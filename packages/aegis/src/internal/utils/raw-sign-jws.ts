@@ -3,7 +3,7 @@ import { JwsKit } from "../../classes/JwsKit.js";
 import type {
   AegisSignKey,
   SignedToken,
-  SignUnstructuredTokenOptions,
+  JoseSignUnstructuredTokenOptions,
   TokenContent,
 } from "../../types/index.js";
 import type { AegisDeps } from "./aegis-deps.js";
@@ -36,7 +36,7 @@ export const rawSignJws = async ({
   deps,
 }: {
   data: TokenContent;
-  options?: SignUnstructuredTokenOptions & { key?: AegisSignKey };
+  options?: JoseSignUnstructuredTokenOptions & { key?: AegisSignKey };
   deps: AegisDeps;
 }): Promise<SignedToken> => {
   const { key, ...rest } = options;

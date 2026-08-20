@@ -1,6 +1,7 @@
 import type {
   CweEncryptOptions,
   DecryptedEncryptedToken,
+  DecryptTokenOptions,
   TokenContent,
 } from "../../types/index.js";
 
@@ -8,7 +9,7 @@ import type {
  * The COSE_Encrypt0 kit — the COSE analogue of {@link IJweKit}. `encrypt`
  * serialises arbitrary content (cty negotiated via the shared codec) and returns
  * the BARE encoded COSE token (COSE_Encrypt0 bytes); `decrypt` consumes the ENCODED
- * COSE token bytes (R2 — decoded internally, parallel to JOSE), returning the
+ * COSE token bytes (decoded internally, parallel to JOSE), returning the
  * cty-reconstructed payload + the unified wire header + the native token. The
  * keyless `decode` (unified wire header ONLY, the content stays ciphertext, uniform
  * with JWE decode) is a static on the class, not an instance method.
@@ -17,5 +18,6 @@ export interface ICweKit {
   encrypt(content: TokenContent, options?: CweEncryptOptions): Buffer;
   decrypt<T extends TokenContent = Buffer>(
     token: Buffer,
+    options?: DecryptTokenOptions,
   ): DecryptedEncryptedToken<T, Buffer>;
 }

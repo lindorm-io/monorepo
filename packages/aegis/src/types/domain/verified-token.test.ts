@@ -34,7 +34,7 @@ const header: DomainTokenHeader = {
   zip: undefined,
 };
 
-describe("VerifiedToken (type witness — not yet returned by verify, Phase 19)", () => {
+describe("VerifiedToken (type witness)", () => {
   test("a jwt result carries domain claims + custom bucket", () => {
     const verified: VerifiedToken = {
       format: "jwt",

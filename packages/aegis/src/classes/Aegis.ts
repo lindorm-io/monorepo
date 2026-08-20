@@ -103,8 +103,10 @@ import type {
   RawSignInput,
   SignContent,
   SignedToken,
-  SignStructuredTokenOptions,
-  SignUnstructuredTokenOptions,
+  CoseSignStructuredTokenOptions,
+  CoseSignUnstructuredTokenOptions,
+  JoseSignStructuredTokenOptions,
+  JoseSignUnstructuredTokenOptions,
   TokenContent,
   TokenProfile,
   TokenProfileInput,
@@ -194,8 +196,8 @@ export class Aegis implements IAegis {
 
     // Every pipeline body — the verb surface AND the raw namespaces — lives in
     // `internal/utils/*`; Aegis assembles the state + JOSE/COSE config they need
-    // once and delegates. The kit façades are gone (Phase 11): the utils build
-    // the wire kits directly from the resolved key + this config. The key
+    // once and delegates. There is no kit façade: the utils build the wire kits
+    // directly from the resolved key + this config. The key
     // resolvers close over `amphora`, so they stay on the class and reach the
     // utils through this bundle.
     this.deps = {
@@ -280,7 +282,7 @@ export class Aegis implements IAegis {
     return signToken({ input, deps: this.deps });
   }
 
-  // The domain confidentiality surface (§5e), the mirror of `sign`: NO inner
+  // The domain confidentiality surface, the mirror of `sign`: NO inner
   // signature (sender auth is `mint(profile, content, { encrypt })`, read with
   // `verify`). `encrypt` translates domain claims to the wire then seals them in
   // a JWE/CWE; `decrypt` reverses it with NO signature check.
@@ -456,7 +458,7 @@ export class Aegis implements IAegis {
     return isCose(Buffer.from(token, "base64url"));
   }
 
-  // The COSE sub-format detectors, symmetric with isJwt/isJws/isJwe (Bit 8). A
+  // The COSE sub-format detectors, symmetric with isJwt/isJws/isJwe. A
   // COSE token is never dot-delimited, so a dotted token bails cheaply; otherwise
   // the COSE structure tag + typ decide (see `is-cose-format.ts`).
   static isCwt(token: string): boolean {
@@ -483,10 +485,10 @@ export class Aegis implements IAegis {
     return isCweBytes(Buffer.from(token, "base64url"));
   }
 
-  // The claim translator, exposed as the public vocabulary source of truth (Bit
-  // 8). These ARE the internal translator functions — pylon's relocated
-  // userinfo/introspection parsing and tyr build their claim mapping on them
-  // without re-deriving the registry. `toWire`: domain-keyed common claims →
+  // The claim translator, exposed as the public vocabulary source of truth.
+  // These ARE the internal translator functions, so a consumer builds its claim
+  // mapping on them without re-deriving the registry. `toWire`: domain-keyed
+  // common claims →
   // jose-keyed wire dict; `toDomain`: jose/camel-keyed wire →
   // `{ claims, custom, profile, sensitive }` — the SAME four buckets the token
   // read path resolves, so a consumer never re-derives the split itself.
@@ -494,8 +496,10 @@ export class Aegis implements IAegis {
 
   static toDomain = dictToBuckets;
 
-  // `Aegis.decode` is DROPPED (Bit 2) — use `aegis.<fmt>.decode` for a known
-  // format, or the INSTANCE `aegis.parse` for an unknown one.
+  // There is no `Aegis.decode` static. A keyless read of a KNOWN format is the
+  // kit's own static (`JwtKit.decode`, `CwtKit.decode`, …); of an UNKNOWN one, the
+  // INSTANCE `aegis.parse`. The wire namespaces (`aegis.jwt` …) expose sign and
+  // verify only — no `decode` member exists on any of the seven.
 
   /**
    * Test a flat claim dict against a {@link DomainAssert} — the boolean form of
@@ -545,8 +549,8 @@ export class Aegis implements IAegis {
 
   // private raw namespaces — each a ONE-LINE delegator to its
   // `internal/utils/raw-*` body. The bodies (key-resolve → kit → native wire)
-  // moved out in Phase 12; the class keeps only the namespace signatures the
-  // `IAegis*` interfaces bind to.
+  // live there; the class keeps only the namespace signatures the `IAegis*`
+  // interfaces bind to.
 
   // private aes
   private aesEncrypt(
@@ -582,7 +586,7 @@ export class Aegis implements IAegis {
   // private jws
   private jwsSign(
     data: TokenContent,
-    options: SignUnstructuredTokenOptions & { key?: AegisSignKey } = {},
+    options: JoseSignUnstructuredTokenOptions & { key?: AegisSignKey } = {},
   ): Promise<SignedToken> {
     return rawSignOpaque({ format: "jws", data, options, deps: this.deps });
   }
@@ -597,7 +601,7 @@ export class Aegis implements IAegis {
   // private jwt
   private jwtSign<C extends Dict = Dict>(
     claims: JwtClaimsWire & C,
-    options: SignStructuredTokenOptions & { key?: AegisSignKey } = {},
+    options: JoseSignStructuredTokenOptions & { key?: AegisSignKey } = {},
   ): Promise<SignedToken> {
     return rawSignJwt<C>({ claims, options, deps: this.deps });
   }
@@ -620,7 +624,7 @@ export class Aegis implements IAegis {
   // private cws
   private cwsSign(
     data: TokenContent,
-    options: SignUnstructuredTokenOptions & { key?: AegisSignKey } = {},
+    options: CoseSignUnstructuredTokenOptions & { key?: AegisSignKey } = {},
   ): Promise<SignedToken> {
     return rawSignOpaque({ format: "cws", data, options, deps: this.deps });
   }
@@ -635,7 +639,7 @@ export class Aegis implements IAegis {
   // private cwt
   private cwtSign<C extends Dict = Dict>(
     claims: CwtClaimsWire & C,
-    options: SignStructuredTokenOptions & { key?: AegisSignKey } = {},
+    options: CoseSignStructuredTokenOptions & { key?: AegisSignKey } = {},
   ): Promise<SignedToken> {
     return rawSignCwt<C>({ claims, options, deps: this.deps });
   }
@@ -651,7 +655,7 @@ export class Aegis implements IAegis {
   // private cwm (COSE_Mac0 / symmetric twin of cwt)
   private cwmSign<C extends Dict = Dict>(
     claims: CwtClaimsWire & C,
-    options: SignStructuredTokenOptions & { key?: AegisSignKey } = {},
+    options: CoseSignStructuredTokenOptions & { key?: AegisSignKey } = {},
   ): Promise<SignedToken> {
     return rawSignCwm<C>({ claims, options, deps: this.deps });
   }
@@ -668,7 +672,7 @@ export class Aegis implements IAegis {
   // (COSE_Encrypt0) paths. A missing key is a hard error only when the caller
   // explicitly asked to encrypt; when forced only by the sensitive fields it is
   // tolerated — encryption is skipped and they are omitted rather than leaked in
-  // cleartext (token-claims.md:98).
+  // cleartext.
   private async resolveEncKey(
     encrypt: AegisEncKey | undefined,
     required: boolean,

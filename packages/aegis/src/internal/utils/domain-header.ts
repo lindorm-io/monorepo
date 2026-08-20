@@ -27,6 +27,14 @@ const BASE_FORMAT: Record<TokenFormatTag, BaseTokenFormat | undefined> = {
  * The ONE wire-header → domain-header translation, for every format on either
  * wire, and the ONE producer of the single `header` the domain results report.
  *
+ * ⛔ IT TAKES THE TWO TYPED BUCKETS ONLY, by `Pick`, never the whole
+ * {@link WireHeaderBuckets}. This is the wire → domain crossing, and an
+ * unregistered wire parameter has no domain name by definition — the domain
+ * surface exists so a caller never learns the wire's vocabulary. `parseTokenHeader`
+ * below drops one anyway (it keeps only what `headerByJose` answers for), so this
+ * is the second of two independent gates; pinned in
+ * `internal/header/custom-header-params.test.ts`.
+ *
  * It takes BOTH buckets and merges them canonically ({@link mergeHeaderBuckets}):
  * the unprotected bucket filtered to what the header registry permits there, then
  * overwritten by the protected one. The KIT tier keeps the two apart — that is
@@ -43,7 +51,7 @@ const BASE_FORMAT: Record<TokenFormatTag, BaseTokenFormat | undefined> = {
  * format the token actually is answers for all seven.
  */
 export const domainTokenHeader = (
-  buckets: WireHeaderBuckets,
+  buckets: Pick<WireHeaderBuckets, "protectedHeader" | "unprotectedHeader">,
   format: TokenFormatTag,
 ): DomainTokenHeader => {
   const wire = mergeHeaderBuckets(buckets);

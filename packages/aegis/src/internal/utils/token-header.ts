@@ -39,9 +39,14 @@ import { getBaseFormat } from "./compute-typ-header.js";
  *   - {@link parseTokenHeader}     read,  `jose -> domain`  (via `headerByJose`)
  *   - {@link wireHeaderToCoseMap}  write, `jose -> cose label` (via `coseWireKey`)
  *
- * Unlike custom claims, headers are a CLOSED set: a key with no registry entry is
- * dropped (no passthrough), in both directions, by the passes below. The
- * registry's `HeaderCodec` drives the value shaping.
+ * THESE PASSES SPEAK THE REGISTERED VOCABULARY ONLY: a key with no registry entry
+ * is dropped by the JOSE passes and refused by the COSE one (`coseWireKey`), in
+ * both directions. That is a fact about the REGISTERED bags, not about the header
+ * as a whole — an unregistered parameter has its own carriage, which never crosses
+ * these passes: `custom` on the write (`internal/header/build-custom-header.ts`,
+ * merged verbatim by `build-jose-header.ts` / `build-cose-headers.ts`) and
+ * `WireHeaderBuckets.unknown` on the read. The registry's `HeaderCodec` drives the
+ * value shaping.
  *
  * ⚠ The COSE pass shapes its values from the registry's own per-wire `cose`
  * codec ({@link CoseHeaderCodec}), exhaustively — so a parameter whose COSE form
@@ -320,16 +325,22 @@ export const parseTokenHeader = <T extends DomainTokenHeader = DomainTokenHeader
  * integer `-70000` would recreate the very fatal error above — one spelling in
  * the bucket, another in the list that says the bucket must contain it.
  *
- * A member is refused the same way its parameter is: a parameter COSE cannot
- * carry cannot be marked critical on the COSE wire, because there is no label to
- * name it by.
+ * ⚠ AN UNREGISTERED MEMBER IS ITS OWN TSTR LABEL, not a refusal. By the time this
+ * runs, `assert-crit-eligible.ts` has refused every member that is neither
+ * registry-eligible nor a key of the same call's `custom.protected` bag — so an
+ * unregistered member here IS a custom parameter, and `build-cose-headers.ts`
+ * writes a custom parameter into the bucket under exactly that tstr label. Asking
+ * {@link coseWireKey} for it would throw `header_no_cose_label` for a parameter
+ * the very same message carries.
  */
 const critToCoseLabels = (value: unknown, proprietary: boolean | undefined): unknown => {
   if (!Array.isArray(value)) return value;
 
-  return value.map((member) =>
-    isString(member) ? coseWireKey(member, proprietary) : member,
-  );
+  return value.map((member) => {
+    if (!isString(member)) return member;
+
+    return headerByJose(member) === undefined ? member : coseWireKey(member, proprietary);
+  });
 };
 
 /**

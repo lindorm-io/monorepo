@@ -65,6 +65,11 @@ export const VERIFY_OPTION_PARITY = {
     default: { jose: undefined, cose: undefined },
   },
 
+  critical: {
+    wires: "both",
+    default: { jose: undefined, cose: undefined },
+  },
+
   maxTokenAge: {
     wires: "both",
     default: { jose: undefined, cose: undefined },
@@ -94,14 +99,14 @@ export const VERIFY_OPTION_PARITY = {
     wires: "both",
     default: { jose: undefined, cose: undefined },
     reason:
-      "RFC 9449 defines only the JWT proof form, but the PROOF's wire is independent of the bound token's: a cnf.jkt in a CWT binds exactly as it does in a JWT, and the shared verify policy enforces it on both. ⚠ UNOBSERVABLE on COSE today — RFC 8747's cnf map has members for an embedded COSE_Key and a kid only, with no jkt equivalent (jkt is not ckt), so no CWT can carry the binding in the first place",
+      "RFC 9449 defines only the JWT proof form, but the PROOF's wire is independent of the bound token's, and this option is READ ON BOTH WIRES — a proof presented for a CWT that carries no binding is a mismatch refused there exactly as on JOSE, which is what the knob probe observes on COSE. ⚠ It is the BOUND-token case the option exists for that has no COSE instance: RFC 8747's cnf map (Table 1) has members for an embedded COSE_Key, an encrypted COSE_Key and a kid only, RFC 9679 §5.5 declines to register jkt as a CWT confirmation method, and the COSE thumbprint ckt (§5.6) digests the key's canonical CBOR where RFC 7638 digests its canonical JSON — a different value under a different label, not a spelling of jkt",
   },
 
   trustBoundThumbprint: {
     wires: "both",
     default: { jose: false, cose: false },
     reason:
-      "Shared with dpopProof: it waives the bound-but-unproven refusal, so it is unobservable on COSE for the same RFC 8747 reason",
+      "It waives the refusal of a token that IS bound and was presented without a proof, so on COSE there is no state for it to act on: no CWT can carry a JWK thumbprint (RFC 9679 §5.5 declines to register jkt as a CWT confirmation method, and ckt is a digest over different bytes rather than a spelling of it), so the probe declares it unobservable there. ⚠ NOT dpopProof's reason — that option is read AND observed on both wires",
   },
 
   key: {

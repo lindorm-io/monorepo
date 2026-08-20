@@ -2,12 +2,14 @@ import type { Dict } from "@lindorm/types";
 import type { JoseError } from "../../errors/index.js";
 import type {
   CertificateHeaderFields,
+  JoseWireTokenEnvelope,
   TokenFormatTag,
   WireProtectedHeader,
   WireTokenHeaderOptions,
 } from "../../types/index.js";
 import { mapTokenHeader, shapeWireHeader } from "../utils/token-header.js";
 import { assertCritEligible } from "./assert-crit-eligible.js";
+import { buildCustomHeader } from "./build-custom-header.js";
 import { assertCritSatisfied } from "./assert-crit-satisfied.js";
 import { canonicalWireHeader } from "./canonical-wire-header.js";
 import { normaliseHeaders } from "./normalise-headers.js";
@@ -17,20 +19,18 @@ import { normaliseHeaders } from "./normalise-headers.js";
  * the ONE place any JOSE kit builds one. `JwtKit`, `JwsKit` and `JweKit` all call
  * it; `encodeJoseHeader` remains the encoder that serialises what it returns.
  *
- * It used to be three hand-written object literals, one per kit, which is three
- * chances to write the same precedence differently — and they did: all three wrote
- * `jku` from the key AFTER the caller's bag, so a caller's `jku` was overwritten
- * even when the key carried none, at which point the parameter vanished entirely.
- *
- * ⚠ THE ORDERING RULE, stated once:
+ * ⚠ THE ORDERING RULE, stated once, and in ONE place for all three JOSE kits —
+ * three literals would be three chances to write the same precedence differently:
  *
  *     kit DEFAULTS  <  CALLER  <  kit-DERIVED
  *
  * and A TIER CONTRIBUTES ONLY THE PARAMETERS IT ACTUALLY HAS. That second half is
- * what closes the defect by construction rather than by patch: each tier is shaped
- * before it is merged, and shaping drops an absent (or wrongly-typed) value, so no
- * tier can ever write an `undefined` over the tier below it. There is no
- * "unless the kit's value happens to be missing" anywhere.
+ * load-bearing: each tier is shaped before it is merged, and shaping drops an
+ * absent (or wrongly-typed) value, so no tier can write an `undefined` over the
+ * tier below it. Without it a kit-DERIVED parameter the key does not carry — a
+ * `jku` on a key with none — would blank the caller's, and the parameter would
+ * leave the header entirely. No merge step is conditioned on a tier's value
+ * happening to be present; the shaping is what makes that unnecessary.
  *
  * The two tiers that could otherwise argue are DISJOINT by construction: the
  * caller's bag is narrowed to the parameters the caller may set before it is
@@ -47,9 +47,10 @@ import { normaliseHeaders } from "./normalise-headers.js";
  *    signed JWT, an `x5c` no key backs — and the two wires answer that with one
  *    verdict. Dropping it silently was the JOSE half of the same gap the short
  *    `reserved` rows were: the request disappeared and the token looked fine.
- *  - an UNREGISTERED parameter is still DROPPED, unchanged. That is the closed-set
- *    rule, a different statement about a different problem, and the COSE side
- *    refuses it only because a parameter with no label has nowhere to go.
+ *  - an UNREGISTERED parameter in `header` is still DROPPED by the shaping. That
+ *    is the closed-set rule for THAT bag, which is what keeps a typo a compile
+ *    error there; an unregistered parameter has its own door, `custom.protected`,
+ *    and the two never meet.
  *
  * ⚠ A PARAMETER THAT EMITS NOTHING IS NOT A PARAMETER, so the caller's bag is
  * NORMALISED ONCE at the top and the reserved check then runs over the normalised
@@ -76,6 +77,14 @@ import { normaliseHeaders } from "./normalise-headers.js";
  * `shapeWireHeader` and `mapTokenHeader` each normalise their own output — so
  * the merge needs no normalisation call of its own.
  *
+ * ⚠ THE CUSTOM ENTRIES DO NOT CROSS `shapeWireHeader`, and must not: that pass
+ * drops every key the registry does not answer for (`token-header.ts`), which is
+ * every key a custom bag holds. They are merged VERBATIM, at the CALLER's tier,
+ * so a kit-derived parameter still outranks them — the same precedence the
+ * caller's registered bag gets. {@link canonicalWireHeader} sorts by key and is
+ * key-agnostic, so a custom parameter canonicalises with the rest and the signed
+ * bytes stay deterministic.
+ *
  * ⚠ The SHAPING is what puts the header and its `crit` MEMBERS in one vocabulary:
  * every tier crosses through `shapeWireHeader` or `mapTokenHeader`, and both run
  * `criticalToWire` over `crit` (`token-header.ts#encodeHeaderValue`). The check
@@ -90,6 +99,7 @@ export const buildJoseHeader = ({
   reserved,
   defaults,
   header,
+  custom,
   derived,
   cert,
   format,
@@ -105,6 +115,11 @@ export const buildJoseHeader = ({
   defaults: WireTokenHeaderOptions;
   /** The caller's own wire-named bag, verbatim from the kit's options. */
   header: WireProtectedHeader | undefined;
+  /**
+   * The caller's UNREGISTERED parameters. JOSE has ONE header, so there is one
+   * bucket ({@link JoseWireTokenEnvelope}).
+   */
+  custom: JoseWireTokenEnvelope["custom"];
   /**
    * What only the kit can know: the key's algorithm and id, the `typ` built from
    * the `tokenType` prefix, and (JWE) the content encryption, the gated ECDH-ES
@@ -124,7 +139,15 @@ export const buildJoseHeader = ({
 }): WireTokenHeaderOptions => {
   const owned = new Set(reserved);
 
-  const caller: Dict = {};
+  // ⛔ `Object.create(null)`, not `{}`: the keys are the CALLER's, and the very
+  // next thing done with this bag is `assertCritEligible` reading `caller.crit`
+  // off it. A plain object answers that from `Object.prototype` when the
+  // parameter is absent; a `__proto__` assigned here would answer it with the
+  // caller's own value. `normaliseHeaders` closes the same hole one step earlier
+  // (`prune-empty-headers.ts`), and this is the second gate rather than a
+  // restatement of it — the merge below spreads this bag into an ordinary object,
+  // so nothing downstream sees the null prototype.
+  const caller: Dict = Object.create(null);
   for (const [jose, value] of Object.entries(normaliseHeaders(header ?? {}))) {
     if (!owned.has(jose)) {
       caller[jose] = value;
@@ -152,11 +175,28 @@ export const buildJoseHeader = ({
   // `cert` is a thumbprint binding. The parameter a `crit` NAMES may come from
   // any tier — which is why the satisfaction check waits for the merge — but the
   // `crit` itself cannot.
-  assertCritEligible({ header: caller, format, error });
+  // The custom bag is validated BEFORE the crit gate, because the gate reads its
+  // keys: a `crit` member may name a custom parameter, and one naming a
+  // REGISTERED key written into `custom` must hear about the misplaced parameter
+  // rather than about a crit member that would have been legal in `header`.
+  const customProtected = buildCustomHeader({
+    custom: custom?.protected,
+    owned,
+    bucket: "protected",
+    error,
+  });
+
+  assertCritEligible({
+    header: caller,
+    custom: new Set(Object.keys(customProtected)),
+    format,
+    error,
+  });
 
   const assembled = canonicalWireHeader({
     ...shapeWireHeader(defaults),
     ...shapeWireHeader(caller),
+    ...customProtected,
     ...shapeWireHeader(derived),
     ...mapTokenHeader({}, cert),
   }) as WireTokenHeaderOptions;

@@ -7,7 +7,7 @@ import type {
   SignTokenOptions,
   VerifyOptions,
 } from "../types/index.js";
-import type { JweEncryptOptions } from "../types/kit/encrypted.js";
+import type { MintEncryptOptions } from "../types/profile/profile.js";
 import type { AegisEncKey } from "../types/keys/key-selectors.js";
 import {
   CERT_ENC_KEY_ID,
@@ -236,6 +236,26 @@ export const VERIFY_KNOB_PROBES = {
     flipped: "accepts",
   },
 
+  critical: {
+    rationale:
+      "RFC 7515 §4.1.11 makes a JWS invalid when a listed extension header parameter is 'not understood and supported by the recipient', and aegis is never the final recipient — it verifies on the application's behalf. So the declaration is the application taking that duty, and dropping it either refuses a token the caller has accepted responsibility for or, in the other direction, would accept one nobody understands.",
+    value: ["x-lindorm-hint"],
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: LIVE_CLAIMS,
+        options: {
+          header: { crit: ["x-lindorm-hint"] },
+          custom: { protected: { "x-lindorm-hint": "carried" } },
+        },
+      },
+    ],
+    baseline: "rejects",
+    flipped: "accepts",
+  },
+
   maxTokenAge: {
     rationale:
       "OIDC Core §3.1.2.1 gives a relying party `max_age`, and §3.1.3.7 requires it to check the authentication's freshness on the way back; the same shape of bound applies to a token's own `iat`. It is a TIGHTENING option — it can only refuse tokens that would otherwise pass — so dropping it is always the unsafe direction, and it leaves no trace because a stale token verifying looks exactly like a fresh one.",
@@ -340,7 +360,7 @@ export const VERIFY_KNOB_PROBES = {
     baseline: "rejects",
     flipped: "accepts",
     unobservable: {
-      cose: "The waiver applies to a token that IS bound by a JWK thumbprint, and no CWT can be. RFC 9449 §6.1 defines `jkt` as a JWT Confirmation Method member — 'When access tokens are represented as JWTs, the public key information is represented using the jkt confirmation method member defined herein' — and RFC 9679 §5.5 declines to register \"a CWT confirmation method [RFC8747] for using 'jkt' as a confirmation method for a CWT\". The COSE wire's own thumbprint confirmation, `ckt` (RFC 9679 §5.6), digests the key's canonical CBOR rather than the canonical JSON RFC 7638 digests, so it is a different value under a different label and not a spelling of `jkt`. There is no JWK thumbprint to put in a CWT, so the state this option waives cannot be reached on that wire.",
+      cose: "The waiver applies to a token that IS bound by a JWK thumbprint, and no CWT can be. RFC 9449 §6.1 defines `jkt` as a JWT Confirmation Method member — 'When access tokens are represented as JWTs […], the public key information is represented using the jkt confirmation method member defined herein' — and RFC 9679 §5.5 declines to register \"a CWT confirmation method [RFC8747] for using 'jkt' as a confirmation method for a CWT\". The COSE wire's own thumbprint confirmation, `ckt` (RFC 9679 §5.6), digests the key's canonical CBOR rather than the canonical JSON RFC 7638 digests, so it is a different value under a different label and not a spelling of `jkt`. There is no JWK thumbprint to put in a CWT, so the state this option waives cannot be reached on that wire.",
     },
   },
 
@@ -814,42 +834,6 @@ export const MINT_ENCRYPT_KNOB_PROBES = {
     },
   },
 
-  unprotected: {
-    // ⚠ A REFUSAL probe, and it has to be. RFC 9052 §3 does give a COSE structure
-    // an unprotected bucket, but aegis — not the caller — decides which bucket a
-    // parameter travels in, and the header registry marks EVERY caller-settable
-    // parameter `placement: "protected"`; the two it marks `either` (`kid`, `iv`)
-    // are kit-derived and refused from a caller bag by the reserved rule. So no
-    // value of this bag can ever reach the wire, and an EMISSION probe would be
-    // stating an outcome that cannot exist. What the bag can do is be REFUSED —
-    // the same refusal the scenario row
-    // `a-parameter-that-must-be-signed-is-refused-from-the-unprotected-bucket`
-    // pins on the signing door.
-    rationale:
-      "A parameter a recipient relies on must be one the issuer authenticated, so aegis decides the bucket and refuses a caller that tries to place an integrity-protected parameter in the unauthenticated one (RFC 9052 §3 covers the protected bucket and leaves the other uncovered). Reading the bag is what makes that refusal happen. Dropped, the request simply evaporates: the caller believes a parameter is riding on the outer, the outer carries nothing, and nothing anywhere reports the difference — which is worse than either honest answer.",
-    value: { oid: "1.2.3.4" },
-    given: [
-      { step: "keys", keys: ["oct-enc"] },
-      {
-        step: "token",
-        via: "mint",
-        profile: "id_token",
-        content: ID_TOKEN_CONTENT,
-        options: { context: { accessTokenIssued: false }, encrypt: {} },
-      },
-    ],
-    baseline: "accepts",
-    flipped: "rejects",
-    unobservable: {
-      jose: "There is no bucket to put it in, and so no placement for a rule to refuse. RFC 7516 §7.1 — 'Only one recipient is supported by the JWE Compact Serialization and it provides no syntax to represent JWE Shared Unprotected Header, JWE Per-Recipient Unprotected Header, or JWE AAD values.' aegis emits the compact serialisation, so the parameter has nowhere to go on the JOSE wire; the bucket the COSE refusal is about is one RFC 9052 §3 gives COSE structures alone, and the JOSE kits take the bag only so one option type serves both wires.",
-    },
-    defect: {
-      site: "src/internal/utils/mint-token.ts#const token = encryptOuter(wire, {",
-      note: "Same named subset as `header`: the encrypt envelope's `unprotected` bag never reaches `encryptOuter`, so the mint SUCCEEDS where the placement rule would refuse it and the bag is accepted and dropped.",
-      wires: ["cose"],
-    },
-  },
-
   tokenType: {
     rationale:
       "The encrypting outer declares its own type so a recipient can route it before holding the key to open it. A caller stating one for the outer is describing the envelope, not the inner token, and dropping it leaves the outer typed by the inner profile — a different statement about a different object.",
@@ -1004,7 +988,7 @@ export const MINT_ENCRYPT_KNOB_PROBES = {
       { step: "wireProtectedHeader", on: "cose", includes: { "1": 1 } },
     ],
   },
-} satisfies KnobProbes<JweEncryptOptions & { key?: AegisEncKey }>;
+} satisfies KnobProbes<MintEncryptOptions>;
 
 // ---------------------------------------------------------------------------
 // ProfileMintOptions["context"] — SignContext

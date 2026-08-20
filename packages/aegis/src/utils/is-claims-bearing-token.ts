@@ -7,7 +7,7 @@ import { decodeJoseHeader } from "../internal/utils/jose-header.js";
 /** The JOSE `cty` off a compact token's protected header. Never throws. */
 const joseCty = (token: string): string | undefined => {
   try {
-    return decodeJoseHeader(token.split(".")[0]).cty;
+    return decodeJoseHeader(token.split(".")[0]).header.cty;
   } catch {
     return undefined;
   }

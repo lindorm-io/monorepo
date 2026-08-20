@@ -49,6 +49,21 @@ export type VerifyOptions = {
    */
   currentDate?: Date;
   /**
+   * Custom header parameters the CALLER takes responsibility for — it will act on
+   * them after aegis returns. RFC 7515 §4.1.11 puts the duty on the RECIPIENT, and
+   * aegis is never the final recipient; it verifies on the application's behalf.
+   *
+   * A `crit` member is accepted only when it is named here AND carried by the
+   * token. Absent means nothing is declared, so EVERY critical parameter is
+   * refused — `objectId` included, since registering a parameter says nothing
+   * about whether the application can act on it. Fail closed.
+   *
+   * ⚠ DOMAIN names, like every other domain surface — `["objectId"]`, never
+   * `["oid"]`, which is refused. An unregistered custom parameter is spelled
+   * identically at both tiers.
+   */
+  critical?: Array<string>;
+  /**
    * Reject a token whose `iat` is older than this many seconds. Adds an
    * `iat >= now - maxTokenAge` lower bound (with clock tolerance) and requires
    * `iat` to be present. Per-call only. Independent of {@link verifyIssuedAt}:

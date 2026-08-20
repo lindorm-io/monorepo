@@ -37,7 +37,7 @@ import type {
   DecodedStructuredToken,
   JwtClaimsWire,
   JwtKitSettings,
-  SignStructuredTokenOptions,
+  JoseSignStructuredTokenOptions,
   VerifiedStructuredToken,
   VerifyStructuredTokenOptions,
 } from "../types/index.js";
@@ -46,10 +46,10 @@ import type {
  * The standalone WIRE JWT kit — a jose/jsonwebtoken-parity signer/verifier.
  *
  * It speaks ONLY the wire: `sign` serializes an already-jose-keyed claim dict
- * verbatim (R18 — no envelope injection, no hash derivation, no case/name
- * mapping); `verify` validates the structural + prudent SECURITY invariants
- * (crit, typ well-formedness, algorithm-match, signature, cert-binding, temporal
- * range with clock tolerance — R10) plus a caller-supplied wire `assert`
+ * verbatim (no envelope injection, no hash derivation, no case/name mapping);
+ * `verify` validates the structural + prudent SECURITY invariants (crit, typ
+ * well-formedness, algorithm-match, signature, cert-binding, temporal range with
+ * clock tolerance) plus a caller-supplied wire `assert`
  * predicate, and returns the native WIRE payload (`sub`/`exp`, not
  * `subject`/`expiresAt`). All DOMAIN policy — claim translation, named matchers,
  * exp PRESENCE, actor/delegation, DPoP proof, profiles — lives on the Aegis
@@ -74,7 +74,7 @@ export class JwtKit implements IJwtKit {
   }
 
   /**
-   * TRANSFORM-FREE sign (R18): serialize the already-wire jose-keyed `claims`
+   * TRANSFORM-FREE sign: serialize the already-wire jose-keyed `claims`
    * dict and secure it. Injects NO envelope claims (`iat`/`jti`/`nbf`/`iss`),
    * derives no hash, maps no case or name — the Aegis claim assembly owns all of
    * that. Returns JUST the token; the expiry/id conveniences are DOMAIN sugar,
@@ -89,7 +89,7 @@ export class JwtKit implements IJwtKit {
    */
   sign<C extends Dict = Dict>(
     claims: JwtClaimsWire & C,
-    options: SignStructuredTokenOptions = {},
+    options: JoseSignStructuredTokenOptions = {},
   ): string {
     this.logger.debug("Signing token", {
       claims: redactSensitiveIdentity(claims),
@@ -109,6 +109,7 @@ export class JwtKit implements IJwtKit {
         reserved: KIT_CAPABILITIES.jwt.reserved,
         defaults: { jku: this.kryptos.jwksUri ?? undefined },
         header: options.header,
+        custom: options.custom,
         derived: {
           alg: this.kryptos.algorithm,
           kid: this.kryptos.id,
@@ -139,7 +140,7 @@ export class JwtKit implements IJwtKit {
 
   /**
    * WIRE verify: crit + typ well-formedness + algorithm-match + signature +
-   * cert-binding + temporal range (R10, validated-if-present) + the caller
+   * cert-binding + temporal range (validated-if-present) + the caller
    * `assert` predicate. A kid fail-fast short-circuits before the signature
    * cycle. Returns the native WIRE payload; NO named matchers, NO exp presence,
    * NO actor/DPoP — those are the Aegis verify path's job.
@@ -188,6 +189,8 @@ export class JwtKit implements IJwtKit {
     // order, that every wire runs ahead of its signature or AEAD cycle.
     assertProtectedHeaderGates({
       protectedHeader: decodedHeader,
+      unknown: decoded.unknown.protected,
+      declared: options.crit,
       expectedAlgorithm: this.kryptos.algorithm,
       format: "jwt",
       error: JwtError,
@@ -229,7 +232,7 @@ export class JwtKit implements IJwtKit {
       mode: options.certBindingMode ?? this.certBindingMode,
     });
 
-    // Temporal range (R10) — every temporal claim validated IF PRESENT — plus
+    // Temporal range — every temporal claim validated IF PRESENT — plus
     // the caller's wire `assert` predicate, in one pass over the Date-lifted
     // wire payload. The JOSE lift happens HERE: a NumericDate is an integer on
     // this wire and a `Date` on the COSE one, which is encoding, not policy.
@@ -247,6 +250,7 @@ export class JwtKit implements IJwtKit {
     return {
       protectedHeader: decodedHeader,
       unprotectedHeader: decoded.unprotectedHeader,
+      unknown: decoded.unknown,
       payload: decoded.payload,
       token,
     };
@@ -279,12 +283,15 @@ export class JwtKit implements IJwtKit {
     token: string,
   ): DecodedStructuredToken<JwtClaimsWire & C, string> {
     const [header, payload, signature] = token.split(".");
+    const decoded = decodeJoseHeader(header);
 
     return {
-      protectedHeader: decodeJoseHeader(header),
+      protectedHeader: decoded.header,
       // Compact JOSE serialisation has ONE header and it is protected — there is
-      // no unprotected bucket to report (`KIT_CAPABILITIES.jwt.unprotectedBucket`).
+      // no unprotected bucket to report, so neither the typed bag nor the unknown
+      // one has an unprotected half (`KIT_CAPABILITIES.jwt.unprotectedBucket`).
       unprotectedHeader: {},
+      unknown: { protected: decoded.unknown, unprotected: {} },
       payload: decodeJwtPayload<C>(payload) as JwtClaimsWire & C,
       signature,
       token,

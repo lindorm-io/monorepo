@@ -8,9 +8,9 @@ import { decodeCwtClaims, type EncodeCwtOptions, encodeCwtClaims } from "./cwt-c
 
 const AT_HASH = "LXEWQrcmsEQBYnyp-6wy9chTD7GQPMTbAiWHF5IaSIE"; // 32-byte b64url
 
-// Since Phase 5 `encodeCwtClaims`/`decodeCwtClaims` are the CODEC boundary (wire
-// in / wire out); the domain <-> wire translation is `domainToCose`/`coseToDomain`.
-// These helpers exercise the full domain round-trip the codec sits inside.
+// `encodeCwtClaims`/`decodeCwtClaims` are the CODEC boundary (wire in / wire out);
+// the domain <-> wire translation is `domainToWire`/`wireToDomain` bound to
+// `coseName`. These helpers exercise the full domain round-trip the codec sits inside.
 const encode = (common: Dict, options?: EncodeCwtOptions) =>
   encodeCwtClaims(domainToWire(common, coseName), options);
 
@@ -97,10 +97,10 @@ describe("proprietary encoding", () => {
   });
 
   test("act is interoperable string-keyed by default (proprietary:false)", () => {
-    const map = encode({ act }); // default is interoperable (D5)
-    // The interoperable object now carries RFC 8693 wire member names
-    // (sub/iss/client_id), the translator's `act` shape — NOT the lindorm domain
-    // names it emitted before the Phase-5 collapse onto the ONE translator.
+    const map = encode({ act }); // default is interoperable
+    // The interoperable object carries RFC 8693 wire member names
+    // (sub/iss/client_id) — the shape `internal/claims/translate.ts` produces,
+    // which is the ONE translator both wires now go through.
     expect(map.get("act")).toEqual({
       sub: "actor",
       iss: "https://delegator/",
@@ -114,7 +114,7 @@ describe("proprietary encoding", () => {
     const on = encode(withTenant, { proprietary: true });
     expect(on.get(-65537 - 14)).toBe("t-1"); // tenant_id private label
     expect(on.has("tenant_id")).toBe(false);
-    // Default (interoperable, D5): degraded to the JOSE string key — NOT dropped.
+    // Default (interoperable): degraded to the JOSE string key — NOT dropped.
     const off = encode(withTenant);
     expect(off.has(-65537 - 14)).toBe(false);
     expect(off.get("tenant_id")).toBe("t-1");

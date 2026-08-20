@@ -23,11 +23,10 @@ export const SENSITIVE_DOMAINS: ReadonlyArray<string> = CLAIM_SPECS.filter(
  * registered claim; this collects them (camelCase domain names) and returns the
  * remaining claims with the sensitive keys removed.
  *
- * The gate that decides whether to SURFACE the collected object — OIDC Core
- * the confidentiality gate, which fires only on an encrypted token — lives in the
- * caller. `rest` always has the
- * sensitive keys stripped, so an unencrypted token that carried them in
- * cleartext leaks nothing regardless.
+ * The gate that decides whether to SURFACE the collected object — it fires only
+ * on an encrypted token — lives in the caller. `rest` always has the sensitive
+ * keys stripped, so an unencrypted token that carried them in cleartext leaks
+ * nothing regardless.
  */
 export const extractSensitiveClaims = (
   domain: Dict,
@@ -36,7 +35,13 @@ export const extractSensitiveClaims = (
   const rest: Dict = { ...domain };
 
   for (const key of SENSITIVE_DOMAINS) {
-    if (key in rest) {
+    // `Object.hasOwn`, never `in`. The keys here are registry-derived and closed,
+    // so `in` would answer the same today — but `rest` is a caller-supplied claim
+    // bag, and the day a registry `domain` name collides with an
+    // `Object.prototype` member this loop would COLLECT A FUNCTION off the
+    // prototype and surface it as a sensitive claim the caller never wrote. `in`
+    // on a bag from outside is a BANNED construct in this package.
+    if (Object.hasOwn(rest, key)) {
       collected[key] = rest[key];
       delete rest[key];
     }

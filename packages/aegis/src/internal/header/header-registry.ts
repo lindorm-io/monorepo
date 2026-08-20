@@ -39,11 +39,14 @@
  * `token_type_mismatch` against `DomainAssert.tokenType` — a header-derived
  * assertion, through the matcher door, on every profiled verify.
  *
- * ⚠ `critEligible` USED TO BE A FOURTH constant and is not one any more — `oid` is
- * `true`. A constant boolean column read by nobody is a note; this one is read
- * from both directions (the mint gate `assert-crit-eligible.ts` and the verify
- * gate `reject-unknown-critical.ts`), so it is what decides whether a `crit`
- * naming a parameter stands.
+ * ⚠ `critEligible` IS NOT A CONSTANT COLUMN — `oid` answers `true` and every other
+ * row `false` — and it is WRITE-SIDE ONLY: `internal/header/is-crit-eligible.ts`
+ * is its one reader, serving the mint gate `assert-crit-eligible.ts`. The verify
+ * gate reads the registry too — but only ever to REFUSE, and never this cell; the
+ * read rule is stated once, on `internal/utils/reject-unknown-critical.ts`. So
+ * this cell decides whether a PRODUCER may name a REGISTERED parameter, and
+ * nothing else.
+ * Why a column rather than an `oid`-shaped test: `is-crit-eligible.ts`.
  *
  * --- `whenEmpty` ---
  *
@@ -420,20 +423,29 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     // but "not stated".
     whenEmpty: "prune",
     placement: "protected",
-    // ⭐ THE ONE ELIGIBLE PARAMETER — the only name a caller may put in `crit`
-    // and the only name a verify accepts there. RFC 7515 §4.1.11: "Producers
-    // MUST NOT include Header Parameter names defined by this specification or
-    // [JWA] for use with JWS […] in the "crit" list." `oid` is the sole parameter
-    // aegis owns that neither document defines; the other twenty JOSE names here
-    // are IANA-registered JOSE header parameters, so `crit` may not name them and
-    // every one of them is `false`.
+    // ⭐ THE ONE ELIGIBLE REGISTERED PARAMETER — the only name in THIS REGISTRY a
+    // caller may put in `crit`. RFC 7515 §4.1.11: "Producers MUST NOT include
+    // Header Parameter names defined by this specification or [JWA] for use with
+    // JWS […] in the "crit" list." `oid` is the sole parameter aegis owns that no
+    // specification defines; the other twenty JOSE names here are IANA-registered,
+    // so `crit` may not name them and every one of them is `false`.
+    //
+    // ⛔ IT IS NOT THE ONLY NAME A `crit` MAY CARRY, and it is a WRITE-side column.
+    // The MINT gate ORs it with the keys of the custom bag the same call writes
+    // (`internal/header/assert-crit-eligible.ts`) — by the same RFC sentence,
+    // since a name no specification defines is exactly what it leaves available.
+    // The READ gate does not consult this column at all; what it does consult,
+    // and why a declaration alone never admits a member there, is stated once on
+    // `internal/utils/reject-unknown-critical.ts`.
     //
     // ⚠ WHAT "AEGIS IMPLEMENTS IT" MEANS, said out loud because RFC 7515
     // §4.1.11's own phrase — "understood and supported by the recipient" — reads
     // stronger than what any library can provide for this parameter. It is AEGIS
     // POLICY and not a reading of the RFC: aegis holds a registry entry for
-    // `oid`, translates it in BOTH directions on BOTH wires, placement-checks it,
-    // and REPORTS its value on the verified domain header as `objectId`. It does
+    // `oid`, translates it in BOTH directions on BOTH wires, drops it on READ
+    // from a bucket the signature does not cover (`placement: "protected"`, read
+    // through `internal/header/merge-header-buckets.ts`), and REPORTS its value
+    // on the verified domain header as `objectId`. It does
     // not act on the value, and no library could — the object identifier belongs
     // to the deployment. So a producer marking it critical is asserting that the
     // RECIPIENT'S OWN code reads `header.objectId` before acting on the token,

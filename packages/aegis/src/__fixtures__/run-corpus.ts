@@ -296,7 +296,8 @@ const runSignCase = async (kase: SignCase, ctx: CorpusContext): Promise<ActResul
 
   // An opaque signature is a WIRE-level operation: `aegis.sign` is claims-only,
   // so these rows go through the kit namespaces. Those take the kits' own
-  // `SignUnstructuredTokenOptions`, which is wire-named — so the two domain→wire
+  // `Jose`/`CoseSignUnstructuredTokenOptions`, which are wire-named — so the two
+  // domain→wire
   // translations the domain verb performs run HERE instead, through the same two
   // utilities. That is what makes these rows' bytes comparable with a
   // domain-tier caller's rather than with a second translation of their own.

@@ -48,9 +48,9 @@ MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
  * ⚠ THE HOSTILE `crit` IS INJECTED AFTER THE MINT, and it has to be, because
  * AEGIS CAN NO LONGER PRODUCE ONE. The mint gate
  * (`internal/header/assert-crit-eligible.ts`) refuses a `crit` naming anything
- * outside the header registry's eligible set, which is exactly its purpose — a
- * token aegis mints is a token aegis verifies — so a doubly-hostile token is by
- * construction something only a FOREIGN producer writes. This file writes one.
+ * outside the header registry's eligible set and the custom bag the same call
+ * writes, so a doubly-hostile token is by construction something only a FOREIGN
+ * producer writes. This file writes one.
  * The `crit` used to ride the caller's header bag; that shape now fails at the
  * mint and would never reach a verify at all.
  */
@@ -60,30 +60,35 @@ describe("the protected-header gates, on a token that trips BOTH", () => {
   const WIRE_CLAIMS = { iss: "https://issuer.lindorm.io/", sub: "user-1" };
 
   /**
-   * The hostile pair, written into the protected header of an ALREADY MINTED
-   * token: a `crit` naming a parameter aegis has no registry entry for, beside
-   * the parameter itself so the header is otherwise well-formed.
+   * The hostile `crit`, written into the protected header of an ALREADY MINTED
+   * token: it names `typ`, a parameter the specification itself defines and the
+   * header already carries, so the header stays otherwise well-formed and the
+   * refusal can only be the crit gate's MALFORMED branch (`*_invalid_crit`) —
+   * `validate-crit.ts` refuses every IANA-registered member.
    *
-   * ⚠ The two wires reach the crit gate through DIFFERENT branches of it, and
-   * that is a fact about the COSE READ rather than about this file. On JOSE a
-   * decoded protected header carries unregistered keys verbatim, so `ext` is
-   * present, `validateCrit` passes it, and the ELIGIBILITY branch answers
-   * (`*_unsupported_crit_param`). On COSE an unregistered LABEL has no JOSE wire
-   * name and is dropped on the way in (`internal/header/cose-wire-header.ts`), so
-   * the same token reads as a `crit` naming a parameter the header does not carry
-   * and the MALFORMED branch answers (`*_invalid_crit`). Both are
-   * `rejectUnknownCritical`, which is the gate whose ORDER this file pins; which
-   * of its two branches fires is not.
+   * ⚠ An UNREGISTERED name would reach the OTHER branch — the unclaimed refusal
+   * (`internal/utils/reject-unknown-critical.ts`), whose code differs — so it
+   * cannot serve as the MALFORMED probe this file needs.
    *
    * ⚠ The SIGNATURE IS LEFT BROKEN on purpose, and the rows stay honest: both
    * gates run on the decoded protected header BEFORE any signature or AEAD cycle,
    * which is the property the whole file is about. A row that reached the crypto
    * would be asserting about a different check entirely.
    */
-  const HOSTILE_CRIT_JOSE = { crit: ["ext"], ext: "x" };
+  // ⚠ A SPECIFICATION-DEFINED member, and it must be one: RFC 7515 §4.1.11
+  // forbids `crit` to name one and lets a recipient refuse the token for it,
+  // which is the refusal this probe needs. An UNREGISTERED member would reach the
+  // gate's OTHER branch — the unclaimed refusal
+  // (`internal/utils/reject-unknown-critical.ts`) — under a different code, so the
+  // probe would be pinning a different verdict. `typ` is already on every header these
+  // kits write, so naming it needs no second injection.
+  const HOSTILE_CRIT_JOSE = { crit: ["typ"] };
 
   /** The COSE `crit` label (RFC 9052 §3.1 Table 3). */
   const COSE_CRIT_LABEL = 2;
+
+  /** The COSE `typ` label (RFC 9596 §2) — the member the hostile crit names. */
+  const COSE_TYP_LABEL = 16;
 
   /** JOSE: rewrite the compact serialisation's first segment. */
   const injectJose = (token: string, hostile: boolean): string => {
@@ -119,8 +124,7 @@ describe("the protected-header gates, on a token that trips BOTH", () => {
     const structure = [...(value as Array<unknown>)];
     const bucket = decodeCbor(structure[0] as Uint8Array) as Map<unknown, unknown>;
 
-    bucket.set(COSE_CRIT_LABEL, ["ext"]);
-    bucket.set("ext", "x");
+    bucket.set(COSE_CRIT_LABEL, [COSE_TYP_LABEL]);
     structure[0] = encodeCbor(bucket);
 
     let wrapped: unknown = structure;

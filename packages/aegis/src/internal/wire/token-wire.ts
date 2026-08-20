@@ -8,8 +8,9 @@ import type {
   DomainTokenHeader,
   EncryptedToken,
   JweEncryptOptions,
-  SignStructuredTokenOptions,
-  SignUnstructuredTokenOptions,
+  CoseSignStructuredTokenOptions,
+  CoseSignUnstructuredTokenOptions,
+  CweEncryptOptions,
   SignedToken,
   TokenContent,
   TokenFormat,
@@ -67,6 +68,14 @@ export type VerifyClaimsInput = {
   token: string;
   deps: AegisDeps;
   options: VerifyOptions;
+  /**
+   * The caller's `crit` declaration, ALREADY resolved to WIRE names — the kits
+   * compare against a wire-named header, and `VerifyOptions.critical` is domain
+   * named. Resolved once above the seam
+   * (`internal/header/declared-crit-to-wire.ts`) so neither wire holds a second
+   * opinion about the spelling.
+   */
+  crit: Array<string> | undefined;
   /** The issuer the VERIFIER expects, when it declared one — SCOPES the key lookup. */
   issuer: string | undefined;
 };
@@ -75,6 +84,8 @@ export type VerifyOpaqueInput = {
   token: string;
   deps: AegisDeps;
   options: VerifyOptions;
+  /** Same resolved declaration as {@link VerifyClaimsInput.crit}. */
+  crit: Array<string> | undefined;
 };
 
 export type OpaqueVerified = {
@@ -95,7 +106,15 @@ export type OpaqueVerified = {
 
 /**
  * The input to securing DOMAIN claims — the aegis-only fields intersected with
- * `SignStructuredTokenOptions`, the claims kits' OWN option type.
+ * `CoseSignStructuredTokenOptions`, the WIDER of the two claims-kit option types.
+ *
+ * ⚠ THE WIDER ONE, because ONE input crosses to BOTH wires: the COSE envelope is
+ * the JOSE envelope plus `custom.unprotected` and `proprietary`, so a JOSE
+ * caller's options are assignable to it and the JOSE kits answer for the members
+ * they do not read ({@link WireInputDispositions}). The public doors are the
+ * narrow ones — `aegis.jwt.sign` takes `JoseSignStructuredTokenOptions`, so
+ * `custom.unprotected` is a compile error there rather than a value this seam has
+ * to refuse.
  *
  * ⚠ The intersection is the mechanism, not a tidying. Only the aegis-only fields
  * above the `&` can be named in a wire's destructure; the whole kit surface
@@ -112,7 +131,7 @@ export type SignClaimsInput = {
   common: Dict;
   /** COSE only — which secured structure to emit (`cwt` = Sign1, `cwm` = Mac0). */
   format: TokenFormat;
-} & SignStructuredTokenOptions;
+} & CoseSignStructuredTokenOptions;
 
 /**
  * The input to a PROFILED write's typ derivation.
@@ -142,10 +161,11 @@ export type MintTypInput = {
  * (`aegis.jws.sign` / `aegis.cws.sign`) do, through the shared guard
  * (`raw-sign-opaque.ts`). See {@link TokenWire.signOpaque}.
  *
- * Same intersection as {@link SignClaimsInput}, over the opaque kits' own
- * `SignUnstructuredTokenOptions`. The opaque kits secure whatever bytes they are
- * given; the registry-driven claim normalisation is applied aegis-side, to an
- * OBJECT payload only.
+ * Same intersection as {@link SignClaimsInput}, over the WIDER of the opaque
+ * kits' option types (`CoseSignUnstructuredTokenOptions`) and for the same
+ * reason. The opaque kits secure whatever bytes they are given; the
+ * registry-driven claim normalisation is applied aegis-side, to an OBJECT payload
+ * only.
  */
 export type SignOpaqueInput = {
   deps: AegisDeps;
@@ -162,7 +182,7 @@ export type SignOpaqueInput = {
    */
   payload: TokenContent;
   key: AegisSignKey | undefined;
-} & SignUnstructuredTokenOptions;
+} & CoseSignUnstructuredTokenOptions;
 
 /**
  * The input to sealing arbitrary content in this wire's encrypting outer — the
@@ -171,10 +191,12 @@ export type SignOpaqueInput = {
  * the nested-token content and cty filled in).
  */
 /**
- * Same intersection as {@link SignClaimsInput}, over `JweEncryptOptions` — the
- * WIDER of the two encrypt option types, so the JOSE-only ECDH-ES party info is
- * expressible and the COSE wire has to state (and refuse) it rather than accept
- * it silently.
+ * Same intersection as {@link SignClaimsInput}, over BOTH encrypt option types.
+ * Neither is wider on its own — `JweEncryptOptions` alone has the ECDH-ES party
+ * info, `CweEncryptOptions` alone has `custom.unprotected` and `proprietary` — so
+ * the seam carries the intersection and each wire's table states what it does
+ * with every member. The party info is what makes this load-bearing: the COSE
+ * wire has to REFUSE it rather than accept it silently.
  *
  * ⚠ There is no `contentType` field. A NESTED token's cty is a `header.cty` the
  * COMPOSITION stamps (`encrypt-outer.ts`), because both wires reached the same
@@ -192,13 +214,15 @@ export type EncryptContentInput = {
    * comes back `{ iss: "x" }` and never as a registered issuer claim.
    */
   content: TokenContent;
-} & JweEncryptOptions;
+} & JweEncryptOptions &
+  CweEncryptOptions;
 
 /**
- * `DecryptTokenOptions` has no members today — decrypt takes no wire knobs — so
- * the intersection adds nothing YET. It is spelled anyway: the day a kit gains a
- * decrypt option it lands on this input, and both wires' `decrypt` disposition
- * tables stop compiling until each states what it does with it.
+ * `DecryptTokenOptions` carries ONE member, the `crit` declaration, and both
+ * wires' `decrypt` disposition tables answer for it — `forwarded` on each, since
+ * the crit gate runs at the kit's own decrypt door. The intersection is what
+ * makes that mandatory: a member added here does not compile until every wire's
+ * table states what it does with it.
  */
 export type DecryptInput = {
   token: string;
@@ -216,9 +240,9 @@ export type DecryptInput = {
  * seam; proved by the disposition probe beside it.
  */
 export type WireInputDispositions = {
-  readonly signClaims: InputDisposition<SignStructuredTokenOptions>;
-  readonly signOpaque: InputDisposition<SignUnstructuredTokenOptions>;
-  readonly encryptContent: InputDisposition<JweEncryptOptions>;
+  readonly signClaims: InputDisposition<CoseSignStructuredTokenOptions>;
+  readonly signOpaque: InputDisposition<CoseSignUnstructuredTokenOptions>;
+  readonly encryptContent: InputDisposition<JweEncryptOptions & CweEncryptOptions>;
   readonly decrypt: InputDisposition<DecryptTokenOptions>;
 };
 

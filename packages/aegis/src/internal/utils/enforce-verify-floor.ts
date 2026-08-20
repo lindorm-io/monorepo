@@ -63,7 +63,7 @@ const typMismatch = (
   });
 
 /**
- * The §4.4 verification floor for profiled verify, enforced UNCONDITIONALLY
+ * The verification floor for profiled verify, enforced UNCONDITIONALLY
  * on top of the standard signature/alg/exp/nbf checks JwtKit already runs:
  *
  *   - `algClass` — the algorithm the signature was verified under is of the

@@ -256,18 +256,25 @@ describe("HEADER_SPECS", () => {
   });
 
   /**
-   * The `critEligible` set, frozen by name — the parameters a producer may name
-   * in `crit` and a verifier will accept there.
+   * The `critEligible` set, frozen by name — the REGISTERED parameters a PRODUCER
+   * may name in `crit`.
    *
-   * ⚠ BOTH DIRECTIONS TURN ON THIS LIST, which is what makes freezing it worth a
-   * test of its own: `assert-crit-eligible.ts` refuses a mint naming anything
-   * outside it, and `reject-unknown-critical.ts` refuses a verify naming
-   * anything outside it. Adding a name here silently widens what aegis both
-   * emits and accepts as a critical extension, and RFC 7515 §4.1.11 forbids
-   * `crit` naming a parameter that specification or JWA defines — so a name
-   * added carelessly mints tokens that are malformed for every recipient.
+   * ⚠ WRITE-SIDE ONLY, and that is what makes freezing it worth a test of its
+   * own: `assert-crit-eligible.ts` refuses a mint naming anything this column
+   * rejects, so a name added here silently widens what aegis EMITS as a critical
+   * extension. RFC 7515 §4.1.11 forbids `crit` naming a parameter that
+   * specification or JWA defines, so a name added carelessly mints tokens that
+   * are malformed for every recipient.
+   *
+   * ⛔ AND IT IS ONLY THE REGISTRY HALF OF THAT WRITE RULE. The mint gate ORs it
+   * with the keys of the custom bag the same call writes
+   * (`internal/header/assert-crit-eligible.ts`), and the READ gate does not read
+   * this column at all — its own rule is stated once on
+   * `internal/utils/reject-unknown-critical.ts`. A reader taking this list as
+   * "the only names a `crit` may carry" would be wrong on both counts, which is
+   * why both rules are pinned in `custom-header-params.test.ts`.
    */
-  test("the crit-eligible header parameters are exactly the stated set", () => {
+  test("the crit-eligible REGISTERED header parameters are exactly the stated set", () => {
     const eligible = HEADER_SPECS.filter((s) => s.critEligible).map(headerJoseName);
 
     // `oid` alone, and it is the ONLY candidate there could be: every other JOSE
@@ -277,15 +284,14 @@ describe("HEADER_SPECS", () => {
   });
 
   test("kid and iv are the only entries DECLARED as either-bucket", () => {
-    // ⚠ A statement about the REGISTRY column — and the column IS enforced.
-    // `build-cose-headers.ts` reads it through `isProtectedOnly` and throws
-    // `cose_unprotected_placement` for a protected-only param placed in the
-    // unprotected bag, so `cty`/`oid`/`x5u` are refused there. (An earlier
-    // version of this note said the builder "never reads placement" and listed
-    // those params as accepted; both stopped being true when the placement rule
-    // landed.)
+    // ⚠ A statement about the REGISTRY column — and the column IS enforced, on
+    // the READ side: `merge-header-buckets.ts` reads it through `isProtectedOnly`
+    // and IGNORES a protected-only param arriving in a foreign token's
+    // unprotected bucket. The write side needs no rule, because it cannot express
+    // the shape: `header` is the only registered bag a caller can fill and it
+    // travels protected.
     //
-    // The two `"either"` rows are the ones the placement rule therefore cannot
+    // The two `"either"` rows are the ones that column therefore cannot
     // speak for, which is exactly why the kits must RESERVE them: `CwsKit` emits
     // `kid` unprotected (an advisory routing hint read before the signature
     // check) and `CweKit` adds `iv` (an AEAD input) — and a caller `iv` on a

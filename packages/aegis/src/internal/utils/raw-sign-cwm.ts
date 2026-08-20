@@ -3,7 +3,7 @@ import { CwmKit } from "../../classes/CwmKit.js";
 import type {
   AegisSignKey,
   CwtClaimsWire,
-  SignStructuredTokenOptions,
+  CoseSignStructuredTokenOptions,
   SignedToken,
 } from "../../types/index.js";
 import type { AegisDeps } from "./aegis-deps.js";
@@ -15,7 +15,7 @@ import { buildSignedToken } from "./build-signed-token.js";
  * of `aegis.cwt.sign`. Identical transform-free wire assembly; only the integrity
  * structure differs (a MAC, not a signature). A CWM shares the CWT media type
  * (`application/cwt` / `+cwt`) — the STRUCTURE (Mac0 vs Sign1) is what tells `cwm`
- * apart from `cwt` (D6). A symmetric key is required; an asymmetric one throws via
+ * apart from `cwt`. A symmetric key is required; an asymmetric one throws via
  * the kit gate (that is `aegis.cwt.sign`).
  */
 export const rawSignCwm = async <C extends Dict = Dict>({
@@ -24,11 +24,11 @@ export const rawSignCwm = async <C extends Dict = Dict>({
   deps,
 }: {
   claims: CwtClaimsWire & C;
-  options?: SignStructuredTokenOptions & { key?: AegisSignKey };
+  options?: CoseSignStructuredTokenOptions & { key?: AegisSignKey };
   deps: AegisDeps;
 }): Promise<SignedToken> => {
   // `key` is the aegis-only signing-key selector (resolves the kryptos); every
-  // other field IS the kit's `SignStructuredTokenOptions` and is forwarded
+  // other field IS the kit's `CoseSignStructuredTokenOptions` and is forwarded
   // structurally, so a new sign option threads through with no change here.
   const { key, ...rest } = options;
 

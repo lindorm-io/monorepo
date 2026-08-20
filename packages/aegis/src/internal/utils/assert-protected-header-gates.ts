@@ -52,13 +52,15 @@ import { rejectUnknownCritical } from "./reject-unknown-critical.js";
  * label 1 rather than a key-management `alg` to compare against a configured one,
  * so there is no second gate for an order to be stated between.
  *
- * ⛔ Both callers must pass the INTEGRITY-PROTECTED header, JOSE-named. On COSE
- * that is the protected bucket alone — the unprotected one is covered by nothing
- * and RFC 9052 §3.1 does not permit `crit` in it. On JOSE the single header IS
- * that header.
+ * ⛔ Both callers must pass the INTEGRITY-PROTECTED header, JOSE-named, and the
+ * SAME bucket's unregistered params. On COSE that is the protected bucket alone —
+ * the unprotected one is covered by nothing and RFC 9052 §3.1 does not permit
+ * `crit` in it. On JOSE the single header IS that header.
  */
 export const assertProtectedHeaderGates = ({
   protectedHeader,
+  unknown,
+  declared,
   expectedAlgorithm,
   format,
   error,
@@ -66,6 +68,17 @@ export const assertProtectedHeaderGates = ({
   algData,
 }: {
   protectedHeader: { crit?: unknown; alg?: unknown } & Dict;
+  /**
+   * The same bucket's params no registry row answers for — a `crit` may name one
+   * ({@link rejectUnknownCritical}).
+   */
+  unknown: Dict;
+  /**
+   * The custom critical parameters the CALLER takes responsibility for — its
+   * `crit` verify/decrypt option, forwarded verbatim to
+   * {@link rejectUnknownCritical}.
+   */
+  declared: ReadonlyArray<string> | undefined;
   /** The algorithm of the configured key. */
   expectedAlgorithm: string;
   /** The wire format tag, which namespaces both refusals. */
@@ -83,7 +96,7 @@ export const assertProtectedHeaderGates = ({
    */
   algData?: Dict;
 }): void => {
-  rejectUnknownCritical({ header: protectedHeader, format, error });
+  rejectUnknownCritical({ header: protectedHeader, unknown, declared, format, error });
 
   assertAlgorithmMatch({
     actual: protectedHeader.alg as string | undefined,

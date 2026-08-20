@@ -11,13 +11,22 @@ import type { Dict } from "@lindorm/types";
  * producer of a wire header therefore ends on this pass — `mapTokenHeader` for the
  * domain crossing, `buildJoseHeader` for the assembled JOSE header — rather than
  * each sorting its own way.
+ *
+ * ⛔ `Object.fromEntries`, NEVER `sorted[key] = …`. A caller's `custom` bag reaches
+ * this pass with keys the caller chose (`build-custom-header.ts`), and assigning
+ * `"__proto__"` onto a plain object sets the prototype rather than the parameter —
+ * so the parameter would vanish from the SIGNED BYTES while the caller believed it
+ * was written. `fromEntries` defines each key instead of setting it, so
+ * `__proto__` is an ordinary own property here.
+ *
+ * ⚠ It stays an ORDINARY object, unlike the read side's `unknown` bags, which are
+ * `Object.create(null)`. Those are handed to a consumer that will look arbitrary
+ * keys up on them; this one is spread, `JSON.stringify`d and compared throughout
+ * the write path, and its prototype is nobody's lookup surface.
  */
-export const canonicalWireHeader = <T extends Dict>(header: T): T => {
-  const sorted: Dict = {};
-
-  for (const key of Object.keys(header).sort()) {
-    sorted[key] = header[key];
-  }
-
-  return sorted as T;
-};
+export const canonicalWireHeader = <T extends Dict>(header: T): T =>
+  Object.fromEntries(
+    Object.keys(header)
+      .sort()
+      .map((key) => [key, header[key]]),
+  ) as T;

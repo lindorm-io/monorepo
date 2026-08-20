@@ -33,8 +33,10 @@ import type {
   ProfileVerifyOptions,
   RawSignInput,
   SignedToken,
-  SignStructuredTokenOptions,
-  SignUnstructuredTokenOptions,
+  CoseSignStructuredTokenOptions,
+  CoseSignUnstructuredTokenOptions,
+  JoseSignStructuredTokenOptions,
+  JoseSignUnstructuredTokenOptions,
   TokenContent,
   TokenProfileInput,
   VerifiedStructuredToken,
@@ -105,7 +107,7 @@ export interface IAegisCwe {
 export interface IAegisCws {
   sign(
     data: TokenContent,
-    options?: SignUnstructuredTokenOptions & { key?: AegisSignKey },
+    options?: CoseSignUnstructuredTokenOptions & { key?: AegisSignKey },
   ): Promise<SignedToken>;
   verify<T extends TokenContent = Buffer>(
     token: string,
@@ -116,7 +118,7 @@ export interface IAegisCws {
 export interface IAegisCwt {
   sign<C extends Dict = Dict>(
     claims: CwtClaimsWire & C,
-    options?: SignStructuredTokenOptions & { key?: AegisSignKey },
+    options?: CoseSignStructuredTokenOptions & { key?: AegisSignKey },
   ): Promise<SignedToken>;
   verify<C extends Dict = Dict>(
     token: string,
@@ -125,12 +127,12 @@ export interface IAegisCwt {
   ): Promise<VerifiedStructuredToken<CwtClaimsWire & C>>;
 }
 
-// The COSE_Mac0 (symmetric) claims twin of `IAegisCwt` (D6). Same ergonomic
+// The COSE_Mac0 (symmetric) claims twin of `IAegisCwt`. Same ergonomic
 // surface; only the integrity structure differs (a MAC, not a signature).
 export interface IAegisCwm {
   sign<C extends Dict = Dict>(
     claims: CwtClaimsWire & C,
-    options?: SignStructuredTokenOptions & { key?: AegisSignKey },
+    options?: CoseSignStructuredTokenOptions & { key?: AegisSignKey },
   ): Promise<SignedToken>;
   verify<C extends Dict = Dict>(
     token: string,
@@ -142,7 +144,7 @@ export interface IAegisCwm {
 export interface IAegisJws {
   sign(
     data: TokenContent,
-    options?: SignUnstructuredTokenOptions & { key?: AegisSignKey },
+    options?: JoseSignUnstructuredTokenOptions & { key?: AegisSignKey },
   ): Promise<SignedToken>;
   verify<T extends TokenContent = Buffer>(
     token: string,
@@ -153,7 +155,7 @@ export interface IAegisJws {
 export interface IAegisJwt {
   sign<C extends Dict = Dict>(
     claims: JwtClaimsWire & C,
-    options?: SignStructuredTokenOptions & { key?: AegisSignKey },
+    options?: JoseSignStructuredTokenOptions & { key?: AegisSignKey },
   ): Promise<SignedToken>;
   verify<C extends Dict = Dict>(
     token: string,

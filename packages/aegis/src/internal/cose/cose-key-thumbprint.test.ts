@@ -63,3 +63,55 @@ describe("computeCoseKeyThumbprint (RFC 9679)", () => {
     );
   });
 });
+
+/**
+ * ⭐ THE CURVE LOOKUP IS THE ONE TOKEN-ADJACENT TABLE READ IN THIS FILE, and it
+ * was the only `ownEntry` site in the package pinned by nothing: reverting it to
+ * `CRV_TO_COSE[jwk.crv]` left the whole suite green. `CRV_TO_COSE` is a plain
+ * object, so that index answers `Object.prototype.constructor` with a live
+ * FUNCTION rather than `undefined`, and the `=== undefined` guard beside it never
+ * fires — the function then reaches `encodeCbor` as a curve label, and whatever
+ * comes back is a `ckt` for a key that does not exist. See own-entry.ts.
+ *
+ * The JWK here is a CALLER's — `computeCoseKeyThumbprintUri` is how a deployment
+ * turns a peer's advertised key into a `ckt` binding — so `crv` is as external as
+ * a curve label off a foreign token.
+ */
+describe("a curve name the table does not own", () => {
+  const PROTO_KEYS = ["constructor", "toString", "valueOf", "hasOwnProperty"] as const;
+
+  const thrownBy = (fn: () => unknown): AegisError => {
+    try {
+      fn();
+    } catch (error) {
+      return error as AegisError;
+    }
+
+    throw new Error("the call was expected to refuse and did not");
+  };
+
+  test.each([...PROTO_KEYS, "P-999", ""])(
+    "an EC key whose crv is `%s` is refused rather than labelled",
+    (crv) => {
+      const error = thrownBy(() =>
+        computeCoseKeyThumbprint({ kty: "EC", crv, x: "eA", y: "eQ" }),
+      );
+
+      expect(error).toBeInstanceOf(AegisError);
+      expect(error.code).toBe("cose_key_unsupported");
+      expect(error.data).toEqual({ crv });
+    },
+  );
+
+  test.each([...PROTO_KEYS, "P-999"])(
+    "an OKP key whose crv is `%s` is refused through the URI door too",
+    (crv) => {
+      const error = thrownBy(() =>
+        computeCoseKeyThumbprintUri({ kty: "OKP", crv, x: "eA" }),
+      );
+
+      expect(error.code).toBe("cose_key_unsupported");
+      expect(error.data).toEqual({ crv });
+    },
+  );
+});

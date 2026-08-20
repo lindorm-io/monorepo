@@ -2,10 +2,16 @@ import { defineProfile } from "../define-profile.js";
 import { ISSUER_IS_URI } from "./rule-predicates.js";
 
 /**
- * JARM response JWT (ADR-0016 — no `typ` mandated). REQUIRED: iss, aud
- * (= client_id), exp (≤ 10 min RECOMMENDED) plus the authorization-response
- * parameters as claims. Signed always (`none` forbidden); confidential-client
- * `HS*` permitted; encryptable.
+ * JARM response JWT (JWT Secured Authorization Response Mode, §2.1) — no `typ`
+ * mandated. §2.1: *"iss - the issuer URL of the authorization server that created
+ * the response […] aud - the client_id of the client the response is intended for
+ * […] exp - expiration of the JWT. A maximum JWT lifetime of 10 minutes is
+ * RECOMMENDED."* — and the JWT "MUST furthermore contain the authorization
+ * endpoint response parameters as defined for the particular response types".
+ * Signed always (`none` forbidden); confidential-client `HS*` permitted;
+ * encryptable.
+ *
+ * https://openid.net/specs/oauth-v2-jarm.html
  */
 export const jarmProfile = defineProfile({
   name: "jarm",

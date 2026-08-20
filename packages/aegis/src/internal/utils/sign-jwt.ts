@@ -1,7 +1,7 @@
 import type { IKryptos } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
 import { JwtKit } from "../../classes/JwtKit.js";
-import type { SignStructuredTokenOptions } from "../../types/index.js";
+import type { JoseSignStructuredTokenOptions } from "../../types/index.js";
 import type { AegisDeps } from "./aegis-deps.js";
 
 /**
@@ -26,7 +26,7 @@ export const signJwt = ({
   kryptos: IKryptos;
   deps: AegisDeps;
   claims: Dict;
-  options: SignStructuredTokenOptions;
+  options: JoseSignStructuredTokenOptions;
 }): string =>
   new JwtKit({
     certBindingMode: deps.certBindingMode,

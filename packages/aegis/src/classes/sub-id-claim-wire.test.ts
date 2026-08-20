@@ -640,8 +640,8 @@ describe("the sub_id claim on the wire", () => {
     // which claim to repair. `identifiers` is not a claim at all; it names nothing
     // a consumer can look up in the registry or remove from its bag.
     //
-    // ⚠ A pin on the write side alone would have left the M2 mutation
-    // (`childPath` overwriting `claim` with the member's own domain) HALF caught —
+    // ⚠ A pin on the write side alone would have left the `childPath` mutation
+    // (overwriting `claim` with the member's own domain) HALF caught —
     // caught for the data aegis produces, blind for the data an attacker does.
     const header = Buffer.from(
       JSON.stringify({ alg: "ES512", typ: "JWT" }),
@@ -735,22 +735,20 @@ describe("the sub_id claim on the wire", () => {
   // ---------------------------------------------------------------------------
 
   test("a `__proto__` member is refused at the UNAUTHENTICATED JOSE door, not made a prototype", () => {
-    // ⛔⛔ THE REFUSAL THIS MIGRATION INHERITS, AND IT WAS NOT INHERITED FOR FREE.
-    // "the walker already refuses it" holds only for claims the walker WALKS, and
-    // until this step `sub_id` was a verbatim passthrough: `decodeBespoke` returned
-    // the producer's object unchanged, so no structure walk ran, no refusal fired,
-    // and `omitUndefined` then rebuilt the bag through `@lindorm/utils`'s
-    // `omitFromObject` — which recurses with `result[key] = cleaned` and re-invokes
-    // the setter. The result was a claim whose `Object.keys` and `JSON.stringify`
-    // showed nothing while `claims.subjectId.id` returned the attacker's value:
-    // data a consumer's natural read returns and every audit log renders as absent.
-    // Not a regression — identical before this step.
+    // ⛔ WHAT THIS PINS IS THE REFUSAL, not a prototype swap. Reading this claim
+    // pollutes nothing: `@lindorm/utils`'s `omit-from-object.ts:32` writes every
+    // key with `Object.defineProperty`, so a nested own `__proto__` survives the
+    // `omitUndefined` rebuild as an ordinary own key (measured through the built
+    // package, at depth). With the refusal disabled the parse succeeds and hands
+    // the member back verbatim. ⇒ This row states aegis's POLICY about the member
+    // name, and a reader must not take it as evidence of a live swap — see
+    // `internal/claims/proto-member-violations.ts`, where that policy's own
+    // justification is filed for removal.
     //
     // ⭐ THE TOKEN IS FORGED AND `parse` IS THE DOOR, because that is the real
     // threat model: `parse` reports a payload WITHOUT checking a signature, so the
-    // attacker needs no key. A token minted through this package cannot carry the
-    // member — the claim bag is normalised first and `omitFromObject` eats it on
-    // the way out — so signing one would prove nothing about the read side.
+    // attacker needs no key. A MINT is refused by the same rule on the write side,
+    // so signing one would prove nothing about the read side.
     const header = Buffer.from(
       JSON.stringify({ alg: "ES512", typ: "JWT" }),
       "utf8",

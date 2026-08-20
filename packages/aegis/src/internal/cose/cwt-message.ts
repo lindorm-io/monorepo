@@ -24,7 +24,7 @@ import { decodeCwtClaims, encodeCwtClaims } from "./cwt-claims.js";
  * the claims map through the registry codec (integer labels where the registry
  * has one, the wire string name where it does not), then CBOR. `proprietary`
  * threads to the codec, where it chooses the compact private-use integer labels
- * over their interoperable string form (D5 — the default is interoperable).
+ * over their interoperable string form; the default is interoperable.
  */
 export const encodeCwtMessage = (wire: Dict, proprietary?: boolean): Buffer =>
   encodeCbor(encodeCwtClaims(wire, { proprietary }));

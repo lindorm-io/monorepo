@@ -206,6 +206,7 @@ describe("kit decode — unified wire header + uniform per-pair result", () => {
         "protectedHeader",
         "signature",
         "token",
+        "unknown",
         "unprotectedHeader",
       ]);
       expect(Object.keys(cwt).sort()).toEqual(Object.keys(jwt).sort());
@@ -242,6 +243,7 @@ describe("kit decode — unified wire header + uniform per-pair result", () => {
         "protectedHeader",
         "signature",
         "token",
+        "unknown",
         "unprotectedHeader",
       ]);
       expect(Object.keys(cws).sort()).toEqual(Object.keys(jws).sort());
@@ -272,6 +274,7 @@ describe("kit decode — unified wire header + uniform per-pair result", () => {
       expect(Object.keys(jwe).sort()).toEqual([
         "protectedHeader",
         "token",
+        "unknown",
         "unprotectedHeader",
       ]);
       expect(Object.keys(cwe).sort()).toEqual(Object.keys(jwe).sort());

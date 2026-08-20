@@ -102,7 +102,7 @@ describe("refreshCorpus", () => {
     ]);
   });
 
-  // G3/G4 at fetch: nothing that fails extraction or the floor reaches the disk.
+  // At fetch: nothing that fails extraction or the floor reaches the disk.
   test.each([
     ["3", "section_ambiguous"],
     ["4", "extract_implausible"],

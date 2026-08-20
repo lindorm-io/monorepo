@@ -46,9 +46,10 @@ describe("rawSignOpaque — certificate binding across the two wires", () => {
    * imports nothing from `src/internal/` or `src/classes/` — a round trip through
    * aegis's own decoder would prove only that the package agrees with itself.
    *
-   * RFC 9360 §2 label 33 is `COSE_X509` — *"If a single certificate is conveyed,
-   * it is placed in a CBOR byte string. If multiple certificates are conveyed, a
-   * CBOR array of byte strings is used"* — and label 34 is `COSE_CertHash`,
+   * RFC 9360 §2 label 33 is `COSE_X509` — two adjacent bullets: *"If a single
+   * certificate is conveyed, it is placed in a CBOR byte string. […] If multiple
+   * certificates are conveyed, a CBOR array of byte strings is used […]"* — and
+   * label 34 is `COSE_CertHash`,
    * `[ hashAlg, hashValue ]`, whose SHA-256 identifier is `-16` (RFC 9054 §3.2).
    */
   test("binds the certificate chain on the COSE wire, in RFC 9360 structures", async () => {

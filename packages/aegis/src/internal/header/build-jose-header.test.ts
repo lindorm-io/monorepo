@@ -9,6 +9,7 @@ const build = (
     reserved: ["alg", "kid", "typ"],
     defaults: {},
     header: undefined,
+    custom: undefined,
     derived: { alg: "ES512", kid: "key_test", typ: "JWT" },
     cert: undefined,
     format: "jwt",

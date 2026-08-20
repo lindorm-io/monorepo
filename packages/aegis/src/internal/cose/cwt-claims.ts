@@ -4,7 +4,7 @@ import { CWT_CLAIMS_KIT } from "./cwt-spec.js";
 
 export type EncodeCwtOptions = {
   /**
-   * Use compact private-use integer COSE labels (default `false` — D5: the
+   * Use compact private-use integer COSE labels (default `false` — the
    * non-proprietary default MUST be fully interoperable). When `false` (default)
    * a claim with a private-use label (`< -65536`) is emitted under its JOSE
    * string key (never dropped) and the structured `act`/`subjectId` are emitted
@@ -17,12 +17,12 @@ export type EncodeCwtOptions = {
 };
 
 /**
- * Encode ALREADY-WIRE (COSE-name-keyed) claims — the `domainToCose` output — into
- * a CWT claims map (RFC 8392): integer labels where the registry has one, the wire
- * string name where it does not, and custom passthrough claims under their literal
- * key. This is the codec ONLY: the domain -> wire translation (name + value shape)
- * happens in `domainToCose` before this is called, so there is no domain-remap loop
- * here anymore.
+ * Encode ALREADY-WIRE (COSE-name-keyed) claims — the `domainToWire(…, coseName)`
+ * output — into a CWT claims map (RFC 8392): integer labels where the registry has
+ * one, the wire string name where it does not, and custom passthrough claims under
+ * their literal key. This is the codec ONLY: the domain -> wire translation (name +
+ * value shape) happens in `domainToWire` before this is called, so there is no
+ * domain-remap loop here.
  *
  * The registry-driven mapping is the `@lindorm/cbor` codec (map mode), keyed by the
  * COSE name; it turns the wire-shaped values into COSE labels / CBOR bytes (cti/
@@ -52,8 +52,9 @@ export const encodeCwtClaims = (
 /**
  * Decode a CWT claims map into the COSE-name-keyed WIRE shape (integer label /
  * wire string -> wire name; values de-serialized). Unknown labels are kept verbatim
- * under their wire key. This is the codec ONLY — `coseToDomain` maps the result to
- * the domain shape (the read twin of `domainToCose` -> `encodeCwtClaims`).
+ * under their wire key. This is the codec ONLY — `wireToDomain(…, coseName)` maps
+ * the result to the domain shape (the read twin of `domainToWire` ->
+ * `encodeCwtClaims`).
  */
 export const decodeCwtClaims = (map: Map<unknown, unknown> | Dict): Dict => {
   // The byte decoder runs `preferMap: false`, which keeps the top CWT map a `Map`
@@ -67,5 +68,19 @@ export const decodeCwtClaims = (map: Map<unknown, unknown> | Dict): Dict => {
       ? (map as Map<number | string, unknown>)
       : new Map(Object.entries(map));
 
+  // ⚠ THE DECODED CLAIMS OBJECT IS PROTOTYPE-SAFE, and not because of anything
+  // here: `@lindorm/cbor` writes every `lax`-mode member with
+  // `Object.defineProperty` (`internal/utils/decode-cbor-map.ts`), so a FOREIGN
+  // CWT carrying the text claim key `__proto__` yields it as an ordinary OWN key
+  // rather than as this object's prototype. That matters because the registered
+  // claims are read off this bag BY PROPERTY — an inherited `aud` would answer as
+  // though the issuer had stated it, on a token whose signature verifies.
+  //
+  // ⛔ A REBUILD HERE WOULD BE A NO-OP. Measured: `CWT_CLAIMS_KIT.decode` already
+  // returns own keys `["iss","__proto__"]` on `Object.prototype`, so wrapping it
+  // changes nothing — and a guard whose removal cannot turn a test red is not a
+  // guard. The disposal lives where the assignment is, and is pinned there
+  // (`packages/cbor/src/internal/utils/decode-cbor.test.ts`); this package pins
+  // the consequence it depends on in `internal/claims/claims-proto-forgery.test.ts`.
   return CWT_CLAIMS_KIT.decode("map", asMap);
 };

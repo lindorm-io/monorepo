@@ -2,7 +2,7 @@ import type { Dict } from "@lindorm/types";
 import type {
   AegisSignKey,
   JwtClaimsWire,
-  SignStructuredTokenOptions,
+  JoseSignStructuredTokenOptions,
   SignedToken,
 } from "../../types/index.js";
 import type { AegisDeps } from "./aegis-deps.js";
@@ -13,9 +13,9 @@ import { signJwt } from "./sign-jwt.js";
 /**
  * The raw JWT sign namespace (`aegis.jwt.sign`): resolve the signing key, then
  * serialize the ALREADY-WIRE `JwtClaimsWire` verbatim via the transform-free
- * `JwtKit` (R18) — no domain translation, no envelope auto-injection. The domain
+ * `JwtKit` — no domain translation, no envelope auto-injection. The domain
  * sign path is `aegis.mint` / `aegis.sign`. `oid` (if wanted) rides the `header`
- * bag (ruling 3); the `SignedToken.objectId` sugar reads it back off it.
+ * bag; the `SignedToken.objectId` sugar reads it back off it.
  */
 export const rawSignJwt = async <C extends Dict = Dict>({
   claims,
@@ -23,7 +23,7 @@ export const rawSignJwt = async <C extends Dict = Dict>({
   deps,
 }: {
   claims: JwtClaimsWire & C;
-  options?: SignStructuredTokenOptions & { key?: AegisSignKey };
+  options?: JoseSignStructuredTokenOptions & { key?: AegisSignKey };
   deps: AegisDeps;
 }): Promise<SignedToken> => {
   const { key, ...rest } = options;

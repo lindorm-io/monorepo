@@ -24,14 +24,14 @@ import {
 } from "./index.js";
 
 /**
- * Bit 10 — the aegis error tree. `LindormError ⊃ AegisError ⊃ family ⊃ leaf`,
+ * The aegis error tree. `LindormError ⊃ AegisError ⊃ family ⊃ leaf`,
  * with two policy siblings (`AegisKeyError` / `AegisDomainError`). The tree is
  * ADDITIVE: `instanceof AegisError` must still catch every aegis error. These
  * tests assert the graduated catch (each leaf grades all the way up, and is NOT
  * caught by the sibling family) and that the routed throw-sites + new codes land
  * on the right class.
  */
-describe("aegis error tree (Bit 10)", () => {
+describe("aegis error tree", () => {
   const joseLeaves = [
     ["JwtError", JwtError],
     ["JwsError", JwsError],

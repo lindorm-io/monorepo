@@ -26,7 +26,7 @@ import type {
   CertificateBindingMode,
   DecodedUnstructuredToken,
   JwsKitSettings,
-  SignUnstructuredTokenOptions,
+  JoseSignUnstructuredTokenOptions,
   TokenContent,
   VerifiedUnstructuredToken,
   VerifyUnstructuredTokenOptions,
@@ -48,7 +48,7 @@ export class JwsKit implements IJwsKit {
    * nothing else. The `objectId`/expiry sugar is DOMAIN enrichment built
    * Aegis-side.
    */
-  sign(data: TokenContent, options: SignUnstructuredTokenOptions = {}): string {
+  sign(data: TokenContent, options: JoseSignUnstructuredTokenOptions = {}): string {
     this.logger.debug("Signing token", { options });
 
     // A parameter that emits nothing is not a parameter, and the caller's bag is
@@ -66,6 +66,7 @@ export class JwsKit implements IJwsKit {
         reserved: KIT_CAPABILITIES.jws.reserved,
         defaults: { cty: contentType, jku: this.kryptos.jwksUri ?? undefined },
         header: callerHeader,
+        custom: options.custom,
         derived: {
           alg: this.kryptos.algorithm,
           kid: this.kryptos.id,
@@ -122,6 +123,8 @@ export class JwsKit implements IJwsKit {
     // order, that every wire runs ahead of its signature or AEAD cycle.
     assertProtectedHeaderGates({
       protectedHeader: decoded.protectedHeader,
+      unknown: decoded.unknown.protected,
+      declared: options.crit,
       expectedAlgorithm: this.kryptos.algorithm,
       format: "jws",
       error: JwsError,
@@ -162,6 +165,7 @@ export class JwsKit implements IJwsKit {
     return {
       protectedHeader: decoded.protectedHeader,
       unprotectedHeader: decoded.unprotectedHeader,
+      unknown: decoded.unknown,
       payload: decoded.payload,
       token,
     };
@@ -189,14 +193,16 @@ export class JwsKit implements IJwsKit {
     token: string,
   ): DecodedUnstructuredToken<T, string> {
     const [h, payload, signature] = token.split(".");
-    const header = decodeJoseHeader(h);
+    const decoded = decodeJoseHeader(h);
 
     return {
-      protectedHeader: header,
+      protectedHeader: decoded.header,
       // Compact JOSE serialisation has ONE header and it is protected — there is
-      // no unprotected bucket to report (`KIT_CAPABILITIES.jws.unprotectedBucket`).
+      // no unprotected bucket to report, so neither the typed bag nor the unknown
+      // one has an unprotected half (`KIT_CAPABILITIES.jws.unprotectedBucket`).
       unprotectedHeader: {},
-      payload: reconstructContent<T>(B64.toBuffer(payload, B64U), header.cty),
+      unknown: { protected: decoded.unknown, unprotected: {} },
+      payload: reconstructContent<T>(B64.toBuffer(payload, B64U), decoded.header.cty),
       signature,
       token,
     };

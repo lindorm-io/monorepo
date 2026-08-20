@@ -1,3 +1,4 @@
+import type { Dict } from "@lindorm/types";
 import type { CoseError } from "../../errors/index.js";
 import type { WireTokenHeader } from "../../types/index.js";
 import type { CoseLabel } from "./cose-label.js";
@@ -41,6 +42,13 @@ export type SignedSegments = {
   protectedMap: Map<CoseLabel, unknown>;
   /** The UNPROTECTED bucket in the JOSE wire vocabulary; empty when there is none. */
   unprotectedHeader: WireTokenHeader;
+  /**
+   * Each bucket's params no registry row answers for, VERBATIM and keyed by
+   * `String(label)` — see {@link WireHeaderBuckets.unknown}. They stay out of the
+   * two translated buckets above, whose type says an unregistered key cannot
+   * exist.
+   */
+  unknown: { protected: Dict; unprotected: Dict };
 };
 
 /**
@@ -90,15 +98,19 @@ export const splitSigned = (
   // the same bytes, so a second decode is a second chance for them to disagree.
   const protectedMap = decodeProtectedHeader(protectedBstr);
 
+  const protectedWire = coseWireHeader(protectedMap, "sig");
+  const unprotectedWire = coseWireHeader(
+    unprotected instanceof Map ? unprotected : undefined,
+    "sig",
+  );
+
   return {
     protectedBstr,
     payload,
     signature,
     protectedMap,
-    protectedHeader: coseWireHeader(protectedMap, "sig"),
-    unprotectedHeader: coseWireHeader(
-      unprotected instanceof Map ? unprotected : undefined,
-      "sig",
-    ),
+    protectedHeader: protectedWire.header,
+    unprotectedHeader: unprotectedWire.header,
+    unknown: { protected: protectedWire.unknown, unprotected: unprotectedWire.unknown },
   };
 };

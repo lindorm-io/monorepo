@@ -45,7 +45,7 @@ describe("the committed corpus", () => {
 });
 
 describe("assertCorpusIntegrity", () => {
-  // G5 — the census is a recursive readdir, so a file cannot opt out of the
+  // The census is a recursive readdir, so a file cannot opt out of the
   // check by being new, and neither side of the bijection may be short.
   test("should refuse an extract nobody asked for", () => {
     const corpusUrl = copy();
@@ -89,7 +89,7 @@ describe("assertCorpusIntegrity", () => {
     );
   });
 
-  // G6 — an extract edited by hand is no longer the fetched text.
+  // An extract edited by hand is no longer the fetched text.
   test("should refuse an extract that no longer matches its hash", () => {
     const corpusUrl = copy();
     const url = new URL("rfc7519/section-4.1.3.txt", corpusUrl);
@@ -101,7 +101,7 @@ describe("assertCorpusIntegrity", () => {
     );
   });
 
-  // G4 — a truncated extract whose hash was updated to match still fails, so
+  // A truncated extract whose hash was updated to match still fails, so
   // rewriting the manifest is not a way past the floor.
   test("should refuse a truncated extract even with a matching hash", () => {
     const corpusUrl = copy();
@@ -123,7 +123,7 @@ describe("assertCorpusIntegrity", () => {
     );
   });
 
-  // G9 — a recorded url that its own key does not derive.
+  // A recorded url that its own key does not derive.
   test("should refuse a manifest url the key does not derive", () => {
     const corpusUrl = copy();
 

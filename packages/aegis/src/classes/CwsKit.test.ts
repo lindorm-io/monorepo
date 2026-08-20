@@ -130,20 +130,22 @@ describe("CwsKit — caller-controlled protected / unprotected header bags", () 
     ).toBe("cose_reserved_header");
   });
 
-  test("throws when a derived param (kid) is smuggled into the unprotected bag", () => {
-    expect(
-      codeOf(() =>
-        kit.sign(Buffer.from("claims"), { unprotected: { kid: "other" } as never }),
-      ),
-    ).toBe("cose_reserved_header");
-  });
-
-  test("throws when a crit-listed param is placed unprotected", () => {
+  test("throws when a derived param (kid) is smuggled into a custom bag", () => {
     expect(
       codeOf(() =>
         kit.sign(Buffer.from("claims"), {
-          header: { crit: ["oid"] },
-          unprotected: { oid: "1.2.3.4" },
+          custom: { unprotected: { kid: "other" } },
+        }),
+      ),
+    ).toBe("header_kit_owned_in_custom");
+  });
+
+  test("throws when a crit-listed custom param is placed unprotected", () => {
+    expect(
+      codeOf(() =>
+        kit.sign(Buffer.from("claims"), {
+          header: { crit: ["x-hint"] },
+          custom: { protected: { "x-hint": "a" }, unprotected: { "x-hint": "b" } },
         }),
       ),
     ).toBe("cose_crit_param_unprotected");
@@ -152,30 +154,29 @@ describe("CwsKit — caller-controlled protected / unprotected header bags", () 
   test("throws when crit itself is placed unprotected", () => {
     expect(
       codeOf(() =>
-        kit.sign(Buffer.from("claims"), { unprotected: { crit: ["cty"] } as never }),
+        kit.sign(Buffer.from("claims"), { custom: { unprotected: { crit: ["cty"] } } }),
       ),
     ).toBe("cose_crit_unprotected");
   });
 
-  test("throws when the same param is set in both bags", () => {
+  test("throws when the same custom param is set in both bags", () => {
     expect(
       codeOf(() =>
         kit.sign(Buffer.from("claims"), {
-          header: { cty: "a" },
-          unprotected: { cty: "b" },
+          custom: { protected: { "x-hint": "a" }, unprotected: { "x-hint": "b" } },
         }),
       ),
     ).toBe("cose_duplicate_header");
   });
 
-  // The bucket is aegis's decision, not the caller's: the header registry's
-  // `placement` column says `x5u` is integrity-protected only, and the READ side
-  // filters an incoming unprotected bucket by that same column — so a parameter
-  // written there would be one no reader ever surfaces.
-  test("throws when a protected-only param is placed in the unprotected bag", () => {
-    expect(codeOf(() => kit.sign(Buffer.from("claims"), { unprotected: { x5u } }))).toBe(
-      "cose_unprotected_placement",
-    );
+  // A REGISTERED parameter has no caller-chosen bucket at all: `header` is the
+  // one bag that takes one and it travels protected, so `x5u` cannot be written
+  // unprotected by any means. Stated on the custom door, which is the only door
+  // to that bucket.
+  test("throws when a protected-only param is written into a custom bag", () => {
+    expect(
+      codeOf(() => kit.sign(Buffer.from("claims"), { custom: { unprotected: { x5u } } })),
+    ).toBe("header_registered_in_custom");
   });
 });
 

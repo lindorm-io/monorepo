@@ -2,7 +2,7 @@ import type { Condition } from "@lindorm/match";
 import type { Dict } from "@lindorm/types";
 import type {
   JwtClaimsWire,
-  SignStructuredTokenOptions,
+  JoseSignStructuredTokenOptions,
   VerifiedStructuredToken,
   VerifyStructuredTokenOptions,
 } from "../../types/index.js";
@@ -10,7 +10,7 @@ import type {
 export interface IJwtKit {
   sign<C extends Dict = Dict>(
     claims: JwtClaimsWire & C,
-    options?: SignStructuredTokenOptions,
+    options?: JoseSignStructuredTokenOptions,
   ): string;
   verify<C extends Dict = Dict>(
     token: string,

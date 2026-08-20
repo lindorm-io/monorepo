@@ -16,22 +16,39 @@ import { rawSignJws } from "../utils/raw-sign-jws.js";
 import { rawVerifyJws } from "../utils/raw-verify-jws.js";
 import { signJwt } from "../utils/sign-jwt.js";
 import { validateCrit } from "../utils/validate-crit.js";
+import { writtenHeader } from "../header/written-header.js";
 import type { TokenWire, WireInputDispositions } from "./token-wire.js";
 
 /**
  * What the JOSE wire does with each kit option it is handed.
  *
- * Every row is `forwarded`, and that is the whole claim: the JOSE kits ARE the
- * kits these option types were written for, so there is no residue to refuse.
- * `unprotected` and `proprietary` are the two that look like residue and are
- * not — `WireTokenEnvelope` declares both as COSE-only parameters the JOSE kits
- * ACCEPT AND IGNORE, which is the kit's own stated contract rather than a wire
- * dropping a request, so the wire hands them over and the kit answers for them.
+ * Every row is `forwarded`, and the claim that carries is the literal one: the
+ * option REACHES the kit through the rest-spread. The tables are typed over the
+ * COSE envelope because ONE input crosses to both wires
+ * ({@link SignClaimsInput}), so the COSE-only members appear here too.
+ *
+ * ⚠ A ROW SPEAKS FOR A TOP-LEVEL KEY AND NOTHING BELOW IT, so `forwarded` does
+ * not promise every MEMBER of a nested bag is read. Two rows here are the
+ * `forwarded`-but-not-read cases, and the TYPE is what closes each rather than
+ * this table:
+ *
+ *   - `proprietary` is a COSE interop gate the JOSE kits ignore.
+ *   - `custom` is forwarded whole, and `buildJoseHeader` reads `custom.protected`
+ *     alone — compact serialisation has one header and it is protected
+ *     (`KIT_CAPABILITIES.<jose kit>.unprotectedBucket: false`), so there is no
+ *     `custom.unprotected` for it to read.
+ *
+ * ⛔ Neither is a silent drop a caller can reach: the PUBLIC JOSE doors
+ * (`aegis.jwt|jws|jwe.*`, `JwtKit`, `JwsKit`, `JweKit`) take `Jose*` option types
+ * that declare no `proprietary` and no `custom.unprotected` at all, so supplying
+ * one is a COMPILE error, not an accepted-and-ignored request. Pinned in
+ * `types/header/wire-envelope.test.ts`. They arrive here only through the
+ * untyped internal seam, which is the one this table cannot speak below.
  */
 const JOSE_DISPOSITIONS: WireInputDispositions = {
   signClaims: {
     header: { use: "forwarded" },
-    unprotected: { use: "forwarded" },
+    custom: { use: "forwarded" },
     tokenType: { use: "forwarded" },
     bindCertificate: { use: "forwarded" },
     proprietary: { use: "forwarded" },
@@ -39,7 +56,7 @@ const JOSE_DISPOSITIONS: WireInputDispositions = {
 
   signOpaque: {
     header: { use: "forwarded" },
-    unprotected: { use: "forwarded" },
+    custom: { use: "forwarded" },
     tokenType: { use: "forwarded" },
     bindCertificate: { use: "forwarded" },
     proprietary: { use: "forwarded" },
@@ -47,7 +64,7 @@ const JOSE_DISPOSITIONS: WireInputDispositions = {
 
   encryptContent: {
     header: { use: "forwarded" },
-    unprotected: { use: "forwarded" },
+    custom: { use: "forwarded" },
     tokenType: { use: "forwarded" },
     bindCertificate: { use: "forwarded" },
     proprietary: { use: "forwarded" },
@@ -55,7 +72,12 @@ const JOSE_DISPOSITIONS: WireInputDispositions = {
     partyRecipient: { use: "forwarded" },
   },
 
-  decrypt: {},
+  decrypt: {
+    // The read-side `crit` declaration reaches the kit's own decrypt door, which
+    // is where the crit gate runs — `JweKit.decrypt` through
+    // `assert-protected-header-gates.ts`, `CweKit.decrypt` directly.
+    crit: { use: "forwarded" },
+  },
 };
 
 /** The JOSE wire: compact JWS/JWE serialisation, one integrity-protected header. */
@@ -140,11 +162,20 @@ export const JOSE_TOKEN_WIRE: TokenWire = {
         "Header typ is present but is not JWT or a <type>+jwt media type, so the token cannot be parsed as a JWT.",
     });
 
-    const critError = validateCrit(decoded.protectedHeader);
+    // The header AS WRITTEN, not the typed bag alone — see `written-header.ts`.
+    // `validateCrit` asks whether the header CARRIES what its `crit` names, and a
+    // custom parameter lives in the other bag.
+    const written = writtenHeader(decoded.protectedHeader, decoded.unknown.protected);
+
+    const critError = validateCrit(written);
     if (critError) {
       throw new JwtError(`Invalid crit header: ${critError}`, {
         code: "jwt_invalid_crit",
-        data: { crit: decoded.protectedHeader.crit },
+        // ⚠ `written`, not the typed bag: the verdict was decided on the header AS
+        // WRITTEN, so reporting `protectedHeader` can hand a consumer
+        // `{ crit: undefined }` while the message names a member. The COSE twin
+        // and `reject-unknown-critical.ts` report the same value.
+        data: { crit: written.crit },
         title: "JWT Invalid Crit",
         details:
           "The crit header is malformed; it must be a non-empty array of strings naming extension parameters present in the header.",
@@ -160,7 +191,7 @@ export const JOSE_TOKEN_WIRE: TokenWire = {
     };
   },
 
-  verifyClaims: async ({ token, deps, options, issuer }) => {
+  verifyClaims: async ({ token, deps, options, crit, issuer }) => {
     const decoded = JwtKit.decode(token);
 
     // Verifier-declared issuer wins; else the token's own UNVERIFIED `iss`; else
@@ -183,6 +214,7 @@ export const JOSE_TOKEN_WIRE: TokenWire = {
 
     kit.verify(token, undefined, {
       clockTolerance: options.clockTolerance,
+      crit,
       currentDate: options.currentDate,
       maxTokenAge: options.maxTokenAge,
       verifyExpiration: options.verifyExpiration,
@@ -201,14 +233,14 @@ export const JOSE_TOKEN_WIRE: TokenWire = {
     };
   },
 
-  verifyOpaque: async ({ token, deps, options }) => {
+  verifyOpaque: async ({ token, deps, options, crit }) => {
     // ⚠ The per-call key POLICY threads through here. It used to be dropped on
     // this branch alone, so a caller stating an algorithm floor for an opaque
     // JOSE signature had that floor silently discarded — the worst kind of
     // policy, because the caller believes it is in force and stops checking.
     const verified = await rawVerifyJws({
       jws: token,
-      options: { key: options.key },
+      options: { key: options.key, crit },
       deps,
     });
 
@@ -270,12 +302,12 @@ export const JOSE_TOKEN_WIRE: TokenWire = {
       logger: deps.logger,
     }),
 
-  decrypt: async ({ token, deps, key }) => {
+  decrypt: async ({ token, deps, key, crit }) => {
     // The JWE outer resolves its recipient key UNSCOPED — the claims sit behind
     // that key, so no `iss` is readable yet. The signed inner IS scoped.
     const decrypted = await rawDecryptJwe<TokenContent>({
       jwe: token,
-      options: { key },
+      options: { key, crit },
       deps,
     });
 

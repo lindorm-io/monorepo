@@ -2,24 +2,23 @@ import { headerByJose } from "./header-registry.js";
 
 /**
  * Whether a header parameter is INTEGRITY-PROTECTED ONLY — the ONE reader of the
- * header registry's `placement` column, consulted by both directions:
+ * header registry's `placement` column.
  *
- *   - WRITE (`build-cose-headers.ts`): a parameter this answers `true` for is
- *     REFUSED from the caller's unprotected bag, so aegis never emits it there.
- *   - READ  (`merge-header-buckets.ts`): a parameter this answers `true` for is
- *     IGNORED when it arrives in a foreign token's unprotected bucket, so it can
- *     never reach the domain header as though the issuer had signed it.
+ * READ (`merge-header-buckets.ts`): a parameter this answers `true` for is
+ * IGNORED when it arrives in a FOREIGN token's unprotected bucket, so it can
+ * never reach the domain header as though the issuer had signed it. That is the
+ * live consumer, and it is a read-side rule about somebody else's token.
  *
- * One datum, both directions. A second list would be a second opinion about the
- * same question, and the day the two disagreed aegis would refuse to write a
- * parameter it was still willing to read.
+ * ⚠ THE WRITE SIDE NEEDS NO SUCH RULE, because it cannot express the shape.
+ * `WireProtectedHeader` is the only registered bag a caller can fill, and it
+ * travels protected; the unprotected bucket takes the kit's own `kid`/`iv` plus
+ * the caller's `custom.unprotected`, which is unregistered by construction
+ * (`build-cose-headers.ts`, `build-custom-header.ts`). Restoring a write-side
+ * placement refusal would be a rule guarding a state the types make unwritable.
  *
- * An UNREGISTERED wire name answers `false`, which is not a permission: the
- * write side hands it to `coseByJose`, which refuses it by name
- * (`header_no_cose_label`), and the read side drops it in `parseTokenHeader`,
- * because headers are a closed set. Answering `true` here would only replace
- * those two accurate refusals with a placement error about a parameter that has
- * no placement.
+ * An UNREGISTERED wire name answers `false`, which is not a permission: an
+ * unregistered param has no registry row and so no placement, and the answer says
+ * only that this column has nothing to say about it.
  */
 export const isProtectedOnly = (jose: string): boolean =>
   headerByJose(jose)?.placement === "protected";

@@ -10,8 +10,7 @@ import { type ClaimSpec, claimsWith, joseName } from "../claims/claims-registry.
  * `temporal` marks — the single source of truth. NOT every `date` claim:
  * `updatedAt` is a date but a profile timestamp, not validation-temporal, so it
  * carries no mark and is absent here. `claimsWith` narrows `spec.temporal` to
- * `"past" | "future"` (never `undefined`). (Phase 8's in-kit temporal check
- * derives from the same set.)
+ * `"past" | "future"` (never `undefined`).
  */
 const TEMPORAL_SPECS = claimsWith("temporal");
 
@@ -20,7 +19,7 @@ const TEMPORAL_SPECS = claimsWith("temporal");
  * unhandled direction is a registry/matcher drift and throws). A `"past"` claim
  * (iat/nbf/auth_time) must not be in the future — `value <= now + tolerance`; a
  * `"future"` claim (exp) must not be in the past — `value >= now - tolerance`.
- * `now` is the effective clock — the caller's `currentDate` override (R10) or the
+ * `now` is the effective clock — the caller's `currentDate` override or the
  * real wall-clock when none is supplied.
  */
 const temporalBound = (
@@ -73,7 +72,7 @@ export type TemporalMatcherOptions = {
  * tolerated (the `$exists: false` escape), a PRESENT value is bounded per its
  * direction.
  *
- * "now" is the effective clock (R10): `currentDate` when the caller overrides it,
+ * "now" is the effective clock: `currentDate` when the caller overrides it,
  * otherwise the real wall-clock. When `maxTokenAge` (seconds) is supplied, `iat`
  * gains a LOWER bound — `iat >= now - maxTokenAge - clockTolerance` — and becomes
  * REQUIRED (a token with no `iat` cannot prove its age), rejecting a stale token.

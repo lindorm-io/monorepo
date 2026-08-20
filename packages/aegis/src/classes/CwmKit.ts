@@ -12,7 +12,7 @@ import type {
   CwmKitSettings,
   CwtClaimsWire,
   DecodedStructuredToken,
-  SignStructuredTokenOptions,
+  CoseSignStructuredTokenOptions,
   VerifiedStructuredToken,
   VerifyStructuredTokenOptions,
 } from "../types/index.js";
@@ -20,9 +20,9 @@ import type {
 /**
  * CWT (RFC 8392) as a COSE_Mac0 — the symmetric twin of `CwtKit`. Same wire-only
  * thin shape (transform-free `sign`, structural `verify` with kid fail-fast and
- * temporal-in-kit R10), but the integrity structure is a MAC, not a signature.
+ * temporal-in-kit), but the integrity structure is a MAC, not a signature.
  *
- * INTEGRITY GATE (Bit 9): `CwmKit` is COSE_Mac0 and requires a SYMMETRIC `oct`
+ * INTEGRITY GATE: `CwmKit` is COSE_Mac0 and requires a SYMMETRIC `oct`
  * key — it throws on an asymmetric one (that is `CwtKit`'s COSE_Sign1). Aegis
  * dispatches the two off the RESOLVED key's `algClass`.
  */
@@ -51,7 +51,7 @@ export class CwmKit implements ICwmKit {
 
   sign<C extends Dict = Dict>(
     claims: CwtClaimsWire & C,
-    options: SignStructuredTokenOptions = {},
+    options: CoseSignStructuredTokenOptions = {},
   ): Buffer {
     return signCwt(this.kryptos, this.logger, "cwm", claims, options);
   }

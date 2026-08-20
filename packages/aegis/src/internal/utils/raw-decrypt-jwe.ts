@@ -21,12 +21,17 @@ export const rawDecryptJwe = async <T extends TokenContent = Buffer>({
   options?: DecryptTokenOptions & { key?: AegisDecryptKey };
   deps: AegisDeps;
 }): Promise<DecryptedEncryptedToken<T, string>> => {
+  // `key` is the aegis-only external-key injection (it resolves the kryptos);
+  // every other field IS the kit's DecryptTokenOptions and is forwarded
+  // structurally, so a new decrypt option threads through with no change here.
+  const { key, ...decryptOptions } = options;
+
   const decode = JweKit.decode(jwe);
 
   const kryptos = await deps.resolveDecryptKey(
     decode.protectedHeader.kid,
     decode.protectedHeader.alg as KryptosEncAlgorithm,
-    options.key,
+    key,
   );
 
   return new JweKit({
@@ -35,5 +40,5 @@ export const rawDecryptJwe = async <T extends TokenContent = Buffer>({
     kryptos,
     logger: deps.logger,
     partyRecipient: deps.partyRecipient,
-  }).decrypt<T>(jwe);
+  }).decrypt<T>(jwe, decryptOptions);
 };

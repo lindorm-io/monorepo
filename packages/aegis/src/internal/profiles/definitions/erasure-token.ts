@@ -2,7 +2,8 @@ import { defineProfile } from "../define-profile.js";
 import { ISSUER_IS_URI } from "./rule-predicates.js";
 
 /**
- * Erasure token — `erasure+jwt` (E9; SET shape, webhook channel). REQUIRED:
+ * Erasure token — `erasure+jwt`, a Security Event Token delivered over a webhook
+ * channel. REQUIRED:
  * iss, aud, iat, exp, jti, sub, events (`urn:lindorm:event:rtbf`); `nonce`
  * MUST NOT be present. Not encryptable. SET-shaped (RFC 8417 permits any JWS
  * alg), so `confidential` for parity with security_event: `HS*` permitted,

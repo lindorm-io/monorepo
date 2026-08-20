@@ -191,9 +191,8 @@ export const SUB_ID_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
     // RFC 9493 §3.2.5 — an E.164 number "including an international dialing
     // prefix".
     //
-    // ⭐ THE ONE MEMBER RULING 1 ACTUALLY MOVES. It was `phone_number` in the
-    // domain bag, which is the only snake_case key any structured claim ever
-    // required a caller to write. Consumer-visible break, stated as one.
+    // ⚠ The DOMAIN spelling is camelCase like every other domain key; only the
+    // `wire` cell below keeps `phone_number`.
     domain: "phoneNumber",
     spec: {
       kind: "rfc",

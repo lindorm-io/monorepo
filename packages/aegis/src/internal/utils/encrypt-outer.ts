@@ -1,5 +1,5 @@
 import type { IKryptos } from "@lindorm/kryptos";
-import type { JweEncryptOptions } from "../../types/index.js";
+import type { CweEncryptOptions, JweEncryptOptions } from "../../types/index.js";
 import { assertWireInput } from "../wire/assert-wire-input.js";
 import type { EncryptContentInput, TokenWire } from "../wire/token-wire.js";
 import type { AegisDeps } from "./aegis-deps.js";
@@ -23,7 +23,8 @@ export type EncryptOuterInput = {
    * repeats it is {@link TokenWire.nestedTokenTyp}'s call, not the caller's.
    */
   innerTokenType: string | undefined;
-} & JweEncryptOptions;
+} & JweEncryptOptions &
+  CweEncryptOptions;
 
 /**
  * Sign-then-encrypt: wrap an already-signed token in its own wire's encrypting

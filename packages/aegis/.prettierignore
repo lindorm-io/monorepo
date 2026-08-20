@@ -1,0 +1,10 @@
+# Prettier resolves its default ignore file relative to the directory it RUNS
+# from, and `npm run prettier` runs from this package — a repo-root file is not
+# read (measured: with only a root .prettierignore, `prettier --check ./src/*`
+# still reported mini-oidc.html).
+
+# Frozen specification documents, compared byte for byte. The extraction tests
+# read exact offsets out of them (spec-corpus/extract-oidc-section.test.ts,
+# document-title.test.ts, refresh-corpus.test.ts), so reformatting one turns a
+# fixture into a different document.
+src/__fixtures__/spec-corpus/__mini__/

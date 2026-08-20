@@ -146,26 +146,22 @@ describe("the raw namespace wrappers", () => {
       expect(unprotectedHeader.kid).toBe(TEST_OCT_KEY_ENC.id);
     });
 
-    // The `unprotected` bag reaches the kit too, and the REFUSAL is what says so:
-    // the placement rule lives inside `buildCoseHeaders`, so an error naming the
-    // parameter can only have been raised by a kit that received it. A wrapper
-    // that dropped the bag would resolve instead.
-    test("the unprotected bag reaches the kit on every COSE wrapper", async () => {
-      const refusal = { code: "cose_unprotected_placement" };
-      const unprotected = { x5u: X5U };
+    // The `custom` bag reaches the kit too, and the REFUSAL is what says so: the
+    // registered-name rule lives inside `buildCoseHeaders`, so an error naming
+    // the parameter can only have been raised by a kit that received it. A
+    // wrapper that dropped the bag would resolve instead.
+    test("the custom bag reaches the kit on every COSE wrapper", async () => {
+      const refusal = { code: "header_registered_in_custom" };
+      const custom = { unprotected: { x5u: X5U } };
 
-      await expect(aegis.cwt.sign(claims, { unprotected })).rejects.toMatchObject(
+      await expect(aegis.cwt.sign(claims, { custom })).rejects.toMatchObject(refusal);
+      await expect(macAegis.cwm.sign(claims, { custom })).rejects.toMatchObject(refusal);
+      await expect(aegis.cws.sign({ tid: "at_abc" }, { custom })).rejects.toMatchObject(
         refusal,
       );
-      await expect(macAegis.cwm.sign(claims, { unprotected })).rejects.toMatchObject(
+      await expect(aegis.cwe.encrypt("hello cose", { custom })).rejects.toMatchObject(
         refusal,
       );
-      await expect(
-        aegis.cws.sign({ tid: "at_abc" }, { unprotected }),
-      ).rejects.toMatchObject(refusal);
-      await expect(
-        aegis.cwe.encrypt("hello cose", { unprotected }),
-      ).rejects.toMatchObject(refusal);
     });
 
     // The JOSE compact serialisation has no unprotected bucket (RFC 7515 §7.1),

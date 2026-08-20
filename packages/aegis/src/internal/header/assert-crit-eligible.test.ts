@@ -135,8 +135,9 @@ describe("assertCritEligible", () => {
      *
      * ⚠ It is worth a gate NOW rather than a note, because this step is what
      * made the shape dangerous. Before the crit reader existed, a duplicate
-     * minted and then failed every aegis verify, so nobody could ship one. Now
-     * it round-trips cleanly — mints, verifies, reports `["oid","oid"]` — while
+     * minted and then failed every aegis verify, so nobody could ship one.
+     * WITHOUT this gate it would round-trip cleanly — minting, and verifying for
+     * a recipient that declares the member, reporting `["oid","oid"]` — while
      * staying malformed for every conformant third party. A token that looks
      * correct to its own issuer and is refusable by everyone else is exactly the
      * mint/verify asymmetry with the outside world this whole step removes.
@@ -196,6 +197,7 @@ describe("assertCritEligible", () => {
       expect(() =>
         assertCritEligible({
           header: { crit: [member] },
+          custom: new Set<string>(),
           format: "jws",
           error: AegisError,
         }),
@@ -205,7 +207,12 @@ describe("assertCritEligible", () => {
 
   test("a non-string member is not eligible", () => {
     expect(() =>
-      assertCritEligible({ header: { crit: [1] }, format: "jws", error: AegisError }),
+      assertCritEligible({
+        header: { crit: [1] },
+        custom: new Set<string>(),
+        format: "jws",
+        error: AegisError,
+      }),
     ).toThrow(expect.objectContaining({ code: "jws_crit_param_not_permitted" }));
   });
 
@@ -213,6 +220,7 @@ describe("assertCritEligible", () => {
     expect(() =>
       assertCritEligible({
         header: { oid: "1.2.3.4" },
+        custom: new Set<string>(),
         format: "jws",
         error: AegisError,
       }),
@@ -224,7 +232,12 @@ describe("assertCritEligible", () => {
     // guard's on the write; this gate answers eligibility and nothing else, so a
     // shape it cannot iterate is passed on rather than given a second verdict.
     expect(() =>
-      assertCritEligible({ header: { crit: "oid" }, format: "jws", error: AegisError }),
+      assertCritEligible({
+        header: { crit: "oid" },
+        custom: new Set<string>(),
+        format: "jws",
+        error: AegisError,
+      }),
     ).not.toThrow();
   });
 
@@ -232,6 +245,7 @@ describe("assertCritEligible", () => {
     expect(() =>
       assertCritEligible({
         header: { crit: ["oid", "oid"], oid: "1.2.3.4" },
+        custom: new Set<string>(),
         format: "cwt",
         error: AegisError,
       }),
@@ -251,6 +265,7 @@ describe("assertCritEligible", () => {
     expect(() =>
       assertCritEligible({
         header: { crit: ["oid", "alg"] },
+        custom: new Set<string>(),
         format: "cwt",
         error: AegisError,
       }),

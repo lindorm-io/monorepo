@@ -28,13 +28,13 @@ import { coseByJose } from "../internal/header/header-registry.js";
 import { CwtKit } from "./CwtKit.js";
 
 // Between the fixtures' issuedAt (1700000000) and expiresAt (1700003600), so the
-// in-kit temporal check (Phase 9 R10) accepts the round-tripped tokens.
+// in-kit temporal check accepts the round-tripped tokens.
 MockDate.set(new Date(1700001000 * 1000));
 
 const logger = createMockLogger();
 
-// Since Phase 5 `encodeCwtClaims`/`decodeCwtClaims` are the CODEC boundary; the
-// domain <-> wire translation is `domainToCose`/`coseToDomain`. These helpers
+// `encodeCwtClaims`/`decodeCwtClaims` are the CODEC boundary; the domain <-> wire
+// translation is `domainToWire`/`wireToDomain` bound to `coseName`. These helpers
 // exercise the full domain round-trip the reference verifiers sit inside.
 const encodeClaims = (common: Dict, options?: EncodeCwtOptions) =>
   encodeCwtClaims(domainToWire(common, coseName), options);
@@ -217,8 +217,8 @@ const fullCommon = {
 };
 
 // What `CwtKit.verify` resolves for `fullCommon`: registered claims to their
-// domain names, and — since Phase 5 converged COSE with the JOSE read path — the
-// unknown `token_introspection` custom claim camelCased to `tokenIntrospection`.
+// domain names, and — COSE sharing the JOSE read path — the unknown
+// `token_introspection` custom claim camelCased to `tokenIntrospection`.
 const fullCommonDecoded = {
   ...common,
   levelOfAssurance: 3,

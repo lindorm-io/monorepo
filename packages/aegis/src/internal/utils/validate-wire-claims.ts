@@ -6,7 +6,7 @@ import { createTemporalMatchers } from "./jwt-temporal-matchers.js";
 import { validate } from "./validate.js";
 
 /**
- * The CLAIMS PASS both claims kits end on: the temporal range (R10 — every
+ * The CLAIMS PASS both claims kits end on: the temporal range (every
  * temporal claim validated IF PRESENT) and the caller's wire `assert` predicate,
  * in ONE pass, so a token is rejected once with the whole list of failing claims
  * rather than at whichever check happened to run first.
@@ -51,6 +51,17 @@ export const validateWireClaims = <C extends Dict = Dict>({
         verifyIssuedAt: options.verifyIssuedAt,
         verifyAuthTime: options.verifyAuthTime,
       }),
+      // ⚠ THE CALLER'S `assert` WINS ON A SHARED KEY, and the shared keys are the
+      // TEMPORAL ones. `assert: { exp: { $exists: true } }` REPLACES the expiry
+      // bound `createTemporalMatchers` built rather than conjoining with it, so a
+      // caller adding a presence check to `exp`/`nbf`/`iat`/`auth_time` stands
+      // the range check down without asking. The knobs that are MEANT to waive a
+      // range are the explicit ones (`verifyExpiration` and its siblings, which
+      // is why they exist), so this precedence is a silent second way to reach
+      // the same state. Not changed here — the merge semantics are the owner's
+      // call, not a bug fix. Filed as finding L-3 in
+      // `lindorm-monorepo/.claude/condition-language-plan.md`, reached from the
+      // "condition-language leftovers" item in `TODO-MONOREPO.md`.
       ...(assert ?? {}),
     } as Condition<C>,
     // The claims kits are PURE WIRE, so a failure here is a kit failure under

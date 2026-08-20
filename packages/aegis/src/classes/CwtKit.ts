@@ -12,7 +12,7 @@ import type {
   CwtKitSettings,
   CwtClaimsWire,
   DecodedStructuredToken,
-  SignStructuredTokenOptions,
+  CoseSignStructuredTokenOptions,
   VerifiedStructuredToken,
   VerifyStructuredTokenOptions,
 } from "../types/index.js";
@@ -20,13 +20,13 @@ import type {
 /**
  * CWT (RFC 8392) as a COSE_Sign1 — the asymmetric, signature-bearing claims kit,
  * the COSE analogue of `JwtKit`. It speaks ONLY the wire: `sign` serializes an
- * already-COSE-keyed `CwtWireClaims` dict verbatim (R18) and secures it with a
+ * already-COSE-keyed `CwtWireClaims` dict verbatim and secures it with a
  * COSE_Sign1; `verify` runs the structural + prudent SECURITY invariants (kid,
- * typ well-formedness, algorithm-match, signature, temporal range R10) plus a
+ * typ well-formedness, algorithm-match, signature, temporal range) plus a
  * caller `assert`, returning the native WIRE payload (`cti`/`exp`, not
  * `tokenId`/`expiresAt`). All DOMAIN policy lives on the Aegis verify path.
  *
- * INTEGRITY GATE (Bit 9): `CwtKit` is COSE_Sign1 and requires an ASYMMETRIC key —
+ * INTEGRITY GATE: `CwtKit` is COSE_Sign1 and requires an ASYMMETRIC key —
  * it throws on a symmetric one. A symmetric `oct` key MUST use `CwmKit`
  * (COSE_Mac0); HMAC is a MAC, never a Sign1 signature. Aegis dispatches the two
  * off the RESOLVED key's `algClass`.
@@ -56,7 +56,7 @@ export class CwtKit implements ICwtKit {
 
   sign<C extends Dict = Dict>(
     claims: CwtClaimsWire & C,
-    options: SignStructuredTokenOptions = {},
+    options: CoseSignStructuredTokenOptions = {},
   ): Buffer {
     return signCwt(this.kryptos, this.logger, "cwt", claims, options);
   }

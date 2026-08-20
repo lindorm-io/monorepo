@@ -2,7 +2,7 @@ import type { Condition } from "@lindorm/match";
 import type { Dict } from "@lindorm/types";
 import type {
   CwtClaimsWire,
-  SignStructuredTokenOptions,
+  CoseSignStructuredTokenOptions,
   VerifiedStructuredToken,
   VerifyStructuredTokenOptions,
 } from "../../types/index.js";
@@ -14,7 +14,7 @@ import type {
  * the class, not an instance method.
  */
 export interface ICwmKit<C extends Dict = Dict> {
-  sign(claims: CwtClaimsWire & C, options?: SignStructuredTokenOptions): Buffer;
+  sign(claims: CwtClaimsWire & C, options?: CoseSignStructuredTokenOptions): Buffer;
   verify(
     token: Buffer,
     assert?: Condition<CwtClaimsWire & C>,

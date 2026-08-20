@@ -49,7 +49,7 @@ const FORMATS = ["jwt", "jws", "jwe", "cwt", "cwm", "cws", "cwe"] as const;
 /** The three knobs the probes drive, wire-named and deliberately untyped. */
 type MintProbe = {
   header?: Dict;
-  unprotected?: Dict;
+  custom?: { protected?: Dict; unprotected?: Dict };
   bindCertificate?: "chain";
 };
 
@@ -456,17 +456,25 @@ describe("KIT_CAPABILITIES", () => {
       // row does not list must reach the wire, which a kit that refused
       // everything would fail.
       //
-      // ⚠ BOTH BAGS. The unprotected one is where the omissions actually bit:
-      // rule 4 (the registry's `placement` column) cannot speak for `iv`, which
-      // is `placement: "either"` so `CweKit` can put its own there — so on the
-      // three SIGNED formats the reserved row is the ONLY thing standing between
-      // a caller and a signature-uncovered `iv` in element 1.
+      // ⚠ EVERY DOOR TO EITHER BUCKET. `header` is the registered one and
+      // travels protected; `custom.protected`/`custom.unprotected` are the only
+      // way to reach a bucket with an unregistered key — and the unprotected one
+      // is where the omissions actually bit: `iv` is `placement: "either"` so
+      // `CweKit` can put its own there, which makes the reserved row the ONLY
+      // thing standing between a caller and a signature-uncovered `iv` in
+      // element 1. Both refusals say the same sentence, which is what lets one
+      // probe drive all three doors.
       for (const format of ["cwt", "cwm", "cws", "cwe"] as const) {
         for (const param of KIT_CAPABILITIES[format].reserved) {
-          for (const bag of ["header", "unprotected"] as const) {
+          expect(
+            () => MINT[format]({ header: { [param]: "probe" } }),
+            `${format} does not reserve "${param}" in the header bag`,
+          ).toThrow(/is key-derived and cannot be set/);
+
+          for (const bucket of ["protected", "unprotected"] as const) {
             expect(
-              () => MINT[format]({ [bag]: { [param]: "probe" } }),
-              `${format} does not reserve "${param}" in the ${bag} bag`,
+              () => MINT[format]({ custom: { [bucket]: { [param]: "probe" } } }),
+              `${format} does not reserve "${param}" in the custom.${bucket} bag`,
             ).toThrow(/is key-derived and cannot be set/);
           }
         }

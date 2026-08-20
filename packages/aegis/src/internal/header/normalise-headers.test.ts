@@ -85,9 +85,11 @@ describe("normaliseHeaders", () => {
     });
 
     /**
-     * Rule 2 of the prune: headers are a CLOSED set, and the closed-set rule is
-     * what disposes of an unregistered key — DROPPED by the two JOSE passes,
-     * REFUSED with `header_no_cose_label` by the COSE one. If the prune took it
+     * Rule 2 of the prune: the REGISTERED header bag is a CLOSED set, and the
+     * closed-set rule is what disposes of an unregistered key that reaches it —
+     * DROPPED by the two JOSE passes, REFUSED with `header_no_cose_label` by the
+     * COSE one. (An unregistered parameter a caller MEANT to send rides `custom`
+     * instead and never crosses these passes — `build-custom-header.ts`.) If the prune took it
      * first, an empty-valued unregistered parameter would vanish silently instead
      * of reaching the refusal a caller must hear.
      */

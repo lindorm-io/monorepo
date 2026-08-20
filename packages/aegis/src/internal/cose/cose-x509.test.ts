@@ -10,9 +10,10 @@ const INTERMEDIATE_B64 = B64.encode(INTERMEDIATE);
 
 /**
  * RFC 9360 §2 `COSE_X509 = bstr / [ 2*certs: bstr ]`, and §2's prose fixes which
- * arm applies: *"If a single certificate is conveyed, it is placed in a CBOR byte
- * string. If multiple certificates are conveyed, a CBOR array of byte strings is
- * used, with each certificate being in its own byte string."*
+ * arm applies, in two adjacent bullets: *"If a single certificate is conveyed, it
+ * is placed in a CBOR byte string. […] If multiple certificates are conveyed, a
+ * CBOR array of byte strings is used, with each certificate being in its own byte
+ * string."*
  */
 describe("encodeCoseX509", () => {
   test("a single certificate becomes the bare byte string", () => {

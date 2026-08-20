@@ -123,7 +123,8 @@ const named = (jose: string): Record<Wire, WireKey> => ({
 /**
  * JOSE name + COSE integer label. `cose` is the COSE STRING name, which differs
  * from the JOSE name only where RFC 8392 renamed the claim (`jti` → `cti`); it is
- * both the off-platform degraded key and the vocabulary `domainToCose` speaks.
+ * both the off-platform degraded key and the vocabulary `domainToWire` speaks when
+ * bound to `coseName`.
  */
 const labelled = (jose: string, label: number, cose = jose): Record<Wire, WireKey> => ({
   jose: wireName(jose),

@@ -971,7 +971,7 @@ export const CORPUS_CASES: ReadonlyArray<CorpusCase> = [
   {
     verb: "encrypt",
     name: "encrypt-cwe-claims-interoperable",
-    note: "`proprietary: false` on the COSE seal — the D5 default, stated. On this verb it reaches ONLY the encryption registration gate: there is no claim codec on the encrypt path any more, so the flag cannot move the plaintext, and this row is byte-comparable to `encrypt-cwe-claims-dir` for that reason rather than because false is the default. ⚠ THE CORPUS CANNOT SEE A PLAINTEXT AT ALL — it is ciphertext — so the flag's inability to reach it is pinned by `src/classes/cose-claims-encoding.test.ts#does not let proprietary reach the plaintext at all`, which decrypts and compares the bytes; this row holds the wire length steady around it.",
+    note: "`proprietary: false` on the COSE seal — the interoperable default, stated. On this verb it reaches ONLY the encryption registration gate: there is no claim codec on the encrypt path any more, so the flag cannot move the plaintext, and this row is byte-comparable to `encrypt-cwe-claims-dir` for that reason rather than because false is the default. ⚠ THE CORPUS CANNOT SEE A PLAINTEXT AT ALL — it is ciphertext — so the flag's inability to reach it is pinned by `src/classes/cose-claims-encoding.test.ts#does not let proprietary reach the plaintext at all`, which decrypts and compares the bytes; this row holds the wire length steady around it.",
     format: "cwe",
     data: ENCRYPT_OBJECT,
     encryptKey: "oct-enc",

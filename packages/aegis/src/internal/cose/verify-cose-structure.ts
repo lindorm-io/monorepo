@@ -8,7 +8,7 @@ import { ERROR_BY_FORMAT, type SignedCoseFormat } from "./error-by-format.js";
 import { requireAttachedPayload } from "./require-attached-payload.js";
 import { requireSignature } from "./require-signature.js";
 import { signedCoseStructureTag } from "./signed-cose-structure-tag.js";
-import { splitSigned } from "./split-signed.js";
+import { splitSigned, type SignedSegments } from "./split-signed.js";
 import { COSE_TAG, buildSecuredStructure } from "./structures.js";
 
 /** What a verified signed COSE structure yields to the path that opened it. */
@@ -17,6 +17,8 @@ export type VerifiedCoseStructure = {
   protectedHeader: WireTokenHeader;
   /** The UNPROTECTED bucket, JOSE-named. Covered by nothing. */
   unprotectedHeader: WireTokenHeader;
+  /** Each bucket's params no registry row answers for — see `split-signed.ts`. */
+  unknown: SignedSegments["unknown"];
   /**
    * The PROTECTED bucket as its RAW COSE label map — see `split-signed.ts`. The
    * translated header above is lossy by design, and this is what the certificate
@@ -51,11 +53,17 @@ export type VerifiedCoseStructure = {
 export const verifyCoseStructure = ({
   kryptos,
   token,
+  declared,
   format,
   payloadDetail,
 }: {
   kryptos: IKryptos;
   token: Buffer;
+  /**
+   * The custom critical parameters the CALLER takes responsibility for — its
+   * `crit` verify option, handed to the crit gate below.
+   */
+  declared: ReadonlyArray<string> | undefined;
   /** Namespaces the header-gate refusals. The structural ones are shared. */
   format: SignedCoseFormat;
   /**
@@ -76,6 +84,7 @@ export const verifyCoseStructure = ({
     signature,
     protectedHeader,
     unprotectedHeader,
+    unknown,
     protectedMap,
   } = splitSigned(token, {
     arity: { exactly: 4 },
@@ -110,6 +119,8 @@ export const verifyCoseStructure = ({
   // once, on `assertProtectedHeaderGates`; do not restate them here as spec.
   assertProtectedHeaderGates({
     protectedHeader,
+    unknown: unknown.protected,
+    declared,
     expectedAlgorithm: kryptos.algorithm,
     format,
     error: ERROR_BY_FORMAT[format],
@@ -159,5 +170,5 @@ export const verifyCoseStructure = ({
         });
   }
 
-  return { protectedHeader, unprotectedHeader, protectedMap, content };
+  return { protectedHeader, unprotectedHeader, unknown, protectedMap, content };
 };

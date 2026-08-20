@@ -1,7 +1,7 @@
 import type { AegisClaimsWire } from "./aegis-claims-wire.js";
 
 /**
- * The OPEN, wire-typed JWT claim set — jose `JWTPayload` parity (R13).
+ * The OPEN, wire-typed JWT claim set — jose `JWTPayload` parity.
  *
  * It is the registry-aligned {@link AegisClaimsWire} intersection (every
  * REGISTERED claim hard-typed to its WIRE form — `exp`/`nbf`/`iat` as `number`

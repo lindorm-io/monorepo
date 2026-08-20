@@ -1,4 +1,4 @@
-import { isArray } from "@lindorm/is";
+import { isArray, isString } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import type { AegisError } from "../../errors/index.js";
 import type { TokenFormatTag } from "../../types/index.js";
@@ -11,13 +11,21 @@ import { isCritEligible } from "./is-crit-eligible.js";
  * that order because they are different questions: may this name stand in a
  * `crit` at all, and does the bucket carry a value for it.
  *
- * ⚠ IT READS ONE REGISTRY CELL, {@link HeaderSpec.critEligible}, through the ONE
- * predicate the verify side also calls ({@link isCritEligible}). That is the
- * whole design: a token aegis mints is a token aegis verifies, because both
- * directions turn on one column through one expression rather than two branches
- * that can drift. The read side's copy of that condition WOULD have been able to
- * drift undetected — see `reject-unknown-critical.test.ts` for why its
- * disagreement is unobservable through its own door.
+ * ⚠ THIS IS THE PRODUCER'S QUESTION, AND THE READ SIDE ASKS A DIFFERENT ONE.
+ * Here: MAY A PRODUCER NAME THIS — the registry's
+ * {@link HeaderSpec.critEligible} cell, or a key of a custom bag this same call
+ * writes (which bag depends on the wire; see {@link assertCritEligible}'s
+ * `custom`). There: HAS THE RECIPIENT CLAIMED RESPONSIBILITY FOR THIS — the
+ * caller's own declaration, which is NECESSARY and never sufficient; the read
+ * rule is stated once, on `internal/utils/reject-unknown-critical.ts`.
+ *
+ * ⛔ SO "A TOKEN AEGIS MINTS IS A TOKEN AEGIS VERIFIES" HOLDS CONDITIONALLY, and
+ * the condition is deliberate: a token aegis mints verifies WHEN THE VERIFIER
+ * DECLARES what the producer marked critical. RFC 7515 §4.1.11 puts the duty to
+ * understand a critical extension on the RECIPIENT, and aegis is never the final
+ * recipient — it verifies on an application's behalf, so it cannot discharge that
+ * duty from a registry column. A producer, by contrast, IS the party acting on
+ * the extension it writes, so writing it is the declaration.
  *
  * ⚠ IT TAKES THE CALLER'S WIRE-NAMED BAG, before ANY translation, and that
  * placement is load-bearing twice over:
@@ -40,8 +48,10 @@ import { isCritEligible } from "./is-crit-eligible.js";
  * names within the JOSE Header in the "crit" list."*
  *
  *   - FIRST (specification-defined names), closed by a SUPERSET rather than by
- *     transcribing the list: every such parameter is `critEligible: false`, and
- *     so is every name aegis does not register at all.
+ *     transcribing the list: every such parameter is `critEligible: false`, and a
+ *     name aegis does not register at all stands only when the caller ALSO wrote
+ *     it as a custom parameter — which is precisely a name the specification does
+ *     not define ({@link buildCustomHeader} refuses every registered one).
  *   - SECOND (duplicate names), closed by the `Set` in the loop below.
  *
  * The THIRD (a name the header does not carry) is `assert-crit-satisfied.ts` on
@@ -71,11 +81,21 @@ import { isCritEligible } from "./is-crit-eligible.js";
  */
 export const assertCritEligible = ({
   header,
+  custom,
   format,
   error,
 }: {
   /** The caller's WIRE-NAMED protected bag, before any label translation. */
   header: Dict;
+  /**
+   * The keys of the caller's validated custom bag(s) — the parameters this call
+   * writes that no registry row answers for, and so the ones a producer may
+   * legitimately mark critical. ⚠ WHICH bag is the CALLER's decision and differs
+   * per wire: JOSE passes `custom.protected` (it has no other), COSE passes BOTH
+   * buckets so the placement rule can answer for a misplaced one rather than this
+   * gate refusing the name.
+   */
+  custom: ReadonlySet<string>;
   /** The wire format tag, which namespaces the refusal's code. */
   format: TokenFormatTag;
   /** The kit's own error class, so the refusal names the format it came from. */
@@ -100,13 +120,18 @@ export const assertCritEligible = ({
     // about the NAME — the producer must stop naming `alg` at all, not merely
     // stop naming it twice. Reporting the duplicate would send the caller to the
     // wrong repair.
-    if (!isCritEligible(member)) {
+    // The two grounds, in ONE expression and NOT shared with the read gate — see
+    // the producer/recipient split in the docstring above. `isCritEligible` is a
+    // `Map` read, so a CALLER-CONTROLLED member cannot resolve through
+    // `Object.prototype`; the `custom` membership test is a `Set` for the same
+    // reason.
+    if (!(isCritEligible(member) || (isString(member) && custom.has(member)))) {
       throw new error(`Header parameter "${String(member)}" cannot be marked critical`, {
         code: `${format}_crit_param_not_permitted`,
         data: { crit, parameter: member },
         title: `${format.toUpperCase()} Crit Parameter Not Permitted`,
         details:
-          "crit names the extension parameters a recipient must understand before acting on the token, so it may only name parameters this library implements as extensions and spells on this wire. A parameter the specification itself defines is forbidden there outright, and a parameter aegis does not implement would mint a token no aegis recipient accepts.",
+          "crit names the extension parameters a recipient must understand before acting on the token, so it may only name an extension this library implements or a custom parameter the same call writes. A parameter the specification itself defines is forbidden there outright, and a name the header does not carry as either would mint a token no aegis recipient accepts.",
       });
     }
 

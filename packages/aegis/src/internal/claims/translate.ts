@@ -46,9 +46,11 @@ import { protoMemberViolations } from "./proto-member-violations.js";
  * looked up — `joseName` vs `coseName` (the RFC 8392 divergence set, today just
  * `jti` <-> `cti`). The VALUE transforms are identical at this level; only the
  * downstream CWT codec turns the jose-shaped values into COSE labels and CBOR
- * bytes. There is deliberately no `domainToCose` / `coseToDomain` pair: a second
- * named entry point per wire is a second place for a rule to be written
- * differently, which is exactly what this file exists to remove.
+ * bytes. The two cores are `domainToWire` and `wireToDomain`, each taking the wire
+ * as a `NameSelector` argument; there is deliberately no `domainToCose` /
+ * `coseToDomain` beside them, because a second named entry point per wire is a
+ * second place for a rule to be written differently, which is exactly what this
+ * file exists to remove.
  *
  * It is the ONLY domain-aware claim code: both the JOSE and the COSE format
  * paths meet here. Value transforms come from the registry's `ClaimCodec`; a
@@ -58,7 +60,7 @@ import { protoMemberViolations } from "./proto-member-violations.js";
  * `internal/claims/cnf-members.ts` and {@link BespokeKind}), and the generic
  * structure walker beside it handles the ones it can
  * (`act`/`may_act`, `address`, `authorization_details`, `sub_id`). All
- * case/name conversion is Aegis-side (R18): a registered claim
+ * case/name conversion is Aegis-side: a registered claim
  * takes the explicit registry path (name + value transform); anything NOT in the
  * registry is a custom claim whose KEY case flips mechanically (snake on write,
  * camel on read) with its value untouched.
@@ -714,27 +716,30 @@ const walkObject = (
   /**
    * `Object.defineProperty` rather than `out[key] = value`.
    *
-   * ⚠⚠ THIS IS DEFENCE IN DEPTH BEHIND THE CLAIM BOUNDARY'S `__proto__` REFUSAL,
-   * AND NOTHING MORE — the note that stood here claimed more and could not be
-   * checked. It said the form was what carries `toString` / `constructor` /
-   * `valueOf` "as own data properties, never as prototype lookups", and plain
-   * assignment carries those as own data properties too. `__proto__` is the ONLY
-   * accessor on `Object.prototype`, and a claim carrying one is already refused
-   * ({@link protoMemberViolations}, asked once per claim in {@link claimContext}),
-   * so no member key can distinguish the two forms: replacing this with an
-   * assignment leaves the whole suite green, and correctly so.
+   * ⚠⚠ NO MEMBER KEY DISTINGUISHES THE TWO FORMS TODAY. `__proto__` is the only
+   * accessor on `Object.prototype` — plain assignment carries `toString`,
+   * `constructor` and `valueOf` as own data properties just as this does — and a
+   * claim carrying `__proto__` is refused upstream ({@link protoMemberViolations},
+   * asked once per claim in {@link claimContext}). Replacing this with an
+   * assignment therefore leaves the suite green, correctly.
    *
-   * ⭐ IT IS KEPT BECAUSE IT IS STRICTLY SAFER AND COSTS NOTHING, and because the
-   * two guards fail differently: the refusal is a POLICY about a name, and this is
-   * a MECHANISM that holds whatever the policy says. It is what keeps `out` clean
-   * while a walk that is ALREADY DOOMED runs to completion — the refusal is
-   * accumulated, not thrown, so a hostile `__proto__` does reach the open tail
-   * below and is written here before the boundary discards the whole result.
-   * ⛔ A future reader who deletes the refusal must know this is NOT a second guard
-   * behind it — with the refusal gone, `__proto__` becomes an ordinary own key here
-   * and then travels on to `@lindorm/utils`'s `omitFromObject`, which rebuilds
-   * nested objects with a plain assignment and re-creates the pollution. That is
-   * measured, and it is why the refusal exists rather than this form alone.
+   * ⭐ IT IS KEPT BECAUSE IT IS A MECHANISM AND THE REFUSAL IS A POLICY. It holds
+   * whatever the policy says, and it is what keeps `out` clean while an
+   * ALREADY-DOOMED walk runs to completion: the refusal is accumulated, not
+   * thrown, so a hostile `__proto__` reaches the open tail below and is written
+   * here before the boundary discards the whole result.
+   *
+   * ⛔ DELETING THE REFUSAL DOES NOT MAKE THIS THE LAST LINE OF DEFENCE — nor is
+   * pollution what follows. Downstream `__proto__` reaches `omitFromObject`, which
+   * also writes with `Object.defineProperty` (`omit-from-object.ts:32`), so the own
+   * key is preserved and nothing is polluted (measured through the built package).
+   * The rebuilds that DID swap a prototype are closed by the same mechanism —
+   * `prune-empty-claims.ts` and this file's own custom bag (built here, rebuilt in
+   * `wireToFloorClaims`). ⛔ NOT the COSE claims decode: aegis rebuilds nothing
+   * there and the disposal is entirely `@lindorm/cbor`'s
+   * (`internal/cose/cwt-claims.ts` states the measurement). See
+   * `proto-member-violations.ts`, where the refusal's justification is filed for
+   * removal.
    */
   const emit = (outKey: string, outValue: unknown): void => {
     Object.defineProperty(out, outKey, {
@@ -873,9 +878,10 @@ const walkObject = (
      * `{"sub":42}`, CARRIED, because `domainToWire` runs no derived-decoder probe
      * and the top level has no walker either. So a top-level leaf claim reaches a
      * signed wire with no codec guard at all, while the member one level in is
-     * guarded by {@link encodeMember}. That is the hole filed in `TODO-MONOREPO.md`
-     * with its measurement and its per-cell dispositions. Closing it changes what
-     * EVERY registered claim writes and reports, and needs its own corpus gate.
+     * guarded by {@link encodeMember}. Closing it changes what EVERY registered
+     * claim writes and reports — each claim needs its own disposition for a value
+     * of the wrong shape — so it needs its own corpus gate and is deliberately
+     * not done here.
      *
      * ⚠ `null` NEVER REACHES THIS LINE. It is classified as absence above and is
      * neither dropped-as-malformed nor refused — see {@link isNotStated}.
@@ -1332,13 +1338,14 @@ const encodeValue = (
 /**
  * The write core (domain -> wire), single-pass over the claims. Registered
  * claims map to the selected wire NAME with their value encoded per `spec.value`;
- * unregistered custom claims keep their value and flip their KEY to snake_case
- * (R18). Undefined results (an absent value, an empty `cnf`) are dropped. The
+ * unregistered custom claims keep their value and flip their KEY to snake_case.
+ * Undefined results (an absent value, an empty `cnf`) are dropped. The
  * VALUE encoding is identical for JOSE and COSE — only `nameOf` differs.
  *
  * EXPORTED, and the only write door: the wire is a PARAMETER, so there is no
- * `domainToJose` / `domainToCose` pair to keep in agreement. `Aegis.toWire` binds
- * `joseName` because the public vocabulary door speaks JOSE.
+ * `domainToCose` to keep in agreement with it. `domainToJose` below is not a
+ * second door but a one-line binding of `joseName`, because the public vocabulary
+ * door (`Aegis.toWire`) speaks JOSE.
  */
 export const domainToWire = (common: Dict, nameOf: NameSelector): Dict => {
   const wire: Dict = {};
@@ -1365,6 +1372,11 @@ export const domainToWire = (common: Dict, nameOf: NameSelector): Dict => {
       const encoded = encodeClaim(spec, value, nameOf);
       if (encoded !== undefined) wire[nameOf(spec)] = encoded;
     } else {
+      // ⚠ SAFE ONLY BECAUSE `snakeCase` CANNOT RETURN `__proto__` — measured:
+      // `__proto__`, `__PROTO__` and `--proto--` all yield `proto`. That is what
+      // makes a plain assignment admissible here where the unconverted bags need
+      // `Object.fromEntries`. A key transform that preserved leading underscores
+      // would reopen it.
       wire[snakeCase(key)] = value;
     }
   }
@@ -1521,7 +1533,7 @@ const decodeValue = (
  *
  *   - `"token"`  reading a TOKEN's wire payload. A registered claim resolves ONLY
  *                under its wire name; an unregistered key flips snake -> camelCase
- *                into `custom` (R18). This is what verify/parse/decrypt read.
+ *                into `custom`. This is what verify/parse/decrypt read.
  *   - `"floor"`  the profiled verify FLOOR read of a token: wire names only, only
  *                `domainClaim`-marked claims resolve (the {@link DomainClaims}
  *                set), and every other key stays in `custom` VERBATIM.
@@ -1684,11 +1696,23 @@ export const wireToDomain = (
     if (decoded !== undefined) claims[spec.domain] = decoded;
   }
 
-  const custom: Dict = {};
-  for (const [key, value] of Object.entries(wire)) {
-    if (consumed.has(key)) continue;
-    custom[rules.customKey(key)] = value;
-  }
+  // ⛔ `Object.fromEntries`, NEVER `custom[key] = value`. The keys are the WIRE's,
+  // so a token carrying `__proto__` reaches here as an own property — the FLOOR
+  // read keys unconverted (`customKey: (key) => key`), so it arrives verbatim —
+  // and a plain assignment makes it this bag's PROTOTYPE instead of a member.
+  // `fromEntries` DEFINES each key, so the name is carried like any other.
+  //
+  // ⚠ THIS IS ONE OF TWO REBUILDS ON THIS PATH, and closing it alone is not
+  // enough: `wireToFloorClaims` rebuilds the same bag again to drop shadowing
+  // names. Both define their keys; a fix to either that skipped the other left the
+  // door broken while this function passed.
+  // pinned where the second rebuild lives:
+  // translate.test.ts#carries a `__proto__` wire key as an own key.
+  const custom: Dict = Object.fromEntries(
+    Object.entries(wire)
+      .filter(([key]) => !consumed.has(key))
+      .map(([key, value]) => [rules.customKey(key), value]),
+  );
 
   return { claims: omitUndefined(claims), custom };
 };
@@ -1719,11 +1743,21 @@ export const wireToFloorClaims = (
   // Only the RESOLVED set is filtered. A profile may require a claim under its
   // wire spelling (`introspection` requires `token_introspection`) or a claim the
   // floor does not resolve at all (`events`), and both must survive verbatim.
-  const filtered: Dict = {};
-  for (const [key, value] of Object.entries(custom)) {
-    if (floorShadows(key)) continue;
-    filtered[key] = value;
-  }
+  // ⛔ `Object.fromEntries`, for the same reason the bag was built with it: this is
+  // a SECOND rebuild over the same wire-controlled keys, and the floor read keys
+  // unconverted, so `__proto__` reaches here as an own property. An assignment
+  // makes it this bag's prototype, which DROPS the member.
+  //
+  // ⚠ WHAT THAT COSTS IS A FLOOR JUDGEMENT ON CLAIMS THE TOKEN DID NOT PRESENT.
+  // This bag is spread into `enforceVerifyFloor`'s payload
+  // (`internal/utils/verify-token.ts`), so a dropped claim is one a `forbidden`
+  // rule no longer sees and a `required` rule reports missing. It reaches no
+  // caller — the floor bag is consumed there and discarded — so the cost is the
+  // verdict, not a polluted result.
+  // pinned: translate.test.ts#carries a `__proto__` wire key as an own key.
+  const filtered: Dict = Object.fromEntries(
+    Object.entries(custom).filter(([key]) => !floorShadows(key)),
+  );
 
   return { claims, custom: filtered };
 };

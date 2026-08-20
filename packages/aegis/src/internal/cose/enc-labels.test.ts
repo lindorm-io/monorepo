@@ -1,6 +1,12 @@
+import type { KryptosEncryption } from "@lindorm/kryptos";
 import { describe, expect, test } from "vitest";
 import { AegisError } from "../../errors/index.js";
-import { coseLabelToEnc, encToCoseLabel, tagBytesForEncryption } from "./enc-labels.js";
+import {
+  coseLabelToEnc,
+  encToCoseLabel,
+  isOfficialCoseEnc,
+  tagBytesForEncryption,
+} from "./enc-labels.js";
 
 describe("enc-labels", () => {
   const pairs = [
@@ -42,6 +48,34 @@ describe("enc-labels", () => {
     expect(() => encToCoseLabel(undefined)).toThrow(AegisError);
     expect(() => encToCoseLabel(null)).toThrow(AegisError);
     expect(() => coseLabelToEnc(999)).toThrow(AegisError);
+  });
+
+  /**
+   * Every table here is a plain object, so a bare index resolves through
+   * `Object.prototype`: `"toString" in ENC_TO_COSE_OFFICIAL` is TRUE and
+   * `COSE_TO_ENC["toString"]` is a FUNCTION, which clears both the `??` chain and
+   * the `undefined` guard. Read through `own-entry.ts` instead.
+   *
+   * ⚠ The label direction is TOKEN-controlled: `CweKit.decrypt` reads it off a
+   * foreign protected header. That door is pinned in `CweKit.test.ts`; these rows
+   * pin the table itself, in both directions.
+   */
+  const PROTO_NAMES = ["constructor", "toString", "valueOf", "hasOwnProperty"];
+
+  test.each(PROTO_NAMES)("`%s` is not an official COSE encryption", (name) => {
+    expect(isOfficialCoseEnc(name as KryptosEncryption)).toBe(false);
+  });
+
+  test.each(PROTO_NAMES)("`%s` has no COSE label and is refused", (name) => {
+    expect(() => encToCoseLabel(name as KryptosEncryption)).toThrow(
+      expect.objectContaining({ code: "cose_encryption_not_supported" }),
+    );
+  });
+
+  test.each(PROTO_NAMES)("a `%s` LABEL resolves to no encryption", (name) => {
+    expect(() => coseLabelToEnc(name as never)).toThrow(
+      expect.objectContaining({ code: "cose_encryption_not_supported" }),
+    );
   });
 
   test("tag length follows the algorithm (GCM/CCM-128 = 16, CCM-64 = 8, CBC-HS = key size)", () => {

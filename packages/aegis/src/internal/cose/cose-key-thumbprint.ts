@@ -5,6 +5,7 @@ import { CoseError } from "../../errors/index.js";
 import { B64U } from "../constants/format.js";
 import { encodeCbor } from "./cbor.js";
 import { CRV_TO_COSE, KTY_TO_COSE } from "./cose-key.js";
+import { ownEntry } from "./own-entry.js";
 
 /**
  * COSE Key Thumbprint (RFC 9679) — the COSE analogue of the RFC 7638 JWK
@@ -26,7 +27,10 @@ const SHA: Readonly<Record<CoseThumbprintHash, (data: Buffer) => string>> = {
 const bstr = (value: unknown): Buffer => B64.toBuffer(String(value), B64U);
 
 const curveLabel = (jwk: Dict): number => {
-  const label = CRV_TO_COSE[jwk.crv as string];
+  // ⚠ `ownEntry`, never `CRV_TO_COSE[jwk.crv]`: the JWK is the caller's and a
+  // prototype member name would resolve to a function this then CBOR-encodes as
+  // a curve label. See own-entry.ts.
+  const label = ownEntry(CRV_TO_COSE, jwk.crv);
   if (label === undefined) {
     throw new CoseError(`Unsupported curve "${jwk.crv}" for COSE Key Thumbprint`, {
       code: "cose_key_unsupported",

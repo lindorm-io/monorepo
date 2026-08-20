@@ -21,6 +21,12 @@ export const rawVerifyJws = async <T extends TokenContent = Buffer>({
   options?: VerifyUnstructuredTokenOptions & { key?: AegisVerifyKey };
   deps: AegisDeps;
 }): Promise<VerifiedUnstructuredToken<T, string>> => {
+  // `key` is the aegis-only external-key injection (it resolves the kryptos);
+  // every other field IS the kit's VerifyUnstructuredTokenOptions and is
+  // forwarded structurally, so a new verify option threads through with no change
+  // here — the same shape `rawVerifyCws` uses.
+  const { key, ...verifyOptions } = options;
+
   const decode = JwsKit.decode(jws);
 
   // UNSCOPED by construction: a JWS is opaque — its payload is arbitrary bytes
@@ -29,12 +35,12 @@ export const rawVerifyJws = async <T extends TokenContent = Buffer>({
   const kryptos = await deps.resolveVerifyKey({
     id: decode.protectedHeader.kid,
     algorithm: decode.protectedHeader.alg as KryptosSigAlgorithm,
-    verify: options.key,
+    verify: key,
   });
 
   return new JwsKit({
     certBindingMode: deps.certBindingMode,
     kryptos,
     logger: deps.logger,
-  }).verify<T>(jws, { certBindingMode: options.certBindingMode });
+  }).verify<T>(jws, verifyOptions);
 };

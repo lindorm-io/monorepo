@@ -11,20 +11,20 @@ import type { VerifyGuaranteedClaims } from "../profile/policy.js";
 import type { TokenProfile } from "../profile/profile.js";
 
 /**
- * The unified domain result types (DESIGN §4) — the shape `verify`/`decrypt` NOW
- * return (the Phase 19 swap has shipped). They describe the domain surface's ONE
- * result shape, uniform across all six token formats: domain-keyed claims (never
- * wire names), a full-breadth domain header, and the logical read-side buckets
- * (`claims`/`custom`/`profile`/`sensitive`) that categorise flat wire claims by
- * registry category on read. The buckets have NO wire representation (D2) — they
- * exist only on the result.
+ * The unified domain result types — the shape `verify`/`decrypt` return. They
+ * describe the domain surface's ONE result shape, uniform across all six token
+ * formats: domain-keyed claims (never wire names), a full-breadth domain header,
+ * and the logical read-side buckets (`claims`/`custom`/`profile`/`sensitive`)
+ * that categorise flat wire claims by registry category on read. The buckets
+ * have NO wire representation — they exist only on the result.
  */
 
 /**
  * The token formats the domain surface discriminates on (`VerifiedToken.format`).
  * COSE splits its claims-bearing CWT into `cwt` (COSE_Sign1 / asymmetric) and
  * `cwm` (COSE_Mac0 / symmetric) — the read side reports which by the COSE
- * structure tag (Sign1=18 ⇒ cwt, Mac0=17 ⇒ cwm), mirroring the D6 write split.
+ * structure tag (Sign1=18 ⇒ cwt, Mac0=17 ⇒ cwm), mirroring the write split
+ * `selectCoseClaimsKit` makes off the resolved key's `algClass`.
  */
 export type TokenFormatTag = "jwt" | "jws" | "jwe" | "cwt" | "cwm" | "cws" | "cwe";
 

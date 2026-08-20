@@ -23,21 +23,21 @@ exports[`the protected-header gates, on a token that trips BOTH > 'cwt' answers 
 
 exports[`the protected-header gates, on a token that trips BOTH > 'jwe' answers a crit-hostile, alg-mismatched token 1`] = `
 {
-  "code": "jwe_unsupported_crit_param",
+  "code": "jwe_invalid_crit",
   "error": "JweError",
 }
 `;
 
 exports[`the protected-header gates, on a token that trips BOTH > 'jws' answers a crit-hostile, alg-mismatched token 1`] = `
 {
-  "code": "jws_unsupported_crit_param",
+  "code": "jws_invalid_crit",
   "error": "JwsError",
 }
 `;
 
 exports[`the protected-header gates, on a token that trips BOTH > 'jwt' answers a crit-hostile, alg-mismatched token 1`] = `
 {
-  "code": "jwt_unsupported_crit_param",
+  "code": "jwt_invalid_crit",
   "error": "JwtError",
 }
 `;

@@ -6,73 +6,71 @@ import type { InvalidEntry } from "../../types/index.js";
  * — the ONE place that rule is decided, for every registered claim and both
  * directions.
  *
- * ⚠⚠ "REGISTERED" IS THE WHOLE SCOPE, AND IT IS NARROWER THAN "EVERY CLAIM" — a
- * sentence here said the latter and it is measurably false. Only a
+ * ⛔⛔ THE RULE IS FILED FOR REMOVAL. Read this before relying on it or extending
+ * it. Nothing measured below justifies refusing a whole token over this name, and
+ * no replacement justification is offered here — inventing one is how a rule
+ * outlives its reason.
+ *
+ * ⭐ WHERE THE HAZARD ACTUALLY LIVED, and how it is closed — by MECHANISM, not by
+ * this refusal. `__proto__` is a legal JSON/CBOR member name that `JSON.parse`
+ * and the CBOR decoder both make an ordinary OWN property; what turns one into a
+ * prototype swap is a REBUILD that writes it with `obj[key] = value`. Two such
+ * rebuilds a claim value crosses now write with `Object.defineProperty` /
+ * `Object.fromEntries`:
+ *   - WRITE `internal/claims/prune-empty-claims.ts` — a swapped claims bag whose
+ *     inherited members the COSE codec read BY PROPERTY, so a SIGNED CWT could
+ *     carry an `aud` its issuer never stated.
+ *   - READ  `internal/claims/translate.ts` — the custom bag, TWICE: once as it is
+ *     built (the FLOOR mode keys unconverted, so the name arrives verbatim) and
+ *     again in `wireToFloorClaims`, which rebuilds it to drop shadowing names.
+ * The COSE claims DECODE is not one of them: aegis rebuilds nothing there, and
+ * the disposal lives entirely in `@lindorm/cbor`
+ * (`internal/utils/decode-cbor-map.ts` — see `internal/cose/cwt-claims.ts`).
+ * `@lindorm/utils`'s `omitFromObject` was never one either: it writes with
+ * `Object.defineProperty` (`omit-from-object.ts:32`, whose own line 26 reads
+ * *"⚠ NOT `result[key] = cleaned`"*), so it PRESERVES the key.
+ *
+ * ⚠⚠ MEASURED WITH THIS SCAN DISABLED, on PROPERTY reads — `JSON.stringify` and
+ * `Object.keys` render a swapped prototype as ABSENT, so a measurement taken with
+ * either reports a forged bag as clean:
+ *   `aegis.parse` (forged token, `events["urn:e"].__proto__`)
+ *     -> parses; own keys `["__proto__"]`; prototype UNCHANGED; `.pwn` undefined
+ *   `JwtKit.sign` / `CwtKit.sign` (the WIRE doors)
+ *     -> mint; `.pwn` undefined; nothing in the process polluted
+ * ⇒ With the refusal gone, the member is carried as an ordinary own key and
+ * forges nothing.
+ *
+ * ⛔⛔ AND IT BREAKS THE INVARIANT IT WAS MEANT TO SERVE: AEGIS MINTS A TOKEN ITS
+ * OWN READERS REFUSE. It runs where CLAIM TRANSLATION runs — the DOMAIN doors —
+ * and the WIRE doors take an already-wire dict verbatim and never reach it.
+ * Measured through the public doors, one shape (`cnf.jwk.__proto__`):
+ *   `aegis.sign(...)`      -> REFUSED `claim_structure_invalid`
+ *   `new JwtKit(...).sign` -> MINTED
+ *   `aegis.parse(<that token>)`  -> REFUSED `claim_structure_invalid`
+ *   `aegis.verify(<that token>)` -> REFUSED `claim_structure_invalid`
+ * ⇒ A public wire door emits a token this package's own keyless reader rejects —
+ * the exact failure "a token aegis mints is a token aegis verifies" names, caused
+ * by the refusal rather than prevented by it.
+ *
+ * ⚠ A TOP-LEVEL claim key named `__proto__` is refused by nothing at all: only the
+ * DOMAIN vocabulary doors case-convert it to `proto` (measured:
+ * `Aegis.toDomain` -> `custom.proto`, `Aegis.toWire` -> `proto`), and a wire door
+ * does no conversion.
+ *
+ * ⇒ WHAT IS LEFT IS A POLICY ABOUT A NAME, applied at some doors and not others,
+ * with the mechanism it was written for closed elsewhere. Whether aegis wants
+ * that policy — at the cost of refusing a token every other JOSE/COSE
+ * implementation accepts — is an owner's call, not this file's.
+ *
+ * ⚠ SCOPE, if it stays: "REGISTERED" is narrower than "every claim". Only a
  * `claimByDomain` / registry hit is routed through {@link encodeClaim} /
- * {@link decodeClaim}; an UNREGISTERED custom claim takes the else branch
- * (`wire[snakeCase(key)] = value` on write, `custom[camelCase(key)] = value` on
- * read) and is never scanned. Measured, both directions:
- *   `Aegis.toWire(JSON.parse('{"my_custom":{"__proto__":{"pwn":"yes"}}}'))`
- *     -> returned, `Object.hasOwn(out.my_custom, "__proto__") === true`, no refusal
- *   `aegis.parse(<forged>)` -> `custom.myCustom` with the same live own key
+ * {@link decodeClaim}; an UNREGISTERED custom claim takes the else branch and is
+ * never scanned. `custom` is a pass-through pipe — and so, now, is a registered
+ * claim, which is why the asymmetry between them no longer rests on anything.
  *
- * ⭐ THAT IS A DELIBERATE LINE, NOT AN OVERSIGHT, AND IT IS DRAWN WHERE THE HAZARD
- * IS CREATED. A registered claim's value is REBUILT by this package —
- * `wireToDomain` finishes with `omitUndefined(claims)` — so aegis is what turns the
- * own property into a prototype swap, and refusing is the only disposal that holds.
- * `custom` is never rebuilt (`omitUndefined` runs on `claims` alone, measured: the
- * own key survives and nothing is polluted), so aegis is a pass-through pipe there.
- * Refusing inside it would mean rejecting a whole token — its registered claims
- * included — over a member name inside an extension claim this package explicitly
- * declines to interpret, which contradicts the registry's own stance on `custom`
- * (carried, key-flipped, value untouched). ⚠ A consumer that rebuilds that bag
- * re-creates the swap, and the README says so rather than leaving it implied.
- *
- * ⚠ A TOP-LEVEL CLAIM KEY LITERALLY NAMED `__proto__` IS NOT THE HAZARD. Both
- * `camelCase` and `snakeCase` return `"proto"` for it, so it lands in `custom` as
- * an ordinary key (measured: `{"__proto__":{…}}` -> `custom.proto`). The hazard is
- * the name appearing INSIDE a claim's value.
- *
- * ⚠⚠ THE HAZARD IS NOT A STRUCTURE'S, IT IS THE CLAIM BAG'S, and that is why
- * this is not a rule inside the structure walker. `__proto__` is a legal JSON
- * member name and `JSON.parse` makes it an ordinary own data property, so a token
- * can carry one; what turns it into a prototype swap is a REBUILD. The read side
- * performs exactly that rebuild on every claim it resolves —
- * `internal/claims/translate.ts`'s `wireToDomain` finishes with
- * `omitUndefined(claims)`, and `@lindorm/utils`'s `omitFromObject` recurses with
- * `result[key] = cleaned` (`packages/utils/src/internal/omit-from-object.ts:26`),
- * which re-invokes the setter. A consumer's natural read then returns
- * attacker-supplied data that `Object.keys` and `JSON.stringify` both render as
- * absent, and no duplicate-key defence can see it because no own key survives to
- * be claimed twice.
- *
- * ⚠⚠ MEASURED ON THIS TREE, through `aegis.parse` on HAND-FORGED tokens — the
- * unauthenticated door, because reading a payload needs no key. It was NOT one
- * claim's hole and it was not a structured claim's hole:
- *   - `events` (a `bespoke` passthrough): keys `["urn:e"]`, stringify
- *     `{"urn:e":{}}`, `claims.events.pollutedParse` -> `"yes"`. On BOTH wires, and
- *     again one level deeper inside an event payload.
- *   - `sub_id` and `authorization_details` — ALREADY on the declared member set —
- *     through their `open: "verbatim"` tails, whose nested values the walker
- *     carries but never descends: `{"format":"opaque","tail":{}}` with
- *     `subjectId.tail.pwn` -> `"yes"`.
- *   - `cnf.jwk`, carried verbatim by the confirmation decoder.
- *   - `email_verified` — a `bool` claim, no structure anywhere near it: `{}` with
- *     `.pwn` -> `"yes"`.
- * ⇒ The disposal cannot be keyed on a codec, a member set or an `open` column,
- * because the rebuild does not ask about any of them. It is asked ONCE, of the
- * whole claim value, at the claim boundary.
- *
- * ⚠ THE WRITE SIDE IS SCANNED TOO, and not for symmetry's sake. `Aegis.toWire`
- * hands the caller a dict in which `__proto__` is still a live own data property
- * (measured: `{"urn:e":{"__proto__":{"pwn":"yes"}}}`), and the first thing that
- * rebuilds it re-creates the swap. A mint does not reach the wire with one — the
- * same `omitFromObject` eats it during normalisation — so refusing on write costs
- * a conformant caller nothing and closes the vocabulary door.
- *
- * ⚠ THE ROOT CAUSE IN `@lindorm/utils` IS NOT FIXED HERE. It is a shared
- * low-level utility with its own blast radius, and it is reported rather than
- * changed from inside this package.
+ * ⚠ IF IT STAYS, IT MUST BE ASKED ONCE, of the whole claim value, at the claim
+ * boundary: no codec, member set or `open` column predicts where the name
+ * appears, so the disposal cannot be keyed on any of them.
  *
  * ⚠ IT RETURNS VIOLATIONS RATHER THAN THROWING. The claim boundary owns the
  * refusal, so this list joins whatever else is wrong with the same claim instead

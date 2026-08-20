@@ -1,3 +1,4 @@
+import type { Dict } from "@lindorm/types";
 import { JweError } from "../../errors/index.js";
 import type { WireTokenHeader } from "../../types/index.js";
 import { decodeJoseHeader } from "./jose-header.js";
@@ -13,6 +14,8 @@ import { decodeJoseHeader } from "./jose-header.js";
  */
 export type JweCompactSegments = {
   header: WireTokenHeader;
+  /** The protected header's params no registry row answers for, verbatim. */
+  unknown: Dict;
   publicEncryptionKey: string | undefined;
   initialisationVector: string;
   content: string;
@@ -29,8 +32,11 @@ export const splitJweCompact = (jwe: string): JweCompactSegments => {
   if (parts.length === 5) {
     const [header, publicEncryptionKey, initialisationVector, content, authTag] = parts;
 
+    const decoded = decodeJoseHeader(header);
+
     return {
-      header: decodeJoseHeader(header),
+      header: decoded.header,
+      unknown: decoded.unknown,
       publicEncryptionKey: publicEncryptionKey?.length ? publicEncryptionKey : undefined,
       initialisationVector,
       content,

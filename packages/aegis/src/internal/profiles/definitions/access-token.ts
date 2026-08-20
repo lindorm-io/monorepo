@@ -3,7 +3,7 @@ import { AUD_SINGLE_RESOURCE, ISSUER_IS_URI } from "./rule-predicates.js";
 
 /**
  * Access token — `at+jwt` (RFC 9068 §2.2). Server-signed. Never encryptable.
- * `aud` resolves to exactly one resource URI (ADR-0014). REQUIRED: iss, exp,
+ * `aud` resolves to exactly one resource URI (`AUD_SINGLE_RESOURCE`). REQUIRED: iss, exp,
  * aud, sub, client_id, iat, jti.
  *
  * `algClass: "asymmetric"` is a DELIBERATE deviation: RFC 9068 §2.1 only

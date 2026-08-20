@@ -1,8 +1,8 @@
 import type { AegisClaimsWire } from "./aegis-claims-wire.js";
 
 /**
- * The OPEN, wire-typed CWT claim set — the COSE twin of {@link JwtClaimsWire}
- * (R13a). DERIVED from {@link AegisClaimsWire} by the ONE registry-grounded
+ * The OPEN, wire-typed CWT claim set — the COSE twin of {@link JwtClaimsWire}.
+ * DERIVED from {@link AegisClaimsWire} by the ONE registry-grounded
  * JOSE↔COSE NAME divergence: RFC 8392 registers `cti` (CWT ID) where JOSE uses
  * `jti`. So this is the wire base with `jti` renamed to `cti` — same names as
  * JOSE everywhere they match (`iss`/`sub`/`aud`/`exp`/`nbf`/`iat`), `cti` only

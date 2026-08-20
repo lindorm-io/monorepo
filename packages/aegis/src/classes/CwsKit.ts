@@ -28,7 +28,7 @@ import type {
   CertificateBindingMode,
   CwsKitSettings,
   DecodedUnstructuredToken,
-  SignUnstructuredTokenOptions,
+  CoseSignUnstructuredTokenOptions,
   TokenContent,
   VerifiedUnstructuredToken,
   VerifyUnstructuredTokenOptions,
@@ -82,9 +82,8 @@ export class CwsKit implements ICwsKit {
     // `splitSigned` — symmetric with `verify`, which strips them too (aegis wraps
     // every signed COSE token in the CWT tag). A bare, un-enveloped token passes
     // through unchanged.
-    const { protectedHeader, unprotectedHeader, payload, signature } = splitSigned(
-      token,
-      {
+    const { protectedHeader, unprotectedHeader, unknown, payload, signature } =
+      splitSigned(token, {
         arity: { exactly: 4 },
         tags: [COSE_TAG.sign1, COSE_TAG.mac0],
         error: CwsError,
@@ -92,8 +91,7 @@ export class CwsKit implements ICwsKit {
         title: "Malformed COSE Structure",
         details:
           "A COSE_Sign1/COSE_Mac0 must be a 4-element array [protected, unprotected, payload, signature/tag].",
-      },
-    );
+      });
 
     // A DETACHED (nil) payload is legal COSE, but this kit carries no out-of-band
     // content, so there is nothing for it to decode — refused with the structural
@@ -122,6 +120,7 @@ export class CwsKit implements ICwsKit {
     return {
       protectedHeader,
       unprotectedHeader,
+      unknown,
       // Reconstruct by the PROTECTED cty alone: a content type the signature does
       // not cover cannot be allowed to decide how the payload is parsed.
       payload: reconstructContent<T>(content, protectedHeader.cty),
@@ -144,8 +143,8 @@ export class CwsKit implements ICwsKit {
    * RAW `r‖s`, Mac0 HMACs, which has no encoding to choose). Everything around
    * those three is one path.
    */
-  sign(content: TokenContent, options: SignUnstructuredTokenOptions = {}): Buffer {
-    // Interop gate (D5): a non-proprietary sign refuses an algorithm with no
+  sign(content: TokenContent, options: CoseSignUnstructuredTokenOptions = {}): Buffer {
+    // Interop gate: a non-proprietary sign refuses an algorithm with no
     // OFFICIAL COSE-RFC registration so the token stays interoperable. Runs
     // before the Sign1/Mac0 split — it applies to both. Every current kryptos
     // signing algorithm is official (ML-DSA joined via RFC 9964), so this guards
@@ -208,7 +207,7 @@ export class CwsKit implements ICwsKit {
     token: Buffer,
     options: VerifyUnstructuredTokenOptions = {},
   ): VerifiedUnstructuredToken<T, Buffer> {
-    // R2: the kit takes the ENCODED bytes and decodes internally (parallel to the
+    // The kit takes the ENCODED bytes and decodes internally (parallel to the
     // JOSE kits + to `sign` returning bytes).
     this.logger.debug("Verifying COSE structure", { options });
 
@@ -217,10 +216,11 @@ export class CwsKit implements ICwsKit {
     // COSE read — byte-identical to the claims path's before it was extracted,
     // down to the `if (!valid) throw` block. The kit's own work is what follows:
     // reconstructing the OPAQUE content by its cty.
-    const { protectedHeader, unprotectedHeader, protectedMap, content } =
+    const { protectedHeader, unprotectedHeader, unknown, protectedMap, content } =
       verifyCoseStructure({
         kryptos: this.kryptos,
         token,
+        declared: options.crit,
         format: "cws",
         payloadDetail: "there is no content to verify",
       });
@@ -250,6 +250,7 @@ export class CwsKit implements ICwsKit {
     return {
       protectedHeader,
       unprotectedHeader,
+      unknown,
       payload: reconstructContent<T>(content, protectedHeader.cty),
       token,
     };
@@ -261,8 +262,8 @@ export class CwsKit implements ICwsKit {
    * Build the COSE_Sign1/Mac0 protected + unprotected header maps. `alg` is
    * derived onto the protected map and `kid` onto the unprotected map (COSE
    * convention: kid is an advisory routing hint read to resolve the verification
-   * key before the signature is checked); the caller's `header`/`unprotected`
-   * bags are then translated and merged under the reserved-param / crit / no-dup
+   * key before the signature is checked); the caller's `header` and `custom` bags
+   * are then translated and merged under the reserved-param / crit / no-dup
    * rules. Scalar `typ` is sugar for the media-type PREFIX, never the whole typ.
    * `contentType` is the codec-inferred cty (label 3) default — a caller
    * `header.cty` wins as the WIRE label.
@@ -275,7 +276,7 @@ export class CwsKit implements ICwsKit {
   private buildHeaders(
     contentType: string,
     header: Partial<WireTokenHeader>,
-    options: SignUnstructuredTokenOptions,
+    options: CoseSignUnstructuredTokenOptions,
   ): {
     protectedHeader: Buffer;
     unprotected: Map<CoseLabel, unknown>;
@@ -295,7 +296,7 @@ export class CwsKit implements ICwsKit {
     const { protectedEntries, unprotectedEntries } = buildCoseHeaders({
       reserved: KIT_CAPABILITIES.cws.reserved,
       header,
-      unprotected: options.unprotected,
+      custom: options.custom,
       cert: resolveCertBinding(
         this.kryptos,
         options.bindCertificate,

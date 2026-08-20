@@ -26,51 +26,95 @@ export type KitOwnedHeaderParam =
   | "x5t#S256";
 
 /**
- * The caller-settable PROTECTED wire header bag — the JOSE-named partial header
+ * The caller-settable REGISTERED wire header bag — the JOSE-named partial header
  * ({@link WireTokenHeader}) minus the kit-owned params. For JOSE it is translated
  * to the single protected header; for COSE it is translated to the protected CBOR
- * map (JOSE names → integer labels). `oid` rides here (ruling 3). Supplying a
+ * map (JOSE names → integer labels). `oid` rides here. Supplying a
  * COSE-label-less param on a COSE kit throws at runtime.
+ *
+ * ⚠ It is CLOSED, and that is what keeps a typo a compile error: `x5t#s256` is
+ * not a member, so it fails the build rather than riding the wire as an
+ * unregistered parameter. An unregistered parameter is expressible — under its
+ * own option key, `custom` ({@link JoseWireTokenEnvelope} /
+ * {@link CoseWireTokenEnvelope}) — so widening this bag buys nothing and costs
+ * the typo check.
+ *
+ * PLACEMENT is the registry's, never the caller's: every param here whose
+ * `placement` cell reads `"protected"` travels protected on COSE, and the two
+ * cells reading `"either"` (`iv`, `kid`) are kit-owned, so nothing in this bag
+ * has a bucket left for a caller to choose (`internal/header/header-registry.ts`,
+ * `internal/header/is-protected-only.ts`).
  */
 export type WireProtectedHeader = Omit<Partial<WireTokenHeader>, KitOwnedHeaderParam>;
 
 /**
- * The caller-settable UNPROTECTED wire header bag (COSE only — JOSE has no
- * unprotected header): like {@link WireProtectedHeader} but ALSO without `crit`,
- * because RFC 9052 §3.1 requires critical params to be integrity-protected.
- */
-export type WireUnprotectedHeader = Omit<WireProtectedHeader, "crit">;
-
-/**
- * The shared sign/encrypt WIRE envelope every kit option intersects (was
- * `TokenSignEnvelope`, misfiled in domain-header.ts). Pure wire, kind-agnostic,
- * format-parallel: the protected/unprotected header bags, the `tokenType` PREFIX
- * (the kit computes `application/<tokenType>+<fmt>`, so it is omitted from the
- * bags themselves), the cert-binding knobs, and the COSE interop gate. The DOMAIN
- * tier retypes `tokenType` to the {@link TokenType} enum and translates it to a
- * prefix; JOSE kits ignore `unprotected`/`proprietary`.
+ * The shared sign/encrypt WIRE envelope both wire families intersect: the
+ * REGISTERED header bag, the `tokenType` PREFIX (the kit computes
+ * `application/<tokenType>+<fmt>`, so it is omitted from the bag itself) and the
+ * cert-binding knob. The DOMAIN tier retypes `tokenType` to the {@link TokenType}
+ * enum and translates it to a prefix.
+ *
+ * The per-wire members live on {@link JoseWireTokenEnvelope} and
+ * {@link CoseWireTokenEnvelope}; a JOSE kit therefore cannot be handed a COSE-only
+ * option at all, which is a compile error rather than an option a kit accepts and
+ * ignores.
  */
 export type WireTokenEnvelope = {
-  /** Caller-controlled PROTECTED (integrity-protected) wire header params. */
+  /** Caller-controlled REGISTERED (integrity-protected) wire header params. */
   header?: WireProtectedHeader;
-  /**
-   * Caller-controlled UNPROTECTED wire header params (COSE only; JOSE kits ignore
-   * it). `crit` is Omit'd — critical params must be integrity-protected.
-   */
-  unprotected?: WireUnprotectedHeader;
   /**
    * The bare TYPE PREFIX. The kit builds the full media type from it (it knows its
    * format): `"at"` → `application/at+jwt` (JOSE) / `application/at+cwt` (COSE). An
    * absent/empty prefix floors to the bare conventional form. Omitted from the
-   * header bags (the kit computes `typ`); the DOMAIN tokenType→prefix mapping is
+   * header bag (the kit computes `typ`); the DOMAIN tokenType→prefix mapping is
    * Aegis-side.
    */
   tokenType?: string;
   bindCertificate?: BindCertificateMode;
+};
+
+/**
+ * The JOSE sign/encrypt envelope — {@link WireTokenEnvelope} plus the custom bag.
+ *
+ * Compact JWS/JWE serialisation carries ONE header and it is integrity-protected
+ * (`KIT_CAPABILITIES.<jose kit>.unprotectedBucket: false`), so there is one custom
+ * bucket and no `custom.unprotected` to write.
+ */
+export type JoseWireTokenEnvelope = WireTokenEnvelope & {
+  /**
+   * UNREGISTERED header params, carried VERBATIM under their own keys. A key the
+   * header registry answers for is REFUSED here (`header_registered_in_custom`) —
+   * it belongs in `header`, where its codec and placement apply — and a kit-owned
+   * param is refused with `header_kit_owned_in_custom`.
+   */
+  custom?: {
+    protected?: Record<string, unknown>;
+  };
+};
+
+/**
+ * The COSE sign/encrypt envelope — {@link WireTokenEnvelope} plus the custom bags
+ * and the interop gate.
+ */
+export type CoseWireTokenEnvelope = WireTokenEnvelope & {
+  /**
+   * UNREGISTERED header params, carried VERBATIM under their own tstr label
+   * (RFC 9052 §1.4 `label = int / tstr`). Refused for a registered or kit-owned
+   * name exactly as on {@link JoseWireTokenEnvelope}.
+   *
+   * PLACEMENT is the caller's here, and only here: an unregistered param has no
+   * registry row, so no `placement` cell can decide its bucket. A param named in
+   * `crit` must sit in `protected` — RFC 9052 §3.1 requires critical params to be
+   * integrity-protected, and `unprotected` is covered by nothing.
+   */
+  custom?: {
+    protected?: Record<string, unknown>;
+    unprotected?: Record<string, unknown>;
+  };
   /**
    * Allow a lindorm-proprietary (private-use) COSE algorithm/encryption label
-   * (default `false`, the D5 interop gate) AND emit private-use compact claim
-   * labels. COSE only — JOSE kits ignore it.
+   * (default `false`, the interop gate) AND emit private-use compact claim
+   * labels. COSE only.
    */
   proprietary?: boolean;
 };

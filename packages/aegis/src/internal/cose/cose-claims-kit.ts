@@ -8,9 +8,8 @@ import { coseStructureTag } from "./cose-structure-tag.js";
 import { COSE_TAG } from "./structures.js";
 
 /**
- * The COSE integrity split (Bit 9), dispatched off the RESOLVED key's `algClass`
- * — the dispatch the dropped `CoseKit` façade used to own, now called directly
- * by the COSE verb utils. An asymmetric key mints/verifies via `CwtKit`
+ * The COSE integrity split, dispatched off the RESOLVED key's `algClass` and
+ * called directly by the COSE verb utils. An asymmetric key mints/verifies via `CwtKit`
  * (COSE_Sign1), a symmetric `oct` key via `CwmKit` (COSE_Mac0). Each kit
  * re-asserts its own class, so a mis-dispatch throws rather than mis-securing.
  *

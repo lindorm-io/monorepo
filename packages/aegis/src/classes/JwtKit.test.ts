@@ -165,7 +165,7 @@ describe("JwtKit", () => {
       expect(header).not.toHaveProperty("oid");
     });
 
-    test("serializes an already-wire claim dict VERBATIM (R18 — no name/case mapping)", () => {
+    test("serializes an already-wire claim dict VERBATIM (no name/case mapping)", () => {
       // A pre-cased mixed dict is signed exactly as given — the kit makes no
       // name or case decision.
       const token = kit.sign({
@@ -314,6 +314,7 @@ describe("JwtKit", () => {
 
       expect(kit.verify(token)).toEqual({
         unprotectedHeader: {},
+        unknown: { protected: {}, unprotected: {} },
         protectedHeader: {
           alg: "ES512",
           jku: "https://test.lindorm.io/.well-known/jwks.json",
@@ -385,7 +386,7 @@ describe("JwtKit", () => {
     });
   });
 
-  describe("temporal-in-kit (R10)", () => {
+  describe("temporal-in-kit", () => {
     // The wire kit is a standalone verifier: it range-checks exp/nbf/iat against
     // "now" with clock tolerance, validated IF PRESENT.
     test("rejects an expired token (exp in the past)", () => {
@@ -550,6 +551,7 @@ describe("JwtKit", () => {
 
       expect(JwtKit.decode(token)).toEqual({
         unprotectedHeader: {},
+        unknown: { protected: {}, unprotected: {} },
         protectedHeader: {
           alg: "ES512",
           jku: "https://test.lindorm.io/.well-known/jwks.json",
@@ -734,7 +736,7 @@ describe("JwtKit", () => {
   });
 
   describe("critical header parameter rejection", () => {
-    test("should reject RFC-valid token with an extension critical parameter aegis does not implement", () => {
+    test("should reject a token whose crit names a specification-defined parameter", () => {
       const token = signDefault(kit, issuer, {
         expires: "1h",
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
@@ -747,8 +749,7 @@ describe("JwtKit", () => {
       const decoded = JwtKit.decode(token);
       const headerWithCrit = {
         ...decoded.protectedHeader,
-        crit: ["lindorm_ext"],
-        lindorm_ext: "some-value",
+        crit: ["typ"],
       };
 
       const parts = token.split(".");
@@ -758,7 +759,7 @@ describe("JwtKit", () => {
       const modifiedToken = [modifiedHeader, parts[1], parts[2]].join(".");
 
       expect(() => kit.verify(modifiedToken)).toThrow(
-        "Unsupported critical header parameter: lindorm_ext",
+        /crit must not contain the specification-defined header parameter "typ"/,
       );
     });
 
@@ -781,7 +782,7 @@ describe("JwtKit", () => {
       expect(() => kit.verify(modifiedToken)).toThrow(/not present/);
     });
 
-    test("should reject crit containing an IANA-registered parameter name", () => {
+    test("should reject crit containing a specification-defined parameter name", () => {
       const token = signDefault(kit, issuer, {
         expires: "1h",
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
@@ -797,7 +798,7 @@ describe("JwtKit", () => {
         .replace(/=/g, "");
       const modifiedToken = [modifiedHeader, parts[1], parts[2]].join(".");
 
-      expect(() => kit.verify(modifiedToken)).toThrow(/IANA-registered/);
+      expect(() => kit.verify(modifiedToken)).toThrow(/specification-defined/);
     });
 
     test("should reject crit that is an empty array", () => {
@@ -963,8 +964,6 @@ describe("JwtKit", () => {
     });
   });
 
-  // R10 temporal overrides — the mocked "now" is 2024-01-01T08:00:00Z (unix
-  // 1704096000). `currentDate` replaces that instant; `maxTokenAge` bounds `iat`.
   // The JOSE twin of the CwsKit COSE-label assertion (CwsKit.test.ts): ML-DSA
   // (post-quantum, AKP) is IANA-registered for JOSE by RFC 9964, where the JWS
   // `alg` is the EXACT string "ML-DSA-44"/"ML-DSA-65"/"ML-DSA-87" (the analogue
@@ -997,7 +996,9 @@ describe("JwtKit", () => {
     );
   });
 
-  describe("temporal overrides (R10 — currentDate / maxTokenAge)", () => {
+  // The mocked "now" is 2024-01-01T08:00:00Z (unix 1704096000). `currentDate`
+  // replaces that instant; `maxTokenAge` bounds `iat`.
+  describe("temporal overrides (currentDate / maxTokenAge)", () => {
     test("currentDate overrides now: a token expired vs the real clock verifies against a past currentDate", () => {
       // exp at 07:00 — one hour BEFORE the mocked 08:00 now, so it is expired.
       const token = kit.sign({ iss: issuer, exp: 1704092400 });

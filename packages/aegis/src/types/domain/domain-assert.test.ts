@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import type { DomainAssert, DomainClaimMatchers } from "./domain-assert.js";
 
-describe("DomainClaimMatchers / DomainAssert (type witness — 25 → 8 audit)", () => {
+describe("DomainClaimMatchers / DomainAssert (type witness)", () => {
   test("the eight kept matchers accept string / array / operator forms", () => {
     const matchers: DomainClaimMatchers = {
       audience: "https://rs.lindorm.io/", // single identity, contains-self

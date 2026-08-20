@@ -11,7 +11,10 @@ import { normaliseClaims } from "../utils/normalise-claims.js";
 import { buildMediaType } from "../utils/compute-typ-header.js";
 import { resolveCertBinding } from "../utils/resolve-cert-binding.js";
 import { COSE_THUMBPRINT_SHA1 } from "./cose-thumbprint-sha1.js";
-import type { SignStructuredTokenOptions, WireTokenHeader } from "../../types/index.js";
+import type {
+  CoseSignStructuredTokenOptions,
+  WireTokenHeader,
+} from "../../types/index.js";
 import { algToCoseLabel } from "./alg-labels.js";
 import { assertCoseRegistered } from "./assert-cose-registered.js";
 import { Tag, encodeCbor } from "./cbor.js";
@@ -22,7 +25,7 @@ import { ERROR_BY_FORMAT } from "./error-by-format.js";
 import { COSE_TAG, buildSecuredStructure } from "./structures.js";
 
 /**
- * TRANSFORM-FREE sign (R18): serialize the already-wire, COSE-name-keyed `claims`
+ * TRANSFORM-FREE sign: serialize the already-wire, COSE-name-keyed `claims`
  * dict into a CWT claims map, secure it with a COSE structure (Sign1/Mac0 chosen
  * by the key's `algClass`), and wrap the result in the CWT tag (61). Injects NO
  * envelope claims, derives no hash, maps no name or case — the Aegis-side
@@ -41,7 +44,7 @@ export const signCwt = (
   logger: ILogger,
   format: CwtFormat,
   claims: Dict,
-  options: SignStructuredTokenOptions,
+  options: CoseSignStructuredTokenOptions,
 ): Buffer => {
   logger.debug("Minting CWT", { options });
 
@@ -50,13 +53,13 @@ export const signCwt = (
   // which is what keeps the two claims wires from drifting apart.
   //
   // The single `proprietary` flag threads to BOTH the claim codec and the alg
-  // gate below, which agree on the omitted default (D5): interoperable. The codec
+  // gate below, which agree on the omitted default: interoperable. The codec
   // emits private-use claims under their JOSE string key (`?? false`), and the
   // alg gate is strict (an omitted flag is falsy, so a private-use alg is
   // refused) — an on-platform token sets `proprietary: true` for both.
   const claimsBstr = encodeCwtMessage(normaliseClaims(claims), options.proprietary);
 
-  // Interop gate (D5): a non-proprietary sign refuses an algorithm with no
+  // Interop gate: a non-proprietary sign refuses an algorithm with no
   // OFFICIAL COSE-RFC registration so the token stays interoperable. Runs before
   // the Sign1/Mac0 split — it applies to both. Every current kryptos signing
   // algorithm is official (ML-DSA joined via RFC 9964), so this guards only a
@@ -87,7 +90,7 @@ export const signCwt = (
   const { protectedEntries, unprotectedEntries } = buildCoseHeaders({
     reserved: KIT_CAPABILITIES[format].reserved,
     header: options.header as Partial<WireTokenHeader> | undefined,
-    unprotected: options.unprotected,
+    custom: options.custom,
     cert: resolveCertBinding(kryptos, options.bindCertificate, COSE_THUMBPRINT_SHA1),
     proprietary: options.proprietary,
     format,

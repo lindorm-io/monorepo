@@ -123,7 +123,7 @@ describe("CwmKit (COSE_Mac0, symmetric)", () => {
     expect(() => kit.verify(token, undefined, { tokenType: "at" })).not.toThrow();
   });
 
-  describe("temporal-in-kit (R10)", () => {
+  describe("temporal-in-kit", () => {
     test("rejects an expired token (exp in the past)", () => {
       const token = kit.sign({ ...wire, exp: 1704092400 }); // 06:00, now is 08:00
       expect(() => kit.verify(token)).toThrow(/Invalid token/);

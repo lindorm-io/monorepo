@@ -39,21 +39,21 @@ describe("readSection", () => {
     );
   });
 
-  // G1 — the corpus has no directory for the document at all.
+  // The corpus has no directory for the document at all.
   test("should refuse a document the corpus does not carry", () => {
     expect(() => readSection(toCitation("rfc9999", "1"))).toThrow(
       expect.objectContaining({ code: "document_unknown" }),
     );
   });
 
-  // G2 — the document is present, the cited section is not.
+  // The document is present, the cited section is not.
   test("should refuse a section the corpus does not carry", () => {
     expect(() => readSection(toCitation("rfc7519", "99.9"))).toThrow(
       expect.objectContaining({ code: "section_missing" }),
     );
   });
 
-  // G9 — a url that is not the one the citation derives means the link and the
+  // A url that is not the one the citation derives means the link and the
   // section number have drifted apart.
   test("should refuse a url the citation does not derive", () => {
     const citation = {
@@ -66,7 +66,7 @@ describe("readSection", () => {
     );
   });
 
-  // G4 on the READ side: a committed extract truncated after it was fetched must
+  // On the READ side: a committed extract truncated after it was fetched must
   // not pass just because the file exists.
   test("should refuse a truncated extract on read", () => {
     expect(() => readSection(toCitation("rfc7519", "4.1.3"), truncatedCorpus())).toThrow(

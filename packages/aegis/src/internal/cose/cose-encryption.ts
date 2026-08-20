@@ -12,9 +12,9 @@ import { COSE_TAG } from "./structures.js";
 import { coseStructure } from "./unwrap-cose.js";
 
 /**
- * The COSE_Encrypt0 operations the dropped `CoseKit` façade owned — the COSE
- * analogue of `JweKit`, now standalone functions the Aegis COSE path and the
- * `mintCoseToken` sign-then-encrypt composition call directly.
+ * The COSE_Encrypt0 operations — the COSE analogue of `JweKit`, as standalone
+ * functions. `COSE_TOKEN_WIRE.encryptContent`
+ * (`internal/wire/cose-token-wire.ts`) is the sign-then-encrypt caller.
  */
 
 /**
@@ -64,18 +64,23 @@ export const encryptCose = ({
  */
 export const decryptCose = <T extends TokenContent = Buffer>({
   certBindingMode,
+  crit,
   kryptos,
   logger,
   token,
 }: {
   certBindingMode?: CertificateBindingMode;
+  /** The caller's `crit` declaration, handed to the kit's crit gate. */
+  crit?: Array<string>;
   kryptos: IKryptos;
   logger: ILogger;
   token: Buffer;
 }): T => {
-  // R2: `CweKit.decrypt` takes the ENCODED bytes and strips the outer CWT tag (61)
+  // `CweKit.decrypt` takes the ENCODED bytes and strips the outer CWT tag (61)
   // itself; hand it the token verbatim.
-  const { payload } = new CweKit({ certBindingMode, kryptos, logger }).decrypt<T>(token);
+  const { payload } = new CweKit({ certBindingMode, kryptos, logger }).decrypt<T>(token, {
+    crit,
+  });
   return payload;
 };
 
@@ -86,9 +91,18 @@ export const isEncryptedCose = (token: Buffer): boolean =>
 /** Read the COSE_Encrypt0 kid (unprotected, label 4) WITHOUT decrypting. */
 export const decodeEncryptedCoseKid = (token: Buffer): string | undefined => {
   const cose = coseStructure(decodeCbor(token));
-  const unprotected = Array.isArray(cose?.contents)
-    ? (cose.contents[1] as Map<number, unknown>)
-    : undefined;
-  const kid = unprotected?.get(coseByJose("kid"));
+  // ⚠ THE SLOT IS TYPE-CHECKED, NOT CAST. This runs BEFORE the recipient key is
+  // resolved (`internal/wire/cose-token-wire.ts` and
+  // `internal/utils/raw-decrypt-cwe.ts` both call it to CHOOSE that key), so the
+  // bucket is a stranger's bytes. RFC 9052 §3 types it as a `header_map`, but a
+  // producer may write anything and `preferMap: false` hands a wholly text-keyed
+  // map back as a plain object — the cast let `.get` be called on both, throwing a
+  // raw `TypeError` out of an unauthenticated read.
+  const unprotected = Array.isArray(cose?.contents) ? cose.contents[1] : undefined;
+  // A bucket this reader cannot index states no kid, which is the same answer a
+  // conformant bucket without one gives. The MALFORMEDNESS verdict is not this
+  // function's to give — `CweKit.decrypt` reads the whole structure and refuses it
+  // in its own words.
+  const kid = unprotected instanceof Map ? unprotected.get(coseByJose("kid")) : undefined;
   return kid instanceof Uint8Array ? Buffer.from(kid).toString("utf8") : undefined;
 };

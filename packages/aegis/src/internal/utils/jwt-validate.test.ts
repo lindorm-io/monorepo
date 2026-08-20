@@ -158,6 +158,37 @@ describe("createJwtValidate / createIdentityMatchers parity", () => {
     expect(createJwtValidate(matchers as never)).toMatchSnapshot();
   });
 
+  /**
+   * ⛔ A CALLER-CHOSEN KEY IS DEFINED, NEVER ASSIGNED. `Aegis.assert` /
+   * `Aegis.matches` match a flat dict the caller already holds, so the matcher
+   * KEYS are the caller's own, and `__proto__` is an ordinary claim name in a
+   * dict built from parsed JSON. `liftClaimMatcher` answers `{ $eq }` for it like
+   * any other string, so a plain `predicate[key] = operator` hits
+   * `Object.prototype`'s setter: the prototype is swapped, no own key is created,
+   * and the caller's assertion is silently DROPPED — the strictest possible
+   * failure direction for an assertion API.
+   *
+   * ⚠ Asserted on the PROPERTY, never through `JSON.stringify`: a swapped
+   * prototype renders as an absent key either way, so a stringified comparison
+   * reads the broken build as clean.
+   */
+  test("a __proto__ assertion is CARRIED as an own property, not applied to the prototype", () => {
+    // ⚠ Built by `JSON.parse`, not as a literal: an object literal's `__proto__`
+    // key is the prototype SETTER (ECMA-262 B.3.1), so a literal input would
+    // reach this function carrying no own key at all and the row would pass over
+    // an empty bag. This is also the realistic arrival path — a caller matching a
+    // parsed introspection response.
+    const assert = JSON.parse(String.raw`{"__proto__":"forged"}`) as never;
+
+    const predicate = createJwtValidate(assert);
+
+    expect(Object.hasOwn(predicate, "__proto__")).toBe(true);
+    expect(Object.keys(predicate)).toEqual(["__proto__"]);
+    expect(Object.getOwnPropertyDescriptor(predicate, "__proto__")?.value).toEqual({
+      $eq: "forged",
+    });
+  });
+
   // The hash-derive matchers are VERIFY-only, so the halves are asymmetric by
   // design: verify DERIVES the digest from a raw source, assert matches a
   // digest the caller already holds. What must still agree is the VALUE — the

@@ -83,7 +83,7 @@ import type { CoseLabel } from "../cose/cose-label.js";
  * value in the COSE unprotected bucket does not satisfy the list, which is why the
  * refusal says "in the protected header" rather than "in the message". A caller
  * PLACING one there hears the accurate `cose_crit_param_unprotected` first
- * (`build-cose-headers.ts`, rule 2); what reaches here is the kit's own unprotected
+ * (`build-cose-headers.ts`, rule 1b); what reaches here is the kit's own unprotected
  * parameters (`kid`, `iv`), which no JOSE header has a second bucket for.
  */
 export const assertCritSatisfied = ({

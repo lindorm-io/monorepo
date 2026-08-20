@@ -35,8 +35,9 @@ import type { ShaAlgorithm } from "@lindorm/types";
  * method to compute it with. It stays dropped rather than approximated.
  *
  * ⚠ SHA-1 is here for the READ direction only. RFC 9054 §3.1 marks it
- * "Filter Only" — *"there are still times where SHA-1 needs to be supported […]
- * the SHA-1 value is used as a filter"* — and aegis never writes one on this wire.
+ * "Filter Only" — *"there are still times where SHA-1 needs to be used […] the
+ * SHA-1 value is used for the purpose of filtering"* — and aegis never writes one
+ * on this wire.
  */
 export const HASH_ALGORITHM: ReadonlyArray<{
   label: number;

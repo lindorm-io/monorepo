@@ -25,8 +25,27 @@ import { decodeCnf, encodeCnf } from "./cose-key.js";
 
 // cti (RFC 8392 label 7): the token id string is carried as its raw UTF-8 bytes.
 const encodeCti = (value: unknown): Buffer => Buffer.from(String(value), "utf8");
-const decodeCti = (wire: unknown): string =>
-  Buffer.from(wire as Uint8Array).toString("utf8");
+
+/**
+ * ⚠ THE TYPE IS CHECKED, NOT CAST. RFC 8392 §3.1.7 gives `cti` "the same meaning
+ * and processing rules as the `jti` claim […] except that the value is a byte
+ * string", and this ran on whatever the token carried: an integer `cti` reached
+ * `Buffer.from(42)` and threw a raw `TypeError` out of the KEYLESS, signature-less
+ * `CwtKit.decode`/`CwmKit.decode` door — which `internal/cose/decode-cwt-wire.ts`
+ * states is exactly what that door does not do. A caller catching `AegisError`
+ * around a decode saw nothing and the process took the throw.
+ */
+const decodeCti = (wire: unknown): string => {
+  if (wire instanceof Uint8Array) return Buffer.from(wire).toString("utf8");
+
+  throw new CoseError("Malformed CWT claim", {
+    code: "cose_malformed",
+    data: { claim: "cti", label: 7 },
+    title: "Malformed CWT",
+    details:
+      "RFC 8392 §3.1.7 defines the cti (CWT ID) claim value as a byte string; this token carries something else, so the token identifier cannot be read.",
+  });
+};
 
 // A structured value carried onto the wire exactly as the translator built it.
 // Named once and shared by the three sub-kinds that take it, so each of them is
@@ -39,9 +58,8 @@ const VERBATIM: Partial<CborField> = {
 
 /**
  * The value-shaping half of a claim whose registry kind is `bespoke`, keyed by
- * the sub-kind the registry DECLARES. Since Phase 5 the translator
- * (`domainToCose`) delivers ALREADY-WIRE values, so these handlers do CBOR
- * byte/structure concerns ONLY.
+ * the sub-kind the registry DECLARES. The write door (`domainToWire`) delivers
+ * ALREADY-WIRE values, so these handlers do CBOR byte/structure concerns ONLY.
  *
  * ⚠ IT IS KEYED ON `BespokeKind`, NOT ON THE DOMAIN NAME, and that is the whole
  * point of the function. Keyed on the name it was a chain of `if`s over an OPEN
@@ -77,7 +95,9 @@ export const shapeForBespoke = (bespoke: BespokeKind): Partial<CborField> => {
       return {
         kind: "bespoke",
         encode: (value) => encodeCnf(value as Dict),
-        decode: (value) => decodeCnf(value as Map<number, unknown>),
+        // No cast: `decodeCnf` takes `unknown` and owns the container check, so
+        // the shape a foreign token actually carried cannot be asserted away here.
+        decode: (value) => decodeCnf(value),
       };
 
     // The one that genuinely has no COSE shaping to do, stated rather than left
@@ -312,7 +332,8 @@ export const shapeForBstr = (encoding: "utf8" | "b64u"): Partial<CborField> => {
 };
 
 // The codec KEYS by the COSE wire name (`coseName`) — the vocabulary
-// `domainToCose`/`coseToDomain` speak, so a name-diverging claim is looked up under
+// `domainToWire`/`wireToDomain` speak when bound to `coseName`, so a name-diverging
+// claim is looked up under
 // its COSE name (`cti`, not `jti`); the on-wire label is unchanged (`cti` keeps
 // integer label 7), so the bytes stay identical. The label is the registered /
 // private-use integer where one exists, else the wire string (labels:"mixed"). A

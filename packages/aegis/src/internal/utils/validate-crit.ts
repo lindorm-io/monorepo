@@ -1,46 +1,5 @@
-import { isEmpty } from "@lindorm/is";
-
-/**
- * IANA-registered JOSE header parameter names.
- * Source: https://www.iana.org/assignments/jose/jose.xhtml#web-signature-encryption-header-parameters
- *
- * Per RFC 7515 Section 4.1.11, the `crit` header parameter MUST NOT contain
- * any of these registered names — `crit` is for extension parameters only.
- */
-const IANA_REGISTERED_JOSE_HEADER_PARAMS = new Set([
-  // RFC 7515 (JWS)
-  "alg",
-  "jku",
-  "jwk",
-  "kid",
-  "x5u",
-  "x5c",
-  "x5t",
-  "x5t#S256",
-  "typ",
-  "cty",
-  "crit",
-  // RFC 7516 (JWE)
-  "enc",
-  "zip",
-  // RFC 7518 (JWA)
-  "epk",
-  "apu",
-  "apv",
-  "iv",
-  "tag",
-  "p2s",
-  "p2c",
-  // RFC 7797 (Unencoded Payload Option)
-  "b64",
-  // RFC 8225 (PASSporT)
-  "ppt",
-  // RFC 8555 (ACME)
-  "url",
-  "nonce",
-  // RFC 9321 (SVT)
-  "svt",
-]);
+import { isArray, isEmpty, isString } from "@lindorm/is";
+import { isSpecDefinedHeaderParam } from "../header/is-spec-defined-header-param.js";
 
 /**
  * Validate the `crit` (Critical) header parameter per RFC 7515 Section 4.1.11.
@@ -59,7 +18,7 @@ export const validateCrit = (
 
   if (crit === undefined) return null;
 
-  if (!Array.isArray(crit)) {
+  if (!isArray(crit)) {
     return "crit must be an array";
   }
 
@@ -69,21 +28,40 @@ export const validateCrit = (
   }
 
   for (const name of crit) {
-    if (typeof name !== "string") {
+    if (!isString(name)) {
       return "crit entries must be strings";
     }
 
-    // RFC 7515 §4.1.11: "crit MUST NOT contain any Header Parameter names
-    // defined by this specification or [JWA] [...]"
-    if (IANA_REGISTERED_JOSE_HEADER_PARAMS.has(name)) {
-      return `crit must not contain the IANA-registered header parameter "${name}"`;
+    // The FIRST of RFC 7515 §4.1.11's three producer prohibitions, quoted in
+    // full and split into its three parts on `internal/header/assert-crit-eligible.ts`
+    // — the one file that states them, so this side cannot drift into a second
+    // reading of the same sentence.
+    //
+    // ⚠ THE SAME PREDICATE THE WRITE SIDE REFUSES ON
+    // (`internal/header/is-spec-defined-header-param.ts`). ⛔ A second list here
+    // would answer differently from the registry the write side reads, and the
+    // shape of that failure is this line refusing a token aegis has just minted.
+    if (isSpecDefinedHeaderParam(name)) {
+      return `crit must not contain the specification-defined header parameter "${name}"`;
     }
 
-    // RFC 7515 §4.1.11: "The Header Parameters listed in the 'crit' list
-    // [...] MUST be integrity protected; therefore, they MUST be located in
-    // the JWS Protected Header [...] The 'crit' Header Parameter MUST NOT be
-    // included unless one or more extensions are actually being used [...]"
-    // — enforced via the existence check below.
+    // The THIRD producer prohibition, and the two wires state it differently:
+    //   - JOSE, RFC 7515 §4.1.11 forbids "names that do not occur as Header
+    //     Parameter names within the JOSE Header in the 'crit' list" — the JOSE
+    //     Header, any bucket.
+    //   - COSE, RFC 9052 §3.1 is stricter and names the bucket: *"If the 'crit'
+    //     value list includes a label for which the header parameter is not in
+    //     the protected-header-parameters bucket, this is a fatal error in
+    //     processing the message."*
+    //
+    // ⚠ THE BUCKET IS THE CALLER'S DECISION, NOT THIS CHECK'S. This asks only
+    // whether the header it was HANDED carries the name; both read doors hand it
+    // the protected bucket alone (`internal/wire/jose-token-wire.ts` and
+    // `internal/wire/cose-token-wire.ts`, each through `writtenHeader`). So on
+    // COSE that is the RFC's own rule, and on JOSE it is AEGIS POLICY — RFC 7515
+    // requires the protected header for `crit` ITSELF ("When used, this Header
+    // Parameter MUST be integrity protected; therefore, it MUST occur only
+    // within the JWS Protected Header"), never for the parameters it lists.
     //
     // ⚠ `Object.hasOwn`, never `in`: `name` comes off a token a stranger wrote and
     // `decoded` is a plain object, so `in` resolves through `Object.prototype` and

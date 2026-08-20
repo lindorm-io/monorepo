@@ -41,13 +41,13 @@ export type ResolveVerifyKeyOptions = {
  * util, so every pipeline body — the verb surface AND the raw namespaces — lives
  * in `internal/utils/*` and the class keeps only state + interface + delegation.
  *
- * The two kit façades are GONE (Phase 11): the utils build the wire kits directly
- * from the resolved key + this bundle's JOSE/COSE config
+ * There is no kit façade: the utils build the wire kits directly from the
+ * resolved key + this bundle's JOSE/COSE config
  * (`certBindingMode`/`clockTolerance`/`encryption`/`dpopMaxSkew`/`logger`). The
  * key resolvers close over `amphora` and stay on `Aegis`, reaching the utils
- * through here. Since Phase 12 the raw-namespace operations are standalone utils
- * (`rawVerifyJwt`/`rawSignJws`/…) too, so they are no longer threaded through
- * this bundle — the verb utils call them directly.
+ * through here. The raw-namespace operations are standalone utils
+ * (`rawVerifyJwt`/`rawSignJws`/…) too, so they are not threaded through this
+ * bundle — the verb utils call them directly.
  */
 export type AegisDeps = {
   issuer: string | null;

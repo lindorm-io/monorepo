@@ -22,6 +22,7 @@ export const decodeCwtWire = <C extends Dict = Dict>(
     signature,
     protectedHeader,
     unprotectedHeader,
+    unknown,
   } = splitSigned(token, {
     arity: { atLeast: 3 },
     error: CoseError,
@@ -68,6 +69,7 @@ export const decodeCwtWire = <C extends Dict = Dict>(
   return {
     protectedHeader,
     unprotectedHeader,
+    unknown,
     payload: payload as CwtClaimsWire & C,
     signature: signatureBytes,
     token,

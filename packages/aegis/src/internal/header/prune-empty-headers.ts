@@ -40,18 +40,24 @@ import { headerByJose } from "./header-registry.js";
  * a zero-length nonce is a crypto-layer defect that must fail in the AEAD,
  * neither of them a parameter this quietly removes.
  *
- * pinned: prune-empty-headers.test.ts.
+ * ⛔ `Object.fromEntries`, NEVER `result[key] = value`. The keys come off a
+ * CALLER's header, `JSON.parse` makes `__proto__` an OWN property that survives
+ * `Object.entries`, and assigning it sets this result's PROTOTYPE instead. What
+ * that costs is not theoretical: everything downstream reads the normalised bag
+ * by property — `JwsKit.sign` takes `callerHeader.cty` to pick the payload
+ * serialisation, `build-cose-headers.ts` takes `headerBag.crit` — so the injected
+ * prototype answered for parameters the caller never wrote. Measured before the
+ * repair: a Dict payload signed as `text/plain` under a forged `cty`, and
+ * `cwt_crit_param_not_permitted` raised against a token carrying no `crit`.
+ * `fromEntries` DEFINES each key, so `__proto__` stays an ordinary own property.
+ * pinned: prune-empty-headers.test.ts for the prune itself; the `__proto__`
+ * half only in custom-header-params.test.ts, which is the door that reaches it.
  */
-export const pruneEmptyHeaders = <T extends Dict = Dict>(dict: T): T => {
-  const result: Dict = {};
+export const pruneEmptyHeaders = <T extends Dict = Dict>(dict: T): T =>
+  Object.fromEntries(
+    Object.entries(dict).filter(([key, value]) => {
+      const spec = headerByJose(key);
 
-  for (const [key, value] of Object.entries(dict)) {
-    const spec = headerByJose(key);
-
-    if (spec?.whenEmpty === "prune" && isEmpty(value)) continue;
-
-    result[key] = value;
-  }
-
-  return result as T;
-};
+      return !(spec?.whenEmpty === "prune" && isEmpty(value));
+    }),
+  ) as T;

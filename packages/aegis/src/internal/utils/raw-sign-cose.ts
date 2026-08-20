@@ -3,7 +3,7 @@ import { CwsKit } from "../../classes/CwsKit.js";
 import type {
   AegisSignKey,
   SignedToken,
-  SignUnstructuredTokenOptions,
+  CoseSignUnstructuredTokenOptions,
   TokenContent,
 } from "../../types/index.js";
 import { Tag, decodeCbor, encodeCbor } from "../cose/cbor.js";
@@ -15,8 +15,8 @@ import type { AegisDeps } from "./aegis-deps.js";
 
 /**
  * The wire-tier input to the raw opaque COSE signer — the content and the
- * resolved key policy, intersected with the kit's `SignUnstructuredTokenOptions`
- * wire envelope (`tokenType` PREFIX, `header`/`unprotected` bags, `proprietary`).
+ * resolved key policy, intersected with the kit's `CoseSignUnstructuredTokenOptions`
+ * wire envelope (`tokenType` PREFIX, the `header` and `custom` bags, `proprietary`).
  * The envelope is forwarded STRUCTURALLY to `CwsKit.sign`, so a new kit sign
  * option threads through unchanged (`oid` rides the `header` bag). The DOMAIN
  * `aegis.sign` path translates its `tokenType` enum to a prefix; the
@@ -25,7 +25,7 @@ import type { AegisDeps } from "./aegis-deps.js";
 export type RawSignCoseInput = {
   payload: TokenContent;
   key?: AegisSignKey;
-} & SignUnstructuredTokenOptions;
+} & CoseSignUnstructuredTokenOptions;
 
 /**
  * Raw OPAQUE COSE sign — the COSE sibling of `rawSignJws`. Secures arbitrary
@@ -49,8 +49,8 @@ export const rawSignCose = async ({
   deps: AegisDeps;
 }): Promise<SignedToken> => {
   // `payload`/`key` are the aegis-side concerns; `signOptions` is exactly the
-  // kit's `SignUnstructuredTokenOptions` and is forwarded STRUCTURALLY to
-  // `CwsKit.sign`, so a new kit sign option (e.g. `proprietary`/`unprotected`)
+  // kit's `CoseSignUnstructuredTokenOptions` and is forwarded STRUCTURALLY to
+  // `CwsKit.sign`, so a new kit sign option (e.g. `proprietary`/`custom`)
   // threads through with no change here.
   const { payload, key, ...signOptions } = input;
 

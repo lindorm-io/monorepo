@@ -1,0 +1,32 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`createMockAegis > declares every member of IAegis 1`] = `
+[
+  "aes.decrypt",
+  "aes.encrypt",
+  "cwe.decrypt",
+  "cwe.encrypt",
+  "cwm.sign",
+  "cwm.verify",
+  "cws.sign",
+  "cws.verify",
+  "cwt.sign",
+  "cwt.verify",
+  "decrypt",
+  "encrypt",
+  "issuer",
+  "jwe.decrypt",
+  "jwe.encrypt",
+  "jws.sign",
+  "jws.verify",
+  "jwt.sign",
+  "jwt.verify",
+  "mint",
+  "parse",
+  "registerProfile",
+  "sign",
+  "verify",
+]
+`;
+
+exports[`createMockAegis > supplies issuer as a string 1`] = `"https://test.lindorm.io/"`;

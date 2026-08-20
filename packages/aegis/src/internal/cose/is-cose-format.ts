@@ -6,8 +6,8 @@ import { COSE_TAG, decodeProtectedHeader } from "./structures.js";
 import { coseStructure } from "./unwrap-cose.js";
 
 /**
- * The COSE sub-format detectors — the wire-family twins of `isJwt`/`isJws`/`isJwe`
- * (Bit 8 symmetry). They operate on the decoded COSE bytes; `Aegis.isCwt`/
+ * The COSE sub-format detectors — the wire-family twins of `isJwt`/`isJws`/`isJwe`.
+ * They operate on the decoded COSE bytes; `Aegis.isCwt`/
  * `isCws`/`isCwe` add the cheap dot-guard + base64url decode on top, exactly as
  * `Aegis.isCose` wraps `is-cose.ts`.
  *
@@ -66,7 +66,7 @@ const hasSuffix = (typ: string | undefined, media: string, suffix: string): bool
   typ === media || (isString(typ) && typ.endsWith(suffix));
 
 /**
- * A claims-bearing CWT signed with COSE_Sign1 (D6). `cwt` and `cwm` are disjoint
+ * A claims-bearing CWT signed with COSE_Sign1. `cwt` and `cwm` are disjoint
  * by STRUCTURE — a CWT is COSE_Sign1 (tag 18, asymmetric), a CWM is COSE_Mac0
  * (tag 17, symmetric) — so `isCwt` requires Sign1 exactly; a Mac0 with a `+cwt`
  * typ is a CWM, not a CWT.
@@ -75,7 +75,7 @@ export const isCwt = (bytes: Buffer): boolean =>
   structureTag(bytes) === COSE_TAG.sign1 &&
   hasSuffix(coseTyp(bytes), "application/cwt", "+cwt");
 
-/** A claims-bearing CWM MAC'd with COSE_Mac0 (D6) — the symmetric CWT twin. */
+/** A claims-bearing CWM MAC'd with COSE_Mac0 — the symmetric CWT twin. */
 export const isCwm = (bytes: Buffer): boolean =>
   structureTag(bytes) === COSE_TAG.mac0 &&
   hasSuffix(coseTyp(bytes), "application/cwt", "+cwt");

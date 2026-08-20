@@ -5,7 +5,7 @@ import type { PolicyRule, SignContext } from "./policy.js";
 import type { ClaimsTokenFormat } from "../domain/token-format.js";
 import type { AegisEncKey, AegisSignKey } from "../keys/key-selectors.js";
 import type { DomainTokenEnvelope } from "../domain/domain-envelope.js";
-import type { JweEncryptOptions } from "../kit/encrypted.js";
+import type { CweEncryptOptions, JweEncryptOptions } from "../kit/encrypted.js";
 import type { SignTokenOptions } from "../domain/sign.js";
 import type { VerifyOptions } from "../domain/verify.js";
 
@@ -96,6 +96,25 @@ export type TokenProfile<
 };
 
 /**
+ * The sign-then-encrypt wrapper's own envelope, as the PROFILED MINT door takes
+ * it — both wire families' encrypt options, because the PROFILE decides which
+ * wire the outer is emitted on and the caller cannot know it here.
+ *
+ * ⛔ MINUS `custom`, and the `Omit` is the tier rule made structural. `aegis.mint`
+ * is a DOMAIN verb: a caller reaches it without learning either wire's
+ * vocabulary, and an UNREGISTERED header parameter has no domain name by
+ * definition. Leaving `custom` reachable here was worse than merely off-tier —
+ * `mint-token.ts` forwards a NAMED subset of this envelope to `encryptOuter`, so
+ * the bag typechecked and was then silently dropped, which is precisely the
+ * accepted-and-ignored outcome the wire disposition tables exist to prevent.
+ * Custom parameters are a KIT-tier capability: `aegis.jwe.encrypt` /
+ * `aegis.cwe.encrypt` take them. Pinned in `types/header/wire-envelope.test.ts`.
+ */
+export type MintEncryptOptions = Omit<JweEncryptOptions & CweEncryptOptions, "custom"> & {
+  key?: AegisEncKey;
+};
+
+/**
  * The AUTHORING shape — what `defineProfile` and `registerProfile` take. The
  * only difference from {@link TokenProfile} is that `use` may be omitted;
  * `defineProfile` resolves it to `"both"`, which is why omitting it changes
@@ -122,7 +141,7 @@ export type ProfileMintOptions = {
    * with `{ key: { kryptos } }`. Only meaningful for an encryptable profile;
    * its presence forces encryption on.
    */
-  encrypt?: JweEncryptOptions & { key?: AegisEncKey };
+  encrypt?: MintEncryptOptions;
   /**
    * Per-call token lifetime, overriding the profile's default `lifetime`. An
    * explicit `content.expires` (an absolute instant) still wins over this; with

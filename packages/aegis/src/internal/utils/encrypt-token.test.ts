@@ -11,9 +11,9 @@ MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
 
 const ISSUER = "https://test.lindorm.io/";
 
-/** RFC 9052 §3.1, Table 3 — the two protected labels this suite is about. */
-const CTY = 3;
-const TYP = 16;
+/** The two protected labels this suite is about; the comment below is the split. */
+const CTY = 3; // RFC 9052 §3.1, Table 3
+const TYP = 16; // RFC 9596 §4.1, Table 1
 
 /**
  * WHAT THE `cwe` ENVELOPE DECLARES ABOUT ITS PLAINTEXT, AND ON WHICH PARAMETER.

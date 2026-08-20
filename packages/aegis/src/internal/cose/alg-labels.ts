@@ -1,5 +1,6 @@
 import type { KryptosAlgorithm } from "@lindorm/kryptos";
 import { CoseError } from "../../errors/index.js";
+import { ownEntry } from "./own-entry.js";
 
 /**
  * OFFICIAL JOSE algorithm name <-> COSE algorithm label (IANA COSE Algorithms
@@ -37,19 +38,25 @@ const COSE_TO_JOSE: Readonly<Record<number, string>> = Object.fromEntries(
   Object.entries(JOSE_TO_COSE_OFFICIAL).map(([alg, label]) => [label, alg]),
 );
 
+// ⚠ BOTH TABLES ARE READ THROUGH `ownEntry`, never indexed directly. A plain
+// index resolves an `Object.prototype` member name — `algorithm in table` is
+// TRUE for `"toString"`, and `table["toString"]` is a FUNCTION, so the
+// `=== undefined` guards below never fire and a function reaches the CBOR
+// encoder as an alg label. See own-entry.ts.
+
 /**
- * Interop gate (D5): true iff the algorithm has an OFFICIAL (non-private-use)
+ * Interop gate: true iff the algorithm has an OFFICIAL (non-private-use)
  * COSE label, i.e. it is COSE-RFC compliant. A non-proprietary `sign` refuses
  * anything this returns `false` for. With ML-DSA now IANA-registered (RFC 9964),
  * every kryptos signing/MAC algorithm is official — the sig gate no longer fires
  * for any real key; the enc-side (AES-CBC-HMAC) gate still exercises the mechanism.
  */
 export const isOfficialCoseAlg = (algorithm: KryptosAlgorithm): boolean =>
-  algorithm in JOSE_TO_COSE_OFFICIAL;
+  ownEntry(JOSE_TO_COSE_OFFICIAL, algorithm) !== undefined;
 
 /** The COSE integer label for a JOSE/kryptos signing or MAC algorithm. */
 export const algToCoseLabel = (algorithm: KryptosAlgorithm): number => {
-  const label = JOSE_TO_COSE_OFFICIAL[algorithm];
+  const label = ownEntry(JOSE_TO_COSE_OFFICIAL, algorithm);
 
   if (label === undefined) {
     throw new CoseError(`No COSE algorithm label for "${algorithm}"`, {
@@ -66,7 +73,7 @@ export const algToCoseLabel = (algorithm: KryptosAlgorithm): number => {
 
 /** The JOSE/kryptos algorithm name for a COSE integer label. */
 export const coseLabelToAlg = (label: number): string => {
-  const algorithm = COSE_TO_JOSE[label];
+  const algorithm = ownEntry(COSE_TO_JOSE, label);
 
   if (algorithm === undefined) {
     throw new CoseError(`No algorithm for COSE label "${label}"`, {

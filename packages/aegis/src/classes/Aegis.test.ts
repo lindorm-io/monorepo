@@ -80,6 +80,7 @@ describe("Aegis", () => {
 
     await expect(aegis.jwe.decrypt(res.token)).resolves.toEqual({
       unprotectedHeader: {},
+      unknown: { protected: {}, unprotected: {} },
       protectedHeader: {
         alg: "ECDH-ES",
         cty: "text/plain",
@@ -112,6 +113,7 @@ describe("Aegis", () => {
 
     await expect(aegis.jws.verify(res.token)).resolves.toEqual({
       unprotectedHeader: {},
+      unknown: { protected: {}, unprotected: {} },
       protectedHeader: {
         alg: "ES512",
         cty: "text/plain",
@@ -151,6 +153,7 @@ describe("Aegis", () => {
       // `alg`/`kid`/`typ`) and `.payload` (wire-keyed `sub`/`exp`) — NOT the domain
       // header/buckets. The domain-named header + claims are `aegis.verify`.
       unprotectedHeader: {},
+      unknown: { protected: {}, unprotected: {} },
       protectedHeader: {
         alg: "ES512",
         jku: "https://test.lindorm.io/.well-known/jwks.json",
@@ -322,9 +325,11 @@ describe("Aegis", () => {
    * at all. The scenario table has no artifact for "the empty string".
    */
   describe("the JOSE format guards", () => {
-    // The `typ` header is a HINT. RFC 7519 §5.1 makes it OPTIONAL and says it is
-    // "intended for use by JWT applications to declare the media type"; routing
-    // on it as the discriminant rejected every third-party token that spelled it
+    // The `typ` header is a HINT. RFC 7519 §5.1 ends "Use of this Header
+    // Parameter is OPTIONAL", and what it declares is a media type for the JWT
+    // APPLICATION to read — the sentence is quoted on the scenario row
+    // `an-asserted-token-type-is-compared-as-a-whole-media-type`. Routing on it
+    // as the discriminant rejected every third-party token that spelled it
     // differently, or omitted it.
     describe("a typ header is a hint, never the discriminant", () => {
       test("a typ-less claims token is a JWT, a JWS, and JOSE", () => {

@@ -20,6 +20,7 @@ import { decodeCwtWire } from "../cose/decode-cwt-wire.js";
 import { ERROR_BY_FORMAT } from "../cose/error-by-format.js";
 import { assertWireTyp } from "../utils/assert-wire-typ.js";
 import { validateCrit } from "../utils/validate-crit.js";
+import { writtenHeader } from "../header/written-header.js";
 import { rawSignCose } from "../utils/raw-sign-cose.js";
 import { rawVerifyCws } from "../utils/raw-verify-cws.js";
 import { buildSignedToken } from "../utils/build-signed-token.js";
@@ -50,7 +51,7 @@ const NO_COSE_KEY_AGREEMENT =
 const COSE_DISPOSITIONS: WireInputDispositions = {
   signClaims: {
     header: { use: "forwarded" },
-    unprotected: { use: "forwarded" },
+    custom: { use: "forwarded" },
     tokenType: { use: "forwarded" },
     bindCertificate: { use: "forwarded" },
     proprietary: { use: "forwarded" },
@@ -58,7 +59,7 @@ const COSE_DISPOSITIONS: WireInputDispositions = {
 
   signOpaque: {
     header: { use: "forwarded" },
-    unprotected: { use: "forwarded" },
+    custom: { use: "forwarded" },
     tokenType: { use: "forwarded" },
     bindCertificate: { use: "forwarded" },
     proprietary: { use: "forwarded" },
@@ -66,7 +67,7 @@ const COSE_DISPOSITIONS: WireInputDispositions = {
 
   encryptContent: {
     header: { use: "forwarded" },
-    unprotected: { use: "forwarded" },
+    custom: { use: "forwarded" },
     tokenType: { use: "forwarded" },
     bindCertificate: { use: "forwarded" },
     proprietary: { use: "forwarded" },
@@ -74,7 +75,12 @@ const COSE_DISPOSITIONS: WireInputDispositions = {
     partyRecipient: { use: "unsupported", reason: NO_COSE_KEY_AGREEMENT },
   },
 
-  decrypt: {},
+  decrypt: {
+    // The read-side `crit` declaration reaches the kit's own decrypt door, which
+    // is where the crit gate runs — `JweKit.decrypt` through
+    // `assert-protected-header-gates.ts`, `CweKit.decrypt` directly.
+    crit: { use: "forwarded" },
+  },
 };
 
 /** The COSE wire: RFC 9052 structures, a protected and an unprotected bucket. */
@@ -121,8 +127,8 @@ export const COSE_TOKEN_WIRE: TokenWire = {
   //     Content-Formats registry, which is a different registry. And §2 makes the
   //     parameter's absence meaningful rather than free: "The parameter is
   //     OPTIONAL if the tagged version of the structure is used. The parameter is
-  //     REQUIRED if the untagged version is used." So a bare `application/cose`
-  //     leaves the structure ambiguous unless the tag carries it.
+  //     REQUIRED if the untagged version of the structure is used." So a bare
+  //     `application/cose` leaves the structure ambiguous unless the tag carries it.
   //
   // A gap is honest where an invented media type is not.
   nestedTokenCty: {
@@ -148,7 +154,7 @@ export const COSE_TOKEN_WIRE: TokenWire = {
   decodeClaims: (token) => {
     const bytes = Buffer.from(token, "base64url");
     const decoded = decodeCwt(bytes);
-    const { payload, protectedHeader, unprotectedHeader } = decodeCwtWire(bytes);
+    const { payload, protectedHeader, unprotectedHeader, unknown } = decodeCwtWire(bytes);
     const format = coseFormatOf(decoded.cose);
 
     // The structural invariants a CWT must satisfy to be READ as one — the twin
@@ -173,11 +179,18 @@ export const COSE_TOKEN_WIRE: TokenWire = {
 
     // `crit` off the PROTECTED bucket alone — the only one a signature covers and
     // the only one RFC 9052 §3.1 permits it in.
-    const critError = validateCrit(protectedHeader);
+    // The header AS WRITTEN — see `written-header.ts` and the JOSE twin.
+    const written = writtenHeader(protectedHeader, unknown.protected);
+
+    const critError = validateCrit(written);
     if (critError) {
       throw new ERROR_BY_FORMAT[format](`Invalid crit header: ${critError}`, {
         code: `${format}_invalid_crit`,
-        data: { crit: protectedHeader.crit },
+        // ⚠ `written`, not the typed bag — a foreign CWT carrying a tstr `"crit"`
+        // and no integer label 2 reaches exactly the `{ crit: undefined }` this
+        // avoids, while the message names the member. Same value the JOSE twin
+        // and `reject-unknown-critical.ts` report.
+        data: { crit: written.crit },
         title: `${format.toUpperCase()} Invalid Crit`,
         details:
           "The crit header is malformed; it must be a non-empty array of strings naming extension parameters present in the header.",
@@ -195,7 +208,7 @@ export const COSE_TOKEN_WIRE: TokenWire = {
     };
   },
 
-  verifyClaims: async ({ token, deps, options, issuer }) => {
+  verifyClaims: async ({ token, deps, options, crit, issuer }) => {
     const bytes = Buffer.from(token, "base64url");
     const decoded = decodeCwt(bytes);
 
@@ -219,6 +232,7 @@ export const COSE_TOKEN_WIRE: TokenWire = {
       clockTolerance,
     }).verify(bytes, undefined, {
       clockTolerance,
+      crit,
       currentDate: options.currentDate,
       maxTokenAge: options.maxTokenAge,
       verifyExpiration: options.verifyExpiration,
@@ -240,8 +254,12 @@ export const COSE_TOKEN_WIRE: TokenWire = {
     };
   },
 
-  verifyOpaque: async ({ token, deps, options }) => {
-    const verified = await rawVerifyCws({ token, options: { key: options.key }, deps });
+  verifyOpaque: async ({ token, deps, options, crit }) => {
+    const verified = await rawVerifyCws({
+      token,
+      options: { key: options.key, crit },
+      deps,
+    });
 
     return {
       format: "cws",
@@ -305,7 +323,7 @@ export const COSE_TOKEN_WIRE: TokenWire = {
       content,
     }).toString("base64url"),
 
-  decrypt: async ({ token, deps, key }) => {
+  decrypt: async ({ token, deps, key, crit }) => {
     const bytes = Buffer.from(token, "base64url");
 
     // The SHARED wire→domain translation, the same one the verify and parse
@@ -329,6 +347,7 @@ export const COSE_TOKEN_WIRE: TokenWire = {
       header,
       payload: decryptCose<TokenContent>({
         certBindingMode: deps.certBindingMode,
+        crit,
         kryptos,
         logger: deps.logger,
         token: bytes,

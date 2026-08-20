@@ -29,6 +29,7 @@ import type {
   CertificateBindingMode,
   DecodedEncryptedToken,
   DecryptedEncryptedToken,
+  DecryptTokenOptions,
   JweEncryptOptions,
   JweKitSettings,
   DomainTokenHeader,
@@ -100,6 +101,7 @@ export class JweKit implements IJweKit {
         reserved: KIT_CAPABILITIES.jwe.reserved,
         defaults: { cty: contentType, jku: this.kryptos.jwksUri ?? undefined },
         header: callerHeader,
+        custom: options.custom,
         derived: {
           alg: this.kryptos.algorithm,
           apu: partyProducer,
@@ -154,6 +156,7 @@ export class JweKit implements IJweKit {
 
   decrypt<T extends TokenContent = Buffer>(
     token: string,
+    options: DecryptTokenOptions = {},
   ): DecryptedEncryptedToken<T, string> {
     // Decrypt is driven by the DECRYPTION RECORD assembled below — the wire's
     // own `enc` — so the kit needs no encryption of its own.
@@ -196,6 +199,8 @@ export class JweKit implements IJweKit {
     // extension critical was answered by whichever of the three ran first.
     assertProtectedHeaderGates({
       protectedHeader: decoded.header,
+      unknown: decoded.unknown,
+      declared: options.crit,
       expectedAlgorithm: this.kryptos.algorithm,
       format: "jwe",
       error: JweError,
@@ -207,7 +212,7 @@ export class JweKit implements IJweKit {
 
     // Parse to the DOMAIN header for the decryption crypto (algorithm, enc,
     // party info, pbkdf/public-encryption params); the RESULT carries the WIRE
-    // header (R1), so `decoded.header` is what is returned.
+    // header, so `decoded.header` is what is returned.
     const header: DomainTokenHeader = parseTokenHeader(decoded.header);
 
     if (header.encryption !== this.encryption) {
@@ -278,9 +283,11 @@ export class JweKit implements IJweKit {
     return {
       protectedHeader: decoded.header,
       // Compact JOSE serialisation has ONE header and it is protected — a compact
-      // JWE carries no per-recipient unprotected header
+      // JWE carries no per-recipient unprotected header, so neither the typed bag
+      // nor the unknown one has an unprotected half
       // (`KIT_CAPABILITIES.jwe.unprotectedBucket`).
       unprotectedHeader: {},
+      unknown: { protected: decoded.unknown, unprotected: {} },
       payload,
       token,
     };
@@ -307,9 +314,12 @@ export class JweKit implements IJweKit {
    * `CweKit` decode.
    */
   static decode(token: string): DecodedEncryptedToken<string> {
+    const segments = splitJweCompact(token);
+
     return {
-      protectedHeader: splitJweCompact(token).header,
+      protectedHeader: segments.header,
       unprotectedHeader: {},
+      unknown: { protected: segments.unknown, unprotected: {} },
       token,
     };
   }

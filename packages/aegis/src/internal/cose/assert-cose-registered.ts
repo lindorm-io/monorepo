@@ -23,7 +23,7 @@ export type AssertCoseRegisteredOptions =
     };
 
 /**
- * The COSE INTEROP gate (D5), for both write kits.
+ * The COSE INTEROP gate, for both write kits.
  *
  * A non-proprietary write refuses a value with no OFFICIAL COSE-RFC label, so
  * the token stays readable by a foreign COSE implementation. A private-use label

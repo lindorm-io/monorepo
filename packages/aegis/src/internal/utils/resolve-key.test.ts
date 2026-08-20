@@ -131,7 +131,7 @@ describe("resolveKey", () => {
     });
 
     test("an injected key is NOT checked against the SELECTOR", async () => {
-      // The crux (§0.9). A client secret has no `purpose: "token"` and never
+      // The crux. A client secret has no `purpose: "token"` and never
       // came from the vault, so checking it against a vault QUERY would reject
       // the very case key injection exists for.
       const kryptos = await resolveKey({

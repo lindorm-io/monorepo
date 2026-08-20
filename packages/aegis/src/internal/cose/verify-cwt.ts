@@ -23,8 +23,8 @@ import { verifyCoseStructure } from "./verify-cose-structure.js";
 /**
  * WIRE verify: kid fail-fast + typ well-formedness + typ match (off the cheap
  * header decode), then the structural gates and the signature/MAC over the
- * structure the key's `algClass` implies, then the temporal range (R10, validated
- * IF PRESENT) and the caller `assert`, in one pass over the WIRE claims. Returns
+ * structure the key's `algClass` implies, then the temporal range (validated IF
+ * PRESENT) and the caller `assert`, in one pass over the WIRE claims. Returns
  * the native WIRE payload; NO named matchers, NO exp presence, NO domain
  * translation — those are the Aegis verify path's job.
  *
@@ -95,10 +95,11 @@ export const verifyCwt = <C extends Dict = Dict>(
   // carried into a signature cycle it could never satisfy — the two
   // protected-header gates answer a hostile header before any cryptography, and
   // the signature or MAC is checked over the structure.
-  const { protectedHeader, unprotectedHeader, protectedMap, content } =
+  const { protectedHeader, unprotectedHeader, unknown, protectedMap, content } =
     verifyCoseStructure({
       kryptos,
       token,
+      declared: options.crit,
       format,
       payloadDetail: "there are no CWT claims to verify",
     });
@@ -132,7 +133,7 @@ export const verifyCwt = <C extends Dict = Dict>(
   // lives). The codec yields the COSE-name-keyed WIRE (temporal claims as Dates).
   const wire = decodeCwtMessage(content);
 
-  // Temporal range (R10) — every temporal claim validated IF PRESENT — plus the
+  // Temporal range — every temporal claim validated IF PRESENT — plus the
   // caller's wire `assert`, in one pass. The CBOR codec has already yielded
   // `Date`s, which is why no lift happens here and one does on the JOSE wire.
   validateWireClaims({
@@ -149,6 +150,7 @@ export const verifyCwt = <C extends Dict = Dict>(
   return {
     protectedHeader,
     unprotectedHeader,
+    unknown,
     payload: wire as CwtClaimsWire & C,
     token,
   };

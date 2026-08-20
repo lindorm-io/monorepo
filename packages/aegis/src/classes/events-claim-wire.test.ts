@@ -327,20 +327,19 @@ describe("the events claim on the wire", () => {
   // ---------------------------------------------------------------------------
 
   test("a `__proto__` event type is refused at the UNAUTHENTICATED JOSE door", () => {
-    // ⛔⛔ WHAT WAS MEASURED BEFORE THIS STEP, at `aegis.parse` on this very
-    // token: `Object.keys(claims.events)` was `["urn:e"]` and
-    // `JSON.stringify(claims.events)` was `{"urn:e":{}}` while
-    // `claims.events.pollutedParse` returned `"yes"`. `__proto__` is a legal JSON
-    // member name that `JSON.parse` makes an ordinary own property, and the read
-    // side's `omitUndefined` rebuild then re-invoked it as a SETTER — so a
-    // consumer's natural read returned attacker data that every audit log renders
-    // as absent, and no duplicate-key defence could see it because no own key
-    // survived to be claimed twice.
+    // ⛔ WHAT THIS PINS IS THE REFUSAL, not a prototype swap. The read side's
+    // `omitUndefined` rebuild does not re-invoke `__proto__` as a setter:
+    // `@lindorm/utils`'s `omit-from-object.ts:32` writes every key with
+    // `Object.defineProperty`, so the member survives as an ordinary own key and
+    // nothing is polluted. Measured with the refusal disabled, this very token
+    // parses cleanly and hands `events` back with `__proto__` live and own. ⇒ The
+    // row states aegis's POLICY about the member name — see
+    // `internal/claims/proto-member-violations.ts`, where that policy's own
+    // justification is filed for removal.
     //
     // ⭐ THE TOKEN IS FORGED AND `parse` IS THE DOOR. `parse` reports a payload
-    // WITHOUT checking a signature, so the attacker needs no key at all — and a
-    // token MINTED through this package cannot carry the member (measured: the
-    // same normalisation eats it before signing), so a signed one would prove
+    // WITHOUT checking a signature, so the attacker needs no key at all. A MINT is
+    // refused by the same rule on the write side, so signing one would prove
     // nothing about the read side.
     expect(() =>
       aegis.parse(

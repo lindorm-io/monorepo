@@ -8,7 +8,7 @@ const build = (
   buildCoseHeaders({
     reserved: ["alg", "kid", "typ"],
     header: undefined,
-    unprotected: undefined,
+    custom: undefined,
     cert: undefined,
     proprietary: false,
     format: "cwt",
@@ -17,11 +17,17 @@ const build = (
   });
 
 /**
- * The COSE twin of `build-jose-header.test.ts`, and the four rules it enforces.
- * What is stated here is the rule the two builders SHARE — a parameter that emits
- * nothing is not a parameter — because that is the one a wire asymmetry hides in:
- * a bag refused on one encoding and accepted on the other is refused or accepted
- * by the presenter's choice of encoding, not by the deployment's policy.
+ * The COSE twin of `build-jose-header.test.ts`, and the rules it enforces. What is
+ * stated here is the rule the two builders SHARE — a parameter that emits nothing
+ * is not a parameter — because that is the one a wire asymmetry hides in: a bag
+ * refused on one encoding and accepted on the other is refused or accepted by the
+ * presenter's choice of encoding, not by the deployment's policy.
+ *
+ * ⚠ ONLY THE `custom` BAGS CAN PUT ANYTHING IN THE UNPROTECTED BUCKET. A
+ * registered parameter has no caller-chosen bucket — see the function's docstring
+ * — so every unprotected row here states an UNREGISTERED key, and the rows that
+ * once stated a registered one in `unprotected` now state the refusal that
+ * replaced them (`header_registered_in_custom`).
  */
 describe("buildCoseHeaders", () => {
   describe("a parameter that emits nothing is not a parameter", () => {
@@ -34,21 +40,30 @@ describe("buildCoseHeaders", () => {
       // the point: both bags are normalised before ANY rule runs, so the four
       // rules below and the JOSE reserved check see the same values the wire will.
       expect(() => build({ header: { alg: "" } as never })).not.toThrow();
-      expect(() => build({ unprotected: { alg: "" } as never })).not.toThrow();
     });
 
-    test("an empty parameter in BOTH buckets is not a duplicate", () => {
+    test("a registered parameter emitting nothing is not a duplicate of a custom one", () => {
       // Rule 3 refuses a parameter COSE would have to carry twice. An empty `cty`
       // is carried nowhere, so there is no second copy to refuse.
       expect(() =>
-        build({ header: { cty: "" }, unprotected: { cty: "" } }),
+        build({
+          header: { cty: "" },
+          custom: { unprotected: { "x-hint": "kept" } },
+        }),
       ).not.toThrow();
     });
 
-    test("an empty protected-only parameter is not a placement error", () => {
-      // Rule 4 states where a parameter TRAVELS, and one that travels nowhere has
-      // no bucket to be in the wrong one of.
-      expect(() => build({ unprotected: { cty: "" } })).not.toThrow();
+    test("an UNDEFINED custom parameter is absent, not an emission", () => {
+      // The one normalisation a custom bag gets: an unregistered key has no
+      // registry row, so there is no `whenEmpty` cell to consult and an EMPTY
+      // value travels verbatim — only `undefined` is dropped
+      // (`build-custom-header.ts`).
+      const { protectedEntries } = build({
+        custom: { protected: { "x-absent": undefined, "x-empty": "" } },
+      });
+
+      expect(protectedEntries.has("x-absent")).toBe(false);
+      expect(protectedEntries.get("x-empty")).toBe("");
     });
 
     test("an empty crit list is neither emitted nor treated as a crit", () => {
@@ -60,53 +75,87 @@ describe("buildCoseHeaders", () => {
       expect(protectedEntries.has(2)).toBe(false);
     });
 
-    test("an empty crit list in the UNPROTECTED bucket is not a placement error", () => {
-      // Rule 2 refuses `crit` from the unauthenticated bucket because RFC 9052
-      // §3.1 requires critical parameters to be integrity-protected. An empty
-      // list is not a `crit` the same RFC would let anyone produce ("The array
-      // MUST have at least one value in it"), so the prune takes it and there is
-      // nothing left in that bucket to place wrongly. Nothing reaches the wire
-      // either way; what changes is only whether a caller hears a refusal for a
-      // parameter that was never going to travel.
-      expect(() => build({ unprotected: { crit: [] } })).not.toThrow();
+    test("an EMPTY crit list in the UNPROTECTED bucket is still refused", () => {
+      // ⚠ THE PRUNE DOES NOT REACH THE CUSTOM BAGS, so unlike the protected `crit`
+      // above, an empty one written into `custom.unprotected` is not normalised
+      // away — and the refusal is right either way: RFC 9052 §3.1 requires
+      // critical parameters to be integrity-protected, so `crit` has no business
+      // in that bucket whatever its value.
+      expect(() => build({ custom: { unprotected: { crit: [] } } })).toThrow(
+        expect.objectContaining({ code: "cose_crit_unprotected" }),
+      );
     });
   });
 
   describe("nothing that emits bytes stops being guarded", () => {
-    test("a NON-empty parameter in both buckets is still a duplicate", () => {
+    test("the same CUSTOM key in both buckets is a duplicate", () => {
+      // Rule 3 compares LABELS, and a custom parameter IS its own tstr label — so
+      // the rule reaches the custom bags without knowing anything about them.
       expect(() =>
         build({
-          header: { cty: "application/json" },
-          unprotected: { cty: "text/plain" },
+          custom: {
+            protected: { "x-hint": "signed" },
+            unprotected: { "x-hint": "unsigned" },
+          },
         }),
       ).toThrow(/set in both header and unprotected/);
     });
 
-    test("a NON-empty protected-only parameter is still refused from the unprotected bag", () => {
-      expect(() => build({ unprotected: { cty: "application/json" } })).toThrow(
-        expect.objectContaining({ code: "cose_unprotected_placement" }),
-      );
+    test("a REGISTERED name in either custom bag is refused", () => {
+      // The rule that REPLACES the placement one: a registered parameter belongs
+      // in `header`, where its value codec and its bucket placement apply, so it
+      // is refused from `custom` in EITHER bucket rather than accepted into the
+      // wrong one.
+      for (const bucket of ["protected", "unprotected"] as const) {
+        expect(() =>
+          build({ custom: { [bucket]: { cty: "application/json" } } }),
+        ).toThrow(
+          expect.objectContaining({
+            code: "header_registered_in_custom",
+            data: { parameter: "cty", bucket },
+          }),
+        );
+      }
     });
 
-    test("a NON-empty reserved parameter is still refused from either bag", () => {
+    test("a KIT-OWNED name in either custom bag is refused, and says so distinctly", () => {
+      // A subset of the rule above, and the accurate verdict is the narrower one:
+      // no caller bag accepts a kit-owned parameter, so "put it in `header`" would
+      // send the caller to a bag whose type Omits it.
+      for (const bucket of ["protected", "unprotected"] as const) {
+        expect(() => build({ custom: { [bucket]: { kid: "attacker-key" } } })).toThrow(
+          expect.objectContaining({
+            code: "header_kit_owned_in_custom",
+            data: { parameter: "kid", bucket },
+          }),
+        );
+      }
+    });
+
+    test("a NON-empty reserved parameter is still refused from the header bag", () => {
       expect(() => build({ header: { alg: "ES512" } as never })).toThrow(
-        expect.objectContaining({ code: "cose_reserved_header" }),
-      );
-      expect(() => build({ unprotected: { kid: "attacker-key" } as never })).toThrow(
         expect.objectContaining({ code: "cose_reserved_header" }),
       );
     });
 
     test("crit is still refused from the unprotected bucket when it names something", () => {
-      // RFC 9052 §3.1 requires critical parameters to be integrity-protected.
-      expect(() => build({ unprotected: { crit: ["oid"] } })).toThrow(
+      // RFC 9052 §3.1 requires critical parameters to be integrity-protected, and
+      // that verdict is reported ahead of the registered-in-custom one: the wire's
+      // own constraint outranks aegis's split policy.
+      expect(() => build({ custom: { unprotected: { crit: ["oid"] } } })).toThrow(
         expect.objectContaining({ code: "cose_crit_unprotected" }),
       );
     });
 
-    test("a crit-listed parameter placed unprotected is still refused", () => {
+    test("a crit-listed CUSTOM parameter placed unprotected is still refused", () => {
       expect(() =>
-        build({ header: { crit: ["oid"] }, unprotected: { oid: "1.2.3.4" } }),
+        build({
+          header: { crit: ["x-hint"] },
+          custom: {
+            protected: { "x-hint": "signed" },
+            unprotected: { "x-hint": "unsigned" },
+          },
+        }),
       ).toThrow(expect.objectContaining({ code: "cose_crit_param_unprotected" }));
     });
 
@@ -136,7 +185,7 @@ describe("buildCoseHeaders", () => {
         expect(() =>
           build({
             header: { crit: [member] },
-            unprotected: { iv: Buffer.from("iv-bytes") } as never,
+            custom: { unprotected: { "x-hint": "unsigned" } },
           }),
         ).toThrow(expect.objectContaining({ code: "cwt_crit_param_not_permitted" }));
       }
@@ -159,9 +208,6 @@ describe("buildCoseHeaders", () => {
      * cannot answer a question about the message.
      */
     test("a crit the CALLER'S BAG alone cannot answer passes this stage", () => {
-      expect(() =>
-        build({ header: { crit: ["oid"] }, unprotected: { oid: "" } }),
-      ).not.toThrow();
       expect(() => build({ header: { crit: ["oid"], oid: "" } })).not.toThrow();
     });
 

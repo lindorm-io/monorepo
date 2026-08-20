@@ -72,6 +72,21 @@ export type EncryptOptions = DomainTokenEnvelope<AegisEncKey> & {
  * deployment `decrypt` key policy plus this per-call CHECK/injection.
  */
 export type DecryptOptions = {
+  /**
+   * Custom header parameters the CALLER takes responsibility for — it will act on
+   * them after aegis returns. RFC 7515 §4.1.11 puts the duty on the RECIPIENT, and
+   * aegis is never the final recipient; it verifies on the application's behalf.
+   *
+   * A `crit` member is accepted only when it is named here AND carried by the
+   * token. Absent means nothing is declared, so EVERY critical parameter is
+   * refused — `objectId` included, since registering a parameter says nothing
+   * about whether the application can act on it. Fail closed.
+   *
+   * ⚠ DOMAIN names, like every other domain surface — `["objectId"]`, never
+   * `["oid"]`, which is refused. An unregistered custom parameter is spelled
+   * identically at both tiers.
+   */
+  critical?: Array<string>;
   /** Per-call decryption key policy — a CHECK (plus injectable `kryptos`). */
   key?: AegisDecryptKey;
 };

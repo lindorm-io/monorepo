@@ -3,6 +3,8 @@ import { B64U } from "../constants/format.js";
 import { TOKEN_HEADER_ALGORITHMS } from "../constants/header.js";
 import { JoseError } from "../../errors/index.js";
 import { KIT_CAPABILITIES } from "../registry/kit-capabilities.js";
+import type { Dict } from "@lindorm/types";
+import { headerByJose } from "../header/header-registry.js";
 import type { WireTokenHeader, WireTokenHeaderOptions } from "../../types/index.js";
 
 /**
@@ -65,7 +67,33 @@ export const encodeJoseHeader = (header: WireTokenHeaderOptions): string => {
   return B64.encode(JSON.stringify(claims), B64U);
 };
 
-export const decodeJoseHeader = (header: string): WireTokenHeader => {
+/**
+ * Decode a base64url JOSE protected header into the REGISTERED members and the
+ * ones no registry row answers for, kept APART.
+ *
+ * ⚠ THE SPLIT IS THE POINT. `JSON.parse` keeps every member a producer wrote, and
+ * returning that object as a `WireTokenHeader` is a typed lie: the type says an
+ * unregistered key cannot exist and the value carries one, so every reader
+ * downstream believes a bag it cannot inspect. `unknown` is where they go — a
+ * foreign issuer may legitimately write params aegis has never heard of, and
+ * dropping them would hide what the token said ({@link WireHeaderBuckets}).
+ *
+ * The `alg`/`enc`/`typ` checks below run on the parsed object BEFORE the split,
+ * because all three are registered and their refusals are about what this library
+ * can process at all.
+ *
+ * ⛔ THE UNKNOWN BAG IS `Object.create(null)`, and both halves of that matter.
+ * `JSON.parse` creates `__proto__` as an OWN data property, so it survives
+ * `Object.entries`; assigning it onto a plain `{}` reaches `Object.prototype`'s
+ * setter instead, which DROPS the parameter (breaking the verbatim carriage this
+ * bag exists for) and leaves the bag inheriting attacker-chosen keys. A
+ * null-prototype object has no setter to hit and no chain for a consumer's own
+ * `unknown[key]` lookup to walk. This package already bans `in` on a
+ * caller-influenced key for the same class; the ASSIGNMENT is the other half.
+ */
+export const decodeJoseHeader = (
+  header: string,
+): { header: WireTokenHeader; unknown: Dict } => {
   const string = B64.toString(header);
   const json = JSON.parse(string) as Partial<WireTokenHeader>;
 
@@ -114,7 +142,23 @@ export const decodeJoseHeader = (header: string): WireTokenHeader => {
         "The decoded header typ is present but is not a string, which RFC 7515 requires.",
     });
   }
-  // Pass through as-is; individual Kit classes validate specific values if needed
+  // The REGISTERED members and the rest, kept apart — see the return docstring.
+  // A `Map` read (`headerByJose`), so a member off a token a stranger wrote
+  // cannot resolve through `Object.prototype`.
+  const registered: Dict = {};
+  // Null-prototype — see the docstring. The keys come off a token a stranger wrote.
+  const unknown: Dict = Object.create(null);
 
-  return json as WireTokenHeader;
+  for (const [key, value] of Object.entries(json)) {
+    if (headerByJose(key) === undefined) {
+      unknown[key] = value;
+      continue;
+    }
+
+    registered[key] = value;
+  }
+
+  // Values are passed through as-is; individual Kit classes validate specific
+  // ones if needed.
+  return { header: registered as WireTokenHeader, unknown };
 };

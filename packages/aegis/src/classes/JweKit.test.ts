@@ -85,6 +85,7 @@ describe("JweKit", () => {
 
       expect(kit.decrypt(token)).toEqual({
         unprotectedHeader: {},
+        unknown: { protected: {}, unprotected: {} },
         protectedHeader: {
           alg: "ECDH-ES",
           cty: "text/plain",
@@ -114,6 +115,7 @@ describe("JweKit", () => {
 
       expect(kit.decrypt(token)).toEqual({
         unprotectedHeader: {},
+        unknown: { protected: {}, unprotected: {} },
         protectedHeader: {
           alg: "dir",
           cty: "text/plain",
@@ -142,6 +144,7 @@ describe("JweKit", () => {
 
       expect(kit.decrypt(token)).toEqual({
         unprotectedHeader: {},
+        unknown: { protected: {}, unprotected: {} },
         protectedHeader: {
           alg: "A128KW",
           cty: "text/plain",
@@ -167,6 +170,7 @@ describe("JweKit", () => {
 
       expect(kit.decrypt(token)).toEqual({
         unprotectedHeader: {},
+        unknown: { protected: {}, unprotected: {} },
         protectedHeader: {
           alg: "PBES2-HS512+A256KW",
           cty: "text/plain",
@@ -193,6 +197,7 @@ describe("JweKit", () => {
 
       expect(kit.decrypt(token)).toEqual({
         unprotectedHeader: {},
+        unknown: { protected: {}, unprotected: {} },
         protectedHeader: {
           alg: "A128GCMKW",
           cty: "text/plain",
@@ -217,6 +222,7 @@ describe("JweKit", () => {
 
       expect(kit.decrypt(token)).toEqual({
         unprotectedHeader: {},
+        unknown: { protected: {}, unprotected: {} },
         protectedHeader: {
           alg: "ECDH-ES",
           cty: "text/plain",
@@ -245,6 +251,7 @@ describe("JweKit", () => {
 
       expect(kit.decrypt(token)).toEqual({
         unprotectedHeader: {},
+        unknown: { protected: {}, unprotected: {} },
         protectedHeader: {
           alg: "RSA-OAEP-256",
           cty: "text/plain",
@@ -270,6 +277,7 @@ describe("JweKit", () => {
       // original compact token — never the ciphertext segments.
       expect(JweKit.decode(token)).toEqual({
         unprotectedHeader: {},
+        unknown: { protected: {}, unprotected: {} },
         protectedHeader: {
           alg: "ECDH-ES",
           cty: "text/plain",
@@ -334,7 +342,7 @@ describe("JweKit", () => {
   });
 
   describe("critical header parameter rejection", () => {
-    test("should reject RFC-valid token with an extension critical parameter aegis does not implement", () => {
+    test("should reject a token whose crit names a specification-defined parameter", () => {
       const token = kit.encrypt("data", {
         header: { oid: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03" },
       });
@@ -345,8 +353,7 @@ describe("JweKit", () => {
       const decoded = JweKit.decode(token);
       const headerWithCrit = {
         ...decoded.protectedHeader,
-        crit: ["lindorm_ext"],
-        lindorm_ext: "some-value",
+        crit: ["typ"],
       };
 
       const parts = token.split(".");
@@ -356,7 +363,7 @@ describe("JweKit", () => {
       const modifiedToken = [modifiedHeader, ...parts.slice(1)].join(".");
 
       expect(() => kit.decrypt(modifiedToken)).toThrow(
-        "Unsupported critical header parameter: lindorm_ext",
+        /crit must not contain the specification-defined header parameter "typ"/,
       );
     });
 
@@ -377,7 +384,7 @@ describe("JweKit", () => {
       expect(() => kit.decrypt(modifiedToken)).toThrow(/not present/);
     });
 
-    test("should reject crit containing an IANA-registered parameter name", () => {
+    test("should reject crit containing a specification-defined parameter name", () => {
       const token = kit.encrypt("data", {
         header: { oid: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03" },
       });
@@ -391,7 +398,7 @@ describe("JweKit", () => {
         .replace(/=/g, "");
       const modifiedToken = [modifiedHeader, ...parts.slice(1)].join(".");
 
-      expect(() => kit.decrypt(modifiedToken)).toThrow(/IANA-registered/);
+      expect(() => kit.decrypt(modifiedToken)).toThrow(/specification-defined/);
     });
 
     test("should reject crit that is an empty array", () => {

@@ -8,8 +8,9 @@ import {
   Sign1,
   UnprotectedHeaders,
 } from "@auth0/cose";
-import { createHash } from "node:crypto";
+import { createHash, subtle } from "node:crypto";
 import { Amphora, type IAmphora } from "@lindorm/amphora";
+import { B64 } from "@lindorm/b64";
 import { LindormError } from "@lindorm/errors";
 import { isArray, isDate, isNull, isObject, isString, isUndefined } from "@lindorm/is";
 import type { IKryptos } from "@lindorm/kryptos";
@@ -40,6 +41,7 @@ import {
   coseName,
   joseName,
 } from "../internal/claims/claims-registry.js";
+import { B64U } from "../internal/constants/format.js";
 import { Tag, decodeCbor, encodeCbor } from "../internal/cose/cbor.js";
 import { encodeCwtClaims } from "../internal/cose/cwt-claims.js";
 import type { CoseLabel } from "../internal/cose/cose-label.js";
@@ -48,10 +50,13 @@ import { COSE_TAG, decodeProtectedHeader } from "../internal/cose/structures.js"
 import { coseByJose, headerByJose } from "../internal/header/header-registry.js";
 import { WIRE_TAGS } from "../internal/registry/wire.js";
 import type {
+  WireHeaderBuckets,
   ParsedDpopProof,
   TokenContent,
   TokenFormat,
   TokenFormatTag,
+  VerifyStructuredTokenOptions,
+  VerifyUnstructuredTokenOptions,
 } from "../types/index.js";
 import { inspectToken, type RawLabelMap, type TokenInspection } from "./inspect-token.js";
 import {
@@ -406,6 +411,21 @@ type ScenarioResult = {
    * act's silence — which is exactly how the success path came to be unexercised.
    */
   dpop?: { value: ParsedDpopProof | undefined };
+  /**
+   * The WIRE-tier `unknown` header bags, in a cell for the same reason as the
+   * rest: only a KIT door reports them. The DOMAIN verbs deliberately do not —
+   * an unregistered wire parameter has no domain name — so a row asserting on
+   * this against `verify`/`decrypt` fails BY NAME rather than passing on the
+   * verb's silence, which is exactly the tier boundary stated as a test.
+   */
+  unknownHeader?: { value: WireHeaderBuckets["unknown"] | undefined };
+  /**
+   * The WIRE protected header a KIT door reports, in a cell of its own — see the
+   * `wireHeader` THEN step. A DOMAIN act reports none, so a row asserting on it
+   * after `verify`/`parse` fails by name rather than silently comparing a domain
+   * header against wire spellings.
+   */
+  wireHeader?: { value: Dict };
 };
 
 /**
@@ -750,6 +770,39 @@ const AGNOSTIC_FORMATS = {
 } as const satisfies Record<"mint" | "sign" | "encrypt", Record<Wire, string>>;
 
 /**
+ * The verify options a STRUCTURED door takes and an OPAQUE one does not — every
+ * one of them a CLAIMS knob, and an opaque token carries no claims layer to
+ * apply it to.
+ *
+ * ⚠ THE KEY TYPE IS THE DIFFERENCE BETWEEN THE TWO OPTION BAGS, not a
+ * transcription of it, and the compiler holds it to that in BOTH directions: a
+ * knob added to the STRUCTURED bag alone enters the `Exclude` and this object
+ * fails to compile for the missing property, and a structured knob PROMOTED to
+ * the shared bag leaves its entry here excess. Hand-kept, the first of those
+ * would reach the opaque door with nothing to notice.
+ *
+ * ⛔ A knob added to the UNSTRUCTURED bag — alone, or to both at once — changes
+ * the `Exclude` not at all, and that is correct rather than a hole: a door that
+ * DECLARES the knob is a door this guard has no objection to. The guard's
+ * subject is the difference, so an option on both sides is outside it.
+ */
+const STRUCTURED_ONLY_VERIFY_OPTIONS: Readonly<
+  Record<
+    Exclude<keyof VerifyStructuredTokenOptions, keyof VerifyUnstructuredTokenOptions>,
+    true
+  >
+> = {
+  clockTolerance: true,
+  currentDate: true,
+  maxTokenAge: true,
+  tokenType: true,
+  verifyAuthTime: true,
+  verifyExpiration: true,
+  verifyIssuedAt: true,
+  verifyNotBefore: true,
+};
+
+/**
  * The FOREIGN producers — the write half of the foreign-token step, one per wire,
  * each a third-party library signing with the vault's own baseline key.
  *
@@ -764,6 +817,62 @@ const AGNOSTIC_FORMATS = {
  * §3.1 permits a non-integrity-critical parameter to sit and where aegis's key
  * resolution reads it from.
  */
+const webCryptoSignParams = (kryptos: IKryptos): EcdsaParams => {
+  switch (kryptos.algorithm) {
+    // RFC 7518 §3.4 — ES512 is ECDSA using P-521 and SHA-512, and the JWS
+    // signature is the raw `R || S` pair `subtle.sign` already returns.
+    case "ES512":
+      return { name: "ECDSA", hash: "SHA-512" };
+    default:
+      throw new Error(
+        `the hand-assembled foreign JOSE producer has no WebCrypto mapping for "${kryptos.algorithm}" — add one`,
+      );
+  }
+};
+
+/**
+ * A JOSE compact serialisation assembled BY HAND — the producer path for a header
+ * `jose` refuses to write (see the caller for which one and why).
+ *
+ * ⚠ THE SIGNATURE IS REAL: `subtle.sign` over the exact
+ * `BASE64URL(header) "." BASE64URL(payload)` input RFC 7515 §5.1 defines, with
+ * the key `jose` would have used. ⛔ NOT because today's callers need it —
+ * every JOSE reader runs `assertProtectedHeaderGates` BEFORE its signature or
+ * AEAD cycle (`JwsKit.verify`, `JwtKit.verify`, `JweKit.decrypt`), so a garbage
+ * signature would not change the verdict of a row taking this path.
+ * It is real because a hostile-header producer that also forged the signature
+ * models nothing (a third party's envelope is odd, its signature is not), and
+ * because a row whose verdict DOES come after the signature must be able to take
+ * this path without the helper changing underneath it. Pinned by
+ * `run-scenario.test.ts#a hand-assembled compact serialisation carries a
+ * signature aegis verifies`.
+ *
+ * Exported for that pin alone: the routing above reaches this only for a header
+ * aegis refuses on sight, so no scenario row can exercise the signature.
+ */
+export const signCompactByHand = async (
+  header: Dict,
+  payload: Buffer,
+  kryptos: IKryptos,
+  key: Awaited<ReturnType<typeof importJWK>>,
+): Promise<string> => {
+  if (!(key instanceof CryptoKey)) {
+    throw new Error(
+      "the hand-assembled foreign JOSE producer signs with WebCrypto, which needs an imported CryptoKey — this row's key resolved to raw bytes.",
+    );
+  }
+
+  const signingInput = `${B64.encode(JSON.stringify(header), B64U)}.${B64.encode(payload, B64U)}`;
+
+  const signature = await subtle.sign(
+    webCryptoSignParams(kryptos),
+    key,
+    Buffer.from(signingInput, "utf8"),
+  );
+
+  return `${signingInput}.${B64.encode(Buffer.from(signature), B64U)}`;
+};
+
 const signForeignJose = async (
   claims: Dict,
   typ: string | undefined,
@@ -777,6 +886,17 @@ const signForeignJose = async (
   if (buckets?.unprotectedHeader !== undefined) {
     throw new Error(
       "the row places parameters in the UNPROTECTED header bucket, but this run is on the JOSE wire, whose compact serialisation has only one header. " +
+        "Scope the row with `unsupported: { jose: … }`.",
+    );
+  }
+
+  // Same guard, same reason: a JOSE header is a JSON object with ONE name-space,
+  // so RFC 9052 §1.4's second label form has no meaning here and this builder has
+  // nowhere to put the entries. Without the throw the field is silently dropped
+  // and the row signs a token that tests nothing.
+  if (buckets?.textLabelledProtected !== undefined) {
+    throw new Error(
+      "the row places TEXT-LABELLED protected entries, but this run is on the JOSE wire, whose header has a single name-space — there is no second label form for them to take. " +
         "Scope the row with `unsupported: { jose: … }`.",
     );
   }
@@ -799,18 +919,42 @@ const signForeignJose = async (
     ? Object.fromEntries(declared.map((member) => [String(member), true]))
     : undefined;
 
-  return new CompactSign(Buffer.from(JSON.stringify(claims), "utf8"))
-    .setProtectedHeader({
-      alg: kryptos.algorithm,
-      kid: kryptos.id,
-      ...(typ === undefined ? {} : { typ }),
-      // ⚠ LAST, so a row can restate a derived parameter deliberately — the same
-      // precedence the COSE producer gives its own protected entries. On this
-      // wire the JOSE name IS the key, so nothing is translated; the parameter
-      // travels exactly as the row spells it, including one aegis does not
-      // register, which is what a third party's own extension looks like.
-      ...protectedHeader,
-    })
+  const header: Dict & { alg: string } = {
+    alg: kryptos.algorithm,
+    kid: kryptos.id,
+    ...(typ === undefined ? {} : { typ }),
+    // ⚠ LAST, so a row can restate a derived parameter deliberately — the same
+    // precedence the COSE producer gives its own protected entries. On this
+    // wire the JOSE name IS the key, so nothing is translated; the parameter
+    // travels exactly as the row spells it, including one aegis does not
+    // register, which is what a third party's own extension looks like.
+    ...protectedHeader,
+  };
+
+  const payload = Buffer.from(JSON.stringify(claims), "utf8");
+
+  // ⚠ ONE SHAPE `jose` WILL NOT WRITE AT ALL: a `crit` member the header does not
+  // carry, which its producer check refuses before signing
+  // (`jose/dist/webapi/lib/validate_crit.js` — `Extension Header Parameter "…" is
+  // missing`). That is NOT a reason to scope such a row off this wire: RFC 9052
+  // §3.1 puts the same prohibition on a COSE producer, `@auth0/cose` does not
+  // check it, and aegis's read gate is wire-agnostic
+  // (`src/internal/utils/validate-crit.ts#export const validateCrit` refuses the
+  // member on either encoding). A
+  // row asking for the shape is modelling a producer that does not validate
+  // either — hostile or merely buggy — so it is signed by hand instead. ⚠ The
+  // membership test is `Object.hasOwn`, never `in`: the members come off the row
+  // and `header` is a plain object, so `in` would find `crit: ["toString"]` on
+  // `Object.prototype` and route a row that needs this path back to `jose`.
+  if (
+    isArray(declared) &&
+    declared.some((member) => !Object.hasOwn(header, String(member)))
+  ) {
+    return signCompactByHand(header, payload, kryptos, key);
+  }
+
+  return new CompactSign(payload)
+    .setProtectedHeader(header)
     .sign(key, crit === undefined ? undefined : { crit });
 };
 
@@ -884,6 +1028,15 @@ const signForeignCose = async (
   if (typ !== undefined) protectedEntries.push([COSE_TYP_LABEL, typ]);
 
   protectedEntries.push(...coseBucketEntries(buckets?.protectedHeader));
+
+  // The row's TEXT-labelled entries, appended verbatim — no registry lookup, which
+  // is the whole point: they state the tstr form of a name whose integer form may
+  // already be in this same bucket (RFC 9052 §1.4 admits both).
+  protectedEntries.push(
+    ...Object.entries(buckets?.textLabelledProtected ?? {}).map(
+      ([name, value]): [CoseLabel, unknown] => [name, value],
+    ),
+  );
 
   const protectedHeaders = new ProtectedHeaders(protectedEntries as never);
   // The row's own unprotected entries are appended AFTER the derived `kid`,
@@ -1395,8 +1548,14 @@ const materialise = async (
  * pass while saying nothing about integrity. An unregistered member is inert on
  * both wires: RFC 7515 §4 leaves an unrecognised JOSE Header Parameter to be
  * ignored when it is not listed in `crit`, and an unregistered COSE label has no
- * JOSE wire name and is skipped
- * (`src/internal/header/cose-wire-header.ts#if (jose === undefined) return;`).
+ * JOSE wire name so it lands in the read result's `unknown` bag rather than in a
+ * typed one (`src/internal/header/cose-wire-header.ts#unknown[String(label)] = value;`).
+ * ⚠ That bag is NOT inert to everything: `rejectUnknownCritical` merges it into
+ * the header it validates, so an added member can SATISFY a `crit` that names it
+ * (`src/internal/utils/validate-crit.ts#is not present in the header`) — standing in
+ * a `crit` then still needs the
+ * caller's declaration. It is inert to this tamper because the tokens here carry
+ * no `crit` for the added member to be named in.
  */
 const TAMPERED_MEMBER = "tampered";
 
@@ -1648,14 +1807,22 @@ const act = async (
           ? AGNOSTIC_KITS[step.kit][wire]
           : step.kit;
 
-      // An OPAQUE door takes `VerifyUnstructuredTokenOptions`, which has no
-      // temporal knob at all — there are no claims to bound. A row that stated
-      // one here would be asserting against an option the door does not have, so
-      // name the mistake rather than forward a bag that is silently ignored.
+      // An OPAQUE door takes `VerifyUnstructuredTokenOptions`, which is the
+      // structured bag MINUS the claims knobs — there are no claims to bound. A
+      // row stating one here would be asserting against an option the door does
+      // not have, so name the mistake rather than forward a bag that is silently
+      // ignored. Everything else — `certBindingMode`, `crit`, `key` — the opaque
+      // door does take, and is forwarded below.
       if (step.options !== undefined && (kit === "jws" || kit === "cws")) {
-        throw new Error(
-          `the row hands verify options to the ${kit} door, which takes none beyond \`certBindingMode\` — an opaque token carries no claims layer to bound.`,
+        const claimsKnobs = Object.keys(step.options).filter((option) =>
+          Object.hasOwn(STRUCTURED_ONLY_VERIFY_OPTIONS, option),
         );
+
+        if (claimsKnobs.length > 0) {
+          throw new Error(
+            `the row hands the ${kit} door the claims verify option(s) ${claimsKnobs.join(", ")}, which it does not take — an opaque token carries no claims layer to bound.`,
+          );
+        }
       }
 
       switch (kit) {
@@ -1668,7 +1835,8 @@ const act = async (
           return {
             token: current.token,
             claims: result.payload as Dict,
-            header: result.protectedHeader as unknown as Dict,
+            wireHeader: { value: result.protectedHeader as unknown as Dict },
+            unknownHeader: { value: result.unknown },
           };
         }
         case "cwt": {
@@ -1680,21 +1848,24 @@ const act = async (
           return {
             token: current.token,
             claims: result.payload as Dict,
-            header: result.protectedHeader as unknown as Dict,
+            wireHeader: { value: result.protectedHeader as unknown as Dict },
+            unknownHeader: { value: result.unknown },
           };
         }
         case "jws": {
-          const result = await ctx.aegis.jws.verify(current.token);
+          const result = await ctx.aegis.jws.verify(current.token, step.options);
           return {
             token: current.token,
-            header: result.protectedHeader as unknown as Dict,
+            wireHeader: { value: result.protectedHeader as unknown as Dict },
+            unknownHeader: { value: result.unknown },
           };
         }
         case "cws": {
-          const result = await ctx.aegis.cws.verify(current.token);
+          const result = await ctx.aegis.cws.verify(current.token, step.options);
           return {
             token: current.token,
-            header: result.protectedHeader as unknown as Dict,
+            wireHeader: { value: result.protectedHeader as unknown as Dict },
+            unknownHeader: { value: result.unknown },
           };
         }
 
@@ -1954,12 +2125,28 @@ const assertObservation = (step: ThenStep, result: ScenarioResult, wire: Wire): 
       return;
     }
 
-    case "header":
+    case "header": {
+      // The CELL, not the value — the same guard `wireHeader` and `unknownHeader`
+      // carry. ⚠ WHAT IT CATCHES IS NARROW AND REAL: measured on this repo's
+      // `@vitest/expect`, `expect(undefined).toMatchObject({})` PASSES while
+      // `expect(undefined).not.toHaveProperty(x)` THROWS — so a row with a
+      // non-empty `excludes` was already red, and the vacuous shape is
+      // `expected: {}` with no `excludes`. No row uses it today. The guard's value
+      // is that it fails BY NAME instead of by a confusing property error, and that
+      // the one shape which would pass silently cannot appear later.
+      if (result.header === undefined) {
+        throw new Error(
+          "the row asserts on the DOMAIN header, but the last act reported none. " +
+            "A `kit-verify` reports `wireHeader` — the wire vocabulary — so name that step instead.",
+        );
+      }
+
       expect(result.header).toMatchObject(step.expected);
       for (const field of step.excludes ?? []) {
         expect(result.header).not.toHaveProperty(field);
       }
       return;
+    }
 
     case "wirePayload": {
       // ⚠ `payload`, not `wire` — this used to SHADOW the `wire: Wire` parameter,
@@ -2012,6 +2199,56 @@ const assertObservation = (step: ThenStep, result: ScenarioResult, wire: Wire): 
     case "wireClaims":
       assertWireBucket(step, wireBucketOf(inspectToken(result.token), "claims"));
       return;
+
+    case "wireHeader": {
+      // The CELL, not the value — a DOMAIN act reports no wire header, and a row
+      // asserting on one there is comparing two vocabularies.
+      if (result.wireHeader === undefined) {
+        throw new Error(
+          "the row asserts on the WIRE header, but the last act reported none. " +
+            "Only a `kit-verify` does — the domain verbs report `header`, in the domain vocabulary.",
+        );
+      }
+
+      if (step.includes) expect(result.wireHeader.value).toMatchObject(step.includes);
+      for (const key of step.excludes ?? []) {
+        expect(result.wireHeader.value).not.toHaveProperty(key);
+      }
+      return;
+    }
+
+    case "unknownHeader": {
+      // The CELL, not the value — see `ScenarioResult.unknownHeader`. A domain
+      // verb reports no unknown bag at all, and a row asserting on one there is
+      // asserting the tier boundary does not exist.
+      if (result.unknownHeader === undefined) {
+        throw new Error(
+          "the row asserts on the wire-tier `unknown` header bag, but the last act reported none. " +
+            "Only a `kit-verify` does — the DOMAIN verbs carry no unregistered parameter by design.",
+        );
+      }
+
+      // ⚠ THE CELL WAS GUARDED, THE VALUE WAS NOT — and an `excludes`-only row
+      // over `{}` can never fail, so a kit that stopped reporting `unknown`
+      // altogether would leave such a row green. The sibling `wirePayload` branch
+      // above throws for the same shape; this matches it.
+      const bags = result.unknownHeader.value;
+
+      if (bags === undefined) {
+        throw new Error(
+          "the row asserts on the wire-tier `unknown` header bag, but the act reported the cell with NO value — " +
+            "an exclusion over an absent bag can never fail, so the row would pass without looking.",
+        );
+      }
+
+      const bag = bags[step.bucket];
+
+      if (step.includes) expect(bag).toMatchObject(step.includes);
+      for (const key of step.excludes ?? []) {
+        expect(bag).not.toHaveProperty(key);
+      }
+      return;
+    }
 
     case "dpop": {
       // The cell, not the value: an act that reports NO proof at all is a row
@@ -2156,6 +2393,9 @@ const assertOutcome = (
       `expected the scenario to REJECT with ${verdict.error}${resolved}`,
     ).toBeInstanceOf(ERROR_CLASSES[verdict.error]);
 
+    if (verdict.code) {
+      expect(error).toMatchObject({ code: verdict.code });
+    }
     if (verdict.data) {
       expect(error).toMatchObject({ data: verdict.data });
     }

@@ -15,7 +15,7 @@ import type { AegisDeps } from "./aegis-deps.js";
  * verify the COSE_Sign1 / COSE_Mac0 integrity and return the OPAQUE payload bytes
  * under `payload` (with the native `Buffer` token). No claim decoding — a CWS
  * carries no claims layer. `CwsKit.verify` takes the ENCODED bytes and strips the
- * outer CWT tag (61) itself (R2).
+ * outer CWT tag (61) itself.
  */
 export const rawVerifyCws = async <T extends TokenContent = Buffer>({
   token,

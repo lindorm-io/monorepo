@@ -20,7 +20,7 @@ MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
 // The kit is WIRE-ONLY and TRANSFORM-FREE: `sign` serializes an already
 // COSE-name-keyed claim dict verbatim; `verify` returns the native WIRE payload
 // (`sub`/`cti`, not the domain `subject`/`tokenId`). The domain⇆wire translation
-// is the Aegis-side CoseKit boundary, never the kit.
+// is Aegis-side (`domainToWire`/`wireToDomain`), never the kit.
 const wire = {
   iss: "https://issuer.lindorm.io/",
   sub: "user-1",
@@ -165,21 +165,21 @@ describe("CwtKit (COSE_Sign1, asymmetric)", () => {
       expect(unprotectedHeader.cty).toBeUndefined();
     });
 
-    // The caller does NOT choose the bucket: the header registry's `placement`
-    // column does, and `x5u` (like `cty`, `typ`, `oid`, `x5c`) is
-    // integrity-protected only. The same column filters an incoming unprotected
-    // bucket on the read side, so a writer allowed to emit one there would be
-    // emitting a parameter no reader will ever surface.
-    test("refuses a protected-only param placed in the unprotected bag", () => {
+    // The caller does NOT choose the bucket for a REGISTERED parameter: `header`
+    // is the only bag that takes one and it travels protected. `x5u` written into
+    // a custom bag is refused as the misplaced registered parameter it is.
+    test("refuses a registered param written into a custom bag", () => {
       const error = (() => {
         try {
-          kit.sign(wire, { unprotected: { x5u: "https://certs.lindorm.io/leaf.pem" } });
+          kit.sign(wire, {
+            custom: { unprotected: { x5u: "https://certs.lindorm.io/leaf.pem" } },
+          });
         } catch (err) {
           return err as AegisError;
         }
       })();
 
-      expect(error?.code).toBe("cose_unprotected_placement");
+      expect(error?.code).toBe("header_registered_in_custom");
     });
 
     test("a derived param (alg) smuggled into the bag throws cose_reserved_header", () => {
@@ -195,7 +195,7 @@ describe("CwtKit (COSE_Sign1, asymmetric)", () => {
     });
   });
 
-  describe("temporal-in-kit (R10)", () => {
+  describe("temporal-in-kit", () => {
     // The wire kit range-checks exp/nbf/iat against "now" with clock tolerance,
     // validated IF PRESENT — exactly as JwtKit does.
     test("rejects an expired token (exp in the past)", () => {
@@ -214,8 +214,8 @@ describe("CwtKit (COSE_Sign1, asymmetric)", () => {
     });
   });
 
-  // R10 temporal overrides — mocked "now" is 2024-01-01T08:00:00Z (unix 1704096000).
-  describe("temporal overrides (R10 — currentDate / maxTokenAge)", () => {
+  // Temporal overrides — mocked "now" is 2024-01-01T08:00:00Z (unix 1704096000).
+  describe("temporal overrides (currentDate / maxTokenAge)", () => {
     test("currentDate overrides now: an expired CWT verifies against a past currentDate", () => {
       // iat 06:00, exp 07:30 — expired against the mocked 08:00 now.
       const token = kit.sign({ ...wire, iat: 1704088800, exp: 1704094200 });
@@ -290,29 +290,29 @@ describe("CwtKit — the COSE_Sign1 it builds and the header rules it enforces",
     expect(thrown?.code).toBe("cose_reserved_header");
   });
 
-  test("refuses a derived param (kid) smuggled into the UNPROTECTED bag", () => {
+  test("refuses a derived param (kid) smuggled into a CUSTOM bag", () => {
     const thrown = thrownBy(() =>
-      kit.sign(wire, { unprotected: { kid: "other" } as never }),
+      kit.sign(wire, { custom: { unprotected: { kid: "other" } } }),
     );
 
     expect(thrown).toBeInstanceOf(CwtError);
-    expect(thrown?.code).toBe("cose_reserved_header");
+    expect(thrown?.code).toBe("header_kit_owned_in_custom");
   });
 
   test("refuses crit itself in the unprotected bag (RFC 9052 §3.1)", () => {
     const thrown = thrownBy(() =>
-      kit.sign(wire, { unprotected: { crit: ["cty"] } as never }),
+      kit.sign(wire, { custom: { unprotected: { crit: ["cty"] } } }),
     );
 
     expect(thrown).toBeInstanceOf(CwtError);
     expect(thrown?.code).toBe("cose_crit_unprotected");
   });
 
-  test("refuses a crit-listed param placed unprotected", () => {
+  test("refuses a crit-listed custom param placed unprotected", () => {
     const thrown = thrownBy(() =>
       kit.sign(wire, {
-        header: { crit: ["oid"] },
-        unprotected: { oid: "1.2.3.4" },
+        header: { crit: ["x-hint"] },
+        custom: { protected: { "x-hint": "a" }, unprotected: { "x-hint": "b" } },
       }),
     );
 
@@ -320,9 +320,11 @@ describe("CwtKit — the COSE_Sign1 it builds and the header rules it enforces",
     expect(thrown?.code).toBe("cose_crit_param_unprotected");
   });
 
-  test("refuses the same param set in BOTH bags", () => {
+  test("refuses the same custom param set in BOTH bags", () => {
     const thrown = thrownBy(() =>
-      kit.sign(wire, { header: { cty: "a" }, unprotected: { cty: "b" } }),
+      kit.sign(wire, {
+        custom: { protected: { "x-hint": "a" }, unprotected: { "x-hint": "b" } },
+      }),
     );
 
     expect(thrown).toBeInstanceOf(CwtError);
@@ -355,15 +357,20 @@ describe("CwtKit — the COSE_Sign1 it builds and the header rules it enforces",
     expect(thrown?.code).toBe("cose_malformed");
   });
 
-  test("verify accepts the crit extension aegis implements, under the cwt tag", () => {
-    // ⚠ THIS USED TO REFUSE, and the refusal was the defect: the token is one
-    // this very file has just minted, so aegis was declining to verify its own
-    // output. `oid` is the header registry's one `critEligible` parameter and the
-    // MINT gate and the VERIFY gate read that same cell, which is what makes a
-    // token aegis mints a token aegis verifies.
+  test("verify accepts the crit extension aegis implements once the caller declares it", () => {
+    // ⛔ `oid` GETS NO EXCEPTION AT VERIFY. It is the registry's one
+    // `critEligible` parameter, which is what lets the MINT gate write it — but
+    // RFC 7515 §4.1.11 puts the duty to understand a critical extension on the
+    // RECIPIENT, and a registry entry says nothing about whether the application
+    // behind this verify can act on one. So the round trip closes on the
+    // declaration, in WIRE vocabulary at a wire door.
     const token = kit.sign(wire, { header: { crit: ["oid"], oid: "1.2.3.4" } });
 
-    const verified = kit.verify(token);
+    expect(() => kit.verify(token)).toThrow(
+      expect.objectContaining({ code: "cwt_unsupported_crit_param" }),
+    );
+
+    const verified = kit.verify(token, undefined, { crit: ["oid"] });
 
     // ⚠ The kit is WIRE-ONLY, so the round trip is asserted in WIRE vocabulary:
     // the member travelled as the label the parameter is keyed under on this wire
@@ -375,9 +382,9 @@ describe("CwtKit — the COSE_Sign1 it builds and the header rules it enforces",
     expect(verified.protectedHeader.oid).toBe("1.2.3.4");
   });
 
-  test("verify refuses a crit extension it does not implement, under the cwt tag", () => {
-    // The other half, and it needs a FOREIGN header: aegis can no longer mint a
-    // `crit` naming a parameter it does not implement, so the only producer of
+  test("verify refuses a crit naming a specification-defined parameter, under the cwt tag", () => {
+    // The other half, and it needs a FOREIGN header: aegis refuses to MINT a
+    // `crit` naming a specification-defined parameter, so the only producer of
     // one is somebody else. The protected bucket is rewritten after the mint —
     // the crit gate runs before the signature cycle, so the broken signature is
     // never reached.
@@ -392,11 +399,16 @@ describe("CwtKit — the COSE_Sign1 it builds and the header rules it enforces",
 
     const structure = [...(value as Array<unknown>)];
     const bucket = decodeCbor(structure[0] as Uint8Array) as Map<unknown, unknown>;
-    // Label 2 is `crit` (RFC 9052 §3.1 Table 3), naming a TEXT label the header
-    // registry has no entry for, beside the parameter itself — the header a
-    // conformant foreign producer with its own extension would write.
-    bucket.set(2, ["ext"]);
-    bucket.set("ext", "x");
+    // Label 2 is `crit` and label 16 is `typ` (RFC 9052 §3.1 Table 3, RFC 9596
+    // §2). `typ` is already in this bucket, so the header stays well-formed and
+    // the only fault is the member itself — one RFC 7515 §4.1.11 forbids a
+    // producer to name and lets a recipient refuse the token for.
+    //
+    // ⚠ An UNREGISTERED text label reaches a DIFFERENT refusal — the unclaimed
+    // one (`*_unsupported_crit_param`), or acceptance once the caller declares it
+    // (`internal/utils/reject-unknown-critical.ts`) — so it cannot serve as the
+    // MALFORMED probe this row needs.
+    bucket.set(2, [16]);
     structure[0] = encodeCbor(bucket);
 
     let wrapped: unknown = structure;
@@ -410,13 +422,8 @@ describe("CwtKit — the COSE_Sign1 it builds and the header rules it enforces",
     }
 
     expect(thrown).toBeInstanceOf(CwtError);
-    // ⚠ `*_invalid_crit`, not `*_unsupported_crit_param`, and that is a COSE READ
-    // fact rather than a weaker refusal: an unregistered COSE label has no JOSE
-    // wire name and is DROPPED on the way in (`internal/header/cose-wire-header.ts`),
-    // so the header aegis reads carries a `crit` naming a parameter that is not
-    // there. Both codes come from `rejectUnknownCritical`; this is its malformed
-    // branch answering first because the evidence for the other one cannot survive
-    // the COSE decode.
+    // `*_invalid_crit` — `validate-crit.ts` refuses every specification-defined member,
+    // which is `rejectUnknownCritical`'s MALFORMED branch.
     expect(thrown?.code).toBe("cwt_invalid_crit");
   });
 });

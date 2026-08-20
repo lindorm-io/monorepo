@@ -1,5 +1,5 @@
 import type {
-  SignUnstructuredTokenOptions,
+  JoseSignUnstructuredTokenOptions,
   TokenContent,
   VerifiedUnstructuredToken,
   VerifyUnstructuredTokenOptions,
@@ -7,7 +7,7 @@ import type {
 
 export interface IJwsKit {
   /** Sign arbitrary content; the cty is negotiated. Returns the BARE compact JWS. */
-  sign(data: TokenContent, options?: SignUnstructuredTokenOptions): string;
+  sign(data: TokenContent, options?: JoseSignUnstructuredTokenOptions): string;
   verify<T extends TokenContent = Buffer>(
     token: string,
     options?: VerifyUnstructuredTokenOptions,

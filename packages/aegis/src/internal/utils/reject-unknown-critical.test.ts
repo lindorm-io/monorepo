@@ -1,4 +1,8 @@
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import MockDate from "mockdate";
 import { describe, expect, test } from "vitest";
+import { TEST_EC_KEY_SIG } from "../../__fixtures__/keys.js";
+import { JwtKit } from "../../classes/JwtKit.js";
 import { CwtError, JwtError } from "../../errors/index.js";
 import type { WireTokenHeader } from "../../types/index.js";
 import { HEADER_SPECS, headerJoseName } from "../header/header-registry.js";
@@ -6,29 +10,66 @@ import { isCritEligible } from "../header/is-crit-eligible.js";
 import { rejectUnknownCritical } from "./reject-unknown-critical.js";
 import { validateCrit } from "./validate-crit.js";
 
+// The fixture key carries a fixed validity window, so the clock is pinned.
+MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
+
+const logger = createMockLogger();
+
 const header = (extra: Record<string, unknown>): WireTokenHeader =>
   ({ alg: "ES512", ...extra }) as WireTokenHeader;
 
-const reject = (extra: Record<string, unknown>) => (): void =>
-  rejectUnknownCritical({ header: header(extra), format: "jwt", error: JwtError });
+const reject =
+  (
+    extra: Record<string, unknown>,
+    unknown: Record<string, unknown> = {},
+    declared?: ReadonlyArray<string>,
+  ) =>
+  (): void =>
+    rejectUnknownCritical({
+      header: header(extra),
+      unknown,
+      declared,
+      format: "jwt",
+      error: JwtError,
+    });
 
 describe("rejectUnknownCritical", () => {
   test("accepts a header with no crit at all", () => {
     expect(reject({})).not.toThrow();
   });
 
-  test("accepts the extension aegis implements", () => {
-    // ⚠ THE COLUMN, NOT A CONSTANT. `oid` is `critEligible: true` in the header
-    // registry, which is the SAME cell the mint gate refuses on — so a token
-    // aegis mints with `crit: ["oid"]` is one aegis verifies. This function used
-    // to throw unconditionally, which meant no crit-carrying token aegis
-    // produced had ever verified on either wire.
-    expect(reject({ crit: ["oid"], oid: "1.2.3.4" })).not.toThrow();
+  test("refuses the extension aegis implements when nothing is declared", () => {
+    // ⛔ `oid` GETS NO EXCEPTION. It is `critEligible: true` in the registry,
+    // which is what lets a PRODUCER name it — but that says nothing about whether
+    // the application behind this verify can act on it, and RFC 7515 §4.1.11 puts
+    // that duty on the recipient. So the read gate does not read the column.
+    expect(reject({ crit: ["oid"], oid: "1.2.3.4" })).toThrow(
+      expect.objectContaining({
+        code: "jwt_unsupported_crit_param",
+        data: { param: "oid" },
+      }),
+    );
   });
 
-  test("refuses an extension it does not implement", () => {
-    // A name with no registry entry has no `critEligible` cell to be `true`, so
-    // it is refused by the same lookup that accepts `oid`.
+  test("accepts the extension aegis implements once the caller declares it", () => {
+    expect(reject({ crit: ["oid"], oid: "1.2.3.4" }, {}, ["oid"])).not.toThrow();
+  });
+
+  /**
+   * ⛔⛔ EVERY ROW BELOW THAT PUTS AN UNREGISTERED MEMBER IN `header` DESCRIBES A
+   * STATE NO PUBLIC DOOR PRODUCES, and each says so in its name. Both read paths
+   * route a key the registry does not answer for into `unknown`
+   * (`internal/utils/jose-header.ts`, `internal/header/cose-wire-header.ts`), so
+   * `header: { crit: ["ext"], ext: "x" }, unknown: {}` is reachable only by
+   * calling this function directly.
+   *
+   * They are kept because they probe the SPLIT the read side makes: a member that
+   * lands in the typed bag is not a custom parameter, so no declaration can admit
+   * it. What a real token does is pinned below and at the public door.
+   */
+  test("DIRECT CALL, unreachable state: an unregistered member in `header` is refused", () => {
+    // The read gate admits a member only when the caller declared it, and this
+    // call declares nothing.
     expect(reject({ crit: ["ext"], ext: "x" })).toThrow(
       expect.objectContaining({
         code: "jwt_unsupported_crit_param",
@@ -37,13 +78,73 @@ describe("rejectUnknownCritical", () => {
     );
   });
 
-  test("reports the first NON-ELIGIBLE member, not merely the first member", () => {
-    // Both members are real, present and NOT IANA-registered, so both clear the
-    // malformed branch. `oid` is understood and is skipped; naming it in the
-    // refusal would report a parameter aegis has no complaint about.
-    expect(reject({ crit: ["oid", "ext"], oid: "1.2.3.4", ext: "x" })).toThrow(
-      expect.objectContaining({ data: { param: "ext" } }),
+  test("DIRECT CALL, unreachable state: the first UNCLAIMED member is reported", () => {
+    // Both members are real, present and not specification-defined, so both clear
+    // the malformed branch. `oid` is DECLARED and is skipped; naming it in the
+    // refusal would report a parameter the caller has already taken on.
+    expect(
+      reject({ crit: ["oid", "ext"], oid: "1.2.3.4", ext: "x" }, {}, ["oid"]),
+    ).toThrow(expect.objectContaining({ data: { param: "ext" } }));
+  });
+
+  /**
+   * ⭐ WHAT A REAL TOKEN DOES — the case the DIRECT-CALL rows above are NOT about.
+   *
+   * An unregistered member the header CARRIES is a custom parameter its issuer
+   * marked critical, and the read side reports it in `unknown`. Whether it stands
+   * turns on the CALLER: RFC 7515 §4.1.11 puts the duty to understand a critical
+   * extension on the recipient, and aegis is never the final recipient, so it
+   * refuses until the application declares the parameter.
+   */
+  test("refuses an unregistered member the header CARRIES when nothing is declared", () => {
+    expect(reject({ crit: ["ext"] }, { ext: "x" })).toThrow(
+      expect.objectContaining({
+        code: "jwt_unsupported_crit_param",
+        data: { param: "ext" },
+      }),
     );
+  });
+
+  test("admits the same member once the caller declares it", () => {
+    expect(reject({ crit: ["ext"] }, { ext: "x" }, ["ext"])).not.toThrow();
+  });
+
+  test("a declaration does NOT waive the presence rule", () => {
+    // RFC 9052 §3.1 makes a crit label whose parameter is absent from the
+    // protected bucket a fatal error, and declaring the name states nothing about
+    // whether the token carries it. MALFORMED, not unsupported.
+    expect(reject({ crit: ["ext"] }, {}, ["ext"])).toThrow(
+      expect.objectContaining({ code: "jwt_invalid_crit" }),
+    );
+  });
+
+  test("a declaration does NOT admit a specification-defined parameter", () => {
+    // RFC 7515 §4.1.11 forbids a producer naming one at all, so no recipient can
+    // take responsibility for it — `validateCrit` refuses before the declaration
+    // is consulted.
+    expect(reject({ crit: ["alg"] }, {}, ["alg"])).toThrow(
+      expect.objectContaining({ code: "jwt_invalid_crit" }),
+    );
+  });
+
+  test("PUBLIC DOOR: a minted custom critical parameter needs the same declaration", () => {
+    // Byte-identical to what a conformant foreign producer with its own extension
+    // emits — aegis is simply the producer here, which is the whole point: these
+    // are the bytes the mint gate permits.
+    const kit = new JwtKit({ kryptos: TEST_EC_KEY_SIG, logger });
+
+    const token = kit.sign(
+      { iss: "https://issuer.lindorm.io/", sub: "user-1" },
+      { header: { crit: ["ext"] }, custom: { protected: { ext: "x" } } },
+    );
+
+    expect(() => kit.verify(token)).toThrow(
+      expect.objectContaining({
+        code: "jwt_unsupported_crit_param",
+        data: { param: "ext" },
+      }),
+    );
+    expect(() => kit.verify(token, undefined, { crit: ["ext"] })).not.toThrow();
   });
 
   test("refuses a MALFORMED crit distinctly from an unrecognised one", () => {
@@ -95,7 +196,7 @@ describe("rejectUnknownCritical", () => {
    * malformed first and this branch would go unprobed.
    */
   test.each(["toString", "constructor", "valueOf", "hasOwnProperty"])(
-    "refuses the Object.prototype member %s as an unsupported extension",
+    "DIRECT CALL, unreachable state: the Object.prototype member %s is refused",
     (member) => {
       expect(reject({ crit: [member], [member]: "x" })).toThrow(
         expect.objectContaining({
@@ -107,24 +208,33 @@ describe("rejectUnknownCritical", () => {
   );
 
   /**
-   * ⭐ THE TWO SOURCES, BOUND. `rejectUnknownCritical` runs `validateCrit`
-   * FIRST, and `validateCrit` refuses every name in its own hand-written
-   * `IANA_REGISTERED_JOSE_HEADER_PARAMS` list — a list nothing derives from the
-   * registry. So "a token aegis mints is a token aegis verifies" holds only
-   * while every `critEligible: true` parameter sits OUTSIDE that list, and
-   * nothing said so.
+   * ⭐ THE TWO GATES, BOUND. `rejectUnknownCritical` runs `validateCrit` FIRST,
+   * and `validateCrit` refuses every SPECIFICATION-DEFINED name
+   * ({@link isSpecDefinedHeaderParam}). So a `crit` aegis MINTS survives its own
+   * malformed gate only while every `critEligible: true` parameter answers FALSE
+   * to that predicate. (Surviving it is not acceptance — the declaration check
+   * below still applies.)
+   *
+   * ⚠ THE PREDICATE'S REGISTRY HALF READS THE `spec` COLUMN, not `critEligible`,
+   * so this row keeps the invariant honest rather than establishing it: a row
+   * whose `spec.kind` is `policy` is the only registry parameter that can be
+   * crit-eligible, and `policy` is frozen to `oid`
+   * (`is-spec-defined-header-param.test.ts`). ⛔ A predicate reading
+   * `critEligible` instead would break exactly here: RFC 7797 §6 requires
+   * `crit: ["b64"]` on a conformant unencoded-payload JWS, so implementing `b64`
+   * means marking it crit-eligible — and that would flip a parameter RFC 7797
+   * DEFINES to "not spec-defined", admitting it into `custom` while this line goes
+   * on refusing it.
    *
    * ⚠ Asserted BEHAVIOURALLY, through the real read path, rather than by
-   * comparing two sets: what matters is not that the lists differ but that an
-   * eligible parameter actually SURVIVES the read. A future parameter marked
-   * eligible while also being IANA-registered would be minted by
-   * `assert-crit-eligible.ts` and then refused on arrival as malformed — a token
-   * aegis issues and will not read back — and this is what says so.
+   * comparing two sets: what matters is that an eligible parameter actually
+   * SURVIVES the read.
    *
-   * ⚠ `b64` is the live warning. RFC 7797 §6 REQUIRES `crit: ["b64"]` on a
-   * conformant unencoded-payload JWS, and the list refuses it; trimming the list
-   * for that (an open item) must not quietly make an ineligible parameter
-   * reachable here.
+   * ⚠ `b64` is the live limitation, and it is not a defect to trim away. RFC 7797
+   * §6 REQUIRES `crit: ["b64"]` on a conformant unencoded-payload JWS, so aegis
+   * cannot produce one — correctly, because it does not implement the unencoded
+   * payload. Removing `b64` from the predicate would let a caller mint a token
+   * DECLARING that option while the payload was base64url-encoded anyway.
    */
   test("every crit-eligible parameter survives the read path's malformed gate", () => {
     const eligible = HEADER_SPECS.filter((spec) => isCritEligible(headerJoseName(spec)));
@@ -142,27 +252,28 @@ describe("rejectUnknownCritical", () => {
         `crit: ["${jose}"] is eligible at mint but refused as malformed on read`,
       ).toBeNull();
 
-      expect(reject({ crit: [jose], [jose]: "x" })).not.toThrow();
+      // DECLARED, because no registry column can ADMIT a member here (the `spec`
+      // column above only refuses): what this row asserts is that an eligible
+      // parameter is not refused as MALFORMED, which is the half the write side
+      // depends on.
+      expect(reject({ crit: [jose], [jose]: "x" }, {}, [jose])).not.toThrow();
     }
   });
 
   /**
-   * ⚠ WHY THE ELIGIBILITY BRANCH CANNOT BE PROBED FROM THIS DOOR, pinned as the
-   * derivation it is rather than left to be rediscovered. Every registered
-   * parameter that is NOT eligible is refused by `validateCrit` before the
-   * branch runs, so no input to `rejectUnknownCritical` distinguishes "reads the
-   * column" from "asks whether the parameter is registered at all" — measured:
-   * weakening the loop to the latter leaves the whole suite at its exact
-   * baseline. The distinction is probed one level down, on the shared predicate
-   * (`internal/header/is-crit-eligible.test.ts`), which is why that predicate
-   * has a file of its own.
+   * ⭐ THE READ PATH REACHES NO REGISTERED PARAMETER AT ALL, which is what makes
+   * the write side's `critEligible` column unobservable from this door and why
+   * `internal/header/is-crit-eligible.test.ts` is where it is probed.
+   * `validateCrit` refuses every IANA-registered member before this gate's loop
+   * runs, and `oid` — the one registered member that survives — is decided here by
+   * the CALLER's declaration rather than by any column.
    *
-   * ⚠ THIS TEST IS THE TRIPWIRE. The day a registered parameter is both
-   * ineligible and absent from the IANA list — a second proprietary parameter,
-   * or the `b64`/`ppt`/`svt` trim — it goes RED, and at that moment the weakened
-   * loop becomes observable from this door and must be probed here too.
+   * ⚠ THIS TEST IS THE TRIPWIRE for the first half of that. The day a registered
+   * parameter is absent from the IANA list — a second proprietary parameter, or
+   * the `b64`/`ppt`/`svt` trim — it goes RED, and at that moment the read gate can
+   * be handed a registered member it has no rule about.
    */
-  test("the read path cannot tell the column from a bare is-it-registered read", () => {
+  test("no registered parameter but oid survives the read path's malformed gate", () => {
     const ineligible = HEADER_SPECS.map(headerJoseName).filter(
       (jose) => !isCritEligible(jose),
     );
@@ -177,13 +288,15 @@ describe("rejectUnknownCritical", () => {
     }
   });
 
-  test("namespaces both codes by the FORMAT, so a refusal names the wire it came from", () => {
+  test("DIRECT CALL, unreachable state: both codes are namespaced by the FORMAT", () => {
     // The same implementation serves both wires; only the format tag and the
     // error class differ. That is the whole point — a hostile token cannot be
     // refused on one wire and accepted on the other.
     expect(() =>
       rejectUnknownCritical({
         header: header({ crit: ["ext"], ext: "x" }),
+        unknown: {},
+        declared: undefined,
         format: "cwt",
         error: CwtError,
       }),

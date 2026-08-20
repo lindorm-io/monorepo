@@ -66,7 +66,7 @@ const COSE_IV = 5;
 const GCM_TAG_BYTES = 16;
 
 /**
- * The claim set both wires carry. COSE-name-keyed WIRE shape (R18), and free of
+ * The claim set both wires carry. COSE-name-keyed WIRE shape, and free of
  * empty/undefined values so the signed path's emission-boundary prune is a no-op
  * and the two payloads are compared on equal terms.
  *

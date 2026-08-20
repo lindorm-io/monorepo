@@ -5,16 +5,17 @@ import { isArray, isString } from "@lindorm/is";
  * RFC 9360 §2 `COSE_X509` — the value type of `x5chain` (label 33), the COSE form
  * of JOSE's `x5c`.
  *
- * The CDDL, verbatim from RFC 9360 §2:
+ * The `COSE_X509` CDDL, verbatim from RFC 9360 §2 (the sibling `COSE_CertHash`
+ * production between the two lines is elided):
  *
  *     COSE_X509 = bstr / [ 2*certs: bstr ]
  *
  *     The contents of "bstr" are the bytes of a DER-encoded certificate.
  *
- * and §2's prose fixes which arm applies: *"If a single certificate is conveyed,
- * it is placed in a CBOR byte string. If multiple certificates are conveyed, a
- * CBOR array of byte strings is used, with each certificate being in its own byte
- * string."* — so a ONE-member array is not a conformant `COSE_X509`; `2*certs`
+ * and §2's prose fixes which arm applies, in two adjacent bullets: *"If a single
+ * certificate is conveyed, it is placed in a CBOR byte string. […] If multiple
+ * certificates are conveyed, a CBOR array of byte strings is used, with each
+ * certificate being in its own byte string."* — so a ONE-member array is not a conformant `COSE_X509`; `2*certs`
  * requires two.
  *
  * JOSE spells the same chain as `Array<base64>` (RFC 7515 §4.1.6 — standard

@@ -49,8 +49,8 @@ export type LindormClaims = {
   authFactorCategories?: Array<AuthFactorCategory>;
   authFactorReference?: AuthFactorReference;
   clientId?: string;
-  // The profiles this token's posture clears (RS-facing signal): required on the
-  // access token / introspection whenever non-empty. See `token-claims.md` §2/§3.
+  // The profiles this token's posture clears above the `permissive` floor
+  // (RS-facing signal). Pruned when empty — `claims-registry.ts`, `conformsTo`.
   conformsTo?: Array<string>;
   federationAssuranceLevel?: FederationAssuranceLevel;
   // RFC 6749 §8.3 allows extension and vendor grant types, and aegis parses

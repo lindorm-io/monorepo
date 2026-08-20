@@ -1,8 +1,10 @@
+import type { Dict } from "@lindorm/types";
+import { importJWK } from "jose";
 import MockDate from "mockdate";
 import { beforeEach, describe, expect, test } from "vitest";
 import { AegisKeyError } from "../errors/index.js";
 import type { ProfileContent } from "../types/index.js";
-import { TEST_EC_KEY_ENC, TEST_OCT_KEY_ENC } from "./keys.js";
+import { TEST_EC_KEY_ENC, TEST_EC_KEY_SIG, TEST_OCT_KEY_ENC } from "./keys.js";
 import {
   artifactStepOf,
   createScenarioContext,
@@ -10,6 +12,7 @@ import {
   readWirePayload,
   runScenario,
   selfMarkedWireOf,
+  signCompactByHand,
   wiresOf,
   pinnedWireOf,
   type ScenarioContext,
@@ -893,11 +896,11 @@ describe("run-scenario — the step-definition layer", () => {
       ).resolves.toBeUndefined();
     });
 
-    // The opaque doors take `VerifyUnstructuredTokenOptions`, which has no
-    // temporal knob — there are no claims to bound. A row that named one would
-    // otherwise hand a bag to a door that ignores it, and the row would read as
-    // a statement about an option nothing consults.
-    test("should refuse verify options handed to an opaque kit door", async () => {
+    // The opaque doors take `VerifyUnstructuredTokenOptions`, which is the
+    // structured bag MINUS the claims knobs — there are no claims to bound. A row
+    // that named one would otherwise hand a bag to a door that ignores it, and
+    // the row would read as a statement about an option nothing consults.
+    test("should refuse a CLAIMS verify option handed to an opaque kit door", async () => {
       const scenario: Scenario = {
         id: "probe",
         title: "a probe row, for the opaque-options guard alone",
@@ -910,11 +913,130 @@ describe("run-scenario — the step-definition layer", () => {
       };
 
       await expect(runScenario(scenario, ctx, "jose")).rejects.toThrow(
-        /the row hands verify options to the jws door/,
+        /the row hands the jws door the claims verify option\(s\) clockTolerance/,
       );
       await expect(
         runScenario(scenario, await createScenarioContext(), "cose"),
-      ).rejects.toThrow(/the row hands verify options to the cws door/);
+      ).rejects.toThrow(
+        /the row hands the cws door the claims verify option\(s\) clockTolerance/,
+      );
+    });
+
+    // ⭐ THE OTHER HALF OF THE SAME GUARD, and without it the guard could be
+    // widened back to "the opaque door takes nothing" and stay green: an option
+    // the opaque door DOES declare must reach it. `crit` is one
+    // (`src/types/kit/unstructured.ts#export type VerifyUnstructuredTokenOptions`),
+    // and the token below is refused unless the declaration is forwarded — so a
+    // dropped bag fails here rather than passing silently.
+    test("should forward an option the opaque kit door does declare", async () => {
+      const scenario: Scenario = {
+        id: "probe",
+        title: "a probe row, for the opaque-options forward alone",
+        rationale: "not a capability — this row exists only to exercise the forward.",
+        given: [
+          {
+            step: "token",
+            via: "kit-sign",
+            kit: "opaque",
+            claims: { hello: "world" },
+            options: {
+              header: { crit: ["x-lindorm-hint"] },
+              custom: { protected: { "x-lindorm-hint": "carried" } },
+            },
+          },
+        ],
+        when: [
+          { step: "kit-verify", kit: "opaque", options: { crit: ["x-lindorm-hint"] } },
+        ],
+        then: [{ step: "accepts" }],
+      };
+
+      await expect(runScenario(scenario, ctx, "jose")).resolves.toBeUndefined();
+      await expect(
+        runScenario(scenario, await createScenarioContext(), "cose"),
+      ).resolves.toBeUndefined();
+
+      // ⚠ BY DIFFERENCE, because the acceptance above has a second explanation:
+      // an opaque SIGN door that dropped `header.crit` would mint a token every
+      // caller accepts, and the row would stay green with the forward removed.
+      // The same row with the declaration withheld must be refused.
+      const withheld: Scenario = {
+        ...scenario,
+        when: [{ step: "kit-verify", kit: "opaque" }],
+        then: [{ step: "rejects", error: "JwsError", data: { param: "x-lindorm-hint" } }],
+      };
+
+      await expect(
+        runScenario(withheld, await createScenarioContext(), "jose"),
+      ).resolves.toBeUndefined();
+      await expect(
+        runScenario(
+          {
+            ...withheld,
+            then: [
+              { step: "rejects", error: "CwsError", data: { param: "x-lindorm-hint" } },
+            ],
+          },
+          await createScenarioContext(),
+          "cose",
+        ),
+      ).resolves.toBeUndefined();
+    });
+  });
+
+  /**
+   * ⭐ THE FALSIFIER FOR `signCompactByHand`'s "THE SIGNATURE IS REAL". Every
+   * scenario row routed to that producer names a `crit` member the header does
+   * not carry, and `crit` is answered ahead of the signature on every JOSE read
+   * path — so those rows reject identically whether the signature verifies or is
+   * garbage, and the claim goes unchecked by the table. This drives the same
+   * helper with a CARRIED member, where aegis reaches the signature and only a
+   * real one gets past it.
+   */
+  describe("the hand-assembled JOSE producer", () => {
+    const HAND_HEADER = {
+      alg: TEST_EC_KEY_SIG.algorithm,
+      kid: TEST_EC_KEY_SIG.id,
+      typ: "JWT",
+      crit: ["x-lindorm-hint"],
+      "x-lindorm-hint": "carried",
+    };
+
+    const handSign = async (claims: Dict): Promise<string> =>
+      signCompactByHand(
+        HAND_HEADER,
+        Buffer.from(JSON.stringify(claims), "utf8"),
+        TEST_EC_KEY_SIG,
+        await importJWK(
+          TEST_EC_KEY_SIG.export("jwk") as never,
+          TEST_EC_KEY_SIG.algorithm,
+        ),
+      );
+
+    const CLAIMS = { iss: ISSUER, sub: "user-1", aud: [RESOURCE], exp: NOW + 3600 };
+
+    test("a hand-assembled compact serialisation carries a signature aegis verifies", async () => {
+      const token = await handSign(CLAIMS);
+
+      await expect(
+        ctx.aegis.verify(token, undefined, { critical: ["x-lindorm-hint"] }),
+      ).resolves.toMatchObject({ format: "jwt" });
+    });
+
+    // The other half, so the assertion above is about the SIGNATURE and not
+    // merely about the header: the same header and payload, carrying a
+    // well-formed ES512 signature made over a DIFFERENT claims set.
+    test("and one spliced from another payload's signing input does not verify", async () => {
+      const token = await handSign(CLAIMS);
+      const other = await handSign({ ...CLAIMS, sub: "user-2" });
+
+      const spliced =
+        token.slice(0, token.lastIndexOf(".") + 1) +
+        other.slice(other.lastIndexOf(".") + 1);
+
+      await expect(
+        ctx.aegis.verify(spliced, undefined, { critical: ["x-lindorm-hint"] }),
+      ).rejects.toThrow();
     });
   });
 });

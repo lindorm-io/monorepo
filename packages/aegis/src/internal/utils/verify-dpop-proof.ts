@@ -57,7 +57,7 @@ export const verifyDpopProof = (options: Options): ParsedDpopProof => {
   }
   const [headerB64, payloadB64] = parts;
 
-  const header = decodeJoseHeader(headerB64);
+  const { header } = decodeJoseHeader(headerB64);
 
   if (header.typ !== "dpop+jwt") {
     throw new AegisDomainError("Invalid DPoP proof: header typ must be dpop+jwt", {

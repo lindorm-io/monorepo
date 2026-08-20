@@ -1,10 +1,14 @@
 import { SYNTHETIC_SPEC } from "../../__fixtures__/synthetic-spec.js";
 import { describe, expect, test } from "vitest";
+import { CwtKit } from "../../classes/CwtKit.js";
 import { CoseError } from "../../errors/index.js";
 import { CLAIM_SPECS, type ClaimSpec, claimByDomain } from "../claims/claims-registry.js";
 import type { BespokeKind, ClaimMemberSpec } from "../registry/claim-spec.js";
 import { codecFor } from "../registry/param-spec.js";
 import { wireLabel, wireName } from "../registry/wire-key.js";
+import { encodeCbor, Tag } from "./cbor.js";
+import { coseByJose } from "../header/header-registry.js";
+import { COSE_TAG, encodeProtectedHeader } from "./structures.js";
 import {
   fieldForClaim,
   shapeForBespoke,
@@ -548,5 +552,62 @@ describe("shapeForObject — the CWT structure shaper's drift guard", () => {
 
     // …and back, so the two halves are one codec rather than two.
     expect(field.decode?.(compact as never)).toEqual(value);
+  });
+});
+
+/**
+ * ⭐ THE `cti` TYPE CHECK, PINNED AT THE DOOR IT ESCAPES FROM. `CwtKit.decode`
+ * takes no key and checks no signature, so the bytes it shapes are a stranger's;
+ * `decodeCti` cast them to `Uint8Array` and handed the cast to `Buffer.from`,
+ * which throws a raw `TypeError` on an integer. That is not an `AegisError`, so
+ * a caller wrapping the decode in the package's own error type caught nothing.
+ *
+ * Pinned HERE rather than on `decodeCti` directly, because the property is that
+ * the refusal reaches the PUBLIC keyless door: `decodeCti` is not exported, and a
+ * test calling it through `shapeForBstr("utf8")` would prove the codec refuses
+ * without proving the codec is still what the door runs.
+ */
+describe("a foreign CWT whose cti is not a byte string", () => {
+  // RFC 8392 §3.1.7 registers `cti` at Claim Key 7.
+  const CTI_LABEL = 7;
+
+  const foreignCwt = (cti: unknown): Buffer =>
+    Buffer.from(
+      encodeCbor(
+        new Tag(
+          COSE_TAG.cwt,
+          new Tag(COSE_TAG.sign1, [
+            encodeProtectedHeader(new Map<number, unknown>([[coseByJose("alg"), -7]])),
+            new Map<number, unknown>(),
+            encodeCbor(new Map<number | string, unknown>([[CTI_LABEL, cti]])),
+            Buffer.alloc(8),
+          ]),
+        ),
+      ),
+    );
+
+  test.each([
+    ["an integer", 42],
+    ["a text string", "not-a-bstr"],
+    ["an array", [1, 2]],
+    ["a map", new Map<number, unknown>([[1, 2]])],
+    ["null", null],
+  ])("a cti carried as %s is refused as a CoseError", (_name, cti) => {
+    let thrown: unknown;
+    try {
+      CwtKit.decode(foreignCwt(cti));
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(CoseError);
+    expect((thrown as CoseError).code).toBe("cose_malformed");
+    expect((thrown as CoseError).data).toEqual({ claim: "cti", label: 7 });
+  });
+
+  test("a conformant byte-string cti still reads back as its UTF-8 string", () => {
+    const token = foreignCwt(Buffer.from("cti_probe", "utf8"));
+
+    expect(CwtKit.decode(token).payload.cti).toBe("cti_probe");
   });
 });

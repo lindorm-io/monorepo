@@ -3,7 +3,7 @@ import { CwtKit } from "../../classes/CwtKit.js";
 import type {
   AegisSignKey,
   CwtClaimsWire,
-  SignStructuredTokenOptions,
+  CoseSignStructuredTokenOptions,
   SignedToken,
 } from "../../types/index.js";
 import type { AegisDeps } from "./aegis-deps.js";
@@ -14,7 +14,7 @@ import { buildSignedToken } from "./build-signed-token.js";
  * The raw CWT sign namespace (`aegis.cwt.sign`) — the generic-CWT mirror of the
  * generic `jwt.sign`. Resolve the signing key, then serialize the ALREADY-WIRE
  * `CwtClaimsWire` (COSE-name-keyed: `iss`/`sub`/`exp`/`cti`) verbatim via the
- * transform-free `CwtKit` (R18) — no domain translation, no envelope
+ * transform-free `CwtKit` — no domain translation, no envelope
  * auto-injection. The domain sign path is `aegis.mint`.
  *
  * The raw `cwt` namespace is COSE_Sign1 (asymmetric); a symmetric key throws via
@@ -26,11 +26,11 @@ export const rawSignCwt = async <C extends Dict = Dict>({
   deps,
 }: {
   claims: CwtClaimsWire & C;
-  options?: SignStructuredTokenOptions & { key?: AegisSignKey };
+  options?: CoseSignStructuredTokenOptions & { key?: AegisSignKey };
   deps: AegisDeps;
 }): Promise<SignedToken> => {
   // `key` is the aegis-only signing-key selector (resolves the kryptos); every
-  // other field IS the kit's `SignStructuredTokenOptions` and is forwarded
+  // other field IS the kit's `CoseSignStructuredTokenOptions` and is forwarded
   // structurally, so a new sign option threads through with no change here.
   const { key, ...rest } = options;
 

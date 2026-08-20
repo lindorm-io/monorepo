@@ -1,5 +1,5 @@
 /**
- * The `aegis.encrypt` result (§5e) — the confidentiality counterpart of the
+ * The `aegis.encrypt` result — the confidentiality counterpart of the
  * signed {@link SignedToken}. `aegis.encrypt` produces an encrypted outer format (a JWE
  * or a COSE_Encrypt0), so the only surface is the `format` discriminant plus the
  * wire token; there are NO domain claims on the WRITE side (the caller supplied

@@ -1,6 +1,7 @@
 import type { Dict } from "@lindorm/types";
 import { sanitiseToken } from "@lindorm/utils";
 import { AegisError } from "../../errors/index.js";
+import { declaredCritToWire } from "../header/declared-crit-to-wire.js";
 import type { DecryptOptions, DecryptedToken } from "../../types/index.js";
 import { assertWireInput } from "../wire/assert-wire-input.js";
 import type { DecryptInput } from "../wire/token-wire.js";
@@ -57,7 +58,15 @@ export const decryptToken = async <C extends Dict = Dict>({
 
   const wire = tokenWireFor(format);
 
-  const input: DecryptInput = { token, deps, key: options.key };
+  // The DOMAIN declaration, resolved to the WIRE names the crit gate compares
+  // against — `["objectId"]` reaches the kit as `["oid"]`, and a wire spelling at
+  // this door is refused (`internal/header/declared-crit-to-wire.ts`).
+  const input: DecryptInput = {
+    token,
+    deps,
+    key: options.key,
+    crit: declaredCritToWire(options.critical),
+  };
 
   assertWireInput(wire.dispositions.decrypt, input, { format, operation: "decrypt" });
 

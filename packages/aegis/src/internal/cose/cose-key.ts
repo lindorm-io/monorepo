@@ -8,6 +8,7 @@ import {
   COSE_CNF_MEMBERS,
   type CoseCnfMember,
 } from "../claims/cnf-members.js";
+import { ownEntry } from "./own-entry.js";
 
 // COSE_Key parameter labels (RFC 9052 §7).
 const KEY = { kty: 1, kid: 2, alg: 3, crv: -1, x: -2, y: -3 } as const;
@@ -57,31 +58,62 @@ const unsupported = (detail: string): never => {
 };
 
 /**
+ * An EC2/OKP coordinate off a FOREIGN COSE_Key. RFC 9052 §7.1 types `x` and `y`
+ * as `bstr`, and a producer that writes anything else — or nothing — used to
+ * reach `Buffer.from(undefined)` here and throw a raw `TypeError` out of the
+ * KEYLESS `CwtKit.decode`/`CwmKit.decode` door, outside the structural-refusal
+ * standard `internal/cose/decode-cwt-wire.ts` states for it.
+ *
+ * ⚠ THE TEXT-STRING CASE WAS NOT A CRASH, WHICH IS WHY THE GUARD TESTS THE TYPE
+ * RATHER THAN PRESENCE. `Buffer.from("not-a-bstr")` succeeds as UTF-8, so a `y`
+ * written as a tstr was silently re-encoded and handed back as a real
+ * coordinate: a confirmation key nobody supplied, on a token a caller may act on.
+ * The AKP branch below already guarded `pub` with `instanceof`; this is the same
+ * question asked of the other two members of the same function.
+ */
+const coordinate = (value: unknown, member: "x" | "y"): Buffer =>
+  value instanceof Uint8Array
+    ? Buffer.from(value)
+    : unsupported(`COSE_Key '${member}' is absent or is not a byte string.`);
+
+/**
  * Convert a JWK to a COSE_Key map (RFC 9052 §7). EC2 and OKP public keys and AKP
  * (RFC 9964 ML-DSA — `pub`, optional `priv` seed) keys are supported; RSA/oct
  * cnf keys are not yet handled.
  */
 export const jwkToCoseKey = (jwk: Dict): Map<number, unknown> => {
-  const ktyLabel = KTY_TO_COSE[jwk.kty as string];
+  // ⚠ `ownEntry`, never `table[key]`: `jwk` is the caller's bag and a JSON body
+  // can spell `kty`/`crv` as an `Object.prototype` member name. See own-entry.ts.
+  const ktyLabel = ownEntry(KTY_TO_COSE, jwk.kty);
   if (ktyLabel === undefined) unsupported(`Unknown JWK kty "${jwk.kty}".`);
 
   const key = new Map<number, unknown>();
   key.set(KEY.kty, ktyLabel);
-  if (typeof jwk.kid === "string") key.set(KEY.kid, Buffer.from(jwk.kid, "utf8"));
+  if (isString(jwk.kid)) key.set(KEY.kid, Buffer.from(jwk.kid, "utf8"));
 
   if (jwk.kty === "EC" || jwk.kty === "OKP") {
-    const crvLabel = CRV_TO_COSE[jwk.crv as string];
+    const crvLabel = ownEntry(CRV_TO_COSE, jwk.crv);
     if (crvLabel === undefined) unsupported(`Unknown curve "${jwk.crv}".`);
     key.set(KEY.crv, crvLabel);
+    // ⚠ THE WRITE TWIN OF {@link coordinate}, and it needs its own guard rather
+    // than borrowing that one: here the coordinate is a base64url STRING off the
+    // CALLER's `cnf.jwk`, not a bstr off a token. `B64.toBuffer(undefined)` threw
+    // a raw `TypeError` at mint, so a JWK handed in as `{kty:"EC",crv:"P-256"}`
+    // — public-key shaped, coordinates forgotten — crashed instead of refusing.
+    if (!isString(jwk.x)) unsupported("EC2/OKP COSE_Key requires an 'x' member.");
     key.set(KEY.x, B64.toBuffer(jwk.x as string, B64U));
-    if (jwk.kty === "EC") key.set(KEY.y, B64.toBuffer(jwk.y as string, B64U));
+
+    if (jwk.kty === "EC") {
+      if (!isString(jwk.y)) unsupported("EC2 COSE_Key requires a 'y' member.");
+      key.set(KEY.y, B64.toBuffer(jwk.y as string, B64U));
+    }
     return key;
   }
 
   if (jwk.kty === "AKP") {
-    if (typeof jwk.pub !== "string") unsupported("AKP COSE_Key requires a 'pub' member.");
+    if (!isString(jwk.pub)) unsupported("AKP COSE_Key requires a 'pub' member.");
     key.set(AKP.pub, B64.toBuffer(jwk.pub as string, B64U));
-    if (typeof jwk.priv === "string") key.set(AKP.priv, B64.toBuffer(jwk.priv, B64U));
+    if (isString(jwk.priv)) key.set(AKP.priv, B64.toBuffer(jwk.priv, B64U));
     return key;
   }
 
@@ -90,7 +122,11 @@ export const jwkToCoseKey = (jwk: Dict): Map<number, unknown> => {
 
 /** Convert a COSE_Key map back to a public JWK. */
 export const coseKeyToJwk = (key: Map<number, unknown>): Dict => {
-  const kty = COSE_TO_KTY[key.get(KEY.kty) as number];
+  // ⚠ EVERY LABEL HERE COMES OFF A FOREIGN TOKEN — a `cnf` COSE_Key reaches this
+  // from `decodeCnf` on any CWT read — so the tables are read through
+  // `ownEntry`, never indexed directly. See own-entry.ts for what a direct index
+  // admitted.
+  const kty = ownEntry(COSE_TO_KTY, key.get(KEY.kty));
   if (kty === undefined) unsupported("Unknown COSE_Key kty.");
 
   const jwk: Dict = { kty };
@@ -98,9 +134,15 @@ export const coseKeyToJwk = (key: Map<number, unknown>): Dict => {
   if (kid instanceof Uint8Array) jwk.kid = Buffer.from(kid).toString("utf8");
 
   if (kty === "EC" || kty === "OKP") {
-    jwk.crv = COSE_TO_CRV[key.get(KEY.crv) as number];
-    jwk.x = B64.encode(Buffer.from(key.get(KEY.x) as Uint8Array), B64U);
-    if (kty === "EC") jwk.y = B64.encode(Buffer.from(key.get(KEY.y) as Uint8Array), B64U);
+    // FAIL CLOSED, as `kty` does one line up: a curve label this reader cannot
+    // name is refused rather than written onto the JWK, so a key nobody can
+    // resolve never reaches a caller as a confirmation it might act on.
+    const crv = ownEntry(COSE_TO_CRV, key.get(KEY.crv));
+    if (crv === undefined) unsupported("Unknown COSE_Key crv.");
+
+    jwk.crv = crv;
+    jwk.x = B64.encode(coordinate(key.get(KEY.x), "x"), B64U);
+    if (kty === "EC") jwk.y = B64.encode(coordinate(key.get(KEY.y), "y"), B64U);
     return jwk;
   }
 
@@ -211,9 +253,9 @@ const decodeCnfMember = (member: CoseCnfMember, value: unknown): unknown => {
 
 /**
  * Encode the JOSE `cnf` to a COSE cnf map (RFC 8747): an embedded public key
- * (`jwk`) -> COSE_Key (label 1), a key id (`kid`) -> kid (label 3). Since Phase
- * 5 the translator (`domainToCose`) already mapped the domain confirmation to its
- * JOSE `cnf` member names, so this accepts `{ jwk, kid, jkt, x5t#S256, jku }` (the
+ * (`jwk`) -> COSE_Key (label 1), a key id (`kid`) -> kid (label 3). The write door
+ * (`domainToWire`) has already mapped the domain confirmation to its JOSE `cnf`
+ * member names, so this accepts `{ jwk, kid, jkt, x5t#S256, jku }` (the
  * JOSE cnf), NOT the domain `{ key, keyId, thumbprint }`. The thumbprint-only
  * forms (`jkt`/`x5t#S256`/`jku`) have no COSE cnf representation (jkt ≠ ckt) and
  * are rejected.
@@ -320,12 +362,37 @@ export const encodeCnf = (cnf: Dict): Map<number, unknown> => {
 
 /**
  * Decode a COSE cnf map back to the JOSE `cnf` shape (`{ jwk, kid }`) — the read
- * twin of {@link encodeCnf}, over the same label table. A member a foreign
+ * twin of {@link encodeCnf}, over the same label table. A MEMBER a foreign
  * producer wrote in a shape this codec cannot read is OMITTED rather than
  * refused: the read side reports what it could recover, and the confirmation is
  * then judged by whoever asked for the binding.
+ *
+ * ⚠ THE CONTAINER IS THE EXCEPTION TO THAT, and it takes `unknown` so the guard
+ * cannot be cast away at the call site — which is how it was missed. RFC 8747
+ * §3.1 makes the `cnf` VALUE a map; the caller (`internal/cose/cwt-spec.ts`) is
+ * fed whatever CBOR the token carried, and `preferMap: false` hands back a plain
+ * OBJECT for a wholly text-keyed map, so `cnf.get(...)` was not merely a
+ * hypothetical. It threw `cnf.get is not a function` — a raw `TypeError` out of
+ * the KEYLESS `CwtKit.decode`/`CwmKit.decode` door, which
+ * `internal/cose/decode-cwt-wire.ts` says that door does not do.
+ *
+ * ⛔ AND IT MUST NOT DEGRADE TO `{}`. Omitting a whole unreadable `cnf` the way a
+ * single member is omitted would read a token that DECLARES a confirmation back
+ * as an unbound one, so a sender-constrained token would present as a bearer
+ * token to every check downstream. The member rule trades a member for what is
+ * left; there is nothing left here.
  */
-export const decodeCnf = (cnf: Map<number, unknown>): Dict => {
+export const decodeCnf = (cnf: unknown): Dict => {
+  if (!(cnf instanceof Map)) {
+    throw new CoseError("Confirmation is not a COSE map", {
+      code: "cose_cnf_unsupported",
+      data: { claim: "cnf", label: 8 },
+      title: "COSE Confirmation Unsupported",
+      details:
+        "RFC 8747 §3.1 defines the CWT cnf claim value as a map of confirmation members; this token carries something else, so the binding it declares cannot be read.",
+    });
+  }
+
   const out: Dict = {};
 
   for (const member of COSE_CNF_MEMBERS) {

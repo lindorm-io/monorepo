@@ -52,7 +52,7 @@ describe("wire input dispositions", () => {
    */
   const SENTINEL: Dict = {
     header: { oid: "1.2.3.4" },
-    unprotected: { oid: "1.2.3.5" },
+    custom: { protected: { "x-probe": "1.2.3.5" } },
     tokenType: "probe",
     // ⚠ The rule this file applies is DISTINGUISHABILITY FROM THE DEFAULT, not
     // observability on the wire: the probe spies the kit call and asserts the
@@ -79,10 +79,10 @@ describe("wire input dispositions", () => {
   ];
 
   /**
-   * The three WRITE operations. `decrypt` is absent because its kit option type
-   * has no members — there is nothing to forward and nothing to refuse — and the
-   * test below fails the day that stops being true, so the omission cannot
-   * quietly become a coverage hole.
+   * The three WRITE operations. `decrypt` is absent because it is the READ one:
+   * the seam probe below drives each of these through its kit's own SIGN or
+   * ENCRYPT method, and a decrypt needs a token to exist first. It gets its own
+   * probe further down, so the omission is not a coverage hole.
    */
   type WriteOperation = "signClaims" | "signOpaque" | "encryptContent";
 
@@ -92,8 +92,11 @@ describe("wire input dispositions", () => {
     "encryptContent",
   ];
 
-  test.each(WIRES)("$name has no decrypt option to dispose of", ({ wire }) => {
-    expect(Object.keys(wire.dispositions.decrypt)).toEqual([]);
+  test.each(WIRES)("$name forwards every decrypt option it declares", ({ wire }) => {
+    // The read operation's whole table, pinned as the list it is: the seam probe
+    // below drives `crit` end to end, and a second decrypt option added without a
+    // probe fails here rather than going undriven.
+    expect(Object.keys(wire.dispositions.decrypt)).toEqual(["crit"]);
   });
 
   /** How ONE row reads, for the inventory pin. `reason` is prose and is left out. */
@@ -144,7 +147,7 @@ describe("wire input dispositions", () => {
     // rewrites a snapshot without anyone reading the diff, and this repo's own
     // notes record `-u` doing exactly that. A plain assertion cannot be updated
     // by `-u`, so a row that disappears has to be answered for by hand.
-    expect(inventory).toHaveLength(34);
+    expect(inventory).toHaveLength(36);
     expect(inventory).toMatchSnapshot();
   });
 
@@ -183,10 +186,12 @@ describe("wire input dispositions", () => {
    * unread and makes it green. A plain `toBe` cannot be updated by `-u`, which is
    * the whole reason the hard count sits beside the snapshot rather than in it.
    *
-   * 32 + 2 = 34, so the three arms account for every row the inventory lists. The
-   * two refusals are the COSE ECDH-ES party-info rows on `encryptContent`: RFC
-   * 9052 §5.2 makes a COSE_Encrypt0 direct encryption, so no key agreement happens
-   * for RFC 7518 §4.6's party info to feed.
+   * ⚠ These count the WRITE operations alone, because {@link rows} iterates
+   * {@link OPERATIONS}. 32 + 2 = 34, and the inventory's other two rows are the
+   * two wires' `decrypt.crit`, driven by the decrypt probe below. The two refusals
+   * are the COSE ECDH-ES party-info rows on `encryptContent`: RFC 9052 §5.2 makes
+   * a COSE_Encrypt0 direct encryption, so no key agreement happens for RFC 7518
+   * §4.6's party info to feed.
    */
   test("every disposition arm is probed below, or provably empty", () => {
     expect(
@@ -353,6 +358,42 @@ describe("wire input dispositions", () => {
         expect(received[option]).toEqual(sentinelOf(option));
       },
     );
+
+    /**
+     * The READ operation's own seam probe. It cannot join the matrix above — that
+     * one drives a kit's SIGN or ENCRYPT method, and a decrypt needs a token
+     * first — so the artifact is produced through the same wire's
+     * `encryptContent` and then read back through its `decrypt`.
+     *
+     * ⚠ Without it `decrypt.crit` would be a `forwarded` row nothing drives, and
+     * the declaration is what makes a custom critical parameter readable at all
+     * (`internal/utils/reject-unknown-critical.ts`) — a dropped forward turns a
+     * token aegis just minted into one it refuses.
+     */
+    test.each(WIRES)("$name decrypt forwards crit", async ({ name, wire }) => {
+      const kryptos = name === "jose" ? TEST_EC_KEY_ENC_CERT : TEST_OCT_KEY_ENC;
+
+      const spy =
+        name === "jose"
+          ? vi.spyOn(JweKit.prototype, "decrypt")
+          : vi.spyOn(CweKit.prototype, "decrypt");
+
+      const token = await wire.encryptContent({
+        kryptos,
+        deps: { ...deps, resolveDecryptKey: async () => kryptos } as AegisDeps,
+        content: Buffer.from("probe-plaintext", "utf8"),
+      });
+
+      await wire.decrypt({
+        token,
+        deps: { ...deps, resolveDecryptKey: async () => kryptos } as AegisDeps,
+        key: undefined,
+        crit: ["x-probe"],
+      });
+
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect((spy.mock.calls[0] as Array<unknown>)[1]).toEqual({ crit: ["x-probe"] });
+    });
   });
 
   // ---------------------------------------------------------------------------

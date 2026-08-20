@@ -32,23 +32,27 @@ describe("validateCrit", () => {
     expect(validateCrit(header)).toMatch(/must be strings/);
   });
 
-  test("rejects crit containing an IANA-registered param (alg)", () => {
+  test("rejects crit containing a specification-defined param (alg)", () => {
     const header = { ...base, crit: ["alg"] } as WireTokenHeader;
-    expect(validateCrit(header)).toMatch(/IANA-registered/);
+    expect(validateCrit(header)).toMatch(/specification-defined/);
   });
 
-  test("rejects crit containing an IANA-registered param (kid)", () => {
+  test("rejects crit containing a specification-defined param (kid)", () => {
     const header = { ...base, crit: ["kid"] } as WireTokenHeader;
-    expect(validateCrit(header)).toMatch(/IANA-registered/);
+    expect(validateCrit(header)).toMatch(/specification-defined/);
   });
 
-  test("rejects crit containing an IANA-registered param (b64)", () => {
+  // ⚠ `b64` is spec-defined (RFC 7797) and aegis has NO registry row for it — the
+  // shape a second, registry-derived-only source would get wrong, admitting it
+  // into `custom` while this refuses it on read. ONE predicate answers both
+  // (`internal/header/is-spec-defined-header-param.ts`).
+  test("rejects crit containing a specification-defined param aegis does not implement (b64)", () => {
     const header = {
       ...base,
       crit: ["b64"],
       b64: false,
     } as unknown as WireTokenHeader;
-    expect(validateCrit(header)).toMatch(/IANA-registered/);
+    expect(validateCrit(header)).toMatch(/specification-defined/);
   });
 
   test("rejects crit listing a name that is not present in the header", () => {

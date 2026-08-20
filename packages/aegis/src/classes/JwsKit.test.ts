@@ -54,6 +54,7 @@ describe("JwsKit", () => {
 
       expect(kit.verify(token)).toEqual({
         unprotectedHeader: {},
+        unknown: { protected: {}, unprotected: {} },
         protectedHeader: {
           alg: "ES512",
           cty: "text/plain",
@@ -74,6 +75,7 @@ describe("JwsKit", () => {
 
       expect(kit.verify(token)).toEqual({
         unprotectedHeader: {},
+        unknown: { protected: {}, unprotected: {} },
         protectedHeader: {
           alg: "ES512",
           cty: "application/octet-stream",
@@ -132,6 +134,7 @@ describe("JwsKit", () => {
       // signature is the raw b64url segment and token is the original compact.
       expect(JwsKit.decode(token)).toEqual({
         unprotectedHeader: {},
+        unknown: { protected: {}, unprotected: {} },
         protectedHeader: {
           alg: "ES512",
           cty: "text/plain",
@@ -153,6 +156,7 @@ describe("JwsKit", () => {
 
       expect(JwsKit.decode(token)).toEqual({
         unprotectedHeader: {},
+        unknown: { protected: {}, unprotected: {} },
         protectedHeader: {
           alg: "ES512",
           cty: "application/octet-stream",
@@ -210,20 +214,22 @@ describe("JwsKit", () => {
   });
 
   describe("critical header parameter rejection", () => {
-    test("should reject RFC-valid token with an extension critical parameter aegis does not implement", () => {
+    test("should reject a token whose crit names a specification-defined parameter", () => {
       const token = kit.sign("test data", {
         header: { oid: "ba63b8d4-500a-4646-9aac-cb45543c966d" },
       });
 
-      // Craft a malicious header with a well-formed crit: the extension
-      // parameter 'lindorm_ext' is not IANA-registered and is present in
-      // the header, so it passes RFC 7515 §4.1.11 well-formedness. Aegis
-      // should still reject it because it does not understand the extension.
+      // Craft a malicious header with a well-formed crit naming a
+      // SPECIFICATION-DEFINED parameter the header already carries (`typ`). RFC 7515 §4.1.11
+      // forbids the producer that shape and lets a recipient treat the token as
+      // invalid for it, which aegis does. An UNREGISTERED member would reach a
+      // DIFFERENT refusal — the unclaimed one — or be accepted once the caller
+      // declares it (`internal/utils/reject-unknown-critical.ts`), so it cannot
+      // serve as the MALFORMED probe this row needs.
       const decoded = JwsKit.decode(token);
       const headerWithCrit = {
         ...decoded.protectedHeader,
-        crit: ["lindorm_ext"],
-        lindorm_ext: "some-value",
+        crit: ["typ"],
       };
 
       const parts = token.split(".");
@@ -233,7 +239,7 @@ describe("JwsKit", () => {
       const modifiedToken = [modifiedHeader, parts[1], parts[2]].join(".");
 
       expect(() => kit.verify(modifiedToken)).toThrow(
-        "Unsupported critical header parameter: lindorm_ext",
+        /crit must not contain the specification-defined header parameter "typ"/,
       );
     });
 
@@ -259,7 +265,7 @@ describe("JwsKit", () => {
       expect(() => kit.verify(modifiedToken)).toThrow(/not present/);
     });
 
-    test("should reject crit containing an IANA-registered parameter name", () => {
+    test("should reject crit containing a specification-defined parameter name", () => {
       const token = kit.sign("test data", {
         header: { oid: "ba63b8d4-500a-4646-9aac-cb45543c966d" },
       });
@@ -274,7 +280,7 @@ describe("JwsKit", () => {
         .replace(/=/g, "");
       const modifiedToken = [modifiedHeader, parts[1], parts[2]].join(".");
 
-      expect(() => kit.verify(modifiedToken)).toThrow(/IANA-registered/);
+      expect(() => kit.verify(modifiedToken)).toThrow(/specification-defined/);
     });
 
     test("should reject crit that is an empty array", () => {

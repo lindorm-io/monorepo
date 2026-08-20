@@ -18,11 +18,18 @@ export const decryptOuter = async (
   wire: TokenWire,
   token: string,
   deps: AegisDeps,
+  /**
+   * The verify caller's own `crit` declaration. It DOES flow, unlike the key
+   * policy beside it: the crit gate runs on this OUTER envelope inside the kit's
+   * decrypt, so a nested token whose outer carries a declared custom critical
+   * parameter is unverifiable without it.
+   */
+  crit: Array<string> | undefined,
 ): Promise<{ inner: string | undefined; contentType: string | undefined }> => {
   // No per-call key policy: this peel is one STEP of reading a signed token, not
   // a caller's `aegis.decrypt`, and the caller's key policy governs the signature
   // below it.
-  const input: DecryptInput = { token, deps, key: undefined };
+  const input: DecryptInput = { token, deps, key: undefined, crit };
 
   assertWireInput(wire.dispositions.decrypt, input, {
     format: wire.encryptedFormat,

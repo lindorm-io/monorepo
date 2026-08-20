@@ -9,6 +9,7 @@ import type {
   VerifyOptions,
 } from "../../types/index.js";
 import { wireToFloorClaims } from "../claims/translate.js";
+import { declaredCritToWire } from "../header/declared-crit-to-wire.js";
 import { tokenWireFor } from "../wire/token-wire-for.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { applyVerifyPolicy } from "./apply-verify-policy.js";
@@ -91,14 +92,16 @@ export const resolveVerifyFloor = (
  * - CLAIMS (`jwt`/`cwt`/`cwm`): integrity, then the domain policy, then — when
  *   the caller named a profile — that profile's floor.
  *
- * It was five functions with two of everything. What the copies had actually
- * diverged on: the opaque JOSE branch dropped the caller's key policy where its
- * COSE twin threaded it; the COSE floor was fed a full domain read where the JOSE
- * floor got the wire-name read; the typ- and exp-presence defaults were decided in
- * three places, one of which disagreed; and the profiled and profile-less COSE
- * paths each assembled their own result. The shared claim translation and the
- * shared policy tail were already in place before this step — it is the paths
- * around them that were two.
+ * ⛔ ONE FUNCTION FOR BOTH WIRES, and every parity claim in this package rests on
+ * it: the key policy, the floor's claim view, and the typ- and exp-presence
+ * defaults are each decided ONCE here. A per-wire copy of any of them is a second
+ * answer to a question `internal/constants/verify-option-parity.ts` states has
+ * one — pinned by `classes/Aegis.knob-matrix.test.ts`, which runs every option on
+ * every wire it can be STATED on (a wire where the flip is declared
+ * `unobservable`, or one a declared `defect` covers, is skipped with its reason
+ * on the row) and proves the option is read by DIFFERENCE, against the verdict
+ * that wire declares — a probe carrying per-wire `overrides` declares a different
+ * one for each.
  */
 export const verifyToken = async <C extends Dict = Dict>({
   token,
@@ -124,6 +127,11 @@ export const verifyToken = async <C extends Dict = Dict>({
   issuer?: string;
 }): Promise<VerifiedToken<C>> => {
   const format = detectTokenFormat(token);
+
+  // The DOMAIN declaration, resolved ONCE to the WIRE names every gate below
+  // compares against — the peel, the claims kits and the opaque kits all take
+  // wire names (`internal/header/declared-crit-to-wire.ts`).
+  const crit = declaredCritToWire(options.critical);
 
   if (format === undefined) {
     // A peeled plaintext that is not a token at all cannot be sender-
@@ -154,7 +162,7 @@ export const verifyToken = async <C extends Dict = Dict>({
 
   // ---- the encrypting outer ------------------------------------------------
   if (isTokenFormatOfKind(format, "encrypted")) {
-    const { inner, contentType } = await decryptOuter(wire, token, deps);
+    const { inner, contentType } = await decryptOuter(wire, token, deps, crit);
     const innerFormat = inner === undefined ? undefined : detectTokenFormat(inner);
 
     // `verify` = authenticity. A plaintext that is not one of the signed forms
@@ -238,11 +246,12 @@ export const verifyToken = async <C extends Dict = Dict>({
       });
     }
 
-    // ⚠ `tokenType` is NOT asserted on this branch, and never has been: the
-    // opaque kit verify has no typ hook at all (`VerifyUnstructuredTokenOptions`
-    // is `{ certBindingMode }`), so there is nothing to thread it to. Recorded
-    // rather than silently dropped — giving it one is a kit change.
-    const verified = await wire.verifyOpaque({ token, deps, options });
+    // ⚠ `tokenType` is NOT asserted on this branch: the opaque kit verify has no
+    // typ hook at all — `VerifyUnstructuredTokenOptions` declares
+    // `certBindingMode` and `crit` and nothing else — so there is nothing to
+    // thread it to. Recorded rather than silently dropped; giving it one is a kit
+    // change.
+    const verified = await wire.verifyOpaque({ token, deps, options, crit });
 
     return {
       format,
@@ -265,6 +274,7 @@ export const verifyToken = async <C extends Dict = Dict>({
     token,
     deps,
     options,
+    crit,
     issuer: issuer ?? floor?.expectedIssuer,
   });
 

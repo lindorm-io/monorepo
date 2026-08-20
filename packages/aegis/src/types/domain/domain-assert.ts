@@ -3,8 +3,8 @@ import type { TokenType } from "../../constants/token-type.js";
 import type { DomainClaims } from "../claims/domain/domain-claims.js";
 
 /**
- * The trimmed domain matcher set (DESIGN §6 — the 25 → 8 audit). This is the
- * `assert` matcher vocabulary consumed by `aegis.verify(token, assert, options)`.
+ * The trimmed domain matcher set — the `assert` matcher vocabulary consumed by
+ * `aegis.verify(token, assert, options)`.
  *
  * Only the eight claims that earn a NAMED slot through NON-equality semantics
  * survive as matchers:
@@ -79,7 +79,7 @@ export type DomainHashMatchers = {
 };
 
 /**
- * The domain `assert` argument (DESIGN §5b) — the domain twin of the raw kit's
+ * The domain `assert` argument — the domain twin of the raw kit's
  * `Condition<WireClaims>`: the eight named {@link DomainClaimMatchers},
  * {@link DomainTokenMatchers}, PLUS a plain predicate over every OTHER domain
  * claim (the folded-in equality claims). This is the vocabulary BOTH surfaces

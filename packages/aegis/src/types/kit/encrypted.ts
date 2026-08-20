@@ -1,20 +1,26 @@
 import type { TokenData } from "@lindorm/types";
 import type { WireHeaderBuckets } from "../header/wire-buckets.js";
-import type { WireTokenEnvelope } from "../header/wire-envelope.js";
+import type {
+  CoseWireTokenEnvelope,
+  JoseWireTokenEnvelope,
+} from "../header/wire-envelope.js";
 import type { TokenContent } from "./content.js";
 
 /**
- * The ENCRYPTED (confidentiality) encrypt options — the generic base shared by
- * JWE and CWE (the bare wire envelope). A SPECIFIC derived type appears only for
- * a genuine wire delta ({@link JweEncryptOptions}).
+ * The JOSE ENCRYPTED (confidentiality) encrypt options — the bare JOSE wire
+ * envelope. A SPECIFIC derived type appears only for a genuine wire delta
+ * ({@link JweEncryptOptions}).
  */
-export type EncryptTokenOptions = WireTokenEnvelope;
+export type JoseEncryptTokenOptions = JoseWireTokenEnvelope;
+
+/** The COSE ENCRYPTED (confidentiality) encrypt options — the bare COSE wire envelope. */
+export type CoseEncryptTokenOptions = CoseWireTokenEnvelope;
 
 /**
- * The JWE encrypt options — {@link EncryptTokenOptions} plus the JOSE-only
- * ECDH-ES party info (RFC 7518 §4.6), a real wire delta (R3).
+ * The JWE encrypt options — {@link JoseEncryptTokenOptions} plus the JOSE-only
+ * ECDH-ES party info (RFC 7518 §4.6), a real wire delta.
  */
-export type JweEncryptOptions = EncryptTokenOptions & {
+export type JweEncryptOptions = JoseEncryptTokenOptions & {
   /**
    * ECDH-ES Agreement PartyUInfo (RFC 7518 §4.6.1.2) — the base64url producer
    * identity. Fed to the Concat-KDF AND emitted on the protected header (`apu`)
@@ -30,24 +36,44 @@ export type JweEncryptOptions = EncryptTokenOptions & {
 };
 
 /**
- * The COSE_Encrypt0 encrypt options — {@link EncryptTokenOptions} with no wire
- * delta beyond the shared base (direct AEAD carries no key-management params;
- * `proprietary`/`unprotected` already live on the envelope).
+ * The COSE_Encrypt0 encrypt options — {@link CoseEncryptTokenOptions} with no wire
+ * delta beyond the COSE envelope (direct AEAD carries no key-management params;
+ * `proprietary`/`custom.unprotected` already live on the envelope).
  */
-export type CweEncryptOptions = EncryptTokenOptions;
+export type CweEncryptOptions = CoseEncryptTokenOptions;
 
 /**
- * The ENCRYPTED decrypt options — shared by JWE and CWE. Empty at the kit level
- * (decrypt takes no wire knobs); Aegis intersects `& { key? }` for its per-call
- * key policy. Modelled as `Record<never, never>` (a clean empty object with no
- * index signature, so the `& { key? }` intersection is well-formed).
+ * The ENCRYPTED decrypt options — shared by JWE and CWE. Aegis intersects
+ * `& { key? }` for its per-call key policy.
+ *
+ * ⚠ A DECRYPT DOOR TAKES THE `crit` DECLARATION because both wires MINT a
+ * critical custom parameter on an encrypting outer ({@link JweEncryptOptions} /
+ * {@link CweEncryptOptions} carry `header.crit` beside `custom.protected`), and
+ * because `aegis.verify` peels a nested token through `JweKit.decrypt` /
+ * `CweKit.decrypt` — so without it the outer's declaration has nowhere to travel
+ * and the token aegis just minted becomes unreadable.
  */
-export type DecryptTokenOptions = Record<never, never>;
+export type DecryptTokenOptions = {
+  /**
+   * Custom header parameters the CALLER takes responsibility for — it will act on
+   * them after aegis returns. RFC 7515 §4.1.11 puts the duty on the RECIPIENT, and
+   * aegis is never the final recipient; it verifies on the application's behalf.
+   *
+   * A `crit` member is accepted only when it is named here AND carried by the
+   * token. Absent means nothing is declared, so EVERY critical parameter is
+   * refused — `oid` included, since registering a parameter says nothing about
+   * whether the application can act on it. Fail closed.
+   *
+   * ⚠ WIRE names — `["oid"]`, never the domain `["objectId"]`. An unregistered
+   * custom parameter is spelled identically at both tiers.
+   */
+  crit?: Array<string>;
+};
 
 /**
  * The NATIVE WIRE result of decrypting an ENCRYPTED token (`JweKit.decrypt` /
  * `CweKit.decrypt`). The COSE-and-JOSE-uniform decrypt result: the two WIRE
- * header buckets ({@link WireHeaderBuckets} for BOTH — R1: no domain-shaped JWE
+ * header buckets ({@link WireHeaderBuckets} for BOTH — no domain-shaped JWE
  * header), the plaintext `payload` — the negotiated content reconstructed from
  * the PROTECTED cty header (a `Dict` for `application/json`, a `string` for
  * `text/plain`, else a `Buffer` — the fallback when cty is absent/unknown) — and

@@ -45,7 +45,7 @@ describe("verifyCitation", () => {
     ).not.toThrow();
   });
 
-  // G8 — presence is the machine-checkable proxy for governance, and the section
+  // Presence is the machine-checkable proxy for governance, and the section
   // that defines "aud" never names "nonce".
   test("should refuse a term its section never names", () => {
     expect(() =>

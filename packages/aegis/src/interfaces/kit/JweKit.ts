@@ -1,5 +1,6 @@
 import type {
   DecryptedEncryptedToken,
+  DecryptTokenOptions,
   JweEncryptOptions,
   TokenContent,
 } from "../../types/index.js";
@@ -9,5 +10,6 @@ export interface IJweKit {
   encrypt(data: TokenContent, options?: JweEncryptOptions): string;
   decrypt<T extends TokenContent = Buffer>(
     token: string,
+    options?: DecryptTokenOptions,
   ): DecryptedEncryptedToken<T, string>;
 }

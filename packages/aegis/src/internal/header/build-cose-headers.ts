@@ -2,25 +2,35 @@ import { isArray, isString } from "@lindorm/is";
 import type { CoseError } from "../../errors/index.js";
 import type {
   CertificateHeaderFields,
+  CoseWireTokenEnvelope,
   TokenFormatTag,
   WireTokenHeader,
 } from "../../types/index.js";
 import type { CoseLabel } from "../cose/cose-label.js";
 import { assertCritEligible } from "./assert-crit-eligible.js";
+import { buildCustomHeader } from "./build-custom-header.js";
 import { joseByCose } from "./header-registry.js";
-import { isProtectedOnly } from "./is-protected-only.js";
 import { normaliseHeaders } from "./normalise-headers.js";
 import { mapTokenHeader, wireHeaderToCoseMap } from "../utils/token-header.js";
 
 /**
- * Translate and VALIDATE the two caller-controlled COSE header bags (`header` →
- * protected, `unprotected` → unprotected) into COSE integer-label maps, enforcing
- * the crit-eligibility gate and the four RFC-9052 / COSE-consistency rules (all
- * throw at the site, house
- * idiom). It returns the translated entries for the kit to merge into its
- * already-derived protected/unprotected maps — the ordering of the merge is the
- * kit's concern (COSE_Encrypt0 finalizes its protected header before the IV
- * exists, so it cannot be a single write here).
+ * Translate and VALIDATE the caller-controlled COSE header input — the REGISTERED
+ * bag (`header` → protected) and the two UNREGISTERED ones (`custom.protected`,
+ * `custom.unprotected`) — into COSE label maps, enforcing the crit-eligibility
+ * gate and the COSE-consistency rules (all throw at the site, house idiom). It
+ * returns the translated entries for the kit to merge into its already-derived
+ * protected/unprotected maps — the ordering of the merge is the kit's concern
+ * (COSE_Encrypt0 finalizes its protected header before the IV exists, so it
+ * cannot be a single write here).
+ *
+ * ⚠ A REGISTERED PARAMETER HAS NO CALLER-CHOSEN BUCKET, and that is why `header`
+ * has no unprotected twin. Every registered parameter a caller may set declares
+ * `placement: "protected"`; the two cells reading `"either"` (`iv`, `kid`) are
+ * kit-owned, so a bag meaning "registered params a caller may place unprotected"
+ * describes the empty set (`header-registry.ts`, `is-protected-only.ts` — which
+ * the READ side still consults for a foreign token that puts one there anyway).
+ * An UNREGISTERED parameter has no row, so its bucket is the caller's by
+ * necessity, and `custom` is where that choice lives.
  *
  * `reserved` is the kit's own `KitCapabilities.reserved` row — the JOSE wire
  * names of the parameters the kit stamps itself. It is the runtime backstop for
@@ -30,39 +40,47 @@ import { mapTokenHeader, wireHeaderToCoseMap } from "../utils/token-header.js";
  * from drifting apart.
  *
  * The rules:
- *  1. a reserved/derived param set in EITHER bag → throw (it is key-derived),
- *     checked by JOSE name BEFORE any value is shaped;
- *  2. `crit` ⊆ protected — `crit` itself, or any param it lists, placed in the
- *     unprotected bag → throw (critical params must be integrity-protected);
- *  3. the same param in BOTH bags → throw (COSE cannot carry it twice);
- *  4. a parameter the header registry declares `placement: "protected"` placed in
- *     the unprotected bag → throw (aegis decides the bucket, not the caller).
+ *  1. `crit` itself, or any param it lists, placed in the unprotected bag →
+ *     throw (RFC 9052 §3.1: critical params must be integrity-protected);
+ *  2. a registered or kit-owned name inside either `custom` bag → throw
+ *     ({@link buildCustomHeader}); a reserved/derived param in `header` → throw;
+ *  3. the same param in BOTH buckets → throw (COSE cannot carry it twice).
  *
- * ⚠ THE CRIT-ELIGIBILITY GATE RUNS FIRST, ahead of all four
- * ({@link assertCritEligible}). "May this name stand in a `crit` at all" is
- * prior to "is it in the right bucket": a `crit: ["alg"]` beside an unprotected
- * `alg` is a header no producer may write on either wire, and answering it with
- * a PLACEMENT complaint would tell the caller to move a parameter it must
- * instead stop naming. It also runs on the WIRE-NAMED bag here, before any label
+ * ⚠ THE CRIT-ELIGIBILITY GATE RUNS AHEAD OF THE PLACEMENT RULES
+ * ({@link assertCritEligible}). "May this name stand in a `crit` at all" is prior
+ * to "is it in the right bucket": a `crit: ["alg"]` beside an unprotected `alg`
+ * is a header no producer may write on either wire, and answering it with a
+ * PLACEMENT complaint would tell the caller to move a parameter it must instead
+ * stop naming. It also runs on the WIRE-NAMED bag here, before any label
  * translation, which is what keeps it out of the label/name question entirely —
- * see its own docstring.
+ * see its own docstring. It is handed the keys of BOTH custom buckets, because
+ * those are the parameters this call CARRIES that the registry does not answer
+ * for, and a producer's own extension is exactly what `crit` is for (RFC 7515
+ * §4.1.11). ⛔ Not the protected keys alone: a name the caller wrote into
+ * `custom.unprotected` IS a name it may mark critical, and refusing it here would
+ * be this gate answering the placement question — the very inversion the
+ * paragraph above rejects, pointed the other way. Rule 1b owns that verdict.
  *
- * ⚠ Rule 4 runs LAST, after the structural ones. Rules 1-3 name facts about the
- * COSE wire itself — a key-derived parameter, RFC 9052 §3.1's crit requirement, a
- * structure that cannot carry one label twice — and rule 4 states an aegis
- * POLICY, so the wire's own constraints are reported before ours. It also keeps
- * rule 3 reachable and honestly probed: with rule 4 first, `{ header: { cty },
- * unprotected: { cty } }` would refuse for placement and the duplicate rule would
- * be checked by nothing.
+ * ⚠ THE `crit`-IN-`custom.unprotected` REFUSAL RUNS BEFORE
+ * {@link buildCustomHeader}, and the order decides which of two true verdicts a
+ * caller hears. `crit` is registered, so the custom bag would refuse it as
+ * misplaced; RFC 9052 §3.1 refuses it as unprotected. The wire's own constraint
+ * is reported ahead of aegis's split policy — the same precedence the rules below
+ * follow.
  *
- * ⚠ A PARAMETER THAT EMITS NOTHING IS NOT A PARAMETER, so BOTH bags are
- * NORMALISED ONCE at the top and ALL FOUR rules then run over the normalised
- * bags. That is the rule this file already applied to `undefined` — an absent
- * parameter is neither reserved, nor critical, nor a duplicate, nor misplaced,
- * because nothing about it reaches either bucket — widened by
- * {@link normaliseHeaders} to "`undefined`, or empty where the registry says
- * prune". One rule, both wires (`build-jose-header.ts` normalises the same way,
- * before its reserved check), every guard.
+ * ⚠ A PARAMETER THAT EMITS NOTHING IS NOT A PARAMETER, so the REGISTERED bag is
+ * NORMALISED ONCE at the top and every rule then runs over the normalised bag.
+ * That is the rule this file already applied to `undefined` — an absent parameter
+ * is neither reserved, nor critical, nor a duplicate, because nothing about it
+ * reaches either bucket — widened by {@link normaliseHeaders} to "`undefined`, or
+ * empty where the registry says prune". One rule, both wires
+ * (`build-jose-header.ts` normalises the same way, before its reserved check).
+ *
+ * ⛔ THE CUSTOM BAGS ARE NOT NORMALISED, and must not be: `normaliseHeaders`
+ * reads the registry's `whenEmpty` cell, and an unregistered parameter has no
+ * row. A custom `{"x-hint": ""}` therefore travels as the empty string the caller
+ * asked to write, on BOTH wires — `buildCustomHeader` drops only `undefined`, and
+ * the JOSE twin merges the same bag it produces.
  *
  * ⚠ Nothing that emits BYTES stops being guarded: the prune removes only what
  * would have gone on the wire as noise, and a `whenEmpty: "keep"` cell would
@@ -73,47 +91,62 @@ import { mapTokenHeader, wireHeaderToCoseMap } from "../utils/token-header.js";
  * reverse) is a wire asymmetry an attacker chooses the encoding to exploit.
  *
  * ⚠ THE NORMALISATION NARROWS EVERY RULE'S REACH, AND THAT IS THE WHOLE CLASS —
- * state it once here rather than leave five separate surprises to be rediscovered
- * one refusal at a time. For a REGISTERED parameter whose `whenEmpty` cell says
+ * state it once here rather than leave separate surprises to be rediscovered one
+ * refusal at a time. For a REGISTERED parameter whose `whenEmpty` cell says
  * prune, an empty value now emits nothing and therefore triggers nothing:
- * `cose_reserved_header`, `cose_duplicate_header`, `cose_unprotected_placement`,
- * `cose_crit_unprotected`, `cose_crit_param_unprotected` and
- * `header_no_cose_label` all fall silent, as does `jose_reserved_header` on the
- * twin. Measured through this function: `{apu: ""}`, `{zip: ""}`, `{x5c: []}`,
- * `unprotected: {cty: ""}`, `unprotected: {crit: []}` and `{ crit: ["oid"] }`
- * beside `unprotected: { oid: "" }` each return two maps with no refusal from any
- * rule here. That is the rule, not six exceptions to it — a refusal names a
- * statement the caller made about the token, and a parameter that emits no bytes
- * made none. What survives is where bytes or a REFERENT survive: an UNREGISTERED
- * key is never pruned, so `{nonsense: ""}` still throws `header_no_cose_label`,
- * and the one `whenEmpty: "refuse"` cell (`x5t#S256`) is answered by the
- * normalisation itself with `header_empty_parameter` rather than reaching any
- * rule below.
+ * `cose_reserved_header` and `header_no_cose_label` fall silent, as does
+ * `jose_reserved_header` on the twin.
+ *
+ * ⚠ TWO CODES ARE NOT ON THAT LIST AND MUST NOT BE, because the prune is not what
+ * makes them unreachable for a registered parameter — the SHAPE is.
+ * `cose_crit_param_unprotected` (rule 1b) and `cose_duplicate_header` (rule 3)
+ * both compare against the UNPROTECTED bucket, and the only caller door to that
+ * bucket is `custom`, which refuses every registered name outright
+ * (`build-custom-header.ts`). So a registered parameter cannot reach either rule
+ * whether it is pruned or not.
+ *
+ * ⚠ WHAT EACH STILL ANSWERS, FOR CUSTOM KEYS, stated exactly rather than as
+ * "both still fire": rule 1b answers a `crit` naming a key written into
+ * `custom.unprotected` — whether or not the same key is also in
+ * `custom.protected`, because it runs first — and rule 3 answers a key written
+ * into BOTH buckets with no `crit` naming it. They overlap on the both-buckets
+ * shape and 1b wins there, which is right: RFC 9052 §3.1's integrity requirement
+ * is a fact about the wire, and carrying one parameter twice is a structural
+ * complaint about the same header. Measured through this function: `{apu: ""}`, `{zip: ""}`, `{x5c: []}`
+ * and `{ crit: ["oid"] }` beside a pruned `oid` each return two maps with no
+ * refusal from any rule here. That is the rule, not a set of exceptions to it — a
+ * refusal names a statement the caller made about the token, and a parameter that
+ * emits no bytes made none. What survives is where bytes or a REFERENT survive:
+ * an UNREGISTERED key in `header` is never pruned, so `{nonsense: ""}` still
+ * throws `header_no_cose_label`, and the one `whenEmpty: "refuse"` cell
+ * (`x5t#S256`) is answered by the normalisation itself with
+ * `header_empty_parameter` rather than reaching any rule below.
  *
  * ⚠ `crit` IS THE ONE PLACE A REFERENT OUTLIVES THE PRUNE, and it is answered by
  * REFUSING rather than by exempting — but NOT HERE. The refusal needs the FINISHED
  * protected bucket, and this function only has the caller's half of it, so it
  * lives at the end of `mergeCoseProtected` ({@link assertCritSatisfied}), the
- * COSE analogue of `buildJoseHeader`'s last line. That is why the last row above
- * returns cleanly from here: `{ header: { crit: ["oid"] }, unprotected: { oid: "" } }`
- * used to reach `cose_crit_param_unprotected` by way of an exemption that carried
- * the empty value into the unprotected bucket, and now travels one step further to
- * be refused as the empty value it is. Rule 2 still owns the case with a REAL
- * value in the wrong bucket, and owns it here, which is why the accurate refusal
- * still comes first.
+ * COSE analogue of `buildJoseHeader`'s last line. Rule 1 still owns the case with
+ * a REAL value in the wrong bucket, and owns it here, which is why the accurate
+ * refusal still comes first.
  */
 export const buildCoseHeaders = ({
   reserved,
   header,
-  unprotected,
+  custom,
   cert,
   proprietary,
   format,
   error,
 }: {
   reserved: ReadonlyArray<string>;
+  /** The caller's REGISTERED wire-named bag; it travels PROTECTED. */
   header: Partial<WireTokenHeader> | undefined;
-  unprotected: Partial<WireTokenHeader> | undefined;
+  /**
+   * The caller's UNREGISTERED parameters, per bucket. COSE keys each by its own
+   * tstr label (RFC 9052 §1.4 `label = int / tstr`).
+   */
+  custom: CoseWireTokenEnvelope["custom"];
   /**
    * The cert-binding output of `resolveCertBinding` — the COSE twin of
    * `buildJoseHeader`'s `cert` tier, and the one DOMAIN-named input either wire
@@ -139,22 +172,20 @@ export const buildCoseHeaders = ({
   protectedEntries: Map<CoseLabel, unknown>;
   unprotectedEntries: Map<CoseLabel, unknown>;
 } => {
-  // A parameter that emits nothing is not a parameter — see the docstring. Both
-  // bags are normalised HERE, once, so all four rules below see the same values
-  // the wire will, and neither wire refuses what the other silently drops.
+  // A parameter that emits nothing is not a parameter — see the docstring. The
+  // REGISTERED bag is normalised HERE, once, so every rule below sees the same
+  // values the wire will, and neither wire refuses what the other silently drops.
   const headerBag = normaliseHeaders(header ?? {});
-  const unprotectedBag = normaliseHeaders(unprotected ?? {});
+  const owned = new Set(reserved);
 
-  // The NAME-side crit gate, ahead of all four rules and on the WIRE-NAMED bag —
-  // see the docstring and `assert-crit-eligible.ts`.
-  assertCritEligible({ header: headerBag, format, error });
-
-  // Rule 2 — crit ⊆ protected (RFC 9052 §3.1). Checked on the wire-named bags,
-  // BEFORE label translation, which is why it compares JOSE names on both sides:
-  // a caller writes `crit: ["oid"]` and `oid: "1.2.3.4"` in the same vocabulary.
-  // `wireHeaderToCoseMap` then translates the members to the integer labels the
-  // parameters are keyed under, because on the wire a crit member IS a label.
-  if (Object.hasOwn(unprotectedBag, "crit")) {
+  // Rule 1a — `crit` itself cannot be unprotected (RFC 9052 §3.1). Asked on the
+  // RAW bag, ahead of `buildCustomHeader`'s misplacement refusal — see the
+  // docstring on why the wire's constraint outranks the split policy.
+  //
+  // ⚠ `Object.hasOwn`, never `in`: the bag is CALLER-CONTROLLED and `in` resolves
+  // through `Object.prototype`. `in` on a caller-influenced key is a BANNED
+  // construct in this package.
+  if (custom?.unprotected !== undefined && Object.hasOwn(custom.unprotected, "crit")) {
     throw new error("crit cannot be an unprotected COSE header parameter", {
       code: "cose_crit_unprotected",
       title: "COSE crit Must Be Protected",
@@ -163,18 +194,48 @@ export const buildCoseHeaders = ({
     });
   }
 
-  // ⚠ `Object.hasOwn`, never `in`: the member is CALLER-CONTROLLED and `in`
-  // resolves through `Object.prototype`, so `crit: ["toString"]` matched a
-  // parameter no bag holds and this rule refused a token that has no unprotected
-  // bucket at all. `in` on a caller-influenced key is a BANNED construct in this
-  // package. It is also what restored the rule's reach: the loop used to be gated
-  // on the caller having SUPPLIED an unprotected bag, and the normalisation above
-  // now makes that bag `{}` rather than `undefined` — an own-key test on an empty
-  // object states the same thing without a second condition to keep in step.
+  // Rule 2a — a registered or kit-owned name in either custom bag. Both bags are
+  // validated before any placement question, because "this parameter is in the
+  // wrong BAG" is prior to "this parameter is in the wrong BUCKET".
+  const customProtected = buildCustomHeader({
+    custom: custom?.protected,
+    owned,
+    bucket: "protected",
+    error,
+  });
+  const customUnprotected = buildCustomHeader({
+    custom: custom?.unprotected,
+    owned,
+    bucket: "unprotected",
+    error,
+  });
+
+  // The NAME-side crit gate, ahead of the placement rules and on the WIRE-NAMED
+  // bag — see the docstring and `assert-crit-eligible.ts`.
+  // ⛔ BOTH BUCKETS' KEYS, not just the protected ones. The gate answers "may this
+  // name stand in a `crit` AT ALL", and a parameter the caller wrote — in either
+  // bucket — may. Handing it the protected keys alone made it answer the
+  // PLACEMENT question by refusing the name, so a caller who wrote the parameter
+  // into `custom.unprotected` was told to stop naming it in `crit` when the repair
+  // is to move it to `custom.protected`. Rule 1b below is what says that, and it
+  // only gets to speak because this gate lets the name through.
+  assertCritEligible({
+    header: headerBag,
+    custom: new Set([...Object.keys(customProtected), ...Object.keys(customUnprotected)]),
+    format,
+    error,
+  });
+
+  // Rule 1b — a param `crit` lists cannot be unprotected (RFC 9052 §3.1).
+  // Checked on the wire-named bags, BEFORE label translation, which is why it
+  // compares JOSE names on both sides: a caller writes `crit: ["x-hint"]` and
+  // `custom.unprotected["x-hint"]` in the same vocabulary. `wireHeaderToCoseMap`
+  // then translates the registered members to the integer labels their parameters
+  // are keyed under, because on the wire a crit member IS a label.
   const crit = headerBag.crit;
   if (isArray(crit)) {
     for (const name of crit) {
-      if (isString(name) && Object.hasOwn(unprotectedBag, name)) {
+      if (isString(name) && Object.hasOwn(customUnprotected, name)) {
         throw new error(`crit-listed parameter "${name}" cannot be unprotected`, {
           code: "cose_crit_param_unprotected",
           data: { parameter: name },
@@ -186,8 +247,9 @@ export const buildCoseHeaders = ({
     }
   }
 
-  // Rule 1 — a kit-derived/computed param cannot be set by the caller in EITHER
-  // bag (the runtime backstop for untyped paths; the bag TYPES already Omit these).
+  // Rule 2b — a kit-derived/computed param cannot be set by the caller in the
+  // registered bag (the runtime backstop for untyped paths; the bag TYPE already
+  // Omits these, and `buildCustomHeader` answers for the custom bags).
   //
   // ⚠ BY JOSE NAME AND BEFORE THE TRANSLATION — the same shape `buildJoseHeader`
   // uses (`owned.has(jose)`), and both halves are load-bearing. The caller's bag
@@ -198,32 +260,46 @@ export const buildCoseHeaders = ({
   // about a value the caller was never allowed to state — pinned in
   // `kit-capabilities.test.ts`'s reserved (COSE) probe, which supplies exactly
   // that value for every reserved parameter.
-  const owned = new Set(reserved);
+  for (const jose of Object.keys(headerBag)) {
+    if (!owned.has(jose)) continue;
 
-  for (const [bag, bucket] of [
-    [headerBag, "header"],
-    [unprotectedBag, "unprotected"],
-  ] as const) {
-    for (const jose of Object.keys(bag)) {
-      if (!owned.has(jose)) continue;
-
-      throw new error(`Header parameter "${jose}" is key-derived and cannot be set`, {
-        code: "cose_reserved_header",
-        data: { parameter: jose, bucket },
-        title: "COSE Reserved Header Parameter",
-        details:
-          "This header parameter is derived from the signing/encrypting key or computed by the crypto operation, so the kit always sets it; it cannot be supplied in the header or unprotected bag.",
-      });
-    }
+    throw new error(`Header parameter "${jose}" is key-derived and cannot be set`, {
+      code: "cose_reserved_header",
+      data: { parameter: jose, bucket: "header" },
+      title: "COSE Reserved Header Parameter",
+      details:
+        "This header parameter is derived from the signing/encrypting key or computed by the crypto operation, so the kit always sets it; it cannot be supplied in the header bag.",
+    });
   }
 
-  // These re-normalise, idempotently — the entries are built from the same bags
+  // This re-normalises, idempotently — the entries are built from the same bag
   // the rules were checked on, so nothing can be added or removed between the
   // verdict and the wire.
   const protectedEntries = wireHeaderToCoseMap(headerBag, proprietary);
-  const unprotectedEntries = wireHeaderToCoseMap(unprotectedBag, proprietary);
+  const unprotectedEntries = new Map<CoseLabel, unknown>();
 
-  // Rule 3 — the same non-reserved param cannot appear in BOTH buckets.
+  // ⚠ THE CUSTOM ENTRIES DO NOT CROSS `wireHeaderToCoseMap`, and must not: that
+  // pass resolves every key through `coseWireKey`, which THROWS
+  // `header_no_cose_label` for a name the registry does not answer for — which is
+  // every custom key. A custom parameter IS its own tstr label (RFC 9052 §1.4),
+  // so the key is the label and the value rides verbatim, with no registry codec
+  // to apply.
+  //
+  // ⛔ This registers nothing. `byCoseName` still resolves only the parameters
+  // aegis can WRITE under a text label, so a foreign token cannot deliver a
+  // REGISTERED parameter under one (`internal/registry/is-private-use-label.ts`);
+  // an unknown tstr label reads back into the unknown bag
+  // (`cose-wire-header.ts`), never into the registered vocabulary.
+  for (const [key, value] of Object.entries(customProtected)) {
+    protectedEntries.set(key, value);
+  }
+  for (const [key, value] of Object.entries(customUnprotected)) {
+    unprotectedEntries.set(key, value);
+  }
+
+  // Rule 3 — the same param cannot appear in BOTH buckets. It compares LABELS, so
+  // it catches a custom key written into both custom bags as well as anything the
+  // registry keyed into both.
   for (const label of protectedEntries.keys()) {
     if (!unprotectedEntries.has(label)) continue;
     const jose = joseByCose(label) ?? String(label);
@@ -236,37 +312,9 @@ export const buildCoseHeaders = ({
     });
   }
 
-  // Rule 4 — the registry's PLACEMENT column, the same datum the read-side merge
-  // consults (`is-protected-only.ts`). Checked on the wire-named bag, like rule
-  // 2, because that is the vocabulary `placement` is keyed in.
-  //
-  // ⚠ It reads the NORMALISED bag, like every rule here. Rule 4 asks where a
-  // parameter TRAVELS, and a pruned parameter travels nowhere: it emits no bytes
-  // and nothing else in the message points at it, so there is no statement left
-  // to be in the wrong bucket.
-  //
-  // An unprotected `typ` is the shape that makes this load-bearing, and it is the
-  // one member of the set a SPECIFICATION decides rather than the placement
-  // column: RFC 9596 §2 — *"The "typ" parameter MUST NOT be present in
-  // unprotected headers."* It is an unauthenticated type declaration on a token
-  // that otherwise verifies. Today the kits reserve `typ`, so rule 1 catches that
-  // one — but `cty`, `oid`, `x5c` and `x5u` are all caller-settable and were all
-  // accepted into the unauthenticated bucket.
-  for (const jose of Object.keys(unprotectedBag)) {
-    if (!isProtectedOnly(jose)) continue;
-
-    throw new error(`Header parameter "${jose}" cannot be unprotected`, {
-      code: "cose_unprotected_placement",
-      data: { parameter: jose, placement: "protected" },
-      title: "COSE Header Parameter Must Be Protected",
-      details:
-        "aegis decides which bucket a header parameter travels in, and this one is integrity-protected only: a recipient must be able to rely on it, so it cannot be placed in the unprotected bucket where any holder of the token could rewrite it.",
-    });
-  }
-
   // The cert tier, LAST — the ordering `buildJoseHeader` states: kit defaults <
-  // caller < kit-derived. It is merged AFTER the four rules because those rules
-  // are about what a CALLER stated, and this tier is the kit's own derivation.
+  // caller < kit-derived. It is merged AFTER the rules because those rules are
+  // about what a CALLER stated, and this tier is the kit's own derivation.
   //
   // ⚠ The digests cross through `mapTokenHeader`, which is where the DOMAIN names
   // (`certificateThumbprint`, …) become wire ones and the registry's empty-value

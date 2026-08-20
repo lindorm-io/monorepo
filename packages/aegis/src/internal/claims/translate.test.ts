@@ -429,7 +429,7 @@ describe("auth factor claims — `afr` is the RESOLVED single factor, `afc` the 
   });
 });
 
-describe("custom claim case flip (R18 — Aegis-side, kits verbatim)", () => {
+describe("custom claim case flip (Aegis-side, kits verbatim)", () => {
   test("write snake_cases the key, read camelCases it back, value untouched", () => {
     const domain: Dict = { acmeFlagValue: { keep: "AS-IS" } };
     const wire = domainToJose(domain);
@@ -440,7 +440,7 @@ describe("custom claim case flip (R18 — Aegis-side, kits verbatim)", () => {
   });
 });
 
-describe("registry-complete extension (intentional, inert until Phase 4/13)", () => {
+describe("registry-complete extension", () => {
   test("the domain mode extracts txn/events that the floor mode leaves in custom", () => {
     const wire: Dict = { iss: "https://i/", txn: "txn-1", events: { "urn:e": {} } };
 
@@ -467,6 +467,42 @@ describe("registry-complete extension (intentional, inert until Phase 4/13)", ()
  */
 describe("wireToFloorClaims — the verify-floor read mode", () => {
   const ISSUER = "https://test.lindorm.io/";
+
+  /**
+   * ⛔⛔ THE FLOOR READ IS WHERE `__proto__` ARRIVES UNCONVERTED. Unlike the
+   * camelCase modes it declares `customKey: (key) => key`, so a wire key reaches
+   * the custom bag as written — and this door rebuilds that bag a SECOND time to
+   * drop the names a floor claim would shadow. Both rebuilds must DEFINE their
+   * keys: an assignment makes `__proto__` the bag's prototype instead of a member,
+   * which DROPS it — and the floor payload is what a profile is judged against, so
+   * a dropped claim is a claim set the token did not present.
+   *
+   * ⚠ THIS CALLS AN INTERNAL FUNCTION, NOT A PUBLIC DOOR, and the distinction is
+   * the point: the second rebuild lives in `wireToFloorClaims`, so a measurement
+   * taken at `wireToDomain` passes while this one fails. What a PUBLIC door
+   * observes is different again — `aegis.verify(token, { profile })` reports the
+   * TOKEN-mode bag (case-converted, `custom: { proto: … }`), never this one, which
+   * `internal/utils/verify-token.ts` consumes into `enforceVerifyFloor` and
+   * discards. So this row pins the FLOOR JUDGEMENT's input, not anything a caller
+   * receives.
+   *
+   * ⚠ ASSERT ON THE PROPERTY AND THE PROTOTYPE. `Object.keys`/`JSON.stringify`
+   * render a swapped prototype as absent, so either alone reads clean on exactly
+   * the hostile input.
+   */
+  test("carries a `__proto__` wire key as an own key and swaps no prototype", () => {
+    const { custom } = wireToFloorClaims(
+      JSON.parse(
+        `{"iss":"${ISSUER}","__proto__":{"aud":"https://victim.example/"}}`,
+      ) as Dict,
+      joseName,
+    );
+
+    expect((custom as Dict).aud).toBeUndefined();
+    expect(Object.getPrototypeOf(custom)).toBe(Object.prototype);
+    expect(Object.keys(custom as Dict)).toContain("__proto__");
+    expect(({} as Dict).aud).toBeUndefined();
+  });
 
   test("leaves an UNRESOLVED key in custom VERBATIM, never case-converted", () => {
     // The whole point: a wire `expires_at` that camelCased to `expiresAt` would
@@ -614,9 +650,11 @@ describe("wireToFloorClaims — the verify-floor read mode", () => {
   });
 
   test("marks a wrongly-typed claim CONSUMED, so it lands in neither bucket", () => {
-    // Preserved defect (finding #10): the key is consumed before decoding, so a
-    // numeric `nonce` is invisible to a forbidden-claim check. Pinned so the
-    // repair is a deliberate change, not an accident of a later refactor.
+    // ⚠ A PRESERVED SHORTFALL: the pass marks a key CONSUMED before its codec
+    // rejects the value, so a wrongly-typed claim lands in neither `claims` nor
+    // `custom` — a numeric `nonce` is invisible to a forbidden-claim check that
+    // reads either bucket. Pinned so the repair is a deliberate change rather than
+    // an accident of a later refactor.
     const { claims, custom } = wireToFloorClaims({ iss: ISSUER, nonce: 12345 }, joseName);
 
     expect(claims.nonce).toBeUndefined();

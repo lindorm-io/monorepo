@@ -31,25 +31,28 @@ import { liftClaimMatcher } from "./lift-claim-matcher.js";
  * builder, merged over this one by `createAssertPredicate` — the same division
  * `JwtKit.verify` makes on the wire side.
  */
-export const createJwtValidate = (assert: DomainAssert): Condition<Dict> => {
-  const predicate: Condition<Dict> = {};
+export const createJwtValidate = (assert: DomainAssert): Condition<Dict> =>
+  // ⛔ `Object.fromEntries`, NEVER `predicate[key] = operator`. The key is the
+  // CALLER's — this door matches a flat dict a caller already holds — and
+  // `liftClaimMatcher` answers `{ $eq: value }` for a string under any key,
+  // including `__proto__`, whose registry lookup is a `Map` read and simply
+  // misses. Assigned onto a plain object that hits `Object.prototype`'s setter
+  // and swaps the prototype instead of defining the key, so the caller's
+  // assertion is dropped and the token verifies unasserted. Same disposal
+  // `internal/claims/prune-empty-claims.ts` uses, and pinned at
+  // `jwt-validate.test.ts#a __proto__ assertion is CARRIED`.
+  Object.fromEntries(
+    Object.entries(assert).map(([key, value]) => {
+      const operator = liftClaimMatcher(claimByDomain(key), value);
 
-  for (const [key, value] of Object.entries(assert)) {
-    const operator = liftClaimMatcher(claimByDomain(key), value);
+      if (operator !== undefined) return [key, operator];
 
-    if (operator !== undefined) {
-      predicate[key] = operator;
-      continue;
-    }
-
-    throw new AegisDomainError(`Unsupported value: ${value as any} for key: ${key}`, {
-      code: "jwt_validate_unsupported_value",
-      data: { key },
-      title: "JWT Validate Unsupported Value",
-      details:
-        "A claim matcher value must be a string, number, array, or predicate object; this key was given an unsupported type.",
-    });
-  }
-
-  return predicate;
-};
+      throw new AegisDomainError(`Unsupported value: ${value as any} for key: ${key}`, {
+        code: "jwt_validate_unsupported_value",
+        data: { key },
+        title: "JWT Validate Unsupported Value",
+        details:
+          "A claim matcher value must be a string, number, array, or predicate object; this key was given an unsupported type.",
+      });
+    }),
+  ) as Condition<Dict>;

@@ -68,13 +68,14 @@ export type HeaderSpec<D = unknown> = ParamSpec<D, HeaderCodec, WhenEmpty> & {
   /**
    * Which bucket the parameter may occupy — see {@link HeaderPlacement}.
    *
-   * ENFORCED IN BOTH DIRECTIONS, through the one predicate that reads this column
-   * (`internal/header/is-protected-only.ts`):
+   * READ  — `merge-header-buckets.ts` IGNORES a `"protected"` parameter arriving
+   * in a FOREIGN token's unprotected bucket, so it cannot reach the domain header
+   * at all. That is the one predicate reading this column
+   * (`internal/header/is-protected-only.ts`).
    *
-   *   - WRITE — `build-cose-headers.ts` REFUSES a `"protected"` parameter placed
-   *     in a caller's unprotected bag (`cose_unprotected_placement`).
-   *   - READ  — `merge-header-buckets.ts` IGNORES one arriving in a token's
-   *     unprotected bucket, so it cannot reach the domain header at all.
+   * ⚠ THE WRITE SIDE NEEDS NO SUCH RULE: `header` is the only registered bag a
+   * caller can fill and it travels protected, so the shape the column would
+   * refuse is unwritable (`build-cose-headers.ts`).
    *
    * That is what lets the domain tier report ONE header without losing the
    * provenance guarantee: the only values that can enter it unauthenticated are
@@ -89,36 +90,32 @@ export type HeaderSpec<D = unknown> = ParamSpec<D, HeaderCodec, WhenEmpty> & {
   placement: HeaderPlacement;
   /**
    * MAY THIS PARAMETER BE NAMED IN `crit` — i.e. is it a critical extension
-   * AEGIS IMPLEMENTS? ONE cell, read from BOTH directions through ONE predicate
-   * (`internal/header/is-crit-eligible.ts`), which is what makes it a gate
-   * rather than a note:
+   * AEGIS IMPLEMENTS? Read through ONE predicate,
+   * `internal/header/is-crit-eligible.ts`, which serves the MINT gate
+   * `internal/header/assert-crit-eligible.ts` at both wire builders.
    *
-   *   - MINT   `internal/header/assert-crit-eligible.ts`, at both wire builders,
-   *            refuses a caller's `crit` naming a parameter whose cell is
-   *            `false` — or a name the registry does not know at all.
-   *   - VERIFY `internal/utils/reject-unknown-critical.ts` accepts a member
-   *            whose cell is `true` and refuses every other.
+   * ⛔ MINT IS THE ONLY GATE THAT READS IT. The read gate never admits a member
+   * on the strength of a registry cell — `oid` included: RFC 7515 §4.1.11 puts
+   * the duty to understand a critical extension on the RECIPIENT, and that aegis
+   * REGISTERS a parameter says nothing about whether the application behind aegis
+   * can act on one. ⇒ This cell decides what a PRODUCER may name; what a RECIPIENT
+   * accepts is the read rule, stated once on
+   * `internal/utils/reject-unknown-critical.ts` — the verify/decrypt `crit`
+   * option is necessary there and never sufficient on its own.
    *
-   * One column both ways is the whole point: a token aegis mints is a token
-   * aegis verifies.
+   * ⚠ The write gate does not read the cell directly either — it goes through
+   * `internal/header/is-crit-eligible.ts`, admitting a member when this cell is
+   * `true` OR when the same call writes the name as an UNREGISTERED custom
+   * parameter. That second ground is the same RFC 7515 §4.1.11 sentence read the
+   * other way, so this column is the REGISTRY HALF of the write rule and never
+   * the whole of it.
    *
-   * ⚠ THE TWO DIRECTIONS ARE NOT SYMMETRIC IN WHAT THEY CAN OBSERVE, and saying
-   * they are would overstate what the read side proves. On MINT all three
-   * outcomes are visible — `true`, `false`, and no entry — because the gate is
-   * the first thing a caller's `crit` meets. On VERIFY only `true` versus "no
-   * registry entry at all" is: `rejectUnknownCritical` runs `validateCrit`
-   * first, which refuses every IANA-registered name, and `oid` is the ONLY
-   * registered parameter that is both crit-eligible and absent from that list —
-   * so the `false` branch has no reachable input on the read path today and a
-   * loop asking merely "is this parameter registered" would behave identically.
-   *
-   * That is a fact about today's registry, not a property of the design, and it
-   * is pinned in `reject-unknown-critical.test.ts` in both directions: one test
-   * binds the two sources (an eligible parameter must survive `validateCrit`, or
-   * aegis would mint a token it refuses on arrival), and one asserts the
-   * unreachability itself — so the day a second non-IANA parameter is registered
-   * ineligible, or the IANA list is trimmed, the tripwire fires and the read
-   * side owes a probe it cannot be given now.
+   * ⚠ STILL BOUND TO THE READ IN ONE DIRECTION, and it has to be: an eligible
+   * parameter must SURVIVE `validateCrit`, which refuses every
+   * specification-defined name — otherwise aegis mints a token it refuses on
+   * arrival for a reason no declaration could repair. Pinned in
+   * `reject-unknown-critical.test.ts#every crit-eligible parameter survives the
+   * read path's malformed gate`.
    *
    * `false` on every entry but `oid`. RFC 7515 §4.1.11 forbids a producer naming
    * a parameter *"defined by this specification or [JWA] for use with JWS"* in

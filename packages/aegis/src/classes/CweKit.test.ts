@@ -4,7 +4,10 @@ import { describe, expect, test } from "vitest";
 import { AegisError, CweError } from "../errors/index.js";
 import { Tag, decodeCbor, encodeCbor } from "../internal/cose/cbor.js";
 import { coseByJose } from "../internal/header/header-registry.js";
-import { decodeProtectedHeader } from "../internal/cose/structures.js";
+import {
+  decodeProtectedHeader,
+  encodeProtectedHeader,
+} from "../internal/cose/structures.js";
 import { CweKit } from "./CweKit.js";
 
 describe("CweKit (COSE_Encrypt0)", () => {
@@ -83,43 +86,44 @@ describe("CweKit — caller-controlled protected / unprotected header bags", () 
     expect(unprotected.has(coseByJose("kid"))).toBe(true);
   });
 
-  // The caller states the parameter, never its provenance: the header registry's
-  // `placement` column decides the bucket, and the read side filters an incoming
-  // unprotected bucket by the same column — so a parameter emitted there would be
-  // one no reader ever surfaces.
-  test("throws when a protected-only param is placed in the unprotected bag", () => {
+  // The caller states the parameter, never its bucket: `header` is the one bag a
+  // REGISTERED parameter may be written into, and it travels protected. Written
+  // into a custom bag, `x5u` is refused as the misplaced registered parameter it
+  // is rather than accepted into the unauthenticated bucket.
+  test("throws when a protected-only param is written into a custom bag", () => {
     expect(
-      codeOf(() => kit.encrypt(Buffer.from("secret"), { unprotected: { x5u } })),
-    ).toBe("cose_unprotected_placement");
+      codeOf(() =>
+        kit.encrypt(Buffer.from("secret"), { custom: { unprotected: { x5u } } }),
+      ),
+    ).toBe("header_registered_in_custom");
   });
 
-  test("throws when the computed iv is smuggled into the unprotected bag", () => {
+  test("throws when the computed iv is smuggled into a custom bag", () => {
     expect(
       codeOf(() =>
         kit.encrypt(Buffer.from("secret"), {
-          unprotected: { iv: Buffer.from("nope") } as never,
+          custom: { unprotected: { iv: Buffer.from("nope") } },
         }),
       ),
-    ).toBe("cose_reserved_header");
+    ).toBe("header_kit_owned_in_custom");
   });
 
-  test("throws when a crit-listed param is placed unprotected", () => {
+  test("throws when a crit-listed custom param is placed unprotected", () => {
     expect(
       codeOf(() =>
         kit.encrypt(Buffer.from("secret"), {
-          header: { crit: ["oid"] },
-          unprotected: { oid: "1.2.3.4" },
+          header: { crit: ["x-hint"] },
+          custom: { protected: { "x-hint": "a" }, unprotected: { "x-hint": "b" } },
         }),
       ),
     ).toBe("cose_crit_param_unprotected");
   });
 
-  test("throws when the same param is set in both bags", () => {
+  test("throws when the same custom param is set in both bags", () => {
     expect(
       codeOf(() =>
         kit.encrypt(Buffer.from("secret"), {
-          header: { cty: "a" },
-          unprotected: { cty: "b" },
+          custom: { protected: { "x-hint": "a" }, unprotected: { "x-hint": "b" } },
         }),
       ),
     ).toBe("cose_duplicate_header");
@@ -168,7 +172,7 @@ describe("CweKit (COSE_Encrypt0) — AES-CCM", () => {
   });
 });
 
-describe("CweKit — proprietary alg/enc gate (D5)", () => {
+describe("CweKit — proprietary alg/enc gate", () => {
   // The AES-CBC-HMAC family (RFC 7518 §5.2.3) has NO official COSE registration —
   // it is private-use. Non-proprietary encrypt refuses it; proprietary allows it.
   const CBC = ["A128CBC-HS256", "A192CBC-HS384", "A256CBC-HS512"] as const;
@@ -221,5 +225,96 @@ describe("CweKit — proprietary alg/enc gate (D5)", () => {
     const kit = new CweKit({ kryptos, logger: createMockLogger() });
 
     expect(() => kit.encrypt(Buffer.from("payload"))).not.toThrow();
+  });
+});
+
+/**
+ * ⭐ THE TOKEN-CONTROLLED HALF of the COSE label tables. `decrypt` reads the
+ * content-encryption label straight off the FOREIGN protected header — RFC 9052
+ * §1.5 admits `int / tstr` there, so a stranger can write a text label — and the
+ * lookup table is a plain object. Indexed bare, `COSE_TO_ENC["constructor"]` is
+ * the `Object` function rather than `undefined`, the "not supported" guard never
+ * fires, and the function reaches `tagBytesForEncryption` where `.startsWith`
+ * throws a raw TypeError straight out of the `AegisError` contract. Read through
+ * `internal/cose/own-entry.ts`, the refusal is the kit's own.
+ */
+describe("CweKit — a protected alg label naming an Object.prototype member", () => {
+  const kryptos = KryptosKit.generate.enc.oct({
+    algorithm: "dir",
+    encryption: "A256GCM",
+  });
+  const kit = new CweKit({ kryptos, logger: createMockLogger() });
+
+  test.each(["constructor", "toString", "valueOf", "hasOwnProperty"])(
+    "a foreign COSE_Encrypt0 whose alg is `%s` is refused as an AegisError",
+    (name) => {
+      const encrypt0 = decodeCbor<Tag>(kit.encrypt(Buffer.from("secret payload")));
+      const contents = encrypt0.contents as Array<unknown>;
+
+      contents[0] = encodeProtectedHeader(
+        new Map<number, unknown>([[coseByJose("alg"), name]]),
+      );
+
+      let thrown: unknown;
+      try {
+        kit.decrypt(encodeCbor(encrypt0));
+      } catch (error) {
+        thrown = error;
+      }
+
+      expect(thrown).toBeInstanceOf(AegisError);
+      expect((thrown as AegisError).code).toBe("cose_encryption_not_supported");
+    },
+  );
+});
+
+/**
+ * ⭐ THE UNPROTECTED BUCKET IS A STRANGER'S, AND `decrypt` READS IT BEFORE THE
+ * AEAD RUNS. `splitEncrypt0` types the slot `unknown` deliberately, because a
+ * producer writes whatever it likes there and `preferMap: false` hands a wholly
+ * text-keyed CBOR map back as a plain object. `decrypt` cast it to `Map` and
+ * called `.get`, so the token escaped as a raw `TypeError` — outside the
+ * `AegisError` contract a caller catches on.
+ *
+ * `decode` narrowed the same slot correctly all along, so the two read verbs
+ * disagreed about one token: a rule enforced at one door and not its twin.
+ */
+describe("CweKit — a COSE_Encrypt0 whose unprotected bucket is not a map", () => {
+  const kryptos = KryptosKit.generate.enc.oct({
+    algorithm: "dir",
+    encryption: "A256GCM",
+  });
+  const kit = new CweKit({ kryptos, logger: createMockLogger() });
+
+  const withUnprotected = (unprotected: unknown): Buffer => {
+    const encrypt0 = decodeCbor<Tag>(kit.encrypt(Buffer.from("secret payload")));
+    (encrypt0.contents as Array<unknown>)[1] = unprotected;
+    return Buffer.from(encodeCbor(encrypt0));
+  };
+
+  test.each([
+    ["an integer", 7],
+    ["a text string", "not-a-map"],
+    ["an array", []],
+    ["a byte string", Buffer.alloc(2)],
+  ])("decrypt refuses it as an AegisError when it is %s", (_name, unprotected) => {
+    let thrown: unknown;
+    try {
+      kit.decrypt(withUnprotected(unprotected));
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(CweError);
+    expect((thrown as CweError).code).toBe("cose_malformed");
+  });
+
+  // The twin door has always narrowed, and it must keep answering the same token
+  // the same way: no IV to report, no throw.
+  test.each([
+    ["an integer", 7],
+    ["a text string", "not-a-map"],
+  ])("decode reads it as an empty unprotected bucket when it is %s", (_name, bucket) => {
+    expect(CweKit.decode(withUnprotected(bucket)).unprotectedHeader).toEqual({});
   });
 });

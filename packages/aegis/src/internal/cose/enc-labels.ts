@@ -1,5 +1,6 @@
 import type { KryptosEncryption } from "@lindorm/kryptos";
 import { CoseError } from "../../errors/index.js";
+import { ownEntry } from "./own-entry.js";
 
 /**
  * COSE content-encryption algorithm labels (IANA COSE Algorithms / RFC 9053
@@ -45,6 +46,13 @@ const COSE_TO_ENC = Object.fromEntries(
   ),
 ) as Record<number, KryptosEncryption>;
 
+// ⚠ EVERY TABLE HERE IS READ THROUGH `ownEntry`, never indexed directly. A plain
+// index resolves an `Object.prototype` member name — `encryption in table` is
+// TRUE for `"toString"`, and `table["toString"]` is a FUNCTION, so the
+// `undefined` guards below never fire. `CweKit.decrypt` reads the label off a
+// FOREIGN protected header, so the read direction is token-controlled. See
+// own-entry.ts.
+
 /**
  * The AEAD authentication-tag length (bytes) for a COSE content-encryption
  * algorithm — the COSE_Encrypt0 ciphertext is `ciphertext‖tag`. GCM is always
@@ -64,12 +72,12 @@ export const tagBytesForEncryption = (encryption: KryptosEncryption): number => 
 };
 
 /**
- * Interop gate (D5): true iff the encryption has an OFFICIAL (non-private-use)
+ * Interop gate: true iff the encryption has an OFFICIAL (non-private-use)
  * COSE label, i.e. it is COSE-RFC compliant. A non-proprietary `encrypt` refuses
  * anything this returns `false` for.
  */
 export const isOfficialCoseEnc = (encryption: KryptosEncryption): boolean =>
-  encryption in ENC_TO_COSE_OFFICIAL;
+  ownEntry(ENC_TO_COSE_OFFICIAL, encryption) !== undefined;
 
 const NOT_SUPPORTED =
   "COSE_Encrypt0 supports the AES-GCM family (A128/A192/A256GCM), the AES-CCM family (AES-CCM-16/64-64/128-128/256), and — in proprietary mode — the AES-CBC-HMAC family.";
@@ -78,7 +86,8 @@ export const encToCoseLabel = (
   encryption: KryptosEncryption | null | undefined,
 ): number => {
   const label = encryption
-    ? (ENC_TO_COSE_OFFICIAL[encryption] ?? ENC_TO_COSE_PRIVATE[encryption])
+    ? (ownEntry(ENC_TO_COSE_OFFICIAL, encryption) ??
+      ownEntry(ENC_TO_COSE_PRIVATE, encryption))
     : undefined;
   if (label === undefined) {
     throw new CoseError(`No COSE label for content encryption "${encryption}"`, {
@@ -92,7 +101,7 @@ export const encToCoseLabel = (
 };
 
 export const coseLabelToEnc = (label: number): KryptosEncryption => {
-  const encryption = COSE_TO_ENC[label];
+  const encryption = ownEntry(COSE_TO_ENC, label);
   if (encryption === undefined) {
     throw new CoseError(`No content encryption for COSE label "${label}"`, {
       code: "cose_encryption_not_supported",

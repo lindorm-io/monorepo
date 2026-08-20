@@ -4,8 +4,9 @@ import type { TokenFormatTag } from "../../types/domain/verified-token.js";
 import type { BaseTokenFormat } from "../../types/header/wire-header.js";
 
 /**
- * The kit-tier format set — the SAME 7 members as the domain `TokenFormatTag`
- * (F4: one canonical union, aliased here rather than re-spelled).
+ * The kit-tier format set — an ALIAS of the domain `TokenFormatTag`, not a second
+ * spelling of its 7 members. One canonical union means a new format cannot be
+ * added to one tier and forgotten in the other.
  */
 export type KitFormat = TokenFormatTag;
 

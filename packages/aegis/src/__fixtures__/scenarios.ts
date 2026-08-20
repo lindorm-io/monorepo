@@ -26,8 +26,10 @@ import type {
   SignContext,
   ProfileVerifyOptions,
   RawSignInput,
-  SignStructuredTokenOptions,
-  SignUnstructuredTokenOptions,
+  CoseSignStructuredTokenOptions,
+  CoseSignUnstructuredTokenOptions,
+  JoseSignStructuredTokenOptions,
+  JoseSignUnstructuredTokenOptions,
   TokenContent,
   TokenFormatTag,
   VerifyAssert,
@@ -215,8 +217,15 @@ export type AgnosticKit = "structured" | "opaque";
 // The per-namespace option types, each the EXACT bag its `IAegis` method takes.
 // Declared here rather than inlined so a row and the real signature drift
 // together or not at all.
-export type StructuredSignOptions = SignStructuredTokenOptions & { key?: AegisSignKey };
-export type JwsSignOptions = SignUnstructuredTokenOptions & { key?: AegisSignKey };
+// The claims doors split by wire: `custom.unprotected` and `proprietary` exist on
+// the COSE envelope alone, so a row targeting both wires states the COSE shape and
+// a JOSE-only row narrows to the JOSE one.
+export type StructuredSignOptions = CoseSignStructuredTokenOptions & {
+  key?: AegisSignKey;
+};
+export type JwtSignOptions = JoseSignStructuredTokenOptions & { key?: AegisSignKey };
+export type JwsSignOptions = JoseSignUnstructuredTokenOptions & { key?: AegisSignKey };
+export type CwsSignOptions = CoseSignUnstructuredTokenOptions & { key?: AegisSignKey };
 export type JweSealOptions = JweEncryptOptions & { key?: AegisEncKey };
 export type CweSealOptions = CweEncryptOptions & { key?: AegisEncKey };
 
@@ -360,11 +369,11 @@ export type TamperGiven = { segment: TamperSegment };
  * vocabulary (`typ`, `cty`, `oid`, `crit`, …).
  *
  * It exists because aegis's own writers deliberately cannot produce these
- * shapes: a caller `typ` is kit-derived, every parameter the registry marks
- * `placement: "protected"` is REFUSED from the unprotected bag, and a `crit`
- * naming an extension aegis does not implement is refused at the mint gate. So
- * the only way to state what a READER must do with one is to have somebody else
- * write it.
+ * shapes: a caller `typ` is kit-derived, a REGISTERED parameter has no
+ * caller-chosen bucket (`header` is the one bag that takes one and it travels
+ * protected), and a `crit` naming a specification-defined parameter is refused at
+ * the mint gate. So the only way to state what a READER must do with one is to
+ * have somebody else write it.
  *
  * ⚠ THE TWO FIELDS HAVE DIFFERENT REACH, and the split is the serialisation's,
  * not a convention:
@@ -392,6 +401,20 @@ export type TamperGiven = { segment: TamperSegment };
 export type ForeignHeadersGiven = {
   protectedHeader?: Dict;
   unprotectedHeader?: Dict;
+  /**
+   * COSE ONLY — protected entries written under their TEXT label, whatever the
+   * registry says. RFC 9052 §1.4 defines `label = int / tstr`, so the integer 2
+   * and the text `"crit"` are DIFFERENT labels, and `protectedHeader` above
+   * deliberately resolves a registered name to its integer one.
+   *
+   * ⭐ IT EXISTS TO STATE ONE THING NO OTHER CELL CAN: a bucket carrying BOTH
+   * forms of the same parameter. That is a shape aegis's own writers cannot
+   * produce and a `Dict` cannot express through `protectedHeader` alone (one
+   * key, one label), and it is where a reader has to decide WHICH form answers
+   * for the name — the question
+   * `a-text-label-cannot-impersonate-a-registered-header-parameter` is about.
+   */
+  textLabelledProtected?: Dict;
 };
 
 /**
@@ -981,6 +1004,18 @@ export type RejectsThenStep = {
   step: "rejects";
   on?: Wire;
   error: ErrorClassName;
+  /**
+   * The refusal's own `code`, when WHICH refusal fired is part of the capability
+   * rather than incidental to it.
+   *
+   * ⚠ The CLASS is not always enough, and where it is not, saying so is the row's
+   * job. Two refusals can share a class AND a `data` shape while stating
+   * different rules — `header_kit_owned_in_custom` and
+   * `header_registered_in_custom` both throw a leaf error carrying
+   * `{ parameter, bucket }` — so a row that names only the class passes whichever
+   * fired, and the narrower rule it meant to pin goes unprobed.
+   */
+  code?: string;
   data?: Dict;
 };
 
@@ -1014,6 +1049,20 @@ export type WireKey = string | number;
  * checks nothing — a vacuous pass that reads on the page exactly like coverage
  * of that bucket. The union below is the cheapest way to make it a build error.
  */
+/**
+ * What a row asserts about ONE `unknown` header bag. The same TWO-ARM shape
+ * {@link WireAssertion} uses and for the same reason: with both lists optional,
+ * `{ step: "unknownHeader", bucket: "protected" }` typechecks and asserts
+ * NOTHING, so a row could name the step, look thorough, and check nothing at all.
+ * At least one list is required.
+ *
+ * Keys are the ISSUER'S own — a JOSE member name, or a COSE label stringified —
+ * so there is no closed vocabulary here, unlike {@link WireKey}.
+ */
+export type UnknownAssertion =
+  | { includes: Dict; excludes?: ReadonlyArray<string> }
+  | { includes?: Dict; excludes: ReadonlyArray<string> };
+
 export type WireAssertion =
   | {
       includes: Dict;
@@ -1150,8 +1199,30 @@ type ObservationStep =
   | {
       step: "header";
       expected: Partial<DomainTokenHeader>;
-      excludes?: ReadonlyArray<keyof DomainTokenHeader>;
+      /**
+       * ⚠ A WIRE name is admissible here, not only a domain one, and that is the
+       * point of the wider type: the domain header's vocabulary is CLOSED, so
+       * excluding a name it has no member for is the assertion "the wire's
+       * vocabulary did not leak into this tier" — which cannot be spelled with
+       * `keyof DomainTokenHeader` alone.
+       */
+      excludes?: ReadonlyArray<keyof DomainTokenHeader | (string & {})>;
     }
+  /**
+   * The WIRE header a KIT door reports — JOSE-named and untranslated, the
+   * protected bucket exactly as {@link WireHeaderBuckets.protectedHeader} carries
+   * it.
+   *
+   * ⛔ IT IS A SEPARATE STEP BECAUSE `header` IS THE DOMAIN ONE, ALWAYS. The two
+   * tiers use different vocabularies for the same parameter (`crit` vs
+   * `critical`, `alg` vs `algorithm`), so one step reporting whichever tier the
+   * last act happened to produce would make a row's meaning depend on its `when`
+   * — and two rows spelling the same assertion differently would both be right.
+   * A `kit-verify` reports THIS one and no `header`; every other act the reverse,
+   * so a row that names the wrong one fails by name rather than silently
+   * asserting against the other tier's spelling.
+   */
+  | ({ step: "wireHeader" } & UnknownAssertion)
   /**
    * Assertions against the token's CLEARTEXT wire payload. ⚠ A payload the
    * interpreter cannot read (a JWE's ciphertext, a malformed token) FAILS the row
@@ -1189,7 +1260,21 @@ type ObservationStep =
   | { step: "wireUnprotectedHeader"; absent: true }
   | ({ step: "wireUnprotectedHeader"; absent?: undefined } & WireAssertion)
   /** The raw claims payload — integer CWT labels on COSE, JOSE claim names on JOSE. */
-  | ({ step: "wireClaims" } & WireAssertion);
+  | ({ step: "wireClaims" } & WireAssertion)
+  /**
+   * The WIRE-tier `unknown` header bag a KIT door reports — the parameters no
+   * registry row answers for, per bucket, verbatim as the issuer wrote them.
+   *
+   * Keys are the ISSUER'S OWN, so no closed vocabulary exists here: a JOSE member
+   * name, or a COSE label stringified (`String(label)` — a tstr label is already
+   * its own key, an integer one becomes its decimal spelling).
+   *
+   * ⛔ Only a `kit-verify` reports one. The DOMAIN verbs report none, by design —
+   * an unregistered wire parameter has no domain name — so a row asserting on
+   * this after `verify`/`decrypt` FAILS by name. That refusal IS the tier
+   * boundary, stated where a row can read it.
+   */
+  | ({ step: "unknownHeader"; bucket: "protected" | "unprotected" } & UnknownAssertion);
 
 /**
  * An observation, optionally scoped to ONE wire.
@@ -1413,6 +1498,66 @@ const LIVE_CLAIMS: JwtClaimsWire & Dict = {
   iat: NOW,
   jti: "token-1",
 };
+
+/**
+ * A capability this table ONCE STATED and the package no longer provides.
+ *
+ * ⭐ IT IS DATA, AND IT IS PART OF THE SPECIFICATION. A row is the package's
+ * promise; withdrawing one is a decision of the same weight as making one, and a
+ * table that simply stops mentioning a capability tells a reader nothing — worse,
+ * it lets an OVERWRITTEN row (same slot, different promise) read as though the
+ * old promise still held. Recording the withdrawal is what keeps
+ * `scenarios.ts` readable ALONE: a reader who greps for the old id finds why it
+ * is gone rather than concluding the code still does it.
+ *
+ * ⛔ A WITHDRAWAL IS NOT A DEFERRAL AND NEVER A `knownDefect`. Those say the
+ * package should do something and does not. These say it deliberately does not,
+ * so there is nothing to fix and nothing to skip — the absence is the statement.
+ * Nothing here is restored by making a test pass.
+ */
+export type WithdrawnCapability = {
+  /**
+   * The row id as it stood — EXACTLY, with no annotation, so a reader grepping the
+   * old name lands here and so the binding below can match it.
+   */
+  id: string;
+  /**
+   * Whether the whole row went or only part of what it promised.
+   *
+   * ⚠ THE TWO ARMS ARE BOUND UNEQUALLY, and the weaker one is worth knowing. A
+   * `"partial"` record is bound tightly: its id must MATCH a live row, so a typo
+   * fails. A `"row"` record can only be checked for the absence of its id, which
+   * any string satisfies — including a mistyped one — because nothing in the tree
+   * can confirm an id that no longer exists anywhere. ⇒ A `"row"` id is verified
+   * by review, not by the suite. It is still a field rather than a suffix on the
+   * id, because an annotated id matches nothing and so escapes BOTH checks.
+   */
+  scope: "row" | "partial";
+  /** What the table promised, in the words it promised it. */
+  stated: string;
+  /** Why the promise was withdrawn — the mechanism, not the meeting. */
+  because: string;
+  /** What the package does INSTEAD, stated as the absence it is. */
+  insteadNow: string;
+};
+
+/**
+ * ⚠ Bound by `Aegis.conformance.test.ts` in BOTH directions the {@link
+ * WithdrawnCapability.scope} docstring states — a `"row"` id must not be live, a
+ * `"partial"` id must be.
+ */
+export const WITHDRAWN_CAPABILITIES: ReadonlyArray<WithdrawnCapability> = [
+  {
+    id: "a-parameter-that-must-be-signed-is-refused-from-the-unprotected-bucket",
+    scope: "row",
+    stated:
+      'placing a header parameter the registry marks `placement: "protected"` in the COSE unprotected bucket is refused at the write, with `cose_unprotected_placement` — aegis decides which bucket a parameter travels in, and enforcing it on write is what made the read-side filter and the write-side refusal one rule.',
+    because:
+      'the caller-facing shape it refused no longer exists. `WireTokenEnvelope.unprotected` carried registered parameters into that bucket; every caller-settable registered parameter is `placement: "protected"`, so the option\'s every inhabitant was refused and the type described an empty set. It was removed with `WireUnprotectedHeader`, and the placement rule (rule 4) went with it — a rule guarding a state the types no longer admit is a rule with no input.',
+    insteadNow:
+      "the unprotected bucket is reachable only through `custom.unprotected`, which refuses every REGISTERED name outright — a strictly stronger rule, since it admits no registered parameter at all rather than only the protected-only ones. Two codes state it, because `buildCustomHeader` asks the narrower question first: a name the KIT derives from the key or the crypto operation is `header_kit_owned_in_custom`, and every other registered or specification-defined name is `header_registered_in_custom`. `isProtectedOnly` survives as a READ-side filter for a foreign token that puts one there anyway (`src/internal/header/merge-header-buckets.ts#if (isProtectedOnly(jose)) continue;`), which is where the original property still has work to do.",
+  },
+];
 
 export const SCENARIOS: ReadonlyArray<Scenario> = [
   // ---------------------------------------------------------------------------
@@ -2212,7 +2357,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token carrying a confirmation refuses a proof that commits to a different access token",
     rationale:
-      "RFC 9449 §4.2 defines `ath` as 'the result of a base64url encoding the SHA-256 hash of the ASCII encoding of the associated access token's value', and §4.3 has the verifier 'ensure that the value of the ath claim equals the hash of that access token'. The claim is what stops a proof from being reusable beyond the request it was made for: without it a proof observed against one token would authorise every other token the observer holds, and the possession check would establish possession of the key while establishing nothing about which token it was presented with.",
+      "RFC 9449 §4.2 defines `ath` as 'the result of a base64url encoding […] the SHA-256 […] hash of the ASCII encoding of the associated access token's value', and §4.3 has the verifier 'ensure that the value of the ath claim equals the hash of that access token'. The claim is what stops a proof from being reusable beyond the request it was made for: without it a proof observed against one token would authorise every other token the observer holds, and the possession check would establish possession of the key while establishing nothing about which token it was presented with.",
     given: [
       {
         step: "token",
@@ -2482,11 +2627,11 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
   // Critical header parameters.
   // ---------------------------------------------------------------------------
   {
-    id: "an-unrecognised-critical-parameter-is-refused",
+    id: "a-specification-defined-critical-parameter-is-refused-at-verify",
     title:
-      "a token demanding an extension the library does not implement is refused at verify",
+      "a foreign token whose crit names a parameter the specification itself defines is refused at verify",
     rationale:
-      'RFC 7515 §4.1.11 states the recipient\'s duty outright: "If any of the listed extension Header Parameters are not understood and supported by the recipient, then the JWS is invalid." That is the whole point of the parameter — a producer marks something critical precisely so that a reader which cannot honour it stops rather than acts on a token it has only partly understood. RFC 9052 §3.1 states the duty for COSE and attaches no consequence to it — `crit` indicates "which protected header parameters an application that is processing a message is required to understand" — so the COSE refusal is the obvious derivation rather than a quotable mandate: a processor required to understand a parameter, and unable to, cannot claim to have processed the message. It must hold on BOTH encodings, because an enforcement present on one wire and absent on the other means the same token is refused or accepted by the presenter\'s choice of encoding, which is a choice an attacker makes.',
+      'RFC 7515 §4.1.11 forbids the producer this shape and, in the same section, licenses the recipient to act on it: "Recipients MAY consider the JWS to be invalid if the critical list contains any Header Parameter names defined by this specification or [JWA] for use with JWS." aegis takes that MAY, and the reason is that a `crit` naming a spec-defined parameter is not a harmless redundancy — it is a producer asserting that the parameter carries meaning beyond what the specification gives it, which is precisely a meaning no recipient can look up. Accepting the token would mean processing it under the ordinary reading the producer just said was insufficient. The refusal must hold on BOTH encodings, because an enforcement present on one wire and absent on the other means the same token is refused or accepted by the presenter\'s choice of encoding, which is a choice an attacker makes. The sibling MINT row states the producer half; this is the recipient half, and only a FOREIGN producer can put it on the wire.',
     given: [
       {
         step: "token",
@@ -2499,88 +2644,526 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
           iat: NOW,
           jti: "token-1",
         },
-        // ⚠ A FOREIGN producer, and it has to be: aegis refuses to MINT a `crit`
-        // naming a parameter it does not implement (the sibling mint rows state
-        // that), so the only writer of this token is somebody else. `ext` is a
-        // name aegis does not register at all, carried beside the `crit` that
-        // names it so the header is otherwise well-formed — which is what a third
-        // party shipping its own extension actually emits.
-        buckets: { protectedHeader: { crit: ["ext"], ext: "x" } },
+        // `cty` is carried BESIDE the `crit` that names it, so the header is
+        // otherwise well-formed and the refusal can only be about the member
+        // being specification-defined — not about a parameter the header lacks,
+        // which is a different rule and a different row.
+        buckets: { protectedHeader: { crit: ["cty"], cty: "application/json" } },
       },
     ],
     when: [{ step: "verify" }],
-    // ⚠ ONE RULE, TWO DIAGNOSES, and the split is a fact about the COSE READ
-    // rather than a weaker refusal there. On JOSE a decoded protected header
-    // carries unregistered keys verbatim, so `ext` is present and the token is
-    // refused for naming an extension aegis does not implement. On COSE an
-    // unregistered LABEL has no JOSE wire name and is dropped on the way in, so
-    // the same token reads as a `crit` naming a parameter the header does not
-    // carry and is refused as malformed. Both are the crit gate; the `data` each
-    // carries is what the branch that fired can honestly report, so it is stated
-    // per wire rather than widened to something neither says.
-    //
-    // The classes sit at the SAME DEPTH of the error tree — `CwtError` is the
-    // leaf `JwtError`'s counterpart, not `CoseError`, which is the family root
-    // and would accept any COSE refusal whatsoever.
+    // ONE gate, ONE diagnosis, both wires. The classes sit at the SAME DEPTH of
+    // the error tree — `CwtError` is the leaf `JwtError`'s counterpart, not
+    // `CoseError`, which is the family root and would accept any COSE refusal
+    // whatsoever.
     then: [
-      { step: "rejects", on: "jose", error: "JwtError", data: { param: "ext" } },
-      { step: "rejects", on: "cose", error: "CwtError", data: { crit: ["ext"] } },
+      { step: "rejects", on: "jose", error: "JwtError", data: { crit: ["cty"] } },
+      { step: "rejects", on: "cose", error: "CwtError", data: { crit: ["cty"] } },
     ],
+  },
+  {
+    id: "a-kit-owned-header-parameter-is-refused-from-the-custom-bag",
+    title:
+      "a parameter the kit derives from the key cannot be smuggled in as a custom one",
+    rationale:
+      "The parameters a kit derives — the algorithm, the key id, the content encryption, the certificate fields — describe crypto that actually happened, and a recipient reads them to decide how to process the token. A caller that could state one would be describing crypto that did not happen: an `alg` the signature does not use, an `x5c` no key backs. The registered header bag omits them at the type level, so the open set must not become the way back in — otherwise every guard the omission provides is bypassed by spelling the same name one field over. The refusal is DISTINCT from the one for any other specification-defined name, because the repair differs: a registered parameter has a bag that accepts it, and a kit-owned one has none at all.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: { iss: ISSUER, sub: "user-1", exp: NOW + 3600 },
+        // `alg` is the sharpest member available: every kit reserves it on both
+        // wires, and it is REQUIRED on every token, so a caller value could only
+        // ever contradict the signature.
+        options: { custom: { protected: { alg: "ES256" } } },
+      },
+    ],
+    when: [{ step: "mint" }],
+    // ⚠ THE CODE, not merely the class: the sibling refusal for any other
+    // specification-defined name throws the same class with the same `data`
+    // shape, so a row naming only the class would pass whichever fired and the
+    // distinction this row is about would go unprobed.
+    then: [
+      {
+        step: "rejects",
+        error: "AegisError",
+        code: "header_kit_owned_in_custom",
+        data: { parameter: "alg" },
+      },
+    ],
+  },
+  {
+    id: "an-unregistered-header-parameter-a-foreign-issuer-wrote-is-carried-on-read",
+    title: "a header parameter the library does not know is reported, never dropped",
+    rationale:
+      "A token header is an OPEN set, so a foreign issuer may legitimately carry parameters this library has never heard of. Dropping them hides what the token said: a reader inspecting the header cannot tell a parameter that was absent from one that was thrown away, and the issuer's statement is lost with no record that it was ever made. Reporting them in a bag of their OWN is what makes that safe — merging them into the typed header would mean handing a caller a value whose type says the key cannot exist, which is a claim nothing downstream can check. The bag is per BUCKET on COSE for the same reason the typed ones are: an unprotected parameter is covered by no signature, and a reader must be able to name the bucket it trusts.",
+    given: [
+      {
+        step: "token",
+        via: "foreign",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          jti: "token-1",
+        },
+        buckets: { protectedHeader: { "x-foreign-hint": "issuer-wrote-this" } },
+      },
+    ],
+    when: [{ step: "kit-verify", kit: "structured" }],
+    then: [
+      { step: "accepts" },
+      // CARRIED — in its own bag, keyed as the issuer wrote it. On COSE that is
+      // the tstr label RFC 9052 §1.4 admits, which is the same spelling.
+      {
+        step: "unknownHeader",
+        bucket: "protected",
+        includes: { "x-foreign-hint": "issuer-wrote-this" },
+      },
+      // …and NOT in the typed bag, whose type says the key cannot exist. The WIRE
+      // header, because a `kit-verify` reports that tier.
+      { step: "wireHeader", excludes: ["x-foreign-hint"] },
+    ],
+  },
+  {
+    id: "an-unregistered-header-parameter-stops-at-the-wire-tier",
+    title: "an unregistered header parameter never reaches the domain header",
+    rationale:
+      "The domain surface exists so a caller never has to learn either wire's vocabulary — it reports `algorithm` and `keyId`, not `alg` and `kid`. An UNREGISTERED parameter has no domain name by definition: nothing translates it, so surfacing it would put raw wire spellings into the one result that promises there are none, and a caller reading the domain header could no longer tell which of its keys are the library's vocabulary and which are a stranger's. The parameter is not lost — the WIRE result reports it in full, which is the tier that speaks the wire. This is the boundary, and it must hold for a parameter aegis itself wrote as much as for a foreign one.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: { iss: ISSUER, sub: "user-1", exp: NOW + 3600 },
+        options: { custom: { protected: { "x-lindorm-hint": "carried" } } },
+      },
+    ],
+    when: [{ step: "verify" }],
+    then: [
+      { step: "accepts" },
+      // It IS on the wire — read by the INDEPENDENT inspector, so the row cannot
+      // pass by the parameter never having been written in the first place.
+      { step: "wireProtectedHeader", includes: { "x-lindorm-hint": "carried" } },
+      // …and the DOMAIN header does not carry it.
+      { step: "header", expected: {}, excludes: ["x-lindorm-hint"] },
+    ],
+  },
+  {
+    id: "a-text-label-cannot-impersonate-a-registered-header-parameter",
+    title:
+      "a COSE text label spelled like a registered parameter does not override the signed one",
+    rationale:
+      "RFC 9052 §1.4 defines a COSE label as `int / tstr`, so the integer 1 and the text \"alg\" are DIFFERENT labels naming different things — but a reader that reports unregistered labels under their stringified form puts the text one in the same name-space as the registered one's JOSE spelling. Where both are present the reader must resolve to the parameter the ISSUER's integer label carries, because that is the one the signature covers and the one every conformant implementation reads. Resolving the other way lets any holder append a text label and restate `alg`, or `crit`, on a token they cannot re-sign — and the keyless read checks no signature at all, so RFC 9052 §3.1's fatal-error rule would be satisfiable by a `crit` the issuer never wrote. The unregistered value is still CARRIED, because a reader may not silently discard what a producer wrote; what it may not do is let it answer for a registered name.",
+    given: [
+      {
+        step: "token",
+        via: "foreign",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          jti: "token-1",
+        },
+        // ⭐ THE SHAPE IS CHOSEN SO THE VERDICT DEPENDS ON WHICH `crit` ANSWERS.
+        // The genuine one rides integer label 2 and names `oid` — which the header
+        // does NOT carry, so RFC 9052 §3.1 makes it fatally malformed. The
+        // impostor rides the TEXT label and names a parameter that IS present.
+        // Read the registered form and the token is refused; read the impostor and
+        // it sails through, which is the whole attack: a holder who cannot re-sign
+        // the token appends two text labels and repairs its `crit`.
+        buckets: {
+          protectedHeader: { crit: ["oid"] },
+          textLabelledProtected: { crit: ["x-shadow"], "x-shadow": "v" },
+        },
+      },
+    ],
+    when: [{ step: "kit-verify", kit: "structured" }],
+    then: [
+      {
+        step: "rejects",
+        error: "CwtError",
+        code: "cwt_invalid_crit",
+        data: { crit: ["oid"] },
+      },
+    ],
+    unsupported: {
+      jose: "a JOSE header is a JSON object with ONE name-space, so a parameter cannot be spelled twice — the collision this row is about exists only where RFC 9052 §1.4 admits two label FORMS for one parameter",
+    },
+  },
+  {
+    id: "a-critical-refusal-reports-the-crit-the-verdict-was-decided-on",
+    title:
+      "the crit a refusal reports is the one the reader actually judged, not the typed bag beside it",
+    rationale:
+      'A refusal is only actionable if its data describes the thing refused. The read side SPLITS one header the producer wrote into a typed bag and a bag of parameters no registry row answers for, and a `crit` can arrive in either — RFC 9052 §1.4 makes the integer label 2 and the text "crit" different labels, so a token carrying only the text one has an empty typed `crit`. A verdict decided on the merged header and reported off the typed bag hands the caller `crit: undefined` for a token that was refused precisely because of its `crit`, while the message names the offending member: the two halves of one refusal contradict each other and a consumer branching on `data` concludes there was no crit at all. Every door that judges a `crit` must therefore report the same value it judged.',
+    given: [
+      {
+        step: "token",
+        via: "foreign",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          jti: "token-1",
+        },
+        // The TEXT label alone, with no integer label 2 anywhere: the reader files
+        // it under the unregistered bag, so the typed bag's `crit` is absent while
+        // the merged header's is what decides the verdict. The member names a
+        // parameter the header does not carry, which is what makes it refusable.
+        buckets: { textLabelledProtected: { crit: ["x-shadow"] } },
+      },
+    ],
+    // The KEYLESS door, because it is the one that reads a header without a key —
+    // and it judges a `crit` exactly as verify does.
+    when: [{ step: "parse" }],
+    then: [
+      {
+        step: "rejects",
+        error: "CwtError",
+        code: "cwt_invalid_crit",
+        data: { crit: ["x-shadow"] },
+      },
+    ],
+    unsupported: {
+      jose: "RFC 7515 §4 gives a JOSE header one JSON name-space, so `crit` always resolves to the typed bag and the two spellings this row separates cannot come apart",
+    },
+  },
+  {
+    id: "the-keyless-read-accepts-every-token-the-mint-produces",
+    title: "a token this library signs can be read back by its own keyless reader",
+    rationale:
+      '`parse` and `verify` are two doors onto the same bytes, and a producer chooses between them by whether it holds a key — never by what the token says. So a token the mint emits must satisfy BOTH, and a rule enforced at one door and not the other is not a policy but an accident of which door a caller happened to use. The shape that exposes it is a `crit` naming a parameter the header carries: both readers must locate that parameter to decide the token is well-formed, and they look in different places — `verify` reads the registered bag beside the unregistered one, while a reader that consulted only the registered bag would conclude the token names a parameter it does not carry and refuse what this library had just signed. RFC 9052 §3.1 makes that conclusion FATAL ("this is a fatal error in processing the message"), so the disagreement is not cosmetic: one door calls the token invalid and the other verifies it.',
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: { iss: ISSUER, sub: "user-1", exp: NOW + 3600 },
+        // A CUSTOM parameter marked critical — the one shape whose two halves live
+        // in different bags on the read side, which is what makes the two doors
+        // able to disagree at all.
+        options: {
+          header: { crit: ["x-lindorm-hint"] },
+          custom: { protected: { "x-lindorm-hint": "carried" } },
+        },
+      },
+    ],
+    // BOTH doors, in ONE row, because the capability IS their agreement: split
+    // across two rows they could drift apart and each stay green, which is the
+    // failure this row exists to catch. The acts run in order and the LAST one's
+    // result is asserted, so `parse` throwing fails the row before `verify` runs.
+    when: [
+      { step: "parse" },
+      // The `crit` declaration on the verify leg only. `parse` takes none — it
+      // asserts nothing about UNDERSTANDING the token — which is itself part of
+      // what this row states about the two doors.
+      { step: "verify", options: { critical: ["x-lindorm-hint"] } },
+    ],
+    then: [{ step: "accepts" }],
+  },
+  {
+    id: "a-custom-parameter-marked-critical-is-carried-and-read-back",
+    title:
+      "a critical UNREGISTERED header parameter round-trips: minted, and accepted at verify by a caller that declares it",
+    rationale:
+      "RFC 7515 §4.1.11 forbids `crit` to name parameters the specification defines — \"Producers MUST NOT include Header Parameter names defined by this specification or [JWA] for use with JWS […] in the 'crit' list\" — which leaves an issuer's OWN extension as precisely what the parameter is for. A library that would mint such a token and then refuse it from every caller would be two disagreeing implementations: the same bytes valid when written and invalid when read. The same section puts the duty to UNDERSTAND the extension on the RECIPIENT, and a verification library is never the final recipient — it verifies on an application's behalf — so the round trip closes only when the caller states that it takes the parameter on. The two gates ask DIFFERENT questions and that is the point: the producer's is whether it may name the member at all, which a parameter it writes itself answers, while the recipient's is whether the application behind the verifier has claimed it. \"A token this library mints is a token it verifies\" therefore holds CONDITIONALLY, and the declaration this row supplies is the condition.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: { iss: ISSUER, sub: "user-1", exp: NOW + 3600 },
+        options: {
+          header: { crit: ["x-lindorm-hint"] },
+          custom: { protected: { "x-lindorm-hint": "carried" } },
+        },
+      },
+    ],
+    when: [{ step: "verify", options: { critical: ["x-lindorm-hint"] } }],
+    then: [
+      { step: "accepts" },
+      // BOTH halves on the wire, and the `crit` half is what makes this row about
+      // a CRITICAL parameter rather than merely a carried one: without it the row
+      // would stay green if the mint dropped the crit member entirely, which is
+      // exactly the failure the round trip exists to exclude.
+      //
+      // The parameter rides under its own key on BOTH encodings — a tstr label on
+      // COSE, since an unregistered parameter has no integer one — and `crit`
+      // names it in that same spelling (`critToCoseLabels` leaves an unregistered
+      // member as its own tstr label).
+      //
+      // ⚠ The PARAMETER is spelled identically on both wires; `crit` is not — it
+      // is a REGISTERED parameter, so COSE keys it by its integer label 2 (RFC
+      // 9052 §3.1 Table 3) while JOSE uses the name. The raw-bytes steps compare
+      // in each wire's own vocabulary, so the two halves are stated per wire.
+      {
+        step: "wireProtectedHeader",
+        includes: { "x-lindorm-hint": "carried" },
+      },
+      {
+        step: "wireProtectedHeader",
+        on: "jose",
+        includes: { crit: ["x-lindorm-hint"] },
+      },
+      {
+        step: "wireProtectedHeader",
+        on: "cose",
+        includes: { 2: ["x-lindorm-hint"] },
+      },
+    ],
+  },
+  {
+    id: "a-critical-custom-parameter-is-refused-until-the-caller-declares-it",
+    title:
+      "a token marking a custom header parameter critical is refused from a verifier that has not claimed it",
+    rationale:
+      'RFC 7515 §4.1.11 states the consequence outright — "If any of the listed extension Header Parameters are not understood and supported by the recipient, then the JWS is invalid" — and RFC 9052 §3.1 gives COSE the same duty, `crit` naming "which protected header parameters an application that is processing a message is required to understand". The duty belongs to the RECIPIENT, and a verification library is never the final recipient: it verifies on an application\'s behalf and cannot know what that application implements. Carriage answers a different question — a producer supplying a parameter says nothing about whether the reader understands it — so accepting on carriage alone leaves the duty unenforced for every extension a specification does not define, which is the whole set `crit` exists for. Refusing until the parameter is claimed is the only reading under which the requirement means anything, and it fails closed: a verifier that says nothing gets the strict answer.',
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: { iss: ISSUER, sub: "user-1", exp: NOW + 3600 },
+        // The producer half is legal on both wires — this is the token the mint
+        // gate emits, which is what makes the refusal a statement about the
+        // RECIPIENT rather than about the bytes.
+        options: {
+          header: { crit: ["x-lindorm-hint"] },
+          custom: { protected: { "x-lindorm-hint": "carried" } },
+        },
+      },
+    ],
+    // No `crit` option: the verifier declares nothing.
+    when: [{ step: "verify" }],
+    // The refusal names the MEMBER in `data.param`, not the whole list — a
+    // producer acting on the verdict has to know which parameter was not honoured.
+    then: [
+      {
+        step: "rejects",
+        on: "jose",
+        error: "JwtError",
+        code: "jwt_unsupported_crit_param",
+        data: { param: "x-lindorm-hint" },
+      },
+      {
+        step: "rejects",
+        on: "cose",
+        error: "CwtError",
+        code: "cwt_unsupported_crit_param",
+        data: { param: "x-lindorm-hint" },
+      },
+    ],
+  },
+  {
+    id: "a-crit-declaration-does-not-substitute-for-the-parameter-being-carried",
+    title:
+      "declaring a critical parameter does not make a token that omits it verifiable",
+    rationale:
+      'RFC 9052 §3.1 makes the omission fatal in its own words — "If the \'crit\' value list includes a label for which the header parameter is not in the protected-header-parameters bucket, this is a fatal error in processing the message" — and RFC 7515 §4.1.11 forbids a producer listing "names that do not occur as Header Parameter names within the JOSE Header". The declaration and the presence rule answer different questions: one says the recipient will act on the parameter, the other says the issuer actually stated it. A declaration that waived presence would let a verifier turn a malformed token into a valid one by naming the missing parameter, which is the verifier deciding what the issuer wrote.',
+    given: [
+      {
+        step: "token",
+        via: "foreign",
+        claims: { iss: ISSUER, sub: "user-1", aud: [RESOURCE], exp: NOW + 3600 },
+        // A FOREIGN producer, because aegis's own mint gate refuses this shape
+        // before it reaches the wire
+        // (`src/internal/header/assert-crit-satisfied.ts#export const assertCritSatisfied`).
+        // ⚠ On JOSE the foreign producer HAND-ASSEMBLES the compact serialisation
+        // rather than going through `jose`, which refuses to write this header at
+        // sign time. Both encodings therefore reach the read gate, which is what
+        // the row is about: `src/internal/utils/validate-crit.ts#export const validateCrit`
+        // is wire-agnostic.
+        buckets: { protectedHeader: { crit: ["x-lindorm-hint"] } },
+      },
+    ],
+    when: [{ step: "verify", options: { critical: ["x-lindorm-hint"] } }],
+    // MALFORMED, not unsupported: the fault is the header, not the recipient.
+    then: [
+      { step: "rejects", on: "jose", error: "JwtError", code: "jwt_invalid_crit" },
+      { step: "rejects", on: "cose", error: "CwtError", code: "cwt_invalid_crit" },
+    ],
+  },
+  {
+    id: "a-crit-declaration-does-not-admit-a-specification-defined-parameter",
+    title:
+      "a verifier cannot take responsibility for a critical parameter the specification itself defines",
+    rationale:
+      "RFC 7515 §4.1.11 forbids the shape to producers outright — \"Producers MUST NOT include Header Parameter names defined by this specification or [JWA] for use with JWS […] in the 'crit' list\" — so there is no conformant token for a recipient to accept. The declaration transfers the duty to UNDERSTAND an extension; it is not a waiver of the rules about what may be named, and reading it as one would let any verifier opt back into the exact shape the specification prohibits. A parameter the specification defines already has a meaning every recipient can look up, so marking it critical asserts a meaning beyond that one — which is precisely what no recipient can obtain, declaration or not.",
+    given: [
+      {
+        step: "token",
+        via: "foreign",
+        claims: { iss: ISSUER, sub: "user-1", aud: [RESOURCE], exp: NOW + 3600 },
+        // `cty` is carried BESIDE the `crit` naming it, so the header is
+        // otherwise well-formed and the refusal can only be about the member
+        // being specification-defined.
+        buckets: { protectedHeader: { crit: ["cty"], cty: "application/json" } },
+      },
+    ],
+    when: [{ step: "verify", options: { critical: ["contentType"] } }],
+    then: [
+      { step: "rejects", on: "jose", error: "JwtError", code: "jwt_invalid_crit" },
+      { step: "rejects", on: "cose", error: "CwtError", code: "cwt_invalid_crit" },
+    ],
+  },
+  {
+    id: "a-crit-declaration-does-not-reach-the-unprotected-bucket",
+    title:
+      "declaring a critical parameter does not admit one that rides the unsigned COSE bucket",
+    rationale:
+      "RFC 9052 §3.1 requires every critical parameter to be integrity-protected — \"If the 'crit' value list includes a label for which the header parameter is not in the protected-header-parameters bucket, this is a fatal error in processing the message\" — because a parameter the signature does not cover is one any holder in the path could have written. A recipient declaring that it will act on the parameter makes that worse rather than better: it is now committed to honouring a value an intermediary chose. So the bucket rule is prior to the declaration, and the reader consults the protected bucket alone when deciding whether the header carries what its `crit` names.",
+    given: [
+      {
+        step: "token",
+        via: "foreign",
+        claims: { iss: ISSUER, sub: "user-1", aud: [RESOURCE], exp: NOW + 3600 },
+        buckets: {
+          protectedHeader: { crit: ["x-lindorm-hint"] },
+          unprotectedHeader: { "x-lindorm-hint": "advisory" },
+        },
+      },
+    ],
+    when: [{ step: "verify", options: { critical: ["x-lindorm-hint"] } }],
+    then: [{ step: "rejects", error: "CwtError", code: "cwt_invalid_crit" }],
+    unsupported: {
+      jose: "RFC 7515 §7.1 gives the JOSE compact serialisation ONE header, and it is protected — there is no unsigned bucket for a parameter to ride",
+    },
+  },
+  {
+    id: "the-crit-declaration-is-accepted-at-the-wire-verify-door",
+    title:
+      "the raw wire verify door takes the same critical-parameter declaration the domain door does",
+    rationale:
+      "A caller reaches the same rule through two doors — the domain verb and the raw wire namespace — and a declaration honoured at one and dropped at the other is invisible: the caller states it, sees no error, and the token is refused anyway. RFC 7515 §4.1.11 puts the duty on the recipient rather than on a tier, so which door an application happens to use cannot decide whether it is allowed to claim an extension. One meaning, both tiers.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: { iss: ISSUER, sub: "user-1", exp: NOW + 3600 },
+        options: {
+          header: { crit: ["x-lindorm-hint"] },
+          custom: { protected: { "x-lindorm-hint": "carried" } },
+        },
+      },
+    ],
+    when: [
+      { step: "kit-verify", kit: "structured", options: { crit: ["x-lindorm-hint"] } },
+    ],
+    then: [{ step: "accepts" }],
+  },
+  {
+    id: "an-opaque-signature-s-critical-custom-parameter-is-declarable-at-its-own-door",
+    title:
+      "the opaque wire verify door takes the critical-parameter declaration for a signature over arbitrary octets",
+    rationale:
+      "RFC 7515 §1 secures 'an arbitrary sequence of octets', and RFC 7515 §4.1.11 attaches the duty to understand a critical extension to the RECIPIENT — neither sentence is about the payload being a claim set, so an opaque signature carries the same header rule a claims token does. The opaque SIGNING door can write a critical custom header parameter, so a matching verify door that cannot be told about one would make the library refuse its own output on that surface alone; the only escape would be to re-issue the artifact through a claims door, which changes what the token IS rather than what the recipient understands. A declaration has to be statable wherever the shape is producible.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "opaque",
+        claims: { tid: "at_abc", scope: "openid" },
+        options: {
+          header: { crit: ["x-lindorm-hint"] },
+          custom: { protected: { "x-lindorm-hint": "carried" } },
+        },
+      },
+    ],
+    when: [{ step: "kit-verify", kit: "opaque", options: { crit: ["x-lindorm-hint"] } }],
+    then: [
+      { step: "accepts" },
+      // BOTH halves on the wire, for the reason the structured twin states: an
+      // `accepts` alone would stay green if the OPAQUE signing door dropped
+      // `header.crit` or the custom bag, since a token carrying neither verifies
+      // for any caller. The declaration is only worth stating at this door if the
+      // door writes the shape that needs it. Same spellings as the twin: the
+      // parameter under its own key on both encodings, `crit` by name on JOSE and
+      // by its integer label 2 on COSE (RFC 9052 §3.1 Table 3).
+      { step: "wireProtectedHeader", includes: { "x-lindorm-hint": "carried" } },
+      {
+        step: "wireProtectedHeader",
+        on: "jose",
+        includes: { crit: ["x-lindorm-hint"] },
+      },
+      { step: "wireProtectedHeader", on: "cose", includes: { 2: ["x-lindorm-hint"] } },
+    ],
+  },
+  {
+    id: "a-sealed-token-s-critical-custom-parameter-needs-the-same-declaration",
+    title:
+      "an encrypting outer marking a custom header parameter critical is read only by a caller that declares it",
+    rationale:
+      "An encrypting outer carries a header exactly as a signed one does, and RFC 7516 §4.1.13 registers `crit` for a JWE with the same meaning RFC 7515 §4.1.11 gives it — the recipient must understand the listed extensions. A library whose sealing door can WRITE a critical custom parameter and whose opening door cannot be told about one refuses the tokens it produces itself, so the declaration has to reach the decrypt door and not the verify door alone. It is the same rule, on the surface where confidentiality rather than authenticity is the point.",
+    given: [
+      { step: "keys", keys: ["ec-enc", "oct-enc"] },
+      {
+        step: "token",
+        via: "kit-encrypt",
+        kit: "sealed",
+        data: "sealed-plaintext",
+        options: {
+          header: { crit: ["x-lindorm-hint"] },
+          custom: { protected: { "x-lindorm-hint": "carried" } },
+        },
+      },
+    ],
+    when: [{ step: "decrypt", options: { critical: ["x-lindorm-hint"] } }],
+    then: [{ step: "accepts" }],
   },
   {
     id: "a-critical-refusal-names-the-parameter-it-objects-to",
     title:
       "a refusal of a critical-parameter list names the parameter the library cannot honour",
     rationale:
-      "RFC 7515 §4.1.11 lets a producer mark SEVERAL parameters critical at once — \"the 'crit' (critical) Header Parameter indicates that extensions to this specification and/or [JWA] are being used that MUST be understood and processed\" — and a recipient may understand some of them and not others. The refusal it returns is the only part of the verdict a producer can act on, so it has to name the parameter actually objected to rather than whichever happens to be listed first. Naming the first member instead tells the producer to remove a parameter the recipient understood perfectly well while leaving the unhonourable one in place: the next token is refused for the same reason, and the diagnosis has cost a round trip while pointing away from the defect. It is the same property that makes any refusal worth returning — a message that misidentifies its cause is worse than a bare rejection, because it is acted upon.",
+      "RFC 7515 §4.1.11 lets a producer mark SEVERAL parameters critical at once — \"the 'crit' (critical) Header Parameter indicates that extensions to this specification and/or [JWA] are being used that MUST be understood and processed\" — and only some of them may be nameable there. The refusal returned is the only part of the verdict a caller can act on, so it has to name the parameter actually objected to rather than whichever happens to be listed first. Naming the first member instead tells the caller to remove a parameter that was perfectly legal while leaving the forbidden one in place: the next call is refused for the same reason, and the diagnosis has cost a round trip while pointing away from the defect. It is the same property that makes any refusal worth returning — a message that misidentifies its cause is worse than a bare rejection, because it is acted upon.",
     given: [
       {
         step: "token",
-        via: "foreign",
-        claims: {
-          iss: ISSUER,
-          sub: "user-1",
-          aud: [RESOURCE],
-          exp: NOW + 3600,
-          iat: NOW,
-          jti: "token-1",
-        },
-        // ⚠ A FOREIGN producer, and it has to be: aegis refuses to MINT a `crit`
-        // naming `ext` at all, so a token demanding BOTH an extension it
-        // implements and one it does not has no aegis writer. Both parameters
-        // are carried beside the `crit` that names them, so the header is
-        // otherwise well-formed and the refusal can only be about understanding.
-        // `oid` is listed FIRST deliberately: it is the member aegis honours, so
-        // a refusal naming it would be naming the wrong one.
-        buckets: {
-          protectedHeader: { crit: ["oid", "ext"], oid: "1.2.3.4", ext: "x" },
-        },
+        via: "kit-sign",
+        kit: "structured",
+        claims: { iss: ISSUER, sub: "user-1", exp: NOW + 3600 },
+        // `oid` is listed FIRST deliberately: it is the member aegis permits — a
+        // critical extension it implements — so a refusal naming it would be
+        // naming the wrong one. `alg` is the member RFC 7515 §4.1.11 forbids
+        // outright ("Header Parameter names defined by this specification"), and
+        // it is the one the verdict must name.
+        options: { header: { crit: ["oid", "alg"], oid: "1.2.3.4" } },
       },
     ],
-    when: [{ step: "verify" }],
-    // ⚠ ONLY THE JOSE CELL CAN MAKE THIS POINT, and that is a fact about the COSE
-    // READ rather than a weaker rule there. On JOSE a decoded protected header
-    // carries unregistered keys verbatim, so both members are present, both clear
-    // the malformed gate, and the token reaches the branch that walks the list —
-    // which is the branch this row is about. On COSE `ext` travels as a text label
-    // the registry does not know and is dropped on the way in, so the same token
-    // reads as a `crit` naming a parameter the header does not carry and is
-    // refused as MALFORMED before any member is weighed. Both are the crit gate;
-    // each cell states what the branch that fired can honestly report.
+    when: [{ step: "mint" }],
+    // ONE gate, both wires, and the refusal carries the whole list beside the
+    // offending member so a caller can see which of the two it names. The classes
+    // sit at the SAME DEPTH of the error tree — `CwtError` is the leaf
+    // `JwtError`'s counterpart, not `CoseError`, which is the family root and
+    // would accept any COSE refusal whatsoever.
     then: [
-      { step: "rejects", on: "jose", error: "JwtError", data: { param: "ext" } },
+      {
+        step: "rejects",
+        on: "jose",
+        error: "JwtError",
+        data: { crit: ["oid", "alg"], parameter: "alg" },
+      },
       {
         step: "rejects",
         on: "cose",
         error: "CwtError",
-        data: { crit: ["oid", "ext"] },
+        data: { crit: ["oid", "alg"], parameter: "alg" },
       },
     ],
   },
   {
     id: "a-producer-may-mark-an-implemented-extension-parameter-critical",
     title:
-      "a token marking a header parameter the library implements critical is minted and verified",
+      "a token marking a header parameter the library implements critical is minted, and verified by a caller that declares it",
     rationale:
       "RFC 7515 §4.1.11 gives a producer one way to say that a recipient MUST understand a header parameter before acting on the token — \"the 'crit' (critical) Header Parameter indicates that extensions to this specification and/or [JWA] are being used that MUST be understood and processed\" — and RFC 9052 §3.1 gives COSE the same one. Both are worthless to a library that refuses every such token, INCLUDING ITS OWN OUTPUT: a producer and a verifier running the same library must agree, or the library mints tokens it will not read back and the mechanism cannot be used at all. So a parameter the library implements as an extension is one it can be told to insist on, and one it honours the insistence about — which means carrying the parameter through to the verified header, where the application can act on it. The parameter has to be one no specification already defines, because RFC 7515 §4.1.11 forbids `crit` naming those outright; `oid` is the only such parameter this library owns.",
     given: [
@@ -2600,9 +3183,12 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       },
     ],
     // VERIFY, not merely mint, and that is the whole capability: a `crit` that
-    // mints and then fails its own library's verify is worse than no `crit` at
-    // all, because the failure lands on the recipient rather than the producer.
-    when: [{ step: "verify" }],
+    // mints and then cannot be verified at all is worse than no `crit`, because
+    // the failure lands on the recipient rather than the producer. The
+    // declaration is what makes the round trip completable — `oid` gets no
+    // exception, because aegis registering a parameter says nothing about whether
+    // the application behind it can act on one.
+    when: [{ step: "verify", options: { critical: ["objectId"] } }],
     then: [
       { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
       // Reported in DOMAIN vocabulary, which is the round trip: the member is
@@ -2613,6 +3199,85 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       {
         step: "header",
         expected: { critical: ["objectId"], objectId: "1.2.3.4" },
+      },
+    ],
+  },
+  {
+    id: "an-implemented-extension-parameter-still-needs-the-recipients-declaration",
+    title:
+      "a token marking the library's own extension critical is refused from a verifier that has not claimed it",
+    rationale:
+      "RFC 7515 §4.1.11 makes a JWS invalid when a listed extension header parameter is \"not understood and supported by the recipient\", and RFC 9052 §3.1 gives COSE the same duty. THE RECIPIENT is the party named, and a verification library is not it — it verifies on an application's behalf and cannot know what that application implements. That a library REGISTERS a parameter, translates it and reports it says only that the library can carry the value; it says nothing about whether the application receiving that value can act on it. So a registered extension is on exactly the same footing as an issuer's own: both are refused until the caller states that it takes the parameter on. An exception for the library's own parameter would be the one case where the duty is discharged by the party that cannot discharge it.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: { iss: ISSUER, sub: "user-1", exp: NOW + 3600 },
+        // The producer half is legal: `oid` is the registry's one crit-eligible
+        // parameter, so this is a token the mint gate emits.
+        options: { header: { crit: ["oid"], oid: "1.2.3.4" } },
+      },
+    ],
+    when: [{ step: "verify" }],
+    then: [
+      {
+        step: "rejects",
+        on: "jose",
+        error: "JwtError",
+        code: "jwt_unsupported_crit_param",
+        data: { param: "oid" },
+      },
+      {
+        step: "rejects",
+        on: "cose",
+        error: "CwtError",
+        code: "cwt_unsupported_crit_param",
+        data: { param: "oid" },
+      },
+    ],
+  },
+  {
+    id: "the-wire-verify-door-declares-a-registered-extension-by-its-wire-name",
+    title:
+      "the raw wire verify door claims the library's own extension under the name the header carries",
+    rationale:
+      "A wire door speaks the wire's vocabulary in every direction — the header it reports, the `crit` it reads, and the declaration it takes. A door that reported a parameter under one spelling and demanded another to accept it would make the caller hold two names for one thing, and the mismatch is silent: the declaration simply fails to match and the token is refused as though nobody had claimed it. So the declaration is spelled exactly as the member the reader is comparing it against.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: { iss: ISSUER, sub: "user-1", exp: NOW + 3600 },
+        options: { header: { crit: ["oid"], oid: "1.2.3.4" } },
+      },
+    ],
+    when: [{ step: "kit-verify", kit: "structured", options: { crit: ["oid"] } }],
+    then: [{ step: "accepts" }],
+  },
+  {
+    id: "the-domain-door-refuses-a-critical-declaration-in-wire-vocabulary",
+    title:
+      "the domain verify door refuses a critical-parameter declaration spelled in wire names",
+    rationale:
+      "The domain tier exists so a caller never has to learn either encoding's vocabulary: every value it takes is stated in aegis names, and the crossing translates them. A door that ALSO accepted the wire spelling would speak two vocabularies at once — one name for a parameter in the header bag it hands back, another admitted in the declaration — and a caller reading one surface would write the other. The refusal is the mirror of a wire door refusing a domain-spelled `crit` member, and together they keep one name meaning one thing per tier.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: { iss: ISSUER, sub: "user-1", exp: NOW + 3600 },
+        options: { header: { crit: ["oid"], oid: "1.2.3.4" } },
+      },
+    ],
+    // `oid` is the WIRE spelling; the domain name is `objectId`.
+    when: [{ step: "verify", options: { critical: ["oid"] } }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        code: "crit_declaration_not_domain_named",
+        data: { parameter: "oid", expected: "objectId" },
       },
     ],
   },
@@ -2742,7 +3407,14 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     ],
     when: [
       { step: "mint" },
-      { step: "verify", profile: "access_token", options: { audience: RESOURCE } },
+      // The DECLARATION is in the same vocabulary as the mint's `critical`, which
+      // is what this row is about: one spelling for the member on both sides of
+      // the domain door.
+      {
+        step: "verify",
+        profile: "access_token",
+        options: { audience: RESOURCE, critical: ["objectId"] },
+      },
     ],
     then: [
       { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
@@ -3264,11 +3936,11 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     },
   },
   {
-    id: "a-parameter-that-must-be-signed-is-refused-from-the-unprotected-bucket",
+    id: "a-registered-header-parameter-cannot-be-carried-as-a-custom-one",
     title:
-      "placing a header parameter that must be signed in the unauthenticated bucket is refused",
+      "a header parameter the library knows is refused from the custom unprotected bucket",
     rationale:
-      "aegis decides which bucket a header parameter travels in — a caller states the parameter, not its provenance — and the decision is the header registry's `placement` column, the SAME datum the read side filters an incoming unprotected bucket by. Enforcing it on write is what makes the two halves one rule: if a writer could emit `cty` unprotected while every reader ignored it there, aegis would issue tokens carrying a declaration nothing will ever read, and the caller would believe a statement had been made. Refusing at the call site names the mistake where it is made, and the value the caller wanted has a bucket that works — the protected one.",
+      "The custom bag exists to carry parameters NO specification defines, and the registered bag exists to carry the ones that do — one question per field. A registered name accepted into `custom` would collapse that: the parameter would travel raw, past the value codec its registry row states and past the bucket its `placement` cell assigns, while a reader gave it the meaning its specification assigns. The caller would have written something that looks like the parameter and behaves like nothing. Refusing at the call site names the mistake where it is made, and the door that does accept it is one field away. The rule is the NAME and not the bucket — what makes a parameter inadmissible is that it is defined, not where the caller tried to put it — and this row runs the UNPROTECTED half, which is the bucket a caller is likeliest to reach for. The protected half of the same rule is stated at `src/internal/header/custom-header-params.test.ts#the JOSE doors refuse a REGISTERED name in custom.protected`.",
     given: [
       {
         step: "token",
@@ -3276,15 +3948,24 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         kit: "structured",
         claims: { iss: ISSUER, sub: "user-1", exp: NOW + 3600 },
         // `cty` is caller-settable and NOT kit-derived, so the refusal can only
-        // be the placement rule: a reserved parameter would be refused by the
-        // reserved rule instead and the row would prove that one twice.
-        options: { unprotected: { cty: "application/example" } },
+        // be the registered-in-custom rule: a kit-owned parameter would be
+        // refused by the sibling rule instead and the row would prove that one
+        // twice. The `unprotected` bucket is named because it is the one a caller
+        // might think the parameter belongs in — the answer is that neither does.
+        options: { custom: { unprotected: { cty: "application/example" } } },
       },
     ],
     when: [{ step: "mint" }],
-    then: [{ step: "rejects", error: "CoseError" }],
+    then: [
+      {
+        step: "rejects",
+        error: "CoseError",
+        code: "header_registered_in_custom",
+        data: { parameter: "cty", bucket: "unprotected" },
+      },
+    ],
     unsupported: {
-      jose: "the JOSE compact serialisation has no unprotected bucket to refuse a parameter from (RFC 7515 §7.1) — the JOSE kits take the bag only so one option type serves both wires, and ignore it entirely",
+      jose: "the JOSE compact serialisation has no unprotected bucket for a parameter to be written into (RFC 7515 §7.1), so `JoseWireTokenEnvelope` declares no `custom.unprotected` at all — the shape this row states is a compile error on that wire rather than a runtime verdict. The NAME rule itself holds on both wires and is stated for JOSE by the sibling `custom.protected` rows in `internal/header/custom-header-params.test.ts`",
     },
   },
   {
@@ -3333,7 +4014,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "header parameters that must be signed are ignored when they arrive unauthenticated",
     rationale:
-      "A parameter a verifier routes, audits or polices a token by is only worth reading if the issuer said it. RFC 9052 §3.1 permits `kid` in the unprotected bucket precisely because it 'is not a security-critical field' — the rest are not so permitted, and a reader that surfaced them anyway would let whoever last held the token declare what the token IS: its type (RFC 9596 §2 makes `typ` the routing declaration for a whole COSE object), the type of its payload, the certificate it is attributable to, or an object identifier an application authorises against. aegis therefore keeps ONE allowlist for both directions — the header registry's `placement` column — and a parameter outside it is refused on write and ignored on read, so the two can never disagree about which values are trustworthy.",
+      "A parameter a verifier routes, audits or polices a token by is only worth reading if the issuer said it. RFC 9052 §3.1 permits `kid` in the unprotected bucket precisely because it 'is not a security-critical field' — the rest are not so permitted, and a reader that surfaced them anyway would let whoever last held the token declare what the token IS: its type (RFC 9596 §2 makes `typ` the routing declaration for a whole COSE object), the type of its payload, the certificate it is attributable to, or an object identifier an application authorises against. aegis therefore denies the shape on both sides, and the two sides do it by different mechanisms because they face different producers. On WRITE there is no bag to put a registered parameter in unprotected at all: `custom.unprotected` is the only one a caller can fill and it refuses every registered name outright — `header_kit_owned_in_custom` for the names the kit derives from the key or the crypto operation, which it asks about first, and `header_registered_in_custom` for the rest — which is strictly stronger than a placement rule. On READ the header registry's `placement` column IS the allowlist, and it has to be — a foreign producer is under no such constraint — so a parameter declared `\"protected\"` that arrives unauthenticated is dropped before the domain header is built.",
     given: [
       // Hand-placed by a FOREIGN producer at the very labels aegis reads: this
       // shape is unmintable here precisely BECAUSE of the rule under test, so
@@ -3401,7 +4082,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "an-asserted-token-type-is-compared-as-a-whole-media-type",
     title: "a token of another type is refused when the caller asserts an id token",
     rationale:
-      "RFC 7519 §5.1 — the `typ` header parameter 'is used by JWT applications to declare the media type of this complete JWT', so a caller asserting a token IS of a given type is asserting on that whole media type. The comparison has to be made on the whole of it: a type whose media type is the bare conventional form — an id token is a plain `JWT` — has no structured prefix, so a check that compares prefixes has nothing to compare for exactly that type and silently accepts every token instead. An assertion that cannot fail is worse than an absent one, because the caller has stopped checking. RFC 9596 §2 gives COSE the same parameter — `typ`, registered as label 16 by §4.1, declares 'the type of this complete COSE object', and an application 'might verify that the typ value is a particular application-chosen media type and reject the data structure if it is not' — so the caller's assertion means the same thing on that wire and must be enforced just as hard. An assertion honoured on one encoding and skipped on the other is an assertion the attacker chooses to be bound by, since the encoding is the issuer's choice and the presenter's opportunity.",
+      "RFC 7519 §5.1 — the `typ` header parameter 'is used by JWT applications to declare the media type […] of this complete JWT', so a caller asserting a token IS of a given type is asserting on that whole media type. The comparison has to be made on the whole of it: a type whose media type is the bare conventional form — an id token is a plain `JWT` — has no structured prefix, so a check that compares prefixes has nothing to compare for exactly that type and silently accepts every token instead. An assertion that cannot fail is worse than an absent one, because the caller has stopped checking. RFC 9596 §2 gives COSE the same parameter — `typ`, registered as label 16 by §4.1, declares 'the type of this complete COSE object', and an application 'might verify that the typ value is a particular application-chosen media type and reject the data structure if it is not' — so the caller's assertion means the same thing on that wire and must be enforced just as hard. An assertion honoured on one encoding and skipped on the other is an assertion the attacker chooses to be bound by, since the encoding is the issuer's choice and the presenter's opportunity.",
     given: [
       {
         step: "token",
@@ -3840,7 +4521,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a mint asked to bind a certificate refuses a signing key that carries no chain",
     rationale:
-      "Asking for a certificate binding is a statement that the token must be attributable to a certificate, so a key that has none cannot honour the request. The two alternatives to refusing are both silent: emitting the token unbound leaves the issuer believing its tokens are attributable when they are not, and inventing a thumbprint would bind them to a certificate nobody holds. RFC 7515 §4.1.8 ties `x5t#S256` to 'the certificate corresponding to the key used to digitally sign the JWS' — with no such certificate there is nothing the parameter could truthfully carry.",
+      "Asking for a certificate binding is a statement that the token must be attributable to a certificate, so a key that has none cannot honour the request. The two alternatives to refusing are both silent: emitting the token unbound leaves the issuer believing its tokens are attributable when they are not, and inventing a thumbprint would bind them to a certificate nobody holds. RFC 7515 §4.1.8 ties `x5t#S256` to 'the […] certificate […] corresponding to the key used to digitally sign the JWS' — with no such certificate there is nothing the parameter could truthfully carry.",
     given: [
       {
         step: "token",
@@ -7119,7 +7800,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token whose subject identifier hides `__proto__` under an undeclared member is refused",
     rationale:
-      "RFC 9493 §3 permits an Identifier Format to describe members a receiver has never heard of — an Identifier Format \"MAY describe more members than are strictly necessary to identify a subject\" — so a Subject Identifier's undeclared members are the producer's to name and are carried exactly as written, at whatever depth they nest. `__proto__` is not among the names any Identifier Format may use, and it is not data either: ordinary assignment treats it as a PROTOTYPE SETTER, so a subject identifier carrying one at any depth reads back with `Object.keys` and `JSON.stringify` showing an empty container while a property read returns the value the producer chose. A receiver then acts on data every audit log renders as missing, and no duplicate-key defence can see it because no own key survives to be claimed twice. Depth is the whole point of this row: the hazard does not care whether the name sits beside a member the receiver models or several levels below one it does not, so neither may the refusal — and the position it reports must locate the container that carries the name, since at depth `__proto__` alone identifies nothing to repair.",
+      "RFC 9493 §3 permits an Identifier Format to describe members a receiver has never heard of — an Identifier Format \"MAY describe more members than are strictly necessary to identify a subject\" — so a Subject Identifier's undeclared members are the producer's to name and are carried exactly as written, at whatever depth they nest. `__proto__` is not among the names any Identifier Format may use, and it is not an ordinary datum either: ORDINARY ASSIGNMENT treats it as a PROTOTYPE SETTER, so any receiver that rebuilds the identifier with `obj[key] = value` ends up with a container whose `Object.keys` and `JSON.stringify` show nothing while a property read returns the value the producer chose — data every audit log renders as missing, which no duplicate-key defence can see because no own key survives to be claimed twice. Every rebuild a claim value crosses on its way to and from the wire defines its keys rather than assigning them — `@lindorm/utils` and `@lindorm/cbor` with `Object.defineProperty`, this package's own bags with `Object.fromEntries` — so no aegis path turns the member into a prototype, and this refusal is a POLICY about a name rather than a defence against a live swap. Whether aegis keeps it is an open question recorded at `src/internal/claims/proto-member-violations.ts#THE RULE IS FILED FOR REMOVAL`. What the row pins either way is DEPTH: the hazard a receiver faces does not care whether the name sits beside a member it models or several levels below one it does not, so neither may the refusal — and the position reported must locate the container that carries the name, since at depth `__proto__` alone identifies nothing to repair.",
     given: [
       {
         step: "token",

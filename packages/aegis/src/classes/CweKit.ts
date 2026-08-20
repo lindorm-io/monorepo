@@ -38,6 +38,7 @@ import type {
   CweKitSettings,
   DecodedEncryptedToken,
   DecryptedEncryptedToken,
+  DecryptTokenOptions,
   TokenContent,
   WireTokenHeader,
 } from "../types/index.js";
@@ -143,7 +144,7 @@ export class CweKit implements ICweKit {
     // as a Dict — the `@lindorm/aes` contract.
     const { bytes, contentType } = serialiseContent(content, callerHeader.cty);
 
-    // Interop gate (D5): a non-proprietary encrypt refuses an encryption with no
+    // Interop gate: a non-proprietary encrypt refuses an encryption with no
     // OFFICIAL COSE-RFC registration (the AES-CBC-HMAC family) so the token stays
     // interoperable.
     assertCoseRegistered({
@@ -168,7 +169,7 @@ export class CweKit implements ICweKit {
     const { protectedEntries, unprotectedEntries } = buildCoseHeaders({
       reserved: CAPABILITIES.reserved,
       header: callerHeader as Partial<WireTokenHeader>,
-      unprotected: options.unprotected,
+      custom: options.custom,
       cert: resolveCertBinding(
         this.kryptos,
         options.bindCertificate,
@@ -224,14 +225,28 @@ export class CweKit implements ICweKit {
    */
   decrypt<T extends TokenContent = Buffer>(
     token: Buffer,
+    options: DecryptTokenOptions = {},
   ): DecryptedEncryptedToken<T, Buffer> {
-    // R2: the kit takes the ENCODED bytes and decodes internally (parallel to
+    // The kit takes the ENCODED bytes and decodes internally (parallel to
     // JweKit.decrypt). The outer CWT tag (61) is stripped by `splitEncrypt0`.
     const segments = splitEncrypt0(token);
     const { protectedBstr, coseCiphertext } = segments;
-    const unprotected = segments.unprotected as Map<CoseLabel, unknown>;
+    // ⚠ NARROWED, NOT CAST. `splitEncrypt0` types this slot `unknown` on purpose
+    // — a producer writes whatever it likes there, and `preferMap: false` hands a
+    // wholly text-keyed CBOR map back as a plain OBJECT — so the cast made
+    // `.get` a raw `TypeError` on a token this door has not authenticated yet.
+    // The static `decode` below already narrows the same slot with `instanceof
+    // Map`; a rule one read verb applies and its twin does not is an accident of
+    // which door a caller used.
+    const unprotected =
+      segments.unprotected instanceof Map
+        ? (segments.unprotected as Map<CoseLabel, unknown>)
+        : undefined;
 
-    const ivValue = unprotected.get(coseByJose("iv"));
+    // A bucket this reader cannot index carries no IV, which the guard below
+    // already has the words for — RFC 9052 §5.3 requires one for every AEAD
+    // COSE_Encrypt0, so there is no second verdict to give.
+    const ivValue = unprotected?.get(coseByJose("iv"));
     if (!(ivValue instanceof Uint8Array)) {
       throw new CweError("COSE_Encrypt0 is missing its IV", {
         code: "cose_malformed",
@@ -246,12 +261,20 @@ export class CweKit implements ICweKit {
     const decodedProtected = decodeProtectedHeader(protectedBstr);
     const encryption = coseLabelToEnc(decodedProtected.get(coseByJose("alg")) as number);
 
-    const protectedHeader = coseWireHeader(decodedProtected, "enc");
+    const protectedWire = coseWireHeader(decodedProtected, "enc");
+    const protectedHeader = protectedWire.header;
+    const unprotectedWire = coseWireHeader(unprotected, "enc");
 
     // `crit` (RFC 9052 §3.1) off the PROTECTED bucket — which for a COSE_Encrypt0
     // is the AAD, so it is the one bucket the AEAD covers. Enforced BEFORE the
     // decryption, exactly as JweKit does.
-    rejectUnknownCritical({ header: protectedHeader, format: "cwe", error: CweError });
+    rejectUnknownCritical({
+      header: protectedHeader,
+      unknown: protectedWire.unknown,
+      declared: options.crit,
+      format: "cwe",
+      error: CweError,
+    });
 
     // COSE ciphertext = ciphertext ‖ tag (the tag is the trailing bytes).
     const ct = Buffer.from(coseCiphertext);
@@ -293,7 +316,11 @@ export class CweKit implements ICweKit {
     // back to Buffer.
     return {
       protectedHeader,
-      unprotectedHeader: coseWireHeader(unprotected, "enc"),
+      unprotectedHeader: unprotectedWire.header,
+      unknown: {
+        protected: protectedWire.unknown,
+        unprotected: unprotectedWire.unknown,
+      },
       payload: reconstructContent<T>(plaintext, protectedHeader.cty),
       token,
     };
@@ -312,12 +339,19 @@ export class CweKit implements ICweKit {
     // it too. A bare, un-enveloped token passes through unchanged.
     const { protectedBstr, unprotected } = splitEncrypt0(token);
 
+    const protectedWire = coseWireHeader(decodeProtectedHeader(protectedBstr), "enc");
+    const unprotectedWire = coseWireHeader(
+      unprotected instanceof Map ? unprotected : undefined,
+      "enc",
+    );
+
     return {
-      protectedHeader: coseWireHeader(decodeProtectedHeader(protectedBstr), "enc"),
-      unprotectedHeader: coseWireHeader(
-        unprotected instanceof Map ? unprotected : undefined,
-        "enc",
-      ),
+      protectedHeader: protectedWire.header,
+      unprotectedHeader: unprotectedWire.header,
+      unknown: {
+        protected: protectedWire.unknown,
+        unprotected: unprotectedWire.unknown,
+      },
       token,
     };
   }

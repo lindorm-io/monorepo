@@ -18,9 +18,9 @@ export const ISSUER_IS_URI: Condition<DomainClaims> = {
 };
 
 /**
- * RFC 9068 + ADR-0014 — an access token's `aud` resolves to exactly one
- * resource (emitted as an array-of-one on the wire). "Only when present" via
- * the `$or`; the multi/empty cases fail `$length: 1`.
+ * An access token's `aud` resolves to exactly one resource (emitted as an
+ * array-of-one on the wire) — narrower than RFC 9068 §3, which bounds no count.
+ * "Only when present" via the `$or`; the multi/empty cases fail `$length: 1`.
  */
 export const AUD_SINGLE_RESOURCE: Condition<DomainClaims> = {
   audience: { $or: [{ $exists: false }, { $length: 1 }] },

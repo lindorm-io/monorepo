@@ -1,0 +1,3 @@
+# IANA serves CRLF and the committed sha256 is a byte-fidelity check, so this
+# snapshot must not be line-ending normalised by `* text=auto eol=lf`.
+*.csv -text
