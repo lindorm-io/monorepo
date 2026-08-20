@@ -43,20 +43,36 @@ import { claimByCoseName, claimByJose } from "./claims-registry.js";
  * jose-keyed dict) and the COSE name (`signCwt` a cose-keyed one, where RFC 8392
  * renames `jti` to `cti`). Those are the only two spellings a claims dict reaches
  * the emission boundary in.
+ *
+ * ⛔⛔ `Object.fromEntries`, NEVER `result[key] = value`. THE KEYS ARE THE
+ * CALLER'S, and a wire door takes an already-wire dict VERBATIM — `JwtKit.sign`,
+ * `CwtKit.sign` and `signCwt` do no case conversion, so a service that built its
+ * claims with `JSON.parse` hands an own `__proto__` straight to this line.
+ * `@lindorm/utils`'s `omitFromObject` runs first and deliberately PRESERVES that
+ * key (`omit-from-object.ts:32`), so it arrives live, and a plain assignment then
+ * makes it this result's PROTOTYPE.
+ *
+ * ⚠ THE CONSEQUENCE IS A FORGED CLAIM ON A SIGNED TOKEN, not a dropped one. The
+ * COSE claims codec reads registered claims off this bag BY PROPERTY, so an
+ * inherited `aud`/`cti` is encoded as though the issuer had stated it. Measured
+ * through the public kit doors before the repair, with
+ * `{"iss":"https://good.example/","sub":"u1","__proto__":{"cti":"forged-token-id","aud":"https://victim.example/"}}`:
+ *   `CwtKit.decode(cwt.sign(claims)).payload` ->
+ *     `{iss, sub, aud:"https://victim.example/", cti:"forged-token-id"}`
+ *   `JwtKit.decode(jwt.sign(claims)).payload` -> `{iss, sub}`
+ * — a signed CWT naming an audience its issuer never wrote, and the two wires
+ * disagreeing about the same input. `fromEntries` DEFINES each key, so
+ * `__proto__` stays an ordinary own property on both.
+ * pinned: prune-empty-claims.test.ts, and end to end in `claims-proto-forgery.test.ts`.
  */
-export const pruneEmptyClaims = <T extends Dict = Dict>(dict: T): T => {
-  const result: Dict = {};
+export const pruneEmptyClaims = <T extends Dict = Dict>(dict: T): T =>
+  Object.fromEntries(
+    Object.entries(dict).filter(([key, value]) => {
+      const spec = claimByJose(key) ?? claimByCoseName(key);
 
-  for (const [key, value] of Object.entries(dict)) {
-    const spec = claimByJose(key) ?? claimByCoseName(key);
-
-    // `!isClaimSatisfied`, not a bare `isEmpty`: this is the same emptiness the
-    // profile floor asks about, and `is-claim-satisfied.ts` cites this column as
-    // agreeing with it — so the two must not be able to drift apart.
-    if (spec?.whenEmpty === "prune" && !isClaimSatisfied(value)) continue;
-
-    result[key] = value;
-  }
-
-  return result as T;
-};
+      // `!isClaimSatisfied`, not a bare `isEmpty`: this is the same emptiness the
+      // profile floor asks about, and `is-claim-satisfied.ts` cites this column as
+      // agreeing with it — so the two must not be able to drift apart.
+      return !(spec?.whenEmpty === "prune" && !isClaimSatisfied(value));
+    }),
+  ) as T;
