@@ -1,6 +1,10 @@
 import { createVitestConfig } from "../../vitest.config.base.mjs";
 
-const config = createVitestConfig();
-config.test.include = ["src/**/*.test.ts", "__tests__/**/*.test.ts"];
+// decorators: the gherkin step classes use stage-3 decorators; aes source does not.
+const config = await createVitestConfig({
+  decorators: true,
+  gherkin: { features: ["src/**/*.feature"], steps: ["src/__fixtures__/**/*.steps.ts"] },
+});
+config.test.include = [...config.test.include, "__tests__/**/*.test.ts"];
 
 export default config;

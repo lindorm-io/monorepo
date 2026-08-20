@@ -80,346 +80,6 @@ describe("AesKit", () => {
     });
   });
 
-  describe("Content type round-trip tests", () => {
-    let kryptos: IKryptos;
-    let aesKit: IAesKit;
-
-    beforeEach(() => {
-      kryptos = KryptosKit.generate.enc.oct({
-        algorithm: "A128KW",
-        encryption: "A128GCM",
-      });
-      aesKit = new AesKit({ kryptos });
-    });
-
-    test("should encrypt and decrypt objects", () => {
-      const data = { key: "value", nested: { deep: true } };
-      const encrypted = aesKit.encrypt(data, "cbor");
-
-      expect(aesKit.decrypt(encrypted)).toEqual(data);
-    });
-
-    test("should encrypt and decrypt arrays", () => {
-      const data = [1, "two", { three: 3 }];
-      const encrypted = aesKit.encrypt(data, "cbor");
-
-      expect(aesKit.decrypt(encrypted)).toEqual(data);
-    });
-
-    test("should encrypt and decrypt numbers", () => {
-      const data = 42;
-      const encrypted = aesKit.encrypt(data, "cbor");
-
-      expect(aesKit.decrypt(encrypted)).toEqual(data);
-    });
-
-    test("should encrypt and decrypt floats", () => {
-      const data = 3.14;
-      const encrypted = aesKit.encrypt(data, "cbor");
-
-      expect(aesKit.decrypt(encrypted)).toEqual(data);
-    });
-
-    test("should encrypt and decrypt buffers", () => {
-      const data = Buffer.from("binary data");
-      const encrypted = aesKit.encrypt(data, "cbor");
-
-      expect(aesKit.decrypt(encrypted)).toEqual(data);
-    });
-
-    test("should encrypt and decrypt empty strings", () => {
-      const data = "";
-      const encrypted = aesKit.encrypt(data, "cbor");
-
-      expect(aesKit.decrypt(encrypted)).toEqual(data);
-    });
-  });
-
-  describe("ECDH-ES apu/apv round-trip", () => {
-    let kryptos: IKryptos;
-    let aesKit: IAesKit;
-
-    beforeEach(() => {
-      kryptos = KryptosKit.generate.auto({
-        algorithm: "ECDH-ES",
-        encryption: "A256GCM",
-      });
-      aesKit = new AesKit({ kryptos });
-    });
-
-    test.each<AesEncryptionMode>(["cbor", "record", "serialised"])(
-      "should encrypt with apu/apv and decrypt (mode: %s)",
-      (mode) => {
-        const encrypted = aesKit.encrypt("agreement", mode as any, {
-          apu: Buffer.from("Alice"),
-          apv: Buffer.from("Bob"),
-        });
-
-        expect(aesKit.decrypt(encrypted)).toEqual("agreement");
-      },
-    );
-
-    test("should carry apu/apv on the serialised header and re-derive the key", () => {
-      const apu = Buffer.from("Alice");
-      const apv = Buffer.from("Bob");
-
-      const encrypted = aesKit.encrypt("agreement", "serialised", { apu, apv });
-      const parsed = AesKit.parse(encrypted);
-
-      expect(parsed.apu).toEqual(apu);
-      expect(parsed.apv).toEqual(apv);
-      expect(aesKit.decrypt(encrypted)).toEqual("agreement");
-    });
-
-    test("should carry apu/apv on the cbor record and re-derive the key", () => {
-      const apu = Buffer.from("Alice");
-      const apv = Buffer.from("Bob");
-
-      const encrypted = aesKit.encrypt("agreement", "cbor", { apu, apv });
-      const parsed = AesKit.parse(encrypted);
-
-      expect(parsed.apu).toEqual(apu);
-      expect(parsed.apv).toEqual(apv);
-      expect(aesKit.decrypt(encrypted)).toEqual("agreement");
-    });
-
-    test("should round-trip without apu/apv (behaviour preserved)", () => {
-      const encrypted = aesKit.encrypt("agreement", "serialised");
-      const parsed = AesKit.parse(encrypted);
-
-      expect(parsed.apu).toBeUndefined();
-      expect(parsed.apv).toBeUndefined();
-      expect(aesKit.decrypt(encrypted)).toEqual("agreement");
-    });
-  });
-
-  describe("Static method tests", () => {
-    describe("contentType", () => {
-      test("should return text/plain for string", () => {
-        expect(AesKit.contentType("hello")).toEqual("text/plain");
-      });
-
-      test("should return application/octet-stream for Buffer", () => {
-        expect(AesKit.contentType(Buffer.from("data"))).toEqual(
-          "application/octet-stream",
-        );
-      });
-
-      test("should return application/json for object", () => {
-        expect(AesKit.contentType({ key: "value" })).toEqual("application/json");
-      });
-
-      test("should return application/json for array", () => {
-        expect(AesKit.contentType([1, 2, 3])).toEqual("application/json");
-      });
-
-      test("should return application/json for number", () => {
-        expect(AesKit.contentType(42)).toEqual("application/json");
-      });
-    });
-
-    describe("isAesString", () => {
-      test("should return true for valid aes: cbor string", () => {
-        const kryptos = KryptosKit.generate.enc.oct({
-          algorithm: "A128KW",
-          encryption: "A128GCM",
-        });
-        const aesKit = new AesKit({ kryptos });
-        const cipher = aesKit.encrypt("test", "cbor");
-
-        expect(AesKit.isAesString(cipher)).toEqual(true);
-      });
-
-      test("should return false for regular string", () => {
-        expect(AesKit.isAesString("regular string")).toEqual(false);
-      });
-    });
-
-    describe("parse", () => {
-      test("should return same object for already-parsed AesDecryptionRecord", () => {
-        const record: AesDecryptionRecord = {
-          algorithm: "dir",
-          authTag: Buffer.from("auth-tag"),
-          content: Buffer.from("encrypted"),
-          contentType: "text/plain",
-          encryption: "A128GCM",
-          initialisationVector: Buffer.from("initialization-vector"),
-          keyId: "test-key-id",
-          pbkdfIterations: undefined,
-          pbkdfSalt: undefined,
-          publicEncryptionIv: undefined,
-          publicEncryptionJwk: undefined,
-          publicEncryptionKey: undefined,
-          publicEncryptionTag: undefined,
-          version: "1.0",
-        };
-
-        expect(AesKit.parse(record)).toEqual(record);
-      });
-    });
-  });
-
-  describe("Constructor defaults", () => {
-    test("should use kryptos encryption when no encryption specified", () => {
-      const kryptos = KryptosKit.generate.enc.oct({
-        algorithm: "A128KW",
-        encryption: "A192GCM",
-      });
-      const aesKit = new AesKit({ kryptos });
-      const encrypted = aesKit.encrypt("test", "record");
-
-      expect(encrypted.encryption).toEqual("A192GCM");
-    });
-
-    test("should default to A256GCM when no encryption specified and kryptos has none", () => {
-      const kryptos = KryptosKit.generate.enc.oct({ algorithm: "A128KW" });
-      const aesKit = new AesKit({ kryptos });
-      const encrypted = aesKit.encrypt("test", "record");
-
-      expect(encrypted.encryption).toEqual("A256GCM");
-    });
-  });
-
-  describe("verify() edge cases", () => {
-    let kryptos: IKryptos;
-    let aesKit: IAesKit;
-
-    beforeEach(() => {
-      kryptos = KryptosKit.generate.enc.oct({
-        algorithm: "A128KW",
-        encryption: "A128GCM",
-      });
-      aesKit = new AesKit({ kryptos });
-    });
-
-    test("should return false for wrong content", () => {
-      const encrypted = aesKit.encrypt("correct", "cbor");
-
-      expect(aesKit.verify("wrong", encrypted)).toEqual(false);
-    });
-
-    test("should return false for corrupted cipher data", () => {
-      const encrypted = aesKit.encrypt("test", "record");
-      const corrupted = {
-        ...encrypted,
-        content: Buffer.from("corrupted-data"),
-      };
-
-      expect(aesKit.verify("test", corrupted)).toEqual(false);
-    });
-  });
-
-  describe("Invalid encryption mode", () => {
-    let kryptos: IKryptos;
-    let aesKit: IAesKit;
-
-    beforeEach(() => {
-      kryptos = KryptosKit.generate.enc.oct({
-        algorithm: "A128KW",
-        encryption: "A128GCM",
-      });
-      aesKit = new AesKit({ kryptos });
-    });
-
-    test("should throw AesError for invalid mode", () => {
-      expect(() => aesKit.encrypt("test", "invalid" as any)).toThrow(
-        "Invalid encryption mode",
-      );
-    });
-  });
-
-  describe("AAD (Additional Authenticated Data)", () => {
-    describe("record mode - caller-provided AAD", () => {
-      const aad = Buffer.from("test-additional-authenticated-data");
-
-      describe.each(["A128GCM", "A128CBC-HS256"] as const)(
-        "encryption: %s",
-        (encryption) => {
-          let aesKit: IAesKit;
-
-          beforeEach(() => {
-            const kryptos = KryptosKit.generate.auto({ algorithm: "A128KW", encryption });
-            aesKit = new AesKit({ kryptos });
-          });
-
-          test("should bind the caller AAD to the record ciphertext", () => {
-            const encrypted = aesKit.encrypt("secret data", "record", { aad });
-
-            // The AAD is NOT stored with the record — that is what makes it a
-            // binding. Omitting it on decrypt must fail authentication.
-            expect(() => aesKit.decrypt(encrypted)).toThrow();
-
-            expect(aesKit.decrypt(encrypted, { aad })).toEqual("secret data");
-
-            expect(() =>
-              aesKit.decrypt(encrypted, { aad: Buffer.from("wrong") }),
-            ).toThrow();
-          });
-
-          test("should verify and assert record mode with the caller AAD", () => {
-            const encrypted = aesKit.encrypt("secret data", "record", { aad });
-
-            expect(aesKit.verify("secret data", encrypted)).toBe(false);
-            expect(aesKit.verify("secret data", encrypted, { aad })).toBe(true);
-
-            expect(() => aesKit.assert("secret data", encrypted)).toThrow();
-            expect(() => aesKit.assert("secret data", encrypted, { aad })).not.toThrow();
-          });
-        },
-      );
-    });
-
-    describe("string modes - format-derived AAD (automatic)", () => {
-      describe.each(["cbor", "serialised"] as const)("mode: %s", (mode) => {
-        let aesKit: IAesKit;
-
-        beforeEach(() => {
-          const kryptos = KryptosKit.generate.auto({
-            algorithm: "A128KW",
-            encryption: "A128GCM",
-          });
-          aesKit = new AesKit({ kryptos });
-        });
-
-        test("should encrypt and decrypt with auto-derived AAD", () => {
-          const encrypted = aesKit.encrypt("secret data", mode as any);
-          const decrypted = aesKit.decrypt(encrypted);
-          expect(decrypted).toEqual("secret data");
-        });
-
-        test("should verify with auto-derived AAD", () => {
-          const encrypted = aesKit.encrypt("secret data", mode as any);
-          expect(aesKit.verify("secret data", encrypted)).toBe(true);
-        });
-
-        test("should assert with auto-derived AAD", () => {
-          const encrypted = aesKit.encrypt("secret data", mode as any);
-          expect(() => aesKit.assert("secret data", encrypted)).not.toThrow();
-        });
-      });
-    });
-
-    describe("record mode - no AAD", () => {
-      describe.each(["A128GCM", "A128CBC-HS256"] as const)(
-        "encryption: %s",
-        (encryption) => {
-          let aesKit: IAesKit;
-
-          beforeEach(() => {
-            const kryptos = KryptosKit.generate.auto({ algorithm: "A128KW", encryption });
-            aesKit = new AesKit({ kryptos });
-          });
-
-          test("should work without AAD in record mode", () => {
-            const encrypted = aesKit.encrypt("secret data", "record");
-            const decrypted = aesKit.decrypt(encrypted);
-            expect(decrypted).toEqual("secret data");
-          });
-        },
-      );
-    });
-  });
-
   describe("prepareEncryption()", () => {
     let kryptos: IKryptos;
     let aesKit: IAesKit;
@@ -568,6 +228,50 @@ describe("AesKit", () => {
 
         expect(decrypted).toEqual("test");
       });
+    });
+  });
+
+  // Compile-time surface: the @ts-expect-error lines are asserted by
+  // `npm run typecheck`, not by the runtime run — vitest does not typecheck.
+  describe("options surface (compile-time)", () => {
+    const kryptos = KryptosKit.generate.auto({
+      algorithm: "A128KW",
+      encryption: "A128GCM",
+    });
+    const kit = new AesKit({ kryptos });
+
+    const aad = Buffer.from("caller-supplied-aad");
+    const apu = Buffer.from("Alice");
+    const apv = Buffer.from("Bob");
+
+    test("record mode takes a caller AAD; the header-derived modes reject one", () => {
+      const record = kit.encrypt("payload", "record", { aad });
+
+      // @ts-expect-error — cbor derives its AAD from the header; a caller AAD is not accepted
+      kit.encrypt("payload", "cbor", { aad });
+
+      // @ts-expect-error — serialised derives its AAD from the header; a caller AAD is not accepted
+      kit.encrypt("payload", "serialised", { aad });
+
+      // @ts-expect-error — the default mode is cbor, which derives its AAD from the header
+      kit.encrypt("payload", { aad });
+
+      expect(kit.decrypt(record, { aad })).toEqual("payload");
+    });
+
+    test("decrypt / verify / assert take only aad — apu and apv are encrypt-time", () => {
+      const cipher = kit.encrypt("payload", "cbor", { apu, apv });
+
+      // @ts-expect-error — apu is an encrypt-time parameter, carried on the header
+      kit.decrypt(cipher, { apu });
+
+      // @ts-expect-error — apv is an encrypt-time parameter, carried on the header
+      kit.verify("payload", cipher, { apv });
+
+      // @ts-expect-error — apu is an encrypt-time parameter, carried on the header
+      kit.assert("payload", cipher, { apu });
+
+      expect(kit.decrypt(cipher)).toEqual("payload");
     });
   });
 });
