@@ -10,13 +10,11 @@ export type SignedCoseFormat = Extract<TokenFormatTag, "cws" | "cwt" | "cwm">;
 
 /**
  * The leaf error class for each signed COSE format, so a throw lands on its own
- * namespace (`CwsError`/`CwtError`/`CwmError`) rather than the shared `CoseError`
- * parent — exactly as `JwtKit` throws `JwtError`. A caller may still catch the
- * whole family via `CoseError` (or `AegisError`).
+ * namespace rather than the shared `CoseError` parent — as `JwtKit` throws
+ * `JwtError`. A caller may still catch the family via `CoseError`.
  *
- * ONE table for the whole signed side: the opaque signer and the claims core
- * kept their own copies, agreeing on the `cwt`/`cwm` rows, which is a fork
- * waiting to happen the moment a fourth format or a renamed leaf arrives.
+ * ONE table for the whole signed side: a second copy forks the moment a fourth
+ * format or a renamed leaf arrives.
  */
 export const ERROR_BY_FORMAT: Record<SignedCoseFormat, typeof CoseError> = {
   cws: CwsError,

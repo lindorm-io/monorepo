@@ -153,7 +153,7 @@ describe("wire corpus", () => {
         new Set(["mint", "sign", "encrypt"]),
       );
       // Every one of the seven appears as the OUTERMOST container of some row.
-      // `format` alone no longer covers `jwe`/`cwe` from a sign-then-encrypt —
+      // `format` alone does not cover `jwe`/`cwe` from a sign-then-encrypt —
       // those rows report the signed token's kind and name the envelope under
       // `wrapper` — so the union is over the outermost of each row.
       expect(
@@ -188,15 +188,16 @@ describe("wire corpus", () => {
     test("a COSE row decodes under the tag chain its format claims", async () => {
       const raw = await buildRawCorpus();
 
-      // RFC 8392 §6 frames a CWT in tag 61; RFC 9052 §2 Table 1 assigns the
-      // structure tags. A CWS is opaque content in a CWT frame, so it carries the
-      // same outer tag — what tells the formats apart is the inner one.
+      // A CWT is framed in tag 61 and the structures carry their own tags inside
+      // it (RFC 8392 §6, RFC 9052 §2). A CWS is opaque content in a CWT frame, so
+      // it carries the same outer tag — what tells the formats apart is the inner
+      // one.
       //
-      // ⚠ `cws` is the one format whose structure is decided by the KEY and not
-      // by the name: RFC 9052 §4.2 defines COSE_Sign1 as carrying a digital
-      // signature, which a shared secret cannot produce, so an opaque COSE token
-      // signed with an `HS*` key is a COSE_Mac0 (§6.2). The named `cwm` format is
-      // the claims-bearing twin of that, not the only way to reach it.
+      // ⚠ `cws` is the one format whose structure is decided by the KEY and not by
+      // the name: a COSE_Sign1 carries a digital signature, which a shared secret
+      // cannot produce, so an opaque COSE token signed with an `HS*` key is a
+      // COSE_Mac0. The named `cwm` format is the claims-bearing twin of that, not
+      // the only way to reach it. RFC 9052 §4.2, RFC 9052 §6.2.
       const structureTag = (entry: {
         reportedFormat: string;
         reportedWrapper?: string;
@@ -275,9 +276,10 @@ describe("wire corpus", () => {
 
   describe("rendering", () => {
     test("the canonical rendering keeps an integer COSE label apart from a text one", () => {
-      // RFC 9052 §1.5 — `label = int / tstr`. A plain object would merge these
-      // two into one key, and the corpus would stop being able to report the
-      // difference the inspector went out of its way to preserve.
+      // An int label and the tstr that spells it are different labels
+      // (RFC 9052 §1.5). A plain object would merge the two into one key, and the
+      // corpus would stop being able to report the difference the inspector went
+      // out of its way to preserve.
       const labels = new Map<number | string, unknown>([
         ["4", "text"],
         [4, "int"],

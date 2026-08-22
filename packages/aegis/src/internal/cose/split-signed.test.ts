@@ -41,8 +41,8 @@ describe("splitSigned", () => {
   });
 
   test("⚠ the two buckets stay SEPARATE — neither leaks into the other", () => {
-    // An unprotected parameter is covered by no signature. If the buckets merged,
-    // an attacker-supplied `typ` would be indistinguishable from a signed one.
+    // No signature covers an unprotected parameter, so merging the buckets makes
+    // an attacker-supplied `typ` indistinguishable from a signed one.
     const spoofed = new Map<number, unknown>([
       [4, Buffer.from("key_test", "utf8")],
       [16, "application/spoofed+cwt"],
@@ -59,7 +59,7 @@ describe("splitSigned", () => {
 
   test("strips the outer CWT tag (61)", () => {
     // aegis envelopes what it emits; a foreign COSE_Sign1 arrives bare, and both
-    // must read — decode and verify share this one opening.
+    // must read through this one opening.
     const tagged = encodeCbor(
       new Tag(
         COSE_TAG.cwt,
@@ -109,8 +109,8 @@ describe("splitSigned", () => {
   });
 
   test("an `atLeast` arity admits the longer structure the claims decode reads", () => {
-    // `decodeCwtWire` asks for at least 3 and takes the tag list off, so it reads
-    // a bare CWT another producer framed differently.
+    // `decodeCwtWire` asks for at least 3 and takes the tag list off, so a bare
+    // CWT another producer framed differently still reads.
     const three = encodeCbor([PROTECTED, unprotected(), PAYLOAD]);
 
     const segments = splitSigned(three, {
@@ -124,17 +124,15 @@ describe("splitSigned", () => {
   });
 
   test("reports a DETACHED (nil) payload as null rather than refusing it", () => {
-    // A detached payload is legal COSE. The verdict belongs to the caller — the
-    // claims decode refuses it, the opaque one has never accepted one — so this
-    // hands it back untouched.
+    // A detached payload is legal COSE and the verdict belongs to the caller, so
+    // this hands it back untouched.
     const detached = sign1([PROTECTED, unprotected(), null, SIGNATURE]);
 
     expect(splitSigned(detached, OPTIONS).payload).toBeNull();
   });
 
   test("an EMPTY protected header translates to an empty bucket, not a throw", () => {
-    // RFC 9052 §3 — an empty protected header is a zero-length byte string, not
-    // the encoding of an empty map.
+    // RFC 9052 §3.
     const empty = sign1([Buffer.alloc(0), unprotected(), PAYLOAD, SIGNATURE]);
 
     expect(splitSigned(empty, OPTIONS).protectedHeader).toEqual({});

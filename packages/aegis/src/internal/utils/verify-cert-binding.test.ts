@@ -171,15 +171,14 @@ describe("verifyCertBinding", () => {
   });
 
   /**
-   * ⭐⭐ THE SHA-1-ONLY BINDING — the cell RFC 9360 §2 makes reachable on the COSE
-   * wire, where label 34's `hashAlg` decides which domain parameter a digest lands
-   * on, and which a foreign JOSE producer reaches by emitting `x5t` alone.
+   * ⭐⭐ THE SHA-1-ONLY BINDING — reachable on the COSE wire through label 34's
+   * `hashAlg` (RFC 9360 §2), and on JOSE from a foreign producer emitting `x5t`
+   * alone.
    *
-   * Strict REFUSES: RFC 9054 §3.1 marks SHA-1 "Filter Only" and the digest is not
-   * collision-resistant, so a binding that rests on it alone is not the strong
-   * attribution a strict verifier expects. Lax COMPARES it — a mismatch is still
-   * a hard fail — and WARNS every time, because otherwise "binding verified" would
-   * silently mean two different strengths.
+   * Strict REFUSES (RFC 9054 §3.1): a binding resting on SHA-1 alone is not the
+   * strong attribution a strict verifier expects. Lax COMPARES it — a mismatch is
+   * still a hard fail — and WARNS every time, or "binding verified" would silently
+   * mean two different strengths.
    */
   describe("a binding made with the SHA-1 thumbprint alone", () => {
     const sha1Header = (value: string) => ({
@@ -293,11 +292,10 @@ describe("verifyCertBinding", () => {
   /**
    * ⭐⭐ THE VERDICT ARM — a binding the DOMAIN HEADER HAS NO FIELD FOR.
    *
-   * RFC 9360 §2's `COSE_CertHash` carries its algorithm inside the value, so a
-   * COSE token may bind under SHA-384 or SHA-512 (RFC 9054 marks both
-   * `Recommended: Yes`); RFC 7517 §4.8/§4.9 register two JOSE parameters, so
-   * neither has a domain field. The COSE read path resolves the comparison and
-   * hands the ANSWER here, which is what lets this function stay wire-agnostic.
+   * A COSE token can bind under SHA-384 or SHA-512 (RFC 9360 §2, RFC 9054 §3.2),
+   * which no JOSE parameter has a domain field for (RFC 7515 §4.1.7, RFC 7515 §4.1.8).
+   * The COSE read path resolves the comparison and hands the ANSWER here, which is
+   * what lets this function stay wire-agnostic.
    *
    * ⚠ EVERY ARM IS EXERCISED HERE, at the unit, because each is a different
    * DECISION and the end-to-end rows can only reach them one token at a time.

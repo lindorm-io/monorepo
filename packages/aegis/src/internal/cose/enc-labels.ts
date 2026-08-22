@@ -3,16 +3,15 @@ import { CoseError } from "../../errors/index.js";
 import { ownEntry } from "./own-entry.js";
 
 /**
- * COSE content-encryption algorithm labels (IANA COSE Algorithms / RFC 9053
- * §4): the AES-GCM family plus the eight AES-CCM variants. The CCM name encodes
- * its parameters as `AES-CCM-{L}-{tagBits}-{keyBits}`, so the tag length is 8
- * bytes for the `…-64-…` algorithms and 16 bytes for `…-128-…` (GCM is always
- * 16); see `tagBytesForEncryption`.
+ * COSE content-encryption algorithm labels. RFC 9053 §4.
+ *
+ * ⚠ A CCM name encodes its parameters — `AES-CCM-{L}-{tagBits}-{keyBits}` — so the
+ * tag length is read out of the NAME, not fixed per family; see
+ * `tagBytesForEncryption`.
  */
 /**
  * OFFICIAL (non-private-use) COSE content-encryption labels — the interop
- * allowlist (`isOfficialCoseEnc`): the AES-GCM family plus the eight AES-CCM
- * variants (RFC 9053 §4).
+ * allowlist behind `isOfficialCoseEnc`. RFC 9053 §4.
  */
 const ENC_TO_COSE_OFFICIAL: Readonly<Partial<Record<KryptosEncryption, number>>> = {
   A128GCM: 1,
@@ -29,10 +28,10 @@ const ENC_TO_COSE_OFFICIAL: Readonly<Partial<Record<KryptosEncryption, number>>>
 };
 
 /**
- * PRIVATE-USE COSE labels (< -65536, RFC 9052 §8) for kryptos encryptions with
- * no OFFICIAL COSE-RFC registration — the AES-CBC-HMAC (RFC 7518 §5.2.3) family,
- * which COSE never registered. Emitted ONLY under proprietary mode; the lenient
- * decrypt path maps them back so a proprietary COSE_Encrypt0 still round-trips.
+ * PRIVATE-USE COSE labels (< -65536) for kryptos encryptions COSE never
+ * registered — the AES-CBC-HMAC family, RFC 7518 §5.2.3. Emitted ONLY under
+ * proprietary mode; the lenient decrypt path maps them back so a proprietary
+ * COSE_Encrypt0 still round-trips.
  */
 const ENC_TO_COSE_PRIVATE: Readonly<Partial<Record<KryptosEncryption, number>>> = {
   "A128CBC-HS256": -65537,
@@ -46,18 +45,15 @@ const COSE_TO_ENC = Object.fromEntries(
   ),
 ) as Record<number, KryptosEncryption>;
 
-// ⚠ EVERY TABLE HERE IS READ THROUGH `ownEntry`, never indexed directly. A plain
-// index resolves an `Object.prototype` member name — `encryption in table` is
-// TRUE for `"toString"`, and `table["toString"]` is a FUNCTION, so the
-// `undefined` guards below never fire. `CweKit.decrypt` reads the label off a
-// FOREIGN protected header, so the read direction is token-controlled. See
-// own-entry.ts.
+// ⚠ Every table here is read through `ownEntry`, never indexed directly: a plain
+// index resolves an `Object.prototype` member name, so `table["toString"]` is a
+// FUNCTION and the `undefined` guards below never fire. `CweKit.decrypt` reads the
+// label off a FOREIGN protected header. See own-entry.ts.
 
 /**
- * The AEAD authentication-tag length (bytes) for a COSE content-encryption
- * algorithm — the COSE_Encrypt0 ciphertext is `ciphertext‖tag`. GCM is always
- * 16; CCM is 8 (`AES-CCM-{L}-64-…`) or 16 (`AES-CCM-{L}-128-…`); the private-use
- * AES-CBC-HMAC tag is the key-size in bytes (`A{k}CBC-HS{2k}` ⇒ k/8 = 16/24/32).
+ * The AEAD authentication-tag length in bytes — the COSE_Encrypt0 ciphertext is
+ * `ciphertext‖tag`. GCM is always 16; CCM reads its `{tagBits}` out of the name;
+ * the private-use AES-CBC-HMAC tag is the key size in bytes.
  */
 export const tagBytesForEncryption = (encryption: KryptosEncryption): number => {
   if (encryption.startsWith("AES-CCM-")) {
@@ -72,9 +68,8 @@ export const tagBytesForEncryption = (encryption: KryptosEncryption): number => 
 };
 
 /**
- * Interop gate: true iff the encryption has an OFFICIAL (non-private-use)
- * COSE label, i.e. it is COSE-RFC compliant. A non-proprietary `encrypt` refuses
- * anything this returns `false` for.
+ * Interop gate: true iff the encryption has an OFFICIAL (non-private-use) COSE
+ * label. A non-proprietary `encrypt` refuses anything this returns `false` for.
  */
 export const isOfficialCoseEnc = (encryption: KryptosEncryption): boolean =>
   ownEntry(ENC_TO_COSE_OFFICIAL, encryption) !== undefined;

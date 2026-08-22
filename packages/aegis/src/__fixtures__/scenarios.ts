@@ -318,12 +318,8 @@ export type DeploymentGivenStep = {
  * `SignContent` vocabulary).
  *
  * `sender_constrained` is the smallest profile that DEMANDS a proof-of-
- * possession binding. No built-in requires `confirmation` — RFC 9449 §5 makes
- * DPoP binding a deployment's choice rather than a property of any token kind
- * ("An authorization server MAY elect to issue access tokens that are not DPoP
- * bound, which is signaled to the client with a value of `Bearer` in the
- * `token_type` parameter") — so the capability that a demanded binding must
- * actually bind cannot be stated against one.
+ * possession binding. No built-in requires `confirmation`, so the capability that
+ * a demanded binding must actually bind cannot be stated against one.
  */
 type RegisteredProfileContent = {
   sender_constrained: Required<
@@ -379,16 +375,12 @@ export type MintGivenStep = {
 /**
  * The part of a built artifact a {@link TamperGiven} rewrites.
  *
- * The three are the three inputs to the integrity computation, and they are
- * named separately because a caller's mental model of "the token was modified"
- * covers all three while only one of them is the signature itself. RFC 7515
- * §5.2 step 8 fixes the JOSE signing input as
- * `ASCII(BASE64URL(UTF8(JWS Protected Header)) || '.' || BASE64URL(JWS Payload))`,
- * and RFC 9052 §4.4 fixes the COSE one as a `Sig_structure` carrying "The
- * protected attributes from the body structure, encoded in a bstr type" and
- * "The payload to be signed, encoded in a bstr type" — so on both wires the
- * header and the payload are covered by the signature exactly as the signature
- * is, and all three must be refused.
+ * The three are the three parts of a serialised token, and they are named
+ * separately because a caller's mental model of "the token was modified" covers
+ * all three while only one of them is the signature itself. On both wires the
+ * protected header and the payload are the integrity computation's inputs and the
+ * signature is its output (RFC 7515 §5.2, RFC 9052 §4.4), so a rewrite of any of
+ * the three is refused.
  */
 export type TamperSegment = "header" | "payload" | "signature";
 
@@ -419,9 +411,8 @@ export type TamperGiven = { segment: TamperSegment };
  *
  * ⚠ THE TWO FIELDS HAVE DIFFERENT REACH, and the split is the serialisation's,
  * not a convention:
- *   - `protectedHeader` applies on BOTH wires. A JOSE compact serialisation has
- *     one header (RFC 7515 §7.1) and a COSE object has a protected bucket
- *     (RFC 9052 §3), so "the integrity-protected header" means something on each.
+ *   - `protectedHeader` applies on BOTH wires: "the integrity-protected header"
+ *     names something on each (RFC 7515 §7.1, RFC 9052 §3).
  *   - `unprotectedHeader` is COSE ONLY — JOSE has no second bucket for it — and a
  *     row naming it owes the JOSE wire an `unsupported` reason. The interpreter
  *     refuses it there rather than signing a token that silently drops half the
@@ -432,10 +423,9 @@ export type TamperGiven = { segment: TamperSegment };
  * at the integer label the registry gives it — deliberately, since the point of
  * placing a parameter is to put it exactly where aegis WOULD read it from, and a
  * hand-picked label the reader ignores makes a row pass for the wrong reason. A
- * name the registry does not know at all falls back to its TEXT label, which RFC
- * 9052 §1.5 makes a label in its own right; that is how a third party's own
- * extension parameter actually travels, and it is the only way to state a rule
- * about one.
+ * name the registry does not know at all falls back to its TEXT label
+ * (RFC 9052 §1.5); that is how a third party's own extension parameter actually
+ * travels, and it is the only way to state a rule about one.
  *
  * ⚠ `unprotectedHeader` entries are written AFTER the producer's own derived
  * `kid`, which is the routing hint aegis's COSE key resolution reads.
@@ -445,9 +435,9 @@ export type ForeignHeadersGiven = {
   unprotectedHeader?: Dict;
   /**
    * COSE ONLY — protected entries written under their TEXT label, whatever the
-   * registry says. RFC 9052 §1.4 defines `label = int / tstr`, so the integer 2
-   * and the text `"crit"` are DIFFERENT labels, and `protectedHeader` above
-   * deliberately resolves a registered name to its integer one.
+   * registry says, where `protectedHeader` above deliberately resolves a
+   * registered name to its integer one. The integer 2 and the text `"crit"` are
+   * different labels (RFC 9052 §1.5).
    *
    * ⭐ IT EXISTS TO STATE ONE THING NO OTHER CELL CAN: a bucket carrying BOTH
    * forms of the same parameter. That is a shape aegis's own writers cannot
@@ -473,8 +463,8 @@ export type ForeignHeadersGiven = {
 export type ForgedSignature = "junk" | KeyFixture;
 
 /**
- * HOW A FORGED COSE MEMBER IS KEYED — RFC 9052 §1.5's `label = int / tstr`, as a
- * cell.
+ * HOW A FORGED COSE MEMBER IS KEYED — an integer label or a text one, as a cell
+ * (RFC 9052 §1.5).
  *
  * ⚠ IT IS NOT REDUNDANT WITH THE KEY'S OWN TYPE, and that is the point of
  * spelling {@link ForgedMember.key} as a string. A Gherkin data table cell is
@@ -488,9 +478,7 @@ export type ForgedKeying = "label" | "name";
 
 /**
  * What a forged member CARRIES. Any JSON value — there is no vocabulary to check
- * a hostile value against, and one of these rows exists precisely because the
- * value is an OBJECT (a `__proto__` member whose value is what would become the
- * prototype).
+ * a hostile value against.
  *
  * ⚠ Held as the REAL value here and rendered as JSON text in a Gherkin cell, so
  * the migration is `JSON.stringify` per cell. The alternative — JSON text in the
@@ -512,8 +500,7 @@ export type ForgedValue =
  * ⭐⭐ A LIST OF THESE IS WHAT A JS OBJECT CANNOT BE. It has ROWS, so one member
  * may appear TWICE — once at its integer label and once under its interoperable
  * text name — which is a legal CBOR map and an impossible object literal. That
- * single property is why the COSE half of a forged token is a table and the JOSE
- * half is a text blob.
+ * single property is the whole reason a forged token states a list and not a bag.
  */
 export type ForgedMember = {
   key: string;
@@ -593,24 +580,22 @@ type TokenGivenShape =
    * envelope. Every aegis writer stamps a type header on both wires (a bare JWT
    * gets `JWT`, a bare CWT `application/cwt`), and neither the domain nor the kit
    * options can suppress it — `WireProtectedHeader` Omits `typ` and an empty
-   * `tokenType` prefix floors to the bare conventional form. RFC 7519 §5.1 makes
-   * the JOSE `typ` OPTIONAL and RFC 9596 §2 makes the COSE one optional too, so a
-   * typ-LESS token is conformant, ordinary, and unproducible here. A presence
-   * policy stated against tokens that always satisfy it is a policy nothing tests.
+   * `tokenType` prefix floors to the bare conventional form. A typ-LESS token is
+   * conformant, ordinary, and unproducible here (RFC 7519 §5.1, RFC 9596 §2). A
+   * presence policy stated against tokens that always satisfy it is a policy
+   * nothing tests.
    *
    * `typ` is the ONE header parameter this step controls, and it is stated as the
    * FULL header value on either wire (`"at+jwt"`, `"application/at+cwt"`); absent
    * means the producer stamps none. It may be stated PER WIRE, because the two
-   * spellings of one media type are different strings (RFC 8392 §9.2 registers
-   * `application/cwt` against RFC 7519 §5.1's `JWT`), so a row asserting a typed
-   * foreign token on both wires cannot name one value for both.
+   * spellings of one media type are different strings (RFC 8392 §9.2,
+   * RFC 7519 §5.1), so a row asserting a typed foreign token on both wires cannot
+   * name one value for both.
    *
    * `key` names the vault resident the producer signs with; absent means the
    * baseline `ec-sig` key. A SYMMETRIC key changes the COSE STRUCTURE rather than
-   * only the algorithm — RFC 9052 §4.2 defines COSE_Sign1 as carrying a digital
-   * signature and §6.2 defines COSE_Mac0 as the MACed structure with an implicit
-   * key — so the producer emits a COSE_Mac0 for one, which is the only conformant
-   * way a shared secret authenticates a CWT.
+   * only the algorithm, so the producer emits a COSE_Mac0 for one — the only MAC
+   * structure aegis reads. RFC 9052 §4.2, RFC 9052 §6.2.
    *
    * Everything else — `alg`, `kid` — is derived from the key, because a foreign
    * token that could not be verified at all would observe nothing.
@@ -630,38 +615,16 @@ type TokenGivenShape =
    * ⭐⭐ WHY THE VERB EXISTS. Every other artifact step states its token as a
    * claims DICT and the interpreter serialises it — `JSON.stringify` on JOSE,
    * `cbor2` on COSE. So any wire shape a JS object cannot express is unreachable
-   * from this table, and three real capabilities live in exactly that class: a
-   * payload whose member is named `__proto__` (a literal invokes the prototype
-   * SETTER, so the dict form cannot hold the key at all), a CBOR map keying one
-   * member BOTH at its integer label and under its text name (an object holds one
-   * or the other, never both), and a compact COSE map with a text `__proto__`
-   * label. Until this verb they were pinned in hand-written test files OUTSIDE
-   * the specification, so the table could not arbitrate them.
-   *
-   * ⭐ THE TWO FORMS ARE THE TWO GHERKIN STEP ARGUMENTS, and each row is written
-   * to convert mechanically:
-   *
-   *   Scenario: a claim member named __proto__ is refused, not made a prototype
-   *     Given a forged JOSE token, unsigned, whose payload is:
-   *       """
-   *       {"iss":"…","sub":"u","act":{"__proto__":{"subject":"attacker"}}}
-   *       """
-   *
-   *   Scenario: one member keyed twice is refused rather than merged
-   *     Given a forged CWT, signed with the "ec-sig" key, whose "act" claim carries:
-   *       | key | keyedBy | value             |
-   *       | 2   | label   | "audited-service" |
-   *       | sub | name    | "rogue-service"   |
-   *
-   * A DocString is free text, which is what a raw JSON payload is; a data table
-   * has ROWS, which is what lets one member appear twice. Neither is a choice of
-   * style — each wire's hostile shape has exactly one of the two forms available
-   * to it.
+   * from this table, and a real capability lives in exactly that class: a CBOR map
+   * keying one member BOTH at its integer label and under its text name (an object
+   * holds one or the other, never both). `carries` is a LIST rather than a bag for
+   * exactly that reason — it is what lets a row state one member twice.
    *
    * ⛔ THE INTERPRETER OWNS ALL ENCODING. A row never carries base64url, CBOR
-   * bytes, an algorithm identifier or a COSE label table: it states the PAYLOAD
-   * and the interpreter writes the header, the tag chain and the signature. A row
-   * that carried bytes would be asserting against a wire it had written itself.
+   * bytes, an algorithm identifier or a COSE label table: it states the member
+   * list and the interpreter writes the envelope, the tag chain and the
+   * signature. A row that carried bytes would be asserting against a wire it had
+   * written itself.
    *
    * ⚠ THE COSE ENVELOPE IS THE INTERPRETER'S, exactly as the foreign producer's
    * `alg`/`kid` are, and for the same reason: the row states the hostile CLAIM,
@@ -670,23 +633,12 @@ type TokenGivenShape =
    * subject, and an expiry inside the row's own clock — through aegis's own CWT
    * codec in its interoperable spelling. A row that also had to spell an issuer
    * would bury the one fact it states. ⚠ A hostile ENVELOPE on the COSE wire is a
-   * different capability and has no step; the JOSE form states its whole payload,
-   * so it needs none.
+   * different capability and has no step.
    *
-   * ⚠ `wire` PINS THE ROW, and it must: a raw JSON payload text is a JOSE
-   * serialisation and a keyed CBOR map is a COSE one, so neither shape exists on
-   * the other wire. It is the single source of that fact — the union makes the
-   * payload form unwritable on `"cose"` and the table form unwritable on `"jose"`
-   * — and the row owes the wire it leaves an `unsupported` reason like any other
-   * pinned row.
+   * ⚠ `wire` PINS THE ROW to `"cose"`, and it must: a keyed CBOR map is a COSE
+   * serialisation with no JOSE form at all, so the row owes the JOSE wire an
+   * `unsupported` reason like any other pinned artifact.
    */
-  | {
-      step: "token";
-      via: "forged";
-      wire: "jose";
-      payload: string;
-      signature: ForgedSignature;
-    }
   | {
       step: "token";
       via: "forged";
@@ -859,9 +811,9 @@ export type Given = readonly [...ReadonlyArray<SetupGivenStep>, ArtifactGivenSte
  * A DPoP proof the interpreter SIGNS, at run time, over the token the row just
  * produced — the one artifact a row cannot write down.
  *
- * RFC 9449 §4.2 makes `ath` "hash of the access token" the proof is presented
- * with, so a conformant proof commits to a token that does not exist until the
- * GIVEN has run. A literal proof in the table could only commit to a token no row
+ * A conformant proof's `ath` commits to the access token it is presented with
+ * (RFC 9449 §4.2), and that token does not exist until the GIVEN has run. A
+ * literal proof in the table could only commit to a token no row
  * presents, which is precisely the state `verify` must REFUSE — so a table that
  * could only spell literals could only ever state the refusals, never the
  * acceptance, and the success path of the possession check would go unstated.
@@ -883,8 +835,8 @@ export type DpopProofGiven = {
   ath?: "presented" | "other";
   /**
    * What the PRESENTER signed — RFC 9449 §4.2 `jti` (the proof's own identifier,
-   * which is what makes it single-use) and `htm`/`htu` (the HTTP request it
-   * commits to).
+   * which a server's replay check runs on — RFC 9449 §11.1) and `htm`/`htu` (the
+   * HTTP request it commits to).
    *
    * Stated by the row rather than fixed by the interpreter so that a row
    * asserting these back through a `dpop` THEN states a ROUND TRIP — the
@@ -1072,10 +1024,10 @@ export type RejectsThenStep = {
  * in the wire's own vocabulary, which is the only vocabulary an independent
  * reader has.
  *
- * ⚠ RFC 9052 §1.5 admits BOTH forms — `label = int / tstr` — and CBOR keys them
- * apart, so the integer `4` and the text string `"4"` are different COSE labels
- * and a row naming one never matches the other. That is deliberate: conflating
- * them is precisely the class of mistake these steps exist to catch.
+ * ⚠ The integer `4` and the text string `"4"` are different COSE labels
+ * (RFC 9052 §1.5), and CBOR keys them apart, so a row naming one never matches
+ * the other. That is deliberate: conflating them is precisely the class of
+ * mistake these steps exist to catch.
  */
 export type WireKey = string | number;
 
@@ -1333,8 +1285,7 @@ type ObservationStep =
  * `on` exists for the observations that genuinely cannot be stated once: a raw
  * COSE label (`4`) and a raw JOSE claim name (`exp`) are different assertions
  * about the same domain fact, and CBOR keys an integer and a text string apart
- * (RFC 9052 §1.5 admits both: `label = int / tstr`), so neither spelling can
- * stand for both. Scoping the
+ * (RFC 9052 §1.5), so neither spelling can stand for both. Scoping the
  * OBSERVATION is what keeps the ROW wire-agnostic: without it, one raw-label
  * assertion would drag the whole capability back onto a single wire and the
  * other wire would silently stop being covered.
@@ -1453,13 +1404,13 @@ export const JKT = "BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc";
  * because every proof-of-possession row that needs a BOUND token owes the same
  * answer and a reason restated by hand drifts a sentence at a time.
  *
- * ⚠ The COSE wire is NOT thumbprint-less — RFC 9679 §5.6 adds `ckt` and §8
- * registers it at Confirmation Key 5, so "COSE has no thumbprint confirmation"
- * would be false. What has no COSE spelling is the JOSE one, and the two are not
- * interchangeable because they hash different canonicalisations of the same key.
+ * ⚠ The COSE wire is NOT thumbprint-less — it has `ckt` (RFC 9679 §5.6,
+ * RFC 9679 §8), so "COSE has no thumbprint confirmation" would be false. What
+ * has no COSE spelling is the JOSE one, and the two are not interchangeable
+ * because they hash different canonicalisations of the same key.
  */
 export const NO_JKT_ON_COSE =
-  "a JWK thumbprint confirmation has no CWT counterpart — RFC 9679 §5.5: \"This document does not register a JWT confirmation method [RFC7800] for using 'ckt' as a confirmation method for a JWT or a CWT confirmation method [RFC8747] for using 'jkt' as a confirmation method for a CWT.\" The COSE wire has a thumbprint confirmation of its own, `ckt` (RFC 9679 §5.6, registered at Confirmation Key 5 in §8), but it is the digest of the key's canonical CBOR whereas RFC 7638 digests its canonical JSON, so the same key yields DIFFERENT bytes and a `jkt` can never be relabelled as its COSE counterpart. A bound token cannot be built on this wire to present in the first place";
+  "a JWK thumbprint confirmation has no CWT counterpart (RFC 9679 §5.5). The COSE wire has a thumbprint confirmation of its own, `ckt` (RFC 9679 §5.6, RFC 9679 §8), but it is the digest of the key's canonical CBOR whereas RFC 7638 §3 digests its canonical JSON, so the same key yields DIFFERENT bytes and a `jkt` can never be relabelled as its COSE counterpart. A bound token cannot be built on this wire to present in the first place";
 
 /**
  * The id of the ES512 signing key every scenario context is built with — the
@@ -1484,7 +1435,7 @@ export const CERT_ENC_KEY_ID = "0c7a2b61-5d4e-59f0-b3c2-7e6d5f4a3b2c";
 /**
  * The two thumbprints of the certificate `ec-sig-cert` carries — the SHA-256 one
  * a binding is checked against (RFC 7515 §4.1.8) and the SHA-1 one that rides
- * along for older clients (§4.1.7). Restated as literals for the same reason as
+ * along for older clients (RFC 7515 §4.1.7). Restated as literals for the same reason as
  * the key ids above: a row carries values, never a computation over a fixture.
  */
 export const CERT_THUMBPRINT = "PQeZGdGGGG1A9Qr4z0qBh_TJrmoi5B-6jbMUOGn34QA";
@@ -1550,66 +1501,6 @@ const LIVE_CLAIMS: JwtClaimsWire & Dict = {
   jti: "token-1",
 };
 
-/**
- * A capability this table ONCE STATED and the package no longer provides.
- *
- * ⭐ IT IS DATA, AND IT IS PART OF THE SPECIFICATION. A row is the package's
- * promise; withdrawing one is a decision of the same weight as making one, and a
- * table that simply stops mentioning a capability tells a reader nothing — worse,
- * it lets an OVERWRITTEN row (same slot, different promise) read as though the
- * old promise still held. Recording the withdrawal is what keeps
- * `scenarios.ts` readable ALONE: a reader who greps for the old id finds why it
- * is gone rather than concluding the code still does it.
- *
- * ⛔ A WITHDRAWAL IS NOT A DEFERRAL AND NEVER A `knownDefect`. Those say the
- * package should do something and does not. These say it deliberately does not,
- * so there is nothing to fix and nothing to skip — the absence is the statement.
- * Nothing here is restored by making a test pass.
- */
-export type WithdrawnCapability = {
-  /**
-   * The row id as it stood — EXACTLY, with no annotation, so a reader grepping the
-   * old name lands here and so the binding below can match it.
-   */
-  id: string;
-  /**
-   * Whether the whole row went or only part of what it promised.
-   *
-   * ⚠ THE TWO ARMS ARE BOUND UNEQUALLY, and the weaker one is worth knowing. A
-   * `"partial"` record is bound tightly: its id must MATCH a live row, so a typo
-   * fails. A `"row"` record can only be checked for the absence of its id, which
-   * any string satisfies — including a mistyped one — because nothing in the tree
-   * can confirm an id that no longer exists anywhere. ⇒ A `"row"` id is verified
-   * by review, not by the suite. It is still a field rather than a suffix on the
-   * id, because an annotated id matches nothing and so escapes BOTH checks.
-   */
-  scope: "row" | "partial";
-  /** What the table promised, in the words it promised it. */
-  stated: string;
-  /** Why the promise was withdrawn — the mechanism, not the meeting. */
-  because: string;
-  /** What the package does INSTEAD, stated as the absence it is. */
-  insteadNow: string;
-};
-
-/**
- * ⚠ Bound by `Aegis.conformance.test.ts` in BOTH directions the {@link
- * WithdrawnCapability.scope} docstring states — a `"row"` id must not be live, a
- * `"partial"` id must be.
- */
-export const WITHDRAWN_CAPABILITIES: ReadonlyArray<WithdrawnCapability> = [
-  {
-    id: "a-parameter-that-must-be-signed-is-refused-from-the-unprotected-bucket",
-    scope: "row",
-    stated:
-      'placing a header parameter the registry marks `placement: "protected"` in the COSE unprotected bucket is refused at the write, with `cose_unprotected_placement` — aegis decides which bucket a parameter travels in, and enforcing it on write is what made the read-side filter and the write-side refusal one rule.',
-    because:
-      'the caller-facing shape it refused no longer exists. `WireTokenEnvelope.unprotected` carried registered parameters into that bucket; the only two rows whose `placement` reads `"either"` (`iv`, `kid`) are kit-owned and so unsettable by a caller, leaving the option inhabited only by parameters that must travel protected — an empty set. It was removed with `WireUnprotectedHeader`, and the placement rule (rule 4) went with it — a rule guarding a state the types no longer admit is a rule with no input.',
-    insteadNow:
-      "the unprotected bucket is reachable only through `custom.unprotected`, which refuses every REGISTERED name outright — a strictly stronger rule, since it admits no registered parameter at all rather than only the protected-only ones. Two codes state it, because `buildCustomHeader` asks the narrower question first: a name the KIT derives from the key or the crypto operation is `header_kit_owned_in_custom`, and every other registered or specification-defined name is `header_registered_in_custom`. `isProtectedOnly` survives as a READ-side filter for a foreign token that puts one there anyway (`src/internal/header/merge-header-buckets.ts#if (isProtectedOnly(jose)) continue;`), which is where the original property still has work to do.",
-  },
-];
-
 export const SCENARIOS: ReadonlyArray<Scenario> = [
   // ---------------------------------------------------------------------------
   // The audience floor.
@@ -1619,7 +1510,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token whose wire audience names someone else is refused even when it also carries a custom audience claim",
     rationale:
-      "The audience floor is what stops a token minted for one resource being replayed at another: RFC 7519 §4.1.3 requires a verifier that does not identify itself in `aud`, when that claim is present, to reject the token, and RFC 8392 §3.1.3 gives the CWT claim the same meaning and processing rules. Only the registered wire claim states who the issuer meant it for. An unregistered custom claim that merely spells the same word differently carries no such statement, so it must never be able to answer the check on the wire claim's behalf — otherwise the presenter, not the issuer, decides the audience.",
+      "The audience floor is what stops a token minted for one resource being replayed at another (RFC 7519 §4.1.3, RFC 8392 §3.1.3). Only the registered wire claim states who the issuer meant it for. An unregistered custom claim that merely spells the same word differently carries no such statement, so it must never be able to answer the check on the wire claim's behalf — otherwise the presenter, not the issuer, decides the audience.",
     given: [
       {
         step: "token",
@@ -1644,7 +1535,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token that states no audience at all is refused, even when it carries a custom audience claim",
     rationale:
-      "RFC 7519 §4.1.3 makes `aud` the claim by which an issuer names who a token is for, and RFC 8392 §3.1.3 carries that meaning onto the COSE wire unchanged. A token that omits it names nobody, so a verifier identifying itself cannot be in it. The check therefore has to fail on ABSENCE as well as on mismatch — a rule that only compares the registered claim WHEN PRESENT lets a presenter supply a look-alike of its own and be believed, which hands the audience decision to the party the check exists to constrain.",
+      "`aud` is the claim by which an issuer names who a token is for, on either encoding (RFC 7519 §4.1.3, RFC 8392 §3.1.3). A token that omits it names nobody, so a verifier identifying itself cannot be in it. ⚠ Failing on ABSENCE at VERIFY is AEGIS POLICY, not a citation: the claim is OPTIONAL and its mandated rejection is scoped to a token that carries it (RFC 7519 §4.1.3), so the specification permits exactly what this floor refuses. The floor exists because a rule that only compares the registered claim WHEN PRESENT lets a presenter supply a look-alike of its own and be believed, which hands the audience decision to the party the check exists to constrain.",
     given: [
       {
         step: "token",
@@ -1668,7 +1559,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "a-non-matching-wire-audience-is-refused",
     title: "a token whose wire audience names someone else is refused",
     rationale:
-      "RFC 7519 §4.1.3 — when `aud` is present, a verifier that does not identify itself in it MUST reject the token. RFC 8392 §3.1.3 gives the CWT claim the same meaning and processing rules, so the refusal is owed on either encoding.",
+      "A token whose `aud` names someone else was minted for another resource, and accepting it is the replay the claim exists to stop. The refusal is owed on either encoding (RFC 7519 §4.1.3, RFC 8392 §3.1.3).",
     given: [
       {
         step: "token",
@@ -1705,7 +1596,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a CWT mint refuses a confirmation whose thumbprint the COSE wire cannot carry",
     rationale:
-      "A token that claims to be bound but is not is strictly worse than a bearer token, because the verifier stops asking for a proof. RFC 9679 §5.5 declines to register \"a CWT confirmation method [RFC8747] for using 'jkt' as a confirmation method for a CWT\", so there is no COSE label a JWK thumbprint may travel under; the COSE thumbprint confirmation that does exist, `ckt` (RFC 9679 §5.6), digests the key's canonical CBOR while RFC 7638 digests its canonical JSON, so the same key yields DIFFERENT bytes and emitting one under the other's label would mislabel the digest and fail against any conformant verifier. A confirmation the wire cannot carry must therefore fail closed at mint rather than be dropped on the way out.",
+      "A token that claims to be bound but is not is strictly worse than a bearer token, because the verifier stops asking for a proof. No COSE label carries a JWK thumbprint (RFC 9679 §5.5); the COSE thumbprint confirmation that does exist, `ckt` (RFC 9679 §5.6), digests the key's canonical CBOR while RFC 7638 §3 digests its canonical JSON, so the same key yields DIFFERENT bytes and emitting one under the other's label would mislabel the digest and fail against any conformant verifier. A confirmation the wire cannot carry must therefore fail closed at mint rather than be dropped on the way out.",
     given: [
       {
         step: "token",
@@ -1728,11 +1619,10 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     // The `data` names the member the refusal READ, so it is attributable to the
     // thumbprint having no COSE form rather than to the confirmation being
     // unusable for some other reason. `keyId` IS representable and is absent
-    // from the list, which is what makes this a per-MEMBER refusal rather than
-    // the old all-or-nothing one.
+    // from the list, which is what makes this a per-MEMBER refusal.
     then: [{ step: "rejects", error: "CoseError", data: { members: ["jkt"] } }],
     unsupported: {
-      jose: "the JOSE wire CAN carry this confirmation, so there is no refusal to state on it: RFC 9449 §6.1 defines `jkt` as a JWT confirmation-method member for use under `cnf`, whose value is the base64url-encoded SHA-256 JWK thumbprint (RFC 7638) of the key the token is bound to. A mint that refused a `jkt` there would refuse the conformant shape",
+      jose: "the JOSE wire CAN carry this confirmation, so there is no refusal to state on it: `cnf.jkt` is the base64url-encoded SHA-256 JWK thumbprint of the key the token is bound to (RFC 9449 §6.1, RFC 7638). A mint that refused a `jkt` there would refuse the conformant shape",
     },
   },
   {
@@ -1740,7 +1630,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token carrying a confirmation is refused when the verifier is shown no proof of possession",
     rationale:
-      "RFC 7800 §3 — by including a confirmation claim the issuer declares that the presenter possesses a particular key and that the recipient can cryptographically confirm that possession. A verifier handed no proof has nothing to check the binding against, so it must refuse rather than quietly fall back to bearer semantics.",
+      "A confirmation claim is the issuer declaring that the presenter possesses a particular key, and that the recipient can cryptographically confirm it (RFC 7800 §3). A verifier handed no proof has nothing to check the binding against, so it must refuse rather than quietly fall back to bearer semantics.",
     given: [
       {
         step: "token",
@@ -1770,31 +1660,18 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token declaring a confirmation whose thumbprint is empty is refused, not read as unbound",
     rationale:
-      "RFC 7800 §3 — a confirmation claim is the issuer's declaration that the presenter holds a particular key and that the recipient can confirm it. A verifier deciding whether a token is bound is therefore reading whether the issuer DECLARED a binding, not whether the declared value is usable: a thumbprint nobody can match is a binding that cannot be honoured, and the only safe response to one is refusal. Downgrading it to bearer semantics inverts the security property — the weakest possible confirmation would buy the widest possible acceptance, so an attacker who can blank one field turns a sender-constrained token into one anybody holding a copy may present.",
+      "A confirmation claim is the issuer's declaration that the presenter holds a particular key, and that the recipient can confirm it (RFC 7800 §3). A verifier deciding whether a token is bound is therefore reading whether the issuer DECLARED a binding, not whether the declared value is usable: a thumbprint nobody can match is a binding that cannot be honoured, and the only safe response to one is refusal. Downgrading it to bearer semantics inverts the security property — the weakest possible confirmation would buy the widest possible acceptance, so an attacker who can blank one field turns a sender-constrained token into one anybody holding a copy may present.",
     given: [
-      // ⚠ THE EMPTY STRING is this row's form, and the two axes that used to
-      // BOUND it no longer do — which is worth recording, because the bound was
-      // the interesting part of the row for as long as it existed.
-      //
-      // The VOUCH axis: `trustBoundThumbprint: true` used to ACCEPT this same
-      // token, because vouching short-circuited the only refusal that fired. Its
-      // own row states the rule now (`vouching-for-a-binding-cannot-supply-one-
-      // the-token-never-stated`), and the verdict runs ahead of all three DPoP
-      // branches rather than inside one of them.
-      //
-      // The VALUE axis: `null`, `42` and `{}` used to be ERASED to `undefined` by
-      // the confirmation decoder before any verifier gate could see that a binding
-      // had been stated, so all of them verified as bearer tokens. They are
-      // refused at the READ now, which is a different capability — a member whose
-      // value contradicts its declared shape — and it has its own row
+      // ⚠ THE EMPTY STRING is this row's form. `null`, `42` and `{}` are refused
+      // at the READ, which is a different capability — a member whose value
+      // contradicts its declared shape — and it has its own row
       // (`a-confirmation-this-package-cannot-read-is-refused-not-reported-as-
       // absent`). ⚠ `null` is in that family and STAYS in it: a confirmation
       // member is the one position in the package where a null is a contradiction
-      // rather than an absence, because RFC 9449 §6.1 types the member by MUST —
-      // the `jkt` value "MUST be the base64url encoding (as defined in [RFC7515])
-      // of the JWK SHA-256 Thumbprint" — and an erased one mints an unbound token. This row stays on the
-      // empty string because that is the form that is perfectly READABLE and
-      // still binds nothing.
+      // rather than an absence: a `jkt` is a thumbprint or the member is not one
+      // (RFC 9449 §6.1), and an erased one mints an unbound token. This row stays
+      // on the empty string because that is the form that is perfectly READABLE
+      // and still binds nothing.
       //
       // A FOREIGN token: minting cannot produce this shape, because the
       // `confirmation` shape rule refuses a thumbprint that is not 32 base64url
@@ -1949,7 +1826,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token whose confirmation names no key at all is refused rather than read as unbound",
     rationale:
-      "RFC 7800 §3 — by including a `cnf` claim the issuer declares that the presenter possesses a particular key and that the recipient can cryptographically confirm that possession. A confirmation object with no member declares exactly that and names nothing to confirm, so there is no binding a verifier could check and no honest way to proceed. Reading it as an absent confirmation inverts the security property: the emptiest possible declaration would buy the widest possible acceptance, and an attacker who can strip the members of a confirmation turns a sender-constrained token into one anybody holding a copy may present.",
+      "By including a `cnf` claim the issuer declares that the presenter possesses a particular key, and that the recipient can cryptographically confirm it (RFC 7800 §3). A confirmation object with no member declares exactly that and names nothing to confirm, so there is no binding a verifier could check and no honest way to proceed. Reading it as an absent confirmation inverts the security property: the emptiest possible declaration would buy the widest possible acceptance, and an attacker who can strip the members of a confirmation turns a sender-constrained token into one anybody holding a copy may present.",
     given: [
       // ⚠⚠ `cnf: {}` — THE OTHER VALUE THE VERDICT JUDGES, and the one that had
       // no row at all. The three sibling rows above all carry `cnf: { jkt: "" }`,
@@ -2118,7 +1995,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token whose confirmation member holds a value of the wrong shape is refused, not read as unbound",
     rationale:
-      "RFC 7800 §3 makes the confirmation claim the issuer's declaration that the presenter holds a particular key. A reader that cannot make sense of the declared value has two honest options and one dangerous one: it may refuse, or it may report the token as stating something it cannot interpret — but it must not report the token as stating NOTHING. Erasing an unreadable member turns the issuer's binding into an absence, and an absence is precisely what a verifier reads as bearer semantics, so an attacker who can substitute one field for a value of the wrong type widens acceptance from one key-holder to anybody holding a copy of the token.",
+      "The confirmation claim is the issuer's declaration that the presenter holds a particular key (RFC 7800 §3). A reader that cannot make sense of the declared value has two honest options and one dangerous one: it may refuse, or it may report the token as stating something it cannot interpret — but it must not report the token as stating NOTHING. Erasing an unreadable member turns the issuer's binding into an absence, and an absence is precisely what a verifier reads as bearer semantics, so an attacker who can substitute one field for a value of the wrong type widens acceptance from one key-holder to anybody holding a copy of the token.",
     given: [
       // A FOREIGN token: `mint` cannot produce this shape, because the domain
       // `confirmation` is typed and the same refusal fires on the way out.
@@ -2133,9 +2010,9 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
           iat: NOW,
           exp: NOW + 120,
           jti: "token-1",
-          // A NUMBER where RFC 9449 §6.1 defines a base64url string. It is the
+          // A NUMBER where a base64url string belongs (RFC 9449 §6.1). It is the
           // representative of the whole family — `null`, `42`, `{}` and a `cnf`
-          // that is not an object — which the decoder used to erase alike.
+          // that is not an object.
           //
           // ⚠ THE CAST IS THE ROW'S SUBJECT, not a convenience. `ConfirmationClaimWire`
           // types `jkt` as a string, so aegis's OWN type system already forbids
@@ -2164,7 +2041,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a confirmation naming a member in the wrong vocabulary is refused, not written into the declared member's slot",
     rationale:
-      "RFC 7800 §3.1 requires a reader to ignore a confirmation member it does not understand, which is why aegis carries an undeclared member verbatim. A member it DOES understand, misspelled, is a different thing: `kid` and the domain `keyId` resolve to ONE key, so writing both into one bag lets whoever chose the order decide which binding the token states. Silence is the dangerous disposal — the caller sees the confirmation accepted, the token carries a value no grammar rule checked, and a verifier reads a binding nobody validated. The refusal must not depend on the declared member being present alongside it: a confirmation naming ONLY the misspelling has nothing to collide with, and that is precisely the case where the look-alike takes the declared member's slot uncontested.",
+      "Absent an application requirement of its own, an unrecognised confirmation member must be ignored rather than treated as an error, on either encoding (RFC 7800 §3.1, RFC 8747 §3.1). A member aegis DOES understand, misspelled, is a different thing: `kid` and the domain `keyId` resolve to ONE key, so writing both into one bag lets whoever chose the order decide which binding the token states. Silence is the dangerous disposal — the caller sees the confirmation accepted, the token carries a value no grammar rule checked, and a verifier reads a binding nobody validated. The refusal must not depend on the declared member being present alongside it: a confirmation naming ONLY the misspelling has nothing to collide with, and that is precisely the case where the look-alike takes the declared member's slot uncontested.",
     given: [
       {
         step: "token",
@@ -2181,8 +2058,8 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
           // built only from what ARRIVED passes such a row while leaving the
           // dangerous case — the misspelling alone, taking the declared slot
           // uncontested — wide open. ⚠ Deliberately the member BOTH wires carry
-          // (RFC 8747 §3.1 label 3), so the rule is stated on each rather than on
-          // JOSE alone.
+          // (RFC 7800 §3.4, RFC 8747 §3.1 label 3), so the rule is stated on each
+          // rather than on JOSE alone.
           confirmation: { kid: "k2" } as never,
         },
       },
@@ -2222,7 +2099,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a mint asked for a confirmation that names no key is refused rather than issuing a bearer token",
     rationale:
-      "RFC 7800 §3 — by including a `cnf` claim the issuer declares that the presenter possesses a particular key and that the recipient can cryptographically confirm it. A confirmation naming no key declares a possession nobody can confirm, so neither disposal of it is a token anyone asked for: dropping the claim hands the audience a BEARER token where the issuer asked for a bound one, and emitting it puts a binding on the wire that a conformant verifier must reject. The issuer is the one party that can still repair the request, so the refusal belongs at the mint.",
+      "By including a `cnf` claim the issuer declares that the presenter possesses a particular key, and that the recipient can cryptographically confirm it (RFC 7800 §3, RFC 8747 §3). A confirmation naming no key declares a possession nobody can confirm, so neither disposal of it is a token anyone asked for: dropping the claim hands the audience a BEARER token where the issuer asked for a bound one, and emitting it puts a binding on the wire that a conformant verifier must reject. The issuer is the one party that can still repair the request, so the refusal belongs at the mint.",
     given: [
       {
         step: "token",
@@ -2279,7 +2156,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "presenting a proof of possession with a token that carries no confirmation is refused",
     rationale:
-      "RFC 9449 §4.3 has the recipient confirm that the key the access token is bound to matches the key from the proof, so a token with no binding leaves the check with nothing on one side of the comparison. Accepting the presentation would mean a proof of possession of ANY key satisfied a token that committed to none — proof-of-possession semantics claimed for a bearer token, which is the confusion the confirmation claim exists to prevent. The presenter must be told the token is unbound rather than have the proof quietly ignored.",
+      "A proof-of-possession check compares the key the token is bound to against the key that made the proof (RFC 9449 §4.3), so a token with no binding leaves nothing on one side of the comparison. Accepting the presentation would mean a proof of possession of ANY key satisfied a token that committed to none — proof-of-possession semantics claimed for a bearer token, which is the confusion the confirmation claim exists to prevent. The presenter must be told the token is unbound rather than have the proof quietly ignored.",
     given: [
       {
         step: "token",
@@ -2312,7 +2189,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token carrying a confirmation is refused when the proof is made by a different key",
     rationale:
-      "RFC 9449 §4.3 states the check the whole mechanism rests on: 'confirm that the public key to which the access token is bound matches the public key from the DPoP proof'. A proof made by a key the token did not name is exactly what a thief presents — the stolen token plus a key they do hold — so a verifier that accepts one has kept the ceremony and lost the property. The proof being internally well-formed and correctly signed is not the question; whose key signed it is.",
+      "The check the whole mechanism rests on is that the key the access token is bound to is the key that made the proof (RFC 9449 §4.3). A proof made by a key the token did not name is exactly what a thief presents — the stolen token plus a key they do hold — so a verifier that accepts one has kept the ceremony and lost the property. The proof being internally well-formed and correctly signed is not the question; whose key signed it is.",
     given: [
       {
         step: "token",
@@ -2354,7 +2231,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token carrying a confirmation verifies when the presenter proves possession of the confirmed key",
     rationale:
-      "RFC 7800 §3 has the issuer declare that the presenter possesses a particular key and that the recipient can cryptographically confirm it, so the floor must be able to say YES and not only NO — a check that can only refuse leaves proof-of-possession unusable and deployments drop the confirmation instead. RFC 9449 §4.3 states the check: 'confirm that the public key to which the access token is bound matches the public key from the DPoP proof'. The proof's own claims must then reach the caller, because the resource server is what acts on them — §4.2 defines `jti` as the proof's unique identifier and `htm`/`htu` as the HTTP method and URI it commits to, and a verifier that swallowed them would leave single-use and request-binding checks with nothing to run on.",
+      "A confirmation is the issuer declaring that the presenter possesses a particular key and that the recipient can cryptographically confirm it (RFC 7800 §3), so the floor must be able to say YES and not only NO — a check that can only refuse leaves proof-of-possession unusable and deployments drop the confirmation instead. The check is that the key the token is bound to is the key that made the proof (RFC 9449 §4.3). The proof's own claims must then reach the caller, because the resource server is what acts on them: `jti`, `htm` and `htu` (RFC 9449 §4.2) are what a single-use check and a request-binding check run on, and a verifier that swallowed them would leave both with nothing.",
     given: [
       {
         step: "token",
@@ -2408,7 +2285,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token carrying a confirmation refuses a proof that commits to a different access token",
     rationale:
-      "RFC 9449 §4.2 defines `ath` as 'the result of a base64url encoding […] the SHA-256 […] hash of the ASCII encoding of the associated access token's value', and §4.3 has the verifier 'ensure that the value of the ath claim equals the hash of that access token'. The claim is what stops a proof from being reusable beyond the request it was made for: without it a proof observed against one token would authorise every other token the observer holds, and the possession check would establish possession of the key while establishing nothing about which token it was presented with.",
+      "`ath` commits a proof to ONE access token, and the verifier compares it against the token actually presented (RFC 9449 §4.2, RFC 9449 §4.3). The claim is what stops a proof from being reusable beyond the request it was made for: without it a proof observed against one token would authorise every other token the observer holds, and the possession check would establish possession of the key while establishing nothing about which token it was presented with.",
     given: [
       {
         step: "token",
@@ -2451,7 +2328,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token carrying a confirmation refuses a proof made by a key other than the one it names",
     rationale:
-      "RFC 9449 §4.3 has the verifier 'confirm that the public key to which the access token is bound matches the public key from the DPoP proof'. A proof carries its own public key in its header, so a verifier that checked only that the proof was internally consistent would accept one that any holder of the token could mint for themselves, and the binding would assert nothing at all.",
+      "The verifier confirms that the key the access token is bound to is the key that made the proof (RFC 9449 §4.3). A proof carries its own public key in its header, so a verifier that checked only that the proof was internally consistent would accept one that any holder of the token could mint for themselves, and the binding would assert nothing at all.",
     given: [
       {
         step: "token",
@@ -2499,10 +2376,11 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     rationale:
       "A claim is sensitive because of WHAT IT IS, not because of which container the caller happened to put it in. A national identity number on a cleartext wire is disclosed to every intermediary that handles the token and to anything that logs it, and the disclosure is irreversible. The confidentiality decision must therefore key off the claim registry's category, so that no input shape can route a sensitive value around it.",
     given: [
-      // BOTH recipient keys: JOSE seals with the ECDH-ES key, and COSE_Encrypt0
-      // is DIRECT encryption (RFC 9052 §5.2) — the recipient key IS the content
-      // encryption key — so an agreement key has no form on that wire and the
-      // COSE run needs the symmetric one.
+      // BOTH recipient keys: JOSE seals with the ECDH-ES key, while a
+      // COSE_Encrypt0 names no recipient and runs no recipient algorithm
+      // (RFC 9052 §5.2), so aegis seals it with a symmetric key known out of band
+      // — an agreement key has no form on that wire and the COSE run needs the
+      // symmetric one.
       { step: "keys", keys: ["ec-enc", "oct-enc"] },
       {
         step: "token",
@@ -2645,10 +2523,11 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     rationale:
       "Confidentiality of a sensitive claim is delivered by SEALING the token, not by omitting the claim — the audience still needs the value. So an encryptable profile handed a sensitive container must produce an encrypted artifact, and that is what makes encryption an available outcome for the profile at all.",
     given: [
-      // BOTH recipient keys: JOSE seals with the ECDH-ES key, and COSE_Encrypt0
-      // is DIRECT encryption (RFC 9052 §5.2) — the recipient key IS the content
-      // encryption key — so an agreement key has no form on that wire and the
-      // COSE run needs the symmetric one.
+      // BOTH recipient keys: JOSE seals with the ECDH-ES key, while a
+      // COSE_Encrypt0 names no recipient and runs no recipient algorithm
+      // (RFC 9052 §5.2), so aegis seals it with a symmetric key known out of band
+      // — an agreement key has no form on that wire and the COSE run needs the
+      // symmetric one.
       { step: "keys", keys: ["ec-enc", "oct-enc"] },
       {
         step: "token",
@@ -2682,7 +2561,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a foreign token whose crit names a parameter the specification itself defines is refused at verify",
     rationale:
-      'RFC 7515 §4.1.11 forbids the producer this shape and, in the same section, licenses the recipient to act on it: "Recipients MAY consider the JWS to be invalid if the critical list contains any Header Parameter names defined by this specification or [JWA] for use with JWS." aegis takes that MAY, and the reason is that a `crit` naming a spec-defined parameter is not a harmless redundancy — it is a producer asserting that the parameter carries meaning beyond what the specification gives it, which is precisely a meaning no recipient can look up. Accepting the token would mean processing it under the ordinary reading the producer just said was insufficient. The refusal must hold on BOTH encodings, because an enforcement present on one wire and absent on the other means the same token is refused or accepted by the presenter\'s choice of encoding, which is a choice an attacker makes. The sibling MINT row states the producer half; this is the recipient half, and only a FOREIGN producer can put it on the wire.',
+      "A producer may not name a specification-defined parameter in `crit`, and a recipient may treat a token that does as invalid (RFC 7515 §4.1.11). aegis takes the recipient option, at verify as at the mint. It is not a harmless redundancy — it is a producer asserting that the parameter carries meaning beyond what the specification gives it, which is precisely a meaning no recipient can look up. Accepting the token would mean processing it under the ordinary reading the producer just said was insufficient. The refusal must hold on BOTH encodings, because an enforcement present on one wire and absent on the other means the same token is refused or accepted by the presenter's choice of encoding, which is a choice an attacker makes. The sibling MINT row states the producer half; this is the recipient half, and only a FOREIGN producer can put it on the wire.",
     given: [
       {
         step: "token",
@@ -2768,7 +2647,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     then: [
       { step: "accepts" },
       // CARRIED — in its own bag, keyed as the issuer wrote it. On COSE that is
-      // the tstr label RFC 9052 §1.4 admits, which is the same spelling.
+      // the tstr label (RFC 9052 §1.5), which is the same spelling.
       {
         step: "customHeader",
         bucket: "protected",
@@ -2808,7 +2687,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a COSE text label spelled like a registered parameter does not override the signed one",
     rationale:
-      "RFC 9052 §1.4 defines a COSE label as `int / tstr`, so the integer 1 and the text \"alg\" are DIFFERENT labels naming different things — but a reader that reports unregistered labels under their stringified form puts the text one in the same name-space as the registered one's JOSE spelling. Where both are present the reader must resolve to the parameter the ISSUER's integer label carries, because that is the one the signature covers and the one every conformant implementation reads. Resolving the other way lets any holder append a text label and restate `alg`, or `crit`, on a token they cannot re-sign — and the keyless read checks no signature at all, so RFC 9052 §3.1's fatal-error rule would be satisfiable by a `crit` the issuer never wrote. The unregistered value is still CARRIED, because a reader may not silently discard what a producer wrote; what it may not do is let it answer for a registered name.",
+      "The integer 1 and the text \"alg\" are DIFFERENT COSE labels naming different things (RFC 9052 §1.5) — but a reader that reports unregistered labels under their stringified form puts the text one in the same name-space as the registered one's JOSE spelling. Where both are present the reader must resolve to the parameter the ISSUER's integer label carries, because that is the one the signature covers and the one every conformant implementation reads. Resolving the other way lets any holder append a text label and restate `alg`, or `crit`, on a token they cannot re-sign — and the keyless read checks no signature at all, so a `crit` the issuer never wrote could satisfy the crit gate the reader runs (RFC 9052 §3.1). The unregistered value is still CARRIED, because a reader may not silently discard what a producer wrote; what it may not do is let it answer for a registered name.",
     given: [
       {
         step: "token",
@@ -2823,7 +2702,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         },
         // ⭐ THE SHAPE IS CHOSEN SO THE VERDICT DEPENDS ON WHICH `crit` ANSWERS.
         // The genuine one rides integer label 2 and names `oid` — which the header
-        // does NOT carry, so RFC 9052 §3.1 makes it fatally malformed. The
+        // does NOT carry, which makes it fatally malformed (RFC 9052 §3.1). The
         // impostor rides the TEXT label and names a parameter that IS present.
         // Read the registered form and the token is refused; read the impostor and
         // it sails through, which is the whole attack: a holder who cannot re-sign
@@ -2844,7 +2723,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       },
     ],
     unsupported: {
-      jose: "a JOSE header is a JSON object with ONE name-space, so a parameter cannot be spelled twice — the collision this row is about exists only where RFC 9052 §1.4 admits two label FORMS for one parameter",
+      jose: "a JOSE header is a JSON object with ONE name-space, so a parameter cannot be spelled twice — the collision this row is about exists only where two label FORMS name one parameter (RFC 9052 §1.5)",
     },
   },
   {
@@ -2852,7 +2731,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "the crit a refusal reports is the one the reader actually judged, not the typed bag beside it",
     rationale:
-      'A refusal is only actionable if its data describes the thing refused. The read side SPLITS one header the producer wrote into a typed bag and a bag of parameters no registry row answers for, and a `crit` can arrive in either — RFC 9052 §1.4 makes the integer label 2 and the text "crit" different labels, so a token carrying only the text one has an empty typed `crit`. A verdict decided on the merged header and reported off the typed bag hands the caller `crit: undefined` for a token that was refused precisely because of its `crit`, while the message names the offending member: the two halves of one refusal contradict each other and a consumer branching on `data` concludes there was no crit at all. Every door that judges a `crit` must therefore report the same value it judged.',
+      'A refusal is only actionable if its data describes the thing refused. The read side SPLITS one header the producer wrote into a typed bag and a bag of parameters no registry row answers for, and a `crit` can arrive in either — the integer label 2 and the text "crit" are different labels (RFC 9052 §1.5), so a token carrying only the text one has an empty typed `crit`. A verdict decided on the merged header and reported off the typed bag hands the caller `crit: undefined` for a token that was refused precisely because of its `crit`, while the message names the offending member: the two halves of one refusal contradict each other and a consumer branching on `data` concludes there was no crit at all. Every door that judges a `crit` must therefore report the same value it judged.',
     given: [
       {
         step: "token",
@@ -2884,14 +2763,14 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       },
     ],
     unsupported: {
-      jose: "RFC 7515 §4 gives a JOSE header one JSON name-space, so `crit` always resolves to the typed bag and the two spellings this row separates cannot come apart",
+      jose: "a JOSE header has ONE JSON name-space (RFC 7515 §4), so `crit` always resolves to the typed bag and the two spellings this row separates cannot come apart",
     },
   },
   {
     id: "the-keyless-read-accepts-every-token-the-mint-produces",
     title: "a token this library signs can be read back by its own keyless reader",
     rationale:
-      '`parse` and `verify` are two doors onto the same bytes, and a producer chooses between them by whether it holds a key — never by what the token says. So a token the mint emits must satisfy BOTH, and a rule enforced at one door and not the other is not a policy but an accident of which door a caller happened to use. The shape that exposes it is a `crit` naming a parameter the header carries: both readers must locate that parameter to decide the token is well-formed, and they look in different places — `verify` reads the registered bag beside the unregistered one, while a reader that consulted only the registered bag would conclude the token names a parameter it does not carry and refuse what this library had just signed. RFC 9052 §3.1 makes that conclusion FATAL ("this is a fatal error in processing the message"), so the disagreement is not cosmetic: one door calls the token invalid and the other verifies it.',
+      "`parse` and `verify` are two doors onto the same bytes, and a producer chooses between them by whether it holds a key — never by what the token says. So a token the mint emits must satisfy BOTH, and a rule enforced at one door and not the other is not a policy but an accident of which door a caller happened to use. The shape that exposes it is a `crit` naming a parameter the header carries: both readers must locate that parameter to decide the token is well-formed, and they look in different places — `verify` reads the registered bag beside the unregistered one, while a reader that consulted only the registered bag would conclude the token names a parameter it does not carry and refuse what this library had just signed. That conclusion is fatal rather than cosmetic (RFC 9052 §3.1): one door calls the token invalid and the other verifies it.",
     given: [
       {
         step: "token",
@@ -2925,7 +2804,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a critical UNREGISTERED header parameter round-trips: minted, and accepted at verify by a caller that declares it",
     rationale:
-      "RFC 7515 §4.1.11 forbids `crit` to name parameters the specification defines — \"Producers MUST NOT include Header Parameter names defined by this specification or [JWA] for use with JWS […] in the 'crit' list\" — which leaves an issuer's OWN extension as precisely what the parameter is for. A library that would mint such a token and then refuse it from every caller would be two disagreeing implementations: the same bytes valid when written and invalid when read. The same section puts the duty to UNDERSTAND the extension on the RECIPIENT, and a verification library is never the final recipient — it verifies on an application's behalf — so the round trip closes only when the caller states that it takes the parameter on. The two gates ask DIFFERENT questions and that is the point: the producer's is whether it may name the member at all, which a parameter it writes itself answers, while the recipient's is whether the application behind the verifier has claimed it. \"A token this library mints is a token it verifies\" therefore holds CONDITIONALLY, and the declaration this row supplies is the condition.",
+      "`crit` may not name parameters the specification itself defines (RFC 7515 §4.1.11), which leaves an issuer's OWN extension as precisely what the parameter is for. A library that would mint such a token and then refuse it from every caller would be two disagreeing implementations: the same bytes valid when written and invalid when read. The duty to UNDERSTAND the extension belongs to the RECIPIENT, and a verification library is never the final recipient — it verifies on an application's behalf — so the round trip closes only when the caller states that it takes the parameter on. The two gates ask DIFFERENT questions and that is the point: the producer's is whether it may name the member at all, which a parameter it writes itself answers, while the recipient's is whether the application behind the verifier has claimed it. \"A token this library mints is a token it verifies\" therefore holds CONDITIONALLY, and the declaration this row supplies is the condition.",
     given: [
       {
         step: "token",
@@ -2952,8 +2831,8 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       // member as its own tstr label).
       //
       // ⚠ The PARAMETER is spelled identically on both wires; `crit` is not — it
-      // is a REGISTERED parameter, so COSE keys it by its integer label 2 (RFC
-      // 9052 §3.1 Table 3) while JOSE uses the name. The raw-bytes steps compare
+      // is a REGISTERED parameter, so COSE keys it by its integer label 2
+      // (RFC 9052 §3.1) while JOSE uses the name. The raw-bytes steps compare
       // in each wire's own vocabulary, so the two halves are stated per wire.
       {
         step: "wireProtectedHeader",
@@ -2976,7 +2855,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token marking a custom header parameter critical is refused from a verifier that has not claimed it",
     rationale:
-      'RFC 7515 §4.1.11 states the consequence outright — "If any of the listed extension Header Parameters are not understood and supported by the recipient, then the JWS is invalid" — and RFC 9052 §3.1 gives COSE the same duty, `crit` naming "which protected header parameters an application that is processing a message is required to understand". The duty belongs to the RECIPIENT, and a verification library is never the final recipient: it verifies on an application\'s behalf and cannot know what that application implements. Carriage answers a different question — a producer supplying a parameter says nothing about whether the reader understands it — so accepting on carriage alone leaves the duty unenforced for every extension a specification does not define, which is the whole set `crit` exists for. Refusing until the parameter is claimed is the only reading under which the requirement means anything, and it fails closed: a verifier that says nothing gets the strict answer.',
+      "A listed extension header parameter the recipient does not understand invalidates the token on JOSE (RFC 7515 §4.1.11). ⚠ The same refusal on COSE is AEGIS POLICY, not a citation: RFC 9052 §3.1 attaches no such consequence. The duty belongs to the RECIPIENT, and a verification library is never the final recipient: it verifies on an application's behalf and cannot know what that application implements. Carriage answers a different question — a producer supplying a parameter says nothing about whether the reader understands it — so accepting on carriage alone leaves the duty unenforced for every extension a specification does not define, which is the whole set `crit` exists for. Refusing until the parameter is claimed is the only reading under which the requirement means anything, and it fails closed: a verifier that says nothing gets the strict answer.",
     given: [
       {
         step: "token",
@@ -3018,7 +2897,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "declaring a critical parameter does not make a token that omits it verifiable",
     rationale:
-      'RFC 9052 §3.1 makes the omission fatal in its own words — "If the \'crit\' value list includes a label for which the header parameter is not in the protected-header-parameters bucket, this is a fatal error in processing the message" — and RFC 7515 §4.1.11 forbids a producer listing "names that do not occur as Header Parameter names within the JOSE Header". The declaration and the presence rule answer different questions: one says the recipient will act on the parameter, the other says the issuer actually stated it. A declaration that waived presence would let a verifier turn a malformed token into a valid one by naming the missing parameter, which is the verifier deciding what the issuer wrote.',
+      "A `crit` naming a parameter the protected header does not carry is a fatal processing error on COSE (RFC 9052 §3.1); on JOSE a producer may not write one and a recipient may treat a token that does as invalid (RFC 7515 §4.1.11), and aegis takes that recipient option. The declaration and the presence rule answer different questions: one says the recipient will act on the parameter, the other says the issuer actually stated it. A declaration that waived presence would let a verifier turn a malformed token into a valid one by naming the missing parameter, which is the verifier deciding what the issuer wrote.",
     given: [
       {
         step: "token",
@@ -3047,7 +2926,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a verifier cannot take responsibility for a critical parameter the specification itself defines",
     rationale:
-      "RFC 7515 §4.1.11 forbids the shape to producers outright — \"Producers MUST NOT include Header Parameter names defined by this specification or [JWA] for use with JWS […] in the 'crit' list\" — so there is no conformant token for a recipient to accept. The declaration transfers the duty to UNDERSTAND an extension; it is not a waiver of the rules about what may be named, and reading it as one would let any verifier opt back into the exact shape the specification prohibits. A parameter the specification defines already has a meaning every recipient can look up, so marking it critical asserts a meaning beyond that one — which is precisely what no recipient can obtain, declaration or not.",
+      "A producer may not name a specification-defined parameter in `crit` (RFC 7515 §4.1.11), so there is no conformant token for a recipient to accept. The declaration transfers the duty to UNDERSTAND an extension; it is not a waiver of the rules about what may be named, and reading it as one would let any verifier opt back into the exact shape the specification prohibits. A parameter the specification defines already has a meaning every recipient can look up, so marking it critical asserts a meaning beyond that one — which is precisely what no recipient can obtain, declaration or not.",
     given: [
       {
         step: "token",
@@ -3070,7 +2949,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "declaring a critical parameter does not admit one that rides the unsigned COSE bucket",
     rationale:
-      "RFC 9052 §3.1 requires every critical parameter to be integrity-protected — \"If the 'crit' value list includes a label for which the header parameter is not in the protected-header-parameters bucket, this is a fatal error in processing the message\" — because a parameter the signature does not cover is one any holder in the path could have written. A recipient declaring that it will act on the parameter makes that worse rather than better: it is now committed to honouring a value an intermediary chose. So the bucket rule is prior to the declaration, and the reader consults the protected bucket alone when deciding whether the header carries what its `crit` names.",
+      "Every critical parameter must be integrity-protected (RFC 9052 §3.1), because a parameter the signature does not cover is one any holder in the path could have written. A recipient declaring that it will act on the parameter makes that worse rather than better: it is now committed to honouring a value an intermediary chose. So the bucket rule is prior to the declaration, and the reader consults the protected bucket alone when deciding whether the header carries what its `crit` names.",
     given: [
       {
         step: "token",
@@ -3085,7 +2964,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     when: [{ step: "verify", options: { critical: ["x-lindorm-hint"] } }],
     then: [{ step: "rejects", error: "CwtError", code: "cwt_invalid_crit" }],
     unsupported: {
-      jose: "RFC 7515 §7.1 gives the JOSE compact serialisation ONE header, and it is protected — there is no unsigned bucket for a parameter to ride",
+      jose: "the JOSE compact serialisation has ONE header and it is protected (RFC 7515 §7.1) — there is no unsigned bucket for a parameter to ride",
     },
   },
   {
@@ -3093,7 +2972,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "the raw wire verify door takes the same critical-parameter declaration the domain door does",
     rationale:
-      "A caller reaches the same rule through two doors — the domain verb and the raw wire namespace — and a declaration honoured at one and dropped at the other is invisible: the caller states it, sees no error, and the token is refused anyway. RFC 7515 §4.1.11 puts the duty on the recipient rather than on a tier, so which door an application happens to use cannot decide whether it is allowed to claim an extension. One meaning, both tiers.",
+      "A caller reaches the same rule through two doors — the domain verb and the raw wire namespace — and a declaration honoured at one and dropped at the other is invisible: the caller states it, sees no error, and the token is refused anyway. The duty sits with the recipient rather than with a tier (RFC 7515 §4.1.11), so which door an application happens to use cannot decide whether it is allowed to claim an extension. One meaning, both tiers.",
     given: [
       {
         step: "token",
@@ -3116,7 +2995,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "the opaque wire verify door takes the critical-parameter declaration for a signature over arbitrary octets",
     rationale:
-      "RFC 7515 §1 secures 'an arbitrary sequence of octets', and RFC 7515 §4.1.11 attaches the duty to understand a critical extension to the RECIPIENT — neither sentence is about the payload being a claim set, so an opaque signature carries the same header rule a claims token does. The opaque SIGNING door can write a critical custom header parameter, so a matching verify door that cannot be told about one would make the library refuse its own output on that surface alone; the only escape would be to re-issue the artifact through a claims door, which changes what the token IS rather than what the recipient understands. A declaration has to be statable wherever the shape is producible.",
+      "An opaque signature carries the same critical-parameter rule a claims token does: neither the signature's reach nor the recipient's duty turns on the payload being a claim set (RFC 7515 §1, RFC 7515 §4.1.11). The opaque SIGNING door can write a critical custom header parameter, so a matching verify door that cannot be told about one would make the library refuse its own output on that surface alone; the only escape would be to re-issue the artifact through a claims door, which changes what the token IS rather than what the recipient understands. A declaration has to be statable wherever the shape is producible.",
     given: [
       {
         step: "token",
@@ -3138,7 +3017,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       // for any caller. The declaration is only worth stating at this door if the
       // door writes the shape that needs it. Same spellings as the twin: the
       // parameter under its own key on both encodings, `crit` by name on JOSE and
-      // by its integer label 2 on COSE (RFC 9052 §3.1 Table 3).
+      // by its integer label 2 on COSE (RFC 9052 §3.1).
       { step: "wireProtectedHeader", includes: { "x-lindorm-hint": "carried" } },
       {
         step: "wireProtectedHeader",
@@ -3153,7 +3032,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "an encrypting outer marking a custom header parameter critical is read only by a caller that declares it",
     rationale:
-      "An encrypting outer carries a header exactly as a signed one does, and RFC 7516 §4.1.13 registers `crit` for a JWE with the same meaning RFC 7515 §4.1.11 gives it — the recipient must understand the listed extensions. A library whose sealing door can WRITE a critical custom parameter and whose opening door cannot be told about one refuses the tokens it produces itself, so the declaration has to reach the decrypt door and not the verify door alone. It is the same rule, on the surface where confidentiality rather than authenticity is the point.",
+      "An encrypting outer carries a header exactly as a signed one does, and `crit` means the same thing on a JWE as on a JWS (RFC 7516 §4.1.13, RFC 7515 §4.1.11). A library whose sealing door can WRITE a critical custom parameter and whose opening door cannot be told about one refuses the tokens it produces itself, so the declaration has to reach the decrypt door and not the verify door alone. It is the same rule, on the surface where confidentiality rather than authenticity is the point.",
     given: [
       { step: "keys", keys: ["ec-enc", "oct-enc"] },
       {
@@ -3175,7 +3054,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a refusal of a critical-parameter list names the parameter the library cannot honour",
     rationale:
-      "RFC 7515 §4.1.11 lets a producer mark SEVERAL parameters critical at once — \"the 'crit' (critical) Header Parameter indicates that extensions to this specification and/or [JWA] are being used that MUST be understood and processed\" — and only some of them may be nameable there. The refusal returned is the only part of the verdict a caller can act on, so it has to name the parameter actually objected to rather than whichever happens to be listed first. Naming the first member instead tells the caller to remove a parameter that was perfectly legal while leaving the forbidden one in place: the next call is refused for the same reason, and the diagnosis has cost a round trip while pointing away from the defect. It is the same property that makes any refusal worth returning — a message that misidentifies its cause is worse than a bare rejection, because it is acted upon.",
+      "A producer may mark SEVERAL parameters critical at once (RFC 7515 §4.1.11), and only some of them may be nameable there. The refusal returned is the only part of the verdict a caller can act on, so it has to name the parameter actually objected to rather than whichever happens to be listed first. Naming the first member instead tells the caller to remove a parameter that was perfectly legal while leaving the forbidden one in place: the next call is refused for the same reason, and the diagnosis has cost a round trip while pointing away from the defect. It is the same property that makes any refusal worth returning — a message that misidentifies its cause is worse than a bare rejection, because it is acted upon.",
     given: [
       {
         step: "token",
@@ -3184,9 +3063,9 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         claims: { iss: ISSUER, sub: "user-1", exp: NOW + 3600 },
         // `oid` is listed FIRST deliberately: it is the member aegis permits — a
         // critical extension it implements — so a refusal naming it would be
-        // naming the wrong one. `alg` is the member RFC 7515 §4.1.11 forbids
-        // outright ("Header Parameter names defined by this specification"), and
-        // it is the one the verdict must name.
+        // naming the wrong one. `alg` is a specification-defined name and so
+        // forbidden outright (RFC 7515 §4.1.11); it is the one the verdict must
+        // name.
         options: { header: { crit: ["oid", "alg"], oid: "1.2.3.4" } },
       },
     ],
@@ -3216,7 +3095,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token marking a header parameter the library implements critical is minted, and verified by a caller that declares it",
     rationale:
-      "RFC 7515 §4.1.11 gives a producer one way to say that a recipient MUST understand a header parameter before acting on the token — \"the 'crit' (critical) Header Parameter indicates that extensions to this specification and/or [JWA] are being used that MUST be understood and processed\" — and RFC 9052 §3.1 gives COSE the same one. Both are worthless to a library that refuses every such token, INCLUDING ITS OWN OUTPUT: a producer and a verifier running the same library must agree, or the library mints tokens it will not read back and the mechanism cannot be used at all. So a parameter the library implements as an extension is one it can be told to insist on, and one it honours the insistence about — which means carrying the parameter through to the verified header, where the application can act on it. The parameter has to be one no specification already defines, because RFC 7515 §4.1.11 forbids `crit` naming those outright; `oid` is the only such parameter this library owns.",
+      "`crit` is a producer's one way to say that a recipient is required to understand a header parameter, on either wire (RFC 7515 §4.1.11, RFC 9052 §3.1). Both are worthless to a library that refuses every such token, INCLUDING ITS OWN OUTPUT: a producer and a verifier running the same library must agree, or the library mints tokens it will not read back and the mechanism cannot be used at all. So a parameter the library implements as an extension is one it can be told to insist on, and one it honours the insistence about — which means carrying the parameter through to the verified header, where the application can act on it. The parameter has to be one no specification already defines, because `crit` may not name those (RFC 7515 §4.1.11); `oid` is the only such parameter this library owns.",
     given: [
       {
         step: "token",
@@ -3244,9 +3123,9 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
       // Reported in DOMAIN vocabulary, which is the round trip: the member is
       // written as the wire name `oid`, travels as the label its own wire keys
-      // the parameter under (RFC 9052 §1.5 — an integer or a text label on COSE),
-      // and comes back as `objectId` beside the value it names. An application
-      // told to understand the parameter can only do so if it is handed it.
+      // the parameter under (RFC 9052 §1.5), and comes back as `objectId` beside
+      // the value it names. An application told to understand the parameter can
+      // only do so if it is handed it.
       {
         step: "header",
         expected: { critical: ["objectId"], objectId: "1.2.3.4" },
@@ -3258,7 +3137,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token marking the library's own extension critical is refused from a verifier that has not claimed it",
     rationale:
-      "RFC 7515 §4.1.11 makes a JWS invalid when a listed extension header parameter is \"not understood and supported by the recipient\", and RFC 9052 §3.1 gives COSE the same duty. THE RECIPIENT is the party named, and a verification library is not it — it verifies on an application's behalf and cannot know what that application implements. That a library REGISTERS a parameter, translates it and reports it says only that the library can carry the value; it says nothing about whether the application receiving that value can act on it. So a registered extension is on exactly the same footing as an issuer's own: both are refused until the caller states that it takes the parameter on. An exception for the library's own parameter would be the one case where the duty is discharged by the party that cannot discharge it.",
+      "A token is invalid when a listed extension header parameter is not understood and supported by the recipient, on JOSE (RFC 7515 §4.1.11). ⚠ The same refusal on COSE is AEGIS POLICY, not a citation: RFC 9052 §3.1 attaches no such consequence. THE RECIPIENT is the party named, and a verification library is not it — it verifies on an application's behalf and cannot know what that application implements. That a library REGISTERS a parameter, translates it and reports it says only that the library can carry the value; it says nothing about whether the application receiving that value can act on it. So a registered extension is on exactly the same footing as an issuer's own: both are refused until the caller states that it takes the parameter on. An exception for the library's own parameter would be the one case where the duty is discharged by the party that cannot discharge it.",
     given: [
       {
         step: "token",
@@ -3337,7 +3216,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a mint refuses a critical-parameter list naming a parameter the specification itself defines",
     rationale:
-      'RFC 7515 §4.1.11 forbids it in as many words: "Producers MUST NOT include Header Parameter names defined by this specification or [JWA] for use with JWS, duplicate names, or names that do not occur as Header Parameter names within the JOSE Header in the \\"crit\\" list." The prohibition earns itself — such a `crit` adds no information, because every implementation already understands the parameter, and it costs conformance, because the same section lets a recipient treat the token as invalid for carrying one ("Recipients MAY consider the JWS to be invalid if the critical list contains any Header Parameter names defined by this specification or [JWA] for use with JWS or if any other constraints on its use are violated"). The producer is therefore strictly worse off than if it had said nothing. RFC 9052 §3.1 reaches the same place from the other side, advising that "Integer labels in the range of 0 to 7 SHOULD be omitted" — those are the labels an implementation must already handle to be an implementation at all. The refusal belongs at the WRITE, which is the last point at which the producer can still choose differently.',
+      "A producer may not name a specification-defined parameter in `crit`, and a recipient may treat a token that does as invalid (RFC 7515 §4.1.11). The prohibition earns itself — such a `crit` adds no information, because every implementation already understands the parameter, and it costs conformance. The producer is therefore strictly worse off than if it had said nothing. ⚠ Holding COSE to the same refusal is AEGIS POLICY: RFC 9052 §3.1 puts the low integer labels an implementation already handles under a SHOULD-omit rather than a prohibition. The refusal belongs at the WRITE, which is the last point at which the producer can still choose differently.",
     given: [
       {
         step: "token",
@@ -3366,7 +3245,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "a-header-parameter-cannot-be-marked-critical-twice",
     title: "a mint refuses a critical-parameter list that names the same parameter twice",
     rationale:
-      'RFC 7515 §4.1.11 forbids it in the same sentence as the specification-defined names: "Producers MUST NOT include Header Parameter names defined by this specification or [JWA] for use with JWS, duplicate names, or names that do not occur as Header Parameter names within the JOSE Header in the \\"crit\\" list." The prohibition earns itself, because a repeat states nothing the first mention did not: `crit` lists the parameters a recipient must understand, and a recipient that understands a parameter understands it once. What the repeat DOES cost is conformance — the token is malformed for every recipient that applies the rule, including the ones that would otherwise have honoured the extension, so the producer is strictly worse off than if it had said nothing. The refusal belongs at the WRITE, which is the last point at which the producer can still choose differently; by the time a recipient sees it, the only choice left is whether to reject.',
+      "A producer may not repeat a name in `crit` (RFC 7515 §4.1.11). The prohibition earns itself, because a repeat states nothing the first mention did not: `crit` lists the parameters a recipient must understand, and a recipient that understands a parameter understands it once. What the repeat DOES cost is conformance — the token is malformed for every recipient that applies the rule, including the ones that would otherwise have honoured the extension, so the producer is strictly worse off than if it had said nothing. The refusal belongs at the WRITE, which is the last point at which the producer can still choose differently; by the time a recipient sees it, the only choice left is whether to reject.",
     given: [
       {
         step: "token",
@@ -3388,10 +3267,10 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         options: { header: { crit: ["oid", "oid"], oid: "1.2.3.4" } },
       },
     ],
-    // MINT is the act: RFC 7515 §4.1.11 addresses this prohibition to PRODUCERS,
-    // and its recipient sentence is a MAY rather than a MUST — so the refusal
-    // aegis owes is at the write, and a foreign token carrying a duplicate is
-    // deliberately still accepted.
+    // MINT is the act: a producer may not repeat a name while a recipient may
+    // accept one anyway (RFC 7515 §4.1.11) — so the refusal aegis owes is at the
+    // write, and a foreign token carrying a duplicate is deliberately still
+    // accepted.
     when: [{ step: "mint" }],
     // ⚠ ONE VERDICT ON BOTH WIRES. The gate runs on the caller's wire-named bag
     // upstream of either wire's label translation, so nothing about the encoding
@@ -3412,7 +3291,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a wire-named door refuses a critical-parameter list written in domain vocabulary",
     rationale:
-      "A door takes ONE vocabulary. The wire doors take wire parameter names — that is what makes `aegis.jws.sign` and `aegis.cws.sign` the same call in two encodings — and a `crit` member is a parameter name like any other. A door that quietly accepted the domain spelling in that one position would resolve the same call two ways depending on the encoding: RFC 9052 §1.5 makes a COSE `crit` member a LABEL, the very label its parameter is keyed under, so a member the JOSE door silently translated for the caller has no counterpart on the COSE wire and the identical call mints on one encoding and fails on the other. That is a difference a presenter chooses rather than the deployment. The domain door is where a domain name is translated, and it translates this one already — so nothing is lost by holding the wire door to its own vocabulary.",
+      "A door takes ONE vocabulary. The wire doors take wire parameter names — that is what makes `aegis.jws.sign` and `aegis.cws.sign` the same call in two encodings — and a `crit` member is a parameter name like any other. A door that quietly accepted the domain spelling in that one position would resolve the same call two ways depending on the encoding: a COSE `crit` member is a LABEL, the very label its parameter is keyed under (RFC 9052 §3.1, RFC 9052 §1.5), so a member the JOSE door silently translated for the caller has no counterpart on the COSE wire and the identical call mints on one encoding and fails on the other. That is a difference a presenter chooses rather than the deployment. The domain door is where a domain name is translated, and it translates this one already — so nothing is lost by holding the wire door to its own vocabulary.",
     given: [
       {
         step: "token",
@@ -3440,7 +3319,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "the-domain-door-marks-a-parameter-critical-in-domain-vocabulary",
     title: "a domain-named mint marks a parameter critical using the domain name for it",
     rationale:
-      "The domain tier is the surface a caller reaches when it does not want to know which encoding the token ends up in, so every value it takes is stated in aegis vocabulary — including a `crit` member, which is a parameter name and must therefore be spelled the way the same bag spells its keys. The crossing translates both together, so the member and the parameter it names can never disagree; a tier that translated the keys and not the members would emit a `crit` naming a parameter the token does not carry, which RFC 7515 §4.1.11 and RFC 9052 §3.1 both make fatal for every recipient.",
+      "The domain tier is the surface a caller reaches when it does not want to know which encoding the token ends up in, so every value it takes is stated in aegis vocabulary — including a `crit` member, which is a parameter name and must therefore be spelled the way the same bag spells its keys. The crossing translates both together, so the member and the parameter it names can never disagree; a tier that translated the keys and not the members would emit a `crit` naming a parameter the token does not carry — a fatal processing error on COSE (RFC 9052 §3.1), and on JOSE a header a producer may not write and a recipient may treat as invalid (RFC 7515 §4.1.11).",
     given: [
       {
         step: "token",
@@ -3481,7 +3360,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token with no exp is refused by the profile floor even when it carries a custom expires_at claim",
     rationale:
-      "RFC 7519 §4.1.4 and RFC 8392 §3.1.4 — expiry is stated by the registered `exp` claim and by nothing else. A presence check that an unregistered claim can satisfy merely by resembling the registered one lets a producer hand out a token with no enforceable lifetime, which the verifier then honours indefinitely.",
+      "Expiry is stated by the registered `exp` claim and by nothing else (RFC 7519 §4.1.4, RFC 8392 §3.1.4). A presence check that an unregistered claim can satisfy merely by resembling the registered one lets a producer hand out a token with no enforceable lifetime, which the verifier then honours indefinitely.",
     given: [
       {
         step: "token",
@@ -3506,7 +3385,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "an-access-token-with-no-expiry-is-refused",
     title: "an access token carrying no expiry claim is refused",
     rationale:
-      "RFC 8392 §3.1.4 defines the CWT `exp` claim, and the aegis access-token floor requires it to be PRESENT: a token that states no lifetime never expires, so a verifier has to refuse it outright rather than supply a default the issuer never authorised. ⚠ The presence requirement is AEGIS POLICY here, not a citation. RFC 9068 §2.2 makes `exp` REQUIRED but governs the JWT ENCODING only — it is the JWT profile for OAuth 2.0 access tokens and its §2.1 mandates `typ: at+jwt` — and no RFC-level CWT access-token profile makes `exp` required at all: RFC 8392 §3 inherits RFC 7519's wording that use of the claim is OPTIONAL. The policy is deliberately encoding-independent, because a lifetime a verifier cannot enforce is the same hazard on either wire; the JOSE profile is what it is modelled on.",
+      "The aegis access-token floor requires `exp` to be PRESENT: a token that states no lifetime never expires, so a verifier has to refuse it outright rather than supply a default the issuer never authorised. `exp` is REQUIRED in a JWT access token, and the same claim rides the COSE wire (RFC 9068 §2.2, RFC 8392 §3.1.4). ⚠ Requiring it on the COSE encoding is AEGIS POLICY, not a citation: RFC 8392 §3.1 mandates no claim. A lifetime a verifier cannot enforce is the same hazard on either wire.",
     given: [
       {
         step: "token",
@@ -3584,7 +3463,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "minting an id_token without stating whether an access token was co-issued is refused",
     rationale:
-      'OIDC Core makes `at_hash` REQUIRED exactly where an access token is co-issued from the authorization endpoint \u2014 \u00a73.2.2.10 for the implicit flow and \u00a73.3.2.11 for the hybrid flow both read "If the ID Token is issued from the Authorization Endpoint with an access_token value \u2026 this is REQUIRED". (\u00a73.1.3.6, which defines the claim, marks it OPTIONAL; the requirement lives with the flows.) aegis applies the same rule wherever an access token co-issues. Whether one did is a fact only the issuer holds \u2014 it is not in the claims, and nothing about the token distinguishes "no access token was issued" from "the issuer forgot to say". Treating the unstated case as `false` therefore silently issues the exact token the rule exists to prevent, so the fact must be supplied rather than assumed.',
+      'OIDC Core makes `at_hash` REQUIRED exactly where an access token is co-issued from the authorization endpoint — OIDC Core §3.2.2.10 for the implicit flow and OIDC Core §3.3.2.11 for the hybrid flow, while OIDC Core §3.1.3.6, which defines the claim, marks it OPTIONAL. aegis applies the same rule wherever an access token co-issues. Whether one did is a fact only the issuer holds — it is not in the claims, and nothing about the token distinguishes "no access token was issued" from "the issuer forgot to say". Treating the unstated case as `false` therefore silently issues the exact token the rule exists to prevent, so the fact must be supplied rather than assumed.',
     given: [
       {
         step: "token",
@@ -3607,7 +3486,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "minting an id_token with a context bag that misspells the co-issuance key is refused",
     rationale:
-      'A rule reading a fact under a name nobody supplied evaluates the fact as absent, which for a boolean reads as false \u2014 so a misspelled key is not an error, it is a silent answer of "no". A supplied bag is therefore no evidence that the fact was supplied: the check has to be on the NAME the rule reads, or the guard against an omitted fact is defeated by any bag at all.',
+      'A rule reading a fact under a name nobody supplied evaluates the fact as absent, which for a boolean reads as false — so a misspelled key is not an error, it is a silent answer of "no". A supplied bag is therefore no evidence that the fact was supplied: the check has to be on the NAME the rule reads, or the guard against an omitted fact is defeated by any bag at all.',
     given: [
       {
         step: "token",
@@ -3615,8 +3494,8 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         profile: "id_token",
         content: { subject: "user-1", audience: [CLIENT], accessToken: "at-1" },
         options: {
-          // \u26a0 LOCAL cast, deliberate: `SignContext` is a CLOSED record, so this
-          // misspelling does not compile \u2014 which is the type-level half of the
+          // ⚠ LOCAL cast, deliberate: `SignContext` is a CLOSED record, so this
+          // misspelling does not compile — which is the type-level half of the
           // same capability. The cast is what lets the row state the RUNTIME half,
           // for a caller reaching the API from untyped code.
           context: { accessTokenIssud: false } as unknown as SignContext,
@@ -3661,7 +3540,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "a-required-claim-supplied-as-an-empty-list-is-not-supplied",
     title: "minting a token whose required audience is an empty list is refused",
     rationale:
-      "RFC 7519 §4.1.3 makes `aud` the set of recipients the JWT is intended for, so an empty set names none of them: the token is addressed to nobody while reporting that it has an audience, and every recipient reading it finds itself excluded. A demand for a claim is a demand for its content, and a demand a container satisfies while holding nothing is enforced at scalar claims and open at every list- and object-valued one — which is the half of the vocabulary that carries the restrictions and the bindings.",
+      "`aud` is the set of recipients a token is intended for (RFC 7519 §4.1.3), so an empty set names none of them: the token is addressed to nobody while reporting that it has an audience, and every recipient reading it finds itself excluded. A demand for a claim is a demand for its content, and a demand a container satisfies while holding nothing is enforced at scalar claims and open at every list- and object-valued one — which is the half of the vocabulary that carries the restrictions and the bindings.",
     given: [
       {
         step: "token",
@@ -3687,13 +3566,11 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "minting a sender-constrained token whose confirmation binds no key is refused",
     rationale:
-      "RFC 7800 §3.1 defines `cnf` as the container for the proof-of-possession key a presenter must demonstrate possession of, and a `cnf` holding no member names no key. A token issued that way is declared sender-constrained and is in fact a bearer token: a recipient checking the binding has nothing to check it against, so a stolen copy presents exactly as the legitimate holder does. A profile demanding a confirmation demands the binding, not the container.",
+      "`cnf` is the container for the confirmation members that identify the proof-of-possession key a presenter must demonstrate possession of, on either encoding (RFC 7800 §3.1, RFC 8747 §3), and a `cnf` holding no member names no key. A token issued that way is declared sender-constrained and is in fact a bearer token: a recipient checking the binding has nothing to check it against, so a stolen copy presents exactly as the legitimate holder does. A profile demanding a confirmation demands the binding, not the container.",
     given: [
-      // No BUILT-IN profile requires `confirmation` — RFC 9449 §5 leaves DPoP
-      // binding to the deployment ("An authorization server MAY elect to issue
-      // access tokens that are not DPoP bound…") rather than making it a
-      // property of any token kind — so the capability is stated against a
-      // profile the row registers through the public `registerProfile` door.
+      // No BUILT-IN profile requires `confirmation`, so the capability is stated
+      // against a profile the row registers through the public `registerProfile`
+      // door.
       {
         step: "profile",
         profile: {
@@ -3743,7 +3620,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a logout token naming neither a subject nor a session is refused — it identifies nothing to log out",
     rationale:
-      "OpenID Connect Back-Channel Logout 1.0 §2.4 — a logout token MUST contain a `sub`, a `sid`, or both, and a relying party handed neither has nothing to terminate. The requirement is on the token a verifier RECEIVES, so it has to be checked at verify: a rule enforced only at mint constrains this issuer's own output and says nothing about the token that actually arrived.",
+      "A relying party handed a logout token naming neither a `sub` nor a `sid` has nothing to terminate (OpenID Connect Back-Channel Logout 1.0 §2.4). The requirement is on the token a verifier RECEIVES, so it has to be checked at verify: a rule enforced only at mint constrains this issuer's own output and says nothing about the token that actually arrived.",
     given: [
       {
         step: "token",
@@ -3767,7 +3644,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "a-logout-token-naming-a-subject-verifies",
     title: "a logout token naming a subject verifies",
     rationale:
-      "OpenID Connect Back-Channel Logout 1.0 §2.4 — a `sub` alone satisfies the identification requirement. A floor that refused a logout token naming one would break every conformant back-channel logout, so the identification rule must reject exactly the tokens that identify nothing and no others.",
+      "A `sub` alone satisfies the identification requirement (OpenID Connect Back-Channel Logout 1.0 §2.4). A floor that refused a logout token naming one would break every conformant back-channel logout, so the identification rule must reject exactly the tokens that identify nothing and no others.",
     given: [
       {
         step: "token",
@@ -3870,7 +3747,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "a-domain-refusal-names-the-wire-it-refused",
     title: "a domain refusal names the encoding of the token it refused in its data",
     rationale:
-      "A domain rule is one rule, so it raises ONE code on both encodings; but a consumer handling that refusal — logging it, rendering it, deciding whether to retry against a different endpoint — still has to know which encoding the refused token was in. That fact therefore has to travel as DATA on the error, because it is no longer in the code. This is aegis policy, not a specification requirement: no RFC says anything about the shape of an implementation's error. What makes it a rule worth pinning is the alternative it replaced — the wire baked into the code as a prefix, one spelling per encoding for a single rule, which forced every consumer to match two codes for one condition and reported a CWT's failure under a name that said JWT. A refusal that names the WRONG encoding is worse than one that names none: it sends whoever reads it to the wrong decoder, the wrong issuer and the wrong half of the code, and it does so most convincingly when both wires share the one implementation that produced it.",
+      "A domain rule is one rule, so it raises ONE code on both encodings; but a consumer handling that refusal — logging it, rendering it, deciding whether to retry against a different endpoint — still has to know which encoding the refused token was in. That fact therefore has to travel as DATA on the error, because it is not in the code. This is aegis policy, not a specification requirement: no RFC says anything about the shape of an implementation's error. A refusal that names the WRONG encoding is worse than one that names none: it sends whoever reads it to the wrong decoder, the wrong issuer and the wrong half of the code, and it does so most convincingly when both wires share the one implementation that produced it.",
     given: [
       {
         step: "token",
@@ -3905,7 +3782,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a CWT's unprotected key identifier reaches the one header the domain result reports",
     rationale:
-      "RFC 9052 §3 gives a COSE object two header buckets, and §3.1 puts the `kid` hint in the unprotected one — it 'is not a security-critical field. For this reason, it can be placed in the unprotected-header-parameters bucket'. A caller reading a verified token must still be told which key identifier the token carried, and must be told it the same way on both wires: JOSE compact serialisation has no second bucket (RFC 7515 §7.1), so a domain surface that reported the COSE `kid` under a bucket name of its own would make the same fact unreadable in one place on one wire and another place on the other. `kid` is on the SHORT list of parameters the header registry permits to travel unauthenticated, which is what makes admitting it safe: it names a key, and the key is then proven by the signature rather than believed.",
+      "A COSE object has two header buckets and the `kid` hint may ride the unprotected one (RFC 9052 §3, RFC 9052 §3.1). A caller reading a verified token must still be told which key identifier the token carried, and must be told it the same way on both wires: the JOSE compact serialisation has no second bucket (RFC 7515 §7.1), so a domain surface that reported the COSE `kid` under a bucket name of its own would make the same fact unreadable in one place on one wire and another place on the other. `kid` is on the SHORT list of parameters the header registry permits to travel unauthenticated, which is what makes admitting it safe: it names a key, and the key is then proven by the signature rather than believed.",
     given: [
       {
         step: "token",
@@ -3941,7 +3818,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "a-wire-with-no-unprotected-bucket-signs-every-parameter-it-carries",
     title: "every parameter in a JWT's domain header is one the signature covers",
     rationale:
-      "RFC 7515 §7.1 — 'Only one signature/MAC is supported by the JWS Compact Serialization and it provides no syntax to represent a JWS Unprotected Header value.' A JWT therefore has exactly one header and the signature covers all of it, so the domain header's provenance question is settled by the serialisation itself: there is no second bucket for an unauthenticated parameter to arrive from. This is what makes ONE domain header the honest shape on this wire — a second, permanently empty bucket beside it would invite a reader to ask which of the two a value came from when the wire admits only one answer.",
+      "A JWT has exactly one header (RFC 7515 §7.1) and the signature covers all of it (RFC 7515 §5.2), so the domain header's provenance question is settled by the serialisation itself: there is no second bucket for an unauthenticated parameter to arrive from. This is what makes ONE domain header the honest shape on this wire — a second, permanently empty bucket beside it would invite a reader to ask which of the two a value came from when the wire admits only one answer.",
     given: [
       {
         step: "token",
@@ -4024,7 +3901,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a parameter stated in both header buckets is reported as the issuer signed it",
     rationale:
-      "RFC 9052 §3 covers the protected bucket with the signature and leaves the unprotected one uncovered, so where BOTH state the same parameter only one of the two values has an author a verifier can name. The signed value must therefore win, unconditionally and in that direction: resolving the other way — or by which bucket happens to be read first — would let whoever last held the token overwrite a statement its issuer signed, which is the whole property the protected bucket exists to provide.",
+      "The protected bucket is covered by the signature and the unprotected one is not (RFC 9052 §3), so where BOTH state the same parameter only one of the two values has an author a verifier can name. The signed value must therefore win, unconditionally and in that direction: resolving the other way — or by which bucket happens to be read first — would let whoever last held the token overwrite a statement its issuer signed, which is the whole property the protected bucket exists to provide.",
     given: [
       // A FOREIGN producer, because no aegis writer emits this shape: `kid` is
       // kit-derived, so `buildCoseHeaders` refuses a caller value for it in
@@ -4048,7 +3925,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     then: [
       { step: "accepts", format: "cwt" },
       // ⚠ The token VERIFIES, and that is what makes the row about the merge and
-      // not about key resolution: RFC 9052 §3.1 makes `kid` a routing hint, so
+      // not about key resolution: `kid` is a routing hint (RFC 9052 §3.1), so
       // aegis finds the key by the UNPROTECTED one (the real fixture id) and the
       // signature then proves the key. What the result REPORTS is the signed
       // value — a different question, and the one this row states.
@@ -4065,7 +3942,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "header parameters that must be signed are ignored when they arrive unauthenticated",
     rationale:
-      "A parameter a verifier routes, audits or polices a token by is only worth reading if the issuer said it. RFC 9052 §3.1 permits `kid` in the unprotected bucket precisely because it 'is not a security-critical field' — the rest are not so permitted, and a reader that surfaced them anyway would let whoever last held the token declare what the token IS: its type (RFC 9596 §2 makes `typ` the routing declaration for a whole COSE object), the type of its payload, the certificate it is attributable to, or an object identifier an application authorises against. aegis therefore denies the shape on both sides, and the two sides do it by different mechanisms because they face different producers. On WRITE there is no bag to put a registered parameter in unprotected at all: `custom.unprotected` is the only one a caller can fill and it refuses every registered name outright — `header_kit_owned_in_custom` for the names the kit derives from the key or the crypto operation, which it asks about first, and `header_registered_in_custom` for the rest — which is strictly stronger than a placement rule. On READ the header registry's `placement` column IS the allowlist, and it has to be — a foreign producer is under no such constraint — so a parameter declared `\"protected\"` that arrives unauthenticated is dropped before the domain header is built.",
+      'A parameter a verifier routes, audits or polices a token by is only worth reading if the issuer said it. `kid` may ride the unprotected bucket (RFC 9052 §3.1); the parameters a verifier DECIDES by may not, and a reader that surfaced them anyway would let whoever last held the token declare what the token IS: its type (RFC 9596 §2), the type of its payload, the certificate it is attributable to, or an object identifier an application authorises against. ⚠ The CERTIFICATE half of that list is AEGIS POLICY, not a placement the specification makes: RFC 9360 §2 permits `x5chain` and `x5t` in either bucket — but aegis BINDS on the thumbprint (`src/internal/header/header-registry.ts#so PRESENCE IS THE BINDING`) and pins the certificate parameters PROTECTED, so an unprotected one is a certificate reference whoever last held the token can rewrite. aegis therefore denies the shape on both sides, and the two sides do it by different mechanisms because they face different producers. On WRITE there is no bag to put a registered parameter in unprotected at all: `custom.unprotected` is the only one a caller can fill and it refuses every registered name outright — `header_kit_owned_in_custom` for the names the kit derives from the key or the crypto operation, which it asks about first, and `header_registered_in_custom` for the rest — which is strictly stronger than a placement rule. On READ the header registry\'s `placement` column IS the allowlist, and it has to be — a foreign producer is under no such constraint — so a parameter declared `"protected"` that arrives unauthenticated is dropped before the domain header is built.',
     given: [
       // Hand-placed by a FOREIGN producer at the very labels aegis reads: this
       // shape is unmintable here precisely BECAUSE of the rule under test, so
@@ -4133,7 +4010,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "an-asserted-token-type-is-compared-as-a-whole-media-type",
     title: "a token of another type is refused when the caller asserts an id token",
     rationale:
-      "RFC 7519 §5.1 — the `typ` header parameter 'is used by JWT applications to declare the media type […] of this complete JWT', so a caller asserting a token IS of a given type is asserting on that whole media type. The comparison has to be made on the whole of it: a type whose media type is the bare conventional form — an id token is a plain `JWT` — has no structured prefix, so a check that compares prefixes has nothing to compare for exactly that type and silently accepts every token instead. An assertion that cannot fail is worse than an absent one, because the caller has stopped checking. RFC 9596 §2 gives COSE the same parameter — `typ`, registered as label 16 by §4.1, declares 'the type of this complete COSE object', and an application 'might verify that the typ value is a particular application-chosen media type and reject the data structure if it is not' — so the caller's assertion means the same thing on that wire and must be enforced just as hard. An assertion honoured on one encoding and skipped on the other is an assertion the attacker chooses to be bound by, since the encoding is the issuer's choice and the presenter's opportunity.",
+      "The `typ` header parameter declares the media type of the complete token (RFC 7519 §5.1), so a caller asserting a token IS of a given type is asserting on that whole media type. The comparison has to be made on the whole of it: a type whose media type is the bare conventional form — an id token is a plain `JWT` — has no structured prefix, so a check that compares prefixes has nothing to compare for exactly that type and silently accepts every token instead. An assertion that cannot fail is worse than an absent one, because the caller has stopped checking. COSE has the same parameter, at label 16 (RFC 9596 §2, RFC 9596 §4.1), so the caller's assertion means the same thing on that wire and must be enforced just as hard. An assertion honoured on one encoding and skipped on the other is an assertion the attacker chooses to be bound by, since the encoding is the issuer's choice and the presenter's opportunity.",
     given: [
       {
         step: "token",
@@ -4175,7 +4052,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "a-token-of-the-asserted-type-verifies",
     title: "a token typed as an id token verifies when the caller asserts an id token",
     rationale:
-      "The type assertion must refuse exactly the tokens of another type and no others. An id token's media type is the bare conventional `JWT` (RFC 7519 §5.1 recommends that spelling and there is no registered structured form for it), so a comparison that got this wrong in the other direction — demanding a structured media type an id token never carries — would refuse every conformant id token in existence. That bare media type has one COSE equivalent, `application/cwt`, registered by RFC 8392 §9.2, so the assertion must accept exactly that and no other there. Getting the accepting half wrong is how a type check is discovered to be too strict only in production, by a deployment whose tokens were conformant all along.",
+      "The type assertion must refuse exactly the tokens of another type and no others. An id token's media type is the bare conventional `JWT` (RFC 7519 §5.1), so a comparison that got this wrong in the other direction — demanding a structured media type an id token never carries — would refuse every conformant id token in existence. That bare media type has one COSE equivalent, `application/cwt` (RFC 8392 §9.2), so the assertion must accept exactly that and no other there. Getting the accepting half wrong is how a type check is discovered to be too strict only in production, by a deployment whose tokens were conformant all along.",
     given: [
       {
         step: "token",
@@ -4280,7 +4157,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a claims token keyed with a shared secret is MAC-authenticated and verifies as one",
     rationale:
-      "RFC 9052 §6.2 defines COSE_Mac0 as the MACed structure with an implicit key, and §4.2 defines COSE_Sign1 as the structure signed by one signer; they are different objects with different tags and different security properties. A shared secret can only produce the first, so an encoder handed one must emit a COSE_Mac0 and the reader must report it as the MAC-authenticated form — a token whose structure says MAC while the result says signature would let a verifier believe a shared secret proved who issued it.",
+      "A COSE_Mac0 and a COSE_Sign1 are different objects, with different tags and different security properties (RFC 9052 §6.2, RFC 9052 §4.2). A shared secret can only produce the first, so an encoder handed one must emit a COSE_Mac0 and the reader must report it as the MAC-authenticated form — a token whose structure says MAC while the result says signature would let a verifier believe a shared secret proved who issued it.",
     given: [
       { step: "keys", keys: ["oct-sig"] },
       {
@@ -4306,13 +4183,13 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       { step: "accepts", format: "cwm" },
       { step: "claims", expected: { subject: "user-1", issuer: ISSUER } },
       { step: "header", expected: { algorithm: "HS256" } },
-      // Tag 17 is COSE_Mac0 and tag 18 is COSE_Sign1 (RFC 9052 §2 Table 1). The
+      // Tag 17 is COSE_Mac0 and tag 18 is COSE_Sign1 (RFC 9052 §2). The
       // independent read is what distinguishes them — `format` is aegis
       // reporting its own decision about the same bytes.
       { step: "wireStructure", tags: [61, 17] },
     ],
     unsupported: {
-      jose: "JOSE has no separate MAC structure to report. RFC 7515 §1 defines JWS as representing content secured with digital signatures OR Message Authentication Codes — one structure for both — so a MAC-authenticated JOSE claims token is a JWS carrying an HMAC `alg` and reports as a `jwt`. There is no distinct format for the read side to name",
+      jose: "JOSE has no separate MAC structure to report: one structure carries both digital signatures and MACs (RFC 7515 §1), so a MAC-authenticated JOSE claims token is a JWS carrying an HMAC `alg` and reports as a `jwt`. There is no distinct format for the read side to name",
     },
   },
   {
@@ -4341,7 +4218,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       { step: "claims", expected: { subject: "user-1", issuer: ISSUER } },
     ],
     unsupported: {
-      jose: "JOSE has no separate MAC structure to read. RFC 7515 §1 defines JWS as representing content secured with digital signatures OR Message Authentication Codes, so a MAC-authenticated JOSE claims token is a `jwt` and is already covered by the ordinary keyless read",
+      jose: "JOSE has no separate MAC structure to read: one structure carries both digital signatures and MACs (RFC 7515 §1), so a MAC-authenticated JOSE claims token is a `jwt` and is already covered by the ordinary keyless read",
     },
   },
   {
@@ -4349,7 +4226,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a mint asked for the signature structure refuses a shared secret rather than emitting one",
     rationale:
-      "RFC 9052 §4.2 defines COSE_Sign1 as the structure signed by one signer, carrying a digital signature, whose whole property is that only the holder of the private key could have produced it. A shared secret has no such property — every party that can verify can also forge — so a structure that admitted one would make a signature and a MAC indistinguishable to the reader, which is the confusion the two separate structures exist to prevent. The refusal has to happen at issue: a token cannot be un-issued.",
+      "A COSE_Sign1 carries a digital signature (RFC 9052 §4.2), whose whole property is that only the holder of the private key could have produced it. A shared secret has no such property — every party that can verify can also forge — so a structure that admitted one would make a signature and a MAC indistinguishable to the reader, which is the confusion the two separate structures exist to prevent. The refusal has to happen at issue: a token cannot be un-issued.",
     given: [
       { step: "keys", keys: ["oct-sig"] },
       {
@@ -4369,7 +4246,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     when: [{ step: "mint" }],
     then: [{ step: "rejects", error: "CwtError" }],
     unsupported: {
-      jose: "JOSE draws no such line to enforce. RFC 7515 §1 defines one structure for both digital signatures and MACs, so an HMAC `alg` is a conformant JWS and a mint that refused it would refuse the conformant shape",
+      jose: "JOSE draws no such line to enforce: one structure carries both digital signatures and MACs (RFC 7515 §1), so an HMAC `alg` is a conformant JWS and a mint that refused it would refuse the conformant shape",
     },
   },
 
@@ -4385,7 +4262,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "a-token-whose-signature-was-replaced-is-refused",
     title: "a token presented with a signature that is not the issuer's is refused",
     rationale:
-      'The signature is the only thing that says who issued a token, so a verifier that accepted one it could not validate would be accepting the presenter\'s word for every claim. RFC 7515 §5.2 makes the check and its consequence explicit: step 8 is to "Validate the JWS Signature against the JWS Signing Input", and step 10 — "If none of the validations in step 9 succeeded, then the JWS MUST be considered invalid." RFC 9052 §4.4 gives COSE_Sign1 the same shape through its `Sig_structure`.',
+      "The signature is the only thing that says who issued a token, so a verifier that accepted one it could not validate would be accepting the presenter's word for every claim. A signature that does not validate makes the token invalid, on either wire (RFC 7515 §5.2, RFC 9052 §4.4).",
     given: [
       {
         step: "token",
@@ -4406,7 +4283,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token whose signature does not validate is refused even when the caller waived the expiry range check",
     rationale:
-      "A temporal waiver states one thing — that this caller does not care when the token expires — and it must not be readable as a general instruction to trust the token less carefully. Authenticity and lifetime are independent properties: RFC 7515 §5.2 step 10 makes an unvalidated signature fatal regardless of what the payload says, while RFC 7519 §4.1.4 makes `exp` a claim ABOUT the payload. A waiver that leaked across the two would turn the id_token_hint flow, whose whole purpose is to accept an expired token on the strength of its signature, into a flow that accepts anything.",
+      "A temporal waiver states one thing — that this caller does not care when the token expires — and it must not be readable as a general instruction to trust the token less carefully. Authenticity and lifetime are independent properties: an unvalidated signature is fatal regardless of what the payload says (RFC 7515 §5.2), while `exp` is a claim ABOUT the payload (RFC 7519 §4.1.4). A waiver that leaked across the two would turn the id_token_hint flow, whose whole purpose is to accept an expired token on the strength of its signature, into a flow that accepts anything.",
     given: [
       {
         step: "token",
@@ -4426,7 +4303,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "a-token-whose-payload-was-altered-after-signing-is-refused",
     title: "a token whose claims were rewritten after it was issued is refused",
     rationale:
-      "A verifier's guarantee is that the claims it reads are the claims the issuer wrote, and that guarantee comes from the payload being covered by the integrity computation rather than merely travelling beside it. RFC 7515 §5.2 step 8 fixes the JOSE signing input as `ASCII(BASE64URL(UTF8(JWS Protected Header)) || '.' || BASE64URL(JWS Payload))`, and RFC 9052 §4.4 lists \"The payload to be signed, encoded in a bstr type\" among the fields of the `Sig_structure`. A payload outside that computation would let any holder grant itself a scope.",
+      "A verifier's guarantee is that the claims it reads are the claims the issuer wrote, and that guarantee comes from the payload being covered by the integrity computation rather than merely travelling beside it. The payload sits INSIDE that computation on both wires (RFC 7515 §5.2, RFC 9052 §4.4). A payload outside it would let any holder grant itself a scope.",
     given: [
       {
         step: "token",
@@ -4446,7 +4323,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "a-token-whose-protected-header-was-altered-after-signing-is-refused",
     title: "a token whose protected header was rewritten after it was issued is refused",
     rationale:
-      'The protected header is where a token states its algorithm, its key and its type, so a header a holder could edit would let the holder restate every one of them. RFC 7515 §5.2 step 8 puts `BASE64URL(UTF8(JWS Protected Header))` inside the JOSE signing input, and RFC 9052 §4.4 lists "The protected attributes from the body structure, encoded in a bstr type" among the `Sig_structure` fields — which is precisely what makes the bucket PROTECTED and separates it from the unprotected one beside it.',
+      "The protected header is where a token states its algorithm, its key and its type, so a header a holder could edit would let the holder restate every one of them. The protected header sits inside the integrity computation on both wires (RFC 7515 §5.2, RFC 9052 §4.4) — which is precisely what makes the bucket PROTECTED and separates it from the unprotected one beside it.",
     given: [
       {
         step: "token",
@@ -4468,9 +4345,10 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
   //
   // ⚠ THE TWO WIRES SPELL THE SAME BINDING WITH A DIFFERENT NUMBER OF PARAMETERS,
   // which is why several rows below are scoped per wire. JOSE names the digest
-  // algorithm in the PARAMETER — RFC 7515 §4.1.7 `x5t` (SHA-1) beside §4.1.8
-  // `x5t#S256` (SHA-256) — while RFC 9360 §2 gives COSE ONE `x5t` (label 34)
-  // whose value is a `COSE_CertHash` carrying its own `hashAlg`. A CBOR map cannot
+  // algorithm in the PARAMETER — `x5t` (SHA-1, RFC 7515 §4.1.7) beside
+  // `x5t#S256` (SHA-256, RFC 7515 §4.1.8) — while COSE has ONE `x5t` (label 34)
+  // whose value is a `COSE_CertHash` carrying its own `hashAlg` (RFC 9360 §2). A
+  // CBOR map cannot
   // key one label twice, so a COSE token names its certificate by exactly one
   // digest and there is no legacy second one riding alongside it.
   //
@@ -4482,7 +4360,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token signed by a key that carries a certificate chain names that certificate in its header",
     rationale:
-      "A certificate binding is what lets a relying party tie a token to an identity a PKI already vouches for, rather than to a bare key it has no way to attribute. RFC 7515 §4.1.8 defines `x5t#S256` as the base64url-encoded SHA-256 digest of the DER encoding of the certificate corresponding to the key used to digitally sign the JWS, and RFC 9360 §2 registers the same statement for COSE (`x5chain`, label 33, and `x5t`, label 34). A key that HAS a chain and emits no binding leaves the relying party unable to make the attribution at all, and the caller no way to know it did not travel.",
+      "A certificate binding is what lets a relying party tie a token to an identity a PKI already vouches for, rather than to a bare key it has no way to attribute. The parameters that name the certificate corresponding to the key that signed a token are defined on either wire (RFC 7515 §4.1.6, RFC 7515 §4.1.7, RFC 7515 §4.1.8; RFC 9360 §2 for `x5chain` at label 33 and `x5t` at label 34). ⚠ Emitting one whenever the signing key carries a chain is AEGIS POLICY: RFC 7515 §4.1.8 makes its use OPTIONAL. A key that HAS a chain and emits no binding leaves the relying party unable to make the attribution at all, and the caller no way to know it did not travel.",
     given: [
       { step: "keys", keys: ["ec-sig-cert"] },
       {
@@ -4504,12 +4382,9 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     //
     // ⚠ SCOPED PER WIRE, because the two wires spell the same domain fact with a
     // DIFFERENT NUMBER of parameters. JOSE names the certificate with a PAIR —
-    // RFC 7515 §4.1.7 `x5t` (SHA-1) beside §4.1.8 `x5t#S256` (SHA-256) — while
-    // RFC 9360 §2 gives COSE a single `x5t` at label 34 whose value is a
-    // `COSE_CertHash`: "The 'x5t' header parameter is represented as an array of
-    // two elements. The first element is an algorithm identifier … The second
-    // element is a binary string containing the hash value computed over the
-    // DER-encoded certificate." The digest algorithm is a MEMBER of the one
+    // `x5t` (SHA-1, RFC 7515 §4.1.7) beside `x5t#S256` (SHA-256,
+    // RFC 7515 §4.1.8) — while COSE has a single `x5t` at label 34 whose value is
+    // a `COSE_CertHash` (RFC 9360 §2). The digest algorithm is a MEMBER of the one
     // parameter rather than part of two parameter names, so a COSE token names
     // its certificate by exactly ONE digest and there is no legacy second one
     // riding alongside it to observe.
@@ -4572,7 +4447,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a mint asked to bind a certificate refuses a signing key that carries no chain",
     rationale:
-      "Asking for a certificate binding is a statement that the token must be attributable to a certificate, so a key that has none cannot honour the request. The two alternatives to refusing are both silent: emitting the token unbound leaves the issuer believing its tokens are attributable when they are not, and inventing a thumbprint would bind them to a certificate nobody holds. RFC 7515 §4.1.8 ties `x5t#S256` to 'the […] certificate […] corresponding to the key used to digitally sign the JWS' — with no such certificate there is nothing the parameter could truthfully carry.",
+      "Asking for a certificate binding is a statement that the token must be attributable to a certificate, so a key that has none cannot honour the request. The two alternatives to refusing are both silent: emitting the token unbound leaves the issuer believing its tokens are attributable when they are not, and inventing a thumbprint would bind them to a certificate nobody holds. `x5t#S256` names the certificate corresponding to the signing key (RFC 7515 §4.1.8) — with no such certificate there is nothing the parameter could truthfully carry.",
     given: [
       {
         step: "token",
@@ -4597,7 +4472,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token sealed around a signed claims token declares that nesting in its envelope",
     rationale:
-      "RFC 7519 §5.2 requires `cty` to be present with the value `JWT` whenever the payload is itself a JWT, so a recipient knows to process the plaintext as a token rather than as opaque bytes; RFC 9052 §3.1 gives COSE the same parameter for the same purpose. Without the declaration a reader holding the key recovers a byte string it has no reason to treat as a credential, and the inner signature — the only thing that says who issued the claims — is never checked.",
+      "A nested token declares itself with `cty`, so a recipient knows to process the plaintext as a token rather than as opaque bytes (RFC 7519 §5.2, RFC 9052 §3.1). Without the declaration a reader holding the key recovers a byte string it has no reason to treat as a credential, and the inner signature — the only thing that says who issued the claims — is never checked.",
     given: [
       { step: "keys", keys: ["ec-enc", "oct-enc"] },
       {
@@ -4616,8 +4491,8 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         wrapper: { jose: "jwe", cose: "cwe" },
       },
       // The same declaration in each wire's own vocabulary — the JOSE parameter
-      // NAME against the COSE integer LABEL 3 (RFC 9052 §3.1), which §1.5 keeps
-      // distinct from the text label "3".
+      // NAME against the COSE integer LABEL 3 (RFC 9052 §3.1), a different label
+      // from the text `"3"` (RFC 9052 §1.5), and CBOR keys them apart.
       { step: "wireProtectedHeader", on: "jose", includes: { cty: "JWT" } },
       { step: "wireProtectedHeader", on: "cose", includes: { 3: "application/cwt" } },
     ],
@@ -4868,7 +4743,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "an opaque signed token declares a media type that names it opaque, not claims-bearing",
     rationale:
-      "RFC 8725 §3.11 recommends explicit typing so a token of one kind cannot be taken for another, and an opaque signature and a claims token are exactly two such kinds: they are the same structure with different contents. The media type is the only thing distinguishing them before the payload is read, so an opaque artifact typed as a claims token would be handed to a claims reader that finds none — and a caller routing on the declaration would treat a handle as a credential.",
+      "Explicit typing is what stops a token of one kind being taken for another (RFC 8725 §3.11), and an opaque signature and a claims token are exactly two such kinds: they are the same structure with different contents. The media type is the only thing distinguishing them before the payload is read, so an opaque artifact typed as a claims token would be handed to a claims reader that finds none — and a caller routing on the declaration would treat a handle as a credential.",
     given: [
       {
         step: "token",
@@ -4924,7 +4799,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a claims token issued elsewhere and carrying no type header is still read keylessly",
     rationale:
-      "The keyless read is what a holder does to a token it did NOT issue — that is its whole purpose — so it cannot require a type header this package would have stamped. RFC 7519 §5.1 makes the JOSE `typ` OPTIONAL, and RFC 9596 §2 makes the COSE one optional too, so a claims token that declares none is ordinary and conformant. A reader that routed on the header would answer 'not a token I recognise' for the majority of the third-party tokens it exists to inspect, and the holder would have no way to learn which key or issuer to ask about.",
+      "The keyless read is what a holder does to a token it did NOT issue — that is its whole purpose — so it cannot require a type header this package would have stamped. A claims token that declares no type is ordinary and conformant (RFC 7519 §5.1, RFC 9596 §2). A reader that routed on the header would answer 'not a token I recognise' for the majority of the third-party tokens it exists to inspect, and the holder would have no way to learn which key or issuer to ask about.",
     given: [
       // FOREIGN on purpose: every aegis writer stamps a type header on both
       // wires and no option suppresses it, so a typ-LESS artifact is not
@@ -4948,7 +4823,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       // ⚠ The row's PREMISE, read off the wire by the independent inspector. A
       // producer that stamped a type after all would make this row a statement
       // about an ordinary typed token, which every other read row already
-      // covers. RFC 9596 §4.1 registers the COSE `typ` at label 16.
+      // covers. The COSE `typ` is label 16 (RFC 9596 §4.1).
       { step: "wireProtectedHeader", on: "jose", excludes: ["typ"] },
       { step: "wireProtectedHeader", on: "cose", excludes: [16] },
     ],
@@ -5090,7 +4965,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a profile claim supplied to a mint is written to the wire and read back into its own bucket",
     rationale:
-      "OIDC Core §5.1 defines the standard profile claims (`given_name`, `email`, …) as the ones an audience reads to learn about the end-user, and the read side categorises them into a bucket of their own so a consumer can hand exactly that set to a rendering or provisioning path without re-deriving the categorisation. Write and read are separate code on each encoding, so a bucket one side fills and the other does not — or vice versa — loses the claims SILENTLY: the token mints, it verifies, and the values are simply gone, with no error on either side to say the caller's content was dropped.",
+      "The standard profile claims (`given_name`, `email`, …) are the ones an audience reads to learn about the end-user (OIDC Core §5.1), and the read side categorises them into a bucket of their own so a consumer can hand exactly that set to a rendering or provisioning path without re-deriving the categorisation. Write and read are separate code on each encoding, so a bucket one side fills and the other does not — or vice versa — loses the claims SILENTLY: the token mints, it verifies, and the values are simply gone, with no error on either side to say the caller's content was dropped.",
     given: [
       {
         step: "token",
@@ -5126,7 +5001,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "an-address-reaches-the-wire-under-the-member-names-its-specification-defines",
     title: "an address is published under the member names its specification defines",
     rationale:
-      "OIDC Core §5.1.1 defines the address claim entirely by its sub-fields and spells each one — `formatted`, `street_address`, `locality`, `region`, `postal_code`, `country` — so those spellings ARE the interoperability contract: a relying party reads `street_address` and knows nothing of any other name for it. The domain form is camelCase like every other claim, so a case conversion sits between the caller and the wire, and a conversion is exactly the kind of step that can be applied to one wire and not the other, or applied twice, or applied to a key that is an identifier rather than a field name. A token whose address members are misspelled round-trips through its own issuer perfectly and means nothing to anybody else, which is the failure mode that has no symptom on the issuing side.",
+      "The address claim is defined entirely by its sub-fields, and their spellings ARE the interoperability contract (OIDC Core §5.1.1): a relying party reads `street_address` and knows nothing of any other name for it. The domain form is camelCase like every other claim, so a case conversion sits between the caller and the wire, and a conversion is exactly the kind of step that can be applied to one wire and not the other, or applied twice, or applied to a key that is an identifier rather than a field name. A token whose address members are misspelled round-trips through its own issuer perfectly and means nothing to anybody else, which is the failure mode that has no symptom on the issuing side.",
     given: [
       {
         step: "token",
@@ -5187,7 +5062,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "an-address-member-no-specification-defines-still-reaches-the-recipient",
     title: "an address member no specification defines still reaches the recipient",
     rationale:
-      "This is AEGIS POLICY, not a specification requirement, and it is stated rather than cited: OIDC Core §5.1.1 lists the members it defines and says nothing about a member it does not, so no specification decides the question either way. The policy is that a declared member set is a floor and not a ceiling, because silently deleting a member a caller wrote is the worse of the two failures available — an address is a physical delivery instruction, a dropped line makes it undeliverable, and the caller gets no error and no way to discover the loss. Carrying it costs a recipient that does not recognise it nothing, because a recipient reads the members it knows. Whether any structured claim's member set should instead be CLOSED is a public-surface decision that has to be taken once for all of them rather than claim by claim, and until it is taken this is what aegis does.",
+      "This is AEGIS POLICY, not a specification requirement, and it is stated rather than cited: the address member set is defined at OIDC Core §5.1.1 and BOUNDED to that set by OIDC Core §5.1, so carrying an unrecognised member is a DEPARTURE and not a gap the specification leaves open. The policy is that a declared member set is a floor and not a ceiling, because silently deleting a member a caller wrote is the worse of the two failures available — an address is a physical delivery instruction, a dropped line makes it undeliverable, and the caller gets no error and no way to discover the loss. Carrying it costs a recipient that does not recognise it nothing, because a recipient reads the members it knows. Whether any structured claim's member set should instead be CLOSED is a public-surface decision that has to be taken once for all of them rather than claim by claim, and until it is taken this is what aegis does.",
     given: [
       {
         step: "token",
@@ -5251,8 +5126,8 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
           // this row state its rule rather than a weaker one. A null at a TEXT
           // member is indistinguishable from a null the text codec merely failed
           // — both leave the member off — so a fixture built on one would pass
-          // whether or not absence is recognised at all. RFC 8693 §4.1 makes
-          // `act` recursive, so `act.act` is a member whose value goes to the
+          // whether or not absence is recognised at all. `act` is recursive
+          // (RFC 8693 §4.1), so `act.act` is a member whose value goes to the
           // structure walker, and that walker REFUSES a value which is not an
           // object. Only classifying `null` as absence FIRST keeps this token
           // readable.
@@ -5294,14 +5169,11 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         content: {
           subject: "user-1",
           audience: [CLIENT],
-          // ⚠⚠ THE CAST IS THE POINT, AND IT IS WHY THIS ROW NEEDS ONE. `null`
-          // used to stand here, chosen because it was the one value
-          // `AegisProfileAddress` PERMITS while failing the member's declared
-          // kind — and `null` is an ABSENCE now, with its own row above. What is
-          // left in this class cannot be reached from a well-typed caller at all,
-          // so the row reaches past the type to state the rule for the doors that
-          // have no type behind them: a foreign token, an introspection response,
-          // a JavaScript caller.
+          // ⚠⚠ THE CAST IS THE POINT, AND IT IS WHY THIS ROW NEEDS ONE. `null` is
+          // an ABSENCE, with its own row above. What is left in this class cannot
+          // be reached from a well-typed caller at all, so the row reaches past
+          // the type to state the rule for the doors that have no type behind
+          // them: a foreign token, an introspection response, a JavaScript caller.
           profile: { address: { region: 42 as unknown as string } },
         },
         options: { context: { accessTokenIssued: false } },
@@ -5330,7 +5202,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "refusing-one-claim-member-does-not-discard-the-members-beside-it",
     title: "refusing one claim member does not discard the members beside it",
     rationale:
-      'OIDC Core §5.1.1 says an implementation "MAY return only a subset of the fields of an address", so the members of a structured claim are independently meaningful — a country is a fact about the end-user whether or not a postal code was available. A refusal must therefore be scoped to the value that failed: discarding the whole structure because one member was malformed destroys information the issuer had and the recipient could have used, and it does so silently, since a structure that arrives with fewer members is indistinguishable from one an issuer chose to send that way. It is also the failure a per-member check invites, because the cheapest way to reject a bad member is to abandon the walk.',
+      "The members of a structured claim are independently meaningful (OIDC Core §5.1.1) — a country is a fact about the end-user whether or not a postal code was available. A refusal must therefore be scoped to the value that failed: discarding the whole structure because one member was malformed destroys information the issuer had and the recipient could have used, and it does so silently, since a structure that arrives with fewer members is indistinguishable from one an issuer chose to send that way. It is also the failure a per-member check invites, because the cheapest way to reject a bad member is to abandon the walk.",
     given: [
       {
         step: "token",
@@ -5342,12 +5214,10 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
           // The refused member has a SURVIVING SIBLING, which is the only shape
           // in which this rule is observable at all.
           //
-          // ⚠ `region: null` stood here and no longer serves: `null` is an
-          // ABSENCE now, and an absent member has nothing to be scoped away from
-          // its siblings. The bad member must be a value that genuinely
-          // contradicts the declared kind, which past `AegisProfileAddress`
-          // means a cast — see the sibling row above for why that is the honest
-          // shape of this class rather than a weakness in the row.
+          // ⚠ The bad member must be a value that genuinely contradicts the
+          // declared kind, which past `AegisProfileAddress` means a cast — see
+          // the sibling row above for why that is the honest shape of this class
+          // rather than a weakness in the row.
           profile: {
             address: { streetAddress: "Sample 1", region: 42 as unknown as string },
           },
@@ -5382,7 +5252,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "an-address-that-is-not-an-address-is-refused-not-read-as-an-absent-one",
     title: "an address that is not an address is refused, not read as an absent one",
     rationale:
-      'OIDC Core §5.1.1 defines the address claim as a structure of sub-fields, so a scalar under that name is not an address that happens to be short — it is a claim that does not conform to its own definition, written by an issuer this verifier does not control. Two disposals are available and only one of them is honest. Reporting the scalar hands the consumer a value in a field whose declared shape is an object, and the consumer\'s first member access is then a runtime type error in code the type checker passed. Discarding it in silence is the subtler fault and the one that matters more: the result then says the token carries no address, which is a statement about the token that is FALSE — its issuer signed one — and the consumer cannot tell "no address was sent" from "an address was sent that I could not read", though the two call for opposite responses. A reader may decline to describe what it cannot describe; what it may not do is report a stranger\'s assertion as never made. So the claim is refused, and the token with it: the value rides inside the signature, so an issuer that cannot state this claim in the shape its own specification defines has not produced a token this verifier can speak for.',
+      'The address claim is a structure of sub-fields (OIDC Core §5.1.1), so a scalar under that name is not an address that happens to be short — it is a claim that does not conform to its own definition, written by an issuer this verifier does not control. Two disposals are available and only one of them is honest. Reporting the scalar hands the consumer a value in a field whose declared shape is an object, and the consumer\'s first member access is then a runtime type error in code the type checker passed. Discarding it in silence is the subtler fault and the one that matters more: the result then says the token carries no address, which is a statement about the token that is FALSE — its issuer signed one — and the consumer cannot tell "no address was sent" from "an address was sent that I could not read", though the two call for opposite responses. A reader may decline to describe what it cannot describe; what it may not do is report a stranger\'s assertion as never made. So the claim is refused, and the token with it: the value rides inside the signature, so an issuer that cannot state this claim in the shape its own specification defines has not produced a token this verifier can speak for.',
     given: [
       {
         step: "token",
@@ -5458,7 +5328,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token presented by an actor on a subject's behalf reports that delegation on the result",
     rationale:
-      "RFC 8693 §4.1 defines `act` as the claim that names the party currently acting for the subject, and its whole purpose is that the recipient can tell a delegated presentation from a direct one. A result that dropped the chain would report the token as though the subject had presented it, so every authorisation decision downstream would attribute the request to the wrong party — and an actor policy stated against it would have nothing to read.",
+      "`act` names the party currently acting for the subject (RFC 8693 §4.1), and its whole purpose is that the recipient can tell a delegated presentation from a direct one. A result that dropped the chain would report the token as though the subject had presented it, so every authorisation decision downstream would attribute the request to the wrong party — and an actor policy stated against it would have nothing to read.",
     given: [
       {
         step: "token",
@@ -5490,7 +5360,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a caller asserting the token identifier it expects is answered from the claim the wire carries",
     rationale:
-      "RFC 7519 §4.1.7 makes `jti` the identifier a replay check keys on, and RFC 8392 §3.1.7 registers the same claim under the name `cti` on the COSE wire — the one registered claim whose spelling differs between the two. A matcher keyed to one spelling and applied to the other finds nothing, so a caller that correlated a token with its own stored record would be told it did not match a token that does.",
+      "`jti` is the identifier a replay check keys on, and the same claim is spelled `cti` on the COSE wire (RFC 7519 §4.1.7, RFC 8392 §3.1.7) — the one registered claim whose spelling differs between the two. A matcher keyed to one spelling and applied to the other finds nothing, so a caller that correlated a token with its own stored record would be told it did not match a token that does.",
     given: [
       {
         step: "token",
@@ -5650,7 +5520,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "an-empty-claim-the-registry-declares-a-statement-reaches-the-wire",
     title: "an empty claim whose emptiness is itself a statement is emitted",
     rationale:
-      "An empty claim and an absent one are different statements, and for some claims the empty one is the one that restricts. An empty `scope` is a grant of nothing — the inert token. RFC 9068 §2.2.3 makes `scope` only a SHOULD on an access token, so a recipient cannot tell an ABSENT scope from a grant that never carried one; the explicit empty list is therefore the only way an issuer can state that this grant conveys nothing, and deleting it would erase that statement rather than compress it. Which claims work this way is a property of the claim, and aegis policy records it per claim rather than leaving it to the caller.",
+      "An empty claim and an absent one are different statements, and for some claims the empty one is the one that restricts. An empty `scope` is a grant of nothing — the inert token. `scope` is only a SHOULD on an access token (RFC 9068 §2.2.3), so a recipient cannot tell an ABSENT scope from a grant that never carried one; the explicit empty list is therefore the only way an issuer can state that this grant conveys nothing, and deleting it would erase that statement rather than compress it. Which claims work this way is a property of the claim, and aegis policy records it per claim rather than leaving it to the caller.",
     given: [
       {
         step: "token",
@@ -5670,7 +5540,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     when: [{ step: "mint" }],
     then: [
       { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
-      // RFC 8392 §4 registers `scope` at integer label 9, so the two wires spell
+      // aegis keys `scope` at COSE integer label 9, so the two wires spell
       // the surviving claim differently — which is exactly why the row states
       // each rather than asserting one name on both.
       { step: "wireClaims", on: "jose", present: ["scope"] },
@@ -5708,7 +5578,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "a-claim-the-issuer-alone-defines-survives-the-empty-claim-prune",
     title: "a claim aegis has not declared reaches the wire with its empty value intact",
     rationale:
-      "Whether an empty value is a statement or noise is a fact about the CLAIM: an empty RFC 9396 `actions` grants no action while an absent one is not restricted by action at all, and an empty `amr` asserts something no issuer means. A library holds that fact only for the claims it has defined. For anything else — a deployment's own claim, an opaque payload's members, a wire dict handed straight to a kit — it is guessing, and both guesses are wrong in a way the wire cannot show: dropping strips a restriction, keeping fabricates an assertion. So the prune stops at the edge of what aegis has declared, and a caller pruning its own claims stays the caller's job. That edge is what makes the prune safe to run on every emission: it can only ever act where a decision has actually been recorded.",
+      "Whether an empty value is a statement or noise is a fact about the CLAIM: an empty `actions` in an authorization details element grants no action, because the permissions requested are the product of the values an element lists (RFC 9396 §2.2), while reading an ABSENT one as not restricted by action at all is aegis's own inference — and an empty `amr` asserts something no issuer means. A library holds that fact only for the claims it has defined. For anything else — a deployment's own claim, an opaque payload's members, a wire dict handed straight to a kit — it is guessing, and both guesses are wrong in a way the wire cannot show: dropping strips a restriction, keeping fabricates an assertion. So the prune stops at the edge of what aegis has declared, and a caller pruning its own claims stays the caller's job. That edge is what makes the prune safe to run on every emission: it can only ever act where a decision has actually been recorded.",
     given: [
       {
         step: "token",
@@ -5736,7 +5606,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a security event whose payload is the conventional empty object is kept on the wire",
     rationale:
-      "RFC 8417 §2.2 defines the `events` claim as a JSON object whose members are URIs identifying event statements, and says of each member value that 'The JSON object MAY be an empty object (\"{}\")'. OpenID Connect Back-Channel Logout 1.0 §2.4 makes that the normal case: the logout token carries the member `http://schemas.openid.net/event/backchannel-logout`, whose value 'MUST be a JSON object and SHOULD be the empty JSON object {}' — the member's presence is the whole statement. A prune that removed empty containers indiscriminately would therefore delete the event itself, leaving a logout token that names no event and identifies nothing to act on. This is the claim on which the whole per-claim design is load-bearing: the one claim the profile REQUIRES is the one an indiscriminate prune would take.",
+      "The `events` claim's members are URIs identifying event statements, and a member value may be the empty object (RFC 8417 §2.2). OpenID Connect Back-Channel Logout 1.0 §2.4 makes that the normal case: the logout token carries the member `http://schemas.openid.net/event/backchannel-logout`, and the member's presence is the whole statement. A prune that removed empty containers indiscriminately would therefore delete the event itself, leaving a logout token that names no event and identifies nothing to act on. This is the claim on which the whole per-claim design is load-bearing: the one claim the profile REQUIRES is the one an indiscriminate prune would take.",
     given: [
       {
         step: "token",
@@ -5759,7 +5629,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "an-event-type-reaches-the-wire-as-the-identifier-it-is",
     title: "a security event's type URI is carried onto the wire without conversion",
     rationale:
-      "RFC 8417 §2.2 defines the claim's members by what their NAMES are: 'The value of the \"events\" claim is a JSON object whose members are name/value pairs whose names are URIs identifying the event statements being expressed.' A URI is an identifier, not a field name, and a receiver dispatches on it character for character — so the house convention that flips a claim's key case on the way out (snake on write, camel on read) would not translate an event type but rename it, and the token would announce an event nobody is listening for. Every other structured claim in this registry either declares its member spellings or flips whatever it is handed; this one must do neither.",
+      "The `events` claim's members are named by URI (RFC 8417 §2.2). A URI is an identifier, not a field name, and a receiver dispatches on it character for character — so the house convention that flips a claim's key case on the way out (snake on write, camel on read) would not translate an event type but rename it, and the token would announce an event nobody is listening for. Every other structured claim in this registry either declares its member spellings or flips whatever it is handed; this one must do neither.",
     given: [
       {
         step: "token",
@@ -5798,7 +5668,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "a-certificate-binding-that-names-no-certificate-is-refused",
     title: "a mint refuses a certificate thumbprint that identifies no certificate",
     rationale:
-      "RFC 7515 §4.1.8 defines `x5t#S256` as the base64url-encoded SHA-256 thumbprint of the DER encoding of the X.509 certificate corresponding to the key used to sign, and it is the one header parameter a verifier acts on — PRESENCE IS THE BINDING. An empty thumbprint therefore has no safe disposal, which is what separates it from every other empty header parameter. Removing it hands the audience a token carrying no binding where the issuer intended one, so the audience accepts a token it would otherwise have had to attribute to a certificate. Emitting it mints a token whose binding no certificate can ever satisfy — one every conformant recipient rejects, including the ones the issuer wrote it for. Both outcomes are silent and neither is what the issuer asked for, so the only answer left is a refusal at the WRITE, where the producer still holds the value and can supply it or drop the parameter; a recipient can do neither.",
+      "`x5t#S256` names the certificate corresponding to the key that signed the token (RFC 7515 §4.1.8), and it is the one header parameter a verifier acts on — PRESENCE IS THE BINDING. An empty thumbprint therefore has no safe disposal, which is what separates it from every other empty header parameter. Removing it hands the audience a token carrying no binding where the issuer intended one, so the audience accepts a token it would otherwise have had to attribute to a certificate. Emitting it mints a token whose binding no certificate can ever satisfy — one every conformant recipient rejects, including the ones the issuer wrote it for. Both outcomes are silent and neither is what the issuer asked for, so the only answer left is a refusal at the WRITE, where the producer still holds the value and can supply it or drop the parameter; a recipient can do neither.",
     given: [
       {
         step: "token",
@@ -5846,7 +5716,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token whose producer marked nothing critical carries no critical-parameter list",
     rationale:
-      'Both wires forbid the empty list outright. RFC 7515 §4.1.11: "Producers MUST NOT use the empty list \\"[]\\" as the \\"crit\\" value." RFC 9052 §3.1 says the same of COSE: "When present, the \\"crit\\" header parameter MUST be placed in the protected-header-parameters bucket. The array MUST have at least one value in it." A `crit` naming no parameter states that a recipient must understand nothing, which is what an ABSENT `crit` already states — so it adds no information and forfeits conformance to say it. It is also the shape a header bag assembled from optional values arrives in, so a writer that passed it through would emit a token its own reader refuses: aegis refuses an empty `crit` on arrival, and a library that mints what it will not verify has two answers to one question.',
+      "Both wires forbid the empty list outright (RFC 7515 §4.1.11, RFC 9052 §3.1). A `crit` naming no parameter states that a recipient must understand nothing, which is what an ABSENT `crit` already states — so it adds no information and forfeits conformance to say it. It is also the shape a header bag assembled from optional values arrives in, so a writer that passed it through would emit a token its own reader refuses: aegis refuses an empty `crit` on arrival, and a library that mints what it will not verify has two answers to one question.",
     given: [
       {
         step: "token",
@@ -5870,9 +5740,9 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     then: [
       { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
       // Read off the RAW bytes by the independent inspector, per wire because the
-      // two spell the parameter differently: RFC 9052 §3.1 Table 3 registers COSE
-      // `crit` at integer label 2, and CBOR keys an integer label and a text one
-      // apart (RFC 9052 §1.5 admits both: `label = int / tstr`).
+      // two spell the parameter differently: COSE keys `crit` at integer label 2
+      // (RFC 9052 §3.1), and CBOR keys an integer label and a text one apart
+      // (RFC 9052 §1.5).
       { step: "wireProtectedHeader", on: "jose", excludes: ["crit"] },
       { step: "wireProtectedHeader", on: "cose", excludes: [2] },
     ],
@@ -5882,7 +5752,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a mint refuses a header that marks a parameter critical while carrying no value for it",
     rationale:
-      'A `crit` list is a producer\'s statement that a recipient MUST understand a named parameter\'s VALUE before acting on the token — RFC 7515 §4.1.11 on JOSE, RFC 9052 §3.1 on COSE. Naming a parameter while giving nothing to understand is that statement contradicting itself, and the contradiction is unrecoverable by the time anyone reads the token: RFC 9052 §3.1 — "If the \\"crit\\" value list includes a label for which the header parameter is not in the protected-header-parameters bucket, this is a fatal error in processing the message." Such a token is refused by EVERY recipient, including the ones the producer wrote it for, which is strictly worse than the merely-unsupported token the producer was asking for. The write is therefore the only place the contradiction can be both NAMED and REPAIRED — the caller still holds the parameter, and can either supply a value or stop marking it critical, where a recipient can do neither. A value that says nothing is one fault however it is spelled: `""`, `null`, `undefined` and a parameter simply not supplied all hand the recipient the same nothing, so they get the same refusal rather than three behaviours to remember.',
+      'A `crit` list is a producer\'s statement that a recipient is required to understand a named parameter (RFC 7515 §4.1.11 on JOSE, RFC 9052 §3.1 on COSE) — and on JOSE its VALUE as well (RFC 7515 §5.2). Naming a parameter while giving nothing to understand is that statement contradicting itself, and the contradiction is unrecoverable by the time anyone reads the token: a `crit` naming a label the protected bucket does not carry is a fatal error (RFC 9052 §3.1). Such a token is refused by EVERY recipient, including the ones the producer wrote it for, which is strictly worse than the merely-unsupported token the producer was asking for. The write is therefore the only place the contradiction can be both NAMED and REPAIRED — the caller still holds the parameter, and can either supply a value or stop marking it critical, where a recipient can do neither. ⚠ Treating a present-but-EMPTY value as that same fault is AEGIS POLICY: RFC 9052 §3.1 attaches the fatal error to an ABSENT label. A value that says nothing is one fault however it is spelled: `""`, `null`, `undefined` and a parameter simply not supplied all hand the recipient the same nothing, so they get the same refusal rather than three behaviours to remember.',
     given: [
       {
         step: "token",
@@ -5898,10 +5768,12 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         },
         // `oid` is the parameter that makes this row REPRODUCE the rule rather
         // than agree with it: it is caller-settable on both wires and the only
-        // parameter aegis owns that RFC 7515 §4.1.11 permits a `crit` to name at
-        // all (every other one is IANA-registered). So the row reaches the
-        // decision, instead of asserting about a parameter a producer could never
-        // legitimately mark critical in the first place.
+        // parameter aegis owns that a `crit` may name at all. ⚠ Refusing every
+        // IANA-registered name is AEGIS POLICY, wider than the producer
+        // prohibition it extends (RFC 7515 §4.1.11), which reaches only names
+        // RFC 7515 and RFC 7518 define. So the row reaches the decision, instead
+        // of asserting about a parameter a producer could never legitimately mark
+        // critical in the first place.
         options: { header: { crit: ["oid"], oid: "" } },
       },
     ],
@@ -5922,7 +5794,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "an object sealed under an empty content type is recovered as the object it was",
     rationale:
-      "RFC 7515 §4.1.10 defines `cty` as the media type of the secured content, and the empty string is not a media type — it is a second spelling of the ABSENT parameter, which both the specification and aegis already define. Nothing has a rule for the second spelling, so it displaces the rule written for the first: a stated content type outranks the one a writer infers from the payload, and a reader given a type it does not recognise falls back to raw bytes. The consequence is silent and unrecoverable in the direction that matters — the token decrypts cleanly and hands back a different TYPE than was sealed, so a caller has no failure to catch and no way to tell the value was reinterpreted.",
+      "`cty` is the media type of the secured content (RFC 7515 §4.1.10), and the empty string is not a media type — it is a second spelling of the ABSENT parameter, which both the specification and aegis already define. Nothing has a rule for the second spelling, so it displaces the rule written for the first: a stated content type outranks the one a writer infers from the payload, and a reader given a type it does not recognise falls back to raw bytes. The consequence is silent and unrecoverable in the direction that matters — the token decrypts cleanly and hands back a different TYPE than was sealed, so a caller has no failure to catch and no way to tell the value was reinterpreted.",
     given: [
       { step: "keys", keys: ["ec-enc", "oct-enc"] },
       {
@@ -5945,7 +5817,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "an object sealed on the encryption kit under an empty cty is recovered as the object it was",
     rationale:
-      "The same rule at the WIRE-named door, which is a public one: a caller reaches `aegis.jwe.encrypt` / `aegis.cwe.encrypt` directly and spells the parameter `cty` rather than `contentType`. Whether the empty string is a media type is a fact about the PARAMETER — RFC 7515 §4.1.10 defines `cty` as the media type of the secured content, and COSE carries the same parameter on label 3 — so it cannot depend on which door the caller used or which encoding they picked. A door that resolved it differently hands back raw bytes where its sibling hands back the object, and the caller has no failure to catch: the token decrypts cleanly and only the TYPE has changed. The two encodings must also AGREE about it, or the parameter is present on one wire and absent on the other for one call, which is a difference an attacker chooses the encoding to exploit.",
+      "The same rule at the WIRE-named door, which is a public one: a caller reaches `aegis.jwe.encrypt` / `aegis.cwe.encrypt` directly and spells the parameter `cty` rather than `contentType`. Whether the empty string is a media type is a fact about the PARAMETER — `cty` is the media type of the secured content, and COSE carries the same parameter at label 3 (RFC 7515 §4.1.10, RFC 9052 §3.1) — so it cannot depend on which door the caller used or which encoding they picked. A door that resolved it differently hands back raw bytes where its sibling hands back the object, and the caller has no failure to catch: the token decrypts cleanly and only the TYPE has changed. The two encodings must also AGREE about it, or the parameter is present on one wire and absent on the other for one call, which is a difference an attacker chooses the encoding to exploit.",
     given: [
       { step: "keys", keys: ["ec-enc", "oct-enc"] },
       {
@@ -5971,7 +5843,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a third-party token whose issuer is not a URI is refused by the profile that demands one",
     rationale:
-      "A profile written to accept tokens from an issuer we do not control is the one whose structural policy MUST run on the verify path — it can never run anywhere else, because nothing on this side ever mints such a token. ⚠ Requiring the issuer to be a URI is AEGIS POLICY, not a citation: RFC 7519 §4.1.1 types `iss` as a StringOrURI, which expressly admits a bare string carrying no colon, so the specification permits exactly what this refuses. The policy exists because the issuer identifier is what scopes key lookup — a bare identifier names no origin that can be resolved or compared, so accepting one lets the presenter name an issuer nobody can check. It sits deliberately between the two published bars: looser than OIDC Core §2, which requires 'a case-sensitive URL using the https scheme that contains scheme, host, and optionally, port number and path components and no query or fragment components', because a third-party issuer need not be an OIDC provider.",
+      "A profile written to accept tokens from an issuer we do not control is the one whose structural policy MUST run on the verify path — it can never run anywhere else, because nothing on this side ever mints such a token. ⚠ Requiring the issuer to be a URI is AEGIS POLICY, not a citation: `iss` is a StringOrURI (RFC 7519 §4.1.1), so the specification permits exactly what this refuses. The policy exists because the issuer identifier is what scopes key lookup — a bare identifier names no origin that can be resolved or compared, so accepting one lets the presenter name an issuer nobody can check. It sits deliberately looser than the issuer requirement in OIDC Core §2, because a third-party issuer need not be an OIDC provider.",
     given: [
       {
         step: "token",
@@ -6001,7 +5873,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token that expires before it was issued is refused as structurally incoherent",
     rationale:
-      "RFC 7519 §4.1.4 defines `exp` as the instant on or after which the token must not be accepted and §4.1.6 defines `iat` as when it was issued, so a token whose expiry precedes its issuance describes a lifetime that never existed. No temporal range check catches it — each claim can be individually plausible — so the incoherence has to be caught as a relationship between them, or a token nobody could have legitimately produced passes every individual test.",
+      "`exp` is the instant on or after which a token must not be accepted and `iat` is when it was issued (RFC 7519 §4.1.4, RFC 7519 §4.1.6), so a token whose expiry precedes its issuance describes a lifetime that never existed. No temporal range check catches it — each claim can be individually plausible — so the incoherence has to be caught as a relationship between them, or a token nobody could have legitimately produced passes every individual test.",
     given: [
       {
         step: "token",
@@ -6038,7 +5910,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "the envelope claims a profile injects for the caller arrive on the wire under their registered names",
     rationale:
-      "A profile injects the envelope claims a caller should not have to remember — who issued the token, when, and under what identifier. Each is a REGISTERED claim with a name of its own on each wire (RFC 7519 §4.1.1/§4.1.6/§4.1.7 name `iss`, `iat` and `jti`; RFC 8392 §3.1.1/§3.1.6/§3.1.7 give the CWT the labels 1, 6 and 7), so a value injected under a domain name and never translated arrives as an unregistered custom claim that looks right and answers nothing — no verifier's issuer check, replay cache or freshness bound reads it. Injection is also EXACTLY what the profile declares: a profile that does not name `notBefore` must not stamp one, or every token it issues carries a lower bound its issuer never chose.",
+      "A profile injects the envelope claims a caller should not have to remember — who issued the token, when, and under what identifier. Each is a REGISTERED claim with a name of its own on each wire — `iss`, `iat` and `jti` on JOSE (RFC 7519 §4.1.1, RFC 7519 §4.1.6, RFC 7519 §4.1.7), labels 1, 6 and 7 on COSE (RFC 8392 §3.1.1, RFC 8392 §3.1.6, RFC 8392 §3.1.7) — so a value injected under a domain name and never translated arrives as an unregistered custom claim that looks right and answers nothing — no verifier's issuer check, replay cache or freshness bound reads it. Injection is also EXACTLY what the profile declares: a profile that does not name `notBefore` must not stamp one, or every token it issues carries a lower bound its issuer never chose.",
     given: [
       {
         step: "token",
@@ -6075,7 +5947,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a profile written for a third party's access tokens accepts several audiences and no client identifier",
     rationale:
-      "The shape a third-party authorization server actually emits is not the shape this package issues, and a profile that exists to READ one has to admit it. RFC 7519 §4.1.3 makes the multi-valued `aud` the general case — 'In the general case, the \"aud\" value is an array of case-sensitive strings' — and RFC 9068 §2.2 lists `client_id` as REQUIRED only for tokens issued under ITS profile, which a foreign server is under no obligation to follow. A resource server that could not read such a token would have no way to accept its own partners' tokens at all, and the usual workaround is to stop checking anything.",
+      "The shape a third-party authorization server actually emits is not the shape this package issues, and a profile that exists to READ one has to admit it. The multi-valued `aud` is the general case (RFC 7519 §4.1.3), and `client_id` is REQUIRED only of tokens issued under the JWT access-token profile (RFC 9068 §2.2), which a foreign server is under no obligation to follow. A resource server that could not read such a token would have no way to accept its own partners' tokens at all, and the usual workaround is to stop checking anything.",
     given: [
       // FOREIGN on purpose: what is under test is whether the profile admits a
       // wire an ordinary third-party server emits, so a token built by the code
@@ -6114,7 +5986,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token whose declared type is not a claims media type is refused before any profile is consulted",
     rationale:
-      "The type header is what says which grammar a token's body follows, and the check that it names a claims media type is a WIRE guard: it is what stops a signed artifact of another kind being read as a claim set at all. RFC 7519 §5.1 admits the bare `JWT` and, through the media-type suffix registered in RFC 6838 §4.2.8, the `<type>+jwt` forms; RFC 9596 §2 gives the COSE parameter the same role. A bare word that is neither is outside the grammar, so no profile can be reached to admit it — which is a limit worth stating plainly, because the tokens it excludes are real ones some deployments emit.",
+      "The type header is what says which grammar a token's body follows, and the check that it names a claims media type is a WIRE guard: it is what stops a signed artifact of another kind being read as a claim set at all. The grammar admits the bare `JWT` (RFC 7519 §5.1) and the registered `+jwt` structured syntax suffix (RFC 8417 §7.2, RFC 6838 §4.2.8), and the COSE parameter has the same role (RFC 9596 §2). A bare word that is neither is outside the grammar, so no profile can be reached to admit it. ⚠ Enforcing that grammar at the WIRE door is AEGIS POLICY, not a citation: `typ` is OPTIONAL and processing it belongs to the application rather than to the token implementation, on either wire (RFC 7519 §5.1, RFC 9596 §2). The limit is worth stating plainly, because the tokens it excludes are real ones some deployments emit.",
     given: [
       {
         step: "token",
@@ -6222,7 +6094,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a caller asserting one audience is answered by a token naming that audience among several",
     rationale:
-      "RFC 7519 §4.1.3 — 'In the general case, the \"aud\" value is an array of case-sensitive strings, each containing a StringOrURI value. In the special case when the JWT has one audience, the \"aud\" value MAY be a single case-sensitive string' — so the MULTI-valued form is the general one, and RFC 8392 §3.1.3 gives the CWT claim the same meaning and processing rules. A resource server asserting its own identity is asking whether it is AMONG the audiences, never whether it is the only one, so a matcher compiled to an equality test answers 'no' for every token in the general form — and the deployments it breaks are exactly the ones whose issuer did the ordinary thing.",
+      "The MULTI-valued `aud` is the general form and a single string the special case, on either wire (RFC 7519 §4.1.3, RFC 8392 §3.1.3). A resource server asserting its own identity is asking whether it is AMONG the audiences, never whether it is the only one, so a matcher compiled to an equality test answers 'no' for every token in the general form — and the deployments it breaks are exactly the ones whose issuer did the ordinary thing.",
     given: [
       {
         step: "token",
@@ -6269,7 +6141,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a caller presenting the raw access token, code and state is answered from the hash claims the token carries",
     rationale:
-      "The three hash claims come from TWO specifications and are defined the same way in both. OIDC Core §3.1.3.6 defines `at_hash` as 'the base64url encoding of the left-most half of the hash of the octets of the ASCII representation of the access_token value' and §3.3.2.11 defines `c_hash` over the `code`; `s_hash` is not an OIDC Core claim at all — Financial-grade API Security Profile 1.0 Part 2 (Advanced) §5.1.1 defines it over the `state` in identical terms. All three name the hash algorithm the same way, as 'the hash algorithm used in the alg header parameter of the ID Token's JOSE header'. A relying party holds the raw artifacts, never the digests, so the comparison has to happen where the SIGNING ALGORITHM is known — and `alg` is a header parameter. A verify that could not take the raw source would push the derivation onto every caller, and a caller that derives it from the wrong algorithm gets a mismatch it cannot explain.",
+      "The three hash claims come from TWO specifications and are defined the same way in both: `at_hash` over the access token (OIDC Core §3.1.3.6) and `c_hash` over the code (OIDC Core §3.3.2.11), while `s_hash` is not an OIDC Core claim at all and is defined over the `state` in identical terms by Financial-grade API Security Profile 1.0 Part 2 (Advanced) §5.1.1. All three take the hash algorithm from the id token's `alg` header parameter. A relying party holds the raw artifacts, never the digests, so the comparison has to happen where the SIGNING ALGORITHM is known — and `alg` is a header parameter. A verify that could not take the raw source would push the derivation onto every caller, and a caller that derives it from the wrong algorithm gets a mismatch it cannot explain.",
     given: [
       {
         step: "token",
@@ -6303,7 +6175,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a caller presenting an access token the id token was not issued for is refused",
     rationale:
-      "OIDC Core §3.1.3.6 exists so a relying party can detect an access token substituted for the one the id token was issued alongside. The binding therefore has to FAIL for the substituted artifact — a derivation that computed a digest and then compared nothing would report success for every pair, which is the single condition the claim was added to make detectable.",
+      "The `at_hash` binding is what lets a relying party detect an access token substituted for the one the id token was issued alongside (OIDC Core §3.1.3.6). It therefore has to FAIL for the substituted artifact — a derivation that computed a digest and then compared nothing would report success for every pair, which is the single condition the claim was added to make detectable.",
     given: [
       {
         step: "token",
@@ -6389,13 +6261,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a refused claim matcher is reported under the domain claim name the caller stated it with",
     rationale:
-      "The domain surface exists so a caller states claims in ONE vocabulary and never has to know the wire's. It takes `tokenId` and returns `tokenId`, and it does so precisely because the wire spellings diverge — RFC 7519 §4.1.7 calls the claim `jti` and RFC 8392 §3.1.7 registers the same claim as `cti` on COSE. A refusal that reports the WIRE name hands that divergence straight back: the caller receives a name it never wrote, and receives a DIFFERENT one depending on which encoding the issuer chose, so the only way to act on the failure is to carry a private reverse map of every claim on both wires. It also makes one field mean two things — the policy floor and the static claim matcher both report this list in domain names — so a consumer reading `invalid` cannot tell which vocabulary it was handed.",
-    // ⚠ `data` IS pinned on a row carrying a knownDefect, which the general rule
-    // above discourages — and the reason it does not apply here is that the
-    // refusal is fully observable today. The error is thrown, and it already
-    // carries an `invalid` list; the shortfall is its CONTENTS, not the shape of
-    // an error that does not exist yet. So this is read off the real error and
-    // states what that same field must hold, rather than guessing at a fix.
+      "The domain surface exists so a caller states claims in ONE vocabulary and never has to know the wire's. It takes `tokenId` and returns `tokenId`, and it does so precisely because the wire spellings diverge — the claim is `jti` on JOSE and `cti` on COSE (RFC 7519 §4.1.7, RFC 8392 §3.1.7). A refusal that reports the WIRE name hands that divergence straight back: the caller receives a name it never wrote, and receives a DIFFERENT one depending on which encoding the issuer chose, so the only way to act on the failure is to carry a private reverse map of every claim on both wires. It also makes one field mean two things — the policy floor and the static claim matcher both report this list in domain names — so a consumer reading `invalid` cannot tell which vocabulary it was handed.",
     given: [
       {
         step: "token",
@@ -6432,7 +6298,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "an opaque signed artifact verifies through its own raw door and returns the payload it was signed over",
     rationale:
-      "RFC 7515 §1 secures 'an arbitrary sequence of octets', so the opaque door is the one a caller uses for a payload that is not a claim set — a stored blob, an encoded record — and it is a SEPARATE forward from the claims door with its own key resolution and its own verify call. A door that could sign but not verify would leave every such artifact unreadable by the package that wrote it, and there would be no other surface to reach it from: the claims reader refuses an opaque artifact by design rather than returning an empty claim set.",
+      "A signature covers an arbitrary sequence of octets (RFC 7515 §1), so the opaque door is the one a caller uses for a payload that is not a claim set — a stored blob, an encoded record — and it is a SEPARATE forward from the claims door with its own key resolution and its own verify call. A door that could sign but not verify would leave every such artifact unreadable by the package that wrote it, and there would be no other surface to reach it from: the claims reader refuses an opaque artifact by design rather than returning an empty claim set.",
     given: [
       {
         step: "token",
@@ -6448,7 +6314,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "the-raw-claims-verify-accepts-a-token-that-declares-no-type",
     title: "the raw claims verify accepts a token that carries no type header",
     rationale:
-      "RFC 7519 §5.1 makes `typ` OPTIONAL — 'This parameter is ignored by JWT implementations; any processing of this parameter is performed by the JWT application' — and RFC 9596 §2 says the same of the COSE parameter, so a typ-less claims token is conformant on either wire. Whether to accept one is an APPLICATION policy, which is where the domain surface enforces it; the raw wire door is not the application, so a presence rule imposed there would refuse conformant tokens with no way for the caller to say otherwise.",
+      "`typ` is OPTIONAL, and processing it belongs to the application rather than to the token implementation, on either wire (RFC 7519 §5.1, RFC 9596 §2) — so a typ-less claims token is conformant. Whether to accept one is an APPLICATION policy, which is where the domain surface enforces it; the raw wire door is not the application, so a presence rule imposed there would refuse conformant tokens with no way for the caller to say otherwise.",
     given: [
       {
         step: "token",
@@ -6469,8 +6335,8 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     then: [
       { step: "accepts" },
       // ⚠ The row's PREMISE, read off the wire. Without it the row accepts an
-      // ordinary typed token and says nothing about typ-lessness at all.
-      // RFC 9596 §4.1 registers the COSE `typ` at label 16.
+      // ordinary typed token and says nothing about typ-lessness at all. The
+      // COSE `typ` is label 16 (RFC 9596 §4.1).
       { step: "wireProtectedHeader", on: "jose", excludes: ["typ"] },
       { step: "wireProtectedHeader", on: "cose", excludes: [16] },
     ],
@@ -6480,7 +6346,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "the raw claims verify accepts an expired token when the caller waives the expiry range",
     rationale:
-      "RFC 7519 §4.1.4 makes `exp` a bound a verifier enforces, and waiving it is a narrow, legitimate request — inspecting a previously-issued token where the signature, not the lifetime, is what is being trusted. The raw door threads its own option bag by hand, so it can honour an option the domain door honours and drop the one beside it; the caller sees no difference, because a dropped waiver simply rejects and a dropped tightening simply accepts.",
+      "`exp` is a bound a verifier enforces (RFC 7519 §4.1.4), and waiving it is a narrow, legitimate request — inspecting a previously-issued token where the signature, not the lifetime, is what is being trusted. The raw door threads its own option bag by hand, so it can honour an option the domain door honours and drop the one beside it; the caller sees no difference, because a dropped waiver simply rejects and a dropped tightening simply accepts.",
     given: [
       {
         step: "token",
@@ -6508,7 +6374,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "the raw claims verify accepts a token expired inside the leeway the caller allows",
     rationale:
-      "RFC 7519 §4.1.4 allows 'some small leeway, usually no more than a few minutes, to account for clock skew' when checking `exp`. The leeway is a NUMBER rather than a flag, so it is the option that shows the whole bag reaches the raw door and not merely the booleans a hand-written forward is most likely to remember: a token ten seconds past its expiry must verify under a sixty-second allowance and fail without one.",
+      "A small leeway for clock skew is allowed when checking `exp` (RFC 7519 §4.1.4). The leeway is a NUMBER rather than a flag, so it is the option that shows the whole bag reaches the raw door and not merely the booleans a hand-written forward is most likely to remember: a token ten seconds past its expiry must verify under a sixty-second allowance and fail without one.",
     given: [
       {
         step: "token",
@@ -6532,7 +6398,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "the raw claims verify refuses a token whose signing key the caller's policy forbids",
     rationale:
-      "RFC 8725 §3.1 puts the restriction in the caller's hands and makes honouring it mandatory — 'Libraries MUST enable the caller to specify a supported set of algorithms and MUST NOT use any other algorithms when performing cryptographic operations.' The raw door is where a caller reaches the wire directly, so a policy dropped there is worse than no policy at all: the caller believes the constraint is in force and stops checking, and the token's own header is left to decide which vault resident verifies it.",
+      "A library must let the caller restrict which algorithms it will use, and must honour that restriction (RFC 8725 §3.1). The raw door is where a caller reaches the wire directly, so a policy dropped there is worse than no policy at all: the caller believes the constraint is in force and stops checking, and the token's own header is left to decide which vault resident verifies it.",
     given: [{ step: "token", via: "kit-sign", kit: "structured", claims: LIVE_CLAIMS }],
     // The vault's signing key is the ES512 one, so a policy demanding a shared
     // secret can only be satisfied by ignoring the policy.
@@ -6549,16 +6415,14 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
   // ---------------------------------------------------------------------------
   // Delegation, and the actor policy a verifier states over it.
   //
-  // RFC 8693 §4.1: "A chain of delegation can be expressed by nesting one 'act'
-  // claim within another. The outermost 'act' claim represents the current actor
-  // while nested 'act' claims represent prior actors." Everything below is a
+  // The `act` claim and its nesting are RFC 8693 §4.1. Everything below is a
   // policy over that structure.
   // ---------------------------------------------------------------------------
   {
     id: "a-token-that-names-no-actor-reports-an-empty-delegation-chain",
     title: "a token presented by its own subject reports a delegation bucket saying so",
     rationale:
-      "RFC 8693 §4.1 — the `act` claim is what 'express[es] that delegation has occurred'. Its ABSENCE is therefore a positive statement about the presentation, and the result has to carry that statement rather than leave the bucket off: a consumer reading `isDelegated` off an absent bucket reads `undefined`, which is falsy, so the direct case and the case where the read side simply lost the chain become indistinguishable — and the second is the one that misattributes a delegated request to the subject.",
+      "The `act` claim is what expresses that delegation has occurred (RFC 8693 §4.1). Its ABSENCE is therefore a positive statement about the presentation, and the result has to carry that statement rather than leave the bucket off: a consumer reading `isDelegated` off an absent bucket reads `undefined`, which is falsy, so the direct case and the case where the read side simply lost the chain become indistinguishable — and the second is the one that misattributes a delegated request to the subject.",
     given: [
       {
         step: "token",
@@ -6613,7 +6477,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "an-actor-prohibition-refuses-a-token-that-names-one",
     title: "a verifier that accepts only direct presentations refuses a delegated token",
     rationale:
-      "RFC 8693 §4.1 — an `act` claim says the request is being made by a party acting FOR the subject rather than by the subject. An operation that must be performed by the end-user in person — a credential change, a consent — is authorised by the subject and not by anyone acting for them, so the verifier needs a way to refuse the delegated form outright. Without it the only remaining defence is that every downstream check happens to notice the actor, which none of them are written to do.",
+      "An `act` claim says the request is being made by a party acting FOR the subject rather than by the subject (RFC 8693 §4.1). An operation that must be performed by the end-user in person — a credential change, a consent — is authorised by the subject and not by anyone acting for them, so the verifier needs a way to refuse the delegated form outright. Without it the only remaining defence is that every downstream check happens to notice the actor, which none of them are written to do.",
     given: [
       {
         step: "token",
@@ -6634,43 +6498,11 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     then: [{ step: "rejects", error: "AegisDomainError" }],
   },
   {
-    id: "an-actor-allowlist-accepts-a-chain-whose-every-actor-it-names",
+    id: "an-actor-allowlist-ignores-the-prior-actors-in-the-chain",
     title:
-      "a verifier listing the actors it trusts accepts a chain drawn entirely from that list",
+      "a verifier listing the actors it trusts accepts a chain whose earlier actors it does not list",
     rationale:
-      "An allowlist is a constraint on WHO may act, and it has to admit the deployments it was written for: a request that legitimately passed through two named intermediaries must verify. A list that refused its own members would be discovered only when the second hop was added, and the fix applied under pressure is to widen the list to everything.",
-    given: [
-      {
-        step: "token",
-        via: "kit-sign",
-        kit: "structured",
-        claims: {
-          iss: ISSUER,
-          sub: "user-1",
-          aud: [RESOURCE],
-          exp: NOW + 3600,
-          iat: NOW,
-          jti: "token-1",
-          act: { sub: "service-1", act: { sub: "service-2" } },
-        },
-      },
-    ],
-    when: [
-      {
-        step: "verify",
-        options: {
-          actor: { allowedActors: { subject: { $in: ["service-1", "service-2"] } } },
-        },
-      },
-    ],
-    then: [{ step: "accepts", format: { jose: "jwt", cose: "cwt" } }],
-  },
-  {
-    id: "an-actor-allowlist-refuses-a-chain-carrying-an-actor-it-does-not-name",
-    title:
-      "a verifier listing the actors it trusts refuses a chain in which a prior actor is not listed",
-    rationale:
-      "⚠ Checking the WHOLE chain by default is AEGIS POLICY and deliberately stricter than the specification's guidance: RFC 8693 §4.1 says consumers 'only consider the token's top-level claims and the party identified as the current actor by the \"act\" claim. Prior actors identified by any nested \"act\" claims are informational only and are not to be considered in access control decisions.' aegis defaults to the strict reading because a chain is a record of everyone who has HELD the token, and a party that held it could have altered the request it was used for; a deployment that wants the specification's reading asks for it explicitly with the current-actor scope. Whichever reading applies, an allowlist that admitted an unlisted actor would be no list at all.",
+      "The allowlist answers one question — is the party making THIS call one the verifier trusts — and it is read against that party alone (RFC 8693 §4.1). The hops a credential took before it arrived are history about parties that are no longer touching the request; holding the list against all of them would refuse a token over a party that cannot act on it any more, and a list that refuses on history is one a deployment can keep only by naming every intermediary that has ever existed or by dropping the list.",
     given: [
       {
         step: "token",
@@ -6690,49 +6522,17 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     when: [
       {
         step: "verify",
-        options: { actor: { allowedActors: { subject: { $in: ["service-1"] } } } },
-      },
-    ],
-    then: [{ step: "rejects", error: "AegisDomainError" }],
-  },
-  {
-    id: "an-actor-policy-scoped-to-the-current-actor-ignores-the-prior-ones",
-    title:
-      "a verifier checking only the calling actor accepts a chain whose earlier actors it does not list",
-    rationale:
-      "This is the specification's own reading, and it must be available: RFC 8693 §4.1 — 'Prior actors identified by any nested \"act\" claims are informational only and are not to be considered in access control decisions.' A resource asking 'is my CALLER allowed' is asking about the outermost actor alone, and holding it to the whole history would refuse every token that had ever traversed a hop the resource has no opinion about. The scope is what lets one option express both readings; without it the strict default would be the only one, and the specification-conformant deployment would have to drop the allowlist entirely.",
-    given: [
-      {
-        step: "token",
-        via: "kit-sign",
-        kit: "structured",
-        claims: {
-          iss: ISSUER,
-          sub: "user-1",
-          aud: [RESOURCE],
-          exp: NOW + 3600,
-          iat: NOW,
-          jti: "token-1",
-          act: { sub: "service-1", act: { sub: "rogue" } },
-        },
-      },
-    ],
-    when: [
-      {
-        step: "verify",
-        options: {
-          actor: { allowedActors: { subject: "service-1" }, actorScope: "current" },
-        },
+        options: { actor: { allowedActor: { subject: "service-1" } } },
       },
     ],
     then: [{ step: "accepts", format: { jose: "jwt", cose: "cwt" } }],
   },
   {
-    id: "an-actor-policy-scoped-to-any-actor-refuses-a-chain-in-which-none-matches",
+    id: "an-actor-allowlist-refuses-a-chain-whose-current-actor-it-does-not-name",
     title:
-      "a verifier requiring a named actor somewhere in the chain refuses a chain that never carried it",
+      "a verifier listing the actors it trusts refuses a chain whose calling actor is not listed",
     rationale:
-      "The any-actor scope is an ATTESTATION — the token passed through a particular gateway at some point — and RFC 8693 §4.1 is what makes it answerable: the nested claims are 'a history trail that connects the initial request and subject through the various delegation steps'. An attestation is only worth reading if its absence refuses, and this is the scope where that is easiest to get wrong, because a search that never matches and a search that always matches both look like a check.",
+      "The refusal is the whole of the constraint: an unlisted party wielding the token is exactly what a deployment states this option to stop, and it is the half that is invisible when it is missing, because a check that always accepts and a check that is correct agree on every token that was going to be accepted anyway. ⚠ The unlisted party here is the CURRENT actor and the listed one is a prior actor, so a policy that searched the chain rather than reading its head would accept this token (RFC 8693 §4.1).",
     given: [
       {
         step: "token",
@@ -6745,7 +6545,133 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
           exp: NOW + 3600,
           iat: NOW,
           jti: "token-1",
-          act: { sub: "rogue-1", act: { sub: "rogue-2" } },
+          act: { sub: "rogue", act: { sub: "service-1" } },
+        },
+      },
+    ],
+    when: [
+      {
+        step: "verify",
+        options: { actor: { allowedActor: { subject: "service-1" } } },
+      },
+    ],
+    then: [{ step: "rejects", error: "AegisDomainError" }],
+  },
+  {
+    id: "an-actor-allowlist-refuses-a-token-that-names-no-actor",
+    title:
+      "a verifier listing the actors it trusts refuses a token presented by its own subject",
+    rationale:
+      "A constraint on who may act cannot be satisfied by nobody acting. The `act` claim is what expresses that delegation has occurred and identifies the acting party (RFC 8693 §4.1), so a token carrying none names no such party at all — a different presentation from the ones the list was written to admit. Admitting it would make the allowlist a constraint that applies only once some other claim happens to be present, and a verifier stating one would have to state a delegation requirement beside it to get back the refusal it had already asked for.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          jti: "token-1",
+        },
+      },
+    ],
+    when: [
+      {
+        step: "verify",
+        options: { actor: { allowedActor: { subject: "service-1" } } },
+      },
+    ],
+    then: [{ step: "rejects", error: "AegisDomainError" }],
+  },
+  {
+    id: "an-actor-allowlist-stated-as-a-denial-refuses-a-token-that-names-no-actor",
+    title:
+      "a verifier whose actor allowlist names the parties it refuses still refuses a token presented by its own subject",
+    rationale:
+      "Naming the parties a verifier will not accept states the same policy as naming the ones it will: some party is acting, and it is not one of those. The refusal of a token naming no actor therefore has to be decided before the condition is applied rather than by it — the condition language negates two-valuedly (`@lindorm/match`, `$not`), so an actor that is not there fails to match anything and consequently satisfies every denial. A verifier whose policy survived being rewritten from a list of admitted parties into a list of refused ones, but whose refusal of the undelegated presentation did not, has had a hole opened by an edit that changed nothing it could observe.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          jti: "token-1",
+        },
+      },
+    ],
+    when: [
+      {
+        step: "verify",
+        options: { actor: { allowedActor: { $not: { subject: "rogue" } } } },
+      },
+    ],
+    // The `code` separates the two refusals a bad `allowedActor` can draw: this
+    // row is about the TOKEN failing a well-formed condition, and it would read
+    // as green if the condition were instead refused as one that constrains
+    // nothing.
+    then: [{ step: "rejects", error: "AegisDomainError", code: "actor_not_allowed" }],
+  },
+  {
+    id: "an-actor-allowlist-that-constrains-nothing-is-refused",
+    title:
+      "a verifier stating an actor allowlist with no condition in it has the call refused rather than obeyed",
+    rationale:
+      "A condition naming no field is satisfied by every actor, so an allowlist written that way authorises everyone while the call site still reads as an allowlist — and the deployment that wrote it has stopped checking elsewhere precisely because it believes this check is in force. Nothing downstream can notice, since every token the policy should have refused is accepted instead. Refusing the CALL is what makes it visible: a policy that cannot refuse is worse than no policy at all. ⚠ It is the CONDITION that must state something, not the option: an absent `allowedActor` states no actor policy and stays legal.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          jti: "token-1",
+          // An actor the empty condition WOULD match. Without one the token is
+          // refused for naming no actor at all, and the row could not tell a
+          // working guard from a missing one.
+          act: { sub: "service-1" },
+        },
+      },
+    ],
+    when: [{ step: "verify", options: { actor: { allowedActor: {} } } }],
+    // The `code` is part of the capability: the refusal names the CALLER's option
+    // as the malformed thing. Sharing `actor_not_allowed` with the token-shaped
+    // refusals would send an operator to read a token that is fine.
+    then: [{ step: "rejects", error: "AegisDomainError", code: "actor_policy_invalid" }],
+  },
+  {
+    id: "an-actor-allowlist-with-an-alternative-that-constrains-nothing-is-refused",
+    title:
+      "a verifier stating an actor allowlist whose alternatives include one with no condition in it has the call refused rather than obeyed",
+    rationale:
+      "A list of alternatives admits an actor satisfying any ONE of them, so an alternative naming no field admits every actor and the surrounding list stops constraining — while the call site still reads as a list of trusted parties, and every alternative that does name a party still reads as if it were being held against the actor. This is the shape a list assembled from configuration produces: one entry that names nothing yields one alternative that constrains nothing, and the list nobody wrote out by hand is the one nobody re-reads. Refusing the CALL is what makes it visible: a policy that cannot refuse is worse than no policy at all.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          jti: "token-1",
+          // An actor NO named alternative admits, so only the degenerate one can
+          // let it through — which is what separates a working guard from a
+          // missing one here.
+          act: { sub: "service-1" },
         },
       },
     ],
@@ -6753,18 +6679,18 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       {
         step: "verify",
         options: {
-          actor: { allowedActors: { subject: "gateway" }, actorScope: "some" },
+          actor: { allowedActor: { $or: [{ subject: "nobody" }, {}] } },
         },
       },
     ],
-    then: [{ step: "rejects", error: "AegisDomainError" }],
+    then: [{ step: "rejects", error: "AegisDomainError", code: "actor_policy_invalid" }],
   },
   {
     id: "an-actor-chain-deeper-than-the-stated-bound-is-refused",
     title:
       "a verifier bounding the delegation depth refuses a chain longer than it allows",
     rationale:
-      "RFC 8693 §4.1 lets a chain nest without limit, and every additional hop is another party that has held the token. A depth bound is how a deployment states how far a credential may travel from the party that authorised it, and it is also the only structural bound on the claim at all — an unbounded nesting is an unbounded parse, so a verifier that never reads the depth cannot refuse a chain built purely to be expensive.",
+      "A chain nests one `act` claim within another (RFC 8693 §4.1), and every additional hop is another party that has held the token. A depth bound is how a deployment states how far a credential may travel from the party that authorised it, and it is also the only structural bound on the claim at all — an unbounded nesting is an unbounded parse, so a verifier that never reads the depth cannot refuse a chain built purely to be expensive.",
     given: [
       {
         step: "token",
@@ -6789,7 +6715,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a mint carries an actor member RFC 8693 permits and aegis does not declare, at every depth",
     rationale:
-      "RFC 8693 §4.1 does not enumerate the actor's members: \"The 'act' claim value is a JSON object, and members in the JSON object are claims that identify the actor. The claims that make up the 'act' claim identify and possibly provide additional information about the actor.\" §4.4 says the same of `may_act` and NAMES one beyond the identifiers — \"the combination of the two claims 'iss' and 'sub' are sometimes necessary to uniquely identify an authorized actor, while the 'email' claim might be used to provide additional useful information about that party.\" So the set of claims that may identify an actor belongs to the deployment and to the other specifications it composes with, not to this library: an issuer that needs one more identifier must be able to write it, and a reader must report it rather than pretend the issuer said less. The member travels UNTOUCHED because its name was given by whoever registered it — a case flip would not translate it but rewrite it into a field nobody reads. ⚠ The nesting is part of the rule and not a bonus: §4.1 makes a nested `act` the same kind of object as the outer one, so a member set that opened at the top and closed one level down would be a rule about nothing.",
+      "The actor's member set is OPEN TO FURTHER IDENTITY CLAIMS, and so is `may_act`'s — both sections close it to non-identity ones (RFC 8693 §4.1, RFC 8693 §4.4). ⚠ aegis DECLARES one of the excluded members anyway, `audience`, so a consumer can validate what an issuer wrote: a public-surface departure with its own decision to make, not a reading of RFC 8693 §4.1 (`src/internal/claims/act-members.ts#IS DECLARED THOUGH RFC 8693 §4.1 EXCLUDES IT`). So the set of claims that may identify an actor belongs to the deployment and to the other specifications it composes with, not to this library: an issuer that needs one more identifier must be able to write it, and a reader must report it rather than pretend the issuer said less. The member travels UNTOUCHED because its name was given by whoever registered it — a case flip would not translate it but rewrite it into a field nobody reads. ⚠ The nesting is part of the rule and not a bonus: a nested `act` is the same kind of object as the outer one (RFC 8693 §4.1), so a member set that opened at the top and closed one level down would be a rule about nothing.",
     given: [
       {
         step: "token",
@@ -6847,7 +6773,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a verify reports an actor member of somebody else's token that aegis does not declare",
     rationale:
-      'A read reports what a PRODUCER wrote. Dropping a member the library has no declaration for makes it misreport a stranger\'s token as saying LESS than it says, and does so silently — so nothing downstream can tell an actor the issuer described in two members from one they described in three, and a deployment that depends on the extra identifier discovers the loss only where it eventually matters. That is worse than either honest alternative: refusing says the token cannot be read, reporting says what it contains. RFC 8693 §4.1 makes the extra member legitimate in the first place ("members in the JSON object are claims that identify the actor"), so refusing would reject conformant issuers, which leaves reporting as the only answer that is both honest and usable.',
+      "A read reports what a PRODUCER wrote. Dropping a member the library has no declaration for makes it misreport a stranger's token as saying LESS than it says, and does so silently — so nothing downstream can tell an actor the issuer described in two members from one they described in three, and a deployment that depends on the extra identifier discovers the loss only where it eventually matters. That is worse than either honest alternative: refusing says the token cannot be read, reporting says what it contains. The extra member is legitimate in the first place (RFC 8693 §4.1), so refusing would reject conformant issuers, which leaves reporting as the only answer that is both honest and usable.",
     given: [
       {
         // A FOREIGN token, written through the raw kit door — which performs no
@@ -6882,7 +6808,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token whose actor carries a domain-spelled look-alike beside the real one is refused, not re-read from the look-alike",
     rationale:
-      'RFC 8693 §4.1 identifies the acting party by the claims inside the `act` object, and its own example uses `sub`. WHICH party the issuer named is therefore decided by that member and by nothing else. The actor\'s member set is OPEN — §4.4 offers `email` as a member a deployment may add — and an open set is what makes this reachable: a member the library carries untouched can be spelled exactly like the library\'s own DOMAIN name for a member it does declare, so `sub` and `subject` both arrive at `subject` and something has to decide between them. Deciding by key order hands the identification to whoever presents the token: a chain the issuer wrote as `{"sub":"audited-service"}` is re-read as naming a different actor entirely by appending one member the issuer never wrote, and every allowlist, every scope and every audit record downstream then names the wrong party. There is no safe winner to pick — the token is self-contradictory about the one fact the claim exists to state — so the collision is refused, naming the key both members resolved to. It is the same hazard the top-level floor treats as load-bearing when it refuses to let a custom `audience` answer for the registered `aud`, one level in. ⭐ And the refusal cannot depend on the issuer having written the real member too: an actor naming ONLY the look-alike produces a domain claim BYTE-IDENTICAL to one built from a genuine `sub`, so a consumer reading `act.subject` for an allowlist or an audit record has nothing to tell the two apart. Carrying an unknown member and carrying it into a declared member\'s own slot are two different acts — §4.1 permits the first and says nothing that would permit the second.',
+      'The acting party is identified by the claims inside the `act` object, `sub` among them (RFC 8693 §4.1). WHICH party the issuer named is therefore decided by that member and by nothing else. The actor\'s member set is OPEN — a deployment may add a further identity member (RFC 8693 §4.1) — and an open set is what makes this reachable: a member the library carries untouched can be spelled exactly like the library\'s own DOMAIN name for a member it does declare, so `sub` and `subject` both arrive at `subject` and something has to decide between them. Deciding by key order hands the identification to whoever presents the token: a chain the issuer wrote as `{"sub":"audited-service"}` is re-read as naming a different actor entirely by appending one member the issuer never wrote, and every allowlist, every scope and every audit record downstream then names the wrong party. There is no safe winner to pick — the token is self-contradictory about the one fact the claim exists to state — so the collision is refused, naming the key both members resolved to. It is the same hazard the top-level floor treats as load-bearing when it refuses to let a custom `audience` answer for the registered `aud`, one level in. ⭐ And the refusal cannot depend on the issuer having written the real member too: an actor naming ONLY the look-alike produces a domain claim BYTE-IDENTICAL to one built from a genuine `sub`, so a consumer reading `act.subject` for an allowlist or an audit record has nothing to tell the two apart. Carrying an unknown member and carrying it into a declared member\'s own slot are two different acts, and only the first is what the open member set is for (RFC 8693 §4.1).',
     given: [
       {
         step: "token",
@@ -6900,11 +6826,8 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
           // (`an-actor-look-alike-is-refused-even-when-the-real-member-is-absent`)
           // states the harder half, where the look-alike arrives ALONE. Two rows
           // rather than one because the second is what a presence-dependent
-          // refusal passes: an earlier note here argued a lone look-alike "would
-          // be satisfied by a reader that simply ignored it", and that reasoning
-          // is what left the single-key form open — being ignored and being
-          // written into `subject` are not the same outcome, and only the second
-          // one happened.
+          // refusal passes: being ignored and being written into `subject` are
+          // not the same outcome.
           act: { sub: "audited-service", subject: "rogue-service" },
         },
       },
@@ -6931,7 +6854,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token whose actor names ONLY a domain-spelled look-alike is refused, not read as identifying that actor",
     rationale:
-      "The dangerous form of a look-alike is the one that arrives ALONE. RFC 8693 §4.1 identifies the acting party by the claims inside the `act` object and its own example uses `sub`; a token writing `subject` instead produces a domain claim BYTE-IDENTICAL to one built from a genuine `sub`, so every consumer downstream — an allowlist, a scope decision, an audit record — reads a party the issuer never named and has nothing to tell the two apart. With BOTH members present there is a visible contradiction for a reader to refuse; with only the look-alike there is none, which makes this the case a refusal must cover rather than the one it may skip. §4.1 permits an unknown member to be carried, and permits nothing about writing one into a declared member's own slot: those are two different acts, and only the second is indistinguishable from the truth.",
+      "The dangerous form of a look-alike is the one that arrives ALONE. The acting party is identified by the claims inside the `act` object, `sub` among them (RFC 8693 §4.1); a token writing `subject` instead produces a domain claim BYTE-IDENTICAL to one built from a genuine `sub`, so every consumer downstream — an allowlist, a scope decision, an audit record — reads a party the issuer never named and has nothing to tell the two apart. With BOTH members present there is a visible contradiction for a reader to refuse; with only the look-alike there is none, which makes this the case a refusal must cover rather than the one it may skip. Carrying an unknown member and writing one into a declared member's own slot are two different acts, and only the first is what the open member set is for (RFC 8693 §4.1); only the second is indistinguishable from the truth.",
     given: [
       {
         step: "token",
@@ -6974,7 +6897,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token whose address names a member in the library's own domain spelling is refused, not read as that member",
     rationale:
-      "OIDC Core §5.1.1 spells an address member `street_address`, and the library's domain vocabulary spells the same member `streetAddress`. A token writing the domain form is writing a name no specification defines into the slot the specification's own member resolves to, and the result a consumer reads is indistinguishable from a conformant token — so the deployment cannot tell whether the issuer followed the specification. The address claim carries a case-flipped open tail precisely because an undeclared member is a lindorm extension of a lindorm type; a member that is NOT undeclared, merely spelled in the wrong vocabulary, is not that. Stated on `address` as well as on the actor chain because they take DIFFERENT tail policies — a flipped tail and a verbatim one — and a rule that held for only one of them would be a rule about the tail policy rather than about the member set.",
+      "An address member is spelled `street_address` on the wire (OIDC Core §5.1.1) and `streetAddress` in the library's domain vocabulary. A token writing the domain form is writing a name no specification defines into the slot the specification's own member resolves to, and the result a consumer reads is indistinguishable from a conformant token — so the deployment cannot tell whether the issuer followed the specification. The address claim carries a case-flipped open tail precisely because an undeclared member is a lindorm extension of a lindorm type; a member that is NOT undeclared, merely spelled in the wrong vocabulary, is not that. Stated on `address` as well as on the actor chain because they take DIFFERENT tail policies — a flipped tail and a verbatim one — and a rule that held for only one of them would be a rule about the tail policy rather than about the member set.",
     given: [
       {
         step: "token",
@@ -7035,25 +6958,37 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     ],
   },
   {
-    id: "a-structured-member-named-__proto__-is-refused-rather-than-made-a-prototype",
+    id: "every-fault-in-one-structure-is-reported-not-just-the-first",
     title:
-      "a read refuses a structured claim whose member is named `__proto__`, on a token nobody signed",
+      "a mint refuses a structured claim naming EVERY fault it carries, not the one the walker reached first",
     rationale:
-      "RFC 8259 §4 makes any string a legal JSON member name — \"A name is a string\" — and JavaScript then treats the assignment of one particular name as a request to REPLACE the object's prototype rather than to add a member. So a producer who writes `act.__proto__` writes a claim whose members a consumer's `Object.keys` and `JSON.stringify` both report as absent, while `claims.act.subject` returns the value the producer put there: an actor identity that is invisible to every audit log and present at every read. The collision rule cannot see it either — no own property is created, so nothing is claimed twice. Refusing the NAME is the only defence that does not depend on noticing an effect designed to be unobservable. The door is the KEYLESS one because that is the reach: reporting a payload without checking a signature is what `parse` is for, so an attacker needs no key at all, and a token minted through this package cannot carry the member anyway — the claim bag is normalised on the way out.",
+      "A structure refusal is a repair instruction, and every fault it withholds costs the caller another round trip to discover. Two members colliding on one key and two other members colliding on a different key are INDEPENDENT faults: neither creates the other, and repairing one leaves the other exactly as it was — so a walk that returned at the first would report an N-fault structure as a one-fault structure and the caller would rediscover the rest one mint at a time, each time with no token issued and no way to see how far the problem went. Reporting all of them is also the only form in which the entry list describes the VALUE rather than the walk: a single entry says which member the walker happened to reach first, and that is a fact about the caller's key insertion order, not about the claim.",
     given: [
       {
         step: "token",
-        via: "forged",
-        wire: "jose",
-        // ⚠ A PAYLOAD TEXT, not a claims dict, and that is the whole reason this
-        // step exists: a TS/JS object literal spelling `__proto__` invokes the
-        // prototype setter, so the member cannot survive as data anywhere between
-        // the row and the wire. The text is written byte for byte.
-        payload: `{"iss":"${ISSUER}","sub":"user-1","exp":${NOW + 3600},"act":{"__proto__":{"subject":"attacker"},"iss":"https://x.test"}}`,
-        signature: "junk",
+        via: "mint",
+        profile: "access_token",
+        content: {
+          subject: "user-1",
+          audience: [RESOURCE],
+          clientId: CLIENT,
+          // ⚠⚠ TWO INDEPENDENT COLLISIONS, ON TWO DIFFERENT KEYS. `issuer`/`iss`
+          // meet on `iss` and `subject`/`sub` meet on `sub` — separate declared
+          // members, separate tail members, separate outgoing keys. Neither pair
+          // is why the other was found: drop the `subject`/`sub` pair and the
+          // `iss` entry is still the whole refusal, and the reverse holds too.
+          // That is what makes the two-entry pin a statement about AGGREGATION
+          // rather than the causal chain the confirmation row above states.
+          act: {
+            issuer: "https://declared-issuer.test",
+            iss: "https://shadow-issuer.test",
+            subject: "declared-actor",
+            sub: "shadow-actor",
+          },
+        },
       },
     ],
-    when: [{ step: "parse" }],
+    when: [{ step: "mint" }],
     then: [
       {
         step: "rejects",
@@ -7062,41 +6997,46 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
           claim: "act",
           invalid: [
             {
-              key: "act.__proto__",
-              message:
-                'Member "__proto__" is not a member name any structure may use, in "act"',
+              key: "act.iss",
+              message: 'Members "iss" and "issuer" both resolve to "iss" in "act"',
+            },
+            {
+              key: "act.sub",
+              message: 'Members "sub" and "subject" both resolve to "sub" in "act"',
             },
           ],
         },
       },
     ],
-    unsupported: {
-      cose: 'the forgery is a raw JSON payload text, and the hazard it carries is JavaScript\'s own: RFC 8259 §4 admits `__proto__` as an ordinary member name ("A name is a string") and the language turns writing it into a prototype replacement. A COSE payload is CBOR and has no such text to write — RFC 9052 §1.5 keys a COSE map by "text strings, negative integers, and unsigned integers", so the same member reaches a COSE reader as a text LABEL in a member map, which is a different artifact travelling through a different decoder',
-    },
   },
   {
-    id: "a-compact-cose-member-map-refuses-a-text-__proto__-label",
+    id: "a-refusal-locates-a-fault-nested-two-structures-deep",
     title:
-      "a read refuses a COSE member map carrying `__proto__` as a text label, on a token nobody signed",
+      "a mint refusing a fault inside a nested actor names the path to it, not the claim it sits in",
     rationale:
-      'RFC 9052 §1.5 admits a text string as a COSE map label — "In COSE, we use text strings, negative integers, and unsigned integers as map keys", grammar `label = int / tstr` — and a member map is keyed by the member\'s label, so `__proto__` is a reachable key in a COSE structure exactly as it is in a JSON one. The decoder must therefore create a real own property for it and let the name rule refuse it: a decoder that assigned instead would create NO own key at all, the walker would see a structure with one member, and the token would be accepted while carrying an attacker-controlled property that every enumeration reports as absent. The refusal is the observable form of the data property having been created, which is why it is what a row can assert. The keyless door is the reach: a payload is reported without a signature check, so no key is needed to present one.',
+      "The actor claim nests itself (RFC 8693 §4.1), so a delegation chain puts the same member set at every depth and a bare claim name cannot say WHICH actor in the chain is malformed. A caller told only that `act` is wrong has to search a structure whose shape gave them no place to look, and the deeper the chain the less the refusal says — which is the point at which a claim that exists to record who acted for whom stops being repairable. The entry key therefore carries the full path from the claim down to the offending member, and the message names the structure the two members met in rather than the claim they are nested under.",
     given: [
       {
         step: "token",
-        via: "forged",
-        wire: "cose",
-        claim: "act",
-        // ⚠ THE VALUE IS AN OBJECT, and it has to be: assigning a non-object to
-        // `__proto__` is a silent no-op, so a string here would state a weaker
-        // token than the one an attacker sends.
-        carries: [
-          { key: "2", keyedBy: "label", value: "declared-actor" },
-          { key: "__proto__", keyedBy: "name", value: { subject: "attacker" } },
-        ],
-        signature: "junk",
+        via: "mint",
+        profile: "access_token",
+        content: {
+          subject: "user-1",
+          audience: [RESOURCE],
+          clientId: CLIENT,
+          // The OUTER actor is well formed; the fault sits one hop back in the
+          // chain, so nothing above depth 2 can locate it. `subject` is the
+          // declared member and the tail `sub` is the wire spelling of that same
+          // member, exactly as in the depth-1 row above — the SHAPE is held
+          // constant so the only thing this row varies is the depth.
+          act: {
+            subject: "outer-actor",
+            act: { subject: "declared-actor", sub: "shadow-actor" },
+          },
+        },
       },
     ],
-    when: [{ step: "parse" }],
+    when: [{ step: "mint" }],
     then: [
       {
         step: "rejects",
@@ -7105,24 +7045,67 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
           claim: "act",
           invalid: [
             {
-              key: "act.__proto__",
-              message:
-                'Member "__proto__" is not a member name any structure may use, in "act"',
+              key: "act.act.sub",
+              message: 'Members "sub" and "subject" both resolve to "sub" in "act.act"',
             },
           ],
         },
       },
     ],
-    unsupported: {
-      jose: 'the forgery is a member map keyed by COSE labels, which RFC 9052 §1.5 defines and JSON has no counterpart for: "In JSON, maps are called objects and only have one kind of map key: a text string. In COSE, we use text strings, negative integers, and unsigned integers as map keys." A JOSE reader has no label table and no member map to key `__proto__` into — the same name reaches it as an ordinary JSON member name instead, through a different decoder',
-    },
+  },
+  {
+    id: "a-refusal-locates-a-fault-inside-one-element-of-a-collection",
+    title:
+      "a mint refusing a fault below a collection element names the index AND the member, not the collection",
+    rationale:
+      "A Subject Identifier of format `aliases` carries a LIST of identifiers (RFC 9493 §3.2.8), so a refusal that stopped at the claim would tell a caller only that one of an unbounded list is wrong, and one that stopped at the element index would not say which part of that element to look at. Both leave the caller searching. The entry key therefore keeps growing past the index: it names the collection, the position in it, and the member inside that position, so the refusal points at exactly the value that has to change however deep the structure runs.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "security_event",
+        content: {
+          audience: ["https://receiver.lindorm.io/"],
+          events: { "urn:lindorm:event:test": {} },
+          // ⚠ THE ELEMENT IS ITSELF AN `aliases` IDENTIFIER — nesting one
+          // inside another is not permitted (RFC 9493 §3.2.8) — harmless here
+          // precisely because the row is a REFUSAL and nothing is ever emitted.
+          // What it buys is a member BELOW a collection element: an element of
+          // `identifiers` declares the same member set as the identifier holding
+          // it, so it carries an `identifiers` of its own — and a path that
+          // stopped growing at the index is unobservable at any shallower shape.
+          // The fault itself is the ordinary one: `identifiers` is declared an
+          // array and holds a string.
+          subjectId: {
+            format: "aliases",
+            identifiers: [{ format: "aliases", identifiers: "not-an-array" }],
+          } as never,
+        },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: {
+          claim: "subjectId",
+          invalid: [
+            {
+              key: "subjectId.identifiers[0].identifiers",
+              message: 'Claim "subjectId" must be an array',
+            },
+          ],
+        },
+      },
+    ],
   },
   {
     id: "a-cwt-keying-one-member-by-both-its-label-and-its-name-is-refused",
     title:
       "a verify refuses a CWT whose member map carries one member at both its integer label and its text name",
     rationale:
-      'RFC 9052 §1.5 gives a COSE map two kinds of key — "In COSE, we use text strings, negative integers, and unsigned integers as map keys", grammar `label = int / tstr` — and CBOR keys them apart, so a member\'s integer label and its interoperable text name are two distinct map entries. They are also two renderings of ONE declared member, so a map carrying both says two things about one field and a decoder that merges them lets the last entry win. For an identity member that hands the identification to whoever wrote the map: an actor the issuer named `2 => "audited-service"` is re-read as a different party by appending one entry, and every allowlist and audit record downstream then names the wrong one. There is no safe winner to pick — the map is self-contradictory about the one fact the member exists to state — so it is refused, naming the label and the name that resolved together. The door is the VERIFYING one because that is what the rule has to survive: the token carries a real signature over the real key, so it passes every check before the claims layer, and the refusal has to come from the decoder rather than from anything upstream of it.',
+      'A COSE map has two kinds of key (RFC 9052 §1.5), and CBOR keys them apart, so a member\'s integer label and its interoperable text name are two distinct map entries. They are also two renderings of ONE declared member, so a map carrying both says two things about one field and a decoder that merges them lets the last entry win. For an identity member that hands the identification to whoever wrote the map: an actor the issuer named `2 => "audited-service"` is re-read as a different party by appending one entry, and every allowlist and audit record downstream then names the wrong one. There is no safe winner to pick — the map is self-contradictory about the one fact the member exists to state — so it is refused, naming the label and the name that resolved together. The door is the VERIFYING one because that is what the rule has to survive: the token carries a real signature over the real key, so it passes every check before the claims layer, and the refusal has to come from the decoder rather than from anything upstream of it.',
     given: [
       {
         step: "token",
@@ -7151,7 +7134,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       },
     ],
     unsupported: {
-      jose: 'the two keyings are a COSE fact. RFC 9052 §1.5 states the contrast itself — "In JSON, maps are called objects and only have one kind of map key: a text string. In COSE, we use text strings, negative integers, and unsigned integers as map keys" — so a JOSE member has ONE spelling and no second key for the same member to arrive under',
+      jose: "the two keyings are a COSE fact (RFC 9052 §1.5) — a JOSE member has ONE spelling and no second key for the same member to arrive under",
     },
   },
   {
@@ -7159,7 +7142,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a verify refuses an address whose undeclared member flips onto a member the address already states",
     rationale:
-      "The collision rule is a property of an OPEN member set, not of any one claim, and the OIDC Core §5.1.1 address is where it was first measured: an undeclared member takes the house case flip, so `streetAddress` becomes `street_address` and lands on the member §5.1.1 already spells that way. Before the rule, the token's own key order decided which value a relying party read. An address is not an identity assertion, so the stakes are lower than the actor's — which is exactly why it is worth stating separately: a rule that defended only the claim somebody happened to be looking at would be a patch, and the next open structure to arrive would inherit the defect rather than the defence.",
+      "The collision rule is a property of an OPEN member set, not of any one claim, and the OIDC Core §5.1.1 address is where it was first measured: an undeclared member takes the house case flip, so `streetAddress` becomes `street_address` and lands on the member OIDC Core §5.1.1 already spells that way. Before the rule, the token's own key order decided which value a relying party read. An address is not an identity assertion, so the stakes are lower than the actor's — which is exactly why it is worth stating separately: a rule that defended only the claim somebody happened to be looking at would be a patch, and the next open structure to arrive would inherit the defect rather than the defence.",
     given: [
       {
         step: "token",
@@ -7199,7 +7182,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "an actor member aegis does not declare rides the compact COSE encoding as well as the interoperable one",
     rationale:
-      'The compact encoding is a SIZE decision, and a size decision must not also be a content decision. A label map holds only the members the library has labels for, so an implementation that builds one from its label table alone drops everything else — the same domain call then produces two tokens that say different things, and the one that says less is the one a deployment turns on for efficiency. Nothing in the token records the loss, and the interoperable token that would have revealed it is the one nobody is minting. RFC 9052 §1.5 is what makes the honest encoding available: "In COSE, we use text strings, negative integers, and unsigned integers as map keys", with the grammar `label = int / tstr` — so a member with no assigned label rides under its own name in the same map as the labelled ones.',
+      "The compact encoding is a SIZE decision, and a size decision must not also be a content decision. A label map holds only the members the library has labels for, so an implementation that builds one from its label table alone drops everything else — the same domain call then produces two tokens that say different things, and the one that says less is the one a deployment turns on for efficiency. Nothing in the token records the loss, and the interoperable token that would have revealed it is the one nobody is minting. A COSE map admits both integer and text labels (RFC 9052 §1.5), so a member with no assigned label rides under its own name in the same map as the labelled ones.",
     given: [
       {
         step: "token",
@@ -7234,7 +7217,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       },
     ],
     unsupported: {
-      jose: 'the compact label map is a COSE encoding, and JSON has no counterpart for it. RFC 8259 §4 defines an object as "a pair of curly brackets surrounding zero or more name/value pairs (or members). A name is a string" — one kind of key, so a JOSE member has ONE spelling and no second encoding to be dropped from. RFC 9052 §1.5 is what gives COSE two ("In COSE, we use text strings, negative integers, and unsigned integers as map keys", grammar `label = int / tstr`), which is the whole of what this row is about',
+      jose: "the compact label map is a COSE encoding, and JSON has no counterpart for it. A JSON object has ONE kind of key (RFC 8259 §4), so a JOSE member has one spelling and no second encoding to be dropped from; COSE has two (RFC 9052 §1.5), which is the whole of what this row is about",
     },
   },
   {
@@ -7242,7 +7225,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "an actor object carrying no member the token states is reported back as an empty actor, not as no actor",
     rationale:
-      "An issuer and a reader of the same token must agree about what it says, and a library that writes a value it will not read back has broken that on its own output. RFC 8693 §4.1 makes `act` the claim that says a delegation occurred, so an actor object with no members is a strange thing to write — but it is a thing an issuer CAN write, and once written the honest read of it is the object that is there. Reporting the claim as ABSENT instead would say the token names no actor when it names an empty one, which is a different statement and one the wire does not support. ⚠ The consequence a consumer must know is that the reported object is TRUTHY: a delegation is stated and the acting party is not identified, so a check that cares WHO is acting has to read a member rather than the container.",
+      "An issuer and a reader of the same token must agree about what it says, and a library that writes a value it will not read back has broken that on its own output. `act` is the claim that says a delegation occurred (RFC 8693 §4.1), so an actor object with no members is a strange thing to write — but it is a thing an issuer CAN write, and once written the honest read of it is the object that is there. Reporting the claim as ABSENT instead would say the token names no actor when it names an empty one, which is a different statement and one the wire does not support. ⚠ The consequence a consumer must know is that the reported object is TRUTHY: a delegation is stated and the acting party is not identified, so a check that cares WHO is acting has to read a member rather than the container.",
     given: [
       {
         step: "token",
@@ -7270,7 +7253,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token naming an authorized actor carries it on the wire and reports it back under its own name",
     rationale:
-      'RFC 8693 §4.4 — `may_act` "makes a statement that one party is authorized to become the actor and act on behalf of another party", and the authorization server reads it out of a subject token to decide whether a requested delegation may proceed. It is therefore a claim whose whole value is that a DIFFERENT party can read it later: a token that carried it under a spelling the exchange endpoint does not look for, or that lost it on the way back in, silently turns every delegation the issuer authorised into one that cannot be exercised. The claim is the mirror of `act` — one records a delegation that happened, the other permits one that has not — so it is stated separately rather than assumed to follow from its twin.',
+      "`may_act` is the claim a delegation authorisation is written into (RFC 8693 §4.4). It is therefore a claim whose whole value is that a DIFFERENT party can read it later: a token that carried it under a spelling the exchange endpoint does not look for, or that lost it on the way back in, silently turns every delegation the issuer authorised into one that cannot be exercised. The claim is the mirror of `act` — one records a delegation that happened, the other permits one that has not — so it is stated separately rather than assumed to follow from its twin.",
     given: [
       {
         step: "token",
@@ -7291,10 +7274,10 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       // vocabulary. The member spellings are RFC 8693's on both encodings; the
       // CLAIM key is a separate question, and the interoperable default answers
       // it with the string name and NOT the private-use integer label the compact
-      // encoding uses — RFC 8392 §9.1.1, the registry a CWT CLAIM KEY comes from,
-      // marks "Integer values less than -65536" as Private Use, so an
-      // interoperable token must not carry one. (RFC 8152 §16.2 says the same of a
-      // COSE HEADER PARAMETER; that is a different registry.)
+      // encoding uses — integer values below -65536 are Private Use in the
+      // registry a CWT CLAIM KEY comes from (RFC 8392 §9.1.1), so an
+      // interoperable token must not carry one. (RFC 8152 §16.2 is the same rule
+      // for a COSE HEADER PARAMETER — a different registry.)
       {
         step: "wireClaims",
         on: "jose",
@@ -7323,7 +7306,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token older than the caller's freshness bound is refused even when the issued-at range check was waived",
     rationale:
-      "The two options bound `iat` from OPPOSITE ends. RFC 7519 §4.1.6 defines `iat` as when the token was issued, and the range check is the UPPER bound that refuses a token stamped in the future; a freshness bound is the LOWER one that refuses a token stamped too long ago. A caller accepting a future-dated token — a clock it does not control — is not thereby accepting a stale one, so folding the two into a single condition turns a narrow waiver into the removal of the bound the caller explicitly asked for in the same call.",
+      "The two options bound `iat` from OPPOSITE ends. `iat` is when the token was issued (RFC 7519 §4.1.6); the range check is the UPPER bound that refuses a token stamped in the future, a freshness bound is the LOWER one that refuses a token stamped too long ago. A caller accepting a future-dated token — a clock it does not control — is not thereby accepting a stale one, so folding the two into a single condition turns a narrow waiver into the removal of the bound the caller explicitly asked for in the same call.",
     given: [
       {
         step: "token",
@@ -7354,7 +7337,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a profiled verify accepts a token that expired exactly as long ago as the leeway the caller allows",
     rationale:
-      "RFC 7519 §4.1.4 allows 'some small leeway, usually no more than a few minutes, to account for clock skew'. The profiled call and the profile-less one are separate forwards of the same bag, so a leeway honoured by one and dropped by the other means the identical token verifies or fails depending only on whether the caller named a profile — and the direction the drop falls in is the strict one, which reads as a broken issuer rather than a broken verifier. The token here sits ON the boundary rather than comfortably inside it, so the allowance is stated as an inclusive width and not merely as a switch that was flipped.",
+      "A small leeway for clock skew is allowed when checking `exp` (RFC 7519 §4.1.4). The profiled call and the profile-less one are separate forwards of the same bag, so a leeway honoured by one and dropped by the other means the identical token verifies or fails depending only on whether the caller named a profile — and the direction the drop falls in is the strict one, which reads as a broken issuer rather than a broken verifier. The token here sits ON the boundary rather than comfortably inside it, so the allowance is stated as an inclusive width and not merely as a switch that was flipped.",
     given: [
       {
         step: "token",
@@ -7384,7 +7367,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a verify refuses a token that expired one second beyond the leeway the caller allows",
     rationale:
-      "RFC 7519 §4.1.4 permits 'some small leeway, usually no more than a few minutes, to account for clock skew' — a bounded allowance and not a suspension of the expiry check. The MAGNITUDE is therefore the rule: a leeway applied in a unit other than the one the caller stated, or scaled on the way in, still accepts every token an honest one would and is invisible to any test that only widens the window. This row and its accepting twin sit one second apart around the same stated tolerance, so the window has exactly the width the caller asked for and a deployment allowing a minute of skew cannot be made to accept an hour of it.",
+      "The leeway allowed for clock skew is a bounded allowance and not a suspension of the expiry check (RFC 7519 §4.1.4). The MAGNITUDE is therefore the rule: a leeway applied in a unit other than the one the caller stated, or scaled on the way in, still accepts every token an honest one would and is invisible to any test that only widens the window. This row and its accepting twin sit one second apart around the same stated tolerance, so the window has exactly the width the caller asked for and a deployment allowing a minute of skew cannot be made to accept an hour of it.",
     given: [
       {
         step: "token",
@@ -7476,7 +7459,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a verify pinned to an issuer refuses a token whose key is not registered under that issuer",
     rationale:
-      "A `kid` is chosen by whoever wrote the token, so resolving it against every key the process knows lets the PRESENTER decide which issuer's key answers — and two issuers may legitimately publish the same `kid`, since RFC 7517 §4.5 scopes distinctness to ONE key set — 'When \"kid\" values are used within a JWK Set, different keys within the JWK Set SHOULD use distinct \"kid\" values' — and says nothing across sets. ⚠ Scoping the lookup by issuer is AEGIS POLICY, not a citation: no specification tells an implementation how to index the keys it has collected. It exists because the alternative has no safe ordering — a signature checked against a second issuer's colliding key succeeds, and the `iss` comparison that would catch it runs afterwards, by which point the verifier has already accepted material from a party the caller excluded. Refusing at RESOLUTION is what makes the caller's restriction mean 'these keys' rather than 'these keys, eventually'.",
+      "A `kid` is chosen by whoever wrote the token, so resolving it against every key the process knows lets the PRESENTER decide which issuer's key answers — and two issuers may legitimately publish the same `kid`, since distinctness is scoped to ONE key set (RFC 7517 §4.5). ⚠ Scoping the lookup by issuer is AEGIS POLICY, not a citation: no specification tells an implementation how to index the keys it has collected. It exists because the alternative has no safe ordering — a signature checked against a second issuer's colliding key succeeds, and the `iss` comparison that would catch it runs afterwards, by which point the verifier has already accepted material from a party the caller excluded. Refusing at RESOLUTION is what makes the caller's restriction mean 'these keys' rather than 'these keys, eventually'.",
     given: [
       {
         step: "token",
@@ -7506,7 +7489,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token naming another issuer is refused even when its key resolves under the pinned one",
     rationale:
-      "RFC 7519 §4.1.1 makes `iss` the claim that 'identifies the principal that issued the JWT', and RFC 8392 §3.1.1 gives the CWT claim the same meaning. A key registered under the pinned issuer only says the pinned issuer's material signed the bytes; the CLAIM is what the token says about who issued it, and the two can disagree — a deployment signing on behalf of a tenant, a key shared between environments. So the claim comparison is a separate check from the key scope, and skipping it once the key resolves believes the token's own account of its origin.",
+      "`iss` is the claim that identifies the principal that issued the token, on either wire (RFC 7519 §4.1.1, RFC 8392 §3.1.1). A key registered under the pinned issuer only says the pinned issuer's material signed the bytes; the CLAIM is what the token says about who issued it, and the two can disagree — a deployment signing on behalf of a tenant, a key shared between environments. So the claim comparison is a separate check from the key scope, and skipping it once the key resolves believes the token's own account of its origin.",
     given: [
       {
         step: "token",
@@ -7541,7 +7524,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "a-profile-refuses-a-token-typed-as-another-kind",
     title: "a token of one kind is refused when verified under the profile of another",
     rationale:
-      "RFC 8725 §3.11 recommends explicit typing precisely so a token issued for one purpose cannot be replayed where another is expected, and RFC 9068 §2.1 gives the access token its own media type for that reason. Naming a profile is how a caller says which kind it expects, so the profile's own type has to be checked against the token's — otherwise an id token, which the same issuer signs with the same key, is accepted wherever an access token is demanded, and every subsequent claim check passes because the two profiles overlap.",
+      "Explicit typing is what stops a token issued for one purpose being replayed where another is expected, and the access token has a media type of its own (RFC 8725 §3.11, RFC 9068 §2.1). Naming a profile is how a caller says which kind it expects, so the profile's own type has to be checked against the token's — otherwise an id token, which the same issuer signs with the same key, is accepted wherever an access token is demanded, and every subsequent claim check passes because the two profiles overlap.",
     given: [
       {
         step: "token",
@@ -7561,7 +7544,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "a-claim-a-profile-requires-is-enforced-on-arrival",
     title: "a token missing a claim its profile requires is refused when it is verified",
     rationale:
-      "RFC 9068 §2.2 makes `iat` REQUIRED in a JWT access token — 'REQUIRED - as defined in Section 4.1.6 of [RFC7519]. This claim identifies the time at which the JWT access token was issued' — and RFC 8392 §3.1.6 carries the claim onto the COSE wire unchanged. A required-claim rule enforced only where THIS deployment mints constrains its own output and says nothing about the token that actually arrived, which is the only one a verifier is defending against: the issuer of a hostile token is not running our mint.",
+      "`iat` is REQUIRED in a JWT access token, and the same claim rides the COSE wire (RFC 9068 §2.2, RFC 8392 §3.1.6). A required-claim rule enforced only where THIS deployment mints constrains its own output and says nothing about the token that actually arrived, which is the only one a verifier is defending against: the issuer of a hostile token is not running our mint.",
     given: [
       {
         step: "token",
@@ -7595,7 +7578,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "a-claim-a-profile-does-not-require-is-not-demanded-on-arrival",
     title: "a token missing a claim its profile does not require verifies",
     rationale:
-      "The floor must demand exactly what the profile declares. RFC 7519 §4.1.6 makes `iat` OPTIONAL — 'Use of this claim is OPTIONAL' — so a profile written for a third party's assertion does not require it, and a floor that demanded it anyway would refuse conformant tokens from every partner while reporting a policy violation the partner cannot act on. This is the same rule as its refusing twin, read from the other side: the profile decides, not the floor.",
+      "The floor must demand exactly what the profile declares. `iat` is OPTIONAL (RFC 7519 §4.1.6), so a profile written for a third party's assertion does not require it, and a floor that demanded it anyway would refuse conformant tokens from every partner while reporting a policy violation the partner cannot act on. This is the same rule as its refusing twin, read from the other side: the profile decides, not the floor.",
     given: [
       {
         step: "token",
@@ -7632,7 +7615,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token whose required claim is an empty string is refused when it is verified",
     rationale:
-      'Presence has to mean the same thing at issue and on arrival. RFC 7519 §4.1.7 makes `jti` the identifier a replay check keys on, and an identifier of `""` identifies nothing — every token carrying one collides with every other, so a replay store keyed on it stops distinguishing tokens at exactly the moment it matters. A presence rule satisfied by an empty value guarantees nothing while reporting that it does.',
+      'Presence has to mean the same thing at issue and on arrival. `jti` is the identifier a replay check keys on (RFC 7519 §4.1.7), and an identifier of `""` identifies nothing — every token carrying one collides with every other, so a replay store keyed on it stops distinguishing tokens at exactly the moment it matters. A presence rule satisfied by an empty value guarantees nothing while reporting that it does.',
     given: [
       {
         step: "token",
@@ -7663,7 +7646,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token whose issuer is stated per call round-trips under the issuer the caller named",
     rationale:
-      "Most profiles issue in the deployment's own name, but an assertion made BY a client is issued by that client: RFC 7519 §4.1.1 makes `iss` 'the principal that issued the JWT', and here the principal is the caller, not the platform. So the issuer has to travel from the mint content to the wire claim and back — a mint that stamped the deployment's identity instead would produce a token the receiving party rejects for naming the wrong issuer, and it would do so silently, because the token is otherwise well-formed.",
+      "Most profiles issue in the deployment's own name, but an assertion made BY a client is issued by that client: `iss` names the principal that issued the token (RFC 7519 §4.1.1), and here the principal is the caller, not the platform. So the issuer has to travel from the mint content to the wire claim and back — a mint that stamped the deployment's identity instead would produce a token the receiving party rejects for naming the wrong issuer, and it would do so silently, because the token is otherwise well-formed.",
     given: [
       {
         step: "token",
@@ -7690,7 +7673,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "minting a security event token whose subject identifier holds an empty member is refused",
     rationale:
-      "RFC 9493 §3.2.3 states the rule outright for the `iss_sub` format: \"Both the 'iss' member and the 'sub' member are REQUIRED and MUST NOT be null or empty\" — as §3.2.1 and §3.2.2 do for `uri` and `email`. An identifier whose required member is an empty string therefore is not one, however well-formed it looks. It matters most on a security event token, whose whole purpose is to say that something happened to a specific subject: the `security_event` profile additionally FORBIDS a plain `sub` (an aegis policy, for SSF conformance and SET/ID-token anti-confusion — RFC 8417 §2.2 itself makes `sub` OPTIONAL), which leaves the subject identifier as the entire statement of who the event is about. One that names nobody makes the event unattributable to the receiver acting on it. A demand for a member is a demand for the value, at whatever depth the member sits. The refusal names the position in the DOMAIN vocabulary the caller wrote the claim in — the caller stated `subjectId` and never saw `sub_id`, and the same `invalid` field carries the policy floor's own domain-named entries, so a wire-spelled position would make one field mean two things.",
+      "A format's required members must not be null or empty — for `iss_sub`, both `iss` and `sub` (RFC 9493 §3.2.3). An identifier whose required member is an empty string therefore is not one, however well-formed it looks. It matters most on a security event token, whose whole purpose is to say that something happened to a specific subject: the `security_event` profile additionally FORBIDS a plain `sub` (an aegis policy, for SSF conformance and SET/ID-token anti-confusion — `sub` is OPTIONAL in RFC 8417 §2.2), which leaves the subject identifier as the entire statement of who the event is about. One that names nobody makes the event unattributable to the receiver acting on it. A demand for a member is a demand for the value, at whatever depth the member sits. The refusal names the position in the DOMAIN vocabulary the caller wrote the claim in — the caller stated `subjectId` and never saw `sub_id`, and the same `invalid` field carries the policy floor's own domain-named entries, so a wire-spelled position would make one field mean two things.",
     given: [
       {
         step: "token",
@@ -7725,7 +7708,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a subject identifier member is written and read back in the domain vocabulary while the wire keeps the RFC spelling",
     rationale:
-      "The domain surface exists so a caller states claims in ONE vocabulary and never has to know the wire's — it takes `tokenId` and returns `tokenId`, it takes `streetAddress` for OIDC Core §5.1.1's `street_address`, and RFC 9493's Subject Identifier is no different. Its `phone_number` member (§3.2.5) is the only member of any structured claim spelled with an underscore, so a caller writing it had to know that this one structure answered in the wire's words while every other one answered in the house's. The wire is what interoperability is made of and must keep the RFC's own spelling; the two are separate statements, and stating them together is what shows the translation happening rather than a value being copied. It matters beyond taste because the per-format requirement table is keyed by the DOMAIN name: a member the domain surface spells one way and the rule looks up another is a requirement RFC 9493 makes and nothing enforces.",
+      "The domain surface exists so a caller states claims in ONE vocabulary and never has to know the wire's — it takes `tokenId` and returns `tokenId`, it takes `streetAddress` for OIDC Core §5.1.1's `street_address`, and RFC 9493's Subject Identifier is no different. Its `phone_number` member (RFC 9493 §3.2.5) is the only member of any structured claim spelled with an underscore, so a caller writing it would otherwise have had to know that this one structure answered in the wire's words while every other one answered in the house's. The wire is what interoperability is made of and must keep the RFC's own spelling; the two are separate statements, and stating them together is what shows the translation happening rather than a value being copied. It matters beyond taste because the per-format requirement table is keyed by the DOMAIN name: a member the domain surface spells one way and the rule looks up another is a requirement RFC 9493 §3.2.5 makes and nothing enforces.",
     given: [
       {
         step: "token",
@@ -7733,7 +7716,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         profile: "security_event",
         content: {
           audience: ["https://receiver.lindorm.io/"],
-          // The Phone Number format, whose REQUIRED member (§3.2.5) is the one
+          // The Phone Number format, whose REQUIRED member (RFC 9493 §3.2.5) is the one
           // this vocabulary question is about — so the profile's own shape rule
           // has to resolve the domain spelling for the mint to succeed at all.
           subjectId: { format: "phone_number", phoneNumber: "+46700000000" },
@@ -7756,8 +7739,9 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         step: "claims",
         expected: { subjectId: { format: "phone_number", phoneNumber: "+46700000000" } },
       },
-      // The WIRE half, read off the raw bytes: RFC 9493 §3.2.5 names the member
-      // `phone_number`, and a receiver of this token is not a lindorm consumer.
+      // The WIRE half, read off the raw bytes: the member is `phone_number`
+      // there (RFC 9493 §3.2.5), and a receiver of this token is not a lindorm
+      // consumer.
       // Without this the row would pass for a package that never translated
       // anything and simply echoed the caller's key onto a signed token.
       {
@@ -7772,7 +7756,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a security event token whose subject identifier names an unmodelled Identifier Format is minted and verified",
     rationale:
-      "RFC 9493 §3 requires every Identifier Format to have a name *\"registered in the IANA 'Security Event Identifier Formats' registry established in Section 8.1 or a Collision-Resistant Name as defined in [RFC7519]\"* — and the second half needs no registration at all, so a conformant transmitter can name a format this implementation has never heard of. §3 also says an Identifier Format *\"MAY describe more members than are strictly necessary to identify a subject\"*, so what those members are is that format's business and not the reader's. A receiver that refused an unmodelled format would reject conformant security events, and the deployment's only remedy would be to stop using the profile. So an unmodelled format carries no per-format demand and the identifier travels intact. The format name is a PRODUCER'S string with no grammar constraining it, which is why this row states the rule with a name drawn from `Object.prototype`: a lookup table reached by such a name must answer \"unknown format\", and any other answer — a refusal, or a crash escaping the error contract — is the implementation's own vocabulary leaking into the specification's.",
+      "An Identifier Format's name is either registered or a Collision-Resistant Name, and the second needs no registration at all (RFC 9493 §3), so a conformant transmitter can name a format this implementation has never heard of. A format may also describe more members than are strictly necessary to identify a subject (RFC 9493 §3), so what those members are is that format's business and not the reader's. A receiver that refused an unmodelled format would reject conformant security events, and the deployment's only remedy would be to stop using the profile. So an unmodelled format carries no per-format demand and the identifier travels intact. The format name is a PRODUCER'S string with no grammar constraining it, which is why this row states the rule with a name drawn from `Object.prototype`: a lookup table reached by such a name must answer \"unknown format\", and any other answer — a refusal, or a crash escaping the error contract — is the implementation's own vocabulary leaking into the specification's.",
     given: [
       {
         step: "token",
@@ -7805,177 +7789,10 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     ],
   },
   {
-    id: "a-structured-claim-refuses-a-member-that-names-an-objects-prototype",
-    title:
-      "a token whose subject identifier carries a `__proto__` member is refused before its claims are reported",
-    rationale:
-      "`__proto__` is a legal JSON member name that ordinary assignment treats as a PROTOTYPE SETTER rather than as data, so a structure carrying one produces a claim whose `Object.keys` and `JSON.stringify` show it as absent while a property read returns the value the producer chose. A consumer's natural read then returns attacker-supplied data that every audit log renders as missing, and no duplicate-key defence can see it because no own key exists to be claimed twice. It is reachable without any key at all: reading a payload does not require checking a signature, so the refusal has to sit at the structural boundary rather than behind verification. No specification defines the member — RFC 9493 §3 requires every member of a Subject Identifier to be one its Identifier Format describes — so refusing it costs a conformant producer nothing, which is why the disposal is a refusal rather than a silent drop: a drop would report a stranger's token as saying less than it says.",
-    given: [
-      {
-        step: "token",
-        via: "foreign",
-        claims: {
-          iss: ISSUER,
-          sub: "user-1",
-          aud: [RESOURCE],
-          exp: NOW + 3600,
-          iat: NOW,
-          // ⚠ A COMPUTED KEY, and it has to be. `{ "__proto__": … }` in an object
-          // literal invokes the prototype SETTER and creates no member at all, so
-          // the quoted form would produce a token carrying nothing and a row that
-          // passed by asserting a refusal of something else.
-          sub_id: { format: "opaque", ["__proto__"]: { id: "attacker" } },
-        },
-      },
-    ],
-    when: [{ step: "verify" }],
-    then: [
-      {
-        step: "rejects",
-        error: "AegisDomainError",
-        data: {
-          claim: "subjectId",
-          invalid: [
-            {
-              key: "subjectId.__proto__",
-              message:
-                'Member "__proto__" is not a member name any structure may use, in "subjectId"',
-            },
-          ],
-        },
-      },
-    ],
-  },
-  {
-    id: "a-claim-carried-verbatim-refuses-a-prototype-member-at-any-depth",
-    title:
-      "a token whose subject identifier hides `__proto__` under an undeclared member is refused",
-    rationale:
-      "RFC 9493 §3 permits an Identifier Format to describe members a receiver has never heard of — an Identifier Format \"MAY describe more members than are strictly necessary to identify a subject\" — so a Subject Identifier's undeclared members are the producer's to name and are carried exactly as written, at whatever depth they nest. `__proto__` is not among the names any Identifier Format may use, and it is not an ordinary datum either: ORDINARY ASSIGNMENT treats it as a PROTOTYPE SETTER, so any receiver that rebuilds the identifier with `obj[key] = value` ends up with a container whose `Object.keys` and `JSON.stringify` show nothing while a property read returns the value the producer chose — data every audit log renders as missing, which no duplicate-key defence can see because no own key survives to be claimed twice. Every rebuild a claim value crosses on its way to and from the wire defines its keys rather than assigning them — `@lindorm/utils` and `@lindorm/cbor` with `Object.defineProperty`, this package's own bags with `Object.fromEntries` — so no aegis path turns the member into a prototype, and this refusal is a POLICY about a name rather than a defence against a live swap. Whether aegis keeps it is an open question recorded at `src/internal/claims/proto-member-violations.ts#THE RULE IS FILED FOR REMOVAL`. What the row pins either way is DEPTH: the hazard a receiver faces does not care whether the name sits beside a member it models or several levels below one it does not, so neither may the refusal — and the position reported must locate the container that carries the name, since at depth `__proto__` alone identifies nothing to repair.",
-    given: [
-      {
-        step: "token",
-        via: "foreign",
-        claims: {
-          iss: ISSUER,
-          sub: "user-1",
-          aud: [RESOURCE],
-          exp: NOW + 3600,
-          iat: NOW,
-          // ⚠ A COMPUTED KEY, and it has to be. `{ "__proto__": … }` in an object
-          // literal invokes the prototype SETTER and creates no member at all, so
-          // the quoted form would produce a token carrying nothing and a row that
-          // passed by asserting a refusal of something else.
-          sub_id: { format: "opaque", tail: { ["__proto__"]: { id: "attacker" } } },
-        },
-      },
-    ],
-    when: [{ step: "verify" }],
-    then: [
-      {
-        step: "rejects",
-        error: "AegisDomainError",
-        data: {
-          claim: "subjectId",
-          invalid: [
-            {
-              key: "subjectId.tail.__proto__",
-              message:
-                'Member "__proto__" is not a member name any structure may use, in "subjectId.tail"',
-            },
-          ],
-        },
-      },
-    ],
-  },
-  {
-    id: "a-claim-wrong-in-two-ways-reports-both-faults-in-one-refusal",
-    title:
-      "a token whose actor is both hostile and self-contradictory is refused for both reasons at once",
-    rationale:
-      "A refusal is a repair instruction, and one naming a single fault when the claim has two costs the presenter a round trip per fault while the token stays unusable throughout. An actor can carry two independent faults, and RFC 8693 §4.1 is why both are possible at the same time: it defines the actor by an OPEN set — \"The \'act\' claim value is a JSON object, and members in the JSON object are claims that identify the actor.\" — so a member this implementation does not model still rides. That is what lets a producer write both the RFC\'s \'sub\' and a look-alike that resolves to the same field, which cannot be honoured either way and must be refused rather than settled by key order; and it is equally what lets an element carry \'__proto__\', a name no specification defines and one that ordinary assignment treats as a prototype setter rather than as data. Neither fault makes the other moot — one is about what the actor says twice, the other about what it may not say at all — so the refusal reports them together, in a stable order with the hostile member first, exactly as a policy refusal reports a token\'s faults together.",
-    given: [
-      {
-        step: "token",
-        via: "foreign",
-        claims: {
-          iss: ISSUER,
-          sub: "user-1",
-          aud: [RESOURCE],
-          exp: NOW + 3600,
-          iat: NOW,
-          // ⚠ A COMPUTED KEY, and it has to be. `{ "__proto__": … }` in an object
-          // literal invokes the prototype SETTER and creates no member at all, so
-          // the quoted form would leave the actor carrying one fault and the row
-          // would assert a two-fault refusal against a one-fault token.
-          act: { ["__proto__"]: { pwn: "yes" }, sub: "audited", subject: "rogue" },
-        },
-      },
-    ],
-    when: [{ step: "verify" }],
-    then: [
-      {
-        step: "rejects",
-        error: "AegisDomainError",
-        data: {
-          claim: "act",
-          invalid: [
-            {
-              key: "act.__proto__",
-              message:
-                'Member "__proto__" is not a member name any structure may use, in "act"',
-            },
-            {
-              key: "act.subject",
-              message: 'Members "sub" and "subject" both resolve to "subject" in "act"',
-            },
-          ],
-        },
-      },
-    ],
-  },
-  {
-    id: "a-security-event-map-refuses-a-member-that-names-an-objects-prototype",
-    title: "a token whose events map carries a `__proto__` event type is refused",
-    rationale:
-      "RFC 8417 §2.2 requires every member name of the `events` claim to be a URI identifying an event statement, and `__proto__` is not one — so refusing it costs a conformant transmitter nothing. What it costs to CARRY it is a claim whose `Object.keys` and `JSON.stringify` render the map as if the member were absent while a property read returns the transmitter's value, because ordinary assignment treats the name as a prototype setter rather than as data. A receiver's natural read then acts on data every audit log shows as missing, and no duplicate-key defence can see it: no own key survives to be claimed twice. It is reachable with no key at all, since reading a payload does not require checking a signature. The disposal is a refusal rather than a drop for the reason every other member of this family takes one — a drop reports a stranger's token as saying less than it says.",
-    given: [
-      {
-        step: "token",
-        via: "foreign",
-        claims: {
-          iss: ISSUER,
-          sub: "user-1",
-          aud: [RESOURCE],
-          exp: NOW + 3600,
-          iat: NOW,
-          events: { ["__proto__"]: { pwn: "yes" }, [BACKCHANNEL_LOGOUT]: {} },
-        },
-      },
-    ],
-    when: [{ step: "verify" }],
-    then: [
-      {
-        step: "rejects",
-        error: "AegisDomainError",
-        data: {
-          claim: "events",
-          invalid: [
-            {
-              key: "events.__proto__",
-              message:
-                'Member "__proto__" is not a member name any structure may use, in "events"',
-            },
-          ],
-        },
-      },
-    ],
-  },
-  {
     id: "an-authorization-detail-must-name-the-type-that-scopes-it",
     title: "minting a token whose authorization detail carries an empty type is refused",
     rationale:
-      "RFC 9396 §2 makes `type` REQUIRED on every authorization details element and defines it as the field whose value \"determines the allowable contents of the object that contains it\" — it is the identifier a resource server dispatches on. An element typed with an empty string names no type, so nothing can be looked up to interpret the rest of the element, and a resource server matching on type finds no match while the token appears to carry a granted authorization. The element states an authorization it gives no one a way to honour. The demand is the claim's own shape, not one profile's appetite: it holds for every token that carries the claim, which is why this row states it under a profile that says nothing about authorization details at all.",
+      "`type` is REQUIRED on every authorization details element, and its value determines the allowable contents of the object that contains it (RFC 9396 §2) — it is the identifier a resource server dispatches on. An element typed with an empty string names no type, so nothing can be looked up to interpret the rest of the element, and a resource server matching on type finds no match while the token appears to carry a granted authorization. The element states an authorization it gives no one a way to honour. The demand is the claim's own shape, not one profile's appetite: it holds for every token that carries the claim, which is why this row states it under a profile that says nothing about authorization details at all.",
     given: [
       {
         step: "token",
@@ -8012,7 +7829,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "verifying a token whose authorization detail carries no type at all is refused",
     rationale:
-      'RFC 9396 §2 makes the `type` field the one that "determines the allowable contents of the object that contains it", so a presented element without one has no defined contents to read. Neither of the two silent dispositions is honest: dropping the element reports fewer authorizations than the token states, which misrepresents what its issuer signed, and keeping it hands a resource server a grant nobody defined and that no type-specific rule can be applied to. A verifier must therefore refuse the token rather than report an interpretation of it.',
+      "`type` determines the allowable contents of the element that carries it (RFC 9396 §2), so a presented element without one has no defined contents to read. Neither of the two silent dispositions is honest: dropping the element reports fewer authorizations than the token states, which misrepresents what its issuer signed, and keeping it hands a resource server a grant nobody defined and that no type-specific rule can be applied to. A verifier must therefore refuse the token rather than report an interpretation of it.",
     given: [
       {
         step: "token",
@@ -8061,7 +7878,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "verifying a token whose authorization detail is typed with an empty string is refused",
     rationale:
-      'RFC 9396 §2 requires `type` and defines its VALUE as what "determines the allowable contents of the object that contains it" — so the demand is for an identifier, not for the key being spelled. An empty string is a present key naming no type at all: nothing can be looked up to interpret the element, and a resource server dispatching on type finds no match while the token still appears to carry a granted authorization. A reader that accepted it would let a producer satisfy the requirement by writing the field and leaving it blank, which is the requirement not existing.',
+      "`type` is required, and its VALUE is what determines the allowable contents of the element (RFC 9396 §2) — so the demand is for an identifier, not for the key being spelled. An empty string is a present key naming no type at all: nothing can be looked up to interpret the element, and a resource server dispatching on type finds no match while the token still appears to carry a granted authorization. A reader that accepted it would let a producer satisfy the requirement by writing the field and leaving it blank, which is the requirement not existing.",
     given: [
       {
         step: "token",
@@ -8106,7 +7923,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "the keyless read of a token whose authorization detail names no type is refused, and reports no other claim either",
     rationale:
-      "A keyless read skips the SIGNATURE and the profile floor; it does not skip deciding what the token SAYS, and that is the whole of what it returns. RFC 9396 §2 makes an element's `type` determine that element's allowable contents, so an element without one has no contents to report — and a reader that answered anyway would be publishing an interpretation of a structure it cannot interpret, with no signature check behind it to qualify the answer. The refusal is therefore owed on the unverified door exactly as on the verified one. ⚠ Its cost is stated by this row rather than discovered: the read is ALL-OR-NOTHING, so one malformed claim denies the caller every other claim in the token — a caller that needs to inspect a possibly-malformed token must read it through a surface that performs no claim translation.",
+      "A keyless read skips the SIGNATURE and the profile floor; it does not skip deciding what the token SAYS, and that is the whole of what it returns. An element's `type` determines its allowable contents (RFC 9396 §2), so an element without one has no contents to report — and a reader that answered anyway would be publishing an interpretation of a structure it cannot interpret, with no signature check behind it to qualify the answer. The refusal is therefore owed on the unverified door exactly as on the verified one. ⚠ Its cost is stated by this row rather than discovered: the read is ALL-OR-NOTHING, so one malformed claim denies the caller every other claim in the token — a caller that needs to inspect a possibly-malformed token must read it through a surface that performs no claim translation.",
     given: [
       {
         step: "token",
@@ -8152,7 +7969,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "verifying a token whose authorization details claim is a bare string is refused",
     rationale:
-      'RFC 9396 §2 defines the claim as containing "an array of objects", each carrying the data for one type of resource. A scalar is not a shorter form of that array — there is no element for a `type` to scope, and nothing a resource server could dispatch on — so a token stating one grants nothing that can be read, while a reader that silently discarded the claim would report a token that made no authorization statement when its issuer signed one. The mismatch between what was signed and what is reported is the failure a refusal prevents.',
+      "The claim carries an array of objects, each holding the data for one type of resource (RFC 9396 §14.2). A scalar is not a shorter form of that array — there is no element for a `type` to scope, and nothing a resource server could dispatch on — so a token stating one grants nothing that can be read, while a reader that silently discarded the claim would report a token that made no authorization statement when its issuer signed one. The mismatch between what was signed and what is reported is the failure a refusal prevents.",
     given: [
       {
         step: "token",
@@ -8166,8 +7983,8 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
           iat: NOW,
           jti: "token-1",
           // Not an array at all. Same reason for the cast as the row above:
-          // RFC 9396 §2 defines the claim as "an array of objects", so the type
-          // forbids the shape and only somebody else's producer can emit it.
+          // the claim is an array of objects (RFC 9396 §14.2), so the type forbids
+          // the shape and only somebody else's producer can emit it.
           authorization_details:
             "payment_initiation" as unknown as JwtClaimsWire["authorization_details"],
         },
@@ -8195,7 +8012,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a security event token carrying no expiry verifies under the profile that issues it",
     rationale:
-      "RFC 8417 §2.2 says of `exp` in a security event token that 'In the context of a SET, however, this notion does not typically apply, since a SET represents something that has already occurred and is historical in nature' and concludes 'Therefore, its use is NOT RECOMMENDED.' A conformant SET therefore normally carries NO expiry, while an access token with none never stops working — the same absence, opposite consequences. Expiry PRESENCE is consequently the PROFILE'S policy to state: a profile declaring a lifetime keeps the requirement, one declaring none must waive it, or this package cannot issue the shape its own specification recommends and every receiver of one refuses it.",
+      "`exp` is NOT RECOMMENDED in a security event token (RFC 8417 §2.2), so a conformant SET normally carries none, while an access token with none never stops working — the same absence, opposite consequences. Expiry PRESENCE is consequently the PROFILE'S policy to state: a profile declaring a lifetime keeps the requirement, one declaring none must waive it, or this package cannot issue the shape its own specification recommends and every receiver of one refuses it.",
     given: [
       {
         step: "token",
@@ -8219,8 +8036,8 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     then: [
       { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
       // The subject identifier is read back under its DOMAIN name, which is what
-      // shows the profile is usable and not merely acceptable: RFC 9493 §3 makes
-      // `sub_id` a structured Subject Identifier, and it is the whole statement
+      // shows the profile is usable and not merely acceptable: `sub_id` is a
+      // structured Subject Identifier (RFC 9493 §3), and it is the whole statement
       // of who a security event happened to.
       //
       // ⚠ Its neighbour `events` is NOT stated here: `DomainClaims` does not
@@ -8235,7 +8052,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       // ⚠ The row's PREMISE, read off the wire. The verify this row runs sets
       // `expPresence: "optional"`, so a token that DID carry an expiry would
       // pass identically and the row would state nothing about the profile's
-      // lifetime at all. RFC 8392 §3.1.4 gives `exp` the COSE label 4.
+      // lifetime at all. `exp` is COSE label 4 (RFC 8392 §3.1.4).
       { step: "wireClaims", on: "jose", excludes: ["exp"] },
       { step: "wireClaims", on: "cose", excludes: [4] },
     ],
@@ -8254,7 +8071,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token authenticated with a shared secret is refused by a profile that requires a signature",
     rationale:
-      "A MAC proves that SOMEBODY holding the secret produced the token, and every party that can verify holds it — so a shared secret cannot establish who issued anything. An access token is presented to a party that is not the issuer, which is exactly the case the distinction exists for. RFC 8725 §3.1 makes the restriction the verifier's to state: 'Libraries MUST enable the caller to specify a supported set of algorithms and MUST NOT use any other algorithms when performing cryptographic operations.' The rule must bite on ARRIVAL, because a constraint applied only where this deployment signs defends nobody against a token this deployment did not write.",
+      "A MAC proves that SOMEBODY holding the secret produced the token, and every party that can verify holds it — so a shared secret cannot establish who issued anything. An access token is presented to a party that is not the issuer, which is exactly the case the distinction exists for. The restriction is the verifier's to state and the library's to honour (RFC 8725 §3.1). The rule must bite on ARRIVAL, because a constraint applied only where this deployment signs defends nobody against a token this deployment did not write.",
     given: [
       { step: "keys", keys: ["oct-sig"] },
       {
@@ -8284,7 +8101,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a third-party access token authenticated with a shared secret is refused by the profile written to accept it",
     rationale:
-      "RFC 7515 §1 secures content 'with digital signatures or Message Authentication Codes (MACs)', and the two say different things about origin: everyone who can VERIFY a MAC can also PRODUCE one, so a MAC establishes only that some holder of the secret wrote the token. A profile whose whole purpose is to accept tokens from an authorization server we do not control is the case where that matters most — the deployment holds the same secret it would be relying on to prove the third party issued the token, so it could equally have written it itself. RFC 8725 §3.1 makes the restriction the verifier's to state and to enforce: 'Libraries MUST enable the caller to specify a supported set of algorithms and MUST NOT use any other algorithms when performing cryptographic operations.'",
+      "A signature and a MAC both secure content (RFC 7515 §1), and the two say different things about origin: everyone who can VERIFY a MAC can also PRODUCE one, so a MAC establishes only that some holder of the secret wrote the token. A profile whose whole purpose is to accept tokens from an authorization server we do not control is the case where that matters most — the deployment holds the same secret it would be relying on to prove the third party issued the token, so it could equally have written it itself. The restriction is the verifier's to state and the library's to enforce (RFC 8725 §3.1).",
     given: [
       { step: "keys", keys: ["oct-sig"] },
       {
@@ -8316,7 +8133,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a delegation designation authenticated with a shared secret is refused by its profile",
     rationale:
-      "A delegation designation names the client that issued it as its own `iss`, so the platform receiving it is being asked to act on an attribution. RFC 7515 §1 secures content 'with digital signatures or Message Authentication Codes (MACs)', and a MAC is symmetric: the receiving platform holds the same secret and could have written the designation itself, so the attribution it carries is unfalsifiable and therefore worthless. Only a signature made by the client's own registered key lets the platform say who designated whom. RFC 8725 §3.1 puts the restriction where it must be enforced: 'Libraries MUST enable the caller to specify a supported set of algorithms and MUST NOT use any other algorithms when performing cryptographic operations.'",
+      "A delegation designation names the client that issued it as its own `iss`, so the platform receiving it is being asked to act on an attribution. A signature and a MAC both secure content (RFC 7515 §1), and a MAC is symmetric: the receiving platform holds the same secret and could have written the designation itself, so the attribution it carries is unfalsifiable and therefore worthless. Only a signature made by the client's own registered key lets the platform say who designated whom. The restriction belongs where it can be enforced — with the verifier (RFC 8725 §3.1).",
     given: [
       { step: "keys", keys: ["oct-sig"] },
       {
@@ -8351,7 +8168,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token authenticated with a shared secret verifies under a profile that requires no signature",
     rationale:
-      "The class floor is the PROFILE'S rule and not a blanket ban, and the difference is load-bearing. RFC 8417 §5.1 requires only that a security event token be authenticated — 'Unless integrity of the JWT is ensured by other means, it MUST be signed using JWS [RFC7515] by an issuer that is trusted to do so for the use case so that the SET can be authenticated and validated by the SET recipient' — and constrains the ALGORITHM nowhere, while RFC 7515 §1 defines a JWS as content secured with digital signatures OR Message Authentication Codes. A SET is delivered to a receiver the transmitter already has a relationship with, so a shared secret is a conformant and ordinary choice there. A floor applied to every profile would refuse it, and the remedy a deployment reaches for is to stop using the profile — which discards every other rule it carried along with the one that was wrong.",
+      "The class floor is the PROFILE'S rule and not a blanket ban, and the difference is load-bearing. A security event token must be authenticated, with no algorithm class imposed (RFC 8417 §5.1), and a JWS secures content with either a digital signature or a MAC (RFC 7515 §1). A SET is delivered to a receiver the transmitter already has a relationship with, so a shared secret is a conformant and ordinary choice there. A floor applied to every profile would refuse it, and the remedy a deployment reaches for is to stop using the profile — which discards every other rule it carried along with the one that was wrong.",
     given: [
       { step: "keys", keys: ["oct-sig"] },
       {
@@ -8390,7 +8207,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a claim a caller states as an instant reaches the wire as a number of seconds",
     rationale:
-      "OIDC Core §2 defines `auth_time` as the 'Time when the End-User authentication occurred. Its value is a JSON number representing the number of seconds from 1970-01-01T00:00:00Z as measured in UTC until the date/time.' The DOMAIN shape of such a claim is an instant and its WIRE shape is that number, so the encoder is what stands between them — and it fails in the one direction nothing reports: a value it does not recognise as an instant encodes to nothing, which drops the claim from the token without an error, so the issuer believes it stated an authentication time and the audience receives none.",
+      "`auth_time` is the time the End-User authentication occurred, carried as a count of seconds since the epoch (OIDC Core §2). The DOMAIN shape of such a claim is an instant and its WIRE shape is that number, so the encoder is what stands between them — and it fails in the one direction nothing reports: a value it does not recognise as an instant encodes to nothing, which drops the claim from the token without an error, so the issuer believes it stated an authentication time and the audience receives none.",
     given: [
       {
         step: "token",
@@ -8432,7 +8249,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a caller asserting one value of a list-valued claim is answered by a claim containing it",
     rationale:
-      "Several registered claims are LISTS: RFC 7519 §4.1.3 makes an array of strings the general form of `aud`, and RFC 8693 §4.2 defines `scope` as 'a JSON string containing a space-separated list of scopes associated with the token' — the authorisation claims beside it follow the same shape. A caller naming ONE value of such a claim is asking whether the list contains it, which is the only question a single identity can pose: it never expects the list to consist of that value alone. A matcher compiled to an equality test answers `false` for every such claim, so the whole family becomes unassertable at once — and these are the claims authorisation is decided on.",
+      "Several registered claims are LISTS: an array of strings is the general form of `aud` (RFC 7519 §4.1.3), and `scope` is a space-separated list of scopes (RFC 8693 §4.2) — the authorisation claims beside it follow the same shape. A caller naming ONE value of such a claim is asking whether the list contains it, which is the only question a single identity can pose: it never expects the list to consist of that value alone. A matcher compiled to an equality test answers `false` for every such claim, so the whole family becomes unassertable at once — and these are the claims authorisation is decided on.",
     given: [{ step: "claims", claims: { ...LIST_CLAIMS } }],
     when: [{ step: "static-assert", assert: { ...LIST_CLAIM_MATCHERS } }],
     then: [{ step: "accepts" }],
@@ -8518,7 +8335,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "the-static-claim-matcher-derives-no-hash-from-a-raw-source",
     title: "a raw hash source presented to the static claim matcher matches nothing",
     rationale:
-      "OIDC Core §3.1.3.6 derives `at_hash` with the hash function selected by the token's signing `alg`, and `alg` is a HEADER parameter. This surface is handed a flat claim dict with no header, so it cannot know which function to apply — a surface that guessed would produce a digest that matches for one algorithm and silently fails for every other, which is indistinguishable from a substituted access token. The division is therefore structural, not an omission: the key-holding verify derives, and this one matches the digest mint already wrote.",
+      "`at_hash` is derived with the hash function the token's signing `alg` selects (OIDC Core §3.1.3.6), and `alg` is a HEADER parameter. This surface is handed a flat claim dict with no header, so it cannot know which function to apply — a surface that guessed would produce a digest that matches for one algorithm and silently fails for every other, which is indistinguishable from a substituted access token. The division is therefore structural, not an omission: the key-holding verify derives, and this one matches the digest mint already wrote.",
     given: [{ step: "claims", claims: { accessTokenHash: "a-digest" } }],
     when: [
       {
@@ -8542,7 +8359,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "an expired claim set is refused even when the caller asserts nothing about time",
     rationale:
-      "RFC 7519 §4.1.4 defines `exp` as the instant 'on or after which the JWT MUST NOT be accepted for processing', and that obligation belongs to whoever is processing the claims — it does not lapse because the signature was checked upstream. Applying the bound by DEFAULT is what retires the hand-rolled `exp > now` a caller would otherwise write, and a hand-rolled one carries no clock tolerance, so a claim set inside the verified arm's skew window passes there and fails here.",
+      "`exp` is the instant on or after which a token must not be accepted for processing (RFC 7519 §4.1.4), and that obligation belongs to whoever is processing the claims — it does not lapse because the signature was checked upstream. Applying the bound by DEFAULT is what retires the hand-rolled `exp > now` a caller would otherwise write, and a hand-rolled one carries no clock tolerance, so a claim set inside the verified arm's skew window passes there and fails here.",
     given: [
       {
         step: "claims",
@@ -8567,7 +8384,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "a-claim-set-that-states-no-expiry-is-not-treated-as-expired",
     title: "a claim set carrying no expiry passes the temporal window",
     rationale:
-      "RFC 7519 §4.1.4 says of `exp` that 'Use of this claim is OPTIONAL', and RFC 8417 §2.2 puts a whole class of conformant tokens on the other side of that: in a security event token 'this notion does not typically apply, since a SET represents something that has already occurred and is historical in nature. Therefore, its use is NOT RECOMMENDED.' A RANGE bound that treated an absent claim as a failed one would refuse every such claim set — and would report the refusal as an expiry, which points whoever reads it at a clock rather than at a claim that was never there. Whether the claim must be PRESENT is a different question, and it is answered by a different policy.",
+      "`exp` is OPTIONAL (RFC 7519 §4.1.4), and a whole class of conformant tokens sits on the other side of that: it is NOT RECOMMENDED in a security event token (RFC 8417 §2.2). A RANGE bound that treated an absent claim as a failed one would refuse every such claim set — and would report the refusal as an expiry, which points whoever reads it at a clock rather than at a claim that was never there. Whether the claim must be PRESENT is a different question, and it is answered by a different policy.",
     given: [{ step: "claims", claims: { subject: "user-1" } }],
     when: [{ step: "static-assert", assert: { subject: "user-1" } }],
     then: [{ step: "accepts" }],
@@ -8599,7 +8416,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "the-static-claim-matcher-honours-a-caller-supplied-clock-tolerance",
     title: "a claim set expired inside the leeway the caller allows is accepted",
     rationale:
-      "RFC 7519 §4.1.4 provides for 'some small leeway, usually no more than a few minutes, to account for clock skew'. The leeway is the deployment's to choose and it is the reason this surface applies the window at all rather than leaving it to the caller: a hand-rolled comparison has no leeway, so the two arms disagree for exactly the claim sets skew produces — the ones that arrive at the boundary of the window, intermittently, in production.",
+      "A small leeway for clock skew is provided for (RFC 7519 §4.1.4). The leeway is the deployment's to choose and it is the reason this surface applies the window at all rather than leaving it to the caller: a hand-rolled comparison has no leeway, so the two arms disagree for exactly the claim sets skew produces — the ones that arrive at the boundary of the window, intermittently, in production.",
     given: [
       { step: "clock", at: "2024-01-01T09:00:10.000Z" },
       {
@@ -8642,7 +8459,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "the-static-claim-matcher-applies-the-not-before-bound",
     title: "a claim set that is not yet valid is refused",
     rationale:
-      "RFC 7519 §4.1.5 — 'the JWT MUST NOT be accepted for processing' before the time `nbf` names. It is a hard lower bound and it is the one most often left out of a hand-rolled check, because the credential looks complete and its expiry has not passed; a claim set issued for a future window is then honoured for the whole interval before that window opens.",
+      "A token must not be accepted for processing before the time `nbf` names (RFC 7519 §4.1.5). It is a hard lower bound and it is the one most often left out of a hand-rolled check, because the credential looks complete and its expiry has not passed; a claim set issued for a future window is then honoured for the whole interval before that window opens.",
     given: [
       {
         step: "claims",
@@ -8686,7 +8503,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a claim set whose authentication time lies in the future is refused when the caller asks for that bound",
     rationale:
-      "OIDC Core §2 defines `auth_time` as the 'Time when the End-User authentication occurred', so a value in the future describes an authentication that has not happened — a claim set no honest issuer produces. It is checked ON REQUEST rather than always because, unlike `exp` and `nbf`, the claim carries no processing obligation of its own: it is an input to a relying party's freshness policy, and a party that states no such policy has not asked for anything to be enforced.",
+      "`auth_time` is the time the End-User authentication occurred (OIDC Core §2), so a value in the future describes an authentication that has not happened — a claim set no honest issuer produces. It is checked ON REQUEST rather than always because, unlike `exp` and `nbf`, the claim carries no processing obligation of its own: it is an input to a relying party's freshness policy, and a party that states no such policy has not asked for anything to be enforced.",
     given: [
       {
         step: "claims",
@@ -8710,7 +8527,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "a-static-freshness-bound-refuses-a-claim-set-older-than-it-allows",
     title: "a claim set issued longer ago than the caller allows is refused",
     rationale:
-      "OIDC Core §3.1.2.1 gives a relying party `max_age` and §3.1.3.7 requires it to check freshness on the way back; the same bound applies to a claim set read out of a cache or an introspection response, where the age is the only thing separating a current answer from a stale one. It is a TIGHTENING option — it can only refuse claim sets that would otherwise pass — so dropping it is always the unsafe direction, and it leaves no trace: a stale claim set passing looks exactly like a fresh one.",
+      "A relying party bounds how long ago authentication may have happened (OIDC Core §3.1.2.1, OIDC Core §3.1.3.7); the same bound applies to a claim set read out of a cache or an introspection response, where the age is the only thing separating a current answer from a stale one. It is a TIGHTENING option — it can only refuse claim sets that would otherwise pass — so dropping it is always the unsafe direction, and it leaves no trace: a stale claim set passing looks exactly like a fresh one.",
     given: [
       { step: "clock", at: "2024-01-01T08:30:00.000Z" },
       {
@@ -8736,7 +8553,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a claim set carrying no issuance instant is refused when the caller bounds its age",
     rationale:
-      "RFC 7519 §4.1.6 makes `iat` OPTIONAL, so a claim set may legitimately carry none — and a freshness bound cannot be evaluated against a claim that is absent. The bound must therefore fail CLOSED: treating an unstated issuance as satisfying every age limit means the way to defeat the bound is to omit the claim, which is the one thing the party presenting the claim set can always do.",
+      "`iat` is OPTIONAL (RFC 7519 §4.1.6), so a claim set may legitimately carry none — and a freshness bound cannot be evaluated against a claim that is absent. The bound must therefore fail CLOSED: treating an unstated issuance as satisfying every age limit means the way to defeat the bound is to omit the claim, which is the one thing the party presenting the claim set can always do.",
     given: [
       {
         step: "claims",
@@ -8783,7 +8600,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a signature made without a profile still writes domain claims under the registered wire keys",
     rationale:
-      "A claim's wire spelling is fixed by specification and not by which verb wrote it: RFC 7519 §4.1.2 names the subject `sub` and RFC 8392 §3.1.2 keys the same claim at integer label 2, with §3.1.7 keying the token id at 7 where RFC 7519 §4.1.7 spells it `jti`. An issuer that has no profile to apply is still issuing a token a third party must read, so writing the caller's domain names to the wire would produce a token that carries no registered claim at all — it would verify, and every audience would find it empty.",
+      "A claim's wire spelling is fixed by specification and not by which verb wrote it: the subject is `sub` on JOSE and integer label 2 on COSE (RFC 7519 §4.1.2, RFC 8392 §3.1.2), and the token id is `jti` and label 7 (RFC 7519 §4.1.7, RFC 8392 §3.1.7). An issuer that has no profile to apply is still issuing a token a third party must read, so writing the caller's domain names to the wire would produce a token that carries no registered claim at all — it would verify, and every audience would find it empty.",
     given: [
       { step: "keys", keys: ["ec-sig"] },
       {
@@ -8840,7 +8657,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "a-profile-less-signature-declares-the-callers-token-type",
     title: "a signature made without a profile stamps the token type the caller named",
     rationale:
-      "RFC 8725 §3.11 recommends an explicit type header so a recipient can refuse a token issued for another purpose, and RFC 9596 carries the same parameter to COSE at label 16. Without a profile there is no mandated type, so the caller's own is the only statement available — dropping it would leave every profile-less token indistinguishable from every other, which is the confusion the recommendation exists to prevent.",
+      "An explicit type header is what lets a recipient refuse a token issued for another purpose, and COSE carries the same parameter at label 16 (RFC 8725 §3.11, RFC 9596 §2, RFC 9596 §4.1). Without a profile there is no mandated type, so the caller's own is the only statement available — dropping it would leave every profile-less token indistinguishable from every other, which is the confusion the recommendation exists to prevent.",
     given: [
       { step: "keys", keys: ["ec-sig"] },
       {
@@ -8853,9 +8670,16 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     when: [{ step: "mint" }],
     then: [
       { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
-      // One media type, two registered spellings: RFC 7515 §4.1.9 abbreviates
-      // `application/`, RFC 9596 → RFC 9052 §3.1 keeps it, and a COSE object is
-      // a CWT so the structured suffix is `+cwt`.
+      // One media type, two spellings: the JOSE suffix is `+jwt` and the COSE one
+      // `+cwt`, at the COSE type header parameter's own label (RFC 9596 §2,
+      // RFC 9596 §4.1).
+      //
+      // ⚠ THE WHOLE COSE SPELLING IS AEGIS POLICY, and this is the one place that
+      // says so for every `<prefix>+cwt` these rows state. `+cwt` is an aegis
+      // construction: RFC 8392 §9.2 registers `application/cwt` and no structured
+      // suffix, and no document in the local corpus defines one. Keeping the
+      // `application/` prefix is aegis's too: RFC 7515 §4.1.9 RECOMMENDS a
+      // producer omit it.
       {
         step: "wireProtectedHeader",
         on: "jose",
@@ -8901,7 +8725,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a token type that has no structured media type stamps each wire's own conventional type header",
     rationale:
-      "Not every token type has a structured media type to name. OIDC Core §2 defines an ID Token as a plain JWT, and no `id+jwt` type is registered for it, so there is no `application/<prefix>+<format>` to build and what remains is the conventional value of whichever format is being written. Those values are not one string: RFC 7515 §4.1.9 abbreviates the JOSE forms while RFC 8392 §9.2 and RFC 9052 §3.1 keep the `application/` prefix on the COSE ones. Answering the JOSE spelling on a COSE write is not a cosmetic mis-stamp — it is not a representable COSE type header at all, so the token cannot be produced and the caller loses the whole artifact rather than one parameter.",
+      "Not every token type has a structured media type to name. An ID Token is a plain JWT (OIDC Core §2) with no `id+jwt` type registered for it, so there is no `application/<prefix>+<format>` to build and what remains is the conventional value of whichever format is being written. Those values are not one string: on JOSE this one is the abbreviated form `JWT` (RFC 7515 §4.1.9, RFC 7519 §5.1) while the COSE type header takes a media type in full (RFC 9596 §2, RFC 9052 §3.1) — here `application/cwt` (RFC 8392 §9.2). Answering the JOSE spelling on a COSE write is not a cosmetic mis-stamp — it is not a representable COSE type header at all, so the token cannot be produced and the caller loses the whole artifact rather than one parameter.",
     given: [
       { step: "keys", keys: ["ec-sig"] },
       {
@@ -8923,7 +8747,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "an explicitly stated type header replaces the one derived from the token type, on both wires",
     rationale:
-      "An issuer with no profile to obey is the only authority on what its token is for, and RFC 8725 §3.11 makes an explicit type the mechanism a recipient uses to refuse a token issued for something else. Honouring the statement on one encoding and dropping it on the other is worse than not offering it: the caller sets the option once and gets a typed token or an untyped one depending on a format choice made for unrelated reasons, with nothing in either result to say which happened. The value is stated in the JOSE spelling on either wire because the kits re-wrap the bare PREFIX in their own format, exactly as a profile's mandated type is rewritten from `+jwt` to `+cwt`.",
+      "An issuer with no profile to obey is the only authority on what its token is for, and an explicit type is the mechanism a recipient uses to refuse a token issued for something else (RFC 8725 §3.11). Honouring the statement on one encoding and dropping it on the other is worse than not offering it: the caller sets the option once and gets a typed token or an untyped one depending on a format choice made for unrelated reasons, with nothing in either result to say which happened. The value is stated in the JOSE spelling on either wire because the kits re-wrap the bare PREFIX in their own format, exactly as a profile's mandated type is rewritten from `+jwt` to `+cwt`.",
     given: [
       { step: "keys", keys: ["ec-sig"] },
       {
@@ -8955,7 +8779,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "an encrypt refuses an option its wire cannot honour, rather than accepting and ignoring it",
     rationale:
-      "An option a writer cannot act on has exactly two honest dispositions: do it, or say so. Accepting and ignoring is the third, and it is the worst — the caller states a requirement, receives a token, and nothing anywhere reports that the requirement is absent from it. A wire whose specification gives it no parameter for a value must therefore refuse the request rather than issue a token the caller believes carries it: RFC 9052 §5.2 defines a COSE_Encrypt0 as single-recipient DIRECT encryption, so no key agreement happens for RFC 7518 §4.6\'s PartyUInfo to feed, and COSE registers no header parameter to carry it either.",
+      "An option a writer cannot act on has exactly two honest dispositions: do it, or say so. Accepting and ignoring is the third, and it is the worst — the caller states a requirement, receives a token, and nothing anywhere reports that the requirement is absent from it. A wire that cannot carry a value must therefore refuse the request rather than issue a token the caller believes carries it. A COSE_Encrypt0 carries no recipients array and runs no recipient algorithm, so there is no key-agreement step to derive party info from (RFC 9052 §5.2, RFC 7518 §4.6).",
     given: [
       { step: "keys", keys: ["ec-enc", "oct-enc"] },
       {
@@ -8987,7 +8811,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       },
     ],
     unsupported: {
-      jose: "the JOSE wire CAN honour the ECDH-ES party info — RFC 7518 §4.6 registers `apu`/`apv` for its key-agreement algorithms, and `JweKit` writes them — so there is no refusal to state here. That it is honoured is held by the disposition probe row `\'jose\' \'encryptContent\' forwards \'partyProducer\'`, which spies on the kit call and therefore fails if the option stops arriving.",
+      jose: "the JOSE wire CAN honour the ECDH-ES party info: `apu`/`apv` are the key-agreement parameters (RFC 7518 §4.6) and `JweKit` writes them, so there is no refusal to state here. That it is honoured is held by the disposition probe row `\'jose\' \'encryptContent\' forwards \'partyProducer\'`, which spies on the kit call and therefore fails if the option stops arriving.",
     },
   },
   {
@@ -8995,7 +8819,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a signed token wrapped in an encrypting envelope reports its own kind, with the envelope beside it",
     rationale:
-      "A caller asking what a token IS must get one answer whether or not the issuer chose to encrypt it. An encrypted id_token is an id_token — OIDC Core §3.1.3.3 describes `id_token_encrypted_response_alg` as a packaging choice the RP makes, not a different credential — so a consumer routing on the token's kind must not have to know how it travelled. Reporting the envelope as the kind forces every such consumer to special-case encryption, and the ones that forget silently drop a whole class of valid credential: the claims are fully populated and only the tag says otherwise.",
+      "A caller asking what a token IS must get one answer whether or not the issuer chose to encrypt it. An encrypted id_token is an id_token — encryption is how it travelled, not what it is — so a consumer routing on the token's kind must not have to know how it travelled. Reporting the envelope as the kind forces every such consumer to special-case encryption, and the ones that forget silently drop a whole class of valid credential: the claims are fully populated and only the tag says otherwise.",
     given: [
       { step: "keys", keys: ["ec-sig", "oct-enc"] },
       {

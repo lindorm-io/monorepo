@@ -103,13 +103,9 @@ describe("domainToJose — content -> wire mapping", () => {
     expect(domainToJose(common)).toMatchSnapshot();
   });
 
-  // ⚠⚠ IT USED TO COLLAPSE TO NO `cnf` AT ALL, and that was the defect this test
-  // now pins the fix for. RFC 7800 §3 makes the claim the issuer's declaration
-  // that the presenter holds a particular key; an all-empty one declares a
-  // possession nobody can confirm, so dropping it silently handed the audience a
-  // BEARER token where the caller asked for a bound one. The registry entry for
-  // `cnf` has always said "an empty one confirms no key and is refused" — this is
-  // what makes that true.
+  // ⚠⚠ COLLAPSING IT TO NO `cnf` AT ALL SILENTLY HANDS THE AUDIENCE A BEARER
+  // TOKEN where the caller asked for a bound one (RFC 7800 §3), which is what the
+  // `cnf` registry entry's "an empty one confirms no key and is refused" means.
   test("an all-empty confirmation is refused rather than minted as a bearer token", () => {
     const content: Dict = { subject: "s", confirmation: {} };
     const common = assembleCommonClaims(assembleCtx, permissiveProfile, content, {});
@@ -155,32 +151,21 @@ describe("domainToJose — content -> wire mapping", () => {
     });
   });
 
-  // The write side snakes the address per OIDC Core §5.1, so the read side has
-  // to camel it back or the round trip is asymmetric — handing snake keys into a
-  // camelCase-typed shape. It used to share the `events` arm and pass through.
+  // The write side snakes the address (OIDC Core §5.1.1), so the read side has to
+  // camel it back or the round trip is asymmetric — handing snake keys into a
+  // camelCase-typed shape.
   test("should camel the address back on the way in", () => {
     const address = { streetAddress: "1 Byron Way", postalCode: "0001" };
 
     expect(joseToDomain(domainToJose({ address })).claims.address).toEqual(address);
   });
 
-  // ⚠ WHAT A DECLARED MEMBER SET CHANGED, stated as its own test because it is a
-  // behaviour change and not a refactor. The blanket `camelKeys` carried every
-  // inner value through whatever its shape was, so a foreign token could put a
-  // number — or anything else — into a field the public `AegisProfileAddress`
-  // type declares as a string. Each member now decodes through its own codec, so
-  // a value that is not what the member says it is does not reach the domain.
-  //
-  // ⚠ SCOPE, stated narrowly because a wider claim here was over-reaching: this
-  // is the member resolved under its WIRE spelling, and this test demonstrates
-  // that case alone.
-  // ⭐ THE GAP THIS NOTE USED TO FILE IS CLOSED, and the correction matters more
-  // than the note did: it said a member presented under its DOMAIN spelling
-  // "misses the member map and rides the open tail unchecked", which was true and
-  // is not. Measured: `Aegis.toDomain({ address: { streetAddress: "SHADOW" } })`
-  // is REFUSED — a key that resolves onto a declared member's outgoing key is a
-  // collision whether or not that member is present. Anyone repairing the old
-  // "filed gap" would have chased nothing, or reintroduced the tolerance.
+  // ⚠ EACH MEMBER DECODES THROUGH ITS OWN CODEC, so a foreign token cannot put a
+  // number into a field the public `AegisProfileAddress` type declares as a
+  // string. ⚠ SCOPE: this is the member resolved under its WIRE spelling. A
+  // member presented under its DOMAIN spelling is REFUSED instead — a key that
+  // resolves onto a declared member's outgoing key is a collision whether or not
+  // that member is present.
   test("should not report an address member whose value is not what the member declares", () => {
     const wire = { address: { street_address: 42, locality: "Stockholm" } };
 
@@ -193,13 +178,11 @@ describe("domainToJose — content -> wire mapping", () => {
   // side must enforce the same one — otherwise aegis signs a token asserting a
   // member its own reader reports as never stated.
   //
-  // ⚠⚠ THIS ROW USED TO BE ABOUT `null` AND IS NOT ANY MORE, which is a
-  // CORRECTION rather than a re-fixture. `null` was the value that "aegis
-  // permits while no text codec accepts"; it is an ABSENCE now, so it is omitted
-  // on both sides for a different reason and states nothing about codec
-  // symmetry. The value that does is one of the wrong TYPE, which past
-  // `AegisProfileAddress` means a cast — which is the honest shape of this class,
-  // since the declared type no longer admits a value its own codec rejects.
+  // ⚠ IT TAKES A WRONGLY-TYPED VALUE, NOT A `null`. A `null` member is an ABSENCE
+  // ({@link isNotStated}), so it is omitted on both sides for a different reason
+  // and states nothing about codec symmetry — see the boundary row below. Reaching
+  // a wrong TYPE needs a cast past `AegisProfileAddress`, which is the honest
+  // shape of this class: the declared type admits no value its own codec rejects.
   test("should refuse a wrongly-typed address member on BOTH sides, not just on the read", () => {
     const address = { region: 42 as unknown as string, locality: "Stockholm" };
 
@@ -355,10 +338,10 @@ describe("joseToDomain — the two read modes decode identically", () => {
   });
 
   // ⚠ A TOKEN states a claim under its WIRE name and under nothing else. The
-  // domain spelling is a name the PRESENTER chooses, so admitting it here would
-  // let a custom claim answer for the registered one it resembles — which is how
-  // a wire `aud: ["someone-else"]` beside a custom `audience: [me]` used to pass
-  // an audience floor. Everything the pass does not resolve lands in `custom`.
+  // domain spelling is a name the PRESENTER chooses, so admitting it here lets a
+  // custom claim answer for the registered one it resembles — a wire
+  // `aud: ["someone-else"]` beside a custom `audience: [me]` passing an audience
+  // floor. Everything the pass does not resolve lands in `custom`.
   test("a token read resolves the wire name and NOT the domain spelling", () => {
     const camel: Dict = {
       subject: "user-1",
@@ -597,11 +580,10 @@ describe("wireToFloorClaims — the verify-floor read mode", () => {
     expect(custom).toEqual({});
   });
 
-  // ⚠ CORRECTED FROM "drops a non-object sub_id". The floor read used to report
-  // a non-object `sub_id` as ABSENT, which told the profile floor that a token
-  // states no subject identifier when the token states one this package cannot
-  // read. A declared structure refuses a value that contradicts it, at every
-  // door, and the floor read is a door.
+  // ⚠ REPORTING A NON-OBJECT `sub_id` AS ABSENT tells the profile floor that a
+  // token states no subject identifier when it states one this package cannot
+  // read. A declared structure refuses a value that contradicts it at every door,
+  // and the floor read is a door.
   test("refuses a non-object sub_id rather than reporting the token as stating none", () => {
     expect(() => wireToFloorClaims({ sub_id: "not-an-object" }, joseName)).toThrow(
       expect.objectContaining({
@@ -669,19 +651,17 @@ describe("wireToFloorClaims — the verify-floor read mode", () => {
  * `constructor`, `valueOf`, `hasOwnProperty` and `__proto__` on every object
  * literal there is.
  *
- * ⚠ HONEST FRAMING. Two DIFFERENT propositions are pinned below, and for a while
- * only the first was:
- *   1. NO REGISTERED NAME COLLIDES with an `Object.prototype` member — derived
- *      from the registry rather than asserted from memory, so it goes red the day
- *      a claim named `constructor` is registered.
+ * ⚠ TWO DIFFERENT PROPOSITIONS ARE PINNED BELOW:
+ *   1. NO REGISTERED NAME COLLIDES with an `Object.prototype` member — DERIVED
+ *      from the registry, so it goes red the day a claim named `constructor` is
+ *      registered.
  *   2. THE LOOKUP DOES NOT WALK THE PROTOTYPE — a separate fact, and the only one
- *      that survives the registry changing underneath it.
- * ⛔ The first does NOT imply the second, and treating it as though it did left
- * `Object.hasOwn` → `in` invisible: measured, that swap leaves the whole suite at
- * its baseline. A collision is not the only way to reach the fault — ANY library
- * in the process that writes to `Object.prototype` supplies one, and then a token
- * states a claim it does not carry. The third test is proposition 2, driven by a
- * polluted prototype rather than by a hypothetical registry.
+ *      surviving the registry changing underneath it.
+ * ⛔ The first does NOT imply the second: with proposition 1 alone, swapping
+ * `Object.hasOwn` for `in` leaves the whole suite at its baseline. A collision is
+ * not the only way to reach the fault — ANY library in the process that writes to
+ * `Object.prototype` supplies one, and then a token states a claim it does not
+ * carry. The polluted-prototype test is proposition 2.
  */
 describe("a stranger's payload cannot answer through Object.prototype", () => {
   const PROTOTYPE_MEMBERS: ReadonlyArray<string> = Object.getOwnPropertyNames(
@@ -814,6 +794,37 @@ describe("a stranger's payload cannot answer through Object.prototype", () => {
 
     expect(claims.subject).toBe("domain-spelling");
   });
+
+  /**
+   * ⛔⛔ `events` IS THE STRUCTURED CLAIM WITH NO MEMBER SET, so `eventsMap`
+   * passes the object through instead of rebuilding it and the claim never reaches
+   * the `emit` that keeps `act`'s tail safe. This row is what makes that reachable
+   * from the outside: rewriting either arm to rebuild the map with
+   * `out[key] = value` makes a `__proto__` event-type key the map's PROTOTYPE and
+   * DROPS the member, so every event type the token does not state answers with
+   * the producer's payload.
+   *
+   * ⚠ ASSERT ON THE PROPERTY AND THE PROTOTYPE. `Object.keys`/`JSON.stringify`
+   * render a swapped prototype as absent, so either alone reads clean on exactly
+   * this input.
+   */
+  test("carries a `__proto__` event-type key as an own key", () => {
+    const events = JSON.parse(
+      '{"urn:lindorm:event:rtbf":{},"__proto__":{"injected":true}}',
+    ) as Dict;
+
+    const read = joseToDomain({ events }).claims.events as Dict;
+
+    expect(Object.getPrototypeOf(read)).toBe(Object.prototype);
+    expect(Object.keys(read)).toContain("__proto__");
+    expect(Object.getOwnPropertyDescriptor(read, "__proto__")?.value).toEqual({
+      injected: true,
+    });
+
+    // The event type the token DID state is untouched, so the row cannot pass by
+    // the read having dropped everything.
+    expect(read["urn:lindorm:event:rtbf"]).toEqual({});
+  });
 });
 
 /**
@@ -826,23 +837,13 @@ describe("a stranger's payload cannot answer through Object.prototype", () => {
  * PRODUCER wrote, and rewriting a foreign token's empty member into an absence
  * would make aegis misreport a stranger's token.
  *
- * ⚠ THE REGISTRY DOES HAVE A `"prune"` MEMBER NOW, AND IT IS NOT ENOUGH. This
- * note used to claim "every declared member is `whenEmpty: \"keep\"`, so the
- * registry has no `\"prune\"` cell to lend", and that was FALSE from the moment
- * `authorizationDetails` migrated: `authorization-details-members.ts` declares
- * `type` as `whenEmpty: "prune"`, and the frozen member table in
- * `claims-registry.test.ts` pins the cell. What makes that member useless HERE is
- * that it also carries `required: true` — so its empty form is refused before the
- * prune could be observed choosing anything, and the direction rule is invisible
- * through it in both directions. Every OTHER declared member — the seven address
- * members, the five actor members and eight of the nine Subject Identifier
- * members — is `whenEmpty: "keep"`. The ninth, `subjectId.format`, is the second
- * `"prune"` cell and it is `required` too, so it is inert for the same reason.
- * ⇒ The synthetic member below is still the only thing that observes the rule,
- * and it is now for a stated reason rather than a wrong one. The claims still to
- * migrate (`events`, `cnf`) are where a `"prune"` member without a
- * `required` cell could arrive, and the failure would not announce itself when it
- * does — a symmetric walk is symmetric by construction.
+ * ⚠ THE REGISTRY'S OWN `"prune"` MEMBERS CANNOT OBSERVE IT. Both of them —
+ * `authorization-details-members.ts`'s `type` and `sub_id`'s `format` — also carry
+ * `required: true`, so an empty value is refused before the prune could be seen
+ * choosing anything, in either direction; every other declared member is
+ * `whenEmpty: "keep"`. ⇒ The synthetic member below is the only thing that
+ * observes the rule, and a `"prune"` member arriving WITHOUT a `required` cell
+ * would not announce itself — a symmetric walk is symmetric by construction.
  */
 describe("walkObject — the structure walker's direction guard", () => {
   const member = (
@@ -901,31 +902,46 @@ describe("walkObject — the structure walker's direction guard", () => {
   });
 
   /**
+   * ⛔⛔ AN OPEN TAIL'S KEY IS THE PRODUCER'S OWN. `act` is `open: "verbatim"`
+   * (RFC 8693 §4.1), so an undeclared member reaches the emit under the spelling
+   * the token wrote — and `__proto__` is a legal JSON member name that
+   * `JSON.parse` makes an ordinary own property. The emit DEFINES its key; under
+   * `out[outKey] = outValue` the member is DROPPED and becomes the actor's
+   * PROTOTYPE, so every name the actor does not state answers with the producer's
+   * value instead of `undefined`.
+   *
+   * ⚠ ASSERT ON THE PROPERTY AND THE PROTOTYPE. `Object.keys`/`JSON.stringify`
+   * render a swapped prototype as absent, so either alone reads clean on exactly
+   * the hostile input.
+   */
+  test("carries a `__proto__` member of an open tail as an own key", () => {
+    const { claims } = joseToDomain(
+      JSON.parse('{"act":{"sub":"audited","__proto__":{"subject":"attacker"}}}') as Dict,
+    );
+    const act = claims.act as Dict;
+
+    expect(act.subject).toBe("audited");
+    expect(Object.getPrototypeOf(act)).toBe(Object.prototype);
+    expect(Object.keys(act)).toContain("__proto__");
+  });
+
+  /**
    * WHERE A REFUSAL SAYS THE BAD MEMBER IS.
    *
-   * ⚠ THE REGISTRY REACHES DEPTH NOW — the step this note said was coming has
-   * landed. `act-members.ts` names `ACT_MEMBERS` inside itself, so `act` and
-   * `mayAct` nest without limit, and the conformance rows
+   * ⚠ THE REGISTRY REACHES DEPTH: `act-members.ts` names `ACT_MEMBERS` inside
+   * itself, so `act` and `mayAct` nest without limit and the conformance rows
    * `a-caller-cannot-write-two-spellings-of-one-structured-member` and
    * `an-actor-carries-an-identity-claim-the-registry-does-not-declare` drive real
-   * paths like `act.act.<member>` through the public mint door. The previous
-   * version of this note claimed "no registered claim NESTS a declared structure,
-   * so the deepest path any real claim can produce is one level"; that is false at
-   * HEAD and is corrected here rather than deleted, because what it was pointing
-   * at is still half true.
+   * paths like `act.act.<member>` through the public mint door.
    *
-   * ⭐ `WalkContext.claim` IS NO LONGER A SYNTHETIC'S ALONE, AND THAT CLOSED THE
-   * LAST EQUIVALENT MUTANT IN THIS WALKER. It is read at the claim boundary
-   * (always the top context) and in ONE place a CHILD context can reach —
-   * {@link walkElements}'s non-array message, which needs a MEMBER whose codec is
-   * `array` WITH `of`. `act`'s `audience` is an array with NO `of`, so for as long
-   * as `act` and `address` were the only declared structures, a mutation reporting
-   * the member's own domain instead of the claim's was an EQUIVALENT MUTANT.
-   * RFC 9493 §3.2.8's `sub_id.identifiers` is exactly that shape and it has landed:
+   * ⭐ EXACTLY ONE TEST STOPS `WalkContext.claim` BEING AN EQUIVALENT MUTANT.
+   * `claim` is read at the claim boundary and in ONE place a CHILD context can
+   * reach — {@link walkElements}'s non-array message, which needs a MEMBER whose
+   * codec is `array` WITH `of`. `act`'s `audience` is an array with NO `of`, so
+   * `sub_id.identifiers` (RFC 9493 §3.2.8) is the only member of that shape, and
    * `classes/sub-id-claim-wire.test.ts`'s "a non-array `identifiers` is refused as
-   * a violation of the CLAIM, not of the member" drives it through the public mint
-   * door on both wires. ⚠ MEASURED on the final tree — `childPath` rewritten to
-   * `claim: step` reddens that ONE test out of 2,939, and nothing else.
+   * a violation of the CLAIM, not of the member" is the only row that reddens when
+   * `childPath` is rewritten to `claim: step`.
    */
   describe("the path a structural refusal reports", () => {
     const required: ClaimMemberSpec = {
@@ -990,14 +1006,13 @@ describe("walkObject — the structure walker's direction guard", () => {
     /**
      * A `required` member whose DOMAIN and WIRE spellings DIVERGE.
      *
-     * ⛔⛔ NOTHING IN THE REGISTRY HAS THIS SHAPE, WHICH IS WHY IT HAD TO BE BUILT.
-     * Exactly two members are `required` — `authorization_details`'s `type` and
-     * `sub_id`'s `format` — and both spell identically on all three names, as does
-     * the synthetic `subject` above. So the refusal's vocabulary was unpinned:
-     * measured, rewriting the loop's `member.domain` to
-     * `direction.outKeyOf(member)` in both the key and the message leaves the whole
-     * suite at its baseline, while a WRITE-side refusal then reports
-     * `place.street_address` / `Member "street_address" is required`.
+     * ⛔⛔ NOTHING IN THE REGISTRY HAS THIS SHAPE, WHICH IS WHY IT IS BUILT HERE.
+     * Both `required` members — `authorization_details`'s `type` and `sub_id`'s
+     * `format` — spell identically on all three names, as does the synthetic
+     * `subject` above, so without this claim the refusal's VOCABULARY is unpinned:
+     * rewriting the loop's `member.domain` to `direction.outKeyOf(member)` leaves
+     * the whole suite at its baseline while a WRITE-side refusal starts reporting
+     * `place.street_address`.
      */
     const divergent: ClaimMemberSpec = {
       domain: "streetAddress",
@@ -1077,21 +1092,17 @@ describe("walkObject — the structure walker's direction guard", () => {
  * A CLOSED MEMBER SET — the third {@link ObjectCodec.open} disposition, and the
  * ONLY thing that exercises it.
  *
- * ⛔⛔ NO REGISTERED CLAIM IS CLOSED, and the two candidates were ruled out by
- * their own specifications: RFC 8693 §4.1/§4.4 describe an OPEN actor set, and
- * RFC 7800 §3.1 says of `cnf` that "Other members of the 'cnf' object may be
- * defined" and that "in the absence of such requirements, all confirmation
- * members that are not understood by implementations MUST be ignored". So the arm
- * has no user in `claims-registry.ts` and this file is what keeps it live — which
- * is why the synthetics in this file declare `open: "closed"` rather than a value
- * copied off a real claim: a closed synthetic ALSO refuses a typo'd input key in
- * a test about something else, where an open one would carry it on the tail and
- * pass.
+ * ⛔⛔ NO REGISTERED CLAIM IS CLOSED — the two candidates are ruled out by their
+ * own specifications (RFC 8693 §4.1, RFC 8693 §4.4, RFC 7800 §3.1). So the arm has
+ * no user in `claims-registry.ts` and this file is what keeps it live, which is
+ * why every synthetic here declares `open: "closed"` rather than copying a real
+ * claim's value: a closed synthetic ALSO refuses a typo'd input key in a test
+ * about something else, where an open one carries it on the tail and passes.
  *
- * ⚠ THE CELL IS REQUIRED FOR THE SILENT DEFAULT, NOT FOR THIS ARM. `open` was
- * optional and absence meant closed, so a structure fell into the strictest
- * disposition by omission — which this registry shipped, with the NESTED `act`
- * member closed while `act` itself was open, and nothing red anywhere.
+ * ⚠ THE CELL IS REQUIRED FOR THE SILENT DEFAULT, NOT FOR THIS ARM. An optional
+ * `open` whose absence means closed drops a structure into the strictest
+ * disposition by omission — which is how a NESTED `act` member ships closed while
+ * `act` itself is open, with nothing red anywhere.
  *
  * ⚠⚠ A CLOSED SET REFUSES; IT DOES NOT DROP. A drop is invisible from both sides,
  * so it would be strictly weaker than the rule it replaces.

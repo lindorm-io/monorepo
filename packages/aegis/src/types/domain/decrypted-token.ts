@@ -11,10 +11,6 @@ import type { DomainTokenHeader } from "../header/domain-header.js";
  * a registry to categorise. A claim is a statement by an issuer, and an issuer is
  * something only a signature establishes; read those with `verify` (authenticated)
  * or `parse` (keyless), both of which report `claims`/`custom`.
- *
- * The result used to carry FOUR payload-shaped fields — `claims`, `custom`, `raw`
- * and `wire` — of which two were always empty, decided by a per-wire content-type
- * discriminant over a payload the encrypt path had renamed on the way in.
  */
 export type DecryptedToken<C extends Dict = Dict> = {
   /**
@@ -39,7 +35,7 @@ export type DecryptedToken<C extends Dict = Dict> = {
    *
    * ⚠ The AEAD covers the protected bucket in full (it is the `Enc_structure`
    * AAD, RFC 9052 §5.3), so on this verb the merge admits only the COSE
-   * `kid`/`iv` that RFC 9052 §3.1 puts outside it.
+   * `kid`/`iv` from the unprotected bucket (RFC 9052 §3.1).
    */
   header: DomainTokenHeader;
   /**

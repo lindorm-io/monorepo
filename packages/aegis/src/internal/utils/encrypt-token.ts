@@ -24,36 +24,22 @@ import { nestedTokenContent } from "./nested-token-content.js";
  * keys are spelled like registered claims. The HEADER still normalises — it is
  * aegis's own statement about the token, on every verb.
  *
- * ⚠ It USED to normalise, guarded on the payload's JS TYPE (`isBuffer(data) ||
- * isString(data) ? data : normaliseClaims(data)`), which is the wrong question ON
- * THIS DOOR: it made a `Dict` a claims bag by virtue of being a `Dict`, when the
- * door had already answered that. The identical guard is CORRECT on `sign`, where
- * the door does attribute claims to an author and the JS type is genuinely what
- * decides between bytes and a claims set (`sign-token.ts`). The defence offered
- * was that the registry reaches nothing in a caller-spelled payload — true of the
- * payloads that happen to avoid the vocabulary, and false the moment one does
- * not. `encrypt({ nonce: "" })` lost the member silently, and the caller could
- * not compensate for a prune it never asked for.
- *
- * ⚠ IT USED TO TRANSLATE, and the read side had to undo it: `domainToWire` on the
- * way in, `wireToDomain` on the way out, plus a private claims cty on each wire
- * so the read could tell "a claim set I renamed" from "bytes I did not". Sealing
- * a value verbatim removes all three at once — there is nothing left to
- * discriminate, because nothing was renamed. A claims token with an author is
- * `mint`/`sign`, which is where a claims vocabulary belongs.
+ * ⛔ Do NOT reintroduce a JS-TYPE guard (`isBuffer(data) || isString(data) ? data
+ * : normaliseClaims(data)`): it makes a `Dict` a claims bag by virtue of being a
+ * `Dict`, and `encrypt({ nonce: "" })` then loses the member silently. The
+ * identical guard is CORRECT on `sign`, where the door does attribute claims to an
+ * author (`sign-token.ts`).
  *
  * The ONE thing this verb states about the payload is when it IS a token: an
- * encrypting outer must declare a nested token (RFC 7519 §5.2 makes it a MUST for
- * a nested JWT), so a recognised token is sealed in its wire's native content
- * form under the cty that wire registers for it — the SAME resolution the
- * sign-then-encrypt composition runs, so `aegis.encrypt(signed.token)` and
- * `mint(…, { encrypt })` emit the same declaration. A caller's own `header.cty`
- * still wins.
+ * encrypting outer declares a nested token (RFC 7519 §5.2), so a recognised token
+ * is sealed in its wire's native content form under the cty that wire registers
+ * for it — the SAME resolution the sign-then-encrypt composition runs, so
+ * `aegis.encrypt(signed.token)` and `mint(…, { encrypt })` emit the same
+ * declaration. A caller's own `header.cty` still wins.
  *
  * The caller's `header` reaches the COSE_Encrypt0 writer as well as the JWE one
- * — RFC 9052 §3 gives the structure a protected bucket and `CweKit.encrypt`
- * takes the bag — because the wire forwards its kit's whole option surface
- * rather than naming the fields it passes on.
+ * (RFC 9052 §3), because the wire forwards its kit's whole option surface rather
+ * than naming the fields it passes on.
  */
 export const encryptToken = async ({
   data,

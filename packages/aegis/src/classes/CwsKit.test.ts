@@ -181,12 +181,12 @@ describe("CwsKit — caller-controlled protected / unprotected header bags", () 
 });
 
 describe("CwsKit — ML-DSA is official COSE (RFC 9964)", () => {
-  // ML-DSA (post-quantum, AKP) is now IANA-registered (RFC 9964): ML-DSA-44 =
-  // -48, ML-DSA-65 = -49, ML-DSA-87 = -50. It is therefore interoperable by
-  // default — a plain (non-proprietary) sign is accepted and carries the official
-  // label on the wire. The proprietary interop gate no longer fires for any
-  // kryptos signing algorithm (every one is official); the AES-CBC-HMAC enc-side
-  // gate still exercises that mechanism (see CweKit.test.ts).
+  // ML-DSA (post-quantum, AKP) is IANA-registered (RFC 9964): ML-DSA-44 = -48,
+  // ML-DSA-65 = -49, ML-DSA-87 = -50. It is therefore interoperable by default —
+  // a plain (non-proprietary) sign is accepted and carries the official label on
+  // the wire. The proprietary interop gate fires for no kryptos signing algorithm
+  // (every one is official); the AES-CBC-HMAC enc-side gate still exercises that
+  // mechanism (see CweKit.test.ts).
   const cases = [
     ["ML-DSA-44", -48],
     ["ML-DSA-65", -49],
@@ -259,11 +259,11 @@ describe("CwsKit — the algorithm-match gate answers under the cws tag", () => 
  * travels out of band and the structure carries `null` in its place.
  *
  * This kit has no out-of-band channel, so such a token is simply not one it can
- * read. What matters is HOW it says so: both verbs used to cast the `null` away
- * and hand it to `Buffer.from`, which throws a raw `TypeError` — outside the
- * `AegisError` contract entirely. A caller doing `catch (e) { if (e instanceof
- * AegisError) … }` therefore reported a server fault for a token it should have
- * rejected, and the token is cheap for an attacker to construct: a legal
+ * read. What matters is HOW it says so: casting the `null` away and handing it to
+ * `Buffer.from` throws a raw `TypeError` — outside the `AegisError` contract
+ * entirely. A caller doing `catch (e) { if (e instanceof AegisError) … }` would
+ * report a server fault for a token it should reject, and the token is cheap for
+ * an attacker to construct: a legal
  * 4-element COSE_Sign1 with a matching `alg` passes the arity, algorithm and
  * crit gates before reaching the crash.
  */
@@ -370,9 +370,8 @@ describe("CwsKit — a NIL signature is refused under the error contract", () =>
     expect((thrown as CwsError).code).toBe("cose_malformed");
   });
 
-  // The point of the fix: one token, one verdict. `decode` used to be the odd one
-  // out — it fabricated `Buffer.alloc(0)` for the missing signature on the claims
-  // wire and crashed on this one — so the two verbs disagreed about the same bytes.
+  // One token, one verdict. A `decode` that fabricated `Buffer.alloc(0)` for the
+  // missing signature would make the two verbs disagree about the same bytes.
   test("decode and verify AGREE about the token", () => {
     const fromVerify = thrownBy(() => kit.verify(nilSignature())) as CwsError;
     const fromDecode = thrownBy(() => CwsKit.decode(nilSignature())) as CwsError;

@@ -30,7 +30,7 @@ export type CoseSignStructuredTokenOptions = CoseWireTokenEnvelope;
  * The STRUCTURED verify options — shared by JWT, CWT, CWM. Pure wire structural
  * knobs; no named domain matchers, no presence policy (those live Aegis-side).
  * `certBindingMode` governs the post-verify certificate check on BOTH wires
- * (RFC 9360 §2 registers the COSE parameters); `tokenType` is the bare PREFIX the
+ * (RFC 9360 §2 for the COSE parameters); `tokenType` is the bare PREFIX the
  * kit re-wraps into the expected media type.
  */
 export type VerifyStructuredTokenOptions = {
@@ -38,8 +38,8 @@ export type VerifyStructuredTokenOptions = {
   clockTolerance?: number;
   /**
    * Custom header parameters the CALLER takes responsibility for — it will act on
-   * them after aegis returns. RFC 7515 §4.1.11 puts the duty on the RECIPIENT, and
-   * aegis is never the final recipient; it verifies on the application's behalf.
+   * them after aegis returns: aegis is never the final recipient, it verifies on
+   * the application's behalf. RFC 7515 §4.1.11.
    *
    * A `crit` member is accepted only when it is named here AND carried by the
    * token. Absent means nothing is declared, so EVERY critical parameter is

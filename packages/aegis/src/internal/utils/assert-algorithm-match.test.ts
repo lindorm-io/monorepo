@@ -53,7 +53,7 @@ describe("assertAlgorithmMatch", () => {
         "jwe",
         JweError,
         "The header alg does not match the key-management algorithm of the configured kryptos key.",
-        // ⚠ The JWE wire has always reported the value under `alg`, not `algorithm`.
+        // ⚠ The JWE wire reports the value under `alg`, not `algorithm`.
         { alg: "RSA-OAEP" },
       ],
       [

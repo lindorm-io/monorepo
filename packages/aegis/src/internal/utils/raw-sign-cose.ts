@@ -29,17 +29,14 @@ export type RawSignCoseInput = {
 
 /**
  * Raw OPAQUE COSE sign — the COSE sibling of `rawSignJws`. Secures arbitrary
- * content as an OPAQUE COSE_Sign1 / COSE_Mac0 (a CWS), NOT a claims-bearing CWT: COSE_Sign1 signs a `bstr`, so
- * `CwsKit` serialises the content through the shared cty codec (Dict→json,
- * string→text, Buffer→octet) and round-trips it faithfully — there is no
- * claim-label codec here (a claims-bearing COSE_Sign1 is `aegis.cwt.sign`). It
- * stamps a `+cws` / `application/cws` `typ` so the token reads as a CWS
- * (`isCws`) and never as a CWT (`isCwt`). Reached ONLY through
- * `COSE_TOKEN_WIRE.signOpaque`, which `aegis.cws.sign` gets to via the shared
- * guard (`raw-sign-opaque.ts`) — so every caller has already been checked against
- * `COSE_DISPOSITIONS.signOpaque`, and the options that table declares
- * `unsupported` never arrive here. The signing key is resolved exactly as the JWS
- * path does.
+ * content as an OPAQUE COSE_Sign1 / COSE_Mac0 (a CWS), never a claims-bearing CWT:
+ * `CwsKit` serialises through the shared cty codec (Dict→json, string→text,
+ * Buffer→octet), and there is no claim-label codec here. It stamps a `+cws` /
+ * `application/cws` `typ` so the token reads as a CWS (`isCws`), never a CWT.
+ *
+ * Reached ONLY through `COSE_TOKEN_WIRE.signOpaque`, so every caller has already
+ * been checked against `COSE_DISPOSITIONS.signOpaque` and an option that table
+ * declares `unsupported` never arrives here.
  */
 export const rawSignCose = async ({
   input,

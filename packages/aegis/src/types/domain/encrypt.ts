@@ -54,9 +54,9 @@ export type EncryptOptions = DomainTokenEnvelope<AegisEncKey> & {
    * ⚠ ON THIS VERB IT IS THE ENCRYPTION-REGISTRATION GATE AND NOTHING ELSE: this
    * verb seals the caller's value verbatim, so there are no claims to label and
    * the flag cannot move a single plaintext byte. It makes
-   * `assertCoseRegistered` refuse a content encryption RFC 9053 §4 does not
-   * register (the AES-CBC-HMAC family), so a caller must state that it accepts an
-   * on-platform-only artifact before one is produced.
+   * `assertCoseRegistered` refuse a content encryption with no COSE registration
+   * (the AES-CBC-HMAC family — RFC 9053 §4), so a caller must state that it
+   * accepts an on-platform-only artifact before one is produced.
    *
    * ⛔ INPUT-ONLY — there is no read-side twin. `decrypt`, `verify` and `parse`
    * take no such flag (`decodeCwtClaims` normalises integer labels and string
@@ -74,8 +74,8 @@ export type EncryptOptions = DomainTokenEnvelope<AegisEncKey> & {
 export type DecryptOptions = {
   /**
    * Custom header parameters the CALLER takes responsibility for — it will act on
-   * them after aegis returns. RFC 7515 §4.1.11 puts the duty on the RECIPIENT, and
-   * aegis is never the final recipient; it verifies on the application's behalf.
+   * them after aegis returns: aegis is never the final recipient, it verifies on
+   * the application's behalf. RFC 7515 §4.1.11.
    *
    * A `crit` member is accepted only when it is named here AND carried by the
    * token. Absent means nothing is declared, so EVERY critical parameter is

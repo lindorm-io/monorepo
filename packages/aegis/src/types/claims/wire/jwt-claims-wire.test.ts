@@ -86,8 +86,8 @@ const JWT_CLAIMS_WIRE_KINDS = {
   // RFC 8417 / RFC 9493 security event token
   events: "bespoke",
   // RFC 9493 §3 — a DECLARED member set whose `identifiers` member recurses as an
-  // array of Subject Identifiers (§3.2.8), so the structure is `object` at the
-  // claim and a collection one level in.
+  // array of Subject Identifiers (RFC 9493 §3.2.8), so the structure is `object`
+  // at the claim and a collection one level in.
   sub_id: "object",
   txn: "text",
   // Lindorm assurance axes + proprietary hints

@@ -1,14 +1,10 @@
 /**
  * How ONE header parameter's VALUE is represented on the COSE wire — the per-wire
- * half of the registry's codec column, and the twin of {@link HeaderCodec}, which
- * describes the JOSE side.
+ * half of the registry's codec column, and the twin of {@link HeaderCodec}.
  *
  * A CLOSED union, so both COSE passes (`token-header.ts#wireHeaderToCoseMap` on
  * write, `header/cose-wire-header.ts` on read) switch over it exhaustively with a
- * `never` default. That is what keeps the two passes reading ONE declaration
- * instead of each carrying its own list of parameter names: a list beside a pass
- * can name a parameter the registry says COSE does not carry, and nothing
- * compares the two.
+ * `never` default, and neither carries its own list of parameter names.
  *
  *   - `"passthrough"` the CBOR value IS the JOSE value (cty, typ, x5u, oid).
  *   - `"algorithmLabel"` an integer COSE algorithm label against the JOSE

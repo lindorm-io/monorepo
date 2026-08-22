@@ -230,8 +230,8 @@ describe("CweKit — proprietary alg/enc gate", () => {
 
 /**
  * ⭐ THE TOKEN-CONTROLLED HALF of the COSE label tables. `decrypt` reads the
- * content-encryption label straight off the FOREIGN protected header — RFC 9052
- * §1.5 admits `int / tstr` there, so a stranger can write a text label — and the
+ * content-encryption label straight off the FOREIGN protected header — a COSE
+ * label is `int / tstr` (RFC 9052 §1.5), so a stranger can write a text one — and the
  * lookup table is a plain object. Indexed bare, `COSE_TO_ENC["constructor"]` is
  * the `Object` function rather than `undefined`, the "not supported" guard never
  * fires, and the function reaches `tagBytesForEncryption` where `.startsWith`

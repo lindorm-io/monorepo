@@ -1,8 +1,10 @@
 import { Matcher } from "@lindorm/match";
 import type { ActClaim } from "../../types/claims/domain/act-claim.js";
 import type { TokenDelegation, VerifyActorOptions } from "../../types/domain/index.js";
+import { constrainsNothing } from "./constrains-nothing.js";
 
 export type ActorValidationError = {
+  code: "actor_not_allowed" | "actor_policy_invalid";
   message: string;
   debug?: { actor: ActClaim };
 };
@@ -13,54 +15,54 @@ export const validateActor = (
 ): ActorValidationError | null => {
   if (!options) return null;
 
+  // A condition that states nothing, or that contains a sub-condition that
+  // does, reads as an allowlist at the call site while no actor this verifier
+  // can test against it can fail it — so it is refused before it is applied,
+  // and ahead of the token-shaped checks below, so no failing token can answer
+  // in its place. The option's own absence stays legal: it states no actor
+  // policy.
+  if (options.allowedActor && constrainsNothing(options.allowedActor)) {
+    return {
+      code: "actor_policy_invalid",
+      message: "Expected allowedActor to state a condition",
+    };
+  }
+
   if (options.required && !delegation.isDelegated) {
-    return { message: "Expected delegated token with act claim" };
+    return {
+      code: "actor_not_allowed",
+      message: "Expected delegated token with act claim",
+    };
   }
 
   if (options.forbidden && delegation.isDelegated) {
-    return { message: "Expected non-delegated token" };
+    return { code: "actor_not_allowed", message: "Expected non-delegated token" };
   }
 
   if (
     options.maxChainDepth !== undefined &&
     delegation.actorChain.length > options.maxChainDepth
   ) {
-    return { message: `Actor chain exceeds maximum depth of ${options.maxChainDepth}` };
+    return {
+      code: "actor_not_allowed",
+      message: `Actor chain exceeds maximum depth of ${options.maxChainDepth}`,
+    };
   }
 
-  if (options.allowedActors) {
-    const predicate = options.allowedActors;
-    const scope = options.actorScope ?? "every";
+  if (options.allowedActor) {
+    const current = delegation.actorChain[0];
 
-    switch (scope) {
-      case "current": {
-        const current = delegation.actorChain[0];
-        if (!current || !Matcher.match(current, predicate)) {
-          // The actor identifier is kept in debug, never in the client-facing message.
-          return {
-            message: "Actor not allowed",
-            debug: current ? { actor: current } : undefined,
-          };
-        }
-        break;
-      }
-
-      case "some": {
-        if (!delegation.actorChain.some((entry) => Matcher.match(entry, predicate))) {
-          return { message: "No actor in the chain matches the allowed predicate" };
-        }
-        break;
-      }
-
-      case "every":
-      default: {
-        for (const entry of delegation.actorChain) {
-          if (!Matcher.match(entry, predicate)) {
-            return { message: "Actor not allowed", debug: { actor: entry } };
-          }
-        }
-        break;
-      }
+    // An ABSENT actor is refused here rather than left to the condition:
+    // `Matcher` negates two-valuedly, so a condition stated as a denial
+    // (`$not`, `$exists: false`) is SATISFIED by an actor that is not there.
+    // Pinned by the scenario row
+    // `an-actor-allowlist-stated-as-a-denial-refuses-a-token-that-names-no-actor`.
+    if (!current || !Matcher.match(current, options.allowedActor)) {
+      return {
+        code: "actor_not_allowed",
+        message: "Actor not allowed",
+        debug: current ? { actor: current } : undefined,
+      };
     }
   }
 

@@ -122,9 +122,8 @@ export const KIT_CELL_CENSUS: {
     reserved: {
       exercised: "reader",
       site: "src/classes/JwtKit.ts#reserved: KIT_CAPABILITIES.jwt.reserved",
-      // The kit hands its row to `buildJoseHeader`, which strips every param on
-      // it out of the caller's bag. It used to have no reader at all — the
-      // guarantee was SPREAD ORDER, which is what silently lost a caller `jku`.
+      // The kit hands its row to `buildJoseHeader`, which REFUSES a caller bag
+      // naming any param on it (`jose_reserved_header`).
     },
   },
   jws: {
@@ -148,7 +147,7 @@ export const KIT_CELL_CENSUS: {
     },
     unprotectedBucket: {
       exercised: "observed",
-      note: "the scenario row `a-wire-with-no-unprotected-bucket-signs-every-parameter-it-carries` reads the token's raw bytes and finds no such bucket — RFC 7515 §7.1 gives the compact serialisation none, which holds for every kit on this wire",
+      note: "the scenario row `a-wire-with-no-unprotected-bucket-signs-every-parameter-it-carries` reads the token's raw bytes and finds no such bucket — a JOSE compact serialisation has none, which holds for every kit on this wire (RFC 7515 §7.1)",
     },
     reserved: {
       exercised: "reader",
@@ -177,7 +176,7 @@ export const KIT_CELL_CENSUS: {
     },
     unprotectedBucket: {
       exercised: "observed",
-      note: "the scenario row `a-wire-with-no-unprotected-bucket-signs-every-parameter-it-carries` reads the token's raw bytes and finds no such bucket — RFC 7515 §7.1 gives the compact serialisation none, which holds for every kit on this wire",
+      note: "the scenario row `a-wire-with-no-unprotected-bucket-signs-every-parameter-it-carries` reads the token's raw bytes and finds no such bucket — a JOSE compact serialisation has none, which holds for every kit on this wire (RFC 7515 §7.1)",
     },
     reserved: {
       exercised: "reader",
@@ -211,7 +210,7 @@ export const KIT_CELL_CENSUS: {
     },
     unprotectedBucket: {
       exercised: "observed",
-      note: "the scenario rows `an-unprotected-routing-hint-reaches-the-domain-header`, `an-unauthenticated-parameter-cannot-restate-a-signed-one` and `an-unauthenticated-parameter-a-verifier-decides-by-is-ignored` read the raw bucket off the wire — RFC 9052 §3 gives every COSE structure one, so the fact holds for every kit on this wire",
+      note: "the scenario rows `an-unprotected-routing-hint-reaches-the-domain-header`, `an-unauthenticated-parameter-cannot-restate-a-signed-one` and `an-unauthenticated-parameter-a-verifier-decides-by-is-ignored` read the raw bucket off the wire — every COSE structure has one, so the fact holds for every kit on this wire (RFC 9052 §3)",
     },
     reserved: {
       exercised: "reader",
@@ -240,7 +239,7 @@ export const KIT_CELL_CENSUS: {
     },
     unprotectedBucket: {
       exercised: "observed",
-      note: "the scenario rows `an-unprotected-routing-hint-reaches-the-domain-header`, `an-unauthenticated-parameter-cannot-restate-a-signed-one` and `an-unauthenticated-parameter-a-verifier-decides-by-is-ignored` read the raw bucket off the wire — RFC 9052 §3 gives every COSE structure one, so the fact holds for every kit on this wire",
+      note: "the scenario rows `an-unprotected-routing-hint-reaches-the-domain-header`, `an-unauthenticated-parameter-cannot-restate-a-signed-one` and `an-unauthenticated-parameter-a-verifier-decides-by-is-ignored` read the raw bucket off the wire — every COSE structure has one, so the fact holds for every kit on this wire (RFC 9052 §3)",
     },
     reserved: {
       exercised: "reader",
@@ -268,7 +267,7 @@ export const KIT_CELL_CENSUS: {
     },
     unprotectedBucket: {
       exercised: "observed",
-      note: "the scenario rows `an-unprotected-routing-hint-reaches-the-domain-header`, `an-unauthenticated-parameter-cannot-restate-a-signed-one` and `an-unauthenticated-parameter-a-verifier-decides-by-is-ignored` read the raw bucket off the wire — RFC 9052 §3 gives every COSE structure one, so the fact holds for every kit on this wire",
+      note: "the scenario rows `an-unprotected-routing-hint-reaches-the-domain-header`, `an-unauthenticated-parameter-cannot-restate-a-signed-one` and `an-unauthenticated-parameter-a-verifier-decides-by-is-ignored` read the raw bucket off the wire — every COSE structure has one, so the fact holds for every kit on this wire (RFC 9052 §3)",
     },
     reserved: {
       exercised: "reader",
@@ -298,7 +297,7 @@ export const KIT_CELL_CENSUS: {
     },
     unprotectedBucket: {
       exercised: "observed",
-      note: "the scenario rows `an-unprotected-routing-hint-reaches-the-domain-header`, `an-unauthenticated-parameter-cannot-restate-a-signed-one` and `an-unauthenticated-parameter-a-verifier-decides-by-is-ignored` read the raw bucket off the wire — RFC 9052 §3 gives every COSE structure one, so the fact holds for every kit on this wire",
+      note: "the scenario rows `an-unprotected-routing-hint-reaches-the-domain-header`, `an-unauthenticated-parameter-cannot-restate-a-signed-one` and `an-unauthenticated-parameter-a-verifier-decides-by-is-ignored` read the raw bucket off the wire — every COSE structure has one, so the fact holds for every kit on this wire (RFC 9052 §3)",
     },
     reserved: {
       exercised: "reader",

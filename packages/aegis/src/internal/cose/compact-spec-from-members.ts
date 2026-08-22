@@ -5,27 +5,19 @@ import type { CompactSpec } from "./compact-map.js";
 
 /**
  * A {@link CompactSpec} DERIVED from a declared member set — the bridge between
- * the registry's member declarations and the label-map walker in
- * `compact-map.ts`.
+ * the registry's member declarations and the label-map walker in `compact-map.ts`.
+ * A second, hand-written table for the same structure is a second place a label
+ * can be written, with the wire decided by whichever one the byte layer reads.
  *
- * ⚠ IT REPLACES A HAND-WRITTEN TABLE, and the table it replaced is the reason it
- * exists. `internal/cose/act-claim.ts` held `ACT_SPEC = { labels: { iss: 1,
- * sub: 2, aud: 3, client_id: 4, act: 5 }, nested: { act: … } }` beside a registry
- * that now states every one of those five facts itself. Two tables for one
- * structure is two places a label can be written, and the wire is decided by
- * whichever one the byte layer happens to read.
+ * ⚠ THE LABELS ARE KEYED BY THE COSE WIRE NAME, NOT THE DOMAIN NAME: the
+ * translator has already run, so the object handed over is spelled `sub`, not
+ * `subject`. Keying by the domain name produces a spec that matches nothing and
+ * an actor map with no members at all.
  *
- * ⚠ THE LABELS ARE KEYED BY THE COSE WIRE NAME, NOT THE DOMAIN NAME. The
- * translator has already run by the time the byte layer sees a value, so the
- * object it hands over is spelled in the wire's vocabulary (`sub`, not
- * `subject`). Keying by the domain name would produce a spec that matches
- * nothing and an actor map with no members at all.
- *
- * ⭐ THE SELF-REFERENCE IS THE THUNK, EVALUATED LAZILY. `CompactSpec.nested`
- * takes `spec: () => CompactSpec`, so a member set naming ITSELF (RFC 8693's
- * recursive actor chain) builds one level per level of actual data and
- * terminates with the value rather than with the declaration. Deriving the
- * child spec eagerly here would not terminate at all.
+ * ⭐ The self-reference is the THUNK, evaluated lazily. `CompactSpec.nested` takes
+ * `spec: () => CompactSpec`, so a member set naming ITSELF (RFC 8693 §4.1) builds
+ * one level per level of DATA and terminates with the value. Deriving the child
+ * spec eagerly does not terminate.
  */
 export const compactSpecFromMembers = (
   claim: string,
@@ -58,11 +50,9 @@ export const compactSpecFromMembers = (
       continue;
     }
 
-    // A member with no integer label has no place in a label map: `compactEncode`
-    // walks the label table, so an undeclared entry would be DROPPED from a
-    // signed token in silence. The caller (`cwt-spec.ts`) only reaches this
-    // builder for a set it has already established is entirely labelled, so this
-    // is the drift guard for that establishment rather than a case with a policy.
+    // A member with no integer label has no place in a label map. `cwt-spec.ts`
+    // only reaches this builder for a set it has already established is entirely
+    // labelled, so this is the drift guard for that establishment.
     throw new CoseError("Unlabelled member in a compact COSE structure", {
       code: "cose_unlabelled_compact_member",
       data: { claim, member: member.domain },

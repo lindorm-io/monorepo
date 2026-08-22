@@ -11,14 +11,6 @@ import { Aegis } from "./Aegis.js";
 /**
  * WHAT AN RFC 9493 `sub_id` SUBJECT IDENTIFIER ACTUALLY SAYS ON EACH WIRE.
  *
- * ⚠⚠ IT HAD NO INDEPENDENT PIN ON EITHER WIRE BEFORE THIS FILE. The one wire-level
- * assertion that existed (`classes/Cose.interop.test.ts`) reads the claim back
- * through `@auth0/cose` and aegis's own cbor, and everything else round-trips the
- * value through this package's own translator — which a mint bug and a read bug
- * that mirror each other satisfy exactly. The claim spent that whole time as a
- * VERBATIM passthrough (`isObject(value) ? value : undefined` in both directions),
- * so there was no member handling to get wrong; there is now.
- *
  * ⚠ EVERY ASSERTION GOES THROUGH THE INDEPENDENT INSPECTOR
  * (`__fixtures__/inspect-token.ts` — raw `cbor2` and base64url, importing nothing
  * from `src/internal/` or `src/classes/`).
@@ -37,14 +29,14 @@ const ISSUER = "https://test.lindorm.io/";
 /**
  * The COSE labels the Subject Identifier MEMBERS carry, written out.
  *
- * RFC 8392 §4 registers `iss | 1` and `sub | 2` at CLAIM level, and the compact
- * Subject Identifier reuses them so it speaks the CWT vocabulary. `format` (0)
+ * `iss` is CLAIM label 1 and `sub` label 2 (RFC 8392 §4), and the compact Subject
+ * Identifier reuses them so it speaks the CWT vocabulary. `format` (0)
  * and 4-9 are LINDORM's own — no COSE or CWT registry names a member INSIDE a
  * claim — which is exactly why the compact form is on-platform only.
  *
- * ⚠ 3 IS ABSENT ON PURPOSE. RFC 8392 §4 gives it to `aud`, which is not a Subject
- * Identifier member, so leaving it empty holds labels 1/2/3 to their RFC 8392 CWT
- * meanings in every lindorm-compact structure. ⚠ Above 3 the tables are
+ * ⚠ 3 IS ABSENT ON PURPOSE: it is `aud` at CLAIM level (RFC 8392 §4), which is
+ * not a Subject Identifier member, so leaving it empty holds labels 1/2/3 to their
+ * CWT meanings in every lindorm-compact structure. ⚠ Above 3 the tables are
  * private-use and PER-STRUCTURE and they already differ — 4 is `email` here and
  * `client_id` in the compact actor map, 5 is `phone_number` here and `act` there —
  * so the shared vocabulary is the registered range and nothing more.
@@ -62,9 +54,9 @@ const IDENTIFIERS = 9;
 /**
  * The lindorm private-use COSE label the `sub_id` CLAIM carries.
  *
- * RFC 8392 §9.1.1 governs a CWT CLAIM KEY — "Integer values less than -65536 are
- * marked as Private Use" — so a token carrying this is meaningless to any reader
- * but us, and an interoperable token degrades it to the string `sub_id`. The
+ * A CWT CLAIM KEY below -65536 is Private Use (RFC 8392 §9.1.1), so a token
+ * carrying this is meaningless to any reader but us, and an interoperable token
+ * degrades it to the string `sub_id`. The
  * CLAIM key and the MEMBER keys are different questions and are asserted apart.
  */
 const SUB_ID_COSE_LABEL = -65549;
@@ -134,11 +126,9 @@ const wireClaimOf = (token: string, key: number | string): unknown => {
  *
  * ⛔ Deliberately NOT used for the compact form. `Object.fromEntries` stringifies
  * an integer key, so a member that arrived under the text `"2"` would compare
- * equal to one under the integer `2` — a comparison that cannot fail. RFC 9052
- * §1.5 admits both ("In COSE, we use text strings, negative integers, and
- * unsigned integers as map keys", grammar `label = int / tstr`), and it is CBOR's
- * data model that keeps them apart. The compact assertions compare `Map` against
- * `Map`.
+ * equal to one under the integer `2` — a comparison that cannot fail. A COSE
+ * label is `int / tstr` (RFC 9052 §1.5), and it is CBOR's data model that keeps
+ * the two apart. The compact assertions compare `Map` against `Map`.
  */
 const plain = (value: unknown): unknown =>
   value instanceof Map
@@ -150,10 +140,9 @@ const plain = (value: unknown): unknown =>
 /**
  * EVERY DECLARED MEMBER IN ONE FLAT IDENTIFIER, in the DOMAIN vocabulary.
  *
- * ⚠⚠ IT IS NOT A CONFORMANT SUBJECT IDENTIFIER AND IT IS NOT MEANT TO BE. RFC
- * 9493 §3 says "A Subject Identifier MUST NOT contain any members prohibited or
- * not described by its Identifier Format", and no format describes `email` and
- * `id` and `url` together. Aegis enforces the per-format REQUIREMENT (through the
+ * ⚠⚠ IT IS NOT A CONFORMANT SUBJECT IDENTIFIER AND IT IS NOT MEANT TO BE
+ * (RFC 9493 §3) — no Identifier Format describes `email` and `id` and `url`
+ * together. Aegis enforces the per-format REQUIREMENT (through the
  * `subjectId` profile shape rule) and not the per-format PROHIBITION — nothing
  * can, without holding every registered format's member list — so this bag is a
  * structural probe that puts every member's spelling and label on one wire in one
@@ -184,18 +173,17 @@ const EVERY_MEMBER_WIRE: Dict = {
 };
 
 /**
- * AN `aliases` IDENTIFIER — the RFC 9493 §3.2.8 shape whose `identifiers` member
- * is "a JSON array containing one or more Subject Identifiers".
+ * AN `aliases` IDENTIFIER — the RFC 9493 §3.2.8 shape, whose `identifiers`
+ * member is an array of Subject Identifiers.
  *
  * ⭐ THIS IS THE ARRAY-OF-SELF, and each element is a CONFORMANT identifier of its
- * own format: §3.2.3 `iss_sub` (iss + sub), §3.2.2 `email`, §3.2.5 `phone_number`,
- * §3.2.4 `opaque`, §3.2.6 `did` (url), §3.2.1 `account` (uri).
+ * own format: RFC 9493 §3.2.3 `iss_sub` (iss + sub), RFC 9493 §3.2.2 `email`,
+ * RFC 9493 §3.2.5 `phone_number`, RFC 9493 §3.2.4 `opaque`, RFC 9493 §3.2.6 `did`
+ * (url), RFC 9493 §3.2.1 `account` (uri).
  *
- * ⚠ IT STOPS AT DEPTH 2 BECAUSE THE SPECIFICATION DOES: §3.2.8 — "'aliases'
- * Subject Identifiers MUST NOT be nested, i.e., the 'identifiers' member of an
- * 'aliases' Subject Identifier MUST NOT contain a Subject Identifier in the
- * Aliases Identifier Format." A depth-3 pin would assert that aegis emits a token
- * the RFC forbids.
+ * ⚠ IT STOPS AT DEPTH 2 BECAUSE AN `aliases` IDENTIFIER MUST NOT BE NESTED
+ * (RFC 9493 §3.2.8). A depth-3 pin would assert that aegis emits a token the RFC
+ * forbids.
  */
 const ALIASES = {
   format: "aliases",
@@ -362,13 +350,12 @@ describe("the sub_id claim on the wire", () => {
   // ---------------------------------------------------------------------------
 
   test("a member RFC 9493 does not name rides UNTOUCHED on both wires, at depth", async () => {
-    // RFC 9493 §3 permits an Identifier Format named by "a Collision-Resistant
-    // Name as defined in [RFC7519]" — no registration required — so a conformant
-    // Subject Identifier can carry members this package cannot enumerate. They are
-    // carried VERBATIM, because a case flip would rewrite a name the FORMAT's
-    // registrant chose. Asserted at DEPTH because a tail policy declared on the
-    // claim and forgotten on the element would pass a depth-1 row and fail this
-    // one — the exact hole the actor set shipped for one measurement.
+    // An Identifier Format may be named by a Collision-Resistant Name with no
+    // registration (RFC 9493 §3), so a conformant Subject Identifier can carry
+    // members this package cannot enumerate. They are carried VERBATIM, because a
+    // case flip would rewrite a name the FORMAT's registrant chose. Asserted at
+    // DEPTH because a tail policy declared on the claim and forgotten on the
+    // element would pass a depth-1 row and fail this one.
     const subjectId = {
       format: "https://lindorm.test/sub-id-format",
       device_serial: "SN-0001",
@@ -388,9 +375,8 @@ describe("the sub_id claim on the wire", () => {
   });
 
   test("the compact COSE encoding keeps an undeclared member instead of dropping it", async () => {
-    // RFC 9052 §1.5 makes the honest encoding available: "In COSE, we use text
-    // strings, negative integers, and unsigned integers as map keys", grammar
-    // `label = int / tstr`. So the map is MIXED — declared members under their
+    // A COSE label is `int / tstr` (RFC 9052 §1.5), which makes the honest
+    // encoding available: the map is MIXED — declared members under their
     // integers, the tail under its own name — and asserting both halves in one
     // `Map` is what stops an encoder that gave up and emitted the string-keyed
     // structure wholesale from passing.
@@ -411,8 +397,9 @@ describe("the sub_id claim on the wire", () => {
 
   test("the camelised member reaches the RFC 9493 wire spelling on both wires", async () => {
     // ⭐⭐ THE CAMELISATION MOVES NO BYTES, AND THAT IS THE FACT WORTH PINNING.
-    // `phoneNumber` resolves through the declared member to RFC 9493 §3.2.4's
-    // `phone_number` on JOSE and to its label in the compact COSE map. The
+    // `phoneNumber` resolves through the declared member to the wire
+    // `phone_number` on JOSE (RFC 9493 §3.2.5) and to its label in the compact
+    // COSE map. The
     // expectations are WRITTEN OUT rather than compared against a sibling token,
     // so a walker that moved both spellings to the same WRONG place cannot satisfy
     // them.
@@ -435,9 +422,10 @@ describe("the sub_id claim on the wire", () => {
         // ⚠ THREE SHAPES, NOT TWO — and the sibling-comparison this replaced could
         // never have shown it. A JOSE claim is a JSON OBJECT; an interoperable COSE
         // claim is a CBOR MAP with TEXT keys; a proprietary one is a CBOR map with
-        // INTEGER labels. RFC 9052 §1.5 keeps the text `"format"` and an integer
-        // label apart (`label = int / tstr`), so writing all three out is what makes
-        // the assertion about the wire rather than about self-consistency.
+        // INTEGER labels. A COSE label is `int / tstr` (RFC 9052 §1.5), so the
+        // text `"format"` and an integer label stay apart, and writing all three
+        // out is what makes the assertion about the wire rather than about
+        // self-consistency.
         const expected =
           format === "jwt"
             ? { format: "phone_number", phone_number: "+46700000000" }
@@ -461,20 +449,16 @@ describe("the sub_id claim on the wire", () => {
   });
 
   test("the WIRE spelling in a domain bag is refused, not routed onto the declared member's key", async () => {
-    // ⛔⛔ THIS TEST USED TO ASSERT THE OPPOSITE, and correcting it is a finding
-    // rather than cleanup. It paired `{ phone_number: … }` with
-    // `{ phoneNumber: … }` and required the two to produce IDENTICAL bytes — which
-    // they did, because a caller-supplied `phone_number` was an undeclared member
-    // riding the `"verbatim"` tail straight onto the declared member's own outgoing
-    // key. That is exactly the look-alike the walker now refuses: RFC 9493 says an
-    // unknown member may be carried, and nothing says a member may be written INTO
-    // ANOTHER MEMBER'S SLOT, which is what made the two indistinguishable
-    // downstream. The old pin therefore documented a fail-open as a feature.
+    // ⛔⛔ THE LOOK-ALIKE THE WALKER REFUSES. Left unrefused, a caller-supplied
+    // `phone_number` is an undeclared member riding the `"verbatim"` tail straight
+    // onto the declared member's own outgoing key, so `{ phone_number: … }` and
+    // `{ phoneNumber: … }` produce IDENTICAL bytes. An unknown member may be
+    // carried (RFC 9493 §3); nothing says a member may be written INTO ANOTHER
+    // MEMBER'S SLOT, which is what makes the two indistinguishable downstream.
     //
-    // ⭐ It also SOFTENED the very break it claimed to state. If the wire spelling
-    // keeps working, the camelisation is not a break a caller ever notices — it
-    // just silently stops being enforceable by the domain-keyed shape rule. Failing
-    // loudly is the honest form of the same change.
+    // ⭐ Accepting the wire spelling would also SOFTEN the camelisation into a
+    // break no caller notices — it would just silently stop being enforceable by
+    // the domain-keyed shape rule. Failing loudly is the honest form.
     for (const format of ["jwt", "cwt"] as const) {
       await expect(
         mint(format, {
@@ -545,9 +529,8 @@ describe("the sub_id claim on the wire", () => {
   // ---------------------------------------------------------------------------
 
   test("a Subject Identifier that names no format is refused on both wires", async () => {
-    // RFC 9493 §3: "A Subject Identifier MUST conform to a specific Identifier
-    // Format and MUST contain a 'format' member whose value is the name of that
-    // Identifier Format." Unconditional, so it is a registry `required` cell — the
+    // A Subject Identifier MUST carry a `format` member (RFC 9493 §3).
+    // Unconditional, so it is a registry `required` cell — the
     // walker enforces it under EVERY profile including this profile-free-ish
     // `default` one, where the `subjectId` profile shape rule (bound only by
     // `security_event`) never runs at all.
@@ -571,9 +554,9 @@ describe("the sub_id claim on the wire", () => {
   });
 
   test("a format missing from an ALIASED identifier is refused at its own position", async () => {
-    // ⭐ THE `required` CELL AT DEPTH, inside a collection. RFC 9493 §3.2.8 makes
-    // every element of `identifiers` a Subject Identifier, so `format` is
-    // mandatory there too — and the position names WHICH element, because "the
+    // ⭐ THE `required` CELL AT DEPTH, inside a collection. Every element of
+    // `identifiers` is itself a Subject Identifier (RFC 9493 §3.2.8), so `format`
+    // is mandatory there too — and the position names WHICH element, because "the
     // identifier is missing a format" is not a repairable instruction when six of
     // them are present.
     await expect(
@@ -667,8 +650,7 @@ describe("the sub_id claim on the wire", () => {
       }) as unknown as Error,
     );
 
-    // The vocabulary door too, so the rule is not a property of one code path —
-    // the same pairing the `__proto__` rows below make.
+    // The vocabulary door too, so the rule is not a property of one code path.
     expect(() =>
       Aegis.toDomain(
         JSON.parse('{"sub_id":{"format":"aliases","identifiers":"not-an-array"}}'),
@@ -690,8 +672,8 @@ describe("the sub_id claim on the wire", () => {
   });
 
   test("an element of `identifiers` that is not a structure is refused at its index", async () => {
-    // The sibling half of the same walk: RFC 9493 §3.2.8 defines the member as an
-    // array "containing one or more Subject Identifiers", and a string is not one.
+    // The sibling half of the same walk: the member is an array of Subject
+    // Identifiers (RFC 9493 §3.2.8), and a string is not one.
     // Dropping it would report a stranger's token as listing fewer aliases than it
     // does — and would silently sign one for a caller.
     await expect(
@@ -730,162 +712,13 @@ describe("the sub_id claim on the wire", () => {
     }
   });
 
-  // ---------------------------------------------------------------------------
-  // `__proto__` — the refusal that moved with the claim.
-  // ---------------------------------------------------------------------------
-
-  test("a `__proto__` member is refused at the UNAUTHENTICATED JOSE door, not made a prototype", () => {
-    // ⛔ WHAT THIS PINS IS THE REFUSAL, not a prototype swap. Reading this claim
-    // pollutes nothing: `@lindorm/utils`'s `omit-from-object.ts:32` writes every
-    // key with `Object.defineProperty`, so a nested own `__proto__` survives the
-    // `omitUndefined` rebuild as an ordinary own key (measured through the built
-    // package, at depth). With the refusal disabled the parse succeeds and hands
-    // the member back verbatim. ⇒ This row states aegis's POLICY about the member
-    // name, and a reader must not take it as evidence of a live swap — see
-    // `internal/claims/proto-member-violations.ts`, where that policy's own
-    // justification is filed for removal.
-    //
-    // ⭐ THE TOKEN IS FORGED AND `parse` IS THE DOOR, because that is the real
-    // threat model: `parse` reports a payload WITHOUT checking a signature, so the
-    // attacker needs no key. A MINT is refused by the same rule on the write side,
-    // so signing one would prove nothing about the read side.
-    const header = Buffer.from(
-      JSON.stringify({ alg: "ES512", typ: "JWT" }),
-      "utf8",
-    ).toString("base64url");
-    const payload = Buffer.from(
-      '{"iss":"https://test.lindorm.io/","sub":"u","exp":9999999999,"sub_id":{"__proto__":{"id":"attacker"},"format":"opaque"}}',
-      "utf8",
-    ).toString("base64url");
-
-    expect(() => aegis.parse(`${header}.${payload}.AAAA`)).toThrow(
-      expect.objectContaining({
-        code: "claim_structure_invalid",
-        data: {
-          claim: "subjectId",
-          invalid: [
-            {
-              key: "subjectId.__proto__",
-              message:
-                'Member "__proto__" is not a member name any structure may use, in "subjectId"',
-            },
-          ],
-        },
-      }) as unknown as Error,
-    );
-
-    // Both vocabulary doors, so the rule is not a property of one code path.
-    expect(() =>
-      Aegis.toDomain(JSON.parse('{"sub_id":{"__proto__":{"id":"attacker"}}}')),
-    ).toThrow(
-      expect.objectContaining({ code: "claim_structure_invalid" }) as unknown as Error,
-    );
-    expect(() =>
-      Aegis.toWire(JSON.parse('{"subjectId":{"__proto__":{"id":"x"}}}')),
-    ).toThrow(
-      expect.objectContaining({ code: "claim_structure_invalid" }) as unknown as Error,
-    );
-  });
-
-  test("a compact COSE map carrying a text `__proto__` label reaches the walker as a KEY", () => {
-    // RFC 9052 §1.5 admits a TEXT label (`label = int / tstr`) and the compact
-    // encoder walks the VALUE rather than the label table, so `__proto__` is a
-    // reachable key in a compact Subject Identifier — no signature required,
-    // because `aegis.parse` reports a payload without verifying one.
-    //
-    // ⭐ ASSERTED AS THE REFUSAL, which IS the own-key form observed: the walker one
-    // level up refuses `__proto__` by NAME, and it can only see a key that EXISTS.
-    // `compactDecode` writes each member with `Object.defineProperty`; under a
-    // plain assignment no own key is created, the walker sees a one-member
-    // identifier, and the token is accepted with an invisible attacker-controlled
-    // property. So the refusal fires exactly when the data property was created.
-    const claims = new Map<number | string, unknown>([
-      [1, ISSUER],
-      [2, "user-1"],
-      [4, 9999999999],
-      [
-        SUB_ID_COSE_LABEL,
-        new Map<number | string, unknown>([
-          [FORMAT, "opaque"],
-          ["__proto__", { id: "attacker" }],
-        ]),
-      ],
-    ]);
-
-    // A COSE_Sign1 nobody signed, inside the CWT tag — built with raw `cbor2`, so
-    // nothing about the token comes from the code under test.
-    const forged = Buffer.from(
-      encode(
-        new Tag(
-          CBOR_TAG.cwt,
-          new Tag(CBOR_TAG.sign1, [
-            encode(new Map<number, unknown>([[1, -36]])),
-            new Map<number, unknown>(),
-            encode(claims),
-            Buffer.alloc(4),
-          ]),
-        ),
-      ),
-    ).toString("base64url");
-
-    expect(() => aegis.parse(forged)).toThrow(
-      expect.objectContaining({
-        code: "claim_structure_invalid",
-        data: {
-          claim: "subjectId",
-          invalid: [
-            {
-              key: "subjectId.__proto__",
-              message:
-                'Member "__proto__" is not a member name any structure may use, in "subjectId"',
-            },
-          ],
-        },
-      }) as unknown as Error,
-    );
-  });
-
-  test("a `__proto__` inside an ALIASED identifier is refused at its own depth", () => {
-    // ⭐ THE SAME REFUSAL ONE LEVEL IN, through the collection arm. A guard applied
-    // at the claim boundary alone would pass this token — the outer identifier is
-    // clean, and the hostile member sits inside an element the walker only reaches
-    // by descending. The key names WHICH alias, because at depth `__proto__` alone
-    // does not locate it.
-    const header = Buffer.from(
-      JSON.stringify({ alg: "ES512", typ: "JWT" }),
-      "utf8",
-    ).toString("base64url");
-    const payload = Buffer.from(
-      '{"iss":"https://test.lindorm.io/","sub":"u","exp":9999999999,"sub_id":{"format":"aliases","identifiers":[{"format":"email","email":"a@b.test"},{"format":"opaque","__proto__":{"id":"attacker"}}]}}',
-      "utf8",
-    ).toString("base64url");
-
-    expect(() => aegis.parse(`${header}.${payload}.AAAA`)).toThrow(
-      expect.objectContaining({
-        code: "claim_structure_invalid",
-        data: {
-          claim: "subjectId",
-          invalid: [
-            {
-              key: "subjectId.identifiers[1].__proto__",
-              message:
-                'Member "__proto__" is not a member name any structure may use, in "subjectId.identifiers[1]"',
-            },
-          ],
-        },
-      }) as unknown as Error,
-    );
-  });
-
   test("a signed CWT keying one member by BOTH its label and its name is refused", async () => {
-    // ⛔⛔ THE COSE-ONLY COLLISION, END TO END ON A REAL SIGNED TOKEN. RFC 9052
-    // §1.5 makes the integer label and the interoperable text name different map
-    // keys ("In COSE, we use text strings, negative integers, and unsigned
-    // integers as map keys", grammar `label = int / tstr`) — but they are two
-    // renderings of ONE declared member, so a map carrying both said two things
-    // about one field and the LAST one won, silently. Measured before the fix, at
-    // `aegis.parse` AND at `aegis.verify`: `sub_id` as `Map { 0 => "phone_number", 5 => "+46700000000",
-    // "phone_number" => "+00000000000" }` read back carrying the FORGED number on
+    // ⛔⛔ THE COSE-ONLY COLLISION, END TO END ON A REAL SIGNED TOKEN. The integer
+    // label and the interoperable text name are different map keys
+    // (RFC 9052 §1.5) but two renderings of ONE declared member, so a map carrying
+    // both says two things about one field. Left to the last writer, `sub_id` as
+    // `Map { 0 => "phone_number", 5 => "+46700000000",
+    // "phone_number" => "+00000000000" }` reads back carrying the FORGED number on
     // both doors.
     //
     // ⚠ THE UNIT PIN IS IN `internal/cose/compact-map.test.ts`; this one exists
@@ -916,5 +749,54 @@ describe("the sub_id claim on the wire", () => {
 
     expect(() => aegis.parse(signed.token)).toThrow(expected);
     await expect(aegis.verify(signed.token)).rejects.toThrow(expected);
+  });
+
+  test("a signed CWT keying a member `__proto__` reports it as an OWN member, forging none", async () => {
+    // ⛔⛔ THE PRODUCER'S TEXT LABEL AT THE PUBLIC DOOR. `__proto__` is a legal
+    // COSE text label (RFC 9052 §1.5) and the compact decoder has no table entry
+    // for it, so it rides back under its own spelling — into a bag the caller
+    // then reads. Written by assignment it would invoke `Object.prototype`'s
+    // setter instead of creating a member, and the identifier would carry a
+    // prototype the token chose.
+    //
+    // ⚠ THE UNIT PIN IS IN `internal/cose/compact-map.test.ts`; this one exists
+    // because that one asserts over a hand-written `CompactSpec` and observes no
+    // door. Only an end-to-end token shows what `aegis.parse` hands a caller.
+    //
+    // ⚠ ASSERT ON THE PROPERTY, never `toEqual`/`toMatchSnapshot`: a swapped
+    // prototype serialises as ABSENT, so both read clean on exactly this input.
+    const signed = await aegis.cwt.sign(
+      {
+        iss: ISSUER,
+        sub: "user-1",
+        exp: Math.floor(Date.now() / 1000) + 3600,
+        // A `Map` value rides the interoperable arm verbatim into CBOR, so this
+        // is a token that genuinely verifies — the same route the duplicate-key
+        // row above takes. `0` is `format` and `8` is `id`.
+        sub_id: new Map<number | string, unknown>([
+          [FORMAT, "opaque"],
+          [ID, "opaque-subject-1"],
+          ["__proto__", { id: "rogue-subject" }],
+        ]),
+      } as never,
+      { key: { kryptos: TEST_EC_KEY_SIG } } as never,
+    );
+
+    const subjectId = aegis.parse(signed.token).claims.subjectId as unknown as Record<
+      string,
+      unknown
+    >;
+
+    expect(Object.getPrototypeOf(subjectId)).toBe(Object.prototype);
+    expect(Object.keys(subjectId)).toContain("__proto__");
+    expect(Object.getOwnPropertyDescriptor(subjectId, "__proto__")?.value).toEqual({
+      id: "rogue-subject",
+    });
+
+    // The LABELLED members the map did state are untouched — so the row cannot
+    // pass by the decode having thrown everything away, and `id` answers with the
+    // producer's own labelled value rather than with the tail's.
+    expect(subjectId.format).toBe("opaque");
+    expect(subjectId.id).toBe("opaque-subject-1");
   });
 });

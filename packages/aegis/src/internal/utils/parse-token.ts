@@ -62,10 +62,8 @@ export const parseToken = <C extends Dict = Dict>(token: string): ParsedToken<C>
   const wire = tokenWireFor(format);
   const read = wire.decodeClaims(token);
 
-  // `wire` is deliberately dropped: `ParsedToken` declares no wire pass-through,
-  // because an UNVERIFIED read has no authenticated payload to pass through. The
-  // COSE parse used to return one anyway — an undeclared field on half the
-  // formats — which is the asymmetry one builder removes.
+  // `wire` is dropped: `ParsedToken` declares no wire pass-through, because an
+  // UNVERIFIED read has no authenticated payload to pass through.
   const { wire: _wire, ...result } = buildTokenResult<C>({
     format: read.format,
     wire: read.wire,

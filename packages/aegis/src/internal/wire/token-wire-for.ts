@@ -5,10 +5,8 @@ import { JOSE_TOKEN_WIRE } from "./jose-token-wire.js";
 import type { TokenWire } from "./token-wire.js";
 
 /**
- * The ONE format → wire lookup. A TOTAL record, so a new token format is a
- * compile error here rather than a silent fall through to whichever wire the
- * ladder happened to end on — which is exactly how three verbs came to disagree
- * about what a typ-less COSE token is.
+ * The ONE format → wire lookup. A TOTAL record, so a new token format is a compile
+ * error here rather than a silent fall through to whichever wire a ladder ends on.
  */
 const WIRE_BY_FORMAT: Record<TokenFormatTag, TokenWire> = {
   jwt: JOSE_TOKEN_WIRE,

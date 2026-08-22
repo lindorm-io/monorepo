@@ -8,20 +8,14 @@ const INTERMEDIATE = Buffer.from([0x30, 0x82, 0x02, 0x0b]);
 const LEAF_B64 = B64.encode(LEAF);
 const INTERMEDIATE_B64 = B64.encode(INTERMEDIATE);
 
-/**
- * RFC 9360 §2 `COSE_X509 = bstr / [ 2*certs: bstr ]`, and §2's prose fixes which
- * arm applies, in two adjacent bullets: *"If a single certificate is conveyed, it
- * is placed in a CBOR byte string. […] If multiple certificates are conveyed, a
- * CBOR array of byte strings is used, with each certificate being in its own byte
- * string."*
- */
+/** The `COSE_X509` codec — which arm a chain takes. RFC 9360 §2. */
 describe("encodeCoseX509", () => {
   test("a single certificate becomes the bare byte string", () => {
     expect(encodeCoseX509([LEAF_B64])).toEqual(LEAF);
   });
 
-  // `2*certs` requires TWO, so a one-member array is not a conformant COSE_X509
-  // and the single-cert arm is not an optimisation.
+  // ⚠ A one-member array is not a conformant COSE_X509, so the single-cert arm is
+  // not an optimisation. RFC 9360 §2.
   test("a chain becomes an array of byte strings, leaf first", () => {
     expect(encodeCoseX509([LEAF_B64, INTERMEDIATE_B64])).toEqual([LEAF, INTERMEDIATE]);
   });
@@ -36,8 +30,8 @@ describe("encodeCoseX509", () => {
 });
 
 describe("decodeCoseX509", () => {
-  // RFC 7515 §4.1.6 makes a JOSE `x5c` entry STANDARD base64 of the DER, not
-  // base64url, so the two encodings are not interchangeable here.
+  // ⚠ A JOSE `x5c` entry is STANDARD base64 of the DER, not base64url — the two
+  // are not interchangeable here. RFC 7515 §4.1.6.
   test("a bare byte string becomes a one-member base64 array", () => {
     expect(decodeCoseX509(LEAF)).toEqual([LEAF_B64]);
   });

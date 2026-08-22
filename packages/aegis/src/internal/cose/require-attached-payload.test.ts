@@ -18,9 +18,8 @@ describe("requireAttachedPayload", () => {
     expect(bytes.equals(Buffer.from([1, 2, 3]))).toBe(true);
   });
 
-  // An EMPTY payload is attached — the producer said "these bytes", and there
-  // happen to be none of them. Only `null`/absent means detached, so an empty
-  // byte string must pass through rather than be read as a missing payload.
+  // ⚠ An EMPTY payload is ATTACHED — only `null`/absent means detached, so an
+  // empty byte string passes through rather than reading as a missing payload.
   test("accepts an EMPTY payload — attached is not the same as non-empty", () => {
     expect(requireAttachedPayload(Uint8Array.from([]), words)).toHaveLength(0);
   });
@@ -43,8 +42,8 @@ describe("requireAttachedPayload", () => {
     expect(() => requireAttachedPayload(undefined, words)).toThrow(CwsError);
   });
 
-  // The words — and the leaf error class — are DATA, so each read path names the
-  // structure it expected in its own terms while the code stays one value.
+  // The words and the leaf error class are DATA, so each read path names the
+  // structure it expected while the code stays one value.
   test("throws under the leaf class the call site names", () => {
     let thrown: unknown;
 

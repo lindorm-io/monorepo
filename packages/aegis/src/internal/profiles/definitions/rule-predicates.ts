@@ -1,26 +1,23 @@
 import type { Condition } from "@lindorm/match";
 import type { DomainClaims } from "../../../types/claims/domain/domain-claims.js";
 
-// RFC 3986 scheme prefix: `scheme:` where scheme starts with a letter and is
-// followed by letters/digits/`+`/`-`/`.`. A StringOrURI (RFC 7519 §4.1.1) that
-// is a real URI matches; a bare word or a value with spaces does not.
+// A URI scheme prefix (RFC 3986): a bare word or a value with spaces does
+// not match.
 const URI = /^[a-z][a-z0-9+.-]*:/i;
 
 /**
- * `iss`, when present, must be a URI-shaped string (RFC 7519 §4.1.1 — the
- * platform always emits a URL issuer). Expressed as a flat predicate so the
- * profile rule vocabulary unifies with `assert` / matchers / `Aegis.assert`.
- * The `$or` with `$exists:false` keeps the "only when present" semantics —
- * presence is the `required` floor's job.
+ * `iss`, when present, must be a URI-shaped string (RFC 7519 §4.1.1). A flat
+ * predicate, so the profile rule vocabulary unifies with `assert` / matchers; the
+ * `$or` with `$exists:false` leaves presence to the `required` floor.
  */
 export const ISSUER_IS_URI: Condition<DomainClaims> = {
   issuer: { $or: [{ $exists: false }, { $regex: URI }] },
 };
 
 /**
- * An access token's `aud` resolves to exactly one resource (emitted as an
- * array-of-one on the wire) — narrower than RFC 9068 §3, which bounds no count.
- * "Only when present" via the `$or`; the multi/empty cases fail `$length: 1`.
+ * An access token's `aud` resolves to exactly one resource, emitted as an
+ * array-of-one on the wire — STRICTER than RFC 9068 §3. "Only when present" via
+ * the `$or`; the multi and empty cases fail `$length: 1`.
  */
 export const AUD_SINGLE_RESOURCE: Condition<DomainClaims> = {
   audience: { $or: [{ $exists: false }, { $length: 1 }] },

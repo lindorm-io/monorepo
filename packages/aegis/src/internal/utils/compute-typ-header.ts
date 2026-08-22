@@ -11,10 +11,9 @@ import type { BaseTokenFormat } from "../../types/header/wire-header.js";
 export type KitFormat = TokenFormatTag;
 
 // The bare conventional form each kit format floors to when no prefix is given.
-// JOSE uses the abbreviated bare forms (RFC 7515 drops `application/`); COSE
-// (RFC 9596 → 9052 §3.1) keeps the full `application/...` media type, so its
-// fallback is `application/cwt|cws|cwe`. A `cwm` (COSE_Mac0) shares the CWT
-// media type — the STRUCTURE (Mac0 vs Sign1) is what tells `cwm` from `cwt`.
+// JOSE uses the abbreviated bare forms (RFC 7515 §4.1.9); COSE keeps the full
+// `application/…` media type (RFC 9596). A `cwm` (COSE_Mac0) shares the CWT media
+// type — the STRUCTURE (Mac0 vs Sign1) is what tells `cwm` from `cwt`.
 const FORMAT_FALLBACK: Record<KitFormat, string> = {
   jwt: "JWT",
   jws: "JWS",
@@ -77,12 +76,11 @@ export const extractTypPrefix = (
 
 /**
  * The DOMAIN enum → bare kit PREFIX bridge: translate a {@link TokenType} enum to
- * the bare `typ` PREFIX the wire kits re-wrap (`access_token` → `"at"`; a type with
- * no structured form, or `undefined`, → `undefined`). This is where the enum's
- * validation + short-name lookup live now that the kits take a raw prefix — the
- * Aegis-tier callers (sign/verify/encrypt domain paths) run it before handing a
- * prefix to a kit. Format-agnostic (short-name lookup is the same for JOSE/COSE),
- * so it derives via the `jwt` short-name table.
+ * the bare `typ` PREFIX the wire kits re-wrap (`access_token` → `"at"`; a type
+ * with no structured form, or `undefined`, → `undefined`). The kits take a raw
+ * prefix, so the enum's validation and short-name lookup live here and the
+ * Aegis-tier callers run it before handing a prefix to a kit. Format-agnostic, so
+ * it derives via the `jwt` short-name table.
  */
 export const domainTokenTypePrefix = (
   tokenType: TokenType | undefined,
@@ -127,16 +125,14 @@ export const computeTypHeader = (
   const shortName =
     (TOKEN_TYPE_TO_SHORT_NAME as Record<string, string>)[tokenType] ?? tokenType;
 
-  // Special case: a short name of `JWT` means the type has NO structured form —
-  // `id_token` (OIDC ecosystem compatibility: there is no registered `id+jwt`,
-  // and an id_token's consumer is the OIDC RP, which expects a plain JWT). It
-  // therefore floors to the bare conventional form OF THE FORMAT ASKED FOR.
+  // A short name of `JWT` means the type has NO structured form — `id_token`,
+  // whose consumer is the OIDC RP and expects a plain JWT — so it floors to the
+  // bare conventional form OF THE FORMAT ASKED FOR.
   //
-  // ⚠ `FORMAT_FALLBACK[kitFormat]`, not the literal `"JWT"`. A hardcoded `"JWT"`
-  // ignores the argument on this branch alone, so the function answers a JOSE
-  // media type for a COSE format — and `extractTypPrefix(…, "cwt")` then THROWS
-  // on it, because `"JWT"` is neither `application/cwt` nor a `+cwt` type. Every
-  // caller today passes `"jwt"`, where the two spellings are the same string.
+  // ⚠ `FORMAT_FALLBACK[kitFormat]`, not the literal `"JWT"`: a hardcoded `"JWT"`
+  // ignores the argument on this branch alone, and `extractTypPrefix(…, "cwt")`
+  // then THROWS on it, since `"JWT"` is neither `application/cwt` nor a `+cwt`
+  // type.
   if (shortName === "JWT") return FORMAT_FALLBACK[kitFormat];
 
   // A structured type carries the full media type (`application/at+jwt`); only

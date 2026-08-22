@@ -24,17 +24,13 @@ type AegisErrorClass = new (
  * Throwing claim matching — the shared body behind `Aegis.assert`, the verify
  * pipeline's matcher pass, and both claims kits' temporal + assert pass.
  *
- * ⚠ It used to throw a bare `LindormError`, which is the SUPERCLASS of
- * `AegisError`, so the instance satisfied no `instanceof AegisError` guard.
- * `instanceof` IS this package's error interface — a consumer branches on it to
- * turn a token rejection into a 401 — so a failure raised here fell straight
- * through that guard and surfaced as a generic 500 that told the caller nothing.
- * One throw site, four doors.
+ * ⚠ ONE throw site, four doors, and it MUST raise an `AegisError` subclass:
+ * `instanceof AegisError` is this package's error interface — a consumer branches
+ * on it to turn a token rejection into a 401 — so a bare `LindormError` (its
+ * SUPERCLASS) falls through that guard and surfaces as a generic 500.
  *
- * ⚠ The class and code are the CALLER's, not a default. A shared body that
- * picked one for everybody would have made a kit-layer failure present as a
- * domain error under a wire-neutral code — which is the opposite of the rule
- * that kits speak wire and the domain does not.
+ * ⚠ The class and code are the CALLER's, never a default: one picked here would
+ * present a kit-layer failure as a domain error under a wire-neutral code.
  */
 export const validate = <C extends Dict = Dict>(
   dict: C,

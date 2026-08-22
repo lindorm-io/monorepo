@@ -1,22 +1,14 @@
 import type { Dict } from "@lindorm/types";
 
 // Public, camelCase representation of the RFC 8693 `act` / `may_act` claim.
-// Used by SignJwtContent, ParsedJwtPayload, and TokenDelegation.
+// Used by SignJwtContent and TokenDelegation.
 //
-// The wire counterpart is `ActClaimWire` (`../wire/act-claim-wire.ts`). ⚠ The
-// note that used to sit here said it was "consumed only by the wire<->public
-// mapping layer in jwt-payload.ts", and BOTH halves were wrong: the path was
-// `./jwt/...`, which has never existed, and `internal/utils/jwt-payload.ts`
-// exports a pure decoder that holds no claim mapping at all.
+// The wire counterpart is `ActClaimWire` (`../wire/act-claim-wire.ts`).
 //
-// ⚠⚠ THE MEMBER SET IS OPEN, AND THE RFC IS WHY. RFC 8693 §4.1: "The 'act' claim
-// value is a JSON object, and members in the JSON object are claims that identify
-// the actor." §4.4 names one outright — "the combination of the two claims 'iss'
-// and 'sub' are sometimes necessary to uniquely identify an authorized actor,
-// while the 'email' claim might be used to provide additional useful information
-// about that party." So a conformant issuer may write a member aegis does not
-// declare, and refusing such a token is the worse fault. The claim registry
-// declares the five below and carries anything else VERBATIM
+// ⚠⚠ THE MEMBER SET IS OPEN: a conformant issuer may write a member aegis does
+// not declare (RFC 8693 §4.1, RFC 8693 §4.4), and refusing such a token is the
+// worse fault. The claim registry declares the five below and carries anything
+// else VERBATIM
 // (`internal/claims/act-members.ts`) — verbatim rather than case-flipped, because
 // a tail member is another specification's JWT claim name and a flip would
 // rewrite it.
@@ -24,8 +16,8 @@ import type { Dict } from "@lindorm/types";
 // ⚠ ONE THING IS STILL REFUSED: a tail member whose key COLLIDES with a declared
 // member's resolved key — `{ sub: "audited", subject: "rogue" }`. Both resolve to
 // `subject`, and silently letting the last one win would hand actor
-// identification to whoever wrote the token. See
-// `internal/claims/translate.ts#claim_member_collision`.
+// identification to whoever wrote the token. Refused by `reportCollision` in
+// `internal/claims/translate.ts`.
 
 /**
  * The five members aegis DECLARES, split out from the open type on purpose.

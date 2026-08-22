@@ -264,9 +264,8 @@ describe("Aegis", () => {
     ).rejects.toThrow();
   });
 
-  // ⚠ `aegis.sign` is CLAIMS-ONLY, so an opaque signature over a wire literal is
-  // the `jws` namespace. `sign({ payload: "raw-data" })` no longer compiles — the
-  // verb takes a domain claim set.
+  // ⚠ `aegis.sign` is CLAIMS-ONLY — it takes a domain claim set — so an opaque
+  // signature over a wire literal is the `jws` namespace.
   test("jws.sign signs a raw wire literal as a JWS", async () => {
     const res = await aegis.jws.sign("raw-data");
 
@@ -322,12 +321,11 @@ describe("Aegis", () => {
    * at all. The scenario table has no artifact for "the empty string".
    */
   describe("the JOSE format guards", () => {
-    // The `typ` header is a HINT. RFC 7519 §5.1 ends "Use of this Header
-    // Parameter is OPTIONAL", and what it declares is a media type for the JWT
-    // APPLICATION to read — the sentence is quoted on the scenario row
+    // The `typ` header is a HINT (RFC 7519 §5.1) — a media type for the JWT
+    // APPLICATION to read, pinned by the scenario row
     // `an-asserted-token-type-is-compared-as-a-whole-media-type`. Routing on it
-    // as the discriminant rejected every third-party token that spelled it
-    // differently, or omitted it.
+    // as the discriminant would reject every third-party token that spells it
+    // differently, or omits it.
     describe("a typ header is a hint, never the discriminant", () => {
       test("a typ-less claims token is a JWT, a JWS, and JOSE", () => {
         const token = jws({ alg: "ES256", kid: "key_1" });
@@ -344,8 +342,7 @@ describe("Aegis", () => {
         expect(Aegis.isJws(token)).toBe(true);
       });
 
-      // RFC 7519 §3: "JWTs represent a set of claims as a JSON object that is
-      // encoded in a JWS and/or JWE structure."
+      // RFC 7519 §3.
       test("a JWT is also a JWS", () => {
         expect(Aegis.isJws(jws({ alg: "ES256", typ: "JWT" }))).toBe(true);
       });
@@ -357,7 +354,7 @@ describe("Aegis", () => {
         expect(Aegis.isJose(token)).toBe(true);
       });
 
-      // RFC 7516 §4.1.2 makes `enc` a REQUIRED JWE Protected Header parameter, so
+      // `enc` is a REQUIRED JWE Protected Header parameter (RFC 7516 §4.1.2), so
       // a five-segment token without one is not a JWE however it is typed.
       test("a five-segment token without enc is not a JWE", () => {
         expect(Aegis.isJwe(jwe({ alg: "dir", typ: "JWE" }))).toBe(false);
@@ -392,9 +389,9 @@ describe("Aegis", () => {
       });
     });
 
-    // RFC 8725 §3.2: "Use Appropriate Algorithms" — a library must not route a
-    // token whose algorithm it will not perform, and `none` is the Unsecured JWS
-    // of RFC 7515 Appendix A.5, which carries no integrity protection at all.
+    // A library must not route a token whose algorithm it will not perform, and
+    // `none` is the Unsecured JWS, which carries no integrity protection at all.
+    // RFC 8725 §3.2, RFC 7515 Appendix A.5.
     describe("the algorithm allowlist", () => {
       test("an unsecured alg-none token is no JOSE format aegis will route", () => {
         const token = jws({ alg: "none" });
@@ -419,8 +416,8 @@ describe("Aegis", () => {
         }
       });
 
-      // RFC 7515 §4.1.1 makes `alg` REQUIRED, so a header without one describes
-      // no signature to check.
+      // `alg` is REQUIRED (RFC 7515 §4.1.1), so a header without one describes no
+      // signature to check.
       test("false when the header carries no alg", () => {
         expect(Aegis.isJws(jws({ typ: "JWT" }))).toBe(false);
         expect(Aegis.isJwt(jws({ typ: "JWT" }))).toBe(false);
@@ -544,8 +541,8 @@ describe("Aegis", () => {
     });
 
     /**
-     * RFC 8725 §3.1 puts the algorithm restriction in the caller's hands: a
-     * token must not choose the class of key that verifies it. Selection is
+     * A token must not choose the class of key that verifies it
+     * (RFC 8725 §3.1). Selection is
      * driven by the token's own `kid`, so a deployment-wide verify policy is a
      * CHECK on the key that kid names, applied before the signature is touched.
      */
@@ -576,8 +573,8 @@ describe("Aegis", () => {
     });
 
     /**
-     * OIDC Core §10.1 lets a client register `id_token_signed_response_alg:
-     * HS256`, where the client secret IS the MAC key — per-client, held
+     * A client may register `id_token_signed_response_alg: HS256`
+     * (OIDC Core §10.1), where the client secret IS the MAC key — per-client, held
      * out-of-band and emphatically not a vault resident. Both outcomes below are
      * correct and the difference is the PROFILE's floor and nothing else, which
      * is what makes key injection a supported deployment shape rather than an
@@ -631,9 +628,9 @@ describe("Aegis", () => {
   /**
    * Issuer scoping makes two separately-configured strings load-bearing: amphora
    * stamps every key it holds with ITS issuer, and a token aegis mints carries
-   * AEGIS's. A difference that used to be invisible is now a hard failure to
-   * resolve our own signing key, and the error it produces does not point at the
-   * cause — so it is said once, at construction.
+   * AEGIS's. A difference is a hard failure to resolve our own signing key, and
+   * the error it produces does not point at the cause — so it is said once, at
+   * construction.
    */
   describe("issuer coherence", () => {
     const withChildLogger = (): { parent: ILogger; child: ILogger } => {

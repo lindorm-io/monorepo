@@ -35,23 +35,17 @@ const BASE_FORMAT: Record<TokenFormatTag, BaseTokenFormat | undefined> = {
  * is the second of two independent gates; pinned in
  * `internal/header/custom-header-params.test.ts`.
  *
- * ⚠ THE PARAMETER IS THE COSE PAIR, and the JOSE arms adapt INTO it by stating
- * `unprotectedHeader: {}` — the JOSE read arms in `internal/wire/jose-token-wire.ts`,
- * whose `{}` then travels the seam. The pair IS the COSE shape (RFC 9052 §3);
- * a JOSE kit result reports ONE header ({@link JoseHeaderBuckets}) because compact
- * serialisation has no second bucket, so there is no shared two-bucket type to
- * take instead.
+ * ⚠ THE PARAMETER IS THE COSE PAIR (RFC 9052 §3), and the JOSE read arms in
+ * `internal/wire/jose-token-wire.ts` adapt into it by stating
+ * `unprotectedHeader: {}`: compact serialisation has no second bucket, so there is
+ * no shared two-bucket type to take instead.
  *
  * It merges the two canonically ({@link mergeHeaderBuckets}): the unprotected
  * bucket filtered to what the header registry permits there, then overwritten by
- * the protected one. The domain tier speaks neither wire's vocabulary, so it
- * reports ONE header regardless of how many the wire carried.
+ * the protected one.
  *
- * The `tokenType` recovery is ONE call for all seven formats:
- * `decodeTokenTypeFromTyp` is per-format (its own `FORMAT_SUFFIX` and
- * `FORMAT_FALLBACK` tables carry every COSE spelling), so it is handed the format
- * the token actually is rather than a `+cwt`→`+jwt` rewrite that knows one suffix
- * and recovers nothing from `application/at+cwe`.
+ * `decodeTokenTypeFromTyp` is handed the format the token actually is, so its own
+ * per-format tables recover a COSE spelling such as `application/at+cwe`.
  */
 export const domainTokenHeader = (
   buckets: Pick<CoseHeaderBuckets, "protectedHeader" | "unprotectedHeader">,

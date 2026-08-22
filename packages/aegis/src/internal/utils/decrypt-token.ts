@@ -13,22 +13,17 @@ import { TOKEN_FORMAT_KIND } from "./token-format-kind.js";
 /**
  * The domain decrypt pipeline (`aegis.decrypt`) — CONFIDENTIALITY only, with NO
  * signature check (unlike `verify`, which decrypts then REQUIRES a signed inner).
- * The encrypted outer's format is AUTO-DETECTED by the ONE detector every other
- * read verb asks — this verb used to run its own two-step ladder (`isJwe`, then a
- * private "no dot and structurally a COSE_Encrypt0" test) and so could disagree
- * with `verify` and `parse` about what a token IS.
+ * ⚠ The format is AUTO-DETECTED by the ONE detector every other read verb asks, so
+ * this verb cannot disagree with `verify` and `parse` about what a token IS.
  *
  * From there: the wire resolves the recipient key by the ciphertext's own `kid`,
  * decrypts, and reports the plaintext AS IT WAS SEALED. A non-encrypted token is
  * refused — decrypt is not a general reader (use `verify`/`parse`).
  *
- * ⚠ NO CLAIMS LAYER, and that is the whole verb. It used to run `wireToDomain`
- * over a plaintext the encrypt path had run `domainToWire` over, and report the
- * result split into `claims`/`custom` — so a value came back under names its
- * author never wrote, and each wire needed a private cty to recognise its own
- * writing by. Decryption establishes CONFIDENTIALITY, not authorship: the value
- * returned is the value sealed, and domain claims come from `verify`/`parse`,
- * which have a signature behind them.
+ * ⚠ NO CLAIMS LAYER, and that is the whole verb. Decryption establishes
+ * CONFIDENTIALITY, not authorship: the value returned is the value sealed, under
+ * the names its author wrote. Domain claims come from `verify`/`parse`, which have
+ * a signature behind them.
  *
  * The ONE header it reports is the same shape `verify` and `parse` report, built
  * by the same translation: the outer's two wire buckets merged under the header

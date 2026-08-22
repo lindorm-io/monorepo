@@ -11,14 +11,13 @@ import { decodeProtectedHeader } from "./structures.js";
 import { stripCwtTag } from "./unwrap-cose.js";
 
 /**
- * Best-effort decode of the CWT payload byte string into the WIRE claim dict,
- * for the pre-verification {@link CwtDecoded}. It NEVER throws — every caller of
- * `decodeCwt` is resolving a key, not reading claims, and two legitimate inputs
- * carry no claims at all: a DETACHED (nil) payload, which is legal COSE, and an
- * OPAQUE CWS payload, which is arbitrary bytes rather than a CBOR claims map. So
- * a payload this cannot read is reported as "no claims", not as a malformed
- * token — the structural verdict belongs to `verifyCwt`/`decodeCwtWire`, which
- * decode the payload in their own right.
+ * Best-effort decode of the CWT payload byte string into the WIRE claim dict, for
+ * the pre-verification {@link CwtDecoded}.
+ *
+ * ⚠ It NEVER throws: every caller is resolving a key, not reading claims, and two
+ * legitimate inputs carry no claims at all — a DETACHED payload, and an OPAQUE
+ * CWS payload of arbitrary bytes. An unreadable payload is "no claims"; the
+ * structural verdict belongs to `verifyCwt`/`decodeCwtWire`.
  */
 const decodeUnverifiedClaims = (
   payloadBstr: Uint8Array | null | undefined,
@@ -37,10 +36,9 @@ const decodeUnverifiedClaims = (
 };
 
 /**
- * Decode a CWT WITHOUT verifying — the pre-verification twin of the JOSE
- * `JwtKit.decode`, exposing what a caller needs before it holds a key: the
- * kid/alg/typ off the COSE headers, and the cleartext WIRE claims (`payload`).
- * Both are UNVERIFIED; see {@link CwtDecoded}.
+ * Decode a CWT WITHOUT verifying — the twin of `JwtKit.decode`, exposing what a
+ * caller needs before it holds a key. ⚠ Everything it returns is UNVERIFIED; see
+ * {@link CwtDecoded}.
  */
 export const decodeCwt = (token: Buffer): CwtDecoded => {
   const cose = stripCwtTag(decodeCbor(token));

@@ -14,10 +14,10 @@ MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
  * `kid`.
  *
  * A `kid` is unique only per issuer, so two registered peers may legitimately
- * publish the same one. Resolution used to search the whole vault for a bare kid
- * and break the tie by `createdAt` — a value taken straight off the FETCHED
- * JWK's own `iat`, so a registered issuer chose its own tiebreak, and nothing
- * anywhere compared the resolved key's issuer to the token's `iss`.
+ * publish the same one. ⚠ An UNSCOPED lookup would search the whole vault and
+ * break the tie by `createdAt` — a value taken straight off the FETCHED JWK's own
+ * `iat`, so a registered issuer picks its own tiebreak and nothing compares the
+ * resolved key's issuer to the token's `iss`.
  *
  * ⚠ It lives beside `resolve-key.ts` because that is the code under test, and it
  * cannot be a conformance row: the collision only exists once TWO issuers have
@@ -45,10 +45,9 @@ describe("resolveKey — a colliding kid across two registered issuers", () => {
   let keyA: IKryptos;
   let keyB: IKryptos;
 
-  // The public JWK each issuer serves. `iat` drives kryptos's `createdAt`, and
-  // `createdAt` was the old tiebreak — so B publishes the NEWER one and would
-  // win the collision under the old rule. That is what makes the forgery below a
-  // real test rather than a coincidence.
+  // The public JWK each issuer serves. `iat` drives kryptos's `createdAt`, so B
+  // publishes the NEWER one and would win an unscoped most-recent tiebreak. That
+  // is what makes the forgery below a real test rather than a coincidence.
   const publicJwk = (kryptos: IKryptos, iat: number): Record<string, unknown> => {
     const jwk = { ...kryptos.toJWK("public"), kid: SHARED_KID, iat };
     delete jwk.iss;
@@ -186,9 +185,9 @@ describe("resolveKey — a colliding kid across two registered issuers", () => {
     });
   });
 
-  // The benign half of the same hole: under the old most-recent rule B's newer
-  // colliding key was returned for A's honest token, and it failed to verify.
-  // Scoping has to narrow, not blacklist.
+  // The benign half of the same hole: an unscoped most-recent rule returns B's
+  // newer colliding key for A's honest token, which then fails to verify. Scoping
+  // has to narrow, not blacklist.
   describe("an honest token from either issuer", () => {
     test("issuer A's verifies despite B holding a newer colliding kid", async () => {
       await expect(aegis.verify(await craftJwt(keyA, ISSUER_A))).resolves.toMatchObject({

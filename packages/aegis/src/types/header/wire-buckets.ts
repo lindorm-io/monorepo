@@ -42,22 +42,21 @@ export type JoseHeaderBuckets = {
 };
 
 /**
- * The two header BUCKETS a COSE kit result reports, kept apart.
+ * The two header BUCKETS a COSE kit result reports, kept apart (RFC 9052 §3).
  *
- * RFC 9052 §3 splits a COSE header into a protected bucket the signature / AEAD
- * covers and an unprotected bucket it does not. Merging the two into one header
- * makes an unsigned parameter indistinguishable from a signed one, so anything
- * reading the result decides policy on a value the PRESENTER could have written.
- * Reporting them separately means a reader has to name the bucket it trusts.
+ * Merging the two into one header makes an unsigned parameter indistinguishable
+ * from a signed one, so anything reading the result decides policy on a value the
+ * PRESENTER could have written. Reporting them separately means a reader has to
+ * name the bucket it trusts.
  */
 export type CoseHeaderBuckets = {
   /** The INTEGRITY-PROTECTED header — the only bucket a signature or AEAD covers. */
   protectedHeader: WireTokenHeader;
   /**
    * The UNAUTHENTICATED header bucket: present on the wire, covered by nothing.
-   * Nothing read from here may decide whether a token is accepted; COSE convention
-   * puts the advisory `kid` routing hint in it (RFC 9052 §3.1), which is the reason
-   * the bucket is surfaced at all.
+   * Nothing read from here may decide whether a token is accepted; the advisory
+   * `kid` routing hint rides here (RFC 9052 §3.1), which is the reason the bucket
+   * is surfaced at all.
    *
    * `Partial` because an unprotected bucket has no required member — not even
    * `alg`, which {@link WireTokenHeader} requires.
@@ -75,9 +74,9 @@ export type CoseHeaderBuckets = {
    * that its JOSE twin reports as a plain object for the same logical input.
    * Neither is converted: a read reports what the producer wrote, in the shape the
    * wire carries it, and normalising one into the other would invent a structure
-   * on one wire or destroy label fidelity on the other (RFC 9052 §1.4 admits
-   * non-string keys, which an object cannot hold). A consumer reading a custom
-   * value must therefore branch on the shape, exactly as it would reading the raw
+   * on one wire or destroy label fidelity on the other — a COSE label may be an
+   * integer, which an object key cannot hold (RFC 9052 §1.5). A consumer reading a
+   * custom value must therefore branch on the shape, exactly as it would reading the raw
    * wire — which is what this bag is.
    * pinned: `internal/header/custom-header-params.read.test.ts#a nested CBOR map
    * survives as a Map, and its JOSE twin as a plain object`.

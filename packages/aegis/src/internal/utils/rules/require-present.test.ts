@@ -21,8 +21,8 @@ describe("requirePresent", () => {
    * at all, the delegation pair names no actor and RFC 9396
    * `authorization_details: []` authorises nothing.
    *
-   * The remaining five `"keep"` cells are deliberately absent: the three OIDC
-   * hashes are b64url STRINGS whose `""` the old predicate already caught, and
+   * The remaining `"keep"` cells are deliberately absent: the OIDC hashes are
+   * b64url STRINGS whose `""` a plain emptiness test already catches, and
    * `events`/`subjectId` are refused by `eventsShape` / `subIdShape`.
    */
   test.each([

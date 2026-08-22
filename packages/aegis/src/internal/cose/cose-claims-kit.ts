@@ -8,13 +8,13 @@ import { coseStructureTag } from "./cose-structure-tag.js";
 import { COSE_TAG } from "./structures.js";
 
 /**
- * The COSE integrity split, dispatched off the RESOLVED key's `algClass` and
- * called directly by the COSE verb utils. An asymmetric key mints/verifies via `CwtKit`
- * (COSE_Sign1), a symmetric `oct` key via `CwmKit` (COSE_Mac0). Each kit
- * re-asserts its own class, so a mis-dispatch throws rather than mis-securing.
+ * The COSE integrity split, dispatched off the RESOLVED key's `algClass`: an
+ * asymmetric key goes to `CwtKit` (COSE_Sign1), a symmetric `oct` key to `CwmKit`
+ * (COSE_Mac0). ⚠ Each kit re-asserts its own class, so a mis-dispatch throws
+ * rather than mis-securing.
  *
- * The class→structure question is the SAME one the opaque signer asks, so it is
- * asked in the same place; only the kit each structure implies is decided here.
+ * Only the KIT is decided here — the class→structure question is the same one the
+ * opaque signer asks, and is asked in the same place.
  */
 export const selectCoseClaimsKit = ({
   certBindingMode,

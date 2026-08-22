@@ -5,8 +5,7 @@ import { ERROR_BY_FORMAT } from "./error-by-format.js";
 describe("ERROR_BY_FORMAT", () => {
   test("each signed COSE format lands on its OWN leaf class", () => {
     // Namespacing is what lets a consumer catch one format's refusal without
-    // catching another's; the opaque signer and the claims core used to keep
-    // separate copies of this table, agreeing on cwt/cwm by coincidence.
+    // catching another's.
     expect(ERROR_BY_FORMAT.cws).toBe(CwsError);
     expect(ERROR_BY_FORMAT.cwt).toBe(CwtError);
     expect(ERROR_BY_FORMAT.cwm).toBe(CwmError);

@@ -10,9 +10,8 @@ import { isCritEligible } from "./is-crit-eligible.js";
  * On the READ path it is not observable: `rejectUnknownCritical` runs
  * `validateCrit` first, which refuses every IANA-registered name, and every
  * registered parameter but `oid` is IANA-registered — so a version of that loop
- * asking merely "is this parameter registered" passes the ENTIRE suite
- * (measured: 4 failed / 2679 passed, exactly the declared baseline). Probed
- * HERE, the two readings part company on twenty names.
+ * asking merely "is this parameter registered" passes the whole suite. Probed HERE,
+ * the two readings part company on every registered parameter but `oid`.
  */
 describe("isCritEligible", () => {
   test("the eligible set is exactly the registry's own", () => {
@@ -23,9 +22,9 @@ describe("isCritEligible", () => {
 
   /**
    * ⚠ THE DISTINCTION THE READ PATH CANNOT SHOW. `alg` and every other
-   * specification-defined parameter IS registered — `headerByJose` answers for
-   * it — and is NOT crit-eligible. A predicate that returned "is this
-   * registered" would be wrong for all twenty and green everywhere else.
+   * specification-defined parameter IS registered — `headerByJose` answers for it —
+   * and is NOT crit-eligible. A predicate answering "is this registered" would be
+   * wrong for every one of them and green everywhere else.
    */
   test.each(["alg", "typ", "cty", "kid", "crit", "enc", "x5c", "x5t", "x5t#S256", "zip"])(
     "a registered parameter (%s) is NOT eligible, though the registry answers for it",

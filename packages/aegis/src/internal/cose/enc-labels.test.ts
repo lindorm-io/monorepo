@@ -28,8 +28,8 @@ describe("enc-labels", () => {
     expect(coseLabelToEnc(label)).toBe(enc);
   });
 
-  // The AES-CBC-HMAC family has no OFFICIAL COSE registration; it maps to a
-  // private-use label (< -65536) so a proprietary COSE_Encrypt0 round-trips.
+  // The AES-CBC-HMAC family has no official COSE registration, so it maps to a
+  // private-use label and a proprietary COSE_Encrypt0 still round-trips.
   const cbcPairs = [
     ["A128CBC-HS256", -65537],
     ["A192CBC-HS384", -65538],
@@ -52,13 +52,12 @@ describe("enc-labels", () => {
 
   /**
    * Every table here is a plain object, so a bare index resolves through
-   * `Object.prototype`: `"toString" in ENC_TO_COSE_OFFICIAL` is TRUE and
-   * `COSE_TO_ENC["toString"]` is a FUNCTION, which clears both the `??` chain and
-   * the `undefined` guard. Read through `own-entry.ts` instead.
+   * `Object.prototype` and `COSE_TO_ENC["toString"]` is a FUNCTION that clears
+   * both the `??` chain and the `undefined` guard. Read through `own-entry.ts`.
    *
-   * ⚠ The label direction is TOKEN-controlled: `CweKit.decrypt` reads it off a
-   * foreign protected header. That door is pinned in `CweKit.test.ts`; these rows
-   * pin the table itself, in both directions.
+   * ⚠ The label direction is TOKEN-controlled — `CweKit.decrypt` reads it off a
+   * foreign protected header, pinned in `CweKit.test.ts`. These rows pin the table
+   * itself, both directions.
    */
   const PROTO_NAMES = ["constructor", "toString", "valueOf", "hasOwnProperty"];
 

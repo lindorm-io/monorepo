@@ -35,12 +35,11 @@ export const resolveEcdhParty = (
   return {
     partyProducer,
     partyRecipient,
-    // ⚠ BEHAVIOUR CHANGE (READ SIDE). `JweKit.decrypt` used to decode the on-wire
-    // party info UNGATED, so a crafted non-ECDH-ES header carrying a non-base64
-    // `apu` reached `B64.toBuffer` (`Uint8Array.fromBase64`, no guard) and a raw
-    // `SyntaxError` escaped `decrypt`. Routing that call through this gate strips
-    // the field first, so it is never decoded and the read fails in the AES layer
-    // under a proper aegis error instead. Pinned by JweKit.test.ts.
+    // ⚠ THE GATE IS WHAT KEEPS THIS DECODE SAFE. Decoded ungated, a crafted
+    // non-ECDH-ES header carrying a non-base64 `apu` reaches `B64.toBuffer`
+    // (`Uint8Array.fromBase64`, no guard) and a raw `SyntaxError` escapes
+    // `JweKit.decrypt`. Stripped first, the read fails in the AES layer under a
+    // proper aegis error. Pinned by JweKit.test.ts.
     apu: partyProducer ? B64.toBuffer(partyProducer, B64U) : undefined,
     apv: partyRecipient ? B64.toBuffer(partyRecipient, B64U) : undefined,
   };

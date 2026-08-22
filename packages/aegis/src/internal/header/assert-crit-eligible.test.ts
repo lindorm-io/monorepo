@@ -68,19 +68,15 @@ const verdict = (format: string, header: WireProtectedHeader): string => {
 describe("assertCritEligible", () => {
   describe("through the seven public mint doors", () => {
     /**
-     * RFC 7515 §4.1.11: *"Producers MUST NOT include Header Parameter names
-     * defined by this specification or [JWA] for use with JWS […] in the "crit"
-     * list."* Every one of these is such a name, so a `crit` naming one mints a
-     * token that is malformed for every recipient — including aegis's own
-     * verify, which refuses it as `*_invalid_crit`. A library that mints what it
-     * will not verify has two answers to one question.
+     * Every one of these is a specification-defined name (RFC 7515 §4.1.11), so a
+     * `crit` naming one mints a token malformed for every recipient — including
+     * aegis's own verify, which refuses it as `*_invalid_crit`. A library that mints
+     * what it will not verify has two answers to one question.
      *
-     * ⚠ `kid` and `cty` were the members the two wires answered DIFFERENTLY,
-     * because the old refusal was the satisfaction check reading a bucket: `cty`
-     * is derived by the opaque and encrypted wires and by neither claims wire,
-     * and `kid` is protected on JOSE and unprotected on COSE. Eligibility does
-     * not read a bucket, so those asymmetries are gone — the name is forbidden
-     * whatever the bucket happens to hold.
+     * ⚠ `kid` and `cty` are the members a BUCKET-READING refusal answers differently
+     * per wire: `cty` is derived by the opaque and encrypted wires and by neither
+     * claims wire, and `kid` is protected on JOSE and unprotected on COSE.
+     * Eligibility reads no bucket, so the name is forbidden whatever a bucket holds.
      */
     test.each(["alg", "typ", "cty", "kid", "crit", "x5t", "enc"])(
       "a specification-defined parameter (%s) cannot be marked critical on any wire",
@@ -127,20 +123,13 @@ describe("assertCritEligible", () => {
     });
 
     /**
-     * RFC 7515 §4.1.11's SECOND producer prohibition, in the same sentence as
-     * the first: *"Producers MUST NOT include Header Parameter names defined by
-     * this specification or [JWA] for use with JWS, duplicate names, or names
-     * that do not occur as Header Parameter names within the JOSE Header in the
-     * "crit" list."*
+     * RFC 7515 §4.1.11's SECOND producer prohibition.
      *
-     * ⚠ It is worth a gate NOW rather than a note, because this step is what
-     * made the shape dangerous. Before the crit reader existed, a duplicate
-     * minted and then failed every aegis verify, so nobody could ship one.
-     * WITHOUT this gate it would round-trip cleanly — minting, and verifying for
-     * a recipient that declares the member, reporting `["oid","oid"]` — while
-     * staying malformed for every conformant third party. A token that looks
-     * correct to its own issuer and is refusable by everyone else is exactly the
-     * mint/verify asymmetry with the outside world this whole step removes.
+     * ⚠ It needs a GATE rather than a note: without one a duplicate round-trips
+     * cleanly — minting, and verifying for a recipient that declares the member,
+     * reporting `["oid","oid"]` — while staying malformed for every conformant
+     * third party. A token correct to its own issuer and refusable by everyone else
+     * is the mint/verify asymmetry with the outside world this file removes.
      */
     test("a duplicate member is refused on every wire", () => {
       for (const format of Object.keys(MINTERS)) {

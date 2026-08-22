@@ -2,9 +2,8 @@ import type { Dict } from "@lindorm/types";
 
 /**
  * The RFC 8693 actor claim in its WIRE vocabulary — the twin of `ActClaim`, and
- * open for the same reason: §4.1 defines the members as "claims that identify the
- * actor", so a conformant issuer may write one aegis does not declare, and §4.4
- * offers `email` as an example. The tail travels verbatim.
+ * open for the same reason: a conformant issuer may write a member aegis does not
+ * declare (RFC 8693 §4.1, RFC 8693 §4.4). The tail travels verbatim.
  */
 export type ActClaimWireMembers = {
   sub?: string;

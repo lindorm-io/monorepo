@@ -21,16 +21,16 @@ export type Directions = readonly [Direction, ...Array<Direction>];
  * Mint-time facts the assembled claims object does not itself carry — facts only
  * the ISSUER has, which is why a rule reading them can only run at mint.
  *
- * ⚠ CLOSED, and that is the point. It was a bare `Dict`, so a rule body reading
- * `ctx.accessTokenIssud` compiled, evaluated `undefined`, and silently did not
- * fire. Every member is declared here, so a misspelling on either side — in a
- * rule's `needs` list or in its `when` body — is a compile error.
+ * ⚠ CLOSED, and that is the point. A bare `Dict` lets a rule body reading
+ * `ctx.accessTokenIssud` compile, evaluate `undefined`, and silently not fire.
+ * Every member is declared here, so a misspelling on either side — in a rule's
+ * `needs` list or in its `when` body — is a compile error.
  */
 export type SignContext = {
   /**
-   * Whether an access token was co-issued alongside this token. OIDC Core §3.1.3.6
-   * makes `at_hash` OPTIONAL in the code flow; aegis requires it whenever an
-   * access token co-issues, and only the issuer knows that.
+   * Whether an access token was co-issued alongside this token. Aegis requires
+   * `at_hash` whenever an access token co-issues, and only the issuer knows that.
+   * OIDC Core §3.1.3.6.
    */
   accessTokenIssued?: boolean;
 };
@@ -90,10 +90,9 @@ type BoundRule<T> = T & {
 };
 
 /**
- * ONE declarative policy vocabulary, replacing the six per-direction fields a
- * profile used to carry (`required`, `forbidden`, `atLeastOneOf`, `requiredWhen`,
- * `rules`, `validate`) — each of which was enforced by whichever call site
- * remembered it.
+ * ONE declarative policy vocabulary. Every rule names its own direction, so there
+ * is one list and one enforcer — never a per-direction field enforced by whichever
+ * call site remembers it.
  *
  * - `required`     — every named claim must be SATISFIED.
  * - `forbidden`    — no named claim may be NAMED.

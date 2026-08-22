@@ -1,7 +1,7 @@
 import type { KryptosSigAlgorithm } from "@lindorm/kryptos";
 
 /**
- * The FAPI 2.0 signing-algorithm allowlist.
+ * The FAPI 2.0 signing-algorithm allowlist. FAPI 2.0 Security Profile §5.4.1.
  *
  * FAPI is deployment policy, not a property of a key, so aegis does not enforce
  * it — it publishes the list and the deployment applies it as a selector:

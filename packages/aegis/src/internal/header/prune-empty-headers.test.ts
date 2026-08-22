@@ -6,20 +6,16 @@ import { pruneEmptyHeaders } from "./prune-empty-headers.js";
  * `refuse-empty-headers.test.ts`, which is the other half of the one column
  * ({@link HeaderSpec.whenEmpty}) these two functions divide between them.
  *
- * ⚠ WHY THIS FILE EXISTS, said honestly rather than oversold. The end-to-end
- * guarantee is NOT unguarded: `normaliseHeaders` runs the refusal FIRST, so a
- * `refuse` cell never reaches this function with an empty value, and widening the
- * test below's condition while ALSO reordering the two steps is caught loudly —
- * both cells of the certificate-binding row go red, plus six unit rows. What is
- * not caught is either half ALONE: reorder the steps and nothing moves, because
- * this function reads `=== "prune"` and declines; widen this function to "anything
- * but keep" and nothing moves, because the refusal already threw. Two files, each
- * relying on the other to be wrong-proof, and no row saying what either one
- * promises by itself.
+ * ⚠ WHY THIS FILE EXISTS. The end-to-end guarantee is not unguarded —
+ * `normaliseHeaders` runs the refusal FIRST, so a `refuse` cell never reaches this
+ * function with an empty value, and widening the condition below while ALSO
+ * reordering the two steps is caught loudly. What is not caught is either half
+ * ALONE: reorder the steps and nothing moves, because this function reads
+ * `=== "prune"` and declines; widen it to "anything but keep" and nothing moves,
+ * because the refusal already threw.
  *
  * So this file pins the UNIT-level contract: what this function does when handed a
- * bag directly, independent of who normalised it first. It is the only file in
- * `internal/header/` that had a production reader and no test beside it.
+ * bag directly, independent of who normalised it first.
  */
 describe("pruneEmptyHeaders", () => {
   test("prunes the empty value of a parameter the registry says prune", () => {

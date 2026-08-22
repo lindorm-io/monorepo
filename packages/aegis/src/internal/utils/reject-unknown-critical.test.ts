@@ -230,11 +230,10 @@ describe("rejectUnknownCritical", () => {
    * comparing two sets: what matters is that an eligible parameter actually
    * SURVIVES the read.
    *
-   * ⚠ `b64` is the live limitation, and it is not a defect to trim away. RFC 7797
-   * §6 REQUIRES `crit: ["b64"]` on a conformant unencoded-payload JWS, so aegis
-   * cannot produce one — correctly, because it does not implement the unencoded
-   * payload. Removing `b64` from the predicate would let a caller mint a token
-   * DECLARING that option while the payload was base64url-encoded anyway.
+   * ⚠ `b64` is a live limitation, not a defect to trim away: RFC 7797 §6. aegis
+   * does not implement the unencoded payload, so removing `b64` from the
+   * predicate would let a caller mint a token DECLARING that option while the
+   * payload was base64url-encoded anyway.
    */
   test("every crit-eligible parameter survives the read path's malformed gate", () => {
     const eligible = HEADER_SPECS.filter((spec) => isCritEligible(headerJoseName(spec)));

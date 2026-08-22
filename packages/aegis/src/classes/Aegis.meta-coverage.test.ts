@@ -94,13 +94,13 @@ const INSTANCES: ReadonlyArray<RuleInstance> = PROFILES.flatMap((profile) =>
  * Every EXERCISE those instances yield — a `required` rule yields one per claim,
  * and EVERY rule yields one per DIRECTION it declares.
  *
- * ⚠ The direction fan-out is what makes the matrix mean what its name says. It
- * used to take the first direction a rule listed, and all forty-six list `"mint"`
- * first, so every exercise ran the mint path and the verify path was never
- * touched — the enforcer could have skipped `direction === "verify"` outright
- * with the whole matrix green. That is the same shortfall as the one this suite
- * was built for, one level up: a rule enforced on the issuing half and not on the
- * receiving half is exactly what a relying party cannot see.
+ * ⚠ The direction fan-out is what makes the matrix mean what its name says.
+ * Taking only the FIRST direction a rule lists would run the mint path alone —
+ * every rule lists `"mint"` first — so the enforcer could skip
+ * `direction === "verify"` outright with the whole matrix green. That is the same
+ * shortfall as the one this suite exists for, one level up: a rule enforced on
+ * the issuing half and not on the receiving half is exactly what a relying party
+ * cannot see.
  */
 type Exercise = [
   label: string,
@@ -277,16 +277,11 @@ describe("Aegis — meta coverage", () => {
   // number moves in review — up when a kit starts reading its row, and never
   // silently down.
   //
-  // It was SEVEN until the three JOSE kits began reading their own `reserved`
-  // row through `buildJoseHeader`, the way the COSE kits read theirs through
-  // `buildCoseHeaders`. Before that the JOSE guarantee was spread ORDER, which
-  // no row governed — which is how a row could list `jku` while the type offered
-  // it to callers.
+  // ⚠ The three JOSE kits read their own `reserved` row through `buildJoseHeader`,
+  // the way the COSE kits read theirs through `buildCoseHeaders`.
   //
-  // ⚠ It then went from TEN to NINE, which is the direction this pin exists to
-  // stop happening quietly — so the reason is on the record. `cwt.cnfMembers`
-  // lost its reader when the COSE confirmation gained ONE source: `encodeCnf`
-  // used to read the row, and the row is now DERIVED from the label table the
+  // ⚠ `cwt.cnfMembers` has no reader, and the reason is on the record: the COSE
+  // confirmation has ONE source, the row being DERIVED from the label table the
   // codec switches over (`claims/cnf-members.ts`, where the label table is in
   // turn derived from each member's own `wire.cose` cell). Nothing reads it back
   // because there is nothing left to disagree with — the row and the encoder are

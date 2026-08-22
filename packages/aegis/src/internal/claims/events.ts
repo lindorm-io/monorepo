@@ -1,11 +1,8 @@
 import type { Dict } from "@lindorm/types";
 
 /**
- * RFC 8417 — Security Event Token `events` claim. An object keyed by
- * event-type URI; each value is the event-type-specific payload object (which
- * may be empty, e.g. back-channel logout `{}`).
- *
- * https://www.rfc-editor.org/rfc/rfc8417#section-2.2
+ * The RFC 8417 §2.2 `events` claim: keyed by event-type URI, each value the
+ * event-type-specific payload object — which may be empty (`{}`).
  */
 export type SecurityEvents = Record<string, Dict>;
 

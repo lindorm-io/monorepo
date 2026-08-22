@@ -197,7 +197,7 @@ const ID_TOKEN_CONTENT = { subject: "user-1", audience: [CLIENT] };
 export const VERIFY_KNOB_PROBES = {
   actor: {
     rationale:
-      "A token that has been delegated says so in its `act` claim (RFC 8693 §4.1), and a verifier's whole reason to state an actor policy is that it will not accept an unconstrained chain. A dropped `actor` turns a stated constraint into no constraint, which is the failure mode a policy option must never have: the caller believes the chain is being checked and therefore stops checking it.",
+      "A dropped `actor` turns a stated constraint into no constraint: the caller believes the delegation chain in `act` is being checked and therefore stops checking it. RFC 8693 §4.1.",
     value: { required: true },
     given: [{ step: "token", via: "kit-sign", kit: "structured", claims: LIVE_CLAIMS }],
     baseline: "accepts",
@@ -206,7 +206,7 @@ export const VERIFY_KNOB_PROBES = {
 
   clockTolerance: {
     rationale:
-      "RFC 7519 §4.1.4 provides for 'some small leeway, usually no more than a few minutes, to account for clock skew' when checking `exp`, and §4.1.5 says the same of `nbf`. The leeway is the deployment's to choose, so a verifier that states one and has it dropped rejects tokens that are valid by the specification's own allowance.",
+      "The skew allowance is the deployment's to choose, so a verifier that states one and has it dropped refuses tokens whose `exp` or `nbf` fall inside the leeway it asked for. RFC 7519 §4.1.4, RFC 7519 §4.1.5.",
     value: 60,
     given: [
       {
@@ -238,7 +238,7 @@ export const VERIFY_KNOB_PROBES = {
 
   critical: {
     rationale:
-      "RFC 7515 §4.1.11 makes a JWS invalid when a listed extension header parameter is 'not understood and supported by the recipient', and aegis is never the final recipient — it verifies on the application's behalf. So the declaration is the application taking that duty, and dropping it either refuses a token the caller has accepted responsibility for or, in the other direction, would accept one nobody understands.",
+      "aegis is never the final recipient — it verifies on the application's behalf — so declaring an extension header parameter is the application taking responsibility for understanding it. Dropping the declaration refuses a token the caller has accepted responsibility for. RFC 7515 §4.1.11.",
     value: ["x-lindorm-hint"],
     given: [
       {
@@ -258,7 +258,7 @@ export const VERIFY_KNOB_PROBES = {
 
   maxTokenAge: {
     rationale:
-      "OIDC Core §3.1.2.1 gives a relying party `max_age`, and §3.1.3.7 requires it to check the authentication's freshness on the way back; the same shape of bound applies to a token's own `iat`. It is a TIGHTENING option — it can only refuse tokens that would otherwise pass — so dropping it is always the unsafe direction, and it leaves no trace because a stale token verifying looks exactly like a fresh one.",
+      "A TIGHTENING option — it can only refuse tokens that would otherwise pass — so dropping it is always the unsafe direction, and it leaves no trace: a stale token verifying looks exactly like a fresh one. OIDC Core §3.1.2.1, OIDC Core §3.1.3.7.",
     value: 60,
     given: [
       {
@@ -274,7 +274,7 @@ export const VERIFY_KNOB_PROBES = {
 
   verifyExpiration: {
     rationale:
-      "OIDC Core §3.1.2.1 defines `id_token_hint` as an 'ID Token previously issued by the Authorization Server being passed as a hint about the End-User's current or past authenticated session with the Client', and §3.1.2.2 says the OP 'SHOULD accept ID Tokens when the RP identified by the ID Token has a current session or had a recent session at the OP, even when the exp time has passed' — the signature is what is being trusted there, not the lifetime, while the same paragraph keeps the issuer check mandatory. Waiving the `exp` RANGE check is therefore a legitimate, narrow request, and one that must be honoured exactly: dropped, the hint flow cannot work at all.",
+      "Waiving the `exp` RANGE check is a narrow, deliberate request — an `id_token_hint` is presented after its lifetime and the OP still accepts it — and a flag that is accepted and ignored means a caller who asked for the waiver silently does not get it. OIDC Core §3.1.2.1, OIDC Core §3.1.2.2.",
     value: false,
     given: [
       {
@@ -290,7 +290,7 @@ export const VERIFY_KNOB_PROBES = {
 
   verifyNotBefore: {
     rationale:
-      "RFC 7519 §4.1.5 makes `nbf` a hard lower bound — 'the JWT MUST NOT be accepted for processing' before it. Waiving that bound is a deliberate act with a narrow purpose, and a flag that is accepted and ignored means a caller who asked for the waiver silently does not get it.",
+      "Waiving the `nbf` lower bound is a deliberate act with a narrow purpose, and a flag that is accepted and ignored means a caller who asked for the waiver silently does not get it. RFC 7519 §4.1.5.",
     value: false,
     given: [
       {
@@ -306,7 +306,7 @@ export const VERIFY_KNOB_PROBES = {
 
   verifyIssuedAt: {
     rationale:
-      "RFC 7519 §4.1.6 defines `iat` as when the token was issued, and a verifier bounds it so a token stamped in the future is refused. The flag waives that bound and nothing else — `maxTokenAge` keeps its own — so it has to be read independently of the other temporal flags rather than folded into them.",
+      "aegis bounds `iat` so a token stamped in the future is refused. The flag waives that bound and nothing else — `maxTokenAge` keeps its own — so it has to be read independently of the other temporal flags rather than folded into them. RFC 7519 §4.1.6.",
     value: false,
     given: [
       {
@@ -322,7 +322,7 @@ export const VERIFY_KNOB_PROBES = {
 
   verifyAuthTime: {
     rationale:
-      "OIDC Core §2 defines `auth_time` as the instant the end-user authentication occurred, and it is range-checked like every other temporal claim. The waiver exists so that the four temporal claims are individually controllable; a flag that only works for three of them is a surface that lies about its own shape.",
+      "aegis range-checks `auth_time` like every other temporal claim. The waiver exists so the four temporal claims are individually controllable; a flag that only works for three of them is a surface that lies about its own shape. OIDC Core §2.",
     value: false,
     given: [
       {
@@ -338,7 +338,7 @@ export const VERIFY_KNOB_PROBES = {
 
   dpopProof: {
     rationale:
-      "RFC 9449 §7.1 has the resource server check that the presented proof matches the access token's binding. Supplying a proof is therefore an assertion about the token — that it IS bound — and a proof presented for a token carrying no binding is a mismatch the verifier must refuse rather than shrug at. A dropped proof option means the whole possession check never runs, and a bearer token is accepted where a bound one was demanded.",
+      "Supplying a proof is an assertion about the token — that it IS bound — so a proof presented for a token carrying no binding is a mismatch aegis refuses rather than shrugs at. A dropped proof option means the whole possession check never runs, and a bearer token is accepted where a bound one was demanded. RFC 9449 §7.1.",
     value: "not-a-dpop-proof",
     given: [{ step: "token", via: "kit-sign", kit: "structured", claims: LIVE_CLAIMS }],
     baseline: "accepts",
@@ -360,13 +360,13 @@ export const VERIFY_KNOB_PROBES = {
     baseline: "rejects",
     flipped: "accepts",
     unobservable: {
-      cose: "The waiver applies to a token that IS bound by a JWK thumbprint, and no CWT can be. RFC 9449 §6.1 defines `jkt` as a JWT Confirmation Method member — 'When access tokens are represented as JWTs […], the public key information is represented using the jkt confirmation method member defined herein' — and RFC 9679 §5.5 declines to register \"a CWT confirmation method [RFC8747] for using 'jkt' as a confirmation method for a CWT\". The COSE wire's own thumbprint confirmation, `ckt` (RFC 9679 §5.6), digests the key's canonical CBOR rather than the canonical JSON RFC 7638 digests, so it is a different value under a different label and not a spelling of `jkt`. There is no JWK thumbprint to put in a CWT, so the state this option waives cannot be reached on that wire.",
+      cose: "The waiver applies to a token bound by a JWK thumbprint, and aegis gives `jkt` no COSE label at all (`src/internal/claims/cnf-members.ts#const NO_COSE_JKT`). There is no JWK thumbprint in a CWT for this option to waive. RFC 9449 §6.1, RFC 9679 §5.5.",
     },
   },
 
   key: {
     rationale:
-      "RFC 8725 §3.1 puts the restriction in the caller's hands and makes honouring it mandatory: 'Libraries MUST enable the caller to specify a supported set of algorithms and MUST NOT use any other algorithms when performing cryptographic operations.' A key selector is how that set is stated here, and it is a CHECK applied before the signature is touched — so a dropped one means the token's own header decides which vault resident verifies it, which is the state the requirement exists to prevent.",
+      "A key selector is how the caller states the set of keys and algorithms it will accept, and it is a CHECK applied before the signature is touched. Dropped, the token's own header decides which vault resident verifies it. RFC 8725 §3.1.",
     value: { condition: { algorithm: "RS256" } },
     given: [{ step: "token", via: "kit-sign", kit: "structured", claims: LIVE_CLAIMS }],
     baseline: "accepts",
@@ -375,7 +375,7 @@ export const VERIFY_KNOB_PROBES = {
 
   typPresence: {
     rationale:
-      "RFC 8725 §3.11 recommends explicit typing so a token of one kind cannot be replayed where another is expected. Presence is a POLICY, not a fact about the token: `typ` is OPTIONAL on both wires (RFC 7519 §5.1, RFC 9596 §2), so a conformant foreign token may carry none, and a verifier states whether it will accept that. The two wires default the policy differently, so the value that flips the verdict on one is the value that changes nothing on the other — which is exactly why the flip is stated per wire here.",
+      "Presence is a POLICY, not a fact about the token: a conformant foreign token may carry no `typ`, and a verifier states whether it will accept that. The two wires default the policy differently, so the value that flips the verdict on one is the value that changes nothing on the other — which is why the flip is stated per wire here. RFC 8725 §3.11, RFC 7519 §5.1, RFC 9596 §2.",
     value: "optional",
     given: [{ step: "token", via: "foreign", claims: LIVE_CLAIMS }],
     baseline: "rejects",
@@ -387,7 +387,7 @@ export const VERIFY_KNOB_PROBES = {
 
   expPresence: {
     rationale:
-      "RFC 8417 §2.2 says of `exp` in a security event token that 'In the context of a SET, however, this notion does not typically apply, since a SET represents something that has already occurred and is historical in nature. Therefore, its use is NOT RECOMMENDED' — so a conformant SET normally carries none, while an ordinary access token with no expiry is a token that never stops working. Presence is therefore a per-call policy, and a dropped one either refuses every conformant SET or accepts an unbounded access token, depending on which way the default falls.",
+      "Presence is a per-call policy: a conformant security event token normally carries no `exp`, while an access token with no expiry never stops working. A dropped policy either refuses every conformant SET or accepts an unbounded access token, depending on which way the default falls. RFC 8417 §2.2.",
     value: "optional",
     given: [
       {
@@ -423,13 +423,11 @@ export const MINT_KNOB_PROBES = {
     ],
     observed: [
       { step: "wireProtectedHeader", on: "jose", includes: { oid: "1.2.3.4" } },
-      // ⚠ The TEXT label `oid`, not the integer -70000. `oid` has no IANA COSE
-      // parameter, so it rides a lindorm PRIVATE-USE label — RFC 8152 §16.2,
-      // "Integer values less than -65536 are marked as private use" — which a
-      // foreign reader cannot interpret. The interoperable default (`proprietary`
-      // unset here) therefore spells it as the string label RFC 9052 §1.5 permits
-      // (`label = int / tstr`); the integer is what `proprietary: true` writes.
-      // `excludes` states the two apart, since the record compares stringified keys.
+      // ⚠ The TEXT label `oid`, not the integer -70000: with `proprietary` unset
+      // aegis writes the interoperable string label, and `proprietary: true` is
+      // what writes the lindorm private-use integer. `excludes` states the two
+      // apart, since the record compares stringified keys. RFC 8152 §16.2,
+      // RFC 9052 §1.5.
       {
         step: "wireProtectedHeader",
         on: "cose",
@@ -523,7 +521,7 @@ export const MINT_KNOB_PROBES = {
 
   proprietary: {
     rationale:
-      "RFC 8392 §1.1 lets a CWT key its claims by integer as well as by string, and its IANA registration policy marks 'Integer values less than -65536' as Private Use. A platform token keyed by the compact private-use labels is smaller; an off-platform one must not be, because no foreign reader can resolve a private label. The knob is the only way to say which is being minted, so dropping it emits an uninteroperable token to an external party.",
+      "A platform token keyed by the compact private-use labels is smaller; an off-platform one must not be, because no foreign reader can resolve a private label. The knob is the only way to say which is being minted, so dropping it emits an uninteroperable token to an external party. RFC 8392 §1.1.",
     value: true,
     given: [
       {
@@ -541,7 +539,7 @@ export const MINT_KNOB_PROBES = {
       { step: "wireClaims", on: "cose", present: [-65541], excludes: ["auth_time"] },
     ],
     unobservable: {
-      jose: "A JOSE claims set is a JSON object, whose members RFC 7519 §4 calls Claim Names — 'The JWT Claims Set represents a JSON object whose members are the claims conveyed by the JWT' — and a JSON member name is a string. The compact form this knob selects is an INTEGER map key, which RFC 8392 §1.1 introduces as a property of CBOR alone: 'In JSON, maps are called objects and only have one kind of map key: a string. CBOR uses strings, negative integers, and unsigned integers as map keys.' There is no JOSE encoding for the thing being switched on.",
+      jose: "The compact form this knob selects is an INTEGER map key, and a JOSE claims set is a JSON object whose member names are strings. There is no JOSE encoding for the thing being switched on. RFC 7519 §4, RFC 8392 §1.1.",
     },
   },
 } satisfies KnobProbes<ProfileMintOptions>;
@@ -554,7 +552,7 @@ export const MINT_KNOB_PROBES = {
 export const MINT_SIGN_KNOB_PROBES = {
   accessTokenHash: {
     rationale:
-      "OIDC Core §3.1.3.6 defines `at_hash` as the left half of the hash of the co-issued access token, and it is what ties the id_token to that access token. Dropped, the id_token makes no statement about the access token at all and the binding a relying party checks simply is not there.",
+      "`at_hash` is what ties the id_token to the co-issued access token. Dropped, the id_token makes no statement about the access token at all and the binding a relying party checks simply is not there. OIDC Core §3.1.3.6.",
     value: HASH,
     given: [
       {
@@ -576,7 +574,7 @@ export const MINT_SIGN_KNOB_PROBES = {
 
   codeHash: {
     rationale:
-      "OIDC Core §3.3.2.11 defines `c_hash` for the hybrid flow, where the id_token is delivered from the authorization endpoint alongside the code and is the only thing binding the two. Without it a code substituted in transit is indistinguishable from the one the id_token was issued for.",
+      "`c_hash` is the only thing binding an id_token to the code delivered beside it. Without it a code substituted in transit is indistinguishable from the one the id_token was issued for. OIDC Core §3.3.2.11.",
     value: HASH,
     given: [
       {
@@ -595,7 +593,7 @@ export const MINT_SIGN_KNOB_PROBES = {
 
   issuedAt: {
     rationale:
-      "RFC 7519 §4.1.6 defines `iat` as when the token was issued, and an issuer that backdates or replays one states the instant explicitly. Dropped, the token claims to have been issued at the moment of encoding, which is a false statement about provenance and defeats every freshness bound computed from it.",
+      "An issuer that backdates or replays a token states its `iat` explicitly. Dropped, the token claims to have been issued at the moment of encoding — a false statement about provenance that defeats every freshness bound computed from it. RFC 7519 §4.1.6.",
     value: { date: "2024-01-01T07:00:00.000Z" },
     given: [
       {
@@ -614,7 +612,7 @@ export const MINT_SIGN_KNOB_PROBES = {
 
   stateHash: {
     rationale:
-      "`s_hash` is a FAPI claim, not an OIDC Core one — Financial-grade API Security Profile 1.0 Part 2 (Advanced) §5.1.1 defines it as 'the base64url encoding of the left-most half of the hash of the octets of the ASCII representation of the state value, where the hash algorithm used is the hash algorithm used in the alg header parameter of the ID Token's JOSE header', §5.2.2.1 requires an authorization server to 'include state hash, s_hash, in the ID Token to protect the state value if the client supplied a value for state', and §5.2.3.1 requires the client to 'verify that s_hash value is equal to the value calculated from the state value in the authorization response'. It is what lets a client detect a response grafted onto a different request, so a dropped hash claim removes the attestation while leaving the client believing it was made.",
+      "`s_hash` is a FAPI claim, not an OIDC Core one, and it is what lets a client detect a response grafted onto a different request. A dropped hash claim removes the attestation while leaving the client believing it was made. FAPI 1.0 Part 2 §5.1.1, FAPI 1.0 Part 2 §5.2.2.1, FAPI 1.0 Part 2 §5.2.3.1.",
     value: HASH,
     given: [
       {
@@ -633,7 +631,7 @@ export const MINT_SIGN_KNOB_PROBES = {
 
   tokenId: {
     rationale:
-      "RFC 7519 §4.1.7 makes `jti` the identifier a replay check keys on, and an issuer that has to correlate the token with something it already stored supplies its own. Dropped, the stored identifier and the token's identifier are different values, so every lookup against it misses.",
+      "An issuer that must correlate the token with something it already stored supplies its own `jti`. Dropped, the stored identifier and the token's identifier are different values, so every lookup against it misses. RFC 7519 §4.1.7.",
     value: "explicit-token-id",
     given: [
       {
@@ -646,15 +644,15 @@ export const MINT_SIGN_KNOB_PROBES = {
     ],
     observed: [
       { step: "wireClaims", on: "jose", includes: { jti: "explicit-token-id" } },
-      // RFC 8392 §3.1.7 makes the CWT `cti` a byte string, so its VALUE never
-      // equals the text it spells — presence is the assertion available here.
+      // The CWT `cti` is a byte string, so its VALUE never equals the text it
+      // spells — presence is the assertion available here. RFC 8392 §3.1.7.
       { step: "wireClaims", on: "cose", present: [7] },
     ],
   },
 
   typ: {
     rationale:
-      "RFC 8725 §3.11 recommends explicit typing, and a profile that mandates no type of its own leaves the choice to the caller — an issuer emitting an application-specific artifact says what it is. Dropped, the token carries the bare conventional type instead, which is precisely the ambiguity explicit typing exists to remove.",
+      "A profile that mandates no type of its own leaves the choice to the caller — an issuer emitting an application-specific artifact says what it is. Dropped, the token carries the bare conventional type instead, which is the ambiguity explicit typing exists to remove. RFC 8725 §3.11.",
     value: "application/custom+jwt",
     given: [
       {
@@ -665,11 +663,10 @@ export const MINT_SIGN_KNOB_PROBES = {
       },
     ],
     // Both wires, because the defect below is declared on COSE and a JOSE-only
-    // observation cannot demonstrate anything there — it is simply skipped, so
-    // it holds vacuously on the wire the shortfall is claimed on. The COSE
-    // spelling is the caller's media type with the structured suffix the wire
-    // uses: a COSE object is a CWT, so `+jwt` becomes `+cwt` (RFC 9596 label 16,
-    // the same translation `coseTyp` applies to a profile's own typ).
+    // observation would hold vacuously on the wire the shortfall is claimed on.
+    // The COSE spelling is the caller's media type with the wire's own
+    // structured suffix — `+jwt` becomes `+cwt`, the same translation `coseTyp`
+    // applies to a profile's own typ. RFC 9596 §2.
     observed: [
       {
         step: "wireProtectedHeader",
@@ -706,24 +703,20 @@ export const MINT_SIGN_KNOB_PROBES = {
         },
       },
     ],
-    // The chain is representable on BOTH wires — RFC 9360 §2 registers
-    // `x5chain` at label 33 — so the COSE side is observed too. Without it the
-    // defect declared below sits on a wire the probe never looks at.
+    // The chain is representable on BOTH wires, so the COSE side is observed
+    // too rather than declared unobservable. RFC 9360 §2.
     observed: [
-      // JOSE asserts the CONTENTS, not merely the presence: RFC 7515 §4.1.6 fixes
-      // both the encoding (base64, not base64url, of the DER certificate) and the
-      // order ("The certificate containing the public key corresponding to the key
-      // used to digitally sign the JWS MUST be the first certificate"). A
-      // truncated, reversed or PEM-armoured chain is still an `x5c`, and it is one
-      // no relying party can build a path from.
+      // JOSE asserts the CONTENTS, not merely the presence — a truncated,
+      // reversed or PEM-armoured chain is still an `x5c`, and it is one no
+      // relying party can build a path from. RFC 7515 §4.1.6.
       { step: "wireProtectedHeader", on: "jose", includes: { x5c: TEST_X509_CHAIN_B64 } },
-      // ⚠ COSE asserts PRESENCE ONLY here, and that is the honest reading of this
-      // row: the COSE value is a `COSE_X509` of raw DER byte strings (RFC 9360
-      // §2), which this step compares as stringified record values and cannot
-      // state faithfully. What this row holds is that the knob REACHES the COSE
-      // writer. The COSE contents — the DER bytes, in order, against the same
-      // fixture — are asserted in `classes/cose-cert-binding.test.ts`, by the
-      // independent wire inspector.
+      // ⚠ COSE asserts PRESENCE ONLY here: the value is a `COSE_X509` of raw DER
+      // byte strings, which this step compares as stringified record values and
+      // cannot state faithfully. What this row holds is that the knob REACHES the
+      // COSE writer; the bytes themselves are asserted by the independent wire
+      // inspector at
+      // `src/classes/cose-cert-binding.test.ts#The DER bytes themselves, against the fixture, in order`.
+      // RFC 9360 §2.
       { step: "wireProtectedHeader", on: "cose", present: [33] },
     ],
   },
@@ -743,13 +736,11 @@ export const MINT_SIGN_KNOB_PROBES = {
     ],
     observed: [
       { step: "wireProtectedHeader", on: "jose", includes: { oid: "1.2.3.4" } },
-      // ⚠ The TEXT label `oid`, not the integer -70000. `oid` has no IANA COSE
-      // parameter, so it rides a lindorm PRIVATE-USE label — RFC 8152 §16.2,
-      // "Integer values less than -65536 are marked as private use" — which a
-      // foreign reader cannot interpret. The interoperable default (`proprietary`
-      // unset here) therefore spells it as the string label RFC 9052 §1.5 permits
-      // (`label = int / tstr`); the integer is what `proprietary: true` writes.
-      // `excludes` states the two apart, since the record compares stringified keys.
+      // ⚠ The TEXT label `oid`, not the integer -70000: with `proprietary` unset
+      // aegis writes the interoperable string label, and `proprietary: true` is
+      // what writes the lindorm private-use integer. `excludes` states the two
+      // apart, since the record compares stringified keys. RFC 8152 §16.2,
+      // RFC 9052 §1.5.
       {
         step: "wireProtectedHeader",
         on: "cose",
@@ -781,8 +772,9 @@ export const MINT_SIGN_KNOB_PROBES = {
     ],
     observed: [
       { step: "wireProtectedHeader", on: "jose", includes: { alg: "EdDSA" } },
-      // RFC 9053 §2.2 registers EdDSA as COSE algorithm -8; the baseline ES512
-      // key is -36, so the resolved key is legible from the protected bucket.
+      // The two keys declare different COSE algorithms — -8 for the EdDSA key
+      // this knob names, -36 for the pinned ES512 baseline — so the resolved key
+      // is legible from the protected bucket. RFC 9053 §2.2.
       { step: "wireProtectedHeader", on: "cose", includes: { "1": -8 } },
     ],
   },
@@ -814,13 +806,11 @@ export const MINT_ENCRYPT_KNOB_PROBES = {
     ],
     observed: [
       { step: "wireProtectedHeader", on: "jose", includes: { oid: "1.2.3.4" } },
-      // ⚠ The TEXT label `oid`, not the integer -70000. `oid` has no IANA COSE
-      // parameter, so it rides a lindorm PRIVATE-USE label — RFC 8152 §16.2,
-      // "Integer values less than -65536 are marked as private use" — which a
-      // foreign reader cannot interpret. The interoperable default (`proprietary`
-      // unset here) therefore spells it as the string label RFC 9052 §1.5 permits
-      // (`label = int / tstr`); the integer is what `proprietary: true` writes.
-      // `excludes` states the two apart, since the record compares stringified keys.
+      // ⚠ The TEXT label `oid`, not the integer -70000: with `proprietary` unset
+      // aegis writes the interoperable string label, and `proprietary: true` is
+      // what writes the lindorm private-use integer. `excludes` states the two
+      // apart, since the record compares stringified keys. RFC 8152 §16.2,
+      // RFC 9052 §1.5.
       {
         step: "wireProtectedHeader",
         on: "cose",
@@ -885,7 +875,7 @@ export const MINT_ENCRYPT_KNOB_PROBES = {
     ],
     observed: [{ step: "wireProtectedHeader", on: "jose", present: ["x5c"] }],
     unobservable: {
-      cose: "A COSE_Encrypt0 has no certificate to bind. RFC 9052 §5.2 defines it as direct encryption — the recipient key IS the content-encryption key — so a `cwe` recipient is necessarily a symmetric `dir` key, and a symmetric key carries no X.509 certificate for a thumbprint or a chain to be derived from. The parameters themselves are representable (RFC 9360 §2 registers `x5chain` 33 and `x5t` 34); what cannot exist on this wire is a cert-bearing recipient.",
+      cose: "A COSE_Encrypt0 has no certificate to bind. It carries no recipients array, so aegis requires the recipient key to BE the content-encryption key — a kryptos `dir` key — and a symmetric key carries no X.509 certificate for a thumbprint or a chain to be derived from. The parameters themselves are representable; what cannot exist on this wire is a cert-bearing recipient. RFC 9052 §5.2, RFC 9360 §2.",
     },
     defect: {
       site: "src/internal/utils/mint-token.ts#const token = encryptOuter(wire, {",
@@ -914,7 +904,7 @@ export const MINT_ENCRYPT_KNOB_PROBES = {
     baseline: "rejects",
     flipped: "accepts",
     unobservable: {
-      jose: "There is no gate to open. RFC 7518 §5.2.3 registers `A128CBC-HS256` as a standard JOSE `enc` value, so the AES-CBC-HMAC family is fully interoperable on that wire; RFC 9053 §4 registers the COSE content-encryption algorithms — AES-GCM (§4.1), AES-CCM (§4.2) and ChaCha20/Poly1305 (§4.3) — and no AES-CBC-HMAC among them, which is what makes the same cipher private-use there and gives this knob something to decide.",
+      jose: "There is no gate to open. AES-CBC-HMAC is a standard JOSE `enc` value, so that wire is interoperable either way; on COSE aegis has to emit it under a lindorm private-use label (`src/internal/cose/enc-labels.ts#const ENC_TO_COSE_PRIVATE`), which is what gives this knob something to decide. RFC 7518 §5.2.3, RFC 9053 §4.",
     },
     defect: {
       site: "src/internal/utils/mint-token.ts#const token = encryptOuter(wire, {",
@@ -925,7 +915,7 @@ export const MINT_ENCRYPT_KNOB_PROBES = {
 
   partyProducer: {
     rationale:
-      "RFC 7518 §4.6.1.2 makes `apu` an input to the ECDH-ES Concat-KDF as well as a header parameter, so it is part of what derives the content key: producer and recipient must agree on it or the ciphertext does not open. A dropped `apu` therefore does not merely omit a header — it derives a different key than the recipient expects.",
+      "`apu` is an input to the ECDH-ES key derivation as well as a header parameter: producer and recipient must agree on it or the ciphertext does not open. A dropped `apu` does not merely omit a header — it derives a different key than the recipient expects. RFC 7518 §4.6.1.2.",
     value: "cHJvZHVjZXI",
     given: [
       { step: "keys", keys: ["ec-enc"] },
@@ -939,13 +929,13 @@ export const MINT_ENCRYPT_KNOB_PROBES = {
     ],
     observed: [{ step: "wireProtectedHeader", on: "jose", present: ["apu"] }],
     unobservable: {
-      cose: "RFC 7518 §4.6 defines `apu` as a JOSE Header Parameter 'for key agreement algorithms using it (such as \"ECDH-ES\")', and aegis's COSE outer is a COSE_Encrypt0 — RFC 9052 §5.2 defines that structure as a single-recipient direct encryption, so there is no key-agreement step for PartyUInfo to feed and no COSE header parameter registered to carry it.",
+      cose: "aegis's COSE outer is a COSE_Encrypt0. It carries no recipients array and runs no recipient algorithm, so there is no key-agreement step for `apu` to feed. RFC 7518 §4.6, RFC 9052 §5.2.",
     },
   },
 
   partyRecipient: {
     rationale:
-      "RFC 7518 §4.6.1.3 makes `apv` the recipient half of the same Concat-KDF input, and the read side compares the incoming value against the one it was configured with. It is therefore both a key-derivation input and an assertion about who the ciphertext was written to; dropping it removes both at once.",
+      "`apv` is the recipient half of the same key derivation, and aegis's read side compares the incoming value against the one it was configured with. It is a key-derivation input and an assertion about who the ciphertext was written to at once; dropping it removes both. RFC 7518 §4.6.1.3.",
     value: "cmVjaXBpZW50",
     given: [
       { step: "keys", keys: ["ec-enc"] },
@@ -959,7 +949,7 @@ export const MINT_ENCRYPT_KNOB_PROBES = {
     ],
     observed: [{ step: "wireProtectedHeader", on: "jose", present: ["apv"] }],
     unobservable: {
-      cose: "Shares `partyProducer`'s reason exactly: RFC 7518 §4.6 scopes `apv` to JOSE key-agreement algorithms, and a COSE_Encrypt0 (RFC 9052 §5.2) performs no key agreement.",
+      cose: "Shares `partyProducer`'s reason exactly: aegis's COSE_Encrypt0 outer runs no recipient algorithm, so there is no key agreement for `apv` to feed. RFC 7518 §4.6, RFC 9052 §5.2.",
     },
   },
 
@@ -981,8 +971,8 @@ export const MINT_ENCRYPT_KNOB_PROBES = {
       },
     ],
     // The resolved key is legible from the CONTENT ENCRYPTION it declares, on
-    // both wires. The recipient `kid` is not: RFC 9052 §3.1 puts it in the
-    // unprotected bucket as a byte string, which no literal here can equal.
+    // both wires. The recipient `kid` is not — it rides the unprotected bucket
+    // as a byte string, which no literal here can equal. RFC 9052 §3.1.
     observed: [
       { step: "wireProtectedHeader", on: "jose", includes: { enc: "A128GCM" } },
       { step: "wireProtectedHeader", on: "cose", includes: { "1": 1 } },
@@ -998,7 +988,7 @@ export const MINT_ENCRYPT_KNOB_PROBES = {
 export const MINT_CONTEXT_KNOB_PROBES = {
   accessTokenIssued: {
     rationale:
-      "OIDC Core §3.1.3.6 makes `at_hash` OPTIONAL in the code flow, and aegis requires it whenever an access token co-issues — a fact only the issuer holds. The enforcer refuses to evaluate the rule without it precisely because an unsupplied fact and a `false` one are indistinguishable from inside, and the unsupplied case is the one that must not mint.",
+      "aegis requires `at_hash` whenever an access token co-issues — a fact only the issuer holds. The enforcer refuses to evaluate the rule without it precisely because an unsupplied fact and a `false` one are indistinguishable from inside, and the unsupplied case is the one that must not mint. OIDC Core §3.1.3.6.",
     value: false,
     given: [
       {
@@ -1035,7 +1025,7 @@ export const ENCRYPT_KNOB_PROBES = {
     ],
     observed: [{ step: "wireProtectedHeader", on: "jose", present: ["x5c"] }],
     unobservable: {
-      cose: "A COSE_Encrypt0 has no certificate to bind. RFC 9052 §5.2 defines it as direct encryption — the recipient key IS the content-encryption key — so a `cwe` recipient is necessarily a symmetric `dir` key, and a symmetric key carries no X.509 certificate for a thumbprint or a chain to be derived from. The parameters themselves are representable (RFC 9360 §2 registers `x5chain` 33 and `x5t` 34); what cannot exist on this wire is a cert-bearing recipient.",
+      cose: "A COSE_Encrypt0 has no certificate to bind. It carries no recipients array, so aegis requires the recipient key to BE the content-encryption key — a kryptos `dir` key — and a symmetric key carries no X.509 certificate for a thumbprint or a chain to be derived from. The parameters themselves are representable; what cannot exist on this wire is a cert-bearing recipient. RFC 9052 §5.2, RFC 9360 §2.",
     },
   },
 
@@ -1049,13 +1039,11 @@ export const ENCRYPT_KNOB_PROBES = {
     ],
     observed: [
       { step: "wireProtectedHeader", on: "jose", includes: { oid: "1.2.3.4" } },
-      // ⚠ The TEXT label `oid`, not the integer -70000. `oid` has no IANA COSE
-      // parameter, so it rides a lindorm PRIVATE-USE label — RFC 8152 §16.2,
-      // "Integer values less than -65536 are marked as private use" — which a
-      // foreign reader cannot interpret. The interoperable default (`proprietary`
-      // unset here) therefore spells it as the string label RFC 9052 §1.5 permits
-      // (`label = int / tstr`); the integer is what `proprietary: true` writes.
-      // `excludes` states the two apart, since the record compares stringified keys.
+      // ⚠ The TEXT label `oid`, not the integer -70000: with `proprietary` unset
+      // aegis writes the interoperable string label, and `proprietary: true` is
+      // what writes the lindorm private-use integer. `excludes` states the two
+      // apart, since the record compares stringified keys. RFC 8152 §16.2,
+      // RFC 9052 §1.5.
       {
         step: "wireProtectedHeader",
         on: "cose",
@@ -1125,7 +1113,7 @@ export const ENCRYPT_KNOB_PROBES = {
 
   partyProducer: {
     rationale:
-      "RFC 7518 §4.6.1.2 feeds `apu` into the ECDH-ES Concat-KDF as well as emitting it, so producer and recipient must agree on the value or the derived content key differs. Dropping it does not omit a header — it derives a different key than the recipient will.",
+      "`apu` feeds the ECDH-ES key derivation as well as being emitted, so producer and recipient must agree on the value or the derived content key differs. Dropping it does not omit a header — it derives a different key than the recipient will. RFC 7518 §4.6.1.2.",
     value: "cHJvZHVjZXI",
     given: [
       { step: "keys", keys: ["ec-enc"] },
@@ -1133,13 +1121,13 @@ export const ENCRYPT_KNOB_PROBES = {
     ],
     observed: [{ step: "wireProtectedHeader", on: "jose", present: ["apu"] }],
     unobservable: {
-      cose: "RFC 7518 §4.6 defines `apu` as a JOSE Header Parameter 'for key agreement algorithms using it (such as \"ECDH-ES\")'. aegis's `cwe` is a COSE_Encrypt0, which RFC 9052 §5.2 defines as single-recipient direct encryption — no key agreement, so no PartyUInfo to supply and no COSE header parameter for it.",
+      cose: "aegis's `cwe` is a COSE_Encrypt0. It carries no recipients array and runs no recipient algorithm, so there is no key agreement and no PartyUInfo for `apu` to supply. RFC 7518 §4.6, RFC 9052 §5.2.",
     },
   },
 
   partyRecipient: {
     rationale:
-      "RFC 7518 §4.6.1.3 makes `apv` the recipient half of the same derivation, and a decrypt configured with one checks the incoming value against it. It is a key-derivation input and an assertion about the addressee at once; a dropped one loses both.",
+      "`apv` is the recipient half of the same derivation, and a decrypt configured with one checks the incoming value against it. It is a key-derivation input and an assertion about the addressee at once; a dropped one loses both. RFC 7518 §4.6.1.3.",
     value: "cmVjaXBpZW50",
     given: [
       { step: "keys", keys: ["ec-enc"] },
@@ -1147,7 +1135,7 @@ export const ENCRYPT_KNOB_PROBES = {
     ],
     observed: [{ step: "wireProtectedHeader", on: "jose", present: ["apv"] }],
     unobservable: {
-      cose: "Shares `partyProducer`'s reason: RFC 7518 §4.6 scopes `apv` to JOSE key-agreement algorithms, and a COSE_Encrypt0 (RFC 9052 §5.2) performs none.",
+      cose: "Shares `partyProducer`'s reason: aegis's COSE_Encrypt0 runs no recipient algorithm, so there is no key agreement for `apv` to feed. RFC 7518 §4.6, RFC 9052 §5.2.",
     },
   },
 
@@ -1167,7 +1155,7 @@ export const ENCRYPT_KNOB_PROBES = {
     baseline: "rejects",
     flipped: "accepts",
     unobservable: {
-      jose: "There is no gate to open. RFC 7518 §5.2.3 registers `A128CBC-HS256` as a standard JOSE `enc` value, while RFC 9053 §4 registers the COSE content-encryption algorithms — AES-GCM (§4.1), AES-CCM (§4.2) and ChaCha20/Poly1305 (§4.3) — and no AES-CBC-HMAC among them, which is what makes the same cipher private-use on that wire and gives this knob something to decide.",
+      jose: "There is no gate to open. AES-CBC-HMAC is a standard JOSE `enc` value, so that wire is interoperable either way; on COSE aegis has to emit it under a lindorm private-use label (`src/internal/cose/enc-labels.ts#const ENC_TO_COSE_PRIVATE`), which is what gives this knob something to decide. RFC 7518 §5.2.3, RFC 9053 §4.",
     },
   },
 } satisfies KnobProbes<EncryptOptions>;

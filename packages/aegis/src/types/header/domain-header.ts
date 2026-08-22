@@ -98,12 +98,10 @@ export type KitOwnedDomainParam =
  * domain-tier write option (`SignTokenOptions`, `EncryptOptions`, `RawSignInput`)
  * takes.
  *
- * ⚠ The domain tier used to take a JOSE-WIRE-named bag here, which is why a
- * caller writing `{ oid }` was writing JOSE on a call that might emit COSE, and
- * why every COSE write path had to translate a wire name it had already been
- * handed. A domain surface that speaks wire names in ONE of its arguments is the
- * type-level root of that whole family of defects: the name a caller writes now
- * says nothing about the encoding the token ends up in.
+ * ⚠ DOMAIN names, not wire names. A domain surface that speaks wire names in ONE
+ * of its arguments makes the caller choose an encoding it has not chosen: writing
+ * `{ oid }` would be writing JOSE on a call that may emit COSE, and every COSE
+ * write path would translate a wire name it had already been handed.
  */
 export type DomainProtectedHeader = Partial<
   Omit<DomainTokenHeader, KitOwnedDomainParam | "baseFormat" | "tokenType">

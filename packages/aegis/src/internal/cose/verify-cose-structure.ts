@@ -33,22 +33,13 @@ export type VerifiedCoseStructure = {
  * OPEN AND AUTHENTICATE a signed COSE token — the whole cycle every signed COSE
  * read runs, from the CBOR split to the verified payload bytes.
  *
- * In order: the structure the key implies is resolved, the token is split under
- * that tag alone (a COSE_Mac0 handed to an asymmetric key is refused as malformed
- * rather than carried into a signature cycle it could never satisfy), the two
- * PROTECTED-header gates answer a hostile header BEFORE any cryptography, the two
- * nil-able slots are refused with a structural verdict, and the signature or MAC
- * is checked over the structure.
- *
  * ⚠ It stops at the BYTES. `CwsKit.verify` reconstructs them by the protected
  * `cty`; `verifyCwt` reads them as an RFC 8392 CWT Claims Set. That trailing step
- * is the one honest difference between the two paths — opaque content versus a
- * claims Message — and it stays at the call site.
+ * is the one difference between the two paths and stays at the call site.
  *
- * ⚠ The tag is resolved HERE, from the key, rather than accepted as an argument.
- * A caller that could pass one could pass a tag that disagrees with the key it
- * also passed, which is a way for a read to open a structure the write never
- * produced; there is no such argument, so there is nothing to disagree about.
+ * ⚠ The tag is resolved HERE, from the key, and is not an argument: a caller able
+ * to pass one could pass a tag that disagrees with the key it also passed, opening
+ * a structure the write never produced.
  */
 export const verifyCoseStructure = ({
   kryptos,
@@ -67,10 +58,8 @@ export const verifyCoseStructure = ({
   /** Namespaces the header-gate refusals. The structural ones are shared. */
   format: SignedCoseFormat;
   /**
-   * What a DETACHED payload means on this path, in the path's own words — "no
-   * content to verify" for opaque bytes, "no CWT claims to verify" for a claims
-   * token. The wording is not cosmetic: it is what tells a reader which door
-   * refused them.
+   * What a DETACHED payload means on this path, in the path's own words. The
+   * wording is what tells a reader which door refused them.
    */
   payloadDetail: string;
 }): VerifiedCoseStructure => {
@@ -95,28 +84,14 @@ export const verifyCoseStructure = ({
     details: `A ${label} must be a 4-element array [protected, unprotected, payload, signature/tag].`,
   });
 
-  // ⛔ The two PROTECTED-header gates — `crit` (RFC 9052 §3.1), then the
-  // algorithm-match — ahead of the signature cycle, so a hostile header is
-  // answered before any cryptography is spent on it. The PROTECTED bucket alone:
-  // the only one the signature covers, and the only one §3.1 permits `crit` in.
+  // ⛔ Both PROTECTED-header gates — `crit`, then the algorithm-match — run ahead
+  // of the signature cycle, so a hostile header is answered before any
+  // cryptography is spent on it. The PROTECTED bucket alone: RFC 9052 §3.1.
   //
-  // ⚠ CRIT FIRST, and this is a CHANGED ORDER on the COSE wire. Both this path
-  // and `CwsKit.verify` used to run the algorithm-match first, each behind a
-  // comment claiming the pair matched `JwtKit`/`JwsKit` exactly — while the three
-  // JOSE kits ran the opposite order. The two wires had drifted on which refusal
-  // a doubly-hostile token gets, behind comments asserting they could not. There
-  // is ONE pair now (`assertProtectedHeaderGates`), so there is nothing left to
-  // drift; a token that is BOTH crit-hostile and alg-mismatched now reports the
-  // crit verdict.
-  //
-  // ⚠ The ORDER is aegis policy, NOT a specification requirement. RFC 9052 §3.1
-  // does not even make an unrecognised crit member fatal: it says the parameter
-  // indicates what a processor is "required to understand", and its one
-  // fatal-error clause is about a label MISSING FROM the protected bucket, which
-  // is a different condition (`reject-unknown-critical.ts` cites it correctly,
-  // for its MALFORMED branch). The refusal here is aegis deriving the
-  // consequence, and the precedence over `alg` is ours outright. Reasons stated
-  // once, on `assertProtectedHeaderGates`; do not restate them here as spec.
+  // ⚠ CRIT FIRST, and the order is AEGIS POLICY, not a specification requirement.
+  // Both wires share `assertProtectedHeaderGates`, so there is nothing left to
+  // drift on which refusal a doubly-hostile token gets — it reports the crit
+  // verdict. Reasons stated once there; do not restate them here as spec.
   assertProtectedHeaderGates({
     protectedHeader,
     custom: custom.protected,
@@ -128,10 +103,9 @@ export const verifyCoseStructure = ({
       "The protected header alg does not match the algorithm of the configured kryptos key.",
   });
 
-  // A DETACHED (nil) payload is legal COSE, but no aegis read path carries
-  // out-of-band content, so there is nothing to authenticate — refused with the
-  // structural `cose_malformed` verdict rather than a raw `Buffer.from(null)`
-  // TypeError, which would escape the `AegisError` contract entirely.
+  // No aegis read path carries out-of-band content, so a detached (nil) payload
+  // has nothing to authenticate — refused with the structural `cose_malformed`
+  // verdict rather than a raw `Buffer.from(null)` TypeError outside `AegisError`.
   const content = requireAttachedPayload(payload, {
     error: CwsError,
     message: `Malformed ${label}`,
@@ -139,10 +113,8 @@ export const verifyCoseStructure = ({
     details: `The ${label} has a detached or nil payload, so ${payloadDetail}.`,
   });
 
-  // The twin of the payload check on the other nil-able slot: `exactly: 4` counts
-  // ELEMENTS, so a structure with `null` in slot 4 clears the arity, algorithm and
-  // crit gates intact. Refused with the same structural verdict rather than
-  // letting `Buffer.from(null)` throw a raw TypeError out of the error contract.
+  // The twin on the other nil-able slot: `exactly: 4` counts ELEMENTS, so `null`
+  // in slot 4 clears the arity, algorithm and crit gates intact.
   const secured = requireSignature(signature, {
     error: CwsError,
     message: `Malformed ${label}`,

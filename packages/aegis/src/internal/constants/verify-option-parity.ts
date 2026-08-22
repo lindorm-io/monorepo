@@ -13,7 +13,10 @@ export type ParityCase<T> =
       /** Read on both wires — the target state for every row. */
       wires: "both";
       default: { jose: T; cose: T };
-      /** Required when the two defaults differ; cite the RFCs that force it. */
+      /**
+       * Required when the two defaults differ — `Aegis.knob-matrix.test.ts`
+       * asserts it. Reference bare.
+       */
       reason?: string;
     }
   | {
@@ -99,14 +102,14 @@ export const VERIFY_OPTION_PARITY = {
     wires: "both",
     default: { jose: undefined, cose: undefined },
     reason:
-      "RFC 9449 defines only the JWT proof form, but the PROOF's wire is independent of the bound token's, and this option is READ ON BOTH WIRES — a proof presented for a CWT that carries no binding is a mismatch refused there exactly as on JOSE, which is what the knob probe observes on COSE. ⚠ It is the BOUND-token case the option exists for that has no COSE instance: RFC 8747's cnf map (Table 1) has members for an embedded COSE_Key, an encrypted COSE_Key and a kid only, RFC 9679 §5.5 declines to register jkt as a CWT confirmation method, and the COSE thumbprint ckt (§5.6) digests the key's canonical CBOR where RFC 7638 digests its canonical JSON — a different value under a different label, not a spelling of jkt",
+      "aegis reads a DPoP proof as a compact JWS on either wire, because the PROOF's wire is independent of the bound token's — a proof presented for a CWT that carries no binding is a mismatch refused there exactly as on JOSE, which is what the knob probe observes on COSE. ⚠ It is the BOUND-token case the option exists for that has no COSE instance: aegis's COSE confirmation carries an embedded COSE_Key and a kid only, and it will not relabel a JWK thumbprint as the COSE one, which digests different bytes. RFC 9449 §4.2, RFC 8747 §3.1, RFC 9679 §5.5",
   },
 
   trustBoundThumbprint: {
     wires: "both",
     default: { jose: false, cose: false },
     reason:
-      "It waives the refusal of a token that IS bound and was presented without a proof, so on COSE there is no state for it to act on: no CWT can carry a JWK thumbprint (RFC 9679 §5.5 declines to register jkt as a CWT confirmation method, and ckt is a digest over different bytes rather than a spelling of it), so the probe declares it unobservable there. ⚠ NOT dpopProof's reason — that option is read AND observed on both wires",
+      "It waives the refusal of a token that IS bound and was presented without a proof, so on COSE there is no state for it to act on: aegis gives a JWK thumbprint no COSE label and will not relabel it as the COSE thumbprint, which digests different bytes, so the probe declares it unobservable there. ⚠ NOT dpopProof's reason — that option is read AND observed on both wires. RFC 9679 §5.5",
   },
 
   key: {
@@ -118,7 +121,7 @@ export const VERIFY_OPTION_PARITY = {
     wires: "both",
     default: { jose: "required", cose: "optional" },
     reason:
-      "Requiring a typ on JOSE is aegis POLICY, modelled on RFC 8725 §3.11, which RECOMMENDS explicit typing rather than mandating it; RFC 9596 genuinely leaves the COSE typ (label 16) optional. An explicit value behaves identically on both wires — only the unstated default follows each RFC. ⚠ The required case is unobservable on COSE today: every COSE writer stamps a typ (a bare CWT gets application/cwt), so a typ-less CWT cannot be produced to reject",
+      "Requiring a typ on JOSE is aegis POLICY; aegis leaves the COSE typ (label 16) optional. An explicit value behaves identically on both wires — only the unstated default differs. ⚠ The required case is unobservable on COSE today: every COSE writer stamps a typ (a bare CWT gets application/cwt), so a typ-less CWT cannot be produced to reject. RFC 8725 §3.11, RFC 9596 §2",
   },
 
   expPresence: {

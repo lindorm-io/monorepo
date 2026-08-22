@@ -6,15 +6,14 @@ import {
 } from "./cose-hash-algorithms.js";
 
 /**
- * THE SHARED TABLE AND THE SHARED PARSE — the contract two consumers depend on
- * (`cose-cert-hash.ts`'s codec and `cose-wide-cert-binding.ts`'s comparison), which
- * is why it is pinned here rather than only through each of them.
+ * THE SHARED TABLE AND THE SHARED PARSE — the contract `cose-cert-hash.ts`'s codec
+ * and `cose-wide-cert-binding.ts`'s comparison both depend on, pinned here rather
+ * than only through each of them.
  */
 describe("HASH_ALGORITHM", () => {
   /**
-   * ⚠ AGAINST LITERALS, deliberately. Reading the labels back out of the table the
-   * production code reads would make this agree with any table ever written. The
-   * values are RFC 9054's: Table 1 for SHA-1, the §3.2 table for the SHA-2 family.
+   * ⚠ Against LITERALS: reading the labels back out of the table the production
+   * code reads would agree with any table ever written. RFC 9054 §3.1, RFC 9054 §3.2.
    */
   test("carries exactly the four algorithms aegis can compute", () => {
     expect(
@@ -28,10 +27,9 @@ describe("HASH_ALGORITHM", () => {
   });
 
   /**
-   * ⭐ THE ASYMMETRY THE WHOLE BUILD RESTS ON: exactly the two algorithms JOSE
-   * registers a parameter for (RFC 7517 §4.8/§4.9) carry a `jose` cell. A third
-   * would mean a digest could ride the domain header under a parameter whose name
-   * names a different algorithm.
+   * ⚠ Exactly the two algorithms JOSE registers a parameter for (RFC 7515 §4.1.7,
+   * RFC 7515 §4.1.8) carry a `jose` cell. A third would let a digest ride the domain
+   * header under a parameter naming a different algorithm.
    */
   test("gives a jose parameter to exactly the two JOSE registers", () => {
     expect(
@@ -41,7 +39,7 @@ describe("HASH_ALGORITHM", () => {
 });
 
 describe("hashAlgorithmOf", () => {
-  // RFC 9360 §2 admits `hashAlg: (int / tstr)`, so both spellings name the same row.
+  // RFC 9360 §2 — both spellings name the same row.
   test.each([
     [-16, "SHA-256"],
     ["SHA-256", "SHA-256"],
@@ -72,10 +70,9 @@ describe("parseCoseCertHash", () => {
   });
 
   /**
-   * ⚠ ONE PARSE, TWO CONSUMERS. Each used to ask `isArray` → `length === 2` →
-   * `instanceof Uint8Array` for itself, so tightening one — a stricter digest
-   * length, a rejected tagged value — would leave the other accepting on the same
-   * bytes what the first refuses.
+   * ⚠ ONE parse, TWO consumers: a second copy means tightening one — a stricter
+   * digest length, a rejected tagged value — leaves the other accepting on the
+   * same bytes what the first refuses.
    */
   test.each([
     ["a non-array", "MIIBsample"],

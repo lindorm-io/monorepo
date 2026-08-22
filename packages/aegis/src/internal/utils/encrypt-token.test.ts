@@ -19,23 +19,18 @@ const TYP = 16; // RFC 9596 §4.1, Table 1
  * WHAT THE `cwe` ENVELOPE DECLARES ABOUT ITS PLAINTEXT, AND ON WHICH PARAMETER.
  *
  * `aegis.encrypt` seals the caller's own value and gives that value back — there
- * is no claims layer and nothing to discriminate — so `cty` (label 3, which
- * RFC 9052 §3.1 defines as the "Content type of the payload") has exactly one
- * job left: say what the bytes ARE, so the reader reconstructs the same JS type.
- * `typ` (label 16) stays free for the caller's routing type, which is the split
- * RFC 9596 draws — `typ` "declare[s] the type of this complete COSE object, as
- * compared to the content type header parameter, which declares the type of the
- * COSE object payload" — and the same one JOSE draws in RFC 7515 §4.1.9 vs
- * §4.1.10.
+ * is no claims layer and nothing to discriminate — so `cty` (label 3,
+ * RFC 9052 §3.1) has one job left: say what the bytes ARE, so the reader
+ * reconstructs the same JS type. `typ` (label 16, RFC 9596) stays free for the
+ * caller's routing type — the same split JOSE draws between RFC 7515 §4.1.9 and
+ * RFC 7515 §4.1.10.
  *
  * ⚠ These rows are the ONLY thing pinning either declaration to the wire, and
  * they read it with an INDEPENDENT inspector (raw `cbor2`, nothing from
- * `src/internal/`). Two invented markers have already had to be deleted from this
- * area — a reserved `typ` value of `application/claims+cwe` (whose `+cwe` suffix
- * is not registered under RFC 6838 at all) and, after it, a `cty` of
- * `application/cbor` that meant "claims" only by our own private convention. Both
- * survived because a writer and a reader agreed with each other privately and
- * nothing in the suite read the bytes.
+ * `src/internal/`). ⛔ Do not introduce a private marker here — an unregistered
+ * `typ` suffix, or a `cty` that means "claims" only by our own convention: a
+ * writer and a reader agreeing privately passes every check that does not read
+ * the bytes.
  */
 describe("aegis.encrypt — the cwe envelope declares its own plaintext", () => {
   let logger: ILogger;
@@ -131,10 +126,10 @@ describe("aegis.encrypt — the cwe envelope declares its own plaintext", () => 
    * ⚠ THE DISCRIMINANT IS GONE, AND ITS ABSENCE IS THE RULE NOW.
    *
    * A claim-SHAPED object and any other object declare the SAME thing and are
-   * read back the same way, because the envelope makes no claim about meaning.
-   * The pair used to differ — `application/cbor` for the "claims" door,
-   * `application/json` for the opaque one — and the difference is what let a
-   * decrypt promote `{ iss: … }` to a domain issuer its author never asserted.
+   * read back the same way, because the envelope makes no claim about meaning. A
+   * per-door cty — `application/cbor` for "claims", `application/json` for the
+   * opaque one — is what lets a decrypt promote `{ iss: … }` to a domain issuer
+   * its author never asserted.
    */
   describe("no plaintext is privileged over another", () => {
     test("a claim-shaped object and an arbitrary one declare the same cty", async () => {

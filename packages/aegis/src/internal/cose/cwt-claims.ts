@@ -4,31 +4,23 @@ import { CWT_CLAIMS_KIT } from "./cwt-spec.js";
 
 export type EncodeCwtOptions = {
   /**
-   * Use compact private-use integer COSE labels (default `false` — the
-   * non-proprietary default MUST be fully interoperable). When `false` (default)
-   * a claim with a private-use label (`< -65536`) is emitted under its JOSE
-   * string key (never dropped) and the structured `act`/`subjectId` are emitted
-   * as interoperable string-keyed objects. Set `true` for on-platform tokens —
-   * those claims are keyed by their compact private-use integer label instead,
-   * and `act`/`subjectId` use their compact integer-keyed form. The flag only
-   * chooses digit-vs-string; no claim is ever omitted.
+   * Use compact private-use integer COSE labels. Default `false`: a claim with a
+   * private-use label (`< -65536`) is emitted under its JOSE string key and the
+   * structured claims are string-keyed, so an interoperable reader can read the
+   * token. `true` keys them by their compact integer label instead.
+   *
+   * ⚠ The flag chooses digit-vs-string only; no claim is ever omitted.
    */
   proprietary?: boolean;
 };
 
 /**
- * Encode ALREADY-WIRE (COSE-name-keyed) claims — the `domainToWire(…, coseName)`
- * output — into a CWT claims map (RFC 8392): integer labels where the registry has
- * one, the wire string name where it does not, and custom passthrough claims under
- * their literal key. This is the codec ONLY: the domain -> wire translation (name +
- * value shape) happens in `domainToWire` before this is called, so there is no
- * domain-remap loop here.
+ * Encode ALREADY-WIRE (COSE-name-keyed) claims into a CWT claims map (RFC 8392):
+ * integer labels where the registry has one, the wire string name where it does
+ * not, custom claims under their literal key.
  *
- * The registry-driven mapping is the `@lindorm/cbor` codec (map mode), keyed by the
- * COSE name; it turns the wire-shaped values into COSE labels / CBOR bytes (cti/
- * hashes -> bstr, `cnf` -> COSE_Key map, `act`/`sub_id` -> compact maps). Custom
- * claims — which the codec's spec does not know — are merged in under their literal
- * (already snake_cased) key.
+ * ⚠ The codec ONLY. `domainToWire` does the domain -> wire translation (name and
+ * value shape) before this runs, so there is no domain remap here.
  */
 export const encodeCwtClaims = (
   wire: Dict,
@@ -38,8 +30,8 @@ export const encodeCwtClaims = (
     proprietary: options.proprietary ?? false,
   });
 
-  // Unregistered custom claims are unknown to the codec spec, so it never emits
-  // them — add them under their literal wire key (present-only, matching the codec).
+  // The codec spec does not know unregistered custom claims, so they are merged in
+  // under their literal wire key.
   for (const [key, value] of Object.entries(wire)) {
     if (value === undefined) continue;
     if (claimByCoseName(key)) continue;
@@ -50,37 +42,29 @@ export const encodeCwtClaims = (
 };
 
 /**
- * Decode a CWT claims map into the COSE-name-keyed WIRE shape (integer label /
- * wire string -> wire name; values de-serialized). Unknown labels are kept verbatim
- * under their wire key. This is the codec ONLY — `wireToDomain(…, coseName)` maps
- * the result to the domain shape (the read twin of `domainToWire` ->
- * `encodeCwtClaims`).
+ * Decode a CWT claims map into the COSE-name-keyed WIRE shape; unknown labels are
+ * kept verbatim under their wire key. The codec ONLY — `wireToDomain` maps the
+ * result to the domain shape.
  */
 export const decodeCwtClaims = (map: Map<unknown, unknown> | Dict): Dict => {
-  // The byte decoder runs `preferMap: false`, which keeps the top CWT map a `Map`
-  // only while it has integer keys — the usual case, since registered claims carry
-  // integer labels. A CWT whose claims are ALL custom (string-keyed) — e.g. an
-  // opaque handle `{tid, sec}` — has no integer key, so it decodes as a plain
-  // object instead. Normalise it back to a Map here (top level only; nested claim
-  // objects stay plain, as intended) so the codec always sees a Map.
+  // ⚠ `preferMap: false` keeps the top CWT map a `Map` only while it has integer
+  // keys, so a CWT whose claims are ALL custom decodes as a plain object.
+  // Normalised back to a Map here — top level only; nested claim objects stay
+  // plain — so the codec always sees a Map.
   const asMap: Map<number | string, unknown> =
     map instanceof Map
       ? (map as Map<number | string, unknown>)
       : new Map(Object.entries(map));
 
-  // ⚠ THE DECODED CLAIMS OBJECT IS PROTOTYPE-SAFE, and not because of anything
+  // ⚠ The decoded claims object is prototype-safe, and NOT because of anything
   // here: `@lindorm/cbor` writes every `lax`-mode member with
-  // `Object.defineProperty` (`internal/utils/decode-cbor-map.ts`), so a FOREIGN
-  // CWT carrying the text claim key `__proto__` yields it as an ordinary OWN key
-  // rather than as this object's prototype. That matters because the registered
-  // claims are read off this bag BY PROPERTY — an inherited `aud` would answer as
-  // though the issuer had stated it, on a token whose signature verifies.
+  // `Object.defineProperty`, so a foreign CWT's `__proto__` claim key lands as an
+  // ordinary OWN key. That matters because registered claims are read off this bag
+  // BY PROPERTY — an inherited `aud` would answer as though the issuer stated it,
+  // on a token whose signature verifies.
   //
-  // ⛔ A REBUILD HERE WOULD BE A NO-OP. Measured: `CWT_CLAIMS_KIT.decode` already
-  // returns own keys `["iss","__proto__"]` on `Object.prototype`, so wrapping it
-  // changes nothing — and a guard whose removal cannot turn a test red is not a
-  // guard. The disposal lives where the assignment is, and is pinned there
-  // (`packages/cbor/src/internal/utils/decode-cbor.test.ts`); this package pins
-  // the consequence it depends on in `internal/claims/claims-proto-forgery.test.ts`.
+  // ⛔ Rebuilding the object here is a NO-OP, so it would be a guard whose removal
+  // cannot turn a test red. The consequence is pinned in
+  // `internal/claims/claims-proto-forgery.test.ts`.
   return CWT_CLAIMS_KIT.decode("map", asMap);
 };

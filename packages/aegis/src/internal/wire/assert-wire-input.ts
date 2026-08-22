@@ -10,15 +10,9 @@ const isRefused = (rule: Disposition, value: unknown): boolean =>
   rule.use === "unsupported" && !isUndefined(value);
 
 /**
- * THE guard, run ONCE above the seam: a caller that supplied an option the
- * chosen wire declares `unsupported` is refused, by name, with the reason the
- * table states.
- *
- * It exists because the alternative is silence. A wire forwards its kit's whole
- * option surface by rest-spread, so an option it cannot honour would otherwise
- * be handed to a kit that ignores it — and an ignored option is the worst
- * outcome available: the caller believes the request took effect, and nothing
- * anywhere reports that it did not. Refusing names the mistake where it is made.
+ * THE guard, run ONCE above the seam: a caller that supplied an option the chosen
+ * wire declares `unsupported` is refused, by name, with the reason the table
+ * states. The alternative is a rest-spread handing it to a kit that ignores it.
  *
  * ⚠ It reads CALLER INTENT, so it runs on the values the caller supplied, before
  * any deployment default is filled in. A default is not a request.

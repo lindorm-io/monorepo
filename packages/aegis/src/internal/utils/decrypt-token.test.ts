@@ -14,17 +14,15 @@ MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
  * `aegis.decrypt` — what it REFUSES, on both wires and on input that is no token
  * at all.
  *
- * The verb used to sniff for itself: `isJwe`, then "no dot AND structurally a
- * COSE_Encrypt0". It now asks the ONE detector every other read verb asks, so
- * `verify`, `parse` and `decrypt` can no longer disagree about what a token IS —
- * and the refusal is the only externally visible half of that, so it is pinned
- * here rather than left to the round trips.
+ * The verb asks the ONE detector every other read verb asks, so `verify`, `parse`
+ * and `decrypt` cannot disagree about what a token IS. The refusal is the only
+ * externally visible half of that, so it is pinned here rather than left to the
+ * round trips.
  *
- * ⚠ The unguarded half of the old ladder: it reached `decodeCbor` directly, so a
- * string that is not a token at all raised `CoseError: Failed to decode CBOR` —
- * a decoder complaint about input the caller never claimed was CBOR — instead of
- * the refusal this verb documents. The detector is guarded, so it now answers
- * "not a token" and the domain refusal is reached.
+ * ⚠ A verb sniffing for itself reaches `decodeCbor` directly, and a string that
+ * is not a token at all then raises `CoseError: Failed to decode CBOR` — a
+ * decoder complaint about input the caller never claimed was CBOR — instead of
+ * the refusal this verb documents.
  */
 describe("aegis.decrypt — the refusal", () => {
   let aegis: Aegis;
@@ -95,7 +93,7 @@ describe("aegis.decrypt — the refusal", () => {
  * The plaintext is reconstructed from the outer's own `cty`, which is the
  * PRODUCER's to choose — and a producer aegis did not write may state any
  * registered media type on either wire (`application/json`, RFC 8259 §11;
- * `application/cbor`, RFC 8949 §9.1). Both reconstruct to a STRUCTURED value, so
+ * `application/cbor`, RFC 8949 §9.3). Both reconstruct to a STRUCTURED value, so
  * `aegis.decrypt` — which reads any encrypted token, foreign ones included — can
  * hand a caller an object. The field's type says so instead of a cast asserting
  * it cannot happen.

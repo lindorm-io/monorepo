@@ -23,18 +23,14 @@ export type AssertCoseRegisteredOptions =
     };
 
 /**
- * The COSE INTEROP gate, for both write kits.
+ * The COSE INTEROP gate, for both write kits. A non-proprietary write refuses a
+ * value with no OFFICIAL COSE label, so the token stays readable by a foreign
+ * implementation; a private-use label is legal COSE but on-platform only, so it
+ * requires `proprietary: true` — the flag that threads to the claim codec too.
  *
- * A non-proprietary write refuses a value with no OFFICIAL COSE-RFC label, so
- * the token stays readable by a foreign COSE implementation. A private-use label
- * is legal COSE but only ever understood on-platform, so it requires the caller
- * to say `proprietary: true` — the one flag that threads to the claim codec and
- * to this gate alike.
- *
- * The `alg` side guards only a FUTURE private-use algorithm (every current
- * kryptos signing algorithm is registered — ML-DSA joined via RFC 9964); the
- * `enc` side is the reachable twin, because the AES-CBC-HMAC family has no COSE
- * registration at all.
+ * ⚠ The `alg` side guards a FUTURE private-use algorithm; every kryptos signing
+ * algorithm is registered. The `enc` side is the reachable twin, because the
+ * AES-CBC-HMAC family has no COSE registration at all.
  */
 export const assertCoseRegistered = (options: AssertCoseRegisteredOptions): void => {
   if (options.proprietary) return;

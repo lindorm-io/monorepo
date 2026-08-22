@@ -154,8 +154,8 @@ describe("isStructuredToken", () => {
   });
 
   describe("nullish", () => {
-    // Deliberate: the check this replaces is `if (!token || token.format !== "jwt")`,
-    // so the guard has to swallow both halves or it has not replaced anything.
+    // Deliberate: the guard swallows the null test and the format test together,
+    // so a caller needs neither.
     test("should reject null", () => {
       expect(isStructuredToken(null)).toBe(false);
     });
@@ -168,10 +168,10 @@ describe("isStructuredToken", () => {
   /**
    * ⚠ THE TABLE IS READ AS KEYS, NOT AS PROPERTIES. The lookup sits on a plain
    * object literal (`STRUCTURED`) and its key comes off a token the CALLER handed
-   * in, so `format in STRUCTURED` resolved through `Object.prototype` and
-   * narrowed `{ format: "constructor" }` to a claims-bearing token — one every
-   * pylon call site would then read `claims` off. `in` on a caller-influenced key
-   * is a BANNED construct in this package.
+   * in, so `format in STRUCTURED` resolves `{ format: "constructor" }` through
+   * `Object.prototype` and narrows it to a claims-bearing token — one every pylon
+   * call site would then read `claims` off. `in` on a caller-influenced key is a
+   * BANNED construct in this package.
    *
    * A hand-written literal is the right input HERE, unlike every row above:
    * `verify` cannot produce one of these, which is exactly why the guard has to

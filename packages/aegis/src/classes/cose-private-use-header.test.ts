@@ -18,22 +18,18 @@ import { CwtKit } from "./CwtKit.js";
  * THE INTEROPERABLE DEFAULT REACHES THE HEADER, NOT ONLY THE CLAIMS.
  *
  * `oid` (the lindorm object id) has no IANA COSE header parameter, so it rides
- * the COSE wire under a lindorm PRIVATE-USE label. RFC 8152 §16.2 — the registry
- * RFC 9052 §11.1 re-points — reserves that whole range to whoever squats it:
- * *"Integer values less than -65536 are marked as private use."* An integer there
- * is therefore MEANINGLESS to any reader but us, and a token that carries one is
- * not interoperable, whatever it says about itself.
+ * the COSE wire under a lindorm PRIVATE-USE label — a COSE header parameter
+ * label below -65536 is private use (RFC 8152 §16.2, the registry RFC 9052 §11.1
+ * re-points). An integer there is MEANINGLESS to any reader but us, and a token
+ * that carries one is not interoperable, whatever it says about itself.
  *
  * `proprietary: false` — the default — is the promise that a token carries
- * nothing of the kind. The claims side has always kept it (a private-use claim
- * label degrades to its JOSE string key). The HEADER side did not: a caller's
- * `objectId` went onto every COSE wire at the integer `-70000` regardless, so the
- * default emitted exactly the artifact it promises to prevent.
+ * nothing of the kind, on the header exactly as on the claims.
  *
- * The repair is the spelling and ONLY the spelling. RFC 9052 §1.5 defines
- * `label = int / tstr`, so a text label is a legal COSE label: the interoperable
- * default writes the parameter's STRING label, the proprietary mode its compact
- * integer, and neither adds, drops or renames a parameter.
+ * It is the SPELLING and only the spelling. A COSE label is `int / tstr`
+ * (RFC 9052 §1.5), so a text label is legal: the interoperable default writes the
+ * parameter's STRING label, the proprietary mode its compact integer, and neither
+ * adds, drops or renames a parameter.
  *
  * ⚠ EVERY WIRE ASSERTION HERE GOES THROUGH THE INDEPENDENT INSPECTOR
  * (`__fixtures__/inspect-token.ts` — raw `cbor2`, importing nothing from
@@ -212,11 +208,10 @@ describe("a private-use COSE header label degrades to its interoperable spelling
   });
 
   /**
-   * RFC 9052 §3.1: *"if the crit value list includes a label for which the header
-   * parameter is not in the protected-header-parameters bucket, this is a fatal
-   * error in processing the message."* A `crit` naming `-70000` over a bucket
-   * keyed `"oid"` IS that fatal error — the two are different labels — so the
-   * members follow the parameters into whichever spelling the mode chose.
+   * A `crit` naming a label the protected bucket does not carry is a fatal error
+   * (RFC 9052 §3.1). A `crit` naming `-70000` over a bucket keyed `"oid"` IS that
+   * error — the two are different labels — so the members follow the parameters
+   * into whichever spelling the mode chose.
    *
    * ⚠ Wire-only BY DIVISION OF LABOUR, not because the reader refuses the
    * token. `oid` is the header registry's one `critEligible` parameter, so
@@ -226,8 +221,8 @@ describe("a private-use COSE header label degrades to its interoperable spelling
    * `a-producer-may-mark-an-implemented-extension-parameter-critical`. What is
    * stated HERE is the thing a round trip cannot state: aegis reading back its
    * own bytes proves the writer and the reader agree, not that either is right,
-   * and the label/name confusion this file exists for round-tripped perfectly
-   * while being fatally malformed. So this reads the RAW bytes and asserts what
+   * and the label/name confusion this file exists for round-trips perfectly while
+   * being fatally malformed. So this reads the RAW bytes and asserts what
    * a conformant third party would find.
    */
   describe("crit's members are spelled the same way as the parameters they name", () => {

@@ -13,20 +13,16 @@ describe("CNF_MEMBERS", () => {
   /**
    * ⭐ THE LITERAL PIN. Everything else about the confirmation is DERIVED from
    * this table — both translator directions, the mint-side shape rule's entry
-   * point, the JOSE capability row, the COSE capability row and the COSE codec's
-   * labels — so nothing else in the package can say whether the table itself is
-   * right. It inherits this duty from `registry/cose-cnf-labels.test.ts`, which
-   * pinned the two COSE labels for the same reason and is gone with the table it
-   * pinned.
+   * point, both capability rows and the COSE codec's labels — so nothing else in
+   * the package can say whether the table itself is right.
    *
-   * ⛔ WRITTEN OUT, NOT DERIVED. A test that read the names back off the same
-   * declaration would agree with whatever it currently says, including a wrong
+   * ⛔ WRITTEN OUT, NOT DERIVED. A test reading the names back off the same
+   * declaration agrees with whatever it currently says, including a wrong
    * spelling — and a wrong `cnf` member name mints a binding no conformant
-   * verifier can interpret while every derived check in the package still agrees
-   * with it, because they all read the same wrong name.
+   * verifier can interpret while every derived check still agrees with it.
    *
-   * The spellings: `jkt` (RFC 9449 §6.1), `x5t#S256` (RFC 8705 §3.1), `jwk`
-   * (RFC 7800 §3.2), `kid` (§3.4), `jku` (§3.5).
+   * The spellings: RFC 9449 §6.1 · RFC 8705 §3.1 · RFC 7800 §3.2 · RFC 7800 §3.4
+   * · RFC 7800 §3.5.
    */
   test("is exactly the five confirmation members aegis carries, spelled as their specifications do", () => {
     expect(
@@ -102,24 +98,17 @@ describe("CNF_MEMBERS", () => {
    *
    * ⚠ THE CONTRAST IS THE POINT, and it is why this is the only type-level
    * assertion in the file: `CNF_JOSE_MEMBERS`, `COSE_CNF_LABELS` and
-   * `CoseCnfMember` are all caught by the tests around it — up to 18 failures
-   * apiece — because each has a runtime reader. Adding type assertions for those
-   * would restate what behaviour already proves; adding one here is the only way
-   * the fact is checked at all.
+   * `CoseCnfMember` each have a runtime reader and are caught by the tests around
+   * it, so a type assertion for those would restate what behaviour already proves.
    *
    * ⛔ WRITTEN OUT, NOT DERIVED, like every other pin in this file. An assertion
-   * built from `CNF_MEMBERS` would agree with whatever the declaration currently
-   * says, including a member RFC 7800 never defined.
+   * built from `CNF_MEMBERS` agrees with whatever the declaration currently says,
+   * including a member RFC 7800 never defined.
    *
    * ⚠⚠ IT FAILS AT `typecheck`, NOT IN THE TEST RUNNER — vitest transpiles without
    * checking types, so `npm test` stays GREEN on a broken union and only
-   * `npm run verify` (typecheck && build && test) catches it. Anyone who reds this
-   * assertion and sees a passing `npm test` has not disproved it. The probe's own
-   * output, for recognition:
-   *
-   *     src/internal/claims/cnf-members.test.ts(116,7): error TS2344: Type
-   *     '"jku" | "jwk" | "kid" | "x5t#S256" | "jkt" | "ckt"' does not satisfy the
-   *     constraint '"Expected: literal string: jku, Actual: literal string: jwe" | …'
+   * `npm run verify` catches it (TS2344 on the `expectTypeOf` below). Anyone who
+   * reds this assertion and sees a passing `npm test` has not disproved it.
    */
   test("derives the member union from the declaration, and from nothing else", () => {
     expectTypeOf<CnfMember>().toEqualTypeOf<

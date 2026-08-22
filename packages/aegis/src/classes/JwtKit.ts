@@ -98,12 +98,11 @@ export class JwtKit implements IJwtKit {
 
     const payload = B64.encode(JSON.stringify(normaliseClaims(claims)), B64U);
 
-    // NO `cty` default. RFC 7519 §5.2: "In the normal case in which nested
-    // signing or encryption operations are not employed, the use of this Header
-    // Parameter is NOT RECOMMENDED." A JWT's payload is a claims set BY
-    // DEFINITION (§3), so stamping `application/json` on every one restated the
-    // format and left the parameter unavailable for the one thing it is for. A
-    // caller `header.cty` still wins — it is how a NESTED token declares itself.
+    // NO `cty` default. A JWT's payload is a claims set by definition, so
+    // stamping `application/json` on every one restates the format and leaves the
+    // parameter unavailable for the one thing it is for. A caller `header.cty`
+    // still wins — it is how a NESTED token declares itself.
+    // RFC 7519 §3, RFC 7519 §5.2.
     const header = encodeJoseHeader(
       buildJoseHeader({
         reserved: KIT_CAPABILITIES.jwt.reserved,
@@ -261,12 +260,12 @@ export class JwtKit implements IJwtKit {
    * Is this a JWT aegis can process — a JWS whose payload is a claims set (RFC
    * 7519 §3), signed with an algorithm on the allowlist?
    *
-   * The `typ` header decides nothing. RFC 7519 §5.1 makes it OPTIONAL and an
-   * id_token carries none, while RFC 9068 (`at+jwt`), RFC 9449 (`dpop+jwt`) and
-   * RFC 8417 (`secevent+jwt`) each stamp their own — so a fixed spelling
-   * recognises only what aegis itself minted and rejects every externally issued
-   * token. What decides it is the payload being a JSON claims object, which is
-   * also what keeps a signed OPAQUE handle out: it stays a JWS, and a token
+   * The `typ` header decides nothing (RFC 7519 §5.1). An id_token carries none,
+   * while RFC 9068 (`at+jwt`), RFC 9449 (`dpop+jwt`) and RFC 8417
+   * (`secevent+jwt`) each stamp their own — so a fixed spelling would recognise
+   * only what aegis itself minted and reject every externally issued token. What
+   * decides it is the payload being a JSON claims object, which is also what keeps
+   * a signed OPAQUE handle out: it stays a JWS, and a token
    * DECLARING a claims typ over a non-claims payload is not believed.
    */
   static isJwt(jwt: string): boolean {

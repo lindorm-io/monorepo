@@ -27,10 +27,9 @@ export const TOKEN_FORMAT_KIND = {
   cws: "opaque",
   jwe: "encrypted",
   cwe: "encrypted",
-  // `as const satisfies` rather than a type ANNOTATION: the annotation widened
-  // every cell to `TokenFormatKind`, which erased the literals and made the
-  // record unreadable at the type level — so the subset below could not be
-  // derived from it and had to be hand-written somewhere else instead.
+  // ⚠ `as const satisfies`, never a type ANNOTATION: an annotation widens every
+  // cell to `TokenFormatKind` and erases the literals, so `TokenFormatOfKind`
+  // below can no longer be derived from this record.
 } as const satisfies Record<TokenFormatTag, TokenFormatKind>;
 
 /** The formats of one KIND, derived from the record above. */
@@ -40,11 +39,8 @@ export type TokenFormatOfKind<K extends TokenFormatKind> = {
 
 /**
  * The kind check as a TYPE GUARD, so asking what a format IS also narrows it.
- *
- * `TOKEN_FORMAT_KIND[format] === "encrypted"` is a value comparison and narrows
- * nothing, which left every branch that had already established the kind casting
- * the format back to the subset it had just proved. This states the relationship
- * once, derived from the record.
+ * `TOKEN_FORMAT_KIND[format] === "encrypted"` is a value comparison that narrows
+ * nothing, and every caller then casts back to the subset it just proved.
  */
 export const isTokenFormatOfKind = <K extends TokenFormatKind>(
   format: TokenFormatTag,
@@ -56,14 +52,13 @@ export const isTokenFormatOfKind = <K extends TokenFormatKind>(
  *
  * `ClaimsTokenFormat` is spelled as an `Extract<TokenFormat, …>` in
  * `types/domain/token-format.ts` because a public type may not import a runtime
- * value out of `internal/`. That leaves two hand-written lists of the same fact,
- * and the failure is silent AND severe: widening the public one with `"cws"`
- * typechecks clean everywhere and routes an OPAQUE format into
- * `wire.signClaims`, which would hand a COSE_Sign1 over arbitrary bytes to the
- * claims codec. (Measured: it compiles.)
+ * value out of `internal/`. That leaves two hand-written lists of one fact, and
+ * widening the public one with `"cws"` otherwise typechecks clean and routes an
+ * OPAQUE format into `wire.signClaims`, handing a COSE_Sign1 over arbitrary bytes
+ * to the claims codec.
  *
- * This assignment is the check. It is a TYPE-level equality in both directions,
- * so adding a format to one list and not the other stops the build here.
+ * The assignment below is the check: a TYPE-level equality in both directions, so
+ * adding a format to one list and not the other stops the build here.
  */
 type MutuallyAssignable<A, B> = [A] extends [B]
   ? [B] extends [A]

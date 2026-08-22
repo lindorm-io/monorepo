@@ -60,10 +60,9 @@ describe("mergeCoseProtected", () => {
     expect(map.size).toBe(3);
   });
 
-  // The CLAIMS writers derive no content type at all — RFC 8392 §7.2 reads a CWT
-  // payload as a CBOR map with no cty-driven decode — so label 3 has to be
-  // OMITTABLE, not merely settable to something. Writing a placeholder would put
-  // an untrue statement about the payload on the wire.
+  // The CLAIMS writers derive no content type at all (RFC 8392 §7.2), so label 3
+  // has to be OMITTABLE rather than merely settable — a placeholder would put an
+  // untrue statement about the payload on the wire.
   test("an omitted cty writes NO label 3", () => {
     const map = decode(merge({ typ: "application/cwt" }));
 
@@ -103,13 +102,11 @@ describe("mergeCoseProtected", () => {
   });
 
   /**
-   * ⚠ THE BUCKET IS COMPLETE HERE, AND NOWHERE EARLIER. `buildCoseHeaders` sees
-   * the caller's translated entries alone; `alg`, `typ` and `cty` are written by
-   * this function. A `crit` is a statement about the FINISHED bucket (RFC 9052
-   * §3.1: a crit label whose parameter is not in the protected-header-parameters
-   * bucket is "a fatal error in processing the message"), so asked one step
-   * earlier it refused headers whose protected bucket does carry the parameter —
-   * and refused them only on this wire, while the JOSE twin minted the same call.
+   * ⚠ THE BUCKET IS COMPLETE HERE, AND NOWHERE EARLIER. `buildCoseHeaders` sees the
+   * caller's translated entries alone; `alg`, `typ` and `cty` are written by this
+   * function. A `crit` is a statement about the FINISHED bucket (RFC 9052 §3.1), so
+   * asked one step earlier it refuses headers whose protected bucket does carry the
+   * parameter — and only on this wire, while the JOSE twin mints the same call.
    *
    * These four are exactly the parameters that distinguish the fragment from the
    * message: three this function writes (1/16/3) and one it does not (`kid`, 4).
@@ -151,11 +148,10 @@ describe("mergeCoseProtected", () => {
     test("a crit naming a parameter with an EMPTY value is refused", () => {
       // The check reads the VALUE, not the key, so an empty value gets the same
       // verdict as an absent one.
-      // ⚠ No aegis write path can hand this bucket over TODAY: `oid` prunes, and
-      // the one `whenEmpty: "refuse"` cell (`x5t#S256`) is thrown on by the
-      // normalisation itself, and has no COSE label to travel under either, so
-      // neither could reach here. `entries` is a parameter, though — this states the contract
-      // the caller of that parameter is held to, whoever it comes to be.
+      // ⚠ No aegis write path hands this bucket over: `oid` prunes, and the one
+      // `whenEmpty: "refuse"` cell is thrown on by the normalisation and has no COSE
+      // label to travel under. `entries` is a parameter, though, so this states the
+      // contract its caller is held to.
       expect(() =>
         merge({
           entries: new Map<number | string, unknown>([
@@ -167,11 +163,10 @@ describe("mergeCoseProtected", () => {
     });
 
     // ⚠ `kid` (4) is the one parameter the two wires legitimately answer
-    // differently, and it is a fact about the STRUCTURES, not about this check: a
-    // JOSE compact serialisation has ONE header (RFC 7515 §7.1) and carries `kid`
-    // in it, while COSE puts the kit's `kid` in the UNPROTECTED bucket, where RFC
-    // 9052 §3.1 makes a crit naming it a fatal error for every recipient. Minting
-    // it would be minting a token no COSE reader accepts.
+    // differently, and it is a fact about the STRUCTURES: a JOSE compact
+    // serialisation has ONE header (RFC 7515 §7.1) and carries `kid` in it, while
+    // COSE puts the kit's `kid` in the UNPROTECTED bucket, where a crit naming it is
+    // fatal for every recipient (RFC 9052 §3.1).
     test("a crit naming the kit's UNPROTECTED kid (4) is refused", () => {
       expect(() => merge({ entries: new Map([[2, [4]]]) })).toThrow(
         expect.objectContaining({

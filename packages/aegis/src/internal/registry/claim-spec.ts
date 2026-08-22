@@ -1,8 +1,7 @@
 /**
  * The CLAIM half of the shared {@link ParamSpec} base — the payload-side twin of
- * {@link HeaderSpec}. Three fields beyond the base — `temporal`, `bucket` and
- * `domainClaim` — each meaningless for a header parameter, which is why they
- * live here rather than on the base.
+ * {@link HeaderSpec}. Its extra fields are meaningless for a header parameter,
+ * which is why they live here rather than on the base.
  */
 
 import type { MemberSpec, ParamSpec } from "./param-spec.js";
@@ -13,35 +12,27 @@ import type { MemberSpec, ParamSpec } from "./param-spec.js";
  *   - `"spaced"` a space-delimited STRING is accepted and SPLIT (`"a b"` ->
  *                `["a","b"]`), the RFC 6749 §3.3 spelling.
  *   - `"strict"` arrays ONLY; a scalar decodes to `undefined`.
- *   - `"wrap"`   a scalar WRAPS to a single-element array — `aud` alone, because
- *                RFC 7519 §4.1.3 defines it as string-OR-array.
+ *   - `"wrap"`   a scalar WRAPS to a single-element array — `aud` alone, which is
+ *                string-OR-array on the wire (RFC 7519 §4.1.3).
  */
 export type ArrayScalar = "spaced" | "strict" | "wrap";
 
 /**
- * Sub-kind of a `bespoke` claim — the discriminator telling the translator and
- * the COSE byte-shaper WHICH per-claim builder to use.
+ * Sub-kind of a `bespoke` claim — the discriminator telling the translator and the
+ * COSE byte-shaper WHICH per-claim builder to use.
  *
- * ⚠ NEITHER MEMBER IS WAITING ITS TURN AT THE MEMBER-SET MECHANISM; both are
- * here on their own merits, and the reasons are durable rather than deferrals.
+ * ⚠ NEITHER MEMBER IS WAITING ITS TURN AT THE MEMBER-SET MECHANISM.
  *
- * `"confirmation"` — RFC 7800 `cnf` HAS declared members
- * (`internal/claims/cnf-members.ts`), but its COSE form needs a per-claim
- * BUILDER: RFC 8747 §3.1 carries the embedded key as a COSE_Key, so the member's
- * VALUE is transcoded where a declared member set carries values through
- * unchanged — and a JWK is a union discriminated by `kty` whose labels collide
- * (`AKP.pub` is -1, `EC.crv` is -1), the same reason the header registry's
- * `jwk`/`epk` have no children. Three of the five members have no COSE form at
- * all, and the generic walker cannot key a member the wire does not name
- * (`coseName` throws), so that refusal belongs to the byte layer.
+ * `"confirmation"` — `cnf` HAS declared members (`internal/claims/cnf-members.ts`),
+ * but its COSE form needs a per-claim BUILDER (RFC 8747 §3.1): the embedded key's
+ * VALUE is transcoded, where a declared member set carries values through
+ * unchanged, and a JWK is a union discriminated by `kty` whose labels collide
+ * (`AKP.pub` is -1, `EC.crv` is -1) — the same reason `jwk`/`epk` have no children.
  *
- * `"events"` — RFC 8417 §2.2 defines the claim's keys as URIs identifying event
- * statements, i.e. identifiers rather than field names, so every key is the
- * producer's and always will be. A member set answers "what becomes of a member
- * the registry does not declare", and there are no members for that question to
- * be about: `children: () => []` would read as "none declared YET" where the
- * truth is "there are none to declare", and no cell distinguishes those. The URI
- * check is a PROFILE rule and stays there
+ * `"events"` — the claim's keys are event-statement URIs rather than field names
+ * (RFC 8417 §2.2), so every key is the producer's. A member set answers "what
+ * becomes of a member the registry does not declare", and there are none for that
+ * question to be about. The URI check is a PROFILE rule
  * (`internal/utils/rules/events-shape.ts`).
  */
 export type BespokeKind = "confirmation" | "events";
@@ -69,14 +60,12 @@ export type ClaimCodec =
   /**
    * Byte string. `encoding` says how the DOMAIN string maps to those bytes:
    *   - `"utf8"` the string's OWN bytes (`tokenId` -> `cti`, RFC 8392 §3.1.7).
-   *   - `"b64u"` the string IS base64url and the bytes are what it decodes to —
-   *              a 43-char `at_hash` is 32 bytes on COSE.
+   *   - `"b64u"` the string IS base64url and the bytes are what it decodes to.
    *
-   * ⚠ REQUIRED, with no default. The two alphabets are indistinguishable at the
-   * type level and silently produce DIFFERENT bytes on a signed wire, so there
-   * is nothing safe to fall into. It is a SELECTOR, not a value forwarded to
-   * `@lindorm/cbor`: `CborField.encoding` has no `"utf8"` member, and `"utf8"`
-   * resolves to a bespoke encode/decode pair (`internal/cose/cwt-spec.ts`).
+   * ⚠ REQUIRED, with no default: the two alphabets are indistinguishable at the type
+   * level and silently produce DIFFERENT bytes on a signed wire. It is a SELECTOR,
+   * not a value forwarded to `@lindorm/cbor` — `"utf8"` resolves to a bespoke
+   * encode/decode pair (`internal/cose/cwt-spec.ts`).
    */
   | { kind: "bstr"; encoding: "utf8" | "b64u" }
   /**
@@ -114,65 +103,46 @@ export type ClaimMemberSpec = MemberSpec<unknown, ClaimCodec, "keep" | "prune">;
 /**
  * A claim value with a DECLARED member set.
  *
- * ⚠ `children` IS A THUNK for two load-bearing reasons: RFC 8693 §4.1 defines
- * the actor chain recursively — an `act` contains an `act` — so the declaration
- * is SELF-REFERENTIAL and a direct array cannot be written in TypeScript without
- * a mutable binding; and deferring evaluation lets a member set be declared in a
- * module the registry itself imports without an initialisation cycle.
+ * ⚠ `children` IS A THUNK for two load-bearing reasons: the actor chain is
+ * SELF-REFERENTIAL — an `act` contains an `act` (RFC 8693 §4.1) — which a direct
+ * array cannot express without a mutable binding; and deferring evaluation lets a
+ * member set be declared in a module the registry imports without a cycle.
  *
- * `open` says what becomes of a member the registry does NOT declare, and it is
- * a THREE-WAY answer because "carried" is not one disposition but two:
- *   - `"closed"`   REFUSED — an undeclared member has no wire spelling and no
- *                  value shape, so nothing can be said about it.
- *   - `"flip"`     CARRIED with the mechanical key case flip (snake on write,
- *                  camel on read). The tail is in LINDORM's vocabulary: an
- *                  undeclared `address` member is a lindorm extension of a
- *                  lindorm type.
- *   - `"verbatim"` CARRIED UNTOUCHED, at every depth, because the tail is in a
- *                  FOREIGN vocabulary a case flip would corrupt rather than
- *                  translate. RFC 9396 §2 makes an `authorization_details`
- *                  element's `type` determine its allowable contents, and RFC
- *                  9396's own Figure 2 names them `instructedAmount`,
- *                  `creditorName` and `creditorAccount` — fields snake_case would
- *                  rewrite into ones no resource server is looking for.
+ * `open` says what becomes of a member the registry does NOT declare:
+ *   - `"closed"`   REFUSED — an undeclared member has no wire spelling and no value
+ *                  shape, so nothing can be said about it.
+ *   - `"flip"`     CARRIED with the mechanical key case flip (snake on write, camel
+ *                  on read), because the tail is in LINDORM's vocabulary.
+ *   - `"verbatim"` CARRIED UNTOUCHED at every depth, because the tail is in a
+ *                  FOREIGN vocabulary a case flip would corrupt — an
+ *                  `authorization_details` element's own fields (RFC 9396 §2).
  *
- * ⚠ THE CELL IS REQUIRED so a new structure cannot forget to answer. `open` sits
- * on the CODEC and a NESTED member declares its OWN, so an omitted cell decides
- * one depth silently while the depth above says something else.
+ * ⚠ THE CELL IS REQUIRED so a new structure cannot forget to answer. `open` sits on
+ * the CODEC and a NESTED member declares its OWN, so an omitted cell would decide
+ * one depth silently while the depth above said something else.
  *
  * ⚠⚠ A CLOSED SET REFUSES AN UNDECLARED MEMBER; IT DOES NOT DROP IT. A drop is
- * unobservable in both directions — a caller's member vanishes from a signed
- * token with nothing said, and a stranger's token is reported as saying less than
- * it says — so a closed set that dropped would be strictly weaker than a
- * hand-written rule. The walker reports the member NAME and its FULL PATH
- * (`act.act.surprise`).
+ * unobservable in both directions, so a closed set that dropped would be strictly
+ * weaker than a hand-written rule. The walker reports the member NAME and its FULL
+ * PATH (`act.act.surprise`).
  *
  * ⛔⛔ `"closed"` HAS NO REGISTERED USER, AND THIS IS WHERE THAT IS SAID. Every
- * structure the registry declares is open, and the two candidates are ruled out
- * by their own specifications: RFC 8693 §4.1 defines the actor's members as
- * "claims that identify the actor" and §4.4 offers `email` as one; RFC 7800 §3.1
- * says "Other members of the 'cnf' object may be defined" and "all confirmation
- * members that are not understood by implementations MUST be ignored", with §6.2
- * establishing an IANA registry whose §6.2.2 initial contents already name a
- * member aegis does not carry (`jwe`). ⇒ THE CONDITION THAT WOULD CHANGE IT: a
- * claim whose specification ENUMERATES its members and FORBIDS the rest. Until
- * one is registered the arm is carried by the walker's unit pins alone
- * (`internal/claims/translate.test.ts`, "a CLOSED member set").
+ * structure the registry declares is open, and the two candidates are ruled out by
+ * their own specifications (RFC 8693 §4.1, RFC 8693 §4.4; RFC 7800 §3.1, RFC 7800 §6.2.2). ⇒ THE
+ * CONDITION THAT WOULD CHANGE IT: a claim whose specification ENUMERATES its
+ * members and FORBIDS the rest. Until one is registered the arm is carried by the
+ * walker's unit pins alone (`internal/claims/translate.test.ts`).
  *
- * ⭐⭐ AN OPEN SET IS ONLY SAFE BECAUSE A KEY COLLISION IS REFUSED. The tail
- * writes into the same bag as the declared members, so a tail member whose
- * resolved key equals a declared member's would otherwise be settled by KEY ORDER
- * — measured on this registry:
- * `Aegis.toDomain({ address: { street_address: "DECLARED", streetAddress: "SHADOW" } })`
- * yielded `{ streetAddress: "SHADOW" }`. For an identity claim that is an attack:
- * an open `act` lets `{ sub: "audited-service", subject: "rogue-service" }` name
- * whichever actor the token's own key order puts last.
- * `internal/claims/translate.ts` refuses the collision in BOTH directions and for
- * EVERY open set, naming the key the two members resolved to.
+ * ⭐⭐ AN OPEN SET IS ONLY SAFE BECAUSE A KEY COLLISION IS REFUSED. The tail writes
+ * into the same bag as the declared members, so a tail member resolving to a
+ * declared member's key would otherwise be settled by KEY ORDER — for an identity
+ * claim that is an attack, letting an open `act` carry
+ * `{ sub: "audited-service", subject: "rogue-service" }` and naming whichever the
+ * token's own key order puts last. `internal/claims/translate.ts` refuses the
+ * collision in BOTH directions and for EVERY open set.
  *
- * pinned: claims-registry.test.ts, "each declared structure states what becomes
- * of a member it does not declare" — every structure at every depth, so opening
- * or closing one cannot happen quietly.
+ * pinned: claims-registry.test.ts, "each declared structure states what becomes of
+ * a member it does not declare".
  */
 export type ObjectCodec = {
   kind: "object";
@@ -181,23 +151,17 @@ export type ObjectCodec = {
 };
 
 /**
- * ⚠ NARROWED to `"keep" | "prune"`: `refuse` is a HEADER verdict, and the third
- * type parameter is what says so — a runtime loop over the column could only
- * restate what the compiler already refuses, so there is none.
+ * ⚠ NARROWED to `"keep" | "prune"`: `refuse` is a HEADER verdict and the third type
+ * parameter is what says so, so there is no runtime loop over the column.
  *
- * The reason is that `refuse` is a verdict about the EMISSION BOUNDARY, and the
- * two sides do not have the same boundary to speak from. A header parameter is
- * written by aegis itself at the moment of assembly, so the boundary is the only
- * place that sees it and a throw there is the earliest possible repair point. A
- * claim arrives from a caller who was ALREADY answered a layer up, in its own
- * vocabulary and with the claim's DOMAIN name in the error — so the emission
- * prune is the later and blinder of the two places to speak, not the only one.
- * Which claims that layer speaks about is a PROFILE decision: see the `whenEmpty`
- * note in `claims-registry.ts`.
+ * A header parameter is written by aegis itself at assembly, so the emission
+ * boundary is the only place that sees it. A claim arrives from a caller who was
+ * ALREADY answered a layer up, with the claim's DOMAIN name in the error — so the
+ * emission prune is the later and blinder of two places to speak, not the only one.
+ * Which claims that layer speaks about is a PROFILE decision (`claims-registry.ts`).
  *
- * ⚠ The profile floor does NOT cover the gap. It refuses an empty value only for
- * the claims some profile names in a `required`/`forbidden`/shape rule, and a
- * claim no profile mentions is refused nowhere at all.
+ * ⚠ The profile floor does NOT cover the gap: it refuses an empty value only for
+ * claims some profile names in a `required`/`forbidden`/shape rule.
  */
 export type ClaimSpec<D = unknown> = ParamSpec<D, ClaimCodec, "keep" | "prune"> & {
   /**
@@ -211,26 +175,23 @@ export type ClaimSpec<D = unknown> = ParamSpec<D, ClaimCodec, "keep" | "prune"> 
   temporal?: "past" | "future";
   /**
    * Which read-side bucket the claim lands in:
-   *   - `"claims"`  the standard/protocol claim set (RFC / OIDC top-level).
+   *   - `"claims"`  the standard/protocol claim set.
    *   - `"profile"` the OIDC Core §5.1 profile set (`AegisProfile`).
-   * A claim NOT in the registry buckets to `custom`, so `custom` is the ABSENCE
-   * of an entry and never a bucket value. SENSITIVITY is a SEPARATE column
-   * ({@link ParamSpec.sensitivity}) so the two facts compose instead of a
-   * three-way category forcing a choice between them.
+   * A claim NOT in the registry buckets to `custom`, so `custom` is the ABSENCE of
+   * an entry and never a bucket value. SENSITIVITY is a SEPARATE column
+   * ({@link ParamSpec.sensitivity}) so the two facts compose.
    */
   bucket: "claims" | "profile";
   /**
-   * The claim is part of `DomainClaims`, so the verify-FLOOR read resolves it to
-   * its domain name. Absent ⇒ it is not (SET-only `events`/`txn`, profile,
-   * sensitive), and the floor leaves it in `custom` under its wire spelling.
+   * The claim is part of `DomainClaims`, so the verify-FLOOR read resolves it to its
+   * domain name. Absent ⇒ the floor leaves it in `custom` under its wire spelling.
    *
-   * ⚠ NOT part of the shared {@link ParamSpec} base: it is a CLAIM-only fact, and
-   * it is what the verify-floor read scopes itself by — that read resolves a
-   * narrower set than the domain read does (see `ClaimReadMode`), so collapsing
-   * the two is a policy decision belonging to the verify rewrite.
+   * ⚠ NOT part of the shared {@link ParamSpec} base: it is a CLAIM-only fact, and it
+   * is what the verify-floor read scopes itself by — a narrower set than the domain
+   * read resolves (see `ClaimReadMode`).
    *
    * pinned: claims-registry.test.ts binds the mark and the `DomainClaims` type to
-   * each other in BOTH directions, so they cannot drift apart silently.
+   * each other in BOTH directions.
    */
   domainClaim?: true;
 };

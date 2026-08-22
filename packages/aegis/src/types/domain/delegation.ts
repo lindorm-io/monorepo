@@ -30,11 +30,9 @@ export type ParsedDpopProof = {
 /**
  * Args for the STANDALONE proof verifier (`Aegis.verifyDpopProof`) — the same
  * checks `aegis.verify` runs when handed a `dpopProof`, exposed on their own so a
- * resource server can validate a proof against a token it did NOT verify locally.
- * RFC 9449 §6.2 makes that the normal case for an opaque access token: the
- * thumbprint arrives as `cnf.jkt` in the introspection response, and "the resource
- * server uses the data of the introspection response to validate the access token
- * binding itself locally".
+ * resource server can validate a proof against a token it did NOT verify locally
+ * — the opaque access token case, where the thumbprint arrives as `cnf.jkt` in an
+ * introspection response. RFC 9449 §6.2.
  */
 export type VerifyDpopProofOptions = {
   /** The compact JWS from the request's `DPoP` header. */

@@ -28,39 +28,21 @@ import type { CoseHeaderCodec } from "../registry/cose-header-codec.js";
 import { getBaseFormat } from "./compute-typ-header.js";
 
 /**
- * The header translator (the header-side twin of `claims/translate.ts`): the ONE
- * place a header parameter's name is translated, in ANY direction, on EITHER
- * wire, driven entirely by `HEADER_SPECS`. Every pass is DATA-DRIVEN — it
- * iterates the actual header data, not a curated subset, and looks each key up in
- * the registry:
+ * The header translator: the one place a header parameter's name is translated,
+ * in any direction, on either wire, driven by `HEADER_SPECS`. An unregistered
+ * parameter never crosses these passes — it rides `custom` instead
+ * (`internal/header/build-custom-header.ts`).
  *
- *   - {@link mapTokenHeader}       write, `domain -> jose`  (via `headerByDomain`)
- *   - {@link shapeWireHeader}      write, `jose -> jose`   (via `headerByJose`)
- *   - {@link parseTokenHeader}     read,  `jose -> domain`  (via `headerByJose`)
- *   - {@link wireHeaderToCoseMap}  write, `jose -> cose label` (via `coseWireKey`)
- *
- * THESE PASSES SPEAK THE REGISTERED VOCABULARY ONLY: a key with no registry entry
- * is dropped by the JOSE passes and refused by the COSE one (`coseWireKey`), in
- * both directions. That is a fact about the REGISTERED bags, not about the header
- * as a whole — an unregistered parameter has its own carriage, which never crosses
- * these passes: `custom` on the write (`internal/header/build-custom-header.ts`,
- * merged verbatim by `build-jose-header.ts` / `build-cose-headers.ts`) and
- * `custom` on the read, spelled per wire ({@link JoseHeaderBuckets} /
- * {@link CoseHeaderBuckets}). The registry's `HeaderCodec` drives the value
- * shaping.
- *
- * ⚠ The COSE pass shapes its values from the registry's own per-wire `cose`
- * codec ({@link CoseHeaderCodec}), exhaustively — so a parameter whose COSE form
- * is a STRUCTURE rather than the JOSE value is declared in the registry beside
- * every other fact about it, not in a list beside this pass.
+ * ⚠ A parameter whose COSE form is a STRUCTURE rather than the JOSE value is
+ * declared in the registry's `cose` codec cell ({@link CoseHeaderCodec}), never
+ * in a list beside these passes.
  */
 
-// --- `crit` member remap (the one member-transforming parameter) ------------
+// --- `crit` member remap ---------------------------------------------------
 
-// The domain -> wire direction lives in `header/critical-to-wire.ts`: it is the
-// ONE vocabulary anything comparing crit members against header keys has to
-// share, and applying it here is what entitles `assert-crit-satisfied.ts` to
-// compare a bucket's `crit` members against its keys without mapping either.
+// The domain -> wire direction lives in `header/critical-to-wire.ts`: sharing that
+// one vocabulary is what lets `assert-crit-satisfied.ts` compare a bucket's `crit`
+// members against its keys without mapping either.
 
 /** Remap `crit` members WIRE -> DOMAIN; unregistered members pass through. */
 const criticalToDomain = (members: unknown): Array<string> => {
@@ -71,15 +53,13 @@ const criticalToDomain = (members: unknown): Array<string> => {
 // --- value shaping (registry `HeaderCodec` dispatch) ------------------------
 
 /**
- * Shape a header value for the WIRE: apply the kind's defensive guard and return
- * `undefined` for a missing or wrongly-typed value (dropped by both write passes).
- * Buffer fields (iv/p2s/tag) pass through as Buffers; `encodeJoseHeader`
- * base64url-encodes them.
+ * Shape a header value for the WIRE: apply the kind's guard, `undefined` for a
+ * missing or wrongly-typed value (dropped by both write passes). Buffer fields
+ * (iv/p2s/tag) stay Buffers; `encodeJoseHeader` base64url-encodes them.
  *
- * It takes the VALUE, not the source bag, because the two write passes read the
- * value under different keys — `mapTokenHeader` under the domain name,
- * {@link shapeWireHeader} under the JOSE one — while the guard they apply must be
- * the same one, from the same registry row.
+ * It takes the VALUE, not the bag: `mapTokenHeader` reads it under the domain name
+ * and {@link shapeWireHeader} under the JOSE one, but the guard must come from the
+ * same registry row.
  */
 const encodeHeaderValue = (spec: HeaderSpec, value: unknown): unknown => {
   const codec = spec.codec;
@@ -100,10 +80,9 @@ const encodeHeaderValue = (spec: HeaderSpec, value: unknown): unknown => {
     case "array":
       return Array.isArray(value) ? value : undefined;
     default: {
-      // The `never` binding is on `codec` — that is what makes the compiler bite
-      // on a new HeaderCodec member. The REPORTED fact must be the `kind` STRING:
-      // stringifying the codec OBJECT yields "[object Object]" and loses the one
-      // fact this handler exists to name.
+      // The `never` binding is on `codec` so a new HeaderCodec member fails the
+      // compile. The reported fact must be the `kind` STRING — stringifying the
+      // codec object yields "[object Object]".
       const exhaustive: never = codec;
       throw new JoseError("Unhandled header value kind", {
         code: "token_header_unhandled_value_kind",
@@ -120,10 +99,7 @@ const encodeHeaderValue = (spec: HeaderSpec, value: unknown): unknown => {
   }
 };
 
-/**
- * Shape a header value for the DOMAIN header: the parser copies the wire value
- * verbatim, except `crit`, whose members are remapped wire -> domain.
- */
+/** Shape a header value for the DOMAIN header; `crit` members remap wire -> domain. */
 const decodeHeaderValue = (spec: HeaderSpec, decoded: Dict): unknown => {
   const codec = spec.codec;
 
@@ -138,9 +114,8 @@ const decodeHeaderValue = (spec: HeaderSpec, decoded: Dict): unknown => {
     case "array":
       return decoded[headerJoseName(spec)];
     default: {
-      // See `encodeHeaderValue`: the `never` binding is the compiler backstop,
-      // but the REPORTED fact must be the string discriminant — `String(codec)`
-      // on the codec object reads "[object Object]".
+      // See `encodeHeaderValue`: the reported fact must be the string
+      // discriminant, not the codec object.
       const exhaustive: never = codec;
       throw new JoseError("Unhandled header value kind", {
         code: "token_header_unhandled_value_kind",
@@ -164,28 +139,15 @@ const decodeHeaderValue = (spec: HeaderSpec, decoded: Dict): unknown => {
  * than supplied by a caller, so they are folded into the domain-keyed source (their
  * `CertificateHeaderFields` keys already equal their domain names).
  *
- * The output is canonically ordered ({@link canonicalWireHeader}) and
- * NORMALISED ({@link normaliseHeaders}) — this pass is the domain tier's whole
- * crossing, so what it returns is a finished bag.
+ * ⚠ The {@link normaliseHeaders} call is LOAD-BEARING here, not a repeat of the
+ * emission boundary's: it resolves a `contentType: ""` to an absent `cty` before
+ * the kit door below reads the bag. A caller reaching a kit door directly
+ * (`aegis.jws.sign`, `aegis.cwe.encrypt`, …) never passes through here and
+ * normalises its own bag at the door — this pass answers the DOMAIN tier alone.
  *
- * ⚠ The normalisation is LOAD-BEARING HERE, not merely a repeat of the emission
- * boundary's, and it is what makes the DOMAIN spelling agree with the wire one: a
- * `contentType: ""` is resolved to an absent `cty` before the kit door below it
- * reads the bag. It replaced a bare `omitUndefined`, whose top-level effect here
- * was nil — the loop above never writes an `undefined`.
- *
- * ⚠ IT IS NOT THE ONLY EARLY CROSSING, and must not be described as one. A caller
- * reaching a kit door directly (`aegis.jws.sign`, `aegis.cwe.encrypt`, …) never
- * passes through here, and those doors read the caller's `cty` before the header
- * is assembled (`serialiseContent(data, callerHeader.cty)`) — so each of them
- * normalises the caller's bag at the door, for the same reason and with the same
- * call. This pass answers the DOMAIN tier alone.
- *
- * ⚠ It knows nothing about `crit`, and needs to know nothing: a parameter the
- * message's `crit` names can never be empty here, because the builder that owns
- * the message refuses that header outright (`assert-crit-satisfied.ts`). This
- * pass is a FRAGMENT of a message — the domain tier, or the cert tier alone — and
- * a fragment cannot answer a question about the whole.
+ * ⚠ It knows nothing about `crit` and needs to know nothing: this pass is a
+ * FRAGMENT of a message, and `assert-crit-satisfied.ts` answers that question on
+ * the whole header.
  */
 export const mapTokenHeader = (
   options: DomainTokenHeaderOptions,
@@ -214,33 +176,22 @@ export const mapTokenHeader = (
 
 /**
  * The WIRE-KEYED write pass: a JOSE-named bag in, the same bag SHAPED out. It
- * translates nothing — the names are already the wire's — it applies the registry
- * row each parameter carries: the closed-set drop for an unregistered key, and the
- * `HeaderCodec` guard for a value of the wrong shape.
- *
- * This is what lets the JOSE kits stay in wire vocabulary end to end. They used to
- * translate the caller's already-wire bag BACK to domain names (`domain -> wire ->
- * domain -> wire`) purely to reach these guards, which put a second crossing point
- * next to the one `domain-header-to-wire.ts` claims to be.
+ * translates nothing — it applies the registry row each parameter carries: the
+ * closed-set drop for an unregistered key, and the `HeaderCodec` guard for a value
+ * of the wrong shape. This is what lets the JOSE kits stay in wire vocabulary end
+ * to end.
  *
  * ⚠ Key order is NOT canonicalised here: a shaped bag is a MERGE INPUT
- * ({@link buildJoseHeader}), and only the finished header is sorted. EMPTY VALUES
- * are removed here, though — {@link normaliseHeaders} runs on the shaped bag, so
- * every tier the merge unions is already normalised and the merge cannot
- * reintroduce one.
+ * ({@link buildJoseHeader}), and only the finished header is sorted. Empty values
+ * ARE removed ({@link normaliseHeaders}), so the merge cannot reintroduce one.
  *
- * ⚠ A MERGE INPUT IS A FRAGMENT OF A MESSAGE, NOT A MESSAGE, and the prune does
- * not care: whether a `crit` in some OTHER tier still names a value this one
- * emits nothing for is a question about the whole message, answered once by
- * {@link buildJoseHeader} on the merged header (`assert-crit-satisfied.ts`) and
- * answered as a REFUSAL. A tier normalisation that had to know the message's crit
- * members is a fragment reasoning about a whole, which is how the answer came out
- * different in four places.
+ * ⚠ A merge input is a FRAGMENT of a message: whether another tier's `crit` still
+ * names a value this one emits nothing for is answered once by
+ * {@link buildJoseHeader} (`assert-crit-satisfied.ts`), as a REFUSAL.
  *
- * `crit` is shaped by the same {@link criticalToWire} the domain pass uses, which
- * is sort-only on this side: a wire-named member misses `headerByDomain` (every
- * domain name that differs from its wire name is camelCase, and the two that do
- * not differ — `jwk`, `zip` — map to themselves), so no member is rewritten.
+ * `crit` takes the same {@link criticalToWire} the domain pass uses, sort-only on
+ * this side: a wire-named member misses `headerByDomain`, so no member is
+ * rewritten.
  */
 export const shapeWireHeader = (
   bag: Partial<WireTokenHeaderOptions> | undefined,
@@ -265,24 +216,15 @@ export const shapeWireHeader = (
  * key is dropped (the closed-set rule), and `crit`'s members are remapped wire ->
  * domain.
  *
- * ⚠ IT DOES NOT NORMALISE, and the `omitUndefined` below is NOT the twin of the
- * write passes' {@link normaliseHeaders} — do not "restore the symmetry". Three
- * reasons, any one sufficient:
+ * ⚠ IT DOES NOT NORMALISE — the `omitUndefined` below is not the twin of the write
+ * passes' {@link normaliseHeaders}; do not "restore the symmetry". A read-side
+ * prune would delete the `critical = []` default set below (non-optional on
+ * `DomainTokenHeader`), would report a foreign token's `cty: ""` as absent, and
+ * would delete the evidence `validate-crit.ts`, `JweKit.decrypt` and
+ * `verify-cert-binding.ts` refuse on.
  *
- *   1. `crit` prunes on the write side, and a read-side prune would delete the
- *      `critical = []` default written two lines below it — a declared invariant,
- *      since `DomainTokenHeader.critical` is non-optional.
- *   2. A read reports what a PRODUCER wrote. A foreign token's `cty: ""` reported
- *      as absent is aegis misreporting someone else's header, and a caller
- *      inspecting `contentType` could not tell the two apart.
- *   3. The read side's own guards are louder and better: `validate-crit.ts`
- *      refuses an empty `crit`, `JweKit.decrypt` refuses any `zip`,
- *      `verify-cert-binding.ts` refuses a thumbprint mismatch. A prune would
- *      delete the evidence each of them fires on.
- *
- * The `omitUndefined` does a DIFFERENT job: `baseFormat` is `undefined` for a
- * token whose `typ` names no recognised format, and the strip is what makes the
- * key ABSENT rather than present-with-`undefined`.
+ * The `omitUndefined` does a DIFFERENT job: it makes `baseFormat` ABSENT rather
+ * than present-with-`undefined` when `typ` names no recognised format.
  */
 export const parseTokenHeader = <T extends DomainTokenHeader = DomainTokenHeader>(
   decoded: WireTokenHeader,
@@ -298,7 +240,7 @@ export const parseTokenHeader = <T extends DomainTokenHeader = DomainTokenHeader
 
   // `critical` is always present in the domain header (an absent `crit` maps to
   // `[]`), so default it after the pass — the loop only sets it when `crit` is on
-  // the wire. This preserves the pre-refactor `criticalToDomain(undefined) -> []`.
+  // the wire.
   if (result.critical === undefined) result.critical = [];
 
   // `baseFormat` is DERIVED from `typ` (not a wire parameter of its own), so it
@@ -310,29 +252,18 @@ export const parseTokenHeader = <T extends DomainTokenHeader = DomainTokenHeader
 
 /**
  * Translate `crit`'s members from JOSE wire NAMES to the COSE LABELS the
- * parameters are actually keyed under.
+ * parameters are keyed under. RFC 9052 §1.5, RFC 9052 §3.1.
  *
- * RFC 9052 §1.5 defines `label = int / tstr`, so the tstr `"oid"` and the int
- * `-70000` the lindorm `oid` parameter rides under are DIFFERENT labels. RFC 9052
- * §3.1: *"if the crit value list includes a label for which the header parameter
- * is not in the protected-header-parameters bucket, this is a fatal error in
- * processing the message."* Emitting the NAME while keying the parameter by its
- * LABEL therefore produced a token that was fatally malformed by its own
- * `crit` — which is exactly what this pass did until 2026-08-11.
+ * ⚠ The members take {@link coseWireKey} with the SAME `proprietary` mode as the
+ * parameters, never the integer label directly: otherwise the bucket and the crit
+ * list naming it spell the same parameter differently.
  *
- * ⚠ That is also why the members take {@link coseWireKey} and the SAME
- * `proprietary` mode the parameters do, rather than the integer label: under the
- * interoperable default `oid` sits at the tstr `"oid"`, so a crit naming the
- * integer `-70000` would recreate the very fatal error above — one spelling in
- * the bucket, another in the list that says the bucket must contain it.
- *
- * ⚠ AN UNREGISTERED MEMBER IS ITS OWN TSTR LABEL, not a refusal. By the time this
- * runs, `assert-crit-eligible.ts` has refused every member that is neither
- * registry-eligible nor a key of the same call's `custom.protected` bag — so an
- * unregistered member here IS a custom parameter, and `build-cose-headers.ts`
- * writes a custom parameter into the bucket under exactly that tstr label. Asking
- * {@link coseWireKey} for it would throw `header_no_cose_label` for a parameter
- * the very same message carries.
+ * ⚠ AN UNREGISTERED MEMBER IS ITS OWN TSTR LABEL, not a refusal.
+ * `assert-crit-eligible.ts` has already refused every member that is neither
+ * registry-eligible nor a key of the same call's `custom.protected` bag, so an
+ * unregistered member here IS a custom parameter that `build-cose-headers.ts`
+ * writes under exactly that tstr label. {@link coseWireKey} would throw
+ * `header_no_cose_label` for it.
  */
 const critToCoseLabels = (value: unknown, proprietary: boolean | undefined): unknown => {
   if (!Array.isArray(value)) return value;
@@ -349,13 +280,11 @@ const critToCoseLabels = (value: unknown, proprietary: boolean | undefined): unk
  * codec cell. The write half of the per-wire codec; `coseValueToWire` in
  * `header/cose-wire-header.ts` is the read half.
  *
- * ⚠ THE THREE KIT-DERIVED REPRESENTATIONS PASS THROUGH UNCHANGED, and that is the
- * correct answer rather than a missing one. `alg`, `kid` and `iv` are written
- * onto their buckets by `mergeCoseProtected`/`mergeCoseUnprotected`, never by this
- * pass; the only way one of them reaches here is in a CALLER's bag, and
- * `buildCoseHeaders` rule 1 refuses that by NAME one step later
- * (`cose_reserved_header`). Transforming the value first would replace that
- * accurate refusal with whatever the transform made of a value it was never given.
+ * ⚠ `alg`, `kid` and `iv` PASS THROUGH UNCHANGED: they are written onto their
+ * buckets by `mergeCoseProtected`/`mergeCoseUnprotected`, so one reaching here came
+ * from a CALLER's bag and `buildCoseHeaders` refuses it by name
+ * (`cose_reserved_header`) one step later. Transforming the value first would
+ * replace that refusal.
  */
 const encodeCoseHeaderValue = (
   jose: string,
@@ -377,8 +306,7 @@ const encodeCoseHeaderValue = (
     case "passthrough":
       return value;
     default: {
-      // See `encodeHeaderValue`: the `never` binding is the compiler backstop, and
-      // the REPORTED fact is the string discriminant.
+      // See `encodeHeaderValue`: the reported fact is the string discriminant.
       const exhaustive: never = codec;
       throw new JoseError("Unhandled COSE header value kind", {
         code: "token_header_unhandled_cose_value_kind",
@@ -393,28 +321,21 @@ const encodeCoseHeaderValue = (
 
 /**
  * The COSE write pass: a caller's WIRE-named partial header bag -> a COSE label
- * map, each wire name resolved through the registry by {@link coseWireKey} (which
- * THROWS for a parameter COSE does not carry).
+ * map, each wire name resolved by {@link coseWireKey} (which THROWS for a
+ * parameter COSE does not carry). The inverse of `coseWireHeader`'s read
+ * direction.
  *
- * The bag is NORMALISED on entry ({@link normaliseHeaders}), which is what
- * disposes of a value that emits nothing: an `undefined`, and the empty value of
- * a parameter the registry says prunes. That is the whole of the "skip" this pass
- * used to spell as an inline `undefined` check.
+ * The bag is NORMALISED on entry ({@link normaliseHeaders}), which disposes of a
+ * value that emits nothing: an `undefined`, and the empty value of a parameter the
+ * registry says prunes.
  *
- * ⚠ `proprietary` is the INTEROP MODE, and it decides the KEY, never the
- * parameter set: with the default (falsy) a private-use parameter is written
- * under its string label so a foreign reader can interpret it, with `true` under
- * its compact private-use integer. Nothing is added or dropped either way — see
- * `header-registry.ts#coseWireKey`.
+ * ⚠ `proprietary` decides the KEY, never the parameter set: falsy writes a
+ * private-use parameter under its string label, `true` under its compact
+ * private-use integer. See `header-registry.ts#coseWireKey`.
  *
- * ⚠ A bag reaching this pass is a BUCKET of a COSE message, not the message, and
- * the prune does not care: whether the protected bucket's `crit` still names a
- * value this bucket emits nothing for is a question about the whole message,
- * answered once by `buildCoseHeaders` (`assert-crit-satisfied.ts`) and answered
- * as a REFUSAL.
- *
- * The inverse of `coseWireHeader`'s read direction, value by value: both dispatch
- * on the registry's `cose` codec cell.
+ * ⚠ A bag here is a BUCKET of a COSE message, not the message: whether the
+ * protected bucket's `crit` still names a value this bucket emits nothing for is
+ * answered once by `buildCoseHeaders` (`assert-crit-satisfied.ts`), as a REFUSAL.
  */
 export const wireHeaderToCoseMap = (
   bag: Partial<WireTokenHeader> | undefined,
@@ -426,11 +347,9 @@ export const wireHeaderToCoseMap = (
 
   for (const [jose, value] of Object.entries(normaliseHeaders(bag as Dict))) {
     // ⚠ An UNREGISTERED wire key is NOT dropped here, unlike the two JOSE passes:
-    // `coseWireKey` refuses it with `header_no_cose_label`. A caller naming a
-    // parameter COSE cannot carry must hear so, not watch it vanish — this is the
-    // one place the closed-set rule refuses instead of drops. That is also why
-    // there is no registry lookup first: a registered parameter and an
-    // unregistered one take the SAME call.
+    // `coseWireKey` refuses it with `header_no_cose_label`, so a caller naming a
+    // parameter COSE cannot carry hears about it. Hence no registry lookup first —
+    // registered and unregistered take the same call.
     const label = coseWireKey(jose, proprietary);
 
     map.set(label, encodeCoseHeaderValue(jose, value, proprietary));

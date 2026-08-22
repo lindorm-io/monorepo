@@ -2,13 +2,12 @@
  * The kit capability table — one row per {@link TokenFormatTag}, i.e. one row per
  * kit (`jwt` → JwtKit, `cwm` → CwmKit, …).
  *
- * It records what each kit CAN do, and each kit now READS its own row: the COSE
- * kits derive their reserved-parameter set from `reserved`, `CweKit` gates its
- * key management on `keyManagement` and its AEAD on `contentEncryption`, and the
- * JOSE header decoder allowlists `enc` against the `jwe` row. That is the point
- * of the table — before it, "a CWE is `dir`-only" was enforced nowhere, so a
- * non-`dir` key surfaced `@lindorm/aes`'s own "Content primitive requires a
- * direct key" from several layers down instead of an aegis refusal.
+ * It records what each kit CAN do, and each kit READS its own row: the COSE kits
+ * derive their reserved-parameter set from `reserved`, `CweKit` gates its key
+ * management on `keyManagement` and its AEAD on `contentEncryption`, and the JOSE
+ * header decoder allowlists `enc` against the `jwe` row. Without it an unsupported
+ * request surfaces `@lindorm/aes`'s own error from several layers down instead of
+ * an aegis refusal.
  */
 
 import {
@@ -26,23 +25,16 @@ const NONE_ENC: ReadonlySet<KryptosEncryption> = new Set();
 const NO_CNF: ReadonlySet<CnfMember> = new Set();
 
 /**
- * The confirmation members the JOSE `cnf` translator emits — DERIVED from the
- * member declaration the translator itself reads (`internal/claims/cnf-members.ts`).
- *
- * ⚠ IT WAS A HAND-WRITTEN LITERAL, and it was the FOURTH copy of the same five
- * names: the write table, the read table, the mint-side allow list and this row.
- * Nothing bound them to each other, so a member added to the translator and not
- * here would have been emitted on a wire the capability table said could not
- * carry it.
+ * The confirmation members the JOSE `cnf` translator emits — DERIVED from the member
+ * declaration the translator itself reads (`internal/claims/cnf-members.ts`), so a
+ * member added there cannot be emitted on a wire this table says cannot carry it.
  */
 const JOSE_CNF: ReadonlySet<CnfMember> = new Set(CNF_JOSE_MEMBERS);
 
 /**
  * The confirmation members a COSE `cnf` map can carry — DERIVED from the same
- * declaration, through the `wire.cose` cells that carry an integer label. A
- * member is representable exactly when RFC 8747 gives it a label aegis writes,
- * and there is one place that says so, so this row cannot claim a member the
- * encoder would drop.
+ * declaration, through the `wire.cose` cells that carry an integer label
+ * (RFC 8747 §3.1), so this row cannot claim a member the encoder would drop.
  */
 const COSE_CNF: ReadonlySet<CnfMember> = new Set(COSE_CNF_MEMBERS);
 
@@ -51,37 +43,34 @@ const COSE_CNF: ReadonlySet<CnfMember> = new Set(COSE_CNF_MEMBERS);
  *
  *     reserved  =  KitOwnedHeaderParam  ∩  {what this wire can carry}
  *
- * `reserved` is the RUNTIME backstop for the type-level `KitOwnedHeaderParam`
- * Omit (`types/header/wire-envelope.ts`), and a backstop that lists FEWER
- * parameters than the type it backs up is not a backstop: the compiler stops a
- * typed caller, and an untyped one (`as never`, a JS consumer, a JSON body) walks
- * straight through the gap. Every row is therefore the WHOLE KitOwned set, less
- * only the parameters the row's wire has no spelling for.
+ * `reserved` is the RUNTIME backstop for the type-level `KitOwnedHeaderParam` Omit
+ * (`types/header/wire-envelope.ts`), and a backstop listing FEWER parameters than
+ * the type it backs up is not a backstop: the compiler stops a typed caller, and an
+ * untyped one (`as never`, a JS consumer, a JSON body) walks through the gap.
  *
  * ⚠ The wire filter is MANDATORY, not cosmetic. `buildCoseHeaders` resolves every
  * reserved name through `coseWireKey`, which THROWS `header_no_cose_label` for a
  * parameter COSE does not carry — so listing `x5t` on a COSE row would fail every
- * mint that kit ever makes, not just a smuggling one.
+ * mint that kit makes, not just a smuggling one.
  *
- * ⚠ `jku` is on NEITHER row, though it was on the JOSE one until the JOSE header
- * builder landed. It is a DEFAULT: the kit supplies the key's own `jwksUri` and
- * the caller may override it. Both type-level sets already said so — `jku` is
- * absent from `KitOwnedHeaderParam` and `jwksUri` from `KitOwnedDomainParam`, so
- * the parameter is offered on every public write surface — and listing it here
- * made the kits write the key's value LAST over the caller's, which discarded a
- * caller `jku` even when the key resolved none.
+ * ⛔ `jku` IS ON NEITHER ROW. It is a DEFAULT: the kit supplies the key's own
+ * `jwksUri` and the caller may override it — `jku` is absent from
+ * `KitOwnedHeaderParam` and `jwksUri` from `KitOwnedDomainParam`, so the parameter
+ * is offered on every public write surface. Listing it here would make a caller's
+ * `jku` THROW `jose_reserved_header` in `buildJoseHeader` rather than override the
+ * key's — the kit writes the key's value at the `defaults` tier either way. Pinned
+ * by `kit-capabilities.test.ts`'s "reserved (JOSE): jku is NOT on it" row.
  */
 
 /**
- * The JOSE rows: the whole `KitOwnedHeaderParam` set, because JOSE carries every
- * one of them (each has a `wire.jose` name in the header registry).
+ * The JOSE rows: the whole `KitOwnedHeaderParam` set, because JOSE carries every one
+ * of them (each has a `wire.jose` name in the header registry).
  *
- * ⚠ It is the SAME row on all three kits, including the eight key-management and
- * AEAD parameters only `JweKit` ever derives. A signing kit derives none of them,
- * which is exactly why it must refuse them: `aegis.jwt.sign(claims, { header: {
- * enc: "A256GCM", epk: {…} } as never })` used to emit a signed JWT advertising a
- * content encryption that never happened, because the params were absent from the
- * signing rows and so were merged straight onto the wire.
+ * ⚠ THE SAME ROW ON ALL THREE KITS, including the key-management and AEAD
+ * parameters only `JweKit` derives. A signing kit derives none of them, which is
+ * exactly why it must refuse them — otherwise
+ * `aegis.jwt.sign(claims, { header: { enc: "A256GCM" } as never })` emits a signed
+ * JWT advertising a content encryption that never happened.
  */
 const JOSE_RESERVED: ReadonlyArray<string> = [
   "alg",
@@ -102,23 +91,18 @@ const JOSE_RESERVED: ReadonlyArray<string> = [
 
 /**
  * The COSE rows: the same `KitOwnedHeaderParam` set filtered to the parameters the
- * COSE wire has a label for — `alg` (1), `iv` (5), `kid` (4), `typ` (16,
- * RFC 9596), `x5c` (33, RFC 9360 x5chain) and `x5t#S256` (34, RFC 9360 x5t). The
- * rest are `wireAbsent` in the header registry, each with its stated reason: the
- * ECDH-ES and PBES2 outputs have no COSE_Encrypt0 counterpart, and `x5t` — JOSE's
- * SHA-1 parameter — has no COSE spelling because RFC 9360 §2 makes the digest
- * algorithm a member of label 34's value rather than a second parameter name.
+ * COSE wire has a label for. The rest are `wireAbsent` in the header registry, each
+ * with its stated reason.
  *
  * ⚠ `x5c`, `x5t#S256` and `iv` are the three that must not be dropped:
  *
- * - `x5c` and `x5t#S256` are derived from the signing key, so a caller value
- *   would be the ONLY certificate statement on the token — a forged chain or
- *   digest the signing key never had, reported back as
- *   `verified.header.certificateChain` / `.certificateThumbprint`.
- * - `iv` is `placement: "either"` so `CweKit` can put it in the unprotected
- *   bucket, which means the placement rule cannot refuse it there. On the three
- *   SIGNED formats there is no IV at all, so a caller value would be a
- *   signature-uncovered `initialisationVector` on a token that verifies.
+ * - `x5c` and `x5t#S256` are derived from the signing key, so a caller value would
+ *   be the ONLY certificate statement on the token — a forged chain or digest,
+ *   reported back as `verified.header.certificateChain` / `.certificateThumbprint`.
+ * - `iv` is `placement: "either"` so `CweKit` can put it in the unprotected bucket,
+ *   which means the placement rule cannot refuse it there. The SIGNED COSE formats
+ *   have no IV at all, so a caller value would be a signature-uncovered
+ *   `initialisationVector` on a token that verifies.
  */
 const COSE_RESERVED: ReadonlyArray<string> = [
   "alg",
@@ -165,17 +149,14 @@ export const KIT_CAPABILITIES: Readonly<Record<TokenFormatTag, KitCapabilities>>
     keyManagement: NONE_ALG,
     contentEncryption: NONE_ENC,
     cnfMembers: COSE_CNF,
-    // RFC 9360 §2 gives COSE both parameters — `x5chain` (33) and `x5t` (34) —
-    // and every COSE writer derives them from the signing key through
-    // `resolveCertBinding`, exactly as the JOSE kits do. The legacy SHA-1 digest
-    // is the one thing that does not cross: the COSE writers hand the resolver
-    // `false` for it because label 34 carries its algorithm inside the value.
+    // Every COSE writer derives `x5chain` (33) and `x5t` (34) from the signing key
+    // through `resolveCertBinding`, as the JOSE kits do (RFC 9360 §2). The SHA-1
+    // digest does not cross: the writers hand the resolver `false` for it, because
+    // label 34 carries its algorithm inside the value.
     certificateBinding: true,
     unprotectedBucket: true,
-    // `typ` is what routes a COSE token — `isCwt`/`isCws` and the profile floor
-    // read it — so a caller value for it is refused, not merged. It used to be
-    // absent from this list AND overridable: the kit spread `...options.header`
-    // last over its own computed `typ`.
+    // `typ` is what routes a COSE token — `isCwt`/`isCws` and the profile floor read
+    // it — so a caller value for it is refused, not merged.
     reserved: COSE_RESERVED,
   },
   cwm: {
@@ -198,24 +179,21 @@ export const KIT_CAPABILITIES: Readonly<Record<TokenFormatTag, KitCapabilities>>
   },
   cwe: {
     wire: "cose",
-    // COSE_Encrypt0 is DIRECT encryption: the recipient key IS the content
-    // encryption key, so `alg` (label 1) carries the content encryption and no
-    // key management happens at all. The nineteen other JWE key managements have
-    // no COSE_Encrypt0 form.
-    // `CweKit` refuses a non-`dir` key in its CONSTRUCTOR, off this set, before
-    // any content reaches `@lindorm/aes`.
+    // A COSE_Encrypt0 carries no recipients array and runs no recipient algorithm,
+    // so `alg` (label 1) carries the CONTENT encryption and the recipient key IS the
+    // content-encryption key (RFC 9052 §5.2). `CweKit` refuses a non-`dir` key in
+    // its CONSTRUCTOR, off this set, before any content reaches `@lindorm/aes`.
     keyManagement: new Set<KryptosAlgorithm>(["dir"]),
-    // The official COSE labels (AES-GCM + the eight AES-CCM variants) plus the
-    // private-use AES-CBC-HMAC labels, which together are the whole kryptos set;
-    // the CBC-HMAC family requires `proprietary` mode (`enc-labels.ts`).
+    // The registered COSE labels plus the private-use AES-CBC-HMAC ones, which
+    // together are the whole kryptos set; the CBC-HMAC family requires `proprietary`
+    // mode (`enc-labels.ts`).
     contentEncryption: new Set(AES_ENCRYPTION_ALGORITHMS),
     cnfMembers: COSE_CNF,
-    // ⚠ THE KIT CALLS THE RESOLVER — that is the sense every row of this column
-    // states, and it is what `kit-capabilities.test.ts` measures (a cert-less key
-    // makes `resolveCertBinding` throw, so a kit that never called it would mint
-    // happily). It is NOT a claim that a binding can be PRODUCED here: RFC 9052
-    // §5.2 makes a COSE_Encrypt0 direct encryption, so a `cwe` recipient is a
-    // symmetric `dir` key and carries no X.509 certificate to derive one from.
+    // ⚠ THE KIT CALLS THE RESOLVER — the sense every row of this column states, and
+    // what `kit-capabilities.test.ts` measures (a cert-less key makes
+    // `resolveCertBinding` throw, so a kit that never called it would mint happily).
+    // It is NOT a claim that a binding can be PRODUCED here: a `cwe` recipient is a
+    // symmetric `dir` key and carries no X.509 certificate.
     // `knob-probes.ts`'s `unobservable.cose` states that second fact.
     certificateBinding: true,
     unprotectedBucket: true,

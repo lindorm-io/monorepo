@@ -42,33 +42,21 @@ const validateThumbprint = (thumbprint: unknown, invalid: Array<InvalidEntry>): 
  * SHA-256 thumbprint, wire `jkt`) must be a base64url string decoding to 32
  * bytes.
  *
- * ⭐ THE GRAMMAR IS ALL THAT IS LEFT HERE, AND IT IS THE ONLY PART A MEMBER SET
- * COULD NEVER HOLD. `internal/claims/cnf-members.ts` declares the members and the
- * translator enforces them in BOTH directions and under EVERY profile — so the
- * two rules this file used to add on top of that are gone, and their disposal is
- * worth stating rather than leaving as an absence:
+ * ⭐ THE GRAMMAR IS ALL THAT LIVES HERE — the byte length and the alphabet, which
+ * a member set cannot express (`internal/claims/cnf-members.ts` says `thumbprint`
+ * is text; RFC 7638 makes it a base64url SHA-256 digest). Everything else the
+ * member declaration and the translator already enforce, in BOTH directions and
+ * under EVERY profile.
  *
- *   - THE ALLOW LIST (`PERMITTED_MEMBERS`) WAS WRONG, not merely duplicated. It
- *     refused any member outside the declared five, and RFC 7800 §3.1 requires
- *     the opposite: "in the absence of such requirements, all confirmation
- *     members that are not understood by implementations MUST be ignored", with
- *     §6.2 establishing an IANA registry other specifications register into.
- *     §6.2.2's own initial contents name `jwe`, which aegis does not declare — so
- *     the list refused a member RFC 7800 itself defines.
- *   - THE `isObject` CHECK IS THE TRANSLATOR'S NOW, and strictly wider there:
- *     this rule ran only for the three profiles that name it, while a foreign
- *     token verified through the profile-less door reached no shape rule at all.
+ * ⛔ Do NOT add a member ALLOW LIST here: RFC 7800 §3.1 requires an unrecognised
+ * confirmation member to be ignored, and RFC 7800 §6.2 makes the set extensible
+ * by registration, so an allowlist refuses members RFC 7800 itself defines.
  *
- * ⚠ WHAT SURVIVES IS THE BYTE LENGTH AND THE ALPHABET, because a member set
- * cannot express either: `cnf-members.ts` says `thumbprint` is text, and RFC 7638
- * says it is a base64url SHA-256 digest — 43 characters decoding to 32 bytes.
- * That is a REFINEMENT of a value shape, which is a profile's question and not a
- * registry column.
- *
- * ⚠ AN EMPTY CONFIRMATION IS NOT THIS RULE'S BUSINESS EITHER. The translator
- * refuses it on the way out and the verify policy gate refuses it on the way in
+ * ⚠ AN EMPTY CONFIRMATION IS NOT THIS RULE'S BUSINESS. The translator refuses it
+ * on the way out and the verify policy gate on the way in
  * (`internal/claims/translate.ts`, `internal/utils/apply-verify-policy.ts`), both
- * without a profile having to opt in.
+ * without a profile having to opt in — a shape rule runs only for the profiles
+ * that name it.
  */
 export const cnfShape = (claims: Dict): Array<InvalidEntry> => {
   const value = claims.confirmation;

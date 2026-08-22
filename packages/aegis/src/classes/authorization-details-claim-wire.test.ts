@@ -10,11 +10,8 @@ import { Aegis } from "./Aegis.js";
 /**
  * WHAT AN `authorization_details` CLAIM ACTUALLY SAYS ON EACH WIRE.
  *
- * RFC 9396 §2 defines the claim as "an array of objects" in which each object
- * carries a REQUIRED `type`, and states that "The value of the type field
- * determines the allowable contents of the object that contains it." Two wire
- * consequences follow, and neither had ANY byte-level evidence on the COSE side
- * before this file:
+ * The claim is an array of objects, each carrying a REQUIRED `type` that decides
+ * the object's allowable contents — RFC 9396 §2. Two wire consequences follow:
  *
  *   1. The element's remaining fields belong to whoever registered that `type`.
  *      RFC 9396's own Figure 2 names them `instructedAmount`, `creditorName`
@@ -44,7 +41,7 @@ MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
 const ISSUER = "https://test.lindorm.io/";
 
 /**
- * One element in RFC 9396's own shape: the mandatory `type`, two of the §2.2
+ * One element in RFC 9396's own shape: the mandatory `type`, two of RFC 9396 §2.2's
  * common data fields, and two type-specific fields spelled the way Figure 2
  * spells them.
  */
@@ -61,8 +58,8 @@ const DETAIL: Dict = {
  * read from the registry for the same reason as the field names.
  *
  * ⚠ THE CLAIM KEY AND THE ELEMENT FIELD KEYS ARE DIFFERENT QUESTIONS. The claim
- * has an integer label, emitted only in proprietary mode (RFC 8392 §9.1.1
- * reserves everything below -65536 to private use) and degrading to the string
+ * has an integer label, emitted only in proprietary mode (a CWT claim key below
+ * -65536 is Private Use — RFC 8392 §9.1.1) and degrading to the string
  * `authorization_details` otherwise. Its elements' fields have no COSE registry
  * at all and are text-keyed in both modes.
  */
@@ -133,9 +130,9 @@ const wireDetailsOf = (token: string, key: number | string): Array<Dict> => {
     throw new Error(`the claim is not an array — it is a ${typeof value}`);
   }
 
-  // CBOR decodes a map to a `Map` (the inspector keeps `preferMap` on, because
-  // RFC 9052 §1.5 admits `label = int / tstr` and CBOR keys the two apart); JSON to a
-  // plain object. Rendered to one shape HERE, in the test, and RECURSIVELY — a
+  // CBOR decodes a map to a `Map` (the inspector keeps `preferMap` on, because a
+  // COSE label is `int / tstr` — RFC 9052 §1.5 — and CBOR keys the two apart);
+  // JSON to a plain object. Rendered to one shape HERE, in the test, and RECURSIVELY — a
   // type-specific field's value is itself an object, and a shallow render would
   // compare a `Map` against an object literal and fail for the wrong reason.
   const render = (node: unknown): unknown => {
@@ -197,8 +194,8 @@ describe("the authorization_details claim on the wire", () => {
       throw new Error("the mint did not produce a readable COSE payload");
     }
 
-    // RFC 8392 §9.1.1 marks every claim key below -65536 as Private Use, so a
-    // token carrying one is meaningless to any reader but us. The interoperable
+    // A claim key below -65536 is Private Use (RFC 8392 §9.1.1), so a token
+    // carrying one is meaningless to any reader but us. The interoperable
     // default must therefore key the claim by its string name.
     expect(inspection.payload.value.has("authorization_details")).toBe(true);
     expect(inspection.payload.value.has(AUTHORIZATION_DETAILS_COSE_LABEL)).toBe(false);
@@ -261,9 +258,9 @@ describe("the authorization_details claim on the wire", () => {
   test("a required member written with the WRONG SHAPE says so, not that it is empty", async () => {
     // ⚠ THE REPAIR INSTRUCTION IS THE ASSERTION. `isClaimSatisfied` is false for
     // an ABSENT member, a PRUNED empty one and a value that failed its own codec,
-    // and only the third is a shape problem — a caller who wrote `type: 42` used to
-    // be told the member "must not be empty" and sent looking for a field they had
-    // already written. The sibling scenario rows pin the empty-`type` wording, so
+    // and only the third is a shape problem — a caller who wrote `type: 42` must
+    // not be told the member "must not be empty" and sent looking for a field they
+    // already wrote. The sibling scenario rows pin the empty-`type` wording, so
     // the two messages are pinned apart rather than one replacing the other.
     await expect(
       aegis.mint(

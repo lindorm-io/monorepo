@@ -17,17 +17,42 @@ import { isClaimOmitted } from "./rules/is-claim-omitted.js";
 import { isClaimSatisfied } from "./rules/is-claim-satisfied.js";
 import { validate } from "./validate.js";
 import { validateActor } from "./validate-actor.js";
+import type { ActorValidationError } from "./validate-actor.js";
 import { verifyDpopProof } from "./verify-dpop-proof.js";
+
+/**
+ * ⚠ The two actor refusals send a reader to different places, so they must not
+ * share a code: `actor_not_allowed` is a fact about the TOKEN, while
+ * `actor_policy_invalid` is a fact about the OPTION the caller passed, and an
+ * operator handed the first for the second reads a delegation chain that is
+ * fine. Pinned by the `code` on the scenario rows
+ * `an-actor-allowlist-that-constrains-nothing-is-refused` and
+ * `an-actor-allowlist-stated-as-a-denial-refuses-a-token-that-names-no-actor`.
+ */
+const ACTOR_REFUSALS: Record<
+  ActorValidationError["code"],
+  { title: string; details: string }
+> = {
+  actor_not_allowed: {
+    title: "Actor Not Allowed",
+    details:
+      "The token's act delegation chain does not satisfy the expected actor supplied to verify.",
+  },
+  actor_policy_invalid: {
+    title: "Actor Policy Invalid",
+    details:
+      "The allowedActor condition supplied to verify states nothing, or contains a sub-condition that does, so no actor this verifier can test against it can fail it.",
+  },
+};
 
 /**
  * The domain policy every claims-bearing verify applies once integrity is
  * established: typ presence, exp presence, the caller's identity matchers, the
  * actor chain, and the DPoP binding.
  *
- * ONE site, both wires. It was two, and the COSE copy ran only exp presence and
- * the matchers — so `typPresence`, `actor`, `dpopProof` and `trustBoundThumbprint`
- * were accepted and silently dropped on every CWT. A caller requiring a DPoP
- * proof on a COSE access token got no proof check at all.
+ * ⚠ ONE site, both wires. A per-wire copy silently drops whichever of
+ * `typPresence`, `actor`, `dpopProof` and `trustBoundThumbprint` it forgets, and
+ * the caller hears nothing.
  *
  * Returns the parsed DPoP proof; every other outcome is a throw.
  */
@@ -54,10 +79,9 @@ export const applyVerifyPolicy = ({
   /** The DOMAIN claims — read for the `cnf` thumbprint the DPoP check binds to. */
   claims: DomainClaims;
   /**
-   * The act-chain summary. REQUIRED, not optional: `extractTokenDelegation`
-   * always returns one, and making it optional here is what would let the COSE
-   * caller keep omitting it — which is exactly the bug (a COSE result reported
-   * "not delegated" for a token that was).
+   * The act-chain summary. ⚠ REQUIRED, not optional: `extractTokenDelegation`
+   * always returns one, and an optional field here lets a caller omit it, so the
+   * result reports "not delegated" for a token that is.
    */
   delegation: TokenDelegation;
   /** The token's own type header, already verified. */
@@ -67,19 +91,17 @@ export const applyVerifyPolicy = ({
   assert: VerifyAssert | undefined;
   options: VerifyOptions;
   /**
-   * The wire the token actually is. It is DIAGNOSTIC, never a branch: every code
-   * below is wire-neutral, and this is what a reader needs to know which encoding
-   * produced the failure. The domain layer used to stamp a `jwt_` prefix on both
-   * wires, so a CWT's temporal failure reported itself as a JWT problem.
+   * The wire the token actually is. ⚠ DIAGNOSTIC, never a branch: every code below
+   * is wire-neutral, so a wire-prefixed code would report a CWT failure as a JWT
+   * problem.
    */
   format: TokenFormatTag;
   /** Which wire spelling the matcher predicate is keyed by (`jti` vs `cti`). */
   nameOf: NameSelector;
   /**
-   * `typPresence` when the caller states none. JOSE defaults to `"required"` as
-   * aegis POLICY, modelled on RFC 8725 §3.11 — which RECOMMENDS explicit typing,
-   * not mandates it; RFC 9596 genuinely leaves the COSE `typ` (label 16)
-   * optional. An EXPLICIT value behaves identically on both.
+   * `typPresence` when the caller states none. The JOSE default of `"required"` is
+   * aegis POLICY, not a mandate — RFC 8725 §3.11, RFC 9596. An EXPLICIT value
+   * behaves identically on both wires.
    */
   defaultTypPresence: "required" | "optional";
   token: string;
@@ -100,13 +122,11 @@ export const applyVerifyPolicy = ({
   }
 
   // `exp` PRESENCE is policy (default "required"), surfaced under its own code
-  // ahead of the generic matcher pass. The exp RANGE (with clock tolerance) was
-  // already checked by the kit.
-  // ⚠ `wireClaims` is the MATCHER bag, not the raw wire: `withJoseDates` has
-  // already lifted a falsy `exp` to `undefined` on JOSE, and the COSE claim
-  // codec decodes temporal claims inside the kit. So this and the profile
-  // floor's own gate see the same `Date | undefined`, and the predicate is the
-  // notion named once rather than a coverage difference.
+  // ahead of the generic matcher pass. The exp RANGE was already checked by the
+  // kit. ⚠ `wireClaims` is the MATCHER bag, not the raw wire — `withJoseDates`
+  // has lifted a falsy `exp` to `undefined` and the COSE codec decoded its
+  // temporal claims — so this gate and the profile floor's see the same
+  // `Date | undefined`.
   if (options.expPresence !== "optional" && !isClaimSatisfied(wireClaims.exp)) {
     throw new AegisDomainError("Missing claim: exp", {
       code: "missing_claim_exp",
@@ -117,18 +137,17 @@ export const applyVerifyPolicy = ({
     });
   }
 
-  // Built OUTSIDE the try: a matcher the builder REFUSES (an unknown key, a hash
-  // source it cannot hash) is a caller mistake with its own message, and folding
-  // it into the claims-invalid error reported "claims invalid" with an EMPTY
-  // invalid list — the failure that names nothing.
+  // ⚠ Built OUTSIDE the try: a matcher the builder REFUSES (an unknown key, a
+  // hash source it cannot hash) is a caller mistake with its own message. Folded
+  // into the try it becomes `claims_invalid` with an EMPTY invalid list.
   const matchers = omitUndefined(assert ?? {});
 
   const predicate = createIdentityMatchers(algorithm, matchers, nameOf);
 
   /**
    * The caller's own vocabulary, keyed by the wire name each matcher compiled to.
-   * Built from the caller's bag rather than the registry, so it answers ONLY for
-   * claims the caller actually stated and needs no jose/cose branch of its own.
+   * Built from the caller's bag rather than the registry, so it needs no
+   * jose/cose branch of its own.
    */
   const domainByWire = new Map<string, string>(
     Object.keys(matchers).map((key) => [matcherWireName(key, nameOf) ?? key, key]),
@@ -145,10 +164,9 @@ export const applyVerifyPolicy = ({
       // straight in the response body, and the caller stated `tokenId`, which the
       // wire spells `jti` on JOSE and `cti` on COSE. Pinned by the scenario row
       // `a-domain-refusal-names-the-claims-in-the-vocabulary-the-caller-used`.
-      // ⚠ The `?? key` is the Map's `| undefined`, not a reachable branch:
-      // `validate` reports keys from the predicate `createIdentityMatchers` built
-      // out of the same bag, and that builder THROWS on a key it cannot map, so
-      // every reported key is already in `domainByWire`.
+      // The `?? key` is the Map's `| undefined`, not a reachable branch:
+      // `createIdentityMatchers` throws on a key it cannot map, so every key
+      // `validate` reports is already in `domainByWire`.
       data: {
         invalid: invalid?.map((key) => domainByWire.get(key) ?? key),
         format,
@@ -165,110 +183,64 @@ export const applyVerifyPolicy = ({
   const actorError = validateActor(delegation, options.actor);
 
   if (actorError) {
+    const refusal = ACTOR_REFUSALS[actorError.code];
+
     throw new AegisDomainError(actorError.message, {
-      code: "actor_not_allowed",
+      code: actorError.code,
       data: { format },
       debug: actorError.debug,
-      title: "Actor Not Allowed",
-      details:
-        "The token's act delegation chain does not satisfy the expected actor supplied to verify.",
+      title: refusal.title,
+      details: refusal.details,
     });
   }
 
   /**
-   * Whether the token declares a sender constraint — the VOCABULARY question
-   * (did the issuer name `cnf.jkt`), replacing the truthiness test that stood at
-   * both sites below.
+   * Whether the token declares a sender constraint — the VOCABULARY question (did
+   * the issuer name `cnf.jkt`).
    *
-   * ⚠ NOT a spelling change. `""` is a string AND falsy, which is exactly where
-   * truthiness and `=== undefined` part company, so both outcomes moved — for
-   * the better, and measured through the public `verify` door:
-   *   - no proof, no vouch: `cnf: { jkt: "" }` was ACCEPTED as a plain bearer
-   *     token, and is now refused `dpop_proof_required`;
-   *   - with a well-formed proof: it was refused `dpop_token_not_bound`, a false
-   *     statement about a token that IS declared bound, and now reaches the
-   *     comparison and is refused `dpop_thumbprint_mismatch`.
+   * ⚠ NOT truthiness: `""` is a string AND falsy, so a truthy test accepts
+   * `cnf: { jkt: "" }` as a plain bearer token on the unvouched path, and refuses
+   * it `dpop_token_not_bound` — a false statement about a declared-bound token —
+   * on the proof path.
    *
-   * ⚠ THE OTHER BLANKING FORMS ARE CLOSED ELSEWHERE, and the split is the point.
-   * `42`, `{}` and a `cnf` that is not an object at all used to be erased to
-   * `undefined` by the confirmation decoder before this gate could see that a
-   * binding had been stated, so every one of them verified as a plain bearer
-   * token. They are REFUSED AT THE READ now — a member whose value contradicts
-   * its declared shape is not a member this package may drop, and neither is a
-   * `cnf` that is not an object (`internal/claims/translate.ts`) — so what
-   * reaches this gate is a confirmation that was READABLE. Whether it BINDS
-   * anything is the question below.
+   * ⚠⚠ `cnf` IS THE ONE CLAIM EXEMPT FROM THE PACKAGE'S NULL-IS-ABSENCE RULE
+   * (`internal/claims/is-not-stated.ts`). Without the exemption a null `jkt` is
+   * erased in `domainToWire` before the COSE fail-closed guard sees it (that guard
+   * asks `cnf[member] !== undefined`, `internal/cose/cose-key.ts`), and
+   * `mint("cwt", { thumbprint: null, keyId })` mints a CWT that verifies with no
+   * proof, byte-identical to a legitimate key-id binding — where
+   * `{ thumbprint: JKT, keyId }` refuses `cose_cnf_unsupported`. RFC 9449 §6.1.
    *
-   * ⚠⚠ `null` IS STILL IN THAT LIST, AND `cnf` IS THE ONE CLAIM EXEMPT FROM THE
-   * PACKAGE'S NULL-IS-ABSENCE RULE (`internal/claims/is-not-stated.ts`). The
-   * exemption was earned: with `cnf` taking the carve-out, a null `jkt` was erased
-   * in `domainToWire` before the COSE fail-closed guard could see it — the guard
-   * asks `cnf[member] !== undefined` (`internal/cose/cose-key.ts`) — and
-   * `mint("cwt", { thumbprint: null, keyId })` MINTED a CWT that verified with no
-   * proof, byte-identical to a legitimate key-id binding, where
-   * `{ thumbprint: JKT, keyId }` refuses `cose_cnf_unsupported`. RFC 7800 §3.1
-   * §6.1 types the member by MUST — the `jkt` value "MUST be the base64url
-   * encoding (as defined in [RFC7515]) of the JWK SHA-256 Thumbprint" — so a null
-   * one contradicts the declaration.
-   *
-   * ⛔ WHAT THIS GATE STILL DOES NOT SEE, stated because the sentence that stood
-   * here claimed the read path was safe by construction: `internal/claims/translate.ts`
-   * refuses an UNREADABLE confirmation, not an UNBOUND one. A `cnf` carrying
-   * `jwk`/`kid` and no `jkt` reaches here with `boundThumbprint` undefined and is
-   * treated as declaring no sender constraint — long-standing, and correct for an
-   * issuer that wrote it, but note that `Aegis.toDomain` is NOT signature-gated
-   * (`classes/Aegis.ts` documents it as the claim door, and pylon calls it on an
-   * introspection response body), so "only an issuer could have written this" is
-   * not an argument available at every door.
+   * ⛔ WHAT THIS GATE DOES NOT SEE: `internal/claims/translate.ts` refuses an
+   * UNREADABLE confirmation, not an UNBOUND one. A `cnf` carrying `jwk`/`kid` and
+   * no `jkt` arrives with `boundThumbprint` undefined and counts as declaring no
+   * sender constraint. `Aegis.toDomain` is NOT signature-gated (pylon calls it on
+   * an introspection response body), so "only an issuer could have written this"
+   * is not an argument available at every door.
    */
   const boundThumbprint = claims.confirmation?.thumbprint;
 
   /**
-   * ⭐⭐ NAMED, BUT NOT SATISFIED — ONE CHECK, AHEAD OF ALL THREE DPoP BRANCHES.
+   * ⭐ NAMED, BUT NOT SATISFIED — one check, ahead of all three DPoP branches.
+   * A confirmation naming nothing is a declaration that cannot be honoured, so it
+   * is refused rather than downgraded to bearer semantics. RFC 7800 §3.
    *
-   * RFC 7800 §3: "By including a 'cnf' (confirmation) claim in a JWT, the issuer
-   * of the JWT declares that the presenter possesses a particular key and that
-   * the recipient can cryptographically confirm that the presenter has possession
-   * of that key." So a verifier deciding whether a token is bound reads whether
-   * the issuer DECLARED a binding, not whether the declared value happens to be
-   * usable. A confirmation that names nothing is a declaration that cannot be
-   * honoured, and the only safe response to one is refusal: downgrading it to
-   * bearer semantics inverts the security property, because the WEAKEST possible
-   * confirmation would buy the WIDEST possible acceptance.
+   * ⚠⚠ IT MUST STAY AHEAD OF THE BRANCHES rather than be repeated inside them.
+   * `trustBoundThumbprint` substitutes for the PROOF, never for the binding the
+   * proof was checked against, so a copy inside the branches leaves
+   * `cnf: { jkt: "" }` verifying as a bearer token on the vouched path; and on the
+   * proof path the empty thumbprint reaches `verifyDpopProof` and is refused
+   * `dpop_thumbprint_mismatch`, blaming the presenter's key for the token's
+   * confirmation.
    *
-   * ⚠⚠ IT MUST BE ONE CHECK AHEAD OF THE BRANCHES RATHER THAN THREE INSIDE THEM,
-   * and each branch shows why on its own:
-   *   - NO PROOF, VOUCHED. `trustBoundThumbprint` says the proof was already
-   *     checked upstream, so it substitutes for the PROOF and never for the
-   *     binding the proof was checked against. It used to skip the only refusal
-   *     on that path, so `cnf: { jkt: "" }` verified as a bearer token.
-   *   - A PROOF SUPPLIED. The empty thumbprint was handed to `verifyDpopProof` as
-   *     the value to match, and the comparison failed with
-   *     `dpop_thumbprint_mismatch` — a refusal naming the PRESENTER'S key as the
-   *     problem when the TOKEN'S confirmation is, and carrying no `data` at all.
-   *   - NO PROOF, NO VOUCH. This one already refused, but for the wrong reason:
-   *     `dpop_proof_required` tells a caller to go and fetch a proof for a
-   *     binding no proof could ever satisfy.
+   * ⚠ TWO VALUES, ONE PREDICATE: `confirmation` answers for `cnf: {}` and
+   * `thumbprint` for `cnf: { jkt: "" }`. `isClaimOmitted` is vocabulary presence,
+   * `isClaimSatisfied` is whether there is a value to bite on; the gap between
+   * them IS this verdict.
    *
-   * ⚠ TWO VALUES, ONE PREDICATE, AND THE SCOPE IS EXACTLY THOSE TWO.
-   * `confirmation` answers for `cnf: {}` — an object binding nothing — and
-   * `thumbprint` answers for `cnf: { jkt: "" }`. `isClaimOmitted` is vocabulary
-   * presence and `isClaimSatisfied` is whether there is a value to bite on; the
-   * gap between them IS this verdict.
-   *
-   * ⚠⚠ IT DOES NOT JUDGE THE OTHER FOUR MEMBERS, and saying so is the honest
-   * version of the rule. Measured through the public `verify` door on both the
-   * bare and the vouched path: `cnf: { kid: "" }`, `{ "x5t#S256": "" }`,
-   * `{ jku: "" }` and `{ jwk: {} }` all verify. That is NOT a fail-open, and the
-   * control is what shows it — their NON-empty forms verify as plain bearer
-   * tokens too, because `jkt` is the only member aegis gates on at all. An empty
-   * `kid` therefore loosens nothing: there is no check it slips past. If aegis
-   * ever gates on a second member, that member joins this verdict on the same
-   * day, and the prose here and in the error's `details` has to widen with it.
-   *
-   * ⚠ `data: { format }`, like every sibling refusal in this gate. It is what
-   * makes the refusal attributable to the CONFIRMATION rather than to the
-   * presenter's proof, whose own refusal carries no `data`.
+   * ⚠ It judges no other `cnf` member — `jkt` is the only member aegis gates on,
+   * so an empty `kid`/`x5t#S256`/`jku`/`jwk` slips past no check. If aegis gates
+   * on a second member it joins this verdict, and the error's `details` widens.
    */
   const namedButUnsatisfied = (value: unknown): boolean =>
     !isClaimOmitted(value) && !isClaimSatisfied(value);
@@ -277,18 +249,10 @@ export const applyVerifyPolicy = ({
    * WHICH of the two values was named and unsatisfied — `cnf` for a confirmation
    * with no member, `cnf.jkt` for one whose thumbprint is empty.
    *
-   * ⚠⚠ IT IS IN `data` BECAUSE `format` ALONE CANNOT DISCRIMINATE THIS REFUSAL
-   * FROM ITS NEIGHBOUR, and that was measured rather than reasoned about. Every
-   * refusal in this gate stamps `data: { format }` — including
-   * `dpop_token_not_bound`, which fires on the SAME token when a proof is supplied
-   * and this verdict is absent. A scenario row pinning `format` alone therefore
-   * went green against the wrong refusal: deleting the `confirmation` half of the
-   * predicate left the proof-path row passing, because the token fell through to
-   * `dpop_token_not_bound` with an identical `data`. A refusal a row cannot tell
-   * from its neighbour is a row that proves nothing.
-   *
-   * ⭐ It is also the more useful error: a consumer repairing a token learns WHICH
-   * half of the confirmation is unusable rather than only that one of them is.
+   * ⚠⚠ IT IS IN `data` because `format` alone cannot discriminate this refusal
+   * from `dpop_token_not_bound`, which fires on the SAME token when a proof is
+   * supplied and stamps an identical `data: { format }`. A scenario row pinning
+   * `format` alone goes green against the wrong refusal.
    */
   const unsatisfied = namedButUnsatisfied(claims.confirmation)
     ? "cnf"
@@ -303,7 +267,7 @@ export const applyVerifyPolicy = ({
       debug: { confirmation: claims.confirmation },
       title: "Confirmation Binds No Key",
       details:
-        "The token carries a confirmation that is empty, or one whose thumbprint (cnf.jkt) is present but empty. RFC 7800 makes the claim the issuer's declaration that the presenter holds a particular key and that the recipient can confirm it, so a declaration naming nothing cannot be honoured and is refused on every path, including the ones where a caller vouches that the proof was checked upstream. Only those two shapes are judged here: the thumbprint is the one confirmation member this verifier acts on, so an empty value in any other member passes no gate it could otherwise have failed.",
+        "The token carries a confirmation that is empty, or one whose thumbprint (cnf.jkt) is present but empty. A confirmation declares that the presenter holds a particular key, so one naming nothing cannot be honoured and is refused on every path, including the ones where a caller vouches that the proof was checked upstream. Only those two shapes are judged here: the thumbprint is the one confirmation member this verifier acts on, so an empty value in any other member passes no gate it could otherwise have failed. RFC 7800 §3.1.",
     });
   }
 
@@ -332,9 +296,8 @@ export const applyVerifyPolicy = ({
     };
   }
 
-  // RFC 9449 defines only the JWT proof form, but the PROOF's wire is
-  // independent of the bound token's: a `cnf.jkt` in a CWT binds exactly as it
-  // does in a JWT, so the refusal applies on both.
+  // The PROOF's wire is independent of the bound token's: a `cnf.jkt` in a CWT
+  // binds exactly as it does in a JWT, so the refusal applies on both. RFC 9449.
   if (isClaimOmitted(boundThumbprint)) return { dpop: undefined };
 
   if (!options.trustBoundThumbprint) {

@@ -75,12 +75,11 @@ describe("normaliseClaims", () => {
     });
 
     /**
-     * TOP LEVEL only. The registry reads an empty RFC 9396 `actions` (§2.2) as
+     * TOP LEVEL only. The registry reads an empty `actions` (RFC 9396 §2.2) as
      * granting no action, where an ABSENT one is not restricted by action at all
-     * — the second half is aegis's inference, not the spec's words. The inner
-     * members of a claim are its own declared structure and the registry
-     * describes none of them, so recursion would invert a restriction one level
-     * down.
+     * — the second half is aegis's inference. The inner members of a claim are its
+     * own declared structure and the registry describes none of them, so recursion
+     * would invert a restriction one level down.
      */
     test("should not recurse into a claim's own structure", () => {
       expect(
@@ -131,15 +130,11 @@ describe("normaliseClaims — emission regressions", () => {
   });
 
   /**
-   * RFC 9396 §2.2 defines `actions` as "An array of strings representing the
-   * kinds of actions to be taken at the resource" and makes the permissions
-   * requested "the product of all the values" — so an EMPTY `actions` array
-   * grants no action at all. That an ABSENT one is instead not restricted by
-   * action is the registry's own reading rather than the spec's words, and
-   * dropping the empty array INVERTS the restriction: the most permissive
-   * possible reading of a maximally restrictive statement. The registry's
-   * `authorization_details` cell is what has to hold here, and it now holds on
-   * every call rather than only on the ones that asked for a prune.
+   * An EMPTY `actions` array grants no action at all (RFC 9396 §2.2); that an
+   * ABSENT one is instead not restricted by action is the registry's own reading.
+   * ⚠ Dropping the empty array INVERTS the restriction — the most permissive
+   * reading of a maximally restrictive statement. The registry's
+   * `authorization_details` cell is what has to hold here, on every call.
    */
   test("should keep an empty actions array in authorization_details", async () => {
     const { token } = await aegis.jws.sign({
@@ -157,10 +152,10 @@ describe("normaliseClaims — emission regressions", () => {
   });
 
   /**
-   * The other half of the same door, and the one the deleted mode used to gate:
-   * a claim the registry marks prunable now leaves the wire without the caller
-   * asking. `nonce` is registered and prunable; `empty_list` is not registered at
-   * all, so the two are stated together — the prune must take exactly one.
+   * The other half of the same door: a claim the registry marks prunable leaves
+   * the wire without the caller asking. `nonce` is registered and prunable;
+   * `empty_list` is not registered at all, so the two are stated together — the
+   * prune must take exactly one.
    */
   test("should prune a registered empty claim from an opaque payload unasked", async () => {
     const { token } = await aegis.jws.sign({ kept: "value", nonce: "", empty_list: [] });

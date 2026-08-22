@@ -53,15 +53,15 @@ export type LindormClaims = {
   // (RS-facing signal). Pruned when empty — `claims-registry.ts`, `conformsTo`.
   conformsTo?: Array<string>;
   federationAssuranceLevel?: FederationAssuranceLevel;
-  // RFC 6749 §8.3 allows extension and vendor grant types, and aegis parses
-  // tokens it did not mint. The openid `GrantType` set is CLOSED on purpose,
+  // Aegis parses tokens it did not mint, and grant types are extensible
+  // (RFC 6749 §8.3). The openid `GrantType` set is CLOSED on purpose,
   // so the extender widens here; the wire form (`gty?: string`) says the same.
   grantType?: GrantType | (string & {});
   identityAssuranceLevel?: IdentityAssuranceLevel;
   levelOfAssurance?: LevelOfAssurance;
   permissions?: Array<string>;
-  // RFC 6749 §3.3 lets every deployment define its own scope values, and aegis
-  // parses tokens it did not mint. The openid `Scope` set is CLOSED on purpose,
+  // Aegis parses tokens it did not mint, and scope values are deployment-defined
+  // (RFC 6749 §3.3). The openid `Scope` set is CLOSED on purpose,
   // so the extender widens here; the wire form (`scope?: Array<string> |
   // string`) says the same.
   scope?: Array<Scope | (string & {})>;

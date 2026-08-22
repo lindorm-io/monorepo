@@ -12,15 +12,13 @@ import { headerByJose } from "./header-registry.js";
  * passes, REFUSED with `header_no_cose_label` by the COSE one
  * (`internal/utils/token-header.ts`).
  *
- * ⚠ ON COSE THAT COMPOSES INTO AN ASYMMETRY that reads like one rule being
- * inconsistent and is two rules meeting. Through `buildCoseHeaders`,
- * `{ apu: "x" }` and `{ nonsense: "" }` both throw `header_no_cose_label`, while
- * `{ apu: "" }` and `{ zip: "" }` emit nothing and no refusal — an unregistered
- * key survives to the closed-set refusal, a registered one the registry prunes
- * has nothing left to refuse. ⛔ The prune is blind to which wire is being built,
- * and must stay so: sparing a registered-but-COSE-absent parameter to keep the
- * refusal alive would split "empty" into a JOSE meaning and a COSE one, which is
- * the wire asymmetry an attacker picks the encoding to exploit.
+ * ⚠ ON COSE THAT COMPOSES INTO AN ASYMMETRY that reads like one inconsistent rule
+ * and is two rules meeting: through `buildCoseHeaders`, `{ apu: "x" }` and
+ * `{ nonsense: "" }` both throw `header_no_cose_label`, while `{ apu: "" }` emits
+ * nothing and no refusal. ⛔ The prune is blind to which wire is being built and
+ * must stay so — sparing a registered-but-COSE-absent parameter to keep the refusal
+ * alive would split "empty" into a JOSE meaning and a COSE one, which is the wire
+ * asymmetry an attacker picks the encoding to exploit.
  *
  * ⚠ NO `crit` EXEMPTION and nothing left for one to do — see
  * `normalise-headers.ts`.
@@ -40,18 +38,15 @@ import { headerByJose } from "./header-registry.js";
  * a zero-length nonce is a crypto-layer defect that must fail in the AEAD,
  * neither of them a parameter this quietly removes.
  *
- * ⛔ `Object.fromEntries`, NEVER `result[key] = value`. The keys come off a
- * CALLER's header, `JSON.parse` makes `__proto__` an OWN property that survives
- * `Object.entries`, and assigning it sets this result's PROTOTYPE instead. What
- * that costs is not theoretical: everything downstream reads the normalised bag
- * by property — `JwsKit.sign` takes `callerHeader.cty` to pick the payload
- * serialisation, `build-cose-headers.ts` takes `headerBag.crit` — so the injected
- * prototype answered for parameters the caller never wrote. Measured before the
- * repair: a Dict payload signed as `text/plain` under a forged `cty`, and
- * `cwt_crit_param_not_permitted` raised against a token carrying no `crit`.
+ * ⛔ `Object.fromEntries`, NEVER `result[key] = value`. The keys come off a CALLER's
+ * header, `JSON.parse` makes `__proto__` an OWN property that survives
+ * `Object.entries`, and assigning it sets this result's PROTOTYPE instead —
+ * whereupon it answers for parameters the caller never wrote, because everything
+ * downstream reads the normalised bag by property (`JwsKit.sign` takes
+ * `callerHeader.cty`, `build-cose-headers.ts` takes `headerBag.crit`).
  * `fromEntries` DEFINES each key, so `__proto__` stays an ordinary own property.
- * pinned: prune-empty-headers.test.ts for the prune itself; the `__proto__`
- * half only in custom-header-params.test.ts, which is the door that reaches it.
+ * pinned: prune-empty-headers.test.ts for the prune; the `__proto__` half in
+ * custom-header-params.test.ts, which is the door that reaches it.
  */
 export const pruneEmptyHeaders = <T extends Dict = Dict>(dict: T): T =>
   Object.fromEntries(

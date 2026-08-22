@@ -4,49 +4,34 @@ import type { InvalidEntry } from "../../../types/index.js";
 import { isClaimOmitted } from "./is-claim-omitted.js";
 
 /**
- * ⚠⚠ THIS RULE IS THE REMAINDER OF A LARGER ONE, AND THE REMAINDER IS THE POINT.
+ * The VALUE-SHAPE remainder of the RFC 8693 actor-chain rule.
  *
- * It used to enforce FIVE facts about the RFC 8693 actor chain. The claim
- * registry now declares `act`/`may_act` as a recursive member set
- * (`internal/claims/act-members.ts`), and of the five exactly ONE is subsumed:
+ * The claim registry declares `act`/`may_act` as a recursive member set
+ * (`internal/claims/act-members.ts`), so the generic walker in
+ * `internal/claims/translate.ts` carries the NESTING on its own, in both
+ * directions and under every profile. ⚠ `validateActor` below still descends by
+ * hand and must: the rules it carries are not in the walker, so there is nothing
+ * there to carry them down.
  *
- *   - THE RECURSION, subsumed — as a DECLARATION, not as a code path. The
- *     registry states the nesting once (`act`'s member set names itself), so the
- *     generic walker in `internal/claims/translate.ts` descends on its own, in
- *     BOTH directions and under every profile including none, where this rule
- *     only ever runs for the three that name it. ⚠ `validateActor` below STILL
- *     descends by hand, and must: the three rules it carries are not in the
- *     walker, so there is nothing there to carry them down. What the declaration
- *     removed is the need for a SECOND statement of the nesting — not this
- *     function's own descent, which goes when its rules do.
+ * ⛔⛔ THERE IS NO MEMBER ALLOWLIST, AND NOTHING REPLACES IT. The registry
+ * declares the actor set OPEN (`open: "verbatim"`) — RFC 8693 §4.1, RFC 8693 §4.4
+ * — so an undeclared actor member is CARRIED. Do NOT add one here or make the
+ * walker refuse an undeclared member: the same walker serves the OIDC Core §5.1.1
+ * `address` and the RFC 9396 `authorization_details` element, so closing it
+ * breaks all three conformances at once. What the walker DOES refuse is two
+ * members resolving to the SAME key, so a look-alike cannot displace a declared
+ * one.
  *
- * ⛔⛔ THE MEMBER ALLOWLIST IS NOT SUBSUMED — IT IS DELETED, ON PURPOSE, AND
- * NOTHING REPLACES IT. `PERMITTED_MEMBERS` refused an actor member outside a
- * fixed five. The registry declares the actor set **OPEN** (`open: "verbatim"`),
- * because RFC 8693 §4.1 defines the members as "claims that identify the actor"
- * and §4.4 names `email` as one, so an undeclared actor member is now CARRIED.
- * ⛔ Do NOT "restore" the allowlist here or make the walker refuse an undeclared
- * member: the same walker serves the OIDC Core §5.1.1 `address` and the RFC 9396
- * `authorization_details` element, and closing it would break all three
- * conformances at once. What DOES survive of that rule is narrower and lives in
- * the walker: two members that resolve to the SAME key are refused, so a
- * look-alike cannot displace a declared one.
- *
- * ⛔ THE OTHER THREE ARE **NOT** SUBSUMED, AND THAT IS WHY THIS FILE SURVIVES.
+ * ⛔ THE VALUE-SHAPE RULES ARE NOT SUBSUMED, AND THAT IS WHY THIS FILE EXISTS.
  * The walker's disposal for a value it cannot describe is a DROP, not a refusal:
- * a non-object actor walks to `undefined` and the claim is left off, a member
+ * a non-object actor walks to `undefined` and the claim is left off, and a member
  * whose value fails its own codec is skipped by `encodeMember`'s probe read. So
  * `act: "service-1"` and `act: { subject: 1 }` would both mint a token — the
- * second one carrying `act: {}`, an actor that identifies nobody — where today
- * they are refused with the position named. Turning the walker's drop into a
- * refusal is a change to every structured claim in both directions (and cuts
- * across the top-level asymmetry recorded in `translate.ts`), so it is not made
- * as a side effect of migrating one claim. Until it is, these three live here.
+ * second carrying `act: {}`, an actor that identifies nobody — where here they
+ * are refused with the position named.
  *
- * ⚠ THE DEPTH BOUND WAS NEVER PART OF THIS RULE. `maxChainDepth` is a VERIFIER's
- * option (`internal/utils/validate-actor.ts`), not a shape fact — how far a
- * credential may travel is a deployment's policy, and a member set could not
- * express it in any case.
+ * ⚠ THE DEPTH BOUND IS NOT PART OF THIS RULE. `maxChainDepth` is a VERIFIER's
+ * option (`internal/utils/validate-actor.ts`), not a shape fact.
  */
 
 // The two chain ROOTS. Each is validated independently; a token may carry one,
@@ -54,20 +39,15 @@ import { isClaimOmitted } from "./is-claim-omitted.js";
 const CHAIN_CLAIMS = ["act", "mayAct"] as const;
 
 // The actor members that must be a string when the actor names them. `audience`
-// is not among them — RFC 7519 §4.1.3 defines `aud` as string-OR-array — and
-// `act` is the recursive one.
+// is not among them (RFC 7519 §4.1.3) and `act` is the recursive one.
 const STRING_MEMBERS = ["subject", "issuer", "clientId"] as const;
 
 /**
- * `aud` inside an actor, validated only when the actor NAMES it.
+ * `aud` inside an actor, validated only when the actor NAMES it. RFC 7519 §4.1.3.
  *
- * ⚠ IT CHECKS THE ELEMENTS, and it did not before — `isArray` alone accepted
- * `audience: [1, 2]` while the message beside it promised "array of strings". A
- * predicate that admits what its own message forbids is worse than no predicate:
- * a reader takes the message as the contract, and the one thing that would have
- * told them otherwise is the thing agreeing with them. RFC 7519 §4.1.3 defines
- * `aud` as "a StringOrURI value" or "an array of case-sensitive strings", so the
- * message was right and the check was wrong.
+ * ⚠ IT CHECKS THE ELEMENTS: `isArray` alone admits `audience: [1, 2]` while the
+ * message beside it promises an array of strings, and a predicate that admits
+ * what its own message forbids is worse than no predicate.
  */
 const validateAudience = (
   audience: unknown,
@@ -112,11 +92,8 @@ const validateActor = (
 };
 
 /**
- * RFC 8693 — `act`/`mayAct` are recursive actor objects. Validates the VALUE
- * SHAPE of each member the actor names, at every depth of each chain present.
- * (Domain-keyed: `mayAct`, not the wire `may_act`.) WHICH members an actor may
- * name is not this rule's business and is not anybody's: the registry declares the
- * set OPEN — see the file docstring.
+ * Validate the VALUE SHAPE of each member the actor names, at every depth of each
+ * chain present. Domain-keyed: `mayAct`, not the wire `may_act`. RFC 8693.
  */
 export const actChainShape = (claims: Dict): Array<InvalidEntry> => {
   const invalid: Array<InvalidEntry> = [];

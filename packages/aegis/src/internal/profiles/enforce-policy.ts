@@ -30,24 +30,18 @@ export type EnforcePolicyInput = {
 /**
  * THE profile-policy enforcer — one implementation, both directions.
  *
- * A rule runs when it names the direction being enforced, and never otherwise.
- * The arrangement it replaces decided that per CALL SITE: `atLeastOneOf` had
- * exactly one caller, on the mint path, so a logout token naming neither a
- * subject nor a session was refused at issue and accepted on arrival — the half
- * that matters, since a verifier is reading someone else's token. Direction is a
- * property of the rule now, so a rule cannot be enforced in one direction by
- * accident of who called what.
+ * ⚠ DIRECTION IS A PROPERTY OF THE RULE, never of the call site. Deciding it per
+ * caller is what lets a rule be enforced at mint and skipped at verify — the half
+ * that matters, since a verifier is reading someone else's token.
  *
  * Every failure is collected before anything is thrown, so one bad token reports
- * every reason it is bad rather than the first category the enforcer happened to
- * reach.
+ * every reason it is bad rather than the first category reached.
  */
 /**
  * Whether a rule runs in the direction being enforced. A function, not an inline
  * `rule.on.includes(direction)`: a `BoundRule`'s `on` is the pinned tuple
- * `["mint"]`, whose own `includes` accepts only `"mint"` — so asking it about
- * `"verify"` is a type error at the call site rather than the honest widening it
- * is. Widening happens ONCE, here, on a parameter.
+ * `["mint"]`, whose own `includes` accepts only `"mint"`, so asking it about
+ * `"verify"` is a type error at the call site. Widening happens ONCE, here.
  */
 const runsIn = (on: ReadonlyArray<Direction>, direction: Direction): boolean =>
   on.includes(direction);
@@ -86,18 +80,16 @@ export const enforcePolicy = ({
         break;
 
       case "requiredWhen": {
-        // A context-reading rule that is not given its context does not fail —
-        // it silently does not fire. Omitting `accessTokenIssued` (or misspelling
-        // it) used to mint an id_token with no access-token hash and no error, so
-        // the missing fact is refused rather than read as `false`.
+        // A context-reading rule that is not given its context does not fail — it
+        // silently does not fire, so a misspelt `accessTokenIssued` would mint an
+        // id_token with no access-token hash and no error. The missing fact is
+        // refused rather than read as `false`.
         //
-        // ⚠ `Object.hasOwn`, never `in`. A profile is CALLER-REGISTERED
-        // (`Aegis.registerProfile`), so `needs` is caller data: with `in`, a key
-        // spelled `constructor`/`toString`/`valueOf` resolved through
-        // `Object.prototype` and counted as SUPPLIED — this refusal never fired
-        // and `requiredWhen` evaluated the author's predicate against a context
-        // that does not hold the fact. A gate that fails open. `in` on a
-        // caller-influenced key is a BANNED construct in this package.
+        // ⚠ `Object.hasOwn`, NEVER `in`. A profile is CALLER-REGISTERED
+        // (`Aegis.registerProfile`), so `needs` is caller data, and with `in` a key
+        // spelled `constructor`/`toString`/`valueOf` resolves through
+        // `Object.prototype` and counts as SUPPLIED — a gate that fails open. `in`
+        // on a caller-influenced key is a BANNED construct in this package.
         const missing = rule.needs.filter((key) => !Object.hasOwn(context, key));
 
         if (missing.length > 0) {

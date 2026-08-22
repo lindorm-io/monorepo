@@ -42,11 +42,8 @@ import { SignatureKit } from "./SignatureKit.js";
  * knowledge; the CBOR encode/decode (and any outer CWT tag 61) is owned by the
  * layer above.
  *
- * ⚠ It serves the `cws` format and nothing else. It used to take a `format`
- * setting so the claims core could route `cwt`/`cwm` signing through it, which
- * made one kit the body of three and left the claims layer without a door of its
- * own. `CwsKit`, `CwtKit` and `CwmKit` are now SIBLINGS over the same utils, the
- * shape `JwsKit` and `JwtKit` already had.
+ * ⚠ It serves the `cws` format and nothing else. `CwsKit`, `CwtKit` and `CwmKit`
+ * are SIBLINGS over the same utils, the shape `JwsKit` and `JwtKit` already had.
  *
  * It GATES on the key's `algClass` itself (RFC 9052): an asymmetric key produces
  * a COSE_Sign1 (tag 18) over `Sig_structure` with the SAME primitive the JOSE ES*

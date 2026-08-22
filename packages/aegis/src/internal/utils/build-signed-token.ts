@@ -5,11 +5,9 @@ import type { SignedToken, TokenFormat } from "../../types/index.js";
 import { claimByDomain, type NameSelector } from "../claims/claims-registry.js";
 
 /**
- * Enrich a wire kit's bare token into the domain {@link SignedToken} — the DOMAIN
- * sugar the transform-free kits no longer compute. ONE function for both wires:
- * the JOSE and COSE builders it replaces were identical apart from reading the
- * token id under `jti` or `cti`, which is a REGISTRY fact, not a reason for a
- * second implementation.
+ * Enrich a wire kit's bare token into the domain {@link SignedToken}. ONE
+ * function for both wires: the token id is read under `jti` or `cti`, which is a
+ * REGISTRY fact and not a reason for a second implementation.
  *
  * Both claim keys are resolved through the claim registry via the same
  * {@link NameSelector} the claim translator takes, so neither wire name is

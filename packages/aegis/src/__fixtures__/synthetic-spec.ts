@@ -3,10 +3,9 @@ import type { SpecCitation } from "../internal/registry/spec-citation.js";
 /**
  * The `spec` cell for a synthetic registry entry built inside a test.
  *
- * ⚠ It is `policy` and not a real citation ON PURPOSE: `spec-citations.test.ts`
- * verifies every `rfc`/`oidc` cell against the committed corpus, so a fixture
- * claiming a section would either need a corpus entry nothing ships or would
- * fail that check. A fixture governed by nothing says so.
+ * ⚠ `policy`, not a citation: a fixture invented by a test is governed by no
+ * specification, and claiming a section would put a reference in the registry
+ * that points at a rule this entry does not follow.
  */
 export const SYNTHETIC_SPEC: SpecCitation = {
   kind: "policy",

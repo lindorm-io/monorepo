@@ -13,20 +13,16 @@ import { CwsKit } from "../../classes/CwsKit.js";
 MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
 
 /**
- * The COSE FORMAT GUARDS — which COSE structure a token is, decided from its
- * bytes alone.
+ * The COSE FORMAT GUARDS — which COSE structure a token is, from its bytes alone.
  *
- * They live here because `is-cose-format.ts` beside this file is where the
- * discrimination happens. They are exercised through the `Aegis` statics because
- * those are the public surface and each adds exactly one thing of its own: a
- * dotted token bails before any base64url or CBOR work, which is what keeps a
- * JOSE token from being decoded as garbage CBOR and answered about.
+ * Driven through the `Aegis` statics because those are the public surface and each
+ * adds one thing: a dotted token bails before any base64url or CBOR work, which is
+ * what keeps a JOSE token from being decoded as garbage CBOR and answered about.
  *
  * ⚠ These cannot be conformance rows. A row states a capability by BUILDING an
  * artifact and ACTING on it; a guard is a total predicate over an arbitrary
- * string, and the answers that matter most are the ones it gives about strings
- * no artifact step could produce — a JOSE token, and a value that is not a token
- * at all.
+ * string, and its most important answers are about strings no artifact step could
+ * produce.
  */
 describe("COSE format guards", () => {
   let amphora: IAmphora;
@@ -36,8 +32,7 @@ describe("COSE format guards", () => {
   let cwe: string;
   let cws: string;
 
-  // A well-formed JOSE JWT string — the dotted counter-example every COSE guard
-  // must reject before it touches a byte.
+  // The dotted counter-example every COSE guard must reject before touching a byte.
   const seg = (obj: unknown): string =>
     Buffer.from(JSON.stringify(obj)).toString("base64url");
 
@@ -51,7 +46,6 @@ describe("COSE format guards", () => {
     amphora.add(TEST_EC_KEY_SIG); // ES512 signer — COSE_Sign1
     amphora.add(TEST_OCT_KEY_ENC); // dir recipient — COSE_Encrypt0
 
-    // CWT — a claims-bearing COSE_Sign1 carrying a `<type>+cwt` media type.
     cwt = (
       await aegis.cwt.sign(
         { sub: "user-1", aud: ["https://rs.lindorm.io/"], exp: 1704099600 },
@@ -59,9 +53,8 @@ describe("COSE format guards", () => {
       )
     ).token;
 
-    // CWM — the same claims, MAC-authenticated (COSE_Mac0). It needs its own
-    // vault: a second signing resident on the shared one would make the keyless
-    // cwt/cws auto-selection non-deterministic.
+    // ⚠ The CWM needs its OWN vault: a second signing resident on the shared one
+    // makes the keyless cwt/cws auto-selection non-deterministic.
     const macLogger = createMockLogger();
     const macAmphora = new Amphora({
       internal: { issuer: "https://test.lindorm.io/" },
@@ -78,12 +71,9 @@ describe("COSE format guards", () => {
       )
     ).token;
 
-    // CWE — a COSE_Encrypt0.
     cwe = (await aegis.cwe.encrypt("hello cose")).token;
 
-    // CWS — an opaque COSE_Sign1. It shares the CWT's structure tag and is told
-    // apart by its `<type>+cws` media type, exactly as a `+jws` JWS is told from
-    // a `+jwt` JWT.
+    // The CWS shares the CWT's structure tag and is told apart by its media type.
     cws = new CwsKit({ kryptos: TEST_EC_KEY_SIG, logger })
       .sign(Buffer.from("opaque payload"), { tokenType: "example" })
       .toString("base64url");
@@ -125,10 +115,8 @@ describe("COSE format guards", () => {
     expect(Aegis.isCwe("not a token")).toBe(false);
   });
 
-  // The two family umbrellas are EXACT counterparts: every token is at most one
-  // wire family, and neither answers yes about something that is not a token.
-  // Without the negative half, a guard that answered `true` unconditionally
-  // would satisfy every case above that expects `true`.
+  // ⚠ Both umbrellas, positive AND negative: without the negative half a guard
+  // returning `true` unconditionally satisfies every case above.
   test("every COSE structure is COSE and no JOSE token is, and neither claims a non-token", () => {
     for (const token of [cwt, cwm, cws, cwe]) {
       expect(Aegis.isCose(token)).toBe(true);

@@ -3,9 +3,8 @@
  * WireKey>` column every registry entry declares.
  *
  * The point of the union is that `absent` is a STATED FACT carrying its reason,
- * not a missing entry. Before this, "this parameter has no COSE form" was spelled
- * as an optional field left off (`cose?: number`), so a drop was indistinguishable
- * from an oversight and the reason lived — where it lived at all — in a comment.
+ * never a missing entry: an optional field left off would make a drop
+ * indistinguishable from an oversight.
  */
 
 export type WireKey =
@@ -24,11 +23,9 @@ export type WireKey =
  * Keyed by a string name on this wire.
  *
  * ⚠ GENERIC IN THE NAME, so a declaration written `as const` keeps the literal.
- * The return type is still assignable to {@link WireKey} everywhere, and the one
- * place the literal matters is `internal/claims/cnf-members.ts`, which DERIVES
- * the `CnfMember` union from its own members' JOSE names rather than restating
- * them. A widened `string` there would make the union `string` and turn a typo in
- * a capability set from a compile error into a member nothing looks up.
+ * `internal/claims/cnf-members.ts` DERIVES the `CnfMember` union from its members'
+ * JOSE names, and a widened `string` would make that union `string` — turning a
+ * typo in a capability set from a compile error into a member nothing looks up.
  */
 export const wireName = <N extends string>(name: N): { kind: "name"; name: N } => ({
   kind: "name",

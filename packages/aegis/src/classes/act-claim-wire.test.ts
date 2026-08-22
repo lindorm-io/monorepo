@@ -10,11 +10,9 @@ import { Aegis } from "./Aegis.js";
 /**
  * WHAT AN `act` / `may_act` CHAIN ACTUALLY SAYS ON EACH WIRE.
  *
- * RFC 8693 §4.1 defines the actor claim by its members and by its NESTING — "A
- * chain of delegation can be expressed by nesting one 'act' claim within another.
- * The outermost 'act' claim represents the current actor while nested 'act'
- * claims represent prior actors." — so the member spellings AND the nesting are
- * the interoperability contract. A token spelling `subject` instead of `sub`, or
+ * A delegation chain is expressed by NESTING one `act` claim inside another
+ * (RFC 8693 §4.1), so the member spellings AND the nesting are the
+ * interoperability contract. A token spelling `subject` instead of `sub`, or
  * flattening the chain, would round-trip through this package perfectly and mean
  * nothing to anyone else.
  *
@@ -23,12 +21,6 @@ import { Aegis } from "./Aegis.js";
  * from `src/internal/` or `src/classes/`). Reading the token back through aegis's
  * own decoder proves only that the writer and the reader agree, which a pair of
  * mirrored bugs satisfies exactly.
- *
- * ⚠⚠ WHAT WAS MEASURED BEFORE THIS FILE, and it is why the file exists: `act` had
- * ONE wire-level pin, a COSE-only one in `classes/cose-claims-encoding.test.ts`,
- * and `may_act` had NONE ON EITHER WIRE — no scenario row, no byte pin, no claim
- * label pin. So a claim with an integer COSE label and a compact/interoperable
- * duality was carried entirely by round trips through the package's own decoder.
  *
  * ⛔ THE EXPECTED SPELLINGS AND LABELS BELOW ARE WRITTEN OUT, NOT READ FROM THE
  * REGISTRY. A test that derives them from `act-members.ts` agrees with whatever
@@ -70,10 +62,10 @@ const WIRE_ACTOR_CHAIN: Dict = {
 /**
  * The COSE labels the actor MEMBERS carry, written out rather than derived.
  *
- * RFC 8392 §4 registers the first three at CLAIM level — "iss | 1", "sub | 2",
- * "aud | 3" — and the actor map reuses them so a compact actor speaks the CWT
- * vocabulary. `client_id` (4) and the nested `act` (5) have no COSE registration
- * anywhere and are LINDORM's own, which is exactly why the compact form is
+ * The first three are CLAIM labels — `iss` 1, `sub` 2, `aud` 3 (RFC 8392 §4) —
+ * and the actor map reuses them, so a compact actor speaks the CWT vocabulary.
+ * `client_id` (4) and the nested `act` (5) have no COSE registration anywhere and
+ * are LINDORM's own, which is exactly why the compact form is
  * on-platform only.
  */
 const ISS = 1;
@@ -89,12 +81,11 @@ const ACT = 5;
  * `may_act` answer the first one differently: `act` is short enough that its
  * string name is the smaller encoding, so it is text-keyed on COSE in both modes,
  * while `may_act` carries this integer and degrades to the string `may_act` for
- * an interoperable token. RFC 8392 §9.1.1 is the registry that governs a CWT
- * CLAIM KEY — "Integer values less than -65536 are marked as Private Use" — so a
- * token carrying one is meaningless to any reader but us. (RFC 8152 §16.2 says
- * the same of a COSE HEADER PARAMETER, which is a different registry and not the
- * one a claim key comes from.) Their MEMBERS are keyed identically, because they
- * share one declaration.
+ * an interoperable token. A CWT CLAIM KEY below -65536 is Private Use
+ * (RFC 8392 §9.1.1), so a token carrying one is meaningless to any reader but us.
+ * A COSE HEADER PARAMETER comes from a DIFFERENT registry (RFC 8152 §16.2), not
+ * the one a claim key is drawn from. Their MEMBERS are keyed identically, because
+ * they share one declaration.
  */
 const MAY_ACT_COSE_LABEL = -65543;
 
@@ -163,11 +154,9 @@ const wireClaimOf = (token: string, key: number | string): unknown => {
  *
  * ⛔ It is deliberately NOT used for the compact form. `Object.fromEntries`
  * stringifies an integer key, so a member that arrived under the text `"2"` would
- * compare equal to one under the integer `2`. RFC 9052 §1.5 admits BOTH forms —
- * "In COSE, we use text strings, negative integers, and unsigned integers as map
- * keys", grammar `label = int / tstr` — and it is CBOR's data model, where a map
- * key's type is part of the key, that keeps them apart. (§1.5 itself states the
- * admissibility, not the distinctness.) The compact assertions therefore compare
+ * compare equal to one under the integer `2`. A COSE label is `int / tstr`
+ * (RFC 9052 §1.5), and it is CBOR's data model — where a map key's TYPE is part
+ * of the key — that keeps the two apart. The compact assertions therefore compare
  * `Map` against `Map`, which preserves the key's type.
  */
 const plain = (value: unknown): unknown =>
@@ -189,8 +178,8 @@ describe("the act / may_act claims on the wire", () => {
   test("a JOSE token spells `may_act` from the SAME member declaration", async () => {
     const token = await mint("jwt", { mayAct: ACTOR_CHAIN });
 
-    // RFC 8693 §4.4 describes `may_act` in the words §4.1 uses for `act`, and the
-    // registry declares ONE member set for both. Asserted separately rather than
+    // `may_act` and `act` share ONE member declaration in the registry
+    // (RFC 8693 §4.1, RFC 8693 §4.4). Asserted separately rather than
     // inferred: the two claims are two registry entries, and "they agree" is the
     // fact worth being able to see break.
     expect(wireClaimOf(token, "may_act")).toEqual(WIRE_ACTOR_CHAIN);
@@ -289,12 +278,12 @@ describe("the act / may_act claims on the wire", () => {
   });
 
   test("an actor member aegis does not declare rides UNTOUCHED on both wires, at depth", async () => {
-    // RFC 8693 §4.1 leaves the actor's member set open, and §4.4 names `email` as
-    // an example. The member is carried VERBATIM — a case flip would rewrite a
-    // name another specification chose — and it is asserted at DEPTH because a
-    // tail policy declared on the claim and forgotten on the nested member would
-    // pass a depth-1 row and refuse this one. (That was live for one measurement:
-    // `open` sits on the CODEC, and the nested `act` member declares its own.)
+    // The actor's member set is OPEN (RFC 8693 §4.1, RFC 8693 §4.4). The member
+    // is carried VERBATIM — a case flip would rewrite a name another
+    // specification chose — and it is asserted at DEPTH because a tail policy
+    // declared on the claim and forgotten on the nested member would pass a
+    // depth-1 row and refuse this one: `open` sits on the CODEC, and the nested
+    // `act` member declares its own.
     const chain = {
       subject: "service-1",
       registeredBy: "https://scheme.example.test",
@@ -318,13 +307,13 @@ describe("the act / may_act claims on the wire", () => {
   test("the compact COSE encoding keeps an undeclared member instead of dropping it", async () => {
     // ⚠⚠ THE PER-MODE DATA LOSS THIS EXISTS FOR. A label map built by walking the
     // LABEL TABLE holds only the members the table names, so an undeclared one
-    // vanished from a signed token in `proprietary` mode while the interoperable
-    // encoding of the same claim kept it — one domain call, two encodings, two
-    // different statements, and the smaller token is the one a deployment turns on.
+    // would vanish from a signed token in `proprietary` mode while the
+    // interoperable encoding of the same claim kept it — one domain call, two
+    // encodings, two different statements, and the smaller token is the one a
+    // deployment turns on.
     //
-    // RFC 9052 §1.5 is what makes the honest encoding available: "In COSE, we use
-    // text strings, negative integers, and unsigned integers as map keys", grammar
-    // `label = int / tstr`. So the map is MIXED — declared members under their
+    // A COSE label is `int / tstr` (RFC 9052 §1.5), which is what makes the
+    // honest encoding available: the map is MIXED — declared members under their
     // integers, the tail under its own name — and asserting both halves in one
     // `Map` is what stops an encoder that gave up and emitted the string-keyed
     // structure wholesale from passing.
@@ -404,59 +393,6 @@ describe("the act / may_act claims on the wire", () => {
     }
   });
 
-  /**
-   * ⭐ THE COMPACT-COSE `__proto__` PIN NOW LIVES IN THE SPECIFICATION, as the
-   * conformance row `a-compact-cose-member-map-refuses-a-text-__proto__-label`.
-   * The `forged` GIVEN states the member map as key/keyedBy/value rows, which is
-   * the shape a JS object cannot hold, so the table can finally arbitrate it.
-   * ⚠ Re-measured on the final tree before this one was deleted: rewriting
-   * `internal/cose/compact-map.ts`'s `Object.defineProperty` to
-   * `obj[field] = decoded` reddens that row with the refusal replaced by
-   * `Claim "act" must be an object` — the own key was never created.
-   */
-
-  test("a `__proto__` member is refused at BOTH STATIC VOCABULARY DOORS", () => {
-    // ⛔⛔ `__proto__` is a legal JSON member name that ASSIGNMENT treats as a
-    // prototype setter, so a claim carrying one produced a value whose
-    // `Object.keys` and `JSON.stringify` showed it as absent while
-    // `claims.act.subject` returned the attacker's value — data a consumer's
-    // natural read returns and every audit log renders as missing. The collision
-    // guard cannot see it either: no own key is created, so nothing is claimed
-    // twice.
-    //
-    // ⭐ THE TOKEN DOOR IS NOW IN THE SPECIFICATION, as the conformance row
-    // `a-structured-member-named-__proto__-is-refused-rather-than-made-a-prototype`
-    // — a forged JOSE token read at the KEYLESS `parse` door, which is the real
-    // threat model (a payload is reported without a signature check, so the
-    // attacker needs no key). What stays here is what a ROW CANNOT STATE: these
-    // TABLE HAS NO STEP FOR THESE DOORS AT ALL. Every verb a row may name:
-    // `accepts` `bucket` `claims` `clock` `custom` `decrypt` `deployment` `dpop`
-    // `header` `keys` `kit-verify` `mint` `parse` `profile` `raw` `rejects`
-    // `static-assert` `token` `untranslatedClaims` `verify` `wireClaims`
-    // `wirePayload` `wireProtectedHeader` `wireStructure` `wireUnprotectedHeader`
-    // — 25 of them (`grep -oE 'step: "[a-zA-Z-]+"' src/__fixtures__/scenarios.ts
-    // | sort -u`), and neither `Aegis.toDomain` nor `Aegis.toWire` is among them;
-    // `run-scenario.ts` never calls either, and `static-assert` is
-    // `Aegis.matches`/`Aegis.assert`, a different surface.
-    //
-    // ⚠ AN EARLIER VERSION OF THIS NOTE GAVE A DIFFERENT AND FALSE REASON — that
-    // a row could not hold the input because an object literal invokes the
-    // prototype setter, so `JSON.parse` was the only way to build one. Measured
-    // in node: a COMPUTED key does create a real own property, and only the plain
-    // literal form does not.
-    //   `{ ["__proto__"]: { x: 1 } }` → hasOwn true,  keys ["__proto__"]
-    //   `{ __proto__: { x: 1 } }`     → hasOwn false, keys []
-    // So a row COULD carry the value. What it cannot do is name a door.
-    expect(() =>
-      Aegis.toDomain(JSON.parse('{"act":{"__proto__":{"subject":"attacker"}}}')),
-    ).toThrow(
-      expect.objectContaining({ code: "claim_structure_invalid" }) as unknown as Error,
-    );
-    expect(() => Aegis.toWire(JSON.parse('{"act":{"__proto__":{"sub":"x"}}}'))).toThrow(
-      expect.objectContaining({ code: "claim_structure_invalid" }) as unknown as Error,
-    );
-  });
-
   test("a member the caller spelled twice is refused rather than resolved by key order", async () => {
     // The declared `subject` resolves to the wire `sub`; a caller-supplied `sub`
     // rides the open tail and lands on the same key. Refused at the emission
@@ -500,13 +436,11 @@ describe("the act / may_act claims on the wire", () => {
   });
 
   test("a CWT AEGIS ITSELF WROTE with one member keyed twice is refused at the KEYLESS door", async () => {
-    // ⛔⛔ THE COSE-ONLY COLLISION. RFC 9052 §1.5 makes the integer label and the
-    // interoperable text name different map keys ("In COSE, we use text strings,
-    // negative integers, and unsigned integers as map keys", grammar
-    // `label = int / tstr`) — but they are two renderings of ONE declared member,
-    // so a map carrying both said two things about one field and the LAST one
-    // won, silently. Measured before the fix: `act` as
-    // `Map { 2 => "audited-service", "sub" => "rogue-service" }` read back as
+    // ⛔⛔ THE COSE-ONLY COLLISION. The integer label and the interoperable text
+    // name are different map keys (RFC 9052 §1.5) but two renderings of ONE
+    // declared member, so a map carrying both says two things about one field.
+    // Left to the last writer, `act` as
+    // `Map { 2 => "audited-service", "sub" => "rogue-service" }` reads back as
     // `{ subject: "rogue-service" }`, replacing the actor the issuer named.
     //
     // ⭐ THE VERIFYING DOOR IS NOW IN THE SPECIFICATION, as the conformance row

@@ -246,15 +246,14 @@ const EMPTY_CLAIM_CONTENT: SignContent = {
  * while `cnf`, `act`, `sub_id`, `events`, `authorization_details` and `address`
  * each reach the wire through a per-claim builder whose output IS the record.
  *
- * ⚠ `confirmation` carries `keyId` and NOT `thumbprint`. RFC 9679 `ckt` hashes
- * the CBOR canonicalisation and RFC 7638 `jkt` the JSON one, so `jkt` has no COSE
- * form at all and a `thumbprint` here would make the COSE row refuse instead of
- * emit. `keyId` is the one confirmation member both wires carry, which is what
- * lets ONE content bag stand in front of both. The JOSE-only member gets its own
- * row below.
+ * ⚠ `confirmation` carries `keyId` and NOT `thumbprint`. aegis gives `jkt` no
+ * COSE label at all (`src/internal/claims/cnf-members.ts#const NO_COSE_JKT`), so
+ * a `thumbprint` here would make the COSE row refuse instead of emit. `keyId` is
+ * carried on both wires, which is what lets ONE content bag stand in front of
+ * both. The JOSE-only member gets its own row below. RFC 9679 §5.5, RFC 7638.
  *
- * ⚠ `act` NESTS an `act`. RFC 8693 §4.1 defines the actor chain recursively, and
- * a one-level actor would let a builder that never recursed look correct.
+ * ⚠ `act` NESTS an `act` — a one-level actor would let a builder that never
+ * recursed look correct. RFC 8693 §4.1.
  */
 const STRUCTURED_CONTENT: SignContent = {
   subject: SUBJECT,
@@ -316,8 +315,8 @@ const BYTES_PAYLOAD: PayloadCell = {
  * The object an `encrypt` row seals — spelled in DOMAIN names on purpose.
  *
  * ⚠ `aegis.encrypt` seals it VERBATIM: `subject` stays `subject` and never
- * becomes `sub` or RFC 8392's label 2. The domain spelling is what makes a
- * regression to the deleted domain→wire translation legible — the plaintext
+ * becomes `sub` or the CWT label 2 (RFC 8392 §4). The domain spelling is what
+ * makes a regression to the deleted domain→wire translation legible — the plaintext
  * length would move on every one of these rows.
  */
 const ENCRYPT_OBJECT: PayloadCell = {
@@ -451,7 +450,7 @@ export const CORPUS_CASES: ReadonlyArray<CorpusCase> = [
   {
     verb: "mint",
     name: "mint-default-jwt-confirmation-thumbprint",
-    note: "The one confirmation member the COSE wire cannot carry. RFC 9449 §6 `jkt` is the RFC 7638 JSON thumbprint, and the registry marks it absent on COSE — so this row records the JOSE spelling of a member that has no COSE twin, which the shared structured row deliberately does not carry.",
+    note: "A confirmation member the COSE wire cannot carry: the registry marks `jkt` absent on COSE, so this row records the JOSE spelling of a member that has no COSE twin — the shared structured row deliberately does not carry it. RFC 9449 §6, RFC 7638.",
     profile: "default",
     format: "jwt",
     content: {
@@ -621,7 +620,7 @@ export const CORPUS_CASES: ReadonlyArray<CorpusCase> = [
   {
     verb: "mint",
     name: "mint-default-cwt-header-bag",
-    note: "The caller header bag on the COSE wire: the SAME domain option that produced `oid` on JOSE lands at the COSE label the parameter rides under. `oid` has no IANA COSE parameter, so it takes a lindorm PRIVATE-USE label — and this row states no `proprietary`, so it is the INTEROPERABLE spelling: the text label `oid` (RFC 9052 §1.5, `label = int / tstr`), not the integer RFC 8152 §16.2 leaves to private use and no foreign reader can interpret. The row below holds the other spelling.",
+    note: "The caller header bag on the COSE wire: the SAME domain option that produced `oid` on JOSE lands at the COSE label the parameter rides under. `oid` has no IANA COSE parameter, so it takes a lindorm PRIVATE-USE label — and this row states no `proprietary`, so aegis writes the INTEROPERABLE spelling, the text label `oid` rather than the private-use integer no foreign reader can interpret. The row below holds the other spelling. RFC 9052 §1.5, RFC 8152 §16.2.",
     profile: "default",
     format: "cwt",
     content: { subject: SUBJECT, expires: "1h" },
@@ -713,7 +712,7 @@ export const CORPUS_CASES: ReadonlyArray<CorpusCase> = [
   {
     verb: "mint",
     name: "mint-id-token-cwt-encrypted-dir",
-    note: "Sign-then-encrypt on the COSE wire — a COSE_Encrypt0 whose IV rides the unprotected bucket (RFC 9052 §5.2).",
+    note: "Sign-then-encrypt on the COSE wire — a COSE_Encrypt0 whose IV rides the unprotected bucket (RFC 9052 §3.1).",
     profile: "id_token",
     format: "cwt",
     content: { subject: SUBJECT, audience: CLIENT_AUDIENCE },
@@ -747,7 +746,7 @@ export const CORPUS_CASES: ReadonlyArray<CorpusCase> = [
   {
     verb: "mint",
     name: "mint-id-token-cwm-oct",
-    note: "A MACed id token — OIDC Core §10.1 permits an HS-signed id token for a confidential client, and this is its COSE form.",
+    note: "A MACed id token in its COSE form — the HS-signed id token a confidential client may take. OIDC Core §10.1.",
     profile: "id_token",
     format: "cwm",
     content: { subject: SUBJECT, audience: CLIENT_AUDIENCE },
@@ -811,7 +810,7 @@ export const CORPUS_CASES: ReadonlyArray<CorpusCase> = [
   {
     verb: "sign",
     name: "sign-jws-object-cert",
-    note: "Cert binding on the opaque JOSE path — the opaque JOSE namespace and `mint` resolve the binding through the same code, so both must be held. ⚠ `chain`, not `thumbprint`: a cert-bearing key emits `x5t#S256`/`x5t` on EVERY sign, so a `thumbprint` row produces bytes identical to a row that states nothing and the recorded token shows nothing about the option. `chain` is the only mode that adds `x5c` (RFC 7515 §4.1.6), so the recorded token is attributable to the request. ⚠ The corpus RECORDS; it does not assert header contents — the capability itself is held by the disposition probe row `jose signOpaque forwards bindCertificate`. The COSE twin honours `bindCertificate` too: `CwsKit.sign` resolves it and writes RFC 9360 §2's `x5chain` (label 33).",
+    note: "Cert binding on the opaque JOSE path — the opaque JOSE namespace and `mint` resolve the binding through the same code, so both must be held. ⚠ `chain`, not `thumbprint`: a cert-bearing key emits `x5t#S256`/`x5t` on EVERY sign, so a `thumbprint` row produces bytes identical to a row that states nothing and the recorded token shows nothing about the option. `chain` is the only mode that adds `x5c` (RFC 7515 §4.1.6), so the recorded token is attributable to the request. ⚠ The corpus RECORDS; it does not assert header contents — the capability itself is held by the disposition probe row `jose signOpaque forwards bindCertificate`. The COSE twin honours `bindCertificate` too: `CwsKit.sign` resolves it and writes `x5chain` at label 33 (RFC 9360 §2).",
     format: "jws",
     payload: OBJECT_PAYLOAD,
     signKey: "ec-sig-cert",
@@ -918,7 +917,7 @@ export const CORPUS_CASES: ReadonlyArray<CorpusCase> = [
   {
     verb: "encrypt",
     name: "encrypt-jwe-opaque-bytes-cbc",
-    note: "AES-CBC-HMAC content encryption — registered for JOSE (RFC 7518 §5.2.5) and private-use for COSE, so the same key is standard here and gated there.",
+    note: "AES-CBC-HMAC content encryption — a standard JOSE `enc` value, and private-use on COSE, so the same key is standard here and gated there. RFC 7518 §5.2.3, RFC 9053 §4.",
     format: "jwe",
     data: BYTES_PAYLOAD,
     encryptKey: "oct-enc-cbc",
@@ -955,7 +954,7 @@ export const CORPUS_CASES: ReadonlyArray<CorpusCase> = [
   {
     verb: "encrypt",
     name: "encrypt-cwe-claims-dir",
-    note: "A domain-named object sealed as a COSE_Encrypt0 — the plaintext is the caller's own JSON under the caller's own keys, so `cty` (label 3) is `application/json`, the same answer every other opaque door gives. ⚠ It is NOT the RFC 8392 Message: an encrypt has no signature behind it, so it may not promote `subject` to the registered label 2 that a conformant reader would take for an asserted claim. Sealing a CWT is `mint(…, { encrypt })`, which signs first.",
+    note: "A domain-named object sealed as a COSE_Encrypt0 — the plaintext is the caller's own JSON under the caller's own keys, so `cty` (label 3) is `application/json`, the same answer every other opaque door gives. ⚠ It is NOT a CWT Claims Set: an encrypt has no signature behind it, so aegis may not promote `subject` to the registered label 2 a conformant reader would take for an asserted claim. Sealing a CWT is `mint(…, { encrypt })`, which signs first. RFC 8392 §4.",
     format: "cwe",
     data: ENCRYPT_OBJECT,
     encryptKey: "oct-enc",
@@ -980,7 +979,7 @@ export const CORPUS_CASES: ReadonlyArray<CorpusCase> = [
   {
     verb: "encrypt",
     name: "encrypt-cwe-claims-cbc-proprietary",
-    note: "AES-CBC-HMAC on the COSE wire — private-use in RFC 9053 terms, so it is reachable only through the proprietary gate, which is the one thing that flag still decides here.",
+    note: "AES-CBC-HMAC on the COSE wire — aegis emits it under a lindorm private-use label, so it is reachable only through the proprietary gate, which is the one thing that flag still decides here. RFC 9053 §4.",
     format: "cwe",
     data: ENCRYPT_OBJECT,
     encryptKey: "oct-enc-cbc",

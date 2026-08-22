@@ -23,8 +23,7 @@ export type AutoInjectableClaim = "issuedAt" | "tokenId" | "notBefore" | "issuer
  * - `"none"` — the profile mandates no typ. Mint falls back to the
  *   tokenType-derived default (bare `JWT`); verify runs no typ check.
  * - `"required"` — mint stamps `value`; verify rejects an absent or
- *   mismatching typ (explicit typing, RFC 8725 §3.11 — a RECOMMENDATION aegis
- *   applies as policy).
+ *   mismatching typ (explicit typing, applied as aegis policy — RFC 8725 §3.11).
  *
  * Presence is a verify-side knob only: mint always stamps `value` for
  * `"required"`.
@@ -103,9 +102,9 @@ export type TokenProfile<
  * ⛔ MINUS `custom`, and the `Omit` is the tier rule made structural. `aegis.mint`
  * is a DOMAIN verb: a caller reaches it without learning either wire's
  * vocabulary, and an UNREGISTERED header parameter has no domain name by
- * definition. Leaving `custom` reachable here was worse than merely off-tier —
+ * definition. Leaving `custom` reachable is worse than merely off-tier:
  * `mint-token.ts` forwards a NAMED subset of this envelope to `encryptOuter`, so
- * the bag typechecked and was then silently dropped, which is precisely the
+ * the bag would typecheck and then be silently dropped — precisely the
  * accepted-and-ignored outcome the wire disposition tables exist to prevent.
  * Custom parameters are a KIT-tier capability: `aegis.jwe.encrypt` /
  * `aegis.cwe.encrypt` take them. Pinned in `types/header/wire-envelope.test.ts`.

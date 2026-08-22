@@ -106,8 +106,8 @@ describe("custom header parameters, on read", () => {
     const kit = new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger });
     const token = kit.sign(WIRE_CLAIMS);
 
-    // A tstr label AND an integer one — RFC 9052 §1.4 admits both forms, and both
-    // key the custom bag by `String(label)`.
+    // A tstr label AND an integer one — both forms are labels (RFC 9052 §1.5), and
+    // both key the custom bag by `String(label)`.
     const decoded = CwtKit.decode(
       injectUnprotected(
         injectProtected(token, [
@@ -151,14 +151,11 @@ describe("custom header parameters, on read", () => {
 
   /**
    * ⛔ THE KEY COMES OFF A TOKEN A STRANGER WROTE, so the ASSIGNMENT that files it
-   * is as dangerous as a membership test on it. `JSON.parse` creates `__proto__`
-   * as an OWN data property — it survives `Object.entries` — and writing it onto a
-   * plain `{}` hits `Object.prototype`'s setter instead: the parameter is DROPPED
-   * (breaking the verbatim-carriage contract this bag states) and the bag silently
-   * inherits attacker-chosen keys. `Object.create(null)` answers both at once.
-   *
-   * This package already bans `in` on a caller-influenced key for the same class;
-   * the write side is the half that had no rule.
+   * is as dangerous as a membership test on it. `JSON.parse` creates `__proto__` as
+   * an OWN data property that survives `Object.entries`, and writing it onto a plain
+   * `{}` hits `Object.prototype`'s setter instead: the parameter is DROPPED and the
+   * bag silently inherits attacker-chosen keys. `Object.create(null)` answers both.
+   * This package bans `in` on a caller-influenced key for the same class.
    */
   test("a foreign `__proto__` member is CARRIED as an own key, and pollutes nothing", () => {
     const kit = new JwtKit({ kryptos: TEST_EC_KEY_SIG, logger });
@@ -207,21 +204,15 @@ describe("custom header parameters, on read", () => {
 
   /**
    * ⚠⚠ A KNOWN, DELIBERATE LIMITATION — pinned so it is visible rather than
-   * discovered. RFC 9052 §1.4 makes the integer label `7` and the text label
-   * `"7"` DIFFERENT labels, and CBOR keys them apart; this package states that
-   * rule elsewhere in as many words (`scenarios.ts#WireKey`). The `custom` bag
-   * cannot honour it: {@link CoseHeaderBuckets} types it as
-   * `Record<string, unknown>`, so an integer label can only be reported under its
-   * decimal spelling and a bucket carrying both forms yields ONE key.
+   * discovered. The integer label `7` and the text label `"7"` are DIFFERENT labels
+   * (RFC 9052 §1.5) and CBOR keys them apart, but {@link CoseHeaderBuckets} types
+   * the `custom` bag `Record<string, unknown>`, so a bucket carrying both forms
+   * yields ONE key.
    *
-   * Representing both faithfully needs {@link CoseHeaderBuckets.custom} typed
-   * `Map<CoseLabel, unknown>` rather than `Record<string, unknown>` — a change to
-   * a PUBLIC read surface, which is why it is not made here. The collision is
-   * stated rather than hidden: a token carrying both forms of the same numeral
-   * loses one, and this row says which.
-   *
-   * ⚠ It needs a token no aegis writer produces and no sane issuer emits, which
-   * is why it is a limitation rather than a defect worth a surface change.
+   * Representing both faithfully means typing {@link CoseHeaderBuckets.custom}
+   * `Map<CoseLabel, unknown>` — a change to a PUBLIC read surface, which is why it
+   * is not made here. ⚠ It takes a token no aegis writer produces and no sane issuer
+   * emits, which is why it is a limitation rather than a defect worth that change.
    */
   test("both label FORMS of one numeral collapse to a single custom key", () => {
     const kit = new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger });
@@ -252,9 +243,8 @@ describe("custom header parameters, on read", () => {
    *
    * ⚠ WHICH MAKES MERGE ORDER A SECURITY PROPERTY, not a formality
    * ({@link writtenHeader}). Read with `custom` last, a stranger appending a text
-   * `"crit"` overrides the signed one — and `aegis.parse` checks no signature at
-   * all, so RFC 9052 §3.1's fatal-error rule can be satisfied by a `crit` the
-   * issuer never wrote.
+   * `"crit"` overrides the signed one — and `aegis.parse` checks no signature, so
+   * RFC 9052 §3.1's rule can be satisfied by a `crit` the issuer never wrote.
    */
   test("a TSTR label spelled like a registered parameter cannot shadow it", () => {
     const kit = new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger });
@@ -287,11 +277,10 @@ describe("custom header parameters, on read", () => {
 
   /**
    * ⛔ THE COLLISION'S NAMED CONSEQUENCE, pinned so the limitation cannot silently
-   * widen. RFC 9052 §3.1 makes a `crit` label whose parameter is NOT in the
-   * protected bucket a FATAL error. Here the crit names the INTEGER label 7 and
-   * only the TSTR `"7"` is present — different labels — but both reduce to the
-   * string `"7"` in the merged view, so the presence test passes and the fatal
-   * condition goes unraised.
+   * widen. The crit here names the INTEGER label 7 while only the TSTR `"7"` is
+   * present — different labels — but both reduce to the string `"7"` in the merged
+   * view, so the presence test passes and RFC 9052 §3.1's fatal condition goes
+   * unraised.
    *
    * ⚠ THE ROW ASSERTS THE LIMITATION, NOT A DESIRED BEHAVIOUR. It goes red the day
    * the bag is typed `Map<CoseLabel, unknown>` and the two labels stop colliding —
@@ -327,11 +316,10 @@ describe("custom header parameters, on read", () => {
 
   /**
    * ⛔ THE VALUE TYPE IS `unknown` AND STAYS THAT WAY, which is what lets a read
-   * report the wire rather than a normalisation of it. A custom parameter whose
-   * value is a nested map is a CBOR map on COSE and a JSON object on JOSE, and the
-   * two decoders hand back the shapes their wires carry. Converting either way
-   * would invent a structure on one wire or destroy label fidelity on the other —
-   * RFC 9052 §1.4 admits non-string keys, which an object cannot hold.
+   * report the wire rather than a normalisation of it. A nested custom value is a
+   * CBOR map on COSE and a JSON object on JOSE, and each decoder hands back the
+   * shape its wire carries. Converting either way would invent a structure on one
+   * wire or destroy label fidelity on the other (RFC 9052 §1.5).
    *
    * ⚠ A consumer therefore branches on the SHAPE, exactly as it would reading the
    * raw wire. The reasoning lives on the type

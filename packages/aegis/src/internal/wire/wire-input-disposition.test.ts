@@ -26,25 +26,17 @@ import type { Disposition } from "./wire-input-disposition.js";
 MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
 
 /**
- * THE PROOF that the disposition tables are not merely a claim.
+ * THE PROOF that the disposition tables are not merely a claim — both halves are
+ * RUN rather than read.
  *
- * A wire declares what it does with each of its kit's options, and both halves
- * of that declaration are run here rather than read:
- *
- * - `forwarded` — the operation is driven AT THE SEAM with a sentinel in every
- *   forwarded field, the kit method is spied, and each field is required to have
- *   ARRIVED with the caller's own value. This half is deliberately below the
- *   domain verbs: several kit options (`unprotected`, and `proprietary` on the
- *   opaque sign path) have no domain door at all, so a probe driven from
- *   `aegis.*` could not reach them. What the domain doors forward is the knob
- *   matrix's subject; what the WIRE forwards is this one's.
+ * - `forwarded` — driven AT THE SEAM, kit method spied, each field required to
+ *   have ARRIVED with the caller's own value. Below the domain verbs on purpose:
+ *   `unprotected`, and `proprietary` on the opaque sign path, have no domain door
+ *   for a probe to reach them through.
  * - `unsupported` — driven through the REAL domain verb, because the guard runs
- *   above the seam and a caller is the only thing that can trip it. A supplied
- *   value must be REFUSED.
+ *   above the seam and only a caller can trip it.
  *
- * ⛔ Delete a field from a wire's forward and this goes red. That is the whole
- * point: the rest-spread makes the drop unexpressible, and this proves the
- * spread is still what is there.
+ * ⛔ Delete a field from a wire's forward and this goes red.
  */
 describe("wire input dispositions", () => {
   /**
@@ -55,11 +47,9 @@ describe("wire input dispositions", () => {
   const SENTINEL: Dict = {
     header: { oid: "1.2.3.4" },
     tokenType: "probe",
-    // ⚠ The rule this file applies is DISTINGUISHABILITY FROM THE DEFAULT, not
-    // observability on the wire: the probe spies the kit call and asserts the
-    // received value, so it never inspects an emitted parameter. `"chain"` is the
-    // one mode no deployment default resolves to, which is what makes a received
-    // `"chain"` attributable to this sentinel and to nothing else.
+    // ⚠ The rule is DISTINGUISHABILITY FROM THE DEFAULT, not observability on the
+    // wire — the probe spies the kit call. `"chain"` is the one mode no deployment
+    // default resolves to, so a received `"chain"` is attributable to this alone.
     bindCertificate: "chain",
     proprietary: true,
     partyProducer: "cHJvZHVjZXItcHJvYmU",
@@ -68,16 +58,12 @@ describe("wire input dispositions", () => {
 
   /**
    * The one sentinel whose SHAPE is per-wire: JOSE names its single custom bucket
-   * `header`, COSE has `protected`/`unprotected`
-   * (`types/header/wire-envelope.ts`). A shared value would state a bucket only
-   * one wire's kit declares, and the JOSE kits would be handed a bag they cannot
-   * be handed by a caller.
+   * `header`, COSE has `protected`/`unprotected` (`types/header/wire-envelope.ts`).
    *
-   * ⚠ THE PER-WIRE TYPES ARE THE ASSERTION, because forwarding is a rest-spread
-   * and therefore SHAPE-BLIND: the probe below asserts the bag ARRIVED, so it
-   * passes just as green when the JOSE arm states the COSE spelling. Only the
-   * excess-property check on these two literals refuses that, which is what keeps
-   * the sentinel a shape a caller could actually have written.
+   * ⚠ THE PER-WIRE TYPES ARE THE ASSERTION. Forwarding is a rest-spread and so
+   * SHAPE-BLIND — the probe asserts only that the bag ARRIVED, and passes just as
+   * green when the JOSE arm states the COSE spelling. Only the excess-property
+   * check on these two literals refuses that.
    */
   const CUSTOM_SENTINEL: {
     jose: JoseWireTokenEnvelope["custom"];
@@ -103,10 +89,8 @@ describe("wire input dispositions", () => {
   ];
 
   /**
-   * The three WRITE operations. `decrypt` is absent because it is the READ one:
-   * the seam probe below drives each of these through its kit's own SIGN or
-   * ENCRYPT method, and a decrypt needs a token to exist first. It gets its own
-   * probe further down, so the omission is not a coverage hole.
+   * The three WRITE operations. `decrypt` is the READ one and needs a token to
+   * exist first, so it gets its own probe further down rather than a row here.
    */
   type WriteOperation = "signClaims" | "signOpaque" | "encryptContent";
 
@@ -145,12 +129,9 @@ describe("wire input dispositions", () => {
   };
 
   /**
-   * ⭐ THE INVENTORY, pinned as DATA OUTSIDE the generated matrices.
-   *
-   * Every `wire.operation.option -> use` triple. The matrices below are GENERATED
-   * from this same data, so they cannot notice it changing: a row whose `use`
-   * flips moves from one matrix to the other and both stay green. Only a pin
-   * outside the generation can see that.
+   * ⭐ THE INVENTORY, pinned as DATA OUTSIDE the generated matrices. A row whose
+   * `use` flips moves from one generated matrix to the other and both stay green;
+   * only a pin outside the generation sees it.
    *
    * ⚠ Iterates `Object.keys(wire.dispositions)`, NOT the hand-written OPERATIONS
    * list, so a fourth write operation appears here rather than going unprobed.
@@ -168,21 +149,17 @@ describe("wire input dispositions", () => {
     ).sort();
 
     // ⚠ A HARD COUNT beside the snapshot, deliberately NOT snapshotted: `vitest -u`
-    // rewrites a snapshot without anyone reading the diff, and this repo's own
-    // notes record `-u` doing exactly that. A plain assertion cannot be updated
-    // by `-u`, so a row that disappears has to be answered for by hand.
+    // rewrites a snapshot unread, and a plain assertion it cannot rewrite is what
+    // makes a disappearing row get answered for by hand.
     expect(inventory).toHaveLength(36);
     expect(inventory).toMatchSnapshot();
   });
 
   /**
-   * The hand-written {@link OPERATIONS} list is TOTAL over the write operations
-   * the tables declare.
-   *
-   * `WireInputDispositions` is a hand-written type and the `never` default in the
-   * probes below is exhaustive over the hand-written `WriteOperation` union, not
-   * over `keyof WireInputDispositions` — so a FOURTH write operation would
-   * typecheck, ship, and never be driven by either matrix. This is what notices.
+   * The hand-written {@link OPERATIONS} list is TOTAL over the write operations the
+   * tables declare. The `never` defaults below are exhaustive over the hand-written
+   * `WriteOperation` union, not over `keyof WireInputDispositions`, so a FOURTH
+   * write operation would typecheck and go undriven. This is what notices.
    */
   test.each(WIRES)(
     "$name declares exactly OPERATIONS plus the read operation",
@@ -194,28 +171,22 @@ describe("wire input dispositions", () => {
   );
 
   /**
-   * ⚠ THE THIRD ARM. `consumed` says the WIRE acts on the option ITSELF and does
-   * not pass it down, and neither probe below can demonstrate that: the seam
-   * probe asserts the kit was handed the value (it never is), and the refusal
-   * probe asserts the call throws (it does not). No wire declares one today, and
-   * this is what turns that into a stated FACT rather than a gap — the day a
-   * table gains a `consumed` row, this goes red and a probe has to be written
-   * before it can be relaxed.
+   * ⚠ THE THIRD ARM. `consumed` says the WIRE acts on the option itself and passes
+   * nothing down, which neither probe below can demonstrate — the seam probe
+   * asserts the kit was handed the value, the refusal probe asserts a throw. No
+   * wire declares one, so the day a table gains one this goes red and a probe has
+   * to be written before it can be relaxed.
    *
-   * ⚠ The two counts beside it are EXACT, and they are what SIZES each matrix.
-   * They were `> 0` — enough to catch an emptied filter, nothing else — and the
-   * inventory snapshot above does not replace them: `toHaveLength(40)` guards
-   * ARITY, so flipping every `unsupported` row to `forwarded` keeps the count at
-   * 40, empties the refusal matrix, and one `vitest -u` rewrites the snapshot
-   * unread and makes it green. A plain `toBe` cannot be updated by `-u`, which is
-   * the whole reason the hard count sits beside the snapshot rather than in it.
+   * ⚠ The counts are EXACT and are what SIZES each matrix. An arity-only guard
+   * would stay green while every `unsupported` row flipped to `forwarded` and
+   * emptied the refusal matrix; a plain `toBe` is also the one thing `vitest -u`
+   * cannot rewrite.
    *
-   * ⚠ These count the WRITE operations alone, because {@link rows} iterates
-   * {@link OPERATIONS}. 32 + 2 = 34, and the inventory's other two rows are the
-   * two wires' `decrypt.crit`, driven by the decrypt probe below. The two refusals
-   * are the COSE ECDH-ES party-info rows on `encryptContent`: RFC 9052 §5.2 makes
-   * a COSE_Encrypt0 direct encryption, so no key agreement happens for RFC 7518
-   * §4.6's party info to feed.
+   * ⚠ They count the WRITE operations alone, because {@link rows} iterates
+   * {@link OPERATIONS}; the inventory's remaining rows are the two wires'
+   * `decrypt.crit`. The two refusals are the COSE ECDH-ES party-info rows on
+   * `encryptContent` — a COSE_Encrypt0 runs no key-agreement step for the party
+   * info to describe (RFC 9052 §5.2, RFC 7518 §4.6).
    */
   test("every disposition arm is probed below, or provably empty", () => {
     expect(
@@ -276,10 +247,9 @@ describe("wire input dispositions", () => {
 
     /**
      * The options the KIT was handed, for ONE wire operation driven with ONE
-     * sentinel. One field at a time on purpose: the COSE kits refuse the same
-     * header parameter in both buckets (RFC 9052 §3 — a parameter belongs to one
-     * bucket), so a bag carrying every sentinel at once would fail on the header
-     * bags rather than on the forward this is about.
+     * sentinel. One field at a time: the COSE kits refuse the same header parameter
+     * in both buckets (RFC 9052 §3), so a bag carrying every sentinel at once would
+     * fail on the header bags rather than on the forward this is about.
      */
     const kitOptionsOf = async (
       wire: Wire,
@@ -310,15 +280,11 @@ describe("wire input dispositions", () => {
         }
       })();
 
-      // ⚠ The drive is allowed to THROW, and the catch is not a convenience. What
-      // this probe observes is the ARGUMENTS the kit was handed; whether the kit
-      // then ACCEPTS them is the kit's own question and the kits' own tests.
-      // `unprotected` is where the two come apart: the header registry marks
-      // every caller-settable parameter `placement: "protected"`, so on a COSE
-      // kit there is no value that both proves the forward and survives the
-      // kit's placement rule. A refusal raised BEFORE the kit is called is still
-      // caught — by the call-count assertion below, which is what a dropped
-      // forward looks like.
+      // ⚠ The drive is allowed to THROW, and the catch is not a convenience: this
+      // probe observes the ARGUMENTS the kit was handed, not whether the kit accepts
+      // them. `unprotected` is where the two come apart — the header registry marks
+      // every caller-settable parameter `placement: "protected"`. A refusal raised
+      // BEFORE the kit is called is still caught by the call-count assertion below.
       let refusal: unknown;
 
       try {
@@ -384,15 +350,12 @@ describe("wire input dispositions", () => {
     );
 
     /**
-     * The READ operation's own seam probe. It cannot join the matrix above — that
-     * one drives a kit's SIGN or ENCRYPT method, and a decrypt needs a token
-     * first — so the artifact is produced through the same wire's
-     * `encryptContent` and then read back through its `decrypt`.
+     * The READ operation's own seam probe: the artifact is produced through the
+     * same wire's `encryptContent` and read back through its `decrypt`.
      *
      * ⚠ Without it `decrypt.crit` would be a `forwarded` row nothing drives, and
-     * the declaration is what makes a custom critical parameter readable at all
-     * (`internal/utils/reject-unknown-critical.ts`) — a dropped forward turns a
-     * token aegis just minted into one it refuses.
+     * that forward is what makes a custom critical parameter readable at all
+     * (`internal/utils/reject-unknown-critical.ts`).
      */
     test.each(WIRES)("$name decrypt forwards crit", async ({ name, wire }) => {
       const kryptos = name === "jose" ? TEST_EC_KEY_ENC_CERT : TEST_OCT_KEY_ENC;
@@ -461,10 +424,9 @@ describe("wire input dispositions", () => {
           );
 
         case "signOpaque":
-          // The opaque KIT namespaces. They now reach `wire.signOpaque` through
-          // the shared guard (`raw-sign-opaque.ts`) instead of calling their
-          // wire's signer directly, which is what puts this operation back
-          // within reach of a public door.
+          // The opaque KIT namespaces reach `wire.signOpaque` through the shared
+          // guard (`raw-sign-opaque.ts`), which is what puts this operation within
+          // reach of a public door.
           return wire === "jose"
             ? aegis.jws.sign("probe-payload", { [option]: value } as never)
             : aegis.cws.sign("probe-payload", { [option]: value } as never);

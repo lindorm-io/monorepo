@@ -3,11 +3,10 @@ import { ISSUER_IS_URI } from "./rule-predicates.js";
 
 /**
  * Erasure token — `erasure+jwt`, a Security Event Token delivered over a webhook
- * channel. REQUIRED:
- * iss, aud, iat, exp, jti, sub, events (`urn:lindorm:event:rtbf`); `nonce`
- * MUST NOT be present. Not encryptable. SET-shaped (RFC 8417 permits any JWS
- * alg), so `confidential` for parity with security_event: `HS*` permitted,
- * `none` rejected. (lindorm-internal — no external RFC governs the alg.)
+ * channel (RFC 8417). Not encryptable.
+ *
+ * ⚠ `confidential` is lindorm's own choice, for parity with `security_event`: no
+ * external specification governs the alg here.
  */
 export const erasureTokenProfile = defineProfile({
   name: "erasure_token",

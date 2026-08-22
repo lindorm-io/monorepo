@@ -78,12 +78,12 @@ export const TEST_OCT_KEY_ENC = KryptosKit.from.b64({
  * A SECOND `dir` key, differing from {@link TEST_OCT_KEY_ENC} only in its content
  * encryption (`A128GCM` rather than `A256GCM`).
  *
- * A COSE_Encrypt0 is single-recipient direct encryption (RFC 9052 §5.2), so every
- * `cwe` key is a `dir` key and the recipient's `kid` travels in the UNPROTECTED
- * bucket as a byte string — which no literal can be compared against. The content
- * encryption is the one property of the resolved key that IS legible from the
- * protected bucket on both wires, so a pair that differs in it is what makes "the
- * key selector was read" observable at all.
+ * A COSE_Encrypt0 carries no recipients array, so aegis requires every `cwe` key
+ * to be a `dir` key, and the recipient's `kid` travels in the UNPROTECTED bucket
+ * as a byte string — which no literal can be compared against. RFC 9052 §5.2,
+ * RFC 9052 §3.1. The content encryption is the one property of the resolved key
+ * that IS legible from the protected bucket on both wires, so a pair that differs
+ * in it is what makes "the key selector was read" observable at all.
  */
 export const TEST_OCT_KEY_ENC_GCM128 = KryptosKit.from.b64({
   ...defaults,
@@ -100,11 +100,12 @@ export const TEST_OCT_KEY_ENC_GCM128 = KryptosKit.from.b64({
 /**
  * A `dir` key declaring an AES-CBC-HMAC content encryption.
  *
- * It exists for ONE distinction: RFC 7518 §5.2.5 registers `A128CBC-HS256` as a
- * JOSE `enc` value, while RFC 9053 §4 registers only the AES-GCM and AES-CCM
- * families for COSE — so the same encryption is standard on one wire and
- * private-use on the other, which is the whole subject of the `proprietary`
- * interop gate. No other fixture can put that gate in front of a call.
+ * It exists for ONE distinction: `A128CBC-HS256` is a standard JOSE `enc` value,
+ * while aegis has to emit it under a lindorm private-use COSE label
+ * (`src/internal/cose/enc-labels.ts#const ENC_TO_COSE_PRIVATE`) — so the same
+ * encryption is standard on one wire and gated on the other, which is the whole
+ * subject of the `proprietary` interop gate. No other fixture can put that gate in
+ * front of a call. RFC 7518 §5.2.3, RFC 9053 §4.
  */
 export const TEST_OCT_KEY_ENC_CBC = KryptosKit.from.b64({
   ...defaults,

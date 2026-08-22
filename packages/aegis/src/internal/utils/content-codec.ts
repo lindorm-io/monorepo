@@ -6,19 +6,10 @@ import { decodeCbor } from "../cose/cbor.js";
 /**
  * ⭐ ONE ENCODING FOR OPAQUE CONTENT, ON EVERY DOOR. A structured value is JSON
  * (RFC 8259) whichever wire carries it — this codec serialises OPAQUE content
- * only, and opaque content is bytes the kit was handed rather than a claims set
- * it understands, so there is nothing about the COSE wire that makes CBOR the
- * truer answer for it. A CWT's CLAIMS are a different thing entirely and take a
- * different road: `internal/cose/cwt-message.ts` maps them to RFC 8392 integer
- * labels and never reaches this file.
- *
- * ⚠ The write side once took a per-kit `structured: "cbor" | "json"` family, and
- * its docstring called that "the ONE thing that differs between the two wire
- * families … Every kit passes its own". Neither half was true: all four callers
- * passed `"json"` (`JwtKit`/`JwsKit`/`JweKit`/`CwsKit`/`CweKit`), and the CBOR arm
- * existed for a CWE claims plaintext that the pure-confidentiality encrypt/decrypt
- * pair deleted. Only the READ side keeps its `application/cbor` case, and that one
- * is reachable: a FOREIGN token may declare the media type RFC 8949 §9.1 registers.
+ * only, bytes the kit was handed rather than a claims set it understands, so
+ * nothing about the COSE wire makes CBOR the truer answer. A CWT's CLAIMS take a
+ * different road entirely: `internal/cose/cwt-message.ts` maps them to RFC 8392
+ * integer labels and never reaches this file.
  */
 
 /**
@@ -57,17 +48,11 @@ export const bareMediaType = (cty: string): string =>
 
 /**
  * A NESTED JOSE token — `application/jwt`, the `JWT` short form (RFC 7519 §5.2),
- * any structured `…+jwt` media type, or `application/jose`, which RFC 7515 §9.2.1
- * registers for "a JWS or JWE using the JWS Compact Serialization or the JWE
- * Compact Serialization". Its native form is a compact `string`.
+ * any structured `…+jwt` media type, or `application/jose` (RFC 7515 §9.2.1). Its
+ * native form is a compact `string`.
  *
- * ⚠ BOTH spellings of `application/jose` are accepted. RFC 7515 §4.1.10: "it is
- * RECOMMENDED that producers omit an 'application/' prefix of a media type value
- * in a 'cty' Header Parameter when no other '/' appears in the media type value.
- * A recipient using the media type value MUST treat it as if 'application/' were
- * prepended to any 'cty' value not containing a '/'." So a conformant foreign
- * producer may send either, and the bare form is the RECOMMENDED one — refusing
- * it would be refusing the spelling the RFC prefers.
+ * ⚠ BOTH spellings are accepted, prefixed and bare: a conformant foreign producer
+ * may send either, and the bare form is the recommended one. RFC 7515 §4.1.10.
  */
 const isJoseTokenCty = (bare: string): boolean =>
   bare === "application/jwt" ||
@@ -190,12 +175,12 @@ export const reconstructContent = <T extends TokenContent = Buffer>(
   const strategy = reconstructStrategy(cty);
 
   switch (strategy) {
-    // ⚠ A READ-ONLY case: this codec never WRITES `application/cbor` (there is
-    // one encoding for opaque content, and it is JSON). It is here for a FOREIGN
-    // token that declares the media type RFC 8949 §9.1 registers — without it
-    // such a payload fell through to the `buffer` fallback and a caller got bytes
-    // where the producer stated an object. `preferMap: false` so a string-keyed
-    // CBOR map decodes to a plain object, mirroring the JSON twin.
+    // ⚠ A READ-ONLY case: this codec never WRITES `application/cbor` (opaque
+    // content is JSON). It is here for a FOREIGN token declaring the media type
+    // RFC 8949 §9.3 registers — without it such a payload falls through to the
+    // `buffer` fallback and a caller gets bytes where the producer stated an
+    // object. `preferMap: false` so a string-keyed CBOR map decodes to a plain
+    // object, mirroring the JSON twin.
     case "cbor":
       return decodeCbor<T>(bytes, { preferMap: false });
 

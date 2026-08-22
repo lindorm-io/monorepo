@@ -25,9 +25,9 @@ describe("resolveDomainBuckets", () => {
     expect(dictToBuckets(JOSE_WIRE)).toMatchSnapshot();
   });
 
-  // The bug this closes: the public translator resolved a NARROWER surface than
-  // the token read path, so profile and sensitive claims stayed FLAT in `claims`
-  // and every consumer re-derived the split from a hand-kept mirror list.
+  // ⚠ THE TWO DOORS RESOLVE THE SAME SURFACE. A public translator resolving a
+  // NARROWER one leaves profile and sensitive claims FLAT in `claims`, and every
+  // consumer then re-derives the split from a hand-kept mirror list.
   test("should leave neither profile nor sensitive claims in claims", () => {
     const { claims } = dictToBuckets(JOSE_WIRE);
 

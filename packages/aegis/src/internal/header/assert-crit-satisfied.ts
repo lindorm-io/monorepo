@@ -7,84 +7,56 @@ import type { CoseLabel } from "../cose/cose-label.js";
  * Refuse a FINISHED protected bucket whose `crit` names a parameter the bucket
  * gives a recipient NOTHING TO UNDERSTAND — absent, `undefined`, `null`, or empty.
  *
- * ⚠ THE VALUE-SIDE HALF OF A PAIR. `assert-crit-eligible.ts` is the NAME-side
- * one and runs FIRST, on the caller's bag: it asks whether the member may stand
- * in a `crit` at all (RFC 7515 §4.1.11's producer prohibition, read off the
- * registry's `critEligible` column). This one asks whether the finished bucket
- * carries a value for it. The two need different inputs — a name can be judged
- * before any tier is merged, a value cannot — which is why they are two
- * functions at two points rather than one check.
+ * ⚠ THE VALUE-SIDE HALF OF A PAIR. `assert-crit-eligible.ts` is the NAME-side one
+ * and runs FIRST, on the caller's bag; this one asks whether the finished bucket
+ * carries a value. They need different inputs — a name can be judged before any
+ * tier is merged, a value cannot.
  *
- * `crit` is a producer's statement that a recipient MUST understand a parameter's
- * VALUE (RFC 7515 §4.1.11, RFC 9052 §3.1). Saying that while supplying no value
- * is a contradiction, and it has to be named where it is MADE — at the write —
- * because every later reader sees only the finished header. Both specifications
- * make the finished shape fatal rather than merely unsupported: RFC 9052 §3.1 —
- * *"If the 'crit' value list includes a label for which the header parameter is
- * not in the protected-header-parameters bucket, this is a fatal error in
- * processing the message."* So a writer that emitted one would mint a token
- * EVERY recipient refuses, including the ones the producer wrote it for, and
- * aegis's own `validateCrit` refuses it on arrival.
+ * `crit` states that a recipient MUST understand a parameter's VALUE (RFC 7515
+ * §4.1.11, RFC 9052 §3.1), and both specifications make the contradictory shape
+ * FATAL rather than merely unsupported. It has to be named at the WRITE, because
+ * every later reader sees only the finished header — a token emitted with one is
+ * refused by every recipient, aegis's own `validateCrit` included.
  *
- * ⚠ ABSENT AND EMPTY ARE ONE VERDICT, and the code says it ONCE rather than in two
- * arms: the check reads the VALUE (`isEmpty(bucket.get(member))`) and `isEmpty`
- * answers `true` for the `undefined` a missing key returns. That is also what lets
- * it run on a bucket the emission prune has already been over — the prune removes
- * the empty value of a parameter whose registry cell says it carries nothing
- * (`prune-empty-headers.ts`), so by this point `oid: ""` has BECOME an absent
- * `oid`, and there is no third state for the two to be told apart into.
+ * ⚠ ABSENT AND EMPTY ARE ONE VERDICT, said once: the check reads the VALUE
+ * (`isEmpty(bucket.get(member))`) and `isEmpty` answers `true` for the `undefined`
+ * a missing key returns.
  *
- * ⚠ SO THE EMPTY ARM IS CURRENTLY UNREACHABLE, and saying otherwise would be a
- * branch propped up by a sentence implying something reads it. Every reachable
- * case here is the ABSENT one: the registry has ZERO `whenEmpty: "keep"` header
- * cells (asserted `toEqual([])` in `header-registry.test.ts`), so nothing empty
- * survives the prune, and the one `refuse` cell throws in `normaliseHeaders`
- * before a bucket is ever assembled. What the value-read buys is that ABSENT,
- * `undefined` and `null` are ONE verdict written once — `isEmpty` answers `true`
- * for the `undefined` a missing key returns — instead of three arms to keep in
- * step. It is kept over a key-test because a `keep` cell is one registry edit
- * away and a key-test would silently start accepting an empty value the day one
- * lands.
+ * ⚠ THE EMPTY ARM IS UNREACHABLE TODAY. The registry has no `whenEmpty: "keep"`
+ * header cell (asserted `toEqual([])` in `header-registry.test.ts`), so nothing
+ * empty survives the prune, and the one `refuse` cell throws in `normaliseHeaders`
+ * before a bucket is assembled. The value-read is kept over a key-test because a
+ * `keep` cell is one registry edit away, and a key-test would silently start
+ * accepting an empty value the day one lands.
  *
- * ⚠ IT TAKES A COMPLETE BUCKET, never a fragment — that is the whole of what the
- * two call sites have in common, and each is the LAST point before its wire's
- * bytes exist:
- *   - `buildJoseHeader`, on the merged header. RFC 7515 §7.1 gives the compact
- *     serialisation ONE header, assembled here from four tiers, and a `crit` in
- *     one tier may name a parameter from any of the others.
+ * ⚠ IT TAKES A COMPLETE BUCKET, never a fragment — each call site is the LAST point
+ * before its wire's bytes exist:
+ *   - `buildJoseHeader`, on the merged header — the compact serialisation has ONE
+ *     header (RFC 7515 §7.1), and a `crit` in one tier may name a parameter from
+ *     any other.
  *   - `mergeCoseProtected`, on the assembled protected map — NOT `buildCoseHeaders`,
  *     which sees the caller's bag alone. The COSE protected bucket also carries the
- *     kit's derived `alg`/`typ`/`cty`, so checking the caller's fragment refused
- *     `crit: ["alg"]` on a message whose protected bucket does carry `alg`, and the
- *     two wires answered the same call differently.
+ *     kit's derived `alg`/`typ`/`cty`, so checking the fragment would refuse
+ *     `crit: ["alg"]` on a message whose protected bucket does carry `alg`.
  *
- * ⚠ ONE VOCABULARY, ASSUMED RATHER THAN APPLIED — the bucket and its own `crit`
- * members reach here already spelled the same way, because the pass that BUILT the
- * bucket mapped both: `criticalToWire` through `shapeWireHeader` on JOSE,
- * `critToCoseLabels` through `wireHeaderToCoseMap` on COSE. This function cannot
- * map them itself, and must not try: it does not know which of the two vocabularies
- * it is holding, and RFC 9052 §1.5 types a COSE label as `int / tstr` — the JOSE
- * name `"kid"` and the COSE label `4` are both labels, and they are not the same
- * one. It compares like with like and reports the member as the
- * bucket spells it — on COSE that is the LABEL, which is what a COSE `crit` list
- * literally contains.
+ * ⚠ ONE VOCABULARY, ASSUMED RATHER THAN APPLIED. The pass that BUILT the bucket
+ * mapped both it and its `crit` members — `criticalToWire` through
+ * `shapeWireHeader` on JOSE, `critToCoseLabels` through `wireHeaderToCoseMap` on
+ * COSE. This function cannot map them itself and must not try: it does not know
+ * which vocabulary it holds, and the JOSE name `"kid"` and the COSE label `4` are
+ * both labels but not the same one (RFC 9052 §1.5). It reports the member as the
+ * bucket spells it.
  *
- * ⚠ A `Map`, NOT a plain object, and that is a safety property rather than a
- * convenience: a caller-influenced member fed to `in` or to `header[name]` walks
- * `Object.prototype`, so `crit: ["toString"]` passed a membership test no header
- * ever satisfied and aegis minted a `crit` naming a parameter it does not carry.
- * A `Map` has no prototype chain to walk. `in` on a caller-influenced key is a
- * BANNED construct in this package — use `Object.hasOwn`, or a `Map` where the
- * lookup can be structural.
+ * ⚠ A `Map`, NOT a plain object, and that is a safety property: a caller-influenced
+ * member fed to `in` or to `header[name]` walks `Object.prototype`, so
+ * `crit: ["toString"]` passes a membership test no header satisfies. `in` on a
+ * caller-influenced key is a BANNED construct in this package.
  *
- * ⚠ Only the PROTECTED bucket is consulted, on both wires. RFC 7515 §4.1.11 and
- * RFC 9052 §3.1 both require a crit-named parameter to be integrity-protected, and
- * §3.1 makes a crit naming an UNPROTECTED label a fatal error in processing — so a
- * value in the COSE unprotected bucket does not satisfy the list, which is why the
- * refusal says "in the protected header" rather than "in the message". A caller
- * PLACING one there hears the accurate `cose_crit_param_unprotected` first
- * (`build-cose-headers.ts`, rule 1b); what reaches here is the kit's own unprotected
- * parameters (`kid`, `iv`), which no JOSE header has a second bucket for.
+ * ⚠ Only the PROTECTED bucket is consulted, on both wires (RFC 7515 §4.1.11,
+ * RFC 9052 §3.1), which is why the refusal says "in the protected header" rather
+ * than "in the message". A caller PLACING one in the unprotected bucket hears the
+ * accurate `cose_crit_param_unprotected` first (`build-cose-headers.ts`, rule 1b);
+ * what reaches here is the kit's own unprotected parameters.
  */
 export const assertCritSatisfied = ({
   bucket,
@@ -103,9 +75,8 @@ export const assertCritSatisfied = ({
 }): void => {
   const crit = bucket.get(critKey);
 
-  // `<CoseLabel>` states the WELL-FORMED shape, not a guarantee — the same claim
-  // `criticalToWire` makes about `<string>`. A member of any other type simply
-  // matches no key and is refused below, which is the right answer for it.
+  // `<CoseLabel>` states the WELL-FORMED shape, not a guarantee. A member of any
+  // other type matches no key and is refused below, which is the right answer.
   if (!isArray<CoseLabel>(crit)) return;
 
   for (const member of crit) {

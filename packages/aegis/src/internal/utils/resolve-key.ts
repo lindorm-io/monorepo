@@ -54,34 +54,22 @@ export type ResolveKeyOptions = {
    * SCOPE. The issuer the {@link id} belongs to — a `kid` is unique only PER
    * ISSUER, so without one an id from any registered issuer can answer.
    *
-   * It NARROWS, never widens: it restricts the candidate set to that issuer's
-   * keys and there is NO fallback — an id the named issuer does not hold is a
-   * miss, never a retry unscoped. That is why the value may come from the
-   * artifact's own UNVERIFIED `iss`: set restriction can only produce a miss,
-   * never a key the unscoped lookup would not also have considered. It relaxes
-   * no floor; the floor is checked on whatever key comes back, exactly as before.
+   * It NARROWS, never widens, and there is NO unscoped retry. That is what lets
+   * the value come from the artifact's own UNVERIFIED `iss`: restriction can only
+   * produce a miss, and the floor is still checked on whatever key comes back.
+   * ⚠ Falling back would be strictly WORSE than not scoping at all — an attacker
+   * would no longer need an id COLLISION, only a `kid` the issuer it claims to be
+   * does not hold.
    *
-   * ⚠ Falling back would be strictly WORSE than not scoping at all: an attacker
-   * would no longer need an id COLLISION, only a `kid` the issuer it claims to
-   * be does not hold.
+   * ⚠ A scope is used ONLY when it is a URI. Amphora refuses any other issuer at
+   * construction (`internal_issuer_not_uri`, `external_issuer_not_uri`), so no
+   * vault key can carry a bare identifier as its issuer and scoping by one would
+   * EMPTY the candidate set rather than narrow it. A consumer whose client keys
+   * are not vault residents supplies them via the per-call `key.kryptos`, which
+   * bypasses the vault and this scope entirely.
    *
-   * ⚠ A scope is used ONLY when it is a URI (a URL with an authority, or a URN).
-   * That is not a heuristic — it is amphora's own invariant: an internal issuer
-   * must be a URI at construction (`internal_issuer_not_uri`) and an external
-   * one likewise (`external_issuer_not_uri`), so NO vault key can ever carry a
-   * bare identifier as its issuer. A non-URI `iss` names a PARTY, not a
-   * key-registration scope — an RFC 7523 client assertion's `iss` is the
-   * `client_id`, and the `delegation` profile declares `issuer: "per-token"` for
-   * exactly that reason. Scoping by one would not narrow the candidate set, it
-   * would empty it: every such verify would fail, with no attacker denied
-   * anything (a forgery has to name a REGISTERED issuer to be believed, and
-   * those are URIs). A consumer whose client keys ARE vault residents files them
-   * under a URI issuer (a URN is enough) and gets scoping; one that does not
-   * supplies the key outright via the per-call `key.kryptos`, which bypasses the
-   * vault and this scope entirely.
-   *
-   * Meaningless for a vault QUERY (`find`) — the write side selects by policy,
-   * not by an artifact's claim — so it is applied to the `id` lookup alone.
+   * Applied to the `id` lookup alone: a vault QUERY selects by policy, never by
+   * an artifact's claim.
    */
   issuer?: string;
 
@@ -90,33 +78,22 @@ export type ResolveKeyOptions = {
 };
 
 /**
- * Resolve the key for one cryptographic operation, keeping the two jobs a
- * condition can do strictly apart (only one of them survives key injection):
+ * Resolve the key for one cryptographic operation, keeping the three jobs a
+ * condition can do strictly apart (only the floor survives key injection):
  *
  *   FLOOR    — policy. Checked on the key, whatever its provenance.
  *   SELECTOR — a vault query. Checked on nothing; it only ever selects.
  *   SCOPE    — the issuer an `id` belongs to. Narrows the id lookup, nothing else.
  *
- * There is NO preference, NO ranking and NO fallback: a key either satisfies
- * the policy or it does not, and a miss is a throw. Falling back to a key the
- * policy forbids is how an unverifiable token gets minted — and falling back
- * from a scoped id lookup to an unscoped one is how an issuer answers for a
+ * ⚠ NO preference, NO ranking, NO fallback: a miss is a throw. Falling back to a
+ * key the policy forbids is how an unverifiable token gets minted, and falling
+ * back from a scoped id lookup to an unscoped one is how an issuer answers for a
  * `kid` it does not hold.
  *
- * --- Why FOUR read paths resolve their key UNSCOPED (they are not oversights) ---
- *
- * An issuer scope has to come from somewhere, and these four artifacts have no
- * claims to read it off — by construction, not by omission:
- *
- *   - JWS  and its COSE twin CWS  — OPAQUE. The payload is arbitrary bytes with
- *     no claims layer at all; there is no `iss` in an unstructured artifact.
- *   - JWE  and its COSE twin CWE  — ENCRYPTED. The claims sit behind the very
- *     key this call is resolving, so nothing readable exists before it succeeds.
- *     A JWE/CWE that wraps a SIGNED inner token is covered where it counts: the
- *     inner JWT/CWT re-verifies through the scoped path.
- *
- * The claims-bearing artifacts — JWT and its COSE twins CWT/CWM — all carry a
- * cleartext, pre-verification `iss`, and all of them scope.
+ * JWS/CWS (opaque payload) and JWE/CWE (the claims sit behind the very key being
+ * resolved) have no `iss` to scope by, so those four read paths resolve UNSCOPED
+ * by construction. A signed inner token inside a JWE/CWE re-verifies through the
+ * scoped path. JWT and its COSE twins CWT/CWM all scope.
  */
 export const resolveKey = async (options: ResolveKeyOptions): Promise<IKryptos> => {
   const { amphora, floor, id, logger, operation, profile, selector } = options;
@@ -151,18 +128,13 @@ export const resolveKey = async (options: ResolveKeyOptions): Promise<IKryptos> 
   // carry a floor key (e.g. `use`), and it must never override the policy.
   const query = applyKeyFloor(floor, selector);
 
-  // Read selection is kid-driven; NOTHING searches. A kid-less artifact with no
+  // ⚠ Read selection is kid-driven; NOTHING searches. A kid-less artifact with no
   // supplied key would otherwise fall through to `find(query)`, whose read-side
-  // selector is the token's OWN declared `alg` — i.e. aegis would fetch the
-  // newest vault key of the class the artifact chose for itself. That is an
-  // undocumented fallback the design forbids: an artifact must not steer key
-  // selection by class (RFC 8725 §3.1). So on the read side a missing kid is a
-  // throw, not a query. (Both read ops keep an escape hatch: an injected
-  // `kryptos` — resolved above — is honoured before this gate is reached.
-  // Decrypt uses it for ciphertext written to a non-vault key; verify for a
-  // signature made by one — the RFC 7523 `client_secret_jwt` assertion.) The
-  // WRITE side (sign/encrypt) is legitimately selector-driven with no kid and
-  // is unchanged.
+  // selector is the token's OWN declared `alg` — aegis would fetch the newest
+  // vault key of the class the artifact chose for itself, letting an artifact
+  // steer key selection by class (RFC 8725 §3.1). So a missing kid is a throw on
+  // the read side. The escape hatch is an injected `kryptos`, honoured above this
+  // gate. The WRITE side (sign/encrypt) is legitimately selector-driven.
   const isReadOp = operation === "verify" || operation === "decrypt";
 
   if (!options.kryptos && !id && isReadOp) {
@@ -171,17 +143,15 @@ export const resolveKey = async (options: ResolveKeyOptions): Promise<IKryptos> 
       data: { operation, profile },
       title: "Read Key Has No Kid",
       details:
-        "This artifact carries no `kid` header and no key was supplied for the operation, so aegis will not search the vault by the algorithm the artifact declares — an artifact must not steer key selection by class (RFC 8725 §3.1). Supply the key the artifact names via its `kid`, or supply the key explicitly (verify / decrypt).",
+        "This artifact carries no `kid` header and no key was supplied for the operation, so aegis will not search the vault by the algorithm the artifact declares — an artifact must not steer key selection by class. Supply the key the artifact names via its `kid`, or supply the key explicitly (verify / decrypt). RFC 8725 §3.1.",
     });
   }
 
-  // BOTH lookups surface as an AegisError. The `findById` branch used to let
-  // amphora's own `kryptos_not_found_by_id` escape, so a consumer catching
-  // AegisError — which is the whole contract of this package — silently missed
-  // every unresolvable `kid` on every read path (jwt.verify, jwe.decrypt, COSE,
-  // AES). The `data` differs because the two misses are different failures: a
-  // query miss is a POLICY failure (nothing satisfies it), an id miss is a
-  // MISSING KEY (the artifact names one we do not hold).
+  // ⚠ BOTH lookups surface as an AegisError: let amphora's own
+  // `kryptos_not_found_by_id` escape and a consumer catching AegisError — the
+  // whole contract of this package — silently misses every unresolvable `kid`.
+  // The `data` differs because the misses differ: a query miss is a POLICY
+  // failure, an id miss is a MISSING KEY.
   const kryptos =
     options.kryptos ??
     (id

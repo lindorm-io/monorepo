@@ -172,8 +172,8 @@ describe("run-scenario — the step-definition layer", () => {
       clientId: CLIENT,
     } satisfies ProfileContent["access_token"];
 
-    // COVERAGE IS THE DEFAULT. Every case below that runs on both wires is a
-    // capability that used to need a hand-written twin to reach the second one.
+    // COVERAGE IS THE DEFAULT. Every case below that runs on both wires reaches
+    // the second one without a hand-written twin.
     test("should run a claim-only row on every wire — the static surface has no wire", () => {
       const scenario = probe([{ step: "claims", claims: { subject: "user-1" } }]);
 
@@ -270,24 +270,9 @@ describe("run-scenario — the step-definition layer", () => {
     });
 
     // A FORGED row names an encoding and nothing else, so its own `wire` cell is
-    // the pin. Both directions, because the two forms are different shapes and a
-    // derivation that read only one of them would leave the other unpinned —
-    // which would run a raw JSON payload text through a CBOR producer.
-    test("should pin a forged JOSE payload row to jose", () => {
-      const scenario = probe([
-        {
-          step: "token",
-          via: "forged",
-          wire: "jose",
-          payload: '{"sub":"user-1"}',
-          signature: "junk",
-        },
-      ]);
-
-      expect(pinnedWireOf(scenario)).toBe("jose");
-      expect(wiresOf(scenario)).toEqual(["jose"]);
-    });
-
+    // the only pin — and a row declaring `unsupported: { jose }` has that wire
+    // filtered out of `wiresOf` anyway, so no scenario run witnesses the cell.
+    // Dropping it from `artifactWireOf` reddens this test and nothing else.
     test("should pin a forged COSE member-table row to cose", () => {
       const scenario = probe([
         {
@@ -612,7 +597,7 @@ describe("run-scenario — the step-definition layer", () => {
         ).rejects.toThrow(/which is not an integer/);
       });
 
-      // The control: the guard must still admit what RFC 9052 §1.5 calls a label,
+      // The control: the guard must still admit an integer label (RFC 9052 §1.5),
       // negative range included, or it would refuse every row it exists to serve.
       // The probe's verdict is `accepts` and `parse` reports a payload without
       // checking a signature, so the row RUNS TO COMPLETION — a stronger statement

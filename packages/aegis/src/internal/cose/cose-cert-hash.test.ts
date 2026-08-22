@@ -9,9 +9,8 @@ const SHA1_DIGEST = Buffer.alloc(20, 3);
 const SHA1_B64U = B64.encode(SHA1_DIGEST, "base64url");
 
 /**
- * RFC 9360 §2 `COSE_CertHash = [ hashAlg: (int / tstr), hashValue: bstr ]`, with
- * the algorithm identifiers from RFC 9054 — SHA-256 is `-16` (§3.2 table) and
- * SHA-1 is `-14` (Table 1).
+ * The `COSE_CertHash` codec. RFC 9360 §2, with the algorithm identifiers from
+ * RFC 9054 §3.1 (SHA-1) and RFC 9054 §3.2 (SHA-2).
  */
 describe("encodeCoseCertHash", () => {
   test("writes the SHA-256 label beside the decoded digest bytes", () => {
@@ -19,7 +18,7 @@ describe("encodeCoseCertHash", () => {
   });
 
   // The parameter this encodes IS the SHA-256 digest (RFC 7515 §4.1.8), so the
-  // algorithm is a constant here rather than something read off the value.
+  // algorithm is a constant rather than something read off the value.
   test("never writes any other algorithm", () => {
     const [algorithm] = encodeCoseCertHash(SHA1_B64U) as Array<unknown>;
     expect(algorithm).toBe(-16);
@@ -32,12 +31,8 @@ describe("encodeCoseCertHash", () => {
 
 describe("decodeCoseCertHash", () => {
   /**
-   * ⭐ THE FAN-OUT: one wire label, two domain parameters, chosen by `hashAlg`.
-   * RFC 9360 §2 admits BOTH spellings — *"an algorithm identifier that is an
-   * integer or a string containing the hash algorithm identifier corresponding to
-   * the Value column (integer or text string) of the algorithm registered in the
-   * "COSE Algorithms" registry"* — so a conformant producer that spells SHA-256
-   * as text names the same algorithm as `-16`.
+   * THE FAN-OUT: one wire label, two domain parameters, chosen by `hashAlg`.
+   * Both the integer and the text spelling. RFC 9360 §2.
    */
   test.each([
     [-16, "x5t#S256", DIGEST, DIGEST_B64U],
@@ -49,20 +44,18 @@ describe("decodeCoseCertHash", () => {
   });
 
   /**
-   * ⚠ THIS IS WHAT KEEPS `cert_binding_thumbprint_mismatch` HONEST. A SHA-1
-   * COSE_CertHash landed on `x5t#S256` without reading `hashAlg` would be compared
-   * against the verifying key's SHA-256 digest and refuse the token for a
-   * mismatched CERTIFICATE, when the truth is a different ALGORITHM.
+   * ⚠ What keeps `cert_binding_thumbprint_mismatch` honest: a SHA-1 COSE_CertHash
+   * landed on `x5t#S256` without reading `hashAlg` is compared against the key's
+   * SHA-256 digest and blames the CERTIFICATE for an ALGORITHM difference.
    */
   test("a SHA-1 hash never lands on the SHA-256 parameter", () => {
     expect(decodeCoseCertHash([-14, SHA1_DIGEST])).toMatchObject({ jose: "x5t" });
   });
 
   /**
-   * An algorithm aegis has no JOSE parameter for is DROPPED. RFC 9360 §2 permits
-   * any registered hash, and the domain header has the two parameters JOSE gives
-   * it (RFC 7515 §4.1.7/§4.1.8) — so there is no field such a binding could be
-   * reported in. SHA-512 is `-44` (RFC 9054 §3.2).
+   * An algorithm JOSE has no parameter for is DROPPED: the domain header carries
+   * only RFC 7515 §4.1.7 and RFC 7515 §4.1.8, so there is no field to report such
+   * a binding in. RFC 9360 §2.
    */
   test("drops a hash algorithm with no JOSE parameter", () => {
     expect(decodeCoseCertHash([-44, Buffer.alloc(64, 1)])).toBeUndefined();

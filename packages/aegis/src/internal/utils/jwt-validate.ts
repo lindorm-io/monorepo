@@ -13,33 +13,25 @@ import { liftClaimMatcher } from "./lift-claim-matcher.js";
  * per-claim VALUE lift is shared, so the registry stays the only thing that
  * knows which claims are array-valued.
  *
- * There is no hash-DERIVE case here, and no `algorithm` to pass one: hashing a
- * raw source needs the token's signing algorithm, `alg` is a HEADER parameter
- * rather than a claim, and this surface is handed a flat claim dict. The verify
- * half owns those matchers because it is the half holding a key. A caller who
- * already has the digest matches it under its own domain name
- * (`accessTokenHash`/`codeHash`/`stateHash`) — an ordinary equality claim,
- * through the lift below like any other.
+ * There is no hash-DERIVE case here and no `algorithm` to pass one: hashing a raw
+ * source needs the token's signing algorithm, and this surface is handed a flat
+ * claim dict. A caller holding the digest matches it under its own domain name
+ * (`accessTokenHash`/`codeHash`/`stateHash`) as an ordinary equality claim.
  *
- * `tokenType` needs no special case either: this surface matches a flat dict,
- * and a dict that carries a token's type carries it under exactly that key (an
- * RFC 7662 introspection response, a parsed credential). The verify half checks
- * the same assertion against the `typ` HEADER, because that is where a JWT/CWT
- * keeps it — one matcher, checked where each surface holds the answer.
+ * `tokenType` needs no special case either: a flat dict carries a token's type
+ * under exactly that key (an RFC 7662 introspection response, a parsed
+ * credential), where the verify half checks the same assertion against the `typ`
+ * HEADER.
  *
- * IDENTITY-ONLY, exactly like its verify twin: the temporal RANGE is a separate
- * builder, merged over this one by `createAssertPredicate` — the same division
- * `JwtKit.verify` makes on the wire side.
+ * IDENTITY-ONLY, like its verify twin: the temporal RANGE is a separate builder,
+ * merged over this one by `createAssertPredicate`.
  */
 export const createJwtValidate = (assert: DomainAssert): Condition<Dict> =>
   // ⛔ `Object.fromEntries`, NEVER `predicate[key] = operator`. The key is the
-  // CALLER's — this door matches a flat dict a caller already holds — and
-  // `liftClaimMatcher` answers `{ $eq: value }` for a string under any key,
-  // including `__proto__`, whose registry lookup is a `Map` read and simply
-  // misses. Assigned onto a plain object that hits `Object.prototype`'s setter
-  // and swaps the prototype instead of defining the key, so the caller's
-  // assertion is dropped and the token verifies unasserted. Same disposal
-  // `internal/claims/prune-empty-claims.ts` uses, and pinned at
+  // CALLER's, and `liftClaimMatcher` answers `{ $eq: value }` for a string under
+  // any key, `__proto__` included. Assigned onto a plain object it hits
+  // `Object.prototype`'s setter and swaps the prototype instead of defining the
+  // key, so the assertion is dropped and the token verifies unasserted. Pinned at
   // `jwt-validate.test.ts#a __proto__ assertion is CARRIED`.
   Object.fromEntries(
     Object.entries(assert).map(([key, value]) => {

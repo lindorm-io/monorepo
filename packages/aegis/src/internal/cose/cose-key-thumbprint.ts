@@ -9,15 +9,14 @@ import { ownEntry } from "./own-entry.js";
 
 /**
  * COSE Key Thumbprint (RFC 9679) — the COSE analogue of the RFC 7638 JWK
- * Thumbprint (`jkt`). A `ckt` is a digest over the deterministically-encoded
- * COSE_Key containing ONLY the required parameters for the key type (§4), so it
- * identifies the key itself, independent of any optional members (kid, alg, …).
- * SHA-256 is the default (and the only one a peer MUST support).
+ * Thumbprint. A digest over the deterministically-encoded COSE_Key holding only
+ * the key type's required parameters (RFC 9679 §4), so it identifies the KEY,
+ * independent of `kid`, `alg` and any other optional member. SHA-256 by default.
  */
 
 export type CoseThumbprintHash = "sha-256" | "sha-384" | "sha-512";
 
-// IANA "Named Information Hash Algorithm" name -> ShaKit (base64url) digest.
+// Named Information Hash Algorithm name -> ShaKit base64url digest.
 const SHA: Readonly<Record<CoseThumbprintHash, (data: Buffer) => string>> = {
   "sha-256": (data) => ShaKit.S256(data),
   "sha-384": (data) => ShaKit.S384(data),
@@ -27,9 +26,9 @@ const SHA: Readonly<Record<CoseThumbprintHash, (data: Buffer) => string>> = {
 const bstr = (value: unknown): Buffer => B64.toBuffer(String(value), B64U);
 
 const curveLabel = (jwk: Dict): number => {
-  // ⚠ `ownEntry`, never `CRV_TO_COSE[jwk.crv]`: the JWK is the caller's and a
-  // prototype member name would resolve to a function this then CBOR-encodes as
-  // a curve label. See own-entry.ts.
+  // ⚠ `ownEntry`, never `CRV_TO_COSE[jwk.crv]`: the JWK is the caller's, and a
+  // prototype member name resolves to a function this CBOR-encodes as a curve
+  // label. See own-entry.ts.
   const label = ownEntry(CRV_TO_COSE, jwk.crv);
   if (label === undefined) {
     throw new CoseError(`Unsupported curve "${jwk.crv}" for COSE Key Thumbprint`, {
@@ -44,9 +43,8 @@ const curveLabel = (jwk: Dict): number => {
 };
 
 /**
- * Build the required-only COSE_Key map for the thumbprint (RFC 9679 §4): EC2
- * (kty/crv/x/y), OKP (kty/crv/x), RSA (kty/n/e), Symmetric (kty/k). Deterministic
- * CBOR encoding sorts the labels, so insertion order does not matter.
+ * Build the required-only COSE_Key map for the thumbprint. RFC 9679 §4.
+ * Deterministic CBOR sorts the labels, so insertion order does not matter.
  */
 const requiredCoseKey = (jwk: Dict): Map<number, unknown> => {
   const map = new Map<number, unknown>();
@@ -80,7 +78,7 @@ const requiredCoseKey = (jwk: Dict): Map<number, unknown> => {
           data: { kty: jwk.kty },
           title: "Unsupported COSE Key",
           details:
-            "A COSE Key Thumbprint (RFC 9679) is defined for kty EC, OKP, RSA, and oct keys; this kty is not one of them.",
+            "aegis computes a COSE Key Thumbprint for kty EC, OKP, RSA and oct only; this kty is not one of them. RFC 9679 §4.",
         },
       );
   }
@@ -89,16 +87,15 @@ const requiredCoseKey = (jwk: Dict): Map<number, unknown> => {
 const thumbprintCbor = (jwk: Dict): Buffer =>
   Buffer.from(encodeCbor(requiredCoseKey(jwk)));
 
-/** The raw COSE Key Thumbprint bytes (RFC 9679 §3) — e.g. a `ckt` bstr. */
+/** The raw COSE Key Thumbprint bytes — RFC 9679 §3. */
 export const computeCoseKeyThumbprint = (
   jwk: Dict,
   hash: CoseThumbprintHash = "sha-256",
 ): Buffer => B64.toBuffer(SHA[hash](thumbprintCbor(jwk)), B64U);
 
 /**
- * The COSE Key Thumbprint URI (RFC 9679 §5.7):
- * `urn:ietf:params:oauth:ckt:<hash>:<base64url(thumbprint)>` — base64url without
- * padding, the form ShaKit already emits.
+ * The COSE Key Thumbprint URI — RFC 9679 §5.7. base64url without padding, the
+ * form ShaKit already emits.
  */
 export const computeCoseKeyThumbprintUri = (
   jwk: Dict,

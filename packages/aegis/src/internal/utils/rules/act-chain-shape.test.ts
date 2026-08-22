@@ -37,25 +37,19 @@ describe("actChainShape", () => {
   });
 
   test("says NOTHING about a member the registry does not declare", () => {
-    // ⚠ IT USED TO, and the check is GONE rather than moved. RFC 8693 §4.1
-    // defines an actor's members as "claims that identify the actor" and §4.4
-    // names `email` as one, so the registry declares the set OPEN and an
-    // undeclared member is CARRIED — by this rule's silence and by the structure
-    // walker alike. Asserted rather than deleted, because "this rule is silent
-    // about X" is exactly the fact a reader needs: without the row, someone finds
-    // the silence, assumes an oversight, and re-adds an allowlist the
-    // specification forbids.
+    // ⚠ The registry declares the actor member set OPEN (RFC 8693 §4.1,
+    // RFC 8693 §4.4), so an undeclared member is CARRIED — by this rule's silence
+    // and by the structure walker alike. Asserted rather than left implicit,
+    // because otherwise a reader finds the silence, assumes an oversight, and
+    // re-adds an allowlist the specification forbids.
     expect(actChainShape({ act: { subject: "a", surprise: true } })).toEqual([]);
   });
 
-  // ⚠⚠ THE AUDIENCE RULE HAD ZERO COVERAGE UNTIL THESE THREE ROWS. Deleting its
-  // call site left the ENTIRE package suite green — 155 files, 2907 tests, the six
-  // declared reds unchanged — so the one surviving rule with a non-trivial
-  // predicate was an equivalent mutant, in a file this very migration rewrote.
+  // ⚠⚠ THESE THREE ROWS ARE THE AUDIENCE RULE'S ONLY COVERAGE: without them,
+  // deleting its call site leaves the whole package suite green.
   test("accepts an actor audience in either form RFC 7519 §4.1.3 permits", () => {
-    // §4.1.3 defines `aud` as "a StringOrURI value" or "an array of
-    // case-sensitive strings", so BOTH forms are conformant and a rule that
-    // refused either would refuse tokens the specification allows.
+    // BOTH forms are conformant (RFC 7519 §4.1.3), so a rule refusing either
+    // would refuse tokens the specification allows.
     expect(actChainShape({ act: { audience: "https://rs.test" } })).toEqual([]);
     expect(
       actChainShape({ act: { audience: ["https://rs.test", "https://b.test"] } }),

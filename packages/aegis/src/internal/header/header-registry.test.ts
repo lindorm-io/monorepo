@@ -110,12 +110,9 @@ const sampleMatchesCodec = (codec: HeaderCodec, sample: unknown): boolean => {
 describe("HEADER_SPECS", () => {
   // --- shared ParamSpec base ------------------------------------------------
 
-  // ⚠ A test stood here asserting `HEADER_REGISTRY.unregistered === "drop"` and
-  // `HEADER_REGISTRY.specs === HEADER_SPECS` — the literal against itself, and
-  // nothing else. The wrapper is deleted with it. What the column CLAIMED is
-  // exercised where it actually happens: `token-header.test.ts` requires an
-  // unregistered key to be DROPPED on the write pass and on the read pass, and
-  // requires the prune never to reach one.
+  // What an unregistered key does is exercised where it happens:
+  // `token-header.test.ts` requires it to be DROPPED on both passes, and requires
+  // the prune never to reach one.
 
   test("every entry is TOTAL over the wires", () => {
     for (const spec of HEADER_SPECS) {
@@ -141,12 +138,11 @@ describe("HEADER_SPECS", () => {
       "p2c",
       "p2s",
       "tag",
-      // ⚠ `x5t` is here and `x5t#S256` is NOT, and the asymmetry is RFC 9360 §2's,
-      // not a gap: COSE has ONE thumbprint parameter (label 34) whose hash
-      // algorithm is a member of the value. `x5t#S256` IS that parameter's COSE
-      // form and carries the `certHash` codec; the SHA-1-named JOSE parameter has
-      // no COSE spelling of its own to be written under, and is reached on READ
-      // only through label 34's `hashAlg` dispatch.
+      // ⚠ `x5t` is here and `x5t#S256` is NOT, and the asymmetry is RFC 9360 §2's
+      // rather than a gap: label 34 carries its hash algorithm inside the value, so
+      // `x5t#S256` IS that parameter's COSE form and the SHA-1-named JOSE parameter
+      // has no COSE spelling of its own. It is reached on READ only through label
+      // 34's `hashAlg` dispatch.
       "x5t",
       "zip",
     ]);
@@ -239,17 +235,10 @@ describe("HEADER_SPECS", () => {
   });
 
   test("no header parameter is sensitive", () => {
-    // The one CONSTANT column left, and it is grounded: a header parameter is
-    // never encrypted content. Pinning it means the first parameter that breaks
-    // the pattern has to change this test deliberately.
-    //
-    // ⚠ `provenance`, `matchable` and `critEligible` were pinned here too. The
-    // first two are DELETED — no production code read either, and `matchable`
-    // was WRONG: every row said `false` beside a docstring claiming "there is no
-    // header MATCHER door at all", while `verify-token.ts:283` raises
-    // `token_type_mismatch` against `DomainAssert.tokenType`, which is
-    // header-derived. `critEligible` left this list earlier for the opposite
-    // reason — it stopped being constant and is pinned by name below.
+    // The one CONSTANT column, and it is grounded: a header parameter is never
+    // encrypted content. Pinning it means the first parameter that breaks the
+    // pattern has to change this test deliberately. (`critEligible` is not constant
+    // and is pinned by name below.)
     for (const spec of HEADER_SPECS) {
       expect(spec.sensitivity, `${spec.domain} is sensitive`).toBe("public");
     }
@@ -259,12 +248,10 @@ describe("HEADER_SPECS", () => {
    * The `critEligible` set, frozen by name — the REGISTERED parameters a PRODUCER
    * may name in `crit`.
    *
-   * ⚠ WRITE-SIDE ONLY, and that is what makes freezing it worth a test of its
-   * own: `assert-crit-eligible.ts` refuses a mint naming anything this column
-   * rejects, so a name added here silently widens what aegis EMITS as a critical
-   * extension. RFC 7515 §4.1.11 forbids `crit` naming a parameter that
-   * specification or JWA defines, so a name added carelessly mints tokens that
-   * are malformed for every recipient.
+   * ⚠ WRITE-SIDE ONLY, and that is what makes freezing it worth a test of its own:
+   * `assert-crit-eligible.ts` refuses a mint naming anything this column rejects, so
+   * a name added here silently widens what aegis EMITS as a critical extension — and
+   * a careless one mints tokens malformed for every recipient (RFC 7515 §4.1.11).
    *
    * ⛔ AND IT IS ONLY THE REGISTRY HALF OF THAT WRITE RULE. The mint gate ORs it
    * with the keys of the custom bag the same call writes
@@ -277,9 +264,9 @@ describe("HEADER_SPECS", () => {
   test("the crit-eligible REGISTERED header parameters are exactly the stated set", () => {
     const eligible = HEADER_SPECS.filter((s) => s.critEligible).map(headerJoseName);
 
-    // `oid` alone, and it is the ONLY candidate there could be: every other JOSE
-    // name in this registry is an IANA-registered JOSE header parameter, which
-    // RFC 7515 §4.1.11 forbids a producer from naming in `crit` outright.
+    // `oid` alone, and the only candidate there could be: every other JOSE name in
+    // this registry is IANA-registered, which a producer may not name in `crit`
+    // (RFC 7515 §4.1.11).
     expect(eligible).toEqual(["oid"]);
   });
 
@@ -291,11 +278,10 @@ describe("HEADER_SPECS", () => {
     // the shape: `header` is the only registered bag a caller can fill and it
     // travels protected.
     //
-    // The two `"either"` rows are the ones that column therefore cannot
-    // speak for, which is exactly why the kits must RESERVE them: `CwsKit` emits
-    // `kid` unprotected (an advisory routing hint read before the signature
-    // check) and `CweKit` adds `iv` (an AEAD input) — and a caller `iv` on a
-    // SIGNED COSE format is refused by `KIT_CAPABILITIES`, not by placement.
+    // The `"either"` rows are the ones the column cannot speak for, which is why
+    // the kits must RESERVE them: `CwsKit` emits `kid` unprotected and `CweKit`
+    // adds `iv`, so a caller `iv` on a SIGNED COSE format is refused by
+    // `KIT_CAPABILITIES` rather than by placement.
     const either = HEADER_SPECS.filter((s) => s.placement === "either").map(
       headerJoseName,
     );
@@ -318,36 +304,28 @@ describe("HEADER_SPECS", () => {
     );
 
     // ⚠ The certificate trio is NOT uniform, and this is the split. `x5t#S256` is
-    // the ONE header parameter aegis's verify enforces: `verify-cert-binding.ts`
-    // skips the check when it is ABSENT and refuses a mismatch when it is
-    // present, so presence IS the binding — an empty thumbprint can neither be
-    // pruned (that hands the audience an unbound token) nor emitted (that mints a
-    // token no certificate satisfies), so the write refuses. `x5t` (never
-    // verified, legacy-compat output) and `x5c` (no binding check reads it) sit
-    // beside it and PRUNE, because nothing reads either: an empty value there
-    // binds nothing and is refused by nothing.
+    // the ONE header parameter aegis's verify enforces (`verify-cert-binding.ts`
+    // skips the check when it is ABSENT and refuses a mismatch when it is present),
+    // so presence IS the binding and an empty thumbprint can be neither pruned nor
+    // emitted. `x5t` and `x5c` sit beside it and PRUNE, because nothing reads
+    // either.
     expect(refuse).toEqual(["certificateThumbprint"]);
 
-    // ⚠ EMPTY, and asserted rather than left unsaid. `keep` stays in the union
-    // for the ELEVEN claims that hold it, so nothing about this registry forces
-    // it to have a user — which makes "no header parameter keeps" a fact that
-    // could be reversed by a one-word diff with nothing to notice. It is also
-    // what goes red if someone "tidies" the union down to the two verdicts this
-    // registry uses and quietly re-points this parameter at `keep`.
+    // ⚠ EMPTY, and asserted rather than left unsaid. `keep` stays in the union for
+    // the CLAIMS that hold it, so nothing forces it to have a header user — which
+    // makes "no header parameter keeps" reversible by a one-word diff with nothing
+    // to notice.
     expect(HEADER_SPECS.filter((s) => s.whenEmpty === "keep")).toEqual([]);
 
     // ⚠ THE COUNT IS THE ASSERTION, and it is here rather than a loop over the
-    // column because a loop CANNOT GO RED. `ParamSpec.whenEmpty` is required and
-    // non-optional over a closed union (`registry/param-spec.ts`), so a missing
-    // or off-vocabulary cell is a COMPILE error before any test runs — a loop
-    // asserting the cell is one of three values only restates what the compiler
-    // already refuses, and only a deliberate cast could redden it.
+    // column because a loop CANNOT GO RED: `ParamSpec.whenEmpty` is required over a
+    // closed union, so a missing or off-vocabulary cell is a COMPILE error before
+    // any test runs.
     //
     // What the compiler CANNOT see is a parameter added with a `whenEmpty` the
     // author never thought about. The type forces a cell; nothing forces the
-    // DECISION. A count pinned beside the frozen lists is what makes that
-    // visible HERE: a twenty-second parameter fails this test, and the only way
-    // past it is to read the split above and state which side the new one is on.
+    // DECISION. A count beside the frozen lists is what makes a new parameter fail
+    // this test until someone reads the split above and states which side it is on.
     expect(HEADER_SPECS.length).toBe(21);
   });
 
@@ -495,9 +473,8 @@ describe("HEADER_SPECS", () => {
     expect(joseByCose("typ")).toBeUndefined();
     expect(joseByCose("cty")).toBeUndefined();
     expect(joseByCose("alg")).toBeUndefined();
-    // …not even the stringified integer. RFC 9052 §1.5 admits both forms
-    // (`label = int / tstr`) and CBOR keys them apart, so the text "16" is a
-    // different label from the integer 16.
+    // …not even the stringified integer: the text "16" is a different label from
+    // the integer 16 (RFC 9052 §1.5), and CBOR keys them apart.
     expect(joseByCose("16")).toBeUndefined();
   });
 
@@ -535,10 +512,8 @@ describe("HEADER_SPECS", () => {
   });
 
   test("no header parameter carries a per-wire codec override", () => {
-    // The per-wire codec exists for the claim side (the token id and the three
-    // OIDC hashes: text on JOSE, bytes on COSE). No header parameter needs one
-    // today: a parameter either has the same shape on both wires or is `absent`
-    // on COSE entirely.
+    // The per-wire codec exists for the claim side. No header parameter needs one:
+    // a parameter either has the same shape on both wires or is `absent` on COSE.
     for (const spec of HEADER_SPECS) {
       expect(spec.codec.per, `${spec.domain} has a per-wire codec`).toBeUndefined();
     }

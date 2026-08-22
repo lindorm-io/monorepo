@@ -76,17 +76,14 @@ import {
  * Signature algorithms whose output is drawn fresh on every call over the same
  * message, by algorithm family:
  *
- * - `ES*` — ECDSA (RFC 6979 notwithstanding, Node draws a fresh per-signature
- *   nonce `k`, so two signatures over one message never agree).
- * - `PS*` — RSASSA-PSS, whose EMSA-PSS encoding takes a random salt
- *   (RFC 8017 §9.1).
- * - `ML-DSA-*` — FIPS 204 §5.2 hedged signing mixes fresh randomness `rnd` into
- *   the commitment; hedged is the default variant.
+ * - `ES*` — Node draws a fresh per-signature ECDSA nonce `k`, so two signatures
+ *   over one message never agree (RFC 6979 notwithstanding).
+ * - `PS*` — RSASSA-PSS salts every encoding. RFC 8017 §9.1.
+ * - `ML-DSA-*` — hedged signing, the default variant, mixes fresh randomness
+ *   into the commitment. FIPS 204 §5.2.
  *
  * Everything else aegis can sign with is DETERMINISTIC and is therefore captured
- * byte-for-byte: `RS*` (EMSA-PKCS1-v1_5 has no randomness, RFC 8017 §9.2),
- * `EdDSA` (the nonce is derived from the key and the message, RFC 8032 §5.1.6),
- * and `HS*` (HMAC is a keyed hash).
+ * byte-for-byte: `RS*` (RFC 8017 §9.2), `EdDSA` (RFC 8032 §5.1.6) and `HS*`.
  */
 const RANDOMISED_SIGNATURE_PREFIXES: ReadonlyArray<string> = ["ES", "PS", "ML-DSA"];
 
@@ -110,10 +107,10 @@ const RANDOM_JOSE_HEADER_PARAMS: ReadonlyArray<string> = ["epk", "iv", "p2s", "t
 const RANDOM_JWK_MEMBERS: ReadonlyArray<string> = ["x", "y"];
 
 /**
- * The COSE header labels that carry a fresh nonce. RFC 9052 §3.1 Table 2 assigns
- * label 5 to `IV`, and `CweKit` writes it into the UNPROTECTED bucket of every
- * COSE_Encrypt0 it emits (RFC 9052 §5.2 — direct encryption has no other
- * key-management output to place).
+ * The COSE header labels that carry a fresh nonce — label 5 is the IV, and
+ * `CweKit` writes it into the UNPROTECTED bucket of every COSE_Encrypt0 it
+ * emits. A COSE_Encrypt0 carries no recipients array, so aegis has no other
+ * key-management output to place. RFC 9052 §3.1, RFC 9052 §5.2.
  *
  * Label 6 (Partial IV) is not listed because aegis never emits one; a rule for a
  * parameter that never appears would normalise nothing and prove nothing.
@@ -121,8 +118,8 @@ const RANDOM_JWK_MEMBERS: ReadonlyArray<string> = ["x", "y"];
 const RANDOM_COSE_LABELS: ReadonlyArray<number> = [5];
 
 /**
- * The five JOSE compact segments of a JWE (RFC 7516 §7.1) that carry fresh bytes:
- * the wrapped CEK, the content nonce, the ciphertext, and the authentication tag.
+ * The JWE compact segments that carry fresh bytes (RFC 7516 §7.1): the wrapped
+ * CEK, the content nonce, the ciphertext, and the authentication tag.
  * The protected header (index 0) is NOT among them — it is normalised parameter
  * by parameter above, so a header change still shows.
  *
@@ -610,8 +607,8 @@ export const normaliseEntry = (entry: RawCorpusEntry): Dict => ({
  * - Bytes become `{ $bytes: <hex>, $length: n }`. A COSE `kid` is a byte string,
  *   and hex is the only rendering that shows a length change as a length change.
  * - A `Map` becomes `{ $map: [[key, value], …] }` with its keys SORTED, and each
- *   key is tagged `{ $int }` or `{ $text }`. RFC 9052 §1.5 defines a COSE label
- *   as `int / tstr`, so the integer `4` and the text `"4"` are different labels;
+ *   key is tagged `{ $int }` or `{ $text }`: a COSE label is an int or a tstr
+ *   (RFC 9052 §1.5), so the integer `4` and the text `"4"` are different labels;
  *   a plain object could represent neither faithfully and would silently merge
  *   the two.
  * - A `Date` becomes `{ $date: <ISO> }`.

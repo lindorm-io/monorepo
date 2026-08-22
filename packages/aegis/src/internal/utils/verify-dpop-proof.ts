@@ -28,8 +28,6 @@ type DpopProofPayload = {
 // A required proof claim must be a NON-EMPTY string — the demand notion, spelled
 // as `require-present` spells it, so the question is named once across the
 // package rather than open-coded here as a bare `typeof` plus a length test.
-// (It used to name `every-element-has-key` as the second example; that rule was
-// deleted when the RFC 9396 element's `type` became a `required` member cell.)
 const assertString = (value: unknown, claim: string): string => {
   if (!(isString(value) && isClaimSatisfied(value))) {
     throw new AegisDomainError(`Invalid DPoP proof: "${claim}" claim is required`, {
@@ -64,7 +62,7 @@ export const verifyDpopProof = (options: Options): ParsedDpopProof => {
       code: "dpop_invalid_typ",
       data: { typ: header.typ },
       title: "JWT DPoP Invalid Typ",
-      details: "The DPoP proof header typ must be exactly dpop+jwt per RFC 9449.",
+      details: "The DPoP proof header typ must be exactly dpop+jwt. RFC 9449 §4.2.",
     });
   }
 
@@ -93,11 +91,10 @@ export const verifyDpopProof = (options: Options): ParsedDpopProof => {
     });
   }
 
-  // Signature verification requires a Kryptos instance because the
-  // SignatureKit dispatch chain (EcKit/RsaKit/OkpKit) is coupled to
-  // IKryptos. The DPoP proof JWK carries only key material; we supply
-  // `alg` from the JOSE header (authoritative per RFC 9449) and
-  // `use: "sig"` (DPoP proofs are always signatures).
+  // Signature verification needs a Kryptos instance: the SignatureKit dispatch
+  // chain (EcKit/RsaKit/OkpKit) is coupled to IKryptos. The proof JWK carries key
+  // material only, so `alg` comes from the JOSE header (RFC 9449) and `use` is
+  // `"sig"`.
   const proofKryptos = KryptosKit.from.jwk({
     ...rawJwk,
     alg: header.alg,

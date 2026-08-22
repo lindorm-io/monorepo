@@ -105,13 +105,13 @@ export type JoseWireTokenEnvelope = WireTokenEnvelope & {
 export type CoseWireTokenEnvelope = WireTokenEnvelope & {
   /**
    * UNREGISTERED header params, carried VERBATIM under their own tstr label
-   * (RFC 9052 §1.4 `label = int / tstr`). Refused for a registered or kit-owned
-   * name exactly as on {@link JoseWireTokenEnvelope}.
+   * (RFC 9052 §1.5). Refused for a registered or kit-owned name exactly as on
+   * {@link JoseWireTokenEnvelope}.
    *
    * PLACEMENT is the caller's here, and only here: an unregistered param has no
    * registry row, so no `placement` cell can decide its bucket. A param named in
-   * `crit` must sit in `protected` — RFC 9052 §3.1 requires critical params to be
-   * integrity-protected, and `unprotected` is covered by nothing.
+   * `crit` must sit in `protected`; `unprotected` is covered by nothing.
+   * RFC 9052 §3.1.
    */
   custom?: {
     protected?: Record<string, unknown>;

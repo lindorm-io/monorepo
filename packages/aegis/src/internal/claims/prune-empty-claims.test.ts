@@ -27,7 +27,7 @@ describe("pruneEmptyClaims", () => {
   });
 
   test("both wire vocabularies resolve", () => {
-    // RFC 8392 renames `jti` to `cti` on the COSE wire; `signCwt` hands this a
+    // RFC 8392 §3.1.7 keys `jti` as `cti` on the COSE wire; `signCwt` hands this a
     // cose-keyed dict, `JwtKit.sign` a jose-keyed one.
     expect(pruneEmptyClaims({ cti: "", jti: "" })).toEqual({});
   });
@@ -36,8 +36,8 @@ describe("pruneEmptyClaims", () => {
    * ⛔⛔ THE KEYS ARE THE CALLER'S, and a WIRE door takes an already-wire dict
    * VERBATIM — no case conversion — so a service that built its claims with
    * `JSON.parse` hands an own `__proto__` straight here. `@lindorm/utils`'s
-   * `omitFromObject` runs first and deliberately PRESERVES it
-   * (`omit-from-object.ts:32`), so it arrives live.
+   * `omitFromObject` runs first and PRESERVES it — it writes with
+   * `Object.defineProperty` — so it arrives live.
    *
    * ⚠ A PLAIN `result[key] = value` HERE FORGES A SIGNED CLAIM. The COSE claims
    * codec reads registered claims off this bag BY PROPERTY, so an inherited

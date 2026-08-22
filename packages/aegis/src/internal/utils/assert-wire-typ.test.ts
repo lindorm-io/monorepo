@@ -159,12 +159,10 @@ describe("assertWireTyp", () => {
   });
 
   test("the code, class and title the caller supplies are the ones raised", () => {
-    // ⚠ This predicate REPORTS what it is handed; it decides none of it. The
-    // title used to read "CWT Invalid Typ" here beside a `cwm` code, which
-    // documented a real half-applied defect AS INTENT — `verifyCwt` hardcoded
-    // that title while deriving the code, so a COSE_Mac0 answered under two
-    // spellings depending on which typ gate fired. It derives now, so this
-    // config states what the only real `cwm` caller actually passes.
+    // ⚠ This predicate REPORTS what it is handed; it decides none of it. A
+    // hardcoded title beside a derived code makes a COSE_Mac0 answer under two
+    // spellings depending on which typ gate fired, so this config states what the
+    // only real `cwm` caller actually passes.
     //
     // ⚠ And it can only ever state it. Nothing here observes a call site, so
     // this row cannot notice `verifyCwt` reverting: `CwtKit.test.ts` and

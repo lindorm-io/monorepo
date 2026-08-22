@@ -85,12 +85,12 @@ describe("the raw namespace wrappers", () => {
   });
 
   describe("a write wrapper forwards the caller's option bag to the kit", () => {
-    // ⚠ The COSE carrier here is the PROTECTED header bag plus `tokenType`, not
-    // the unprotected bag it used to be. aegis decides which bucket a parameter
-    // travels in — the header registry's `placement` column — and `x5u` is
-    // integrity-protected only, so a wrapper handing it to the unprotected bag
-    // is refused by the kit rather than carried. That refusal is its own proof
-    // that the bag arrives, and it is the test below.
+    // ⚠ The COSE carrier here is the PROTECTED header bag plus `tokenType`. aegis
+    // decides which bucket a parameter travels in (the header registry's
+    // `placement` column), and `x5u` is integrity-protected only, so a wrapper
+    // handing it to the unprotected bag is refused by the kit rather than carried.
+    // That refusal is its own proof that the bag arrives, and it is the test
+    // below.
     test("cwt.sign", async () => {
       const { token } = await aegis.cwt.sign(claims, {
         tokenType: "at",
@@ -175,8 +175,8 @@ describe("the raw namespace wrappers", () => {
         tokenType: "at",
         partyProducer,
         partyRecipient,
-        // ⚠ PINNED, and it must be. Party info is a key-AGREEMENT input (RFC 7518
-        // §4.6), so it is correctly stripped for a symmetric `dir` recipient —
+        // ⚠ PINNED, and it must be. Party info is a key-AGREEMENT input
+        // (RFC 7518 §4.6), correctly stripped for a symmetric `dir` recipient —
         // and this vault holds one. An unpinned recipient is whichever the query
         // returns first, which is a coin toss this test would then be measuring
         // instead of the forward. `key` is also the one aegis-only field the
@@ -292,10 +292,8 @@ describe("the raw namespace wrappers", () => {
       });
     });
 
-    // RFC 8725 §3.1: "Libraries MUST enable the caller to specify a supported set
-    // of algorithms and MUST NOT use any other algorithms when performing
-    // cryptographic operations." Selection is driven by the token's own `kid`, so
-    // the caller's set is a CHECK applied before the signature is touched.
+    // RFC 8725 §3.1. Selection is driven by the token's own `kid`, so the
+    // caller's algorithm set is a CHECK applied before the signature is touched.
     test("jws.verify — a condition the signing key fails", async () => {
       const { token } = await aegis.jws.sign("data");
 

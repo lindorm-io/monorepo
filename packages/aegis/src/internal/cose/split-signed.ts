@@ -8,23 +8,21 @@ import { requireCose } from "./require-cose.js";
 import { decodeProtectedHeader } from "./structures.js";
 import type { CoseArity } from "./unwrap-cose.js";
 
-/** The wire segments of a signed COSE structure — COSE_Sign1 or COSE_Mac0 (RFC 9052). */
+/** The wire segments of a signed COSE structure — COSE_Sign1 or COSE_Mac0. */
 export type SignedSegments = {
   /** The protected header byte string — the Sig/MAC structure input, so it travels raw. */
   protectedBstr: Uint8Array;
   /**
-   * ⚠ The payload byte string AS CBOR DECODED IT, which may be `null`: a
-   * DETACHED payload is legal COSE. The read paths answer that differently — the
-   * claims decode refuses it with a structural verdict, the opaque one has never
-   * accepted a detached token at all — so the decision stays at the call site.
+   * ⚠ The payload byte string AS CBOR DECODED IT, which may be `null`: a DETACHED
+   * payload is legal COSE. Every read path refuses it, but in its own words, so
+   * the decision stays at the call site.
    */
   payload: Uint8Array | null | undefined;
   /**
-   * ⚠ The signature (COSE_Sign1) or authentication tag (COSE_Mac0) bytes AS CBOR
-   * DECODED THEM, which may be `null`: an `exactly: 4` arity counts ELEMENTS, not
-   * non-nil ones, so a structure with `null` in slot 4 reaches here intact. Every
-   * read path refuses it — `requireSignature` — but it is the CALL SITE that says
-   * so, in its own words and under its own leaf error class.
+   * ⚠ The signature or authentication tag bytes AS CBOR DECODED THEM, which may be
+   * `null`: an `exactly: 4` arity counts ELEMENTS, not non-nil ones, so `null` in
+   * slot 4 reaches here intact. `requireSignature` refuses it at the call site,
+   * under that site's own leaf error class.
    */
   signature: Uint8Array | null | undefined;
   /** The PROTECTED bucket in the JOSE wire vocabulary — the one a signature covers. */
@@ -33,11 +31,10 @@ export type SignedSegments = {
    * The SAME bucket as its RAW COSE label map, decoded once and handed on beside
    * the translated one.
    *
-   * ⚠ It exists because the translation is LOSSY BY DESIGN and cannot stop being:
-   * the JOSE wire vocabulary has no parameter for a `COSE_CertHash` under SHA-384
-   * or SHA-512 (RFC 7517 §4.8/§4.9 register two thumbprint parameters), so such a
-   * binding leaves the translated header. `cose-wide-cert-binding.ts` reads it
-   * here instead of the token being re-split to find it.
+   * ⚠ It exists because the translation is LOSSY BY DESIGN: the JOSE wire
+   * vocabulary has no parameter for a `COSE_CertHash` under SHA-384 or SHA-512
+   * (RFC 7515 §4.1.7, RFC 7515 §4.1.8), so such a binding leaves the translated
+   * header and `cose-wide-cert-binding.ts` reads it here.
    */
   protectedMap: Map<CoseLabel, unknown>;
   /** The UNPROTECTED bucket in the JOSE wire vocabulary; empty when there is none. */
@@ -53,18 +50,15 @@ export type SignedSegments = {
 
 /**
  * Decode a signed COSE token to its segments and its two WIRE header buckets, or
- * refuse it. The outer CWT tag (61) is stripped by `requireCose`, so a token
- * another producer did not envelope reads too.
+ * refuse it. `requireCose` strips the outer CWT tag, so an un-enveloped token
+ * reads too.
  *
- * This is the ONE opening the three signed read paths share — the opaque
- * `CwsKit.decode` and `CwsKit.verify`, and the claims `decodeCwtWire` — written
- * three times before, each re-deriving the same protected/unprotected
- * translation. The signature cycle, the header gates and the payload
- * reconstruction stay with the callers, because that is where they differ. The
- * COSE_Encrypt0 twin is `splitEncrypt0`.
+ * The ONE opening every signed read path shares. The signature cycle, the header
+ * gates and the payload reconstruction stay with the callers, because that is
+ * where they differ. The COSE_Encrypt0 twin is `splitEncrypt0`.
  *
- * ⚠ The two buckets travel SEPARATELY: an unprotected parameter is covered by no
- * signature, so a reader has to name the bucket it is willing to trust.
+ * ⚠ The two buckets travel SEPARATELY: no signature covers an unprotected
+ * parameter, so a reader has to name the bucket it is willing to trust.
  */
 export const splitSigned = (
   token: Buffer,
@@ -94,8 +88,8 @@ export const splitSigned = (
     Uint8Array | null | undefined,
   ];
 
-  // Decoded ONCE and used twice — the translated bucket and the raw one describe
-  // the same bytes, so a second decode is a second chance for them to disagree.
+  // Decoded ONCE and used twice: a second decode is a second chance for the raw
+  // and translated buckets to disagree about the same bytes.
   const protectedMap = decodeProtectedHeader(protectedBstr);
 
   const protectedWire = coseWireHeader(protectedMap, "sig");

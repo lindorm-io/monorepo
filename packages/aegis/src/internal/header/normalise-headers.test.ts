@@ -115,14 +115,12 @@ describe("normaliseHeaders", () => {
 
     /**
      * ⚠ THE PRUNE IS CRIT-BLIND, and nothing here needs to know otherwise. A
-     * producer that marks a parameter critical while giving it nothing to
-     * understand is refused OUTRIGHT at the two builders
-     * (`assert-crit-satisfied.ts`), so no header carrying a crit-named empty
-     * value ever reaches an emission boundary — there is no referent left for a
-     * prune to strip out from under. The exemption this replaced had to be told
-     * which bag, which bucket, which tier and which vocabulary it was reasoning
-     * about, and it was wrong on all four; a fragment cannot answer a question
-     * about the message it is part of.
+     * producer that marks a parameter critical while giving it nothing to understand
+     * is refused OUTRIGHT at the two builders (`assert-crit-satisfied.ts`), so no
+     * header carrying a crit-named empty value reaches an emission boundary and
+     * there is no referent for a prune to strip out from under. An EXEMPTION here
+     * would have to be told which bag, bucket, tier and vocabulary it was reasoning
+     * about — a fragment cannot answer a question about the message it is part of.
      */
     test("should prune an empty parameter even where this header's own crit names it", () => {
       expect(normaliseHeaders({ crit: ["oid"], oid: "", cty: "" })).toMatchSnapshot();

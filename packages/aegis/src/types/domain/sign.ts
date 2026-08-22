@@ -42,12 +42,8 @@ export type SignJwtContent = Omit<
 
 /**
  * The mint-time sign envelope — the caller's half of `aegis.mint`'s signing
- * options, on EITHER wire.
- *
- * ⚠ It was `SignJwtOptions`, and the name was load-bearing in the wrong
- * direction: the profiled COSE mint took the same object, so a type named for one
- * encoding was already describing both, and the `typ` field below reads as a JOSE
- * header when it is really the profile's token-type policy however it is spelled.
+ * options, on EITHER wire. The profiled COSE mint takes the same object, and the
+ * `typ` field below is the profile's token-type policy however it is spelled.
  */
 export type SignTokenOptions = DomainTokenEnvelope<AegisSignKey> & {
   accessTokenHash?: string;
@@ -66,10 +62,9 @@ export type SignTokenOptions = DomainTokenEnvelope<AegisSignKey> & {
 };
 
 /**
- * The DOMAIN sugar every `aegis` sign/mint path returns — collapsed from the
- * former byte-identical `SignedJwt` + `SignedCwt` into ONE type (both were
- * `token: string`, so the JOSE/COSE split bought nothing). `token` is always a
- * `string` (a COSE token is base64url-encoded — mint is opinionated). The
+ * The DOMAIN sugar every `aegis` sign/mint path returns — ONE type for both
+ * wires, since `token` is always a `string` (a COSE token is base64url-encoded —
+ * mint is opinionated). The
  * `format` discriminant reports the token's OWN kind, mirroring the read side's
  * `VerifiedToken.format`; an envelope around it is reported under
  * {@link SignedToken.wrapper}.
@@ -84,9 +79,9 @@ export type SignedToken = {
    *
    * ⚠ {@link TokenFormat}, which EXCLUDES the encrypting outers, exactly as the
    * read side's `VerifiedToken.format` does. `buildSignedToken` is only ever
-   * handed a signed format, and since the sign-then-encrypt composition stopped
-   * overwriting this field there is nothing left that could put `jwe`/`cwe` here
-   * — an exhaustive switch over it would otherwise still need two dead arms.
+   * handed a signed format and the sign-then-encrypt composition does not
+   * overwrite this field, so nothing can put `jwe`/`cwe` here — an exhaustive
+   * switch over it would otherwise still need two dead arms.
    */
   format: TokenFormat;
   /**

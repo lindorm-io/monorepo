@@ -11,12 +11,7 @@ import {
   type ScenarioContext,
 } from "../__fixtures__/run-scenario.js";
 import { WIRE_TAGS } from "../internal/registry/wire.js";
-import {
-  SCENARIOS,
-  WITHDRAWN_CAPABILITIES,
-  type Scenario,
-  type Wire,
-} from "../__fixtures__/scenarios.js";
+import { SCENARIOS, type Scenario, type Wire } from "../__fixtures__/scenarios.js";
 
 MockDate.set(new Date(DEFAULT_CLOCK));
 
@@ -161,74 +156,6 @@ describe("Aegis — conformance", () => {
     expect(JSON.parse(JSON.stringify(SCENARIOS))).toEqual(SCENARIOS);
   });
 
-  /**
-   * ⭐ A WITHDRAWN CAPABILITY STAYS WITHDRAWN, or its record goes with it.
-   *
-   * `WITHDRAWN_CAPABILITIES` is how `scenarios.ts` says a promise it once made no
-   * longer holds — without it a reader of the table alone concludes the opposite
-   * of what the code does, which is exactly what happened when
-   * `an-unrecognised-critical-parameter-is-refused` was OVERWRITTEN in place by a
-   * row stating a different capability. This binds the record to the table: a row
-   * reinstated under a withdrawn id must delete the record in the same change,
-   * rather than leaving the two contradicting each other.
-   */
-  test("each withdrawal's id agrees with whether its row still exists", () => {
-    const live = new Set(SCENARIOS.map((scenario) => scenario.id));
-
-    // A WHOLE-row withdrawal whose id is live is a capability reinstated under its
-    // old name while the record still says it is gone.
-    const reinstated = WITHDRAWN_CAPABILITIES.filter(
-      ({ scope, id }) => scope === "row" && live.has(id),
-    ).map(({ id }) => id);
-
-    // A PARTIAL withdrawal whose id is NOT live is a record that outlived its row —
-    // it should have become a whole-row withdrawal when the row went.
-    const orphaned = WITHDRAWN_CAPABILITIES.filter(
-      ({ scope, id }) => scope === "partial" && !live.has(id),
-    ).map(({ id }) => id);
-
-    expect(WITHDRAWN_CAPABILITIES.length).toBeGreaterThan(0);
-    expect({ reinstated, orphaned }).toEqual({ reinstated: [], orphaned: [] });
-  });
-
-  /**
-   * ⚠ NOT "both arms are populated" — a table holding only whole-row withdrawals
-   * is a legitimate state, and asserting the observed mix would freeze today's
-   * data as though it were the rule.
-   *
-   * ⛔ IT READS THE VALUES, NOT THE TYPE. `scope` is a closed union, so a
-   * `filter` over it narrows to `never` and could not fail for typed data — the
-   * check would be a tautology. These records are read by a runtime binding, and
-   * the input a binding has to survive is data that reached it WITHOUT passing
-   * the compiler: a hand-edited fixture, a JSON round trip. So the set is
-   * compared as strings.
-   */
-  test("every withdrawal declares a scope the binding above can act on", () => {
-    const declared = new Set<string>(["row", "partial"]);
-    const unknown = (
-      WITHDRAWN_CAPABILITIES as ReadonlyArray<{ id: string; scope: string }>
-    )
-      .filter(({ scope }) => !declared.has(scope))
-      .map(({ id }) => id);
-
-    // The population check, as on every other reduce over this table: a filter
-    // over an emptied array is trivially green.
-    expect(WITHDRAWN_CAPABILITIES.length).toBeGreaterThan(0);
-    expect(unknown).toEqual([]);
-  });
-
-  test("every withdrawal states what the package does instead", () => {
-    // A record that names no replacement behaviour is a memo: the point is that a
-    // reader learns what IS true now, not merely that something stopped.
-    const thin = WITHDRAWN_CAPABILITIES.filter(
-      ({ stated, because, insteadNow }) =>
-        !stated.trim() || !because.trim() || !insteadNow.trim(),
-    ).map(({ id }) => id);
-
-    expect(WITHDRAWN_CAPABILITIES.length).toBeGreaterThan(0);
-    expect(thin).toEqual([]);
-  });
-
   // `knownDefect` is PRESENT-TENSE: it describes how the code falls short today
   // and is deleted when the row goes green. So it must sit on exactly the rows
   // that currently FAIL. A defect note on a passing row is either a leftover or a
@@ -242,15 +169,12 @@ describe("Aegis — conformance", () => {
   // one wire and not the other is a real shortfall, and a row-level verdict would
   // average the two away.
   //
-  // ⚠ The DECLARATION is resolved per wire too (`knownDefectOn`), which it was
-  // not. This check has always been per CELL while the field could only speak for
-  // the whole row, so a row green on JOSE and red on COSE reported
-  // `"[jose] — PASSES but still carries a knownDefect"` however it was written —
-  // and the two ways out were both dishonest: `unsupported` is reserved for a
-  // SPECIFICATION reason and would be a lie about a wire that works, and
-  // splitting into two wire-pinned rows owes the working wire the same lie. Two
-  // such defects exist in the table today (`decrypt` on the COSE wire), and
-  // before this they could not be pinned at all.
+  // ⚠ The DECLARATION is resolved per wire too (`knownDefectOn`). This check is
+  // per CELL, so a field speaking only for the whole row would report a row green
+  // on JOSE and red on COSE as `"[jose] — PASSES but still carries a
+  // knownDefect"` — and both ways out are dishonest: `unsupported` is reserved
+  // for a SPECIFICATION reason and would be a lie about a wire that works, and
+  // splitting into two wire-pinned rows owes the working wire the same lie.
   test("should carry a knownDefect on exactly the scenario cells that currently fail", async () => {
     const mismatched: Array<string> = [];
 

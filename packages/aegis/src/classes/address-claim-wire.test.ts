@@ -10,10 +10,10 @@ import { Aegis } from "./Aegis.js";
 /**
  * WHAT AN `address` CLAIM ACTUALLY SAYS ON EACH WIRE.
  *
- * OIDC Core §5.1.1 defines the address claim by its members and spells each one
- * — `formatted`, `street_address`, `locality`, `region`, `postal_code`,
- * `country` — so those spellings ARE the interoperability contract: a relying
- * party reads `street_address` and nothing else. A token that carried
+ * The address claim's member spellings — `formatted`, `street_address`,
+ * `locality`, `region`, `postal_code`, `country` (OIDC Core §5.1.1) — ARE the
+ * interoperability contract: a relying party reads `street_address` and nothing
+ * else. A token that carried
  * `streetAddress`, or that dropped a member, would round-trip through this
  * package perfectly and mean nothing to anyone else.
  *
@@ -21,9 +21,7 @@ import { Aegis } from "./Aegis.js";
  * (`__fixtures__/inspect-token.ts` — raw `cbor2` and base64url, importing
  * nothing from `src/internal/` or `src/classes/`). Reading the token back
  * through aegis's own decoder proves only that the writer and the reader agree,
- * which a pair of mirrored bugs satisfies exactly. The claim had NO wire-level
- * evidence of any kind before this file: its behaviour was pinned by a
- * translator-internal round trip, which is precisely that trap.
+ * which a pair of mirrored bugs satisfies exactly.
  *
  * ⛔ THE EXPECTED SPELLINGS BELOW ARE WRITTEN OUT, NOT READ FROM THE REGISTRY.
  * A test that derives them from `address-members.ts` agrees with whatever the
@@ -67,11 +65,10 @@ const WIRE_ADDRESS: Dict = {
  * rather than read from the registry for the same reason as the member names.
  *
  * ⚠ THE CLAIM KEY AND THE MEMBER KEYS ARE DIFFERENT QUESTIONS. The claim has an
- * integer label, emitted only in proprietary mode — RFC 8392 §9.1.1, the registry
- * a CWT CLAIM KEY comes from, marks "Integer values less than -65536" as Private
- * Use, so an interoperable token must not carry one — and degrading to the string
- * `address` otherwise. Its MEMBERS have
- * no COSE registry at all and are text-keyed in both modes.
+ * integer label, emitted only in proprietary mode — a CWT CLAIM KEY below -65536
+ * is Private Use (RFC 8392 §9.1.1), so an interoperable token must not carry one
+ * and degrades to the string `address`. Its MEMBERS have no COSE registry at all
+ * and are text-keyed in both modes.
  */
 const ADDRESS_COSE_LABEL = -65557;
 
@@ -137,9 +134,9 @@ const wireAddressOf = (token: string, key: number | string): Dict => {
     throw new Error(`the token carries no claim under ${String(key)}`);
   }
 
-  // A COSE map decodes to a `Map` (the inspector keeps `preferMap` on, because
-  // RFC 9052 §1.5 admits `label = int / tstr` and CBOR keys the two apart); a JOSE
-  // one to a plain object. Rendered to one shape HERE, in the test, so the two
+  // A COSE map decodes to a `Map` (the inspector keeps `preferMap` on, because a
+  // COSE label is `int / tstr` — RFC 9052 §1.5 — and CBOR keys the two apart);
+  // a JOSE one to a plain object. Rendered to one shape HERE, in the test, so the two
   // wires can be compared against the same written-out expectation — and so a
   // member that arrived under an INTEGER key would surface as the number it is
   // rather than being silently stringified into agreement.
@@ -214,12 +211,11 @@ describe("the address claim on the wire", () => {
     // difference between a member that was never written and one the reader
     // discarded.
     //
-    // ⚠⚠ `null` USED TO STAND HERE and no longer states this rule. It is an
-    // ABSENCE now, not a value of the wrong kind, and it has its own two tests
-    // below — which is why this one needs a cast past `AegisProfileAddress`
-    // altogether: with `null` reclassified, the declared type admits no value
-    // that fails the member's own codec, so the fault can only arrive from a
-    // door with no type behind it.
+    // ⚠⚠ `null` DOES NOT STATE THIS RULE — it is an ABSENCE, not a value of the
+    // wrong kind, and it has its own two tests below. That is why this one needs
+    // a cast past `AegisProfileAddress` altogether: the declared type admits no
+    // value that fails the member's own codec, so the fault can only arrive from
+    // a door with no type behind it.
     for (const format of ["jwt", "cwt"] as const) {
       const token = await mint(format, {
         streetAddress: "Sample 1",
@@ -263,11 +259,11 @@ describe("the address claim on the wire", () => {
   test("a null UNDECLARED member is omitted too, rather than riding as a null", async () => {
     // ⭐⭐ THE HALF OF THE NULL RULE THAT IS OBSERVABLE ON `address`, and the one
     // a build can get wrong without any other test noticing. An undeclared member
-    // rides through the OPEN tail with no codec to fail, so before `null` was
-    // classified as absence this put a literal `"extra_thing": null` on a SIGNED
-    // wire — a member asserting nothing, in a claim OIDC Core §5.1.1 defines
-    // entirely by members that are strings. A database row's extension column is
-    // null exactly as often as its declared ones are.
+    // rides through the OPEN tail with no codec to fail, so treating `null` as a
+    // value would put a literal `"extra_thing": null` on a SIGNED wire — a member
+    // asserting nothing, in a claim whose members are all strings
+    // (OIDC Core §5.1.1). A database row's extension column is null exactly as
+    // often as its declared ones are.
     for (const format of ["jwt", "cwt"] as const) {
       const token = await mint(format, {
         streetAddress: "Sample 1",
@@ -296,7 +292,7 @@ describe("the address claim on the wire", () => {
   });
 
   test("an address that is not an address is refused rather than dropped", async () => {
-    // OIDC Core §5.1.1 defines the claim as a structure of sub-fields. A scalar
+    // The claim is a structure of sub-fields (OIDC Core §5.1.1). A scalar
     // under that name is a statement this package cannot describe, and reporting
     // the token as carrying no address would be reporting a statement its issuer
     // signed as never made.
@@ -347,8 +343,8 @@ describe("the address claim on the wire", () => {
       throw new Error("the mint did not produce a readable COSE payload");
     }
 
-    // RFC 8392 §9.1.1 marks every claim key below -65536 as Private Use, so a
-    // token carrying one is meaningless to any reader but us. The interoperable
+    // A claim key below -65536 is Private Use (RFC 8392 §9.1.1), so a token
+    // carrying one is meaningless to any reader but us. The interoperable
     // default must therefore key the claim by its string name.
     expect(inspection.payload.value.has("address")).toBe(true);
     expect(inspection.payload.value.has(ADDRESS_COSE_LABEL)).toBe(false);

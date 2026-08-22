@@ -104,11 +104,9 @@ export const decodeJoseHeader = (
       details: "The decoded JOSE header has no alg, or alg is not a string.",
     });
   }
-  // Allowlist enforcement: the only algorithms aegis will even attempt to
-  // decode are the ones kryptos currently supports. This catches `none`,
-  // RSA1_5, and any other weak or unsupported algorithm up front — well
-  // before the kryptos-match check in the Kit — and with a clearer error
-  // message than "algorithm mismatch".
+  // Allowlist enforcement: the only algorithms aegis attempts to decode are the
+  // ones kryptos supports. This catches `none`, RSA1_5 and any other weak or
+  // unsupported algorithm up front, before the kryptos-match check in the kit.
   if (!(TOKEN_HEADER_ALGORITHMS as ReadonlyArray<string>).includes(json.alg)) {
     throw new JoseError(`Unsupported algorithm: ${json.alg}`, {
       code: "jose_header_unsupported_algorithm",
@@ -118,11 +116,10 @@ export const decodeJoseHeader = (
         "The decoded header alg is not in the allowlist of supported algorithms, rejecting weak or disallowed algorithms such as none.",
     });
   }
-  // The `enc` twin of the allowlist above, which did not exist: `alg` was checked
-  // and the CONTENT encryption was not, so a header naming an unsupported (or
-  // invented) AEAD passed the keyless read untouched and was refused only later,
-  // by a kit's encryption-MISMATCH check, which says something else. The
-  // allowlist is the `jwe` kit's declared `contentEncryption` capability.
+  // The `enc` twin of the allowlist above: without it a header naming an
+  // unsupported or invented AEAD passes the keyless read untouched and is refused
+  // only later by a kit's encryption-MISMATCH check, which says something else.
+  // The allowlist is the `jwe` kit's declared `contentEncryption` capability.
   // Presence-gated: `enc` is a JWE parameter, and a JWS/JWT carries none.
   if (json.enc !== undefined && !KIT_CAPABILITIES.jwe.contentEncryption.has(json.enc)) {
     throw new JoseError(`Unsupported encryption: ${json.enc}`, {
@@ -133,13 +130,13 @@ export const decodeJoseHeader = (
         "The decoded header enc is not one of the content-encryption algorithms this wire can carry.",
     });
   }
-  // typ is OPTIONAL per RFC 7515 Section 4.1.9
+  // typ is optional — RFC 7515 §4.1.9
   if (json.typ !== undefined && typeof json.typ !== "string") {
     throw new JoseError("Invalid token header: typ must be a string", {
       code: "jose_header_typ_invalid",
       title: "JOSE Header Typ Invalid",
       details:
-        "The decoded header typ is present but is not a string, which RFC 7515 requires.",
+        "The decoded header typ is present but is not a string, so aegis cannot read the token's declared type. RFC 7515 §4.1.9.",
     });
   }
   // The REGISTERED members and the rest, kept apart — see the return docstring.

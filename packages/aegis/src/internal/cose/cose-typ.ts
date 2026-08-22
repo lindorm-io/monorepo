@@ -1,22 +1,13 @@
 import type { TokenProfileTyp } from "../../types/index.js";
 
 /**
- * Map a profile's JOSE `typ` to the COSE `typ` (label 16, RFC 9596). A COSE
- * object is a CWT, not a JWT, so the `+jwt` structured suffix becomes `+cwt`;
- * the value keeps its full `application/...` media type (COSE does not use the
- * JWS abbreviation that drops `application/` — RFC 9596 → RFC 9052 §3.1):
+ * Map a profile's JOSE `typ` to the COSE `typ`. RFC 9596. A COSE object is a CWT,
+ * so the `+jwt` structured suffix becomes `+cwt`, and the value keeps its full
+ * `application/...` media type rather than the JWS abbreviation. The bare `JWT`
+ * maps to `application/cwt`; `presence: "none"` maps to `undefined`.
  *
- *   { presence: "required", value: "application/at+jwt" } -> application/at+cwt
- *   { presence: "required", value: "application/secevent+jwt" }
- *                                                          -> application/secevent+cwt
- *   { presence: "required", value: "JWT" }                 -> application/cwt
- *                                       (the one registered CWT type, RFC 8392
- *                                        — bare JWT has no structured equivalent)
- *   { presence: "none" }                                   -> undefined
- *                                       (profile mandates no typ)
- *
- * NOTE: only `application/cwt` is IANA-registered; the per-profile `+cwt` types
- * are lindorm-proprietary (no CWT equivalent of RFC 9068's `at+jwt` exists).
+ * ⚠ Only `application/cwt` is registered — the per-profile `+cwt` types are
+ * lindorm-proprietary, as COSE has no equivalent of RFC 9068's `at+jwt`.
  */
 export const coseTyp = (typ: TokenProfileTyp): string | undefined => {
   if (typ.presence === "none") return undefined;

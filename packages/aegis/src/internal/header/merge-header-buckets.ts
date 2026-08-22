@@ -4,42 +4,28 @@ import { isProtectedOnly } from "./is-protected-only.js";
 
 /**
  * Merge a token's two WIRE header buckets into the ONE header the DOMAIN tier
- * reports, in the canonical order: start from the unprotected bucket FILTERED to
- * the parameters the header registry permits there, then overwrite with the
- * protected bucket.
+ * reports: start from the unprotected bucket FILTERED to the parameters the header
+ * registry permits there, then overwrite with the protected bucket.
  *
- * ⚠ A PARAMETER NOTHING COVERS MUST NOT READ AS THOUGH THE ISSUER SIGNED IT, and
- * the filter is why merging keeps that property by CONSTRUCTION rather than by
- * making the reader choose: `placement` (`is-protected-only.ts`) decides it, so the only
- * parameters that can enter the domain header from the unauthenticated bucket are
- * the two the registry marks `"either"` — `kid` and
- * `iv`, the COSE routing/AEAD infrastructure RFC 9052 §3.1 puts there precisely
- * because they are not security-critical. Everything a verifier routes, audits or
- * polices a token by — `typ`, `cty`, `oid`, `x5c`, `x5u` — is `"protected"` and is
- * DROPPED here, silently and unconditionally.
+ * ⚠ A PARAMETER NOTHING COVERS MUST NOT READ AS THOUGH THE ISSUER SIGNED IT. The
+ * filter keeps that by CONSTRUCTION: `placement` (`is-protected-only.ts`) decides,
+ * so only the parameters the registry marks `"either"` can enter from the
+ * unauthenticated bucket — see RFC 9052 §3.1 and the allowlist pinned in
+ * `merge-header-buckets.test.ts`. Everything else is DROPPED here, silently.
  *
- * ⚠ THIS IS A READ-SIDE RULE ABOUT A FOREIGN TOKEN, and it has no write-side twin
- * to mirror: a caller cannot express the shape at all. `header` is the only
- * registered bag a caller can fill and it travels protected, so there is nothing
- * for a write-side refusal to refuse (`build-cose-headers.ts` states the
- * structural argument). `is-protected-only.ts` has exactly one production reader —
- * this one.
+ * ⚠ A READ-SIDE RULE ABOUT A FOREIGN TOKEN, with no write-side twin: `header` is
+ * the only registered bag a caller can fill and it travels protected, so there is
+ * nothing for a write-side refusal to refuse (`build-cose-headers.ts`).
  *
- * The protected bucket therefore always wins a collision: it is applied second,
- * so a `kid` in both buckets reports the signed one. A reader who needs to tell
- * the two apart reads the KIT result, which keeps them separate
- * ({@link CoseHeaderBuckets}); the domain tier speaks neither wire's vocabulary.
+ * The protected bucket wins a collision — it is applied second. A reader who needs
+ * the two apart reads the KIT result ({@link CoseHeaderBuckets}).
  *
- * ⚠ NOT `Object.assign` and not a spread of the whole bucket: an explicitly
- * `undefined` value is an ABSENT parameter, and copying one would let the
- * protected bucket clobber a legitimate unprotected `kid` with nothing.
+ * ⚠ NOT `Object.assign` and not a whole-bucket spread: an explicitly `undefined`
+ * value is an ABSENT parameter, and copying one would let the protected bucket
+ * clobber a legitimate unprotected `kid` with nothing.
  *
- * ⛔ IT TAKES THE TWO TYPED BUCKETS ONLY, by `Pick`, and that is the tier
- * boundary made structural: this merge is the last wire-tier step before
- * `parseTokenHeader` produces `VerifiedToken.header`, and an unregistered
- * parameter has no domain name to be reported under. Widening the parameter to
- * the whole {@link CoseHeaderBuckets} would put `custom` in reach of a future
- * edit here; it is not in reach now.
+ * ⛔ IT TAKES THE TWO TYPED BUCKETS ONLY, by `Pick` — widening the parameter to the
+ * whole {@link CoseHeaderBuckets} would put `custom` in reach of an edit here.
  */
 export const mergeHeaderBuckets = (
   buckets: Pick<CoseHeaderBuckets, "protectedHeader" | "unprotectedHeader">,

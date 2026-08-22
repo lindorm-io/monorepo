@@ -1,17 +1,12 @@
 /**
- * The WIRES aegis speaks, and the one place they are enumerated.
- *
- * `Wire` is the type every registry entry is TOTAL over (`wire: Record<Wire,
- * WireKey>`), so adding a third wire is a compile error in every registry entry
- * rather than a silent hole: a new member of this union makes ~100 object
- * literals incomplete at once. `WIRES` is the value-level twin, so a wire also
- * has somewhere to carry its own facts.
+ * The WIRES aegis speaks, and the one place they are enumerated. `Wire` is the
+ * type every registry entry is TOTAL over (`wire: Record<Wire, WireKey>`), so a
+ * third wire is a compile error in every entry rather than a silent hole; `WIRES`
+ * is the value-level twin.
  *
  * A wire is the SERIALISATION vocabulary, not the token format: `jose` covers
- * JWS/JWE/JWT, `cose` covers CWS/CWM/CWE/CWT. Per-KIT facts (which key
- * managements a kit supports, whether it has an unprotected bucket) live in the
- * kit capability table, not here — a kit fact is finer-grained than a wire fact,
- * and stating it twice would create two sources for one answer.
+ * JWS/JWE/JWT, `cose` covers CWS/CWM/CWE/CWT. Per-KIT facts live in the kit
+ * capability table — a kit fact is finer-grained than a wire fact.
  */
 
 export type Wire = "jose" | "cose";
@@ -22,9 +17,8 @@ export type WireDescriptor = {
   /** Human-facing name, used in error data and reports. */
   name: string;
   /**
-   * Whether the wire may key a parameter by an INTEGER label. COSE labels are
-   * `int / tstr` (RFC 9052 §1.5), so a COSE parameter is either an integer label
-   * or a text-string name; JOSE names are always strings.
+   * Whether the wire may key a parameter by an INTEGER label (RFC 9052 §1.5). JOSE
+   * names are always strings.
    */
   labelled: boolean;
 };

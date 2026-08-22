@@ -218,9 +218,9 @@ describe("parseTokenHeader", () => {
 
 /**
  * The WIRE-KEYED write pass. It exists so the JOSE kits can stay in wire
- * vocabulary end to end: they used to translate the caller's already-wire bag
- * BACK to domain names purely to reach these guards, which put a second crossing
- * point beside the one `domain-header-to-wire.ts` claims to be.
+ * vocabulary end to end: without it a kit translates its already-wire bag BACK to
+ * domain names purely to reach these guards, which is a second crossing point
+ * beside the one `domain-header-to-wire.ts` claims to be.
  */
 describe("shapeWireHeader (the wire-keyed write pass)", () => {
   test("shapes without translating — the names come out as they went in", () => {
@@ -341,12 +341,11 @@ describe("wireHeaderToCoseMap (the COSE write pass)", () => {
   });
 
   test("translates crit's MEMBERS to the labels their parameters are keyed under", () => {
-    // RFC 9052 §1.5 makes `label = int / tstr`, so the tstr "oid" and the int
-    // -70000 the `oid` parameter rides under are DIFFERENT labels — and §3.1
-    // makes a crit member naming a label absent from the protected bucket a
-    // FATAL error. Emitting the name while keying the parameter by its label
-    // produced a token that was malformed by its own crit, which is what this
-    // pass did until 2026-08-11. Order is preserved (the reader mirrors it).
+    // The tstr "oid" and the int -70000 the `oid` parameter rides under are
+    // DIFFERENT labels (RFC 9052 §1.5), and a crit member naming a label absent
+    // from the protected bucket is a FATAL error (RFC 9052 §3.1) — so emitting the
+    // NAME while keying the parameter by its LABEL produces a token malformed by
+    // its own crit. Order is preserved (the reader mirrors it).
     //
     // ⚠ PROPRIETARY, so both `oid` entries are the integer — the mode that
     // makes this the original defect's shape. The interoperable pair below is
@@ -367,9 +366,8 @@ describe("wireHeaderToCoseMap (the COSE write pass)", () => {
   // string label instead, the parameter is legible COSE (RFC 9052 §1.5 —
   // `label = int / tstr`).
   //
-  // ⚠ The expected keys are LITERALS on purpose. Reading them from the registry
-  // would make the test agree with whatever the registry says, including the
-  // integer it said before this pair existed.
+  // ⚠ The expected keys are LITERALS on purpose: read from the registry, the test
+  // would agree with whatever the registry says.
   test("the interoperable default keys a PRIVATE-USE parameter by its STRING label", () => {
     const map = wireHeaderToCoseMap({ oid: "1.2.3.4" } as never, false);
 
@@ -441,9 +439,8 @@ describe("wireHeaderToCoseMap (the COSE write pass)", () => {
 
   test("removes the empty value the registry says carries nothing", () => {
     // The COSE half of the JOSE rule above, and the reason it is stated on both
-    // passes: an empty `crit` is forbidden by RFC 9052 §3.1 ("The array MUST have
-    // at least one value in it") exactly as RFC 7515 §4.1.11 forbids it on JOSE,
-    // so a wire that emitted one would be refused by aegis's own reader.
+    // passes: an empty `crit` is forbidden on both wires (RFC 9052 §3.1,
+    // RFC 7515 §4.1.11), so a wire emitting one is refused by aegis's own reader.
     const map = wireHeaderToCoseMap({ crit: [], cty: "", typ: "application/cwt" }, false);
 
     expect(map.size).toBe(1);

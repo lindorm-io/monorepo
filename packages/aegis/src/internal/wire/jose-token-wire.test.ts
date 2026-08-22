@@ -6,12 +6,12 @@ import { parseToken } from "../utils/parse-token.js";
 import { JOSE_TOKEN_WIRE } from "./jose-token-wire.js";
 
 /**
- * The JOSE wire's KEYLESS claims read — the `aegis.parse` half of the JWT typ
- * gate, which no other suite reaches.
+ * The JOSE wire's KEYLESS claims read — the `aegis.parse` half of the JWT typ gate,
+ * which no other suite reaches.
  *
- * `assert-wire-typ.test.ts` pins the PREDICATE against configs it declares
- * itself, so it stays green no matter what the call sites pass. This drives the
- * two real sites and pins the one thing that distinguishes them: their WORDING.
+ * ⚠ `assert-wire-typ.test.ts` pins the PREDICATE against configs it declares itself,
+ * so it stays green no matter what the call sites pass. This drives the two real
+ * sites and pins what distinguishes them: their WORDING.
  */
 describe("JOSE_TOKEN_WIRE typ gate", () => {
   let logger: ReturnType<typeof createMockLogger>;
@@ -22,12 +22,12 @@ describe("JOSE_TOKEN_WIRE typ gate", () => {
     logger = createMockLogger();
     kit = new JwtKit({ logger, kryptos: TEST_EC_KEY_SIG });
 
-    // A signed JWT whose header typ is then rewritten to something outside the
-    // JWT media-type family — the sign floor would never emit one. The edit
-    // breaks the signature, which is irrelevant: both gates run before it.
-    // The spelling matters: an opaque `JWS`/`JOSE`/`+jws` typ would make
-    // `isJwt` false, so `parse` would refuse the token as an opaque JWS long
-    // before the wire ever read it.
+    // A signed JWT whose header typ is rewritten outside the JWT media-type family.
+    // The broken signature is irrelevant — both gates run before it.
+    //
+    // ⚠ The spelling matters: an opaque `JWS`/`JOSE`/`+jws` typ would make `isJwt`
+    // false, so `parse` would refuse the token as an opaque JWS before the wire read
+    // it at all.
     const signed = kit.sign({ iss: "https://test.lindorm.io/", sub: "s" });
     const [, payload, signature] = signed.split(".");
     const header = Buffer.from(
@@ -62,13 +62,9 @@ describe("JOSE_TOKEN_WIRE typ gate", () => {
   });
 
   test("⚠ the parse-side and verify-side wordings DIFFER, deliberately", () => {
-    // Same code, same title, one word apart — and the word is the operation the
-    // caller actually asked for. `JwtKit.verify` is about to check a signature,
-    // so it says the token "cannot be verified"; the wire read is keyless and
-    // checks nothing, so it says "cannot be parsed". Telling a parse caller
-    // their token cannot be VERIFIED would name a check that path never runs.
-    //
-    // ⛔ The two are NOT a copy-paste slip. Do not collapse them.
+    // ⛔ NOT a copy-paste slip — do not collapse them. The word is the operation the
+    // caller asked for: telling a parse caller their token cannot be VERIFIED would
+    // name a check that path never runs.
     const parsed = refusalOf(() => JOSE_TOKEN_WIRE.decodeClaims(token)) as {
       code: string;
       details: string;

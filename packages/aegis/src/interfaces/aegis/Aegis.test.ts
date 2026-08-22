@@ -30,27 +30,23 @@ const aegis = {} as IAegis;
 const RESOURCE = "https://rs.lindorm.io/";
 
 /**
- * NEVER INVOKED — the compiler IS the assertion, and each `@ts-expect-error`
- * marks a call that used to compile.
+ * NEVER INVOKED — the compiler IS the assertion.
  *
- * `mint` once declared two overloads — a typed one over `keyof ProfileContent`
- * and a loose one over `string & {}` — and `string & {}` accepts `"access_token"`
- * as readily as any other string. An inline literal carrying a claim the profile
- * does not `Pick` failed the typed overload, FELL THROUGH to the loose one and
- * compiled as the whole `SignContent` vocabulary, so the content types
- * constrained nothing at a plain call site. The fix is ONE signature whose
- * content type is resolved from the profile name, leaving nothing to fall
- * through to.
+ * `mint` has ONE signature whose content type resolves from the profile NAME, so
+ * an inline literal has nothing to fall through to. A typed/loose overload pair
+ * would not hold: `string & {}` accepts `"access_token"` as readily as any other
+ * string, so a literal failing the typed overload compiles as the whole
+ * `SignContent` vocabulary and the content types constrain nothing.
  *
  * ⚠ The guard runs in BOTH directions, which is why the un-marked calls matter
  * as much as the marked ones: an unused `@ts-expect-error` is itself a compile
- * error, so restoring the fall-through fails here — and closing the escape hatch
- * for custom profiles fails here too.
+ * error, so reintroducing the fall-through fails here — and closing the escape
+ * hatch for custom profiles fails here too.
  */
 export const _mintContentGuards = (): void => {
   // `federationAssuranceLevel` is a real member of the domain vocabulary and `1`
   // is a valid value for it — it is simply not a claim an access token may
-  // assert. This is the exact shape that used to compile.
+  // assert.
   void aegis.mint("access_token", {
     subject: "user-1",
     audience: [RESOURCE],
@@ -59,9 +55,9 @@ export const _mintContentGuards = (): void => {
     federationAssuranceLevel: 1,
   });
 
-  // `clientId` is required on an access token and absent from an id token: OIDC
-  // Core §2 makes `aud` the client id, and `azp` (authorizedParty) the claim for
-  // the authorized party. Neither direction may leak into the other.
+  // `clientId` is required on an access token and absent from an id token, whose
+  // audience IS the client. Neither direction may leak into the other.
+  // OIDC Core §2.
   void aegis.mint(
     "id_token",
     {
@@ -160,11 +156,9 @@ describe("IAegis — the compile-time contract", () => {
         .toEqualTypeOf<SignContent>();
     });
 
-    // RFC 7662 §2.2 registers `username` as a member of an introspection
-    // response — "Human-readable identifier for the resource owner who
-    // authorized this token" — so the artifact an introspection answers ABOUT is
-    // the profile that may assert it. An id token has its own OpenID Connect
-    // claim for the same idea and does not pick this one.
+    // An introspection response may carry `username` (RFC 7662 §2.2), so the
+    // artifact an introspection answers ABOUT is the profile that may assert it.
+    // An id token does not pick it.
     test("should admit username on an access token and not on an id token", () => {
       expectTypeOf<AccessTokenContent>().toHaveProperty("username");
       expectTypeOf<IdTokenContent>().not.toHaveProperty("username");

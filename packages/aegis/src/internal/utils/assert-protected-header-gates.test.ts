@@ -17,28 +17,18 @@ MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
  * ⭐ WHICH REFUSAL A DOUBLY-HOSTILE TOKEN GETS, on every wire that runs both
  * protected-header gates.
  *
- * SIX read paths run `rejectUnknownCritical` AND `assertAlgorithmMatch` over the
- * integrity-protected header before they spend a signature or AEAD cycle — three
- * JOSE kits, `CwsKit.verify`, and `verifyCwt` serving BOTH `CwtKit` and `CwmKit`.
- * That is six paths through four call sites, and `cwm` is the one a count of
- * files loses: it has no kit of its own here and its verdict changed anyway. Both
- * gates refuse, so a token that trips BOTH — a `crit` naming an extension aegis
- * does not implement, under an `alg` that is not the resolved key's — is answered
- * by whichever gate the kit happens to run first. That ORDER is observable output
- * and nothing else in the package states it.
+ * Every read path runs `rejectUnknownCritical` AND `assertAlgorithmMatch` over
+ * the integrity-protected header before it spends a signature or AEAD cycle —
+ * the three JOSE kits, `CwsKit.verify`, and `verifyCwt` serving BOTH `CwtKit` and
+ * `CwmKit`. Both gates refuse, so a token that trips BOTH — a `crit` naming an
+ * extension aegis does not implement, under an `alg` that is not the resolved
+ * key's — is answered by whichever gate runs first. That ORDER is observable
+ * output and nothing else in the package states it.
  *
- * ⚠ Every OTHER test in the package trips ONE gate at a time, which is exactly
- * why the two wires were able to disagree about the order behind comments
- * asserting they could not: a single-gate test passes under either order. This
- * file was written BEFORE the pair was unified, and it recorded the divergence —
- * three JOSE `*_unsupported_crit_param` verdicts against three COSE
- * `*_algorithm_mismatch` ones. The three COSE verdicts are the ones that changed
- * when `assertProtectedHeaderGates` made the order one thing; the three JOSE ones
- * are unchanged, which is what says the unification moved nothing it did not have
- * to. ⚠ Only five rows existed when the freeze was taken, so `cwm`'s change was
- * unpinned; its snapshot below was written after the fact and is therefore the
- * one row whose pre-unification value rests on the reasoning above rather than on
- * a measurement — the order-flip check is what holds it.
+ * ⚠ Every OTHER test in the package trips ONE gate at a time, and a single-gate
+ * test passes under EITHER order — which is how the two wires can disagree about
+ * it behind comments asserting they cannot. `cwm` has no kit of its own here, so
+ * a count of files loses it entirely.
  *
  * The `alg` mismatch comes from minting with one key and verifying with a second
  * of the same class and a different algorithm. ⚠ Both keys in a pair share an
@@ -50,9 +40,8 @@ MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
  * (`internal/header/assert-crit-eligible.ts`) refuses a `crit` naming anything
  * outside the header registry's eligible set and the custom bag the same call
  * writes, so a doubly-hostile token is by construction something only a FOREIGN
- * producer writes. This file writes one.
- * The `crit` used to ride the caller's header bag; that shape now fails at the
- * mint and would never reach a verify at all.
+ * producer writes. This file writes one. ⛔ A `crit` riding the caller's header
+ * bag fails at the mint and never reaches a verify at all.
  */
 describe("the protected-header gates, on a token that trips BOTH", () => {
   const logger = createMockLogger();
@@ -271,7 +260,7 @@ describe("the protected-header gates, on a token that trips BOTH", () => {
       // the same algorithms and the same shared id, not the same bytes — with no
       // crit injected first: the alg gate must fire on its own. If a future
       // edit stops `signPair`/`encryptPair` producing a real mismatch, this goes
-      // red here rather than leaving five green snapshots pinning an order the
+      // red here rather than leaving the snapshots below pinning an order the
       // file no longer observes.
       expect(
         refuse(false).code,

@@ -11,18 +11,10 @@ import { Aegis } from "./Aegis.js";
 /**
  * WHAT AN RFC 8417 `events` MAP ACTUALLY SAYS ON EACH WIRE.
  *
- * RFC 8417 §2.2 defines the claim as a JSON object whose MEMBER NAMES are URIs
- * identifying event statements. That makes the keys IDENTIFIERS rather than field
- * names, and it is the whole interoperability contract: a receiver dispatches on
- * the URI, so a key rewritten by even one character names an event nobody is
- * listening for.
- *
- * ⛔⛔ THAT PROPERTY HAD NEVER BEEN CHECKED. Before this file the JOSE side of
- * `events` had PRESENCE ONLY — a scenario row asserting the key exists, with no
- * assertion about its value — and the only value-level pin anywhere was the COSE
- * one in `classes/cose-claims-encoding.test.ts`. The translator's decode arm
- * carries an explicit comment that the map must NOT join the `address` arm's case
- * flip "because the keys are URIs"; nothing anywhere could see that claim break.
+ * The claim's MEMBER NAMES are URIs identifying event statements
+ * (RFC 8417 §2.2). That makes the keys IDENTIFIERS rather than field names, and
+ * it is the whole interoperability contract: a receiver dispatches on the URI, so
+ * a key rewritten by even one character names an event nobody is listening for.
  *
  * ⚠ EVERY WIRE ASSERTION GOES THROUGH THE INDEPENDENT INSPECTOR
  * (`__fixtures__/inspect-token.ts` — raw `cbor2` and base64url, importing nothing
@@ -44,9 +36,8 @@ const ISSUER = "https://test.lindorm.io/";
  * The COSE claim key `events` takes, and the reason an interoperable token must
  * not carry it.
  *
- * RFC 8392 §9.1.1 governs the CWT claim key registry and states the boundary in
- * one sentence: "Integer values less than -65536 are marked as Private Use." The
- * SET claim has no registered CWT key at all, so aegis assigns a private-use one
+ * A CWT claim key below -65536 is Private Use (RFC 8392 §9.1.1). The SET claim
+ * has no registered CWT key at all, so aegis assigns a private-use one
  * — meaningless to any reader but us — and an interoperable token therefore falls
  * back to the JOSE string `events`.
  */
@@ -70,8 +61,8 @@ const URN_MIXED_URI = "urn:lindorm:event:sessionRevoked";
  * each encoding, because "the two wires agree" is the fact worth being able to
  * see break.
  *
- * ⚠ THE PAYLOAD MEMBERS ARE HOSTILE TO A CASE FLIP TOO. RFC 8417 §2.2 leaves an
- * event's payload to whoever defines the event type, so a member spelled
+ * ⚠ THE PAYLOAD MEMBERS ARE HOSTILE TO A CASE FLIP TOO. An event's payload
+ * belongs to whoever defines the event type (RFC 8417 §2.2), so a member spelled
  * `subject_id` or `initiatingParty` belongs to that definition and not to this
  * package's house convention.
  */
@@ -145,8 +136,8 @@ const wireClaimOf = (token: string, key: number | string): unknown => {
  *
  * ⚠ SAFE HERE, AND NOT SAFE EVERYWHERE. `Object.fromEntries` stringifies a key,
  * so a member that arrived under the integer `2` would compare equal to one under
- * the text `"2"` — RFC 9052 §1.5 keeps those apart (`label = int / tstr`) and the
- * compact actor pins compare `Map` against `Map` for exactly that reason. An
+ * the text `"2"` — a COSE label is `int / tstr` (RFC 9052 §1.5) and the compact
+ * actor pins compare `Map` against `Map` for exactly that reason. An
  * `events` map has no integer form at any depth: its keys are URIs and its
  * payload members are the event definition's own strings, so no key here can be
  * an integer for the stringification to blur.
@@ -269,7 +260,8 @@ describe("the events claim on the wire", () => {
     // ⭐ THE SAME TABLE AS THE JOSE ROW, ON THE OTHER ENCODING. The two wires
     // reach the value through different code — the translator, then the CWT byte
     // shaper's verbatim arm — so "the URI survives" has to be asserted of each.
-    // RFC 9052 §1.5 admits a text map key, which is what an event-type URI takes.
+    // A COSE label may be a text string (RFC 9052 §1.5), which is what an
+    // event-type URI takes.
     for (const [mode, proprietary] of [
       ["interoperable", undefined],
       ["proprietary", true],
@@ -320,134 +312,6 @@ describe("the events claim on the wire", () => {
         "http://schemas.openid.net/event/backchannel-logout": {},
       });
     }
-  });
-
-  // ---------------------------------------------------------------------------
-  // `__proto__` — the refusal `events` never had.
-  // ---------------------------------------------------------------------------
-
-  test("a `__proto__` event type is refused at the UNAUTHENTICATED JOSE door", () => {
-    // ⛔ WHAT THIS PINS IS THE REFUSAL, not a prototype swap. The read side's
-    // `omitUndefined` rebuild does not re-invoke `__proto__` as a setter:
-    // `@lindorm/utils`'s `omit-from-object.ts:32` writes every key with
-    // `Object.defineProperty`, so the member survives as an ordinary own key and
-    // nothing is polluted. Measured with the refusal disabled, this very token
-    // parses cleanly and hands `events` back with `__proto__` live and own. ⇒ The
-    // row states aegis's POLICY about the member name — see
-    // `internal/claims/proto-member-violations.ts`, where that policy's own
-    // justification is filed for removal.
-    //
-    // ⭐ THE TOKEN IS FORGED AND `parse` IS THE DOOR. `parse` reports a payload
-    // WITHOUT checking a signature, so the attacker needs no key at all. A MINT is
-    // refused by the same rule on the write side, so signing one would prove
-    // nothing about the read side.
-    expect(() =>
-      aegis.parse(
-        forgeJose(
-          `{"iss":"${ISSUER}","sub":"u","exp":9999999999,"events":{"__proto__":{"pollutedParse":"yes"},"urn:e":{}}}`,
-        ),
-      ),
-    ).toThrow(
-      expect.objectContaining({
-        code: "claim_structure_invalid",
-        data: {
-          claim: "events",
-          invalid: [
-            {
-              key: "events.__proto__",
-              message:
-                'Member "__proto__" is not a member name any structure may use, in "events"',
-            },
-          ],
-        },
-      }) as unknown as Error,
-    );
-  });
-
-  test("a `__proto__` INSIDE an event payload is refused at its own depth", () => {
-    // ⚠ THE HALF A PER-KEY CHECK WOULD MISS. An event's payload is a third-party
-    // shape carried untouched, so nothing descends into it — and the rebuild that
-    // creates the swap descends into everything. Measured before this step:
-    // `Object.keys(claims.events["urn:e"])` was `[]` while
-    // `claims.events["urn:e"].deep` returned `"yes"`. The key names WHICH event,
-    // because at depth `__proto__` alone does not locate it.
-    expect(() =>
-      aegis.parse(
-        forgeJose(
-          `{"iss":"${ISSUER}","sub":"u","exp":9999999999,"events":{"urn:e":{"__proto__":{"deep":"yes"}}}}`,
-        ),
-      ),
-    ).toThrow(
-      expect.objectContaining({
-        code: "claim_structure_invalid",
-        data: {
-          claim: "events",
-          invalid: [
-            {
-              key: "events.urn:e.__proto__",
-              message:
-                'Member "__proto__" is not a member name any structure may use, in "events.urn:e"',
-            },
-          ],
-        },
-      }) as unknown as Error,
-    );
-  });
-
-  test("a COSE map carrying a text `__proto__` label is refused too", () => {
-    // RFC 9052 §1.5 admits a TEXT label (`label = int / tstr`), and `cbor2`
-    // decodes such a key to an OWN property rather than to a prototype swap —
-    // which is exactly what leaves it reachable. Measured before this step, on
-    // this token: keys `["urn:e"]`, stringify `{"urn:e":{}}`, and
-    // `claims.events.pollutedParse` returning `"yes"`.
-    expect(() =>
-      aegis.parse(
-        forgeCose(
-          coseFloor(
-            new Map<string, unknown>([
-              ["__proto__", { pollutedParse: "yes" }],
-              ["urn:e", new Map()],
-            ]),
-          ),
-        ),
-      ),
-    ).toThrow(
-      expect.objectContaining({
-        code: "claim_structure_invalid",
-        data: {
-          claim: "events",
-          invalid: [
-            {
-              key: "events.__proto__",
-              message:
-                'Member "__proto__" is not a member name any structure may use, in "events"',
-            },
-          ],
-        },
-      }) as unknown as Error,
-    );
-  });
-
-  test("both vocabulary doors refuse it, so the rule is not a property of one path", () => {
-    // ⚠ COMPUTED KEYS ONLY. `{ "__proto__": … }` written as an object literal is
-    // a prototype setter at parse time and creates no own key, so a literal would
-    // hand these doors a clean value and both rows would pass without checking
-    // anything.
-    expect(() =>
-      Aegis.toDomain(JSON.parse('{"events":{"__proto__":{"pwn":"yes"},"urn:e":{}}}')),
-    ).toThrow(
-      expect.objectContaining({ code: "claim_structure_invalid" }) as unknown as Error,
-    );
-
-    // The WRITE door matters on its own: `Aegis.toWire` hands the caller a dict in
-    // which `__proto__` is still a live own data property (measured:
-    // `{"urn:e":{"__proto__":{"pwn":"yes"}}}`), and the first thing that rebuilds
-    // it re-creates the swap.
-    expect(() =>
-      Aegis.toWire(JSON.parse('{"events":{"urn:e":{"__proto__":{"pwn":"yes"}}}}')),
-    ).toThrow(
-      expect.objectContaining({ code: "claim_structure_invalid" }) as unknown as Error,
-    );
   });
 
   // ---------------------------------------------------------------------------
@@ -512,74 +376,26 @@ describe("the events claim on the wire", () => {
     expect(eventsOf(aegis.parse(forgeCose(coseFloor(null))))).toBeUndefined();
   });
 
-  test("a caller-supplied `Map` is scanned too, at the claim and at depth", () => {
-    // ⭐ THE DOOR THE `Map` ARM IS ACTUALLY REACHED BY — the WRITE side, not the
-    // COSE read. A decoded COSE claim is a plain object by the time the claim
-    // boundary sees it (`internal/cose/cwt-spec.ts`'s `decompactValue` runs
-    // `compactDecode` on any `Map`, with no `proprietary` test), so nothing on the
-    // read path presents one. A CALLER can: RFC 9052 §1.5 admits non-string map
-    // keys (`label = int / tstr`), which makes a `Map` the natural way to hand this
-    // package such a claim, and nothing converts it before the scan.
-    //
-    // ⚠ Without this row the arm would be exercised only by its own unit test —
-    // which is exactly how the arm's first justification came to cite a
-    // measurement that was three hits from that unit test and nothing else.
-    // ⚠⚠ TWO ENTRIES, AND THE SECOND IS A CORRECTION RATHER THAN NOISE. A `Map`
-    // is not `isObject` (measured: `isObject(new Map())` is `false`), so a `Map`
-    // handed to `events` never reached a wire at all — the encode arm returned
-    // `undefined` and the claim vanished from the token in silence. It is refused
-    // now, by the same guard that refuses any other non-object, so a caller who
-    // reaches for the shape RFC 9052 §1.5 makes natural is TOLD rather than issued
-    // a token missing the claim they asked for. The `__proto__` refusal is
-    // unchanged and still comes first: it is a CLAIM-level scan that runs before
-    // any codec (`internal/claims/proto-member-violations.ts`), which is exactly
-    // why it reaches inside a value the codec then rejects.
-    expect(() =>
-      Aegis.toWire({ events: new Map([["__proto__", { pwn: "yes" }]]) } as Dict),
-    ).toThrow(
-      expect.objectContaining({
-        code: "claim_structure_invalid",
-        data: {
-          claim: "events",
-          invalid: [
-            {
-              key: "events.__proto__",
-              message:
-                'Member "__proto__" is not a member name any structure may use, in "events"',
-            },
-            { key: "events", message: 'Claim "events" must be an object' },
-          ],
-        },
-      }) as unknown as Error,
-    );
-
-    expect(() =>
-      Aegis.toWire({
-        events: { "urn:e": new Map([["__proto__", { pwn: "yes" }]]) },
-      } as Dict),
-    ).toThrow(
-      expect.objectContaining({
-        code: "claim_structure_invalid",
-        data: {
-          claim: "events",
-          invalid: [
-            {
-              key: "events.urn:e.__proto__",
-              message:
-                'Member "__proto__" is not a member name any structure may use, in "events.urn:e"',
-            },
-          ],
-        },
-      }) as unknown as Error,
-    );
-  });
-
   // ⚠ CORRECTED FROM "aegis will not WRITE a non-object `events` either", which
   // asserted the write side merely DROPPED it. Both sides ask ONE guard now
   // (`eventsMap`, `internal/claims/translate.ts`), so the correction is the same
   // one on both — and the write side is where a caller can still repair the fault.
   test("aegis REFUSES to write a non-object `events`, rather than dropping it", () => {
     expect(() => Aegis.toWire({ events: "not-an-object" } as Dict)).toThrow(
+      expect.objectContaining({
+        code: "claim_structure_invalid",
+        data: {
+          claim: "events",
+          invalid: [{ key: "events", message: 'Claim "events" must be an object' }],
+        },
+      }) as unknown as Error,
+    );
+
+    // ⚠ A `Map` TOO, and it is the shape a caller reaches for: a COSE label is
+    // `int / tstr` (RFC 9052 §1.5). `isObject(new Map())` is `false`, so without
+    // this guard the encode arm returns `undefined` and the claim leaves the token
+    // in silence.
+    expect(() => Aegis.toWire({ events: new Map([["urn:e", {}]]) } as Dict)).toThrow(
       expect.objectContaining({
         code: "claim_structure_invalid",
         data: {

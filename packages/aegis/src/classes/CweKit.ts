@@ -47,23 +47,22 @@ import type {
 const CAPABILITIES = KIT_CAPABILITIES.cwe;
 
 /**
- * COSE_Encrypt0 (RFC 9052 §5.2) — direct symmetric AEAD, the COSE analogue of
- * JweKit. Reuses `AesKit.encryptContent`: the COSE `Enc_structure` is the AAD,
- * the IV travels unprotected (label 5), and the COSE ciphertext is `ct‖tag`.
- * AES-GCM and AES-CCM (the tag length comes from the algorithm).
+ * COSE_Encrypt0 — the recipient-less COSE encryption structure, written here
+ * with an AEAD content encryption (RFC 9052 §5.2 for the wire, RFC 9052 §5.3
+ * for the AEAD), the COSE analogue of JweKit.
+ * Reuses `AesKit.encryptContent`: the COSE `Enc_structure` is the AAD, the IV
+ * travels unprotected (label 5), and the COSE ciphertext is `ct‖tag`.
+ * The content encryptions are `cwe.contentEncryption` (the whole kryptos set);
+ * the AES-CBC-HMAC family needs proprietary mode, and the tag length comes from
+ * the algorithm — `enc-labels.ts`.
  *
  * ONE PLAINTEXT DOOR. Whatever it is handed is serialised by the shared content
  * codec under its own keys and comes back as the same value — a Dict declares
  * `application/json` exactly as the three other opaque doors do (`JwsKit`,
  * `JweKit`, `CwsKit`), so a Dict is a Dict in and a Dict out on every wire.
  *
- * ⚠ There was briefly a SECOND door (`encryptClaims`/`decryptClaims`) that wrote
- * a CWT Claims Set under RFC 8392's registered INTEGER LABELS, for a domain
- * encrypt path that translated claims on the way in. That path is gone —
- * `aegis.encrypt` is pure confidentiality and seals the caller's value verbatim —
- * so the second door had no caller and a COSE_Encrypt0 written by aegis never
- * carries label-mapped claims. Signing a CWT Claims Set is still `CwtKit`/
- * `CwmKit`, which is where the RFC 8392 Message belongs.
+ * ⚠ A COSE_Encrypt0 written here never carries label-mapped claims — signing a
+ * CWT Claims Set is `CwtKit`/`CwmKit`.
  */
 export class CweKit implements ICweKit {
   private readonly kryptos: IKryptos;
@@ -72,13 +71,12 @@ export class CweKit implements ICweKit {
   private readonly certBindingMode: CertificateBindingMode;
 
   constructor(options: CweKitSettings) {
-    // The capability gate, raised in the CONSTRUCTOR so it fires before any
-    // content, header or AEAD work. COSE_Encrypt0 is DIRECT encryption — the
-    // recipient key IS the content-encryption key — so the nineteen other JWE key
-    // managements have no COSE_Encrypt0 form at all. Without this the key reached
-    // `@lindorm/aes`, which refused it with its own "Content primitive requires a
-    // direct key": a foreign error, several layers down, naming neither the wire
-    // nor the reason the wire cannot carry the key.
+    // Raised in the CONSTRUCTOR so it fires before any content, header or AEAD
+    // work. Without it a wrapping or key-agreement key reaches `@lindorm/aes`
+    // and dies in `assertDirectKey` (`content-primitive.ts`) — an `AesError`
+    // carrying no `data`, so neither the algorithm the caller passed nor the
+    // supported set. The mapping itself is stated caller-visibly in the
+    // `details` below.
     if (!CAPABILITIES.keyManagement.has(options.kryptos.algorithm)) {
       throw new CweError(
         `COSE_Encrypt0 cannot use key management "${options.kryptos.algorithm}"`,
@@ -90,7 +88,7 @@ export class CweKit implements ICweKit {
           },
           title: "COSE Key Management Unsupported",
           details:
-            "A COSE_Encrypt0 is direct encryption (RFC 9052 §5.2): the recipient key is the content-encryption key, so only a direct (dir) key can seal one. Encrypt to a dir key, or use the JOSE wire, whose JWE key-management algorithms have no COSE_Encrypt0 equivalent.",
+            "A COSE_Encrypt0 carries no recipients array, so there is nowhere for aegis to put a wrapped or agreed key and the recipient key must BE the content-encryption key — a kryptos `dir` key. That mapping of the wire onto kryptos key management is aegis's, not a COSE-wide rule. Encrypt to a dir key, or use the JOSE wire, whose JWE key-management algorithms have no COSE_Encrypt0 equivalent here. RFC 9052 §5.2.",
         },
       );
     }
@@ -243,9 +241,7 @@ export class CweKit implements ICweKit {
         ? (segments.unprotected as Map<CoseLabel, unknown>)
         : undefined;
 
-    // A bucket this reader cannot index carries no IV, which the guard below
-    // already has the words for — RFC 9052 §5.3 requires one for every AEAD
-    // COSE_Encrypt0, so there is no second verdict to give.
+    // An unindexable bucket carries no IV, so the guard below is the only verdict.
     const ivValue = unprotected?.get(coseByJose("iv"));
     if (!(ivValue instanceof Uint8Array)) {
       throw new CweError("COSE_Encrypt0 is missing its IV", {

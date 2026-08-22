@@ -4,18 +4,17 @@ import { pruneEmptyHeaders } from "./prune-empty-headers.js";
 import { refuseEmptyHeaders } from "./refuse-empty-headers.js";
 
 /**
- * The single normalisation applied to a header bag on the way to the wire,
- * shared by JOSE and COSE, and the twin of `internal/utils/normalise-claims.ts`.
+ * The single normalisation applied to a header bag on the way to the wire, shared
+ * by JOSE and COSE, and the twin of `internal/utils/normalise-claims.ts`.
  *
- * ⚠ `omitUndefined` MUST STAY FIRST. `isEmpty(undefined)` is `true`, so a
- * refusal reached before the strip would answer a bag that merely OMITS the
- * parameter — and `mapTokenHeader` spreads exactly such a bag, so every kit
- * carrying an optional field would throw for a parameter nobody set.
- * The other two steps are interchangeable: they read the same `whenEmpty` cell
- * for DIFFERENT answers, so neither can take the other's cell whichever runs
- * first. ⛔ Widen either from its exact answer to "anything but keep" and that
- * independence is gone — measured: the widening PLUS a swap prunes the
- * certificate binding silently, though either change alone is inert.
+ * ⚠ `omitUndefined` MUST STAY FIRST. `isEmpty(undefined)` is `true`, so a refusal
+ * reached before the strip would answer a bag that merely OMITS the parameter — and
+ * `mapTokenHeader` spreads exactly such a bag, so every kit carrying an optional
+ * field would throw for a parameter nobody set. The other two steps are
+ * interchangeable: they read the same `whenEmpty` cell for DIFFERENT answers.
+ * ⛔ Widen either from its exact answer to "anything but keep" and that independence
+ * is gone — the widening PLUS a swap prunes the certificate binding silently,
+ * though either change alone is inert.
  * pinned: normalise-headers.test.ts, refuse-empty-headers.test.ts,
  * prune-empty-headers.test.ts.
  *

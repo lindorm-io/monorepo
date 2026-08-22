@@ -6,59 +6,40 @@ import { assertCritSatisfied } from "./assert-crit-satisfied.js";
 import { coseWireKey } from "./header-registry.js";
 
 /**
- * Build and ENCODE a COSE protected header: the parameters every write kit
- * derives — `alg` (label 1, the signing algorithm or, for a COSE_Encrypt0, the
- * content encryption), `typ` (label 16, the kit-computed media type) and `cty`
- * (label 3, the codec-inferred content type) — then the caller's already
- * translated and validated entries on top.
+ * Build and ENCODE a COSE protected header: the parameters every write kit derives
+ * — `alg` (label 1), `typ` (label 16) and `cty` (label 3) — then the caller's
+ * already translated and validated entries on top.
  *
- * `cty` is OPTIONAL: a CWT/CWM payload IS a CWT Claims Set (RFC 8392 §7.2 reads
- * it as a CBOR map with no cty-driven decode), so the claims writer derives no
- * content type at all and label 3 is simply absent unless a caller sets one.
+ * `cty` is OPTIONAL: a CWT/CWM payload IS a CWT Claims Set (RFC 8392 §7.2), so the
+ * claims writer derives no content type and label 3 is absent unless a caller sets
+ * one.
  *
  * ⚠ ORDER IS PRECEDENCE, not layout: the caller's entries are written LAST, so a
- * caller value wins. `typ` is REFUSED to callers by `buildCoseHeaders` (it is
- * what routes a COSE token), while `cty` is settable and a caller value
- * legitimately overwrites the inferred one. The encoded BYTES are unaffected by
- * insertion order — `encodeCbor` is deterministic (CDE) and sorts the labels.
+ * caller `cty` legitimately overwrites the inferred one — while `typ` is REFUSED to
+ * callers by `buildCoseHeaders`. The encoded BYTES are unaffected by insertion
+ * order; `encodeCbor` is deterministic and sorts the labels.
  *
- * ⚠ The unprotected bucket is written by a SEPARATE function
- * (`mergeCoseUnprotected`), and the reason is a DATA DEPENDENCY, not a
- * preference. A COSE_Encrypt0 must finalise its protected header BEFORE the AEAD
- * runs — that header IS the AAD — and the IV only exists after, so the two
- * buckets cannot be written in one pass.
+ * ⚠ The unprotected bucket is a SEPARATE function (`mergeCoseUnprotected`) because
+ * of a DATA DEPENDENCY: a COSE_Encrypt0 must finalise its protected header BEFORE
+ * the AEAD runs — that header IS the AAD — and the IV only exists after.
  *
  * ⚠ THIS IS WHERE THE COSE PROTECTED BUCKET BECOMES COMPLETE, which is why the
- * `crit` check runs here ({@link assertCritSatisfied}) and not in
- * `buildCoseHeaders`. A `crit` is a statement about the FINISHED bucket, and the
- * caller's translated entries are only part of it — `alg`, `typ` and `cty` are
- * added by this function. Asked one step earlier, on the caller's fragment,
- * `crit: ["alg"]` was refused as naming a parameter "the message does not carry"
- * on a message whose protected bucket carries `alg` three lines below, while the
- * JOSE twin minted the same header: one call, two verdicts, chosen by encoding.
- * There are three callers of this function and one of it per wire write, so the
- * check has ONE site here — the COSE analogue of `buildJoseHeader`'s last line.
+ * `crit` check runs here ({@link assertCritSatisfied}) rather than in
+ * `buildCoseHeaders`, which sees the caller's fragment alone. Asked on that
+ * fragment, `crit: ["alg"]` refuses a message whose protected bucket does carry
+ * `alg`, while the JOSE twin mints the same header.
  *
- * ⚠ THAT MOTIVATING CASE IS NOW CLOSED FURTHER UPSTREAM, and the check still
- * earns its place — do NOT read it as unreachable and delete it. `crit: ["alg"]`
- * cannot reach here any more: the eligibility gate
- * (`internal/header/assert-crit-eligible.ts`) refuses a `crit` naming any
- * specification-defined parameter at the caller's bag. And with `oid` the sole
- * eligible member, and `oid` caller-supplied, a crit member satisfied by
- * a tier OTHER than the caller's has no production path on this wire either. So
- * what this call still catches is the case the eligibility gate deliberately
- * says nothing about: an ELIGIBLE member whose VALUE the bucket does not carry —
- * `crit: ["oid"]` with `oid` absent or empty.
- * That is reachable from every COSE door today and is pinned per door in
- * `assert-crit-satisfied.test.ts`. The two gates ask different questions; the
- * upstream one narrowing its inputs does not answer this one's.
+ * ⚠ DO NOT READ THE CHECK AS UNREACHABLE AND DELETE IT. `crit: ["alg"]` is now
+ * refused upstream by the eligibility gate, but what this call catches is the case
+ * that gate says nothing about: an ELIGIBLE member whose VALUE the bucket does not
+ * carry — `crit: ["oid"]` with `oid` absent or empty. Reachable from every COSE
+ * door and pinned per door in `assert-crit-satisfied.test.ts`.
  *
- * ⚠ It runs on the MAP, before the bytes: the members of a COSE `crit` are LABELS
- * (RFC 9052 §1.5; `critToCoseLabels` translated them on the way in), and the map's
- * keys are the same labels, so the two are compared in one vocabulary. Rule 1b of
+ * ⚠ It runs on the MAP, before the bytes: a COSE `crit`'s members are LABELS
+ * (RFC 9052 §1.5, translated by `critToCoseLabels` on the way in) and the map's
+ * keys are the same labels, so the two compare in one vocabulary. Rule 1b of
  * `buildCoseHeaders` has already refused a crit-named parameter the caller placed
- * in the UNPROTECTED bucket, with the accurate error; what this catches is a
- * parameter the protected bucket provides nothing for.
+ * in the UNPROTECTED bucket, with the accurate error.
  */
 export const mergeCoseProtected = ({
   alg,

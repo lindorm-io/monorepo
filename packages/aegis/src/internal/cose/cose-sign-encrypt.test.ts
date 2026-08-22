@@ -16,8 +16,8 @@ import { coseByJose } from "../header/header-registry.js";
 import { encodeCbor, Tag } from "./cbor.js";
 import { COSE_TAG, encodeProtectedHeader } from "./structures.js";
 
-// Between the fixture's issuedAt (1700000000) and expiresAt (1700003600), so the
-// in-kit temporal check accepts the round-tripped CWT.
+// Between the fixture's issuedAt and expiresAt, so the in-kit temporal check
+// accepts the round-tripped CWT.
 MockDate.set(new Date(1700001000 * 1000));
 afterAll(() => MockDate.reset());
 
@@ -34,13 +34,8 @@ const common = {
 
 // The COSE sign-then-encrypt BYTE path, pinned independently of the domain layer
 // that drives it: translate the domain claims to the COSE wire, secure them as a
-// COSE_Sign1, wrap that in a COSE_Encrypt0, then read the whole thing back.
-//
-// It used to drive two wrappers (`signCose` / `verifyCose`) that no longer exist —
-// the single mint/verify pipeline calls the kit and the translator directly. The
-// test is retargeted onto those rather than deleted, because it was the only thing
-// pinning this round trip and deleting it with its subject would have left the
-// survivor unchecked.
+// COSE_Sign1, wrap that in a COSE_Encrypt0, then read the whole thing back. It
+// drives the kit and the translator directly, as the mint/verify pipeline does.
 describe("COSE sign-then-encrypt", () => {
   const enc = KryptosKit.generate.enc.oct({ algorithm: "dir", encryption: "A256GCM" });
 
@@ -62,18 +57,16 @@ describe("COSE sign-then-encrypt", () => {
 });
 
 /**
- * ⭐ THE COSE_Encrypt0 KID READ RUNS BEFORE ANY KEY EXISTS. `aegis.decrypt` on a
- * CWE (`internal/wire/cose-token-wire.ts:337`) and `aegis.cwe.decrypt`
- * (`internal/utils/raw-decrypt-cwe.ts:35`) both call `decodeEncryptedCoseKid` to
- * choose the recipient key, so it shapes a stranger's bytes with nothing
- * authenticated yet — the same door class `internal/cose/decode-cwt-wire.ts`
- * holds to structural refusal.
+ * ⚠ THE COSE_Encrypt0 KID READ RUNS BEFORE ANY KEY EXISTS. `internal/wire/
+ * cose-token-wire.ts` and `internal/utils/raw-decrypt-cwe.ts` both call
+ * `decodeEncryptedCoseKid` to CHOOSE the recipient key, so it shapes a stranger's
+ * bytes with nothing authenticated — the door class `decode-cwt-wire.ts` holds to
+ * structural refusal.
  *
- * RFC 9052 §3 types the unprotected bucket as a `header_map`, but the slot is
- * whatever the producer wrote. `contents[1]` was cast straight to `Map` and
- * `.get` called on it, so a bucket that is not a map — an integer, or a
- * text-keyed CBOR map, which `preferMap: false` hands back as a plain object —
- * threw a raw `TypeError` rather than reading as "no kid stated".
+ * The unprotected slot is whatever the producer wrote (RFC 9052 §3), so casting it
+ * to `Map` and calling `.get` throws a raw `TypeError` on an integer or on a
+ * text-keyed map, which `preferMap: false` hands back as a plain object, rather
+ * than reading as "no kid stated".
  */
 describe("a COSE_Encrypt0 whose unprotected bucket is not a map", () => {
   const protectedHeader = encodeProtectedHeader(

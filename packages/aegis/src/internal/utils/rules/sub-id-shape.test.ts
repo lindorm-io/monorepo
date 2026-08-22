@@ -31,13 +31,11 @@ describe("subIdShape", () => {
    * stated as a behaviour. A caller writing `phone_number` in the DOMAIN bag is
    * writing a member this rule does not declare, so the format's required member
    * is genuinely absent and the rule says so.
-   * ⚠ THIS IS THE RULE'S OWN ANSWER, NOT A REACHABLE END-TO-END STATE, and the
-   * distinction is new: the note here used to say the member was "carried verbatim
-   * by the open tail", which it no longer is. Through a real mint the translator
-   * REFUSES it first — `phone_number` resolves onto the declared `phoneNumber`'s
-   * outgoing key, which is a collision — so a caller meets that refusal and never
-   * this one. The rule is called directly here, which is the only way to see what
-   * it answers on its own.
+   * ⚠ THIS IS THE RULE'S OWN ANSWER, NOT A REACHABLE END-TO-END STATE. Through a
+   * real mint the translator REFUSES it first — `phone_number` resolves onto the
+   * declared `phoneNumber`'s outgoing key, which is a collision — so a caller
+   * meets that refusal and never this one. The rule is called directly here,
+   * which is the only way to see what it answers on its own.
    */
   test("fails for the phone_number format spelled in the wire vocabulary", () => {
     expect(
@@ -67,16 +65,11 @@ describe("subIdShape", () => {
    * plain object literal, so `TABLE["constructor"]` returned the `Object`
    * constructor, `?? []` never fired, and the `for…of` over it threw a bare
    * `TypeError` that escapes this package's `AegisDomainError` contract entirely.
-   * Measured through the public doors before the fix:
-   *   - `aegis.mint("security_event", { subjectId: { format: "constructor", … } })`
-   *     -> `TypeError: required is not iterable` (same for `toString`, `valueOf`,
-   *     `hasOwnProperty`; `format: "opaque"` mints fine).
-   *   - `aegis.verify("security_event", <signature-VALID token whose sub_id.format
-   *     is "constructor">)` -> the same `TypeError`, from the verify floor.
-   * RFC 9493 §3 lets an Identifier Format be named by "a Collision-Resistant Name
-   * as defined in [RFC7519]", so the key is unconstrained producer text — and an
-   * unknown format carries no extra required members, which is what these rows
-   * assert. The table is a `Map` now: a prototype cannot be reached through one.
+   * An Identifier Format name is unconstrained producer text (RFC 9493 §3), and an
+   * unknown format carries no extra required members — which is what these rows
+   * assert. ⚠ Looked up in an object literal instead of a `Map`, a prototype key
+   * escapes a bare `TypeError: required is not iterable` from both public doors:
+   * `aegis.mint("security_event", …)` and the verify floor.
    *
    * ⚠ FOUR NAMES, not one. `constructor` is a DATA property on
    * `Object.prototype` while `toString`/`valueOf`/`hasOwnProperty` are functions —
@@ -97,8 +90,9 @@ describe("subIdShape", () => {
    * single row would only prove the one entry it happened to pick.
    *
    * ⚠ Live on `security_event`, which requires `subjectId` and FORBIDS `subject`
-   * — `sub_id` is the only thing naming the subject of the event there, so a
-   * security event token identifying nobody used to mint and verify clean.
+   * — `sub_id` is the only thing naming the subject of the event there, so
+   * without this a security event token identifying nobody mints and verifies
+   * clean.
    */
   test.each([
     ["account", { format: "account", uri: "" }],
@@ -113,9 +107,10 @@ describe("subIdShape", () => {
     expect(subIdShape({ subjectId })).toMatchSnapshot();
   });
 
-  // `null` reaches a verifier from any JSON token, and the predicate this
-  // replaced already refused it at the top level — a member read had been weaker
-  // than the claim read it sits inside.
+  // `null` reaches this rule from MINT, not from the wire: a caller minting from a
+  // database row hands null members straight in (`assemble-common-claims.ts` keeps
+  // every non-`undefined` value), while a wire `null` is classified as absence
+  // before any rule runs (`isNotStated`, `translate.ts`).
   test("fails when a required member is null", () => {
     expect(subIdShape({ subjectId: { format: "opaque", id: null } })).toMatchSnapshot();
   });

@@ -36,13 +36,12 @@ const FORMATS = ["jwt", "jws", "jwe", "cwt", "cwm", "cws", "cwe"] as const;
 
 // --- the kit probe table -----------------------------------------------------
 //
-// The rows below are what BINDS a capability row to the kit it describes. The
-// table was previously asserted only against itself — every value read from
-// KIT_CAPABILITIES and compared to a literal or to another column of the same
-// row — so a kit could drift away from its row without a single test failing.
+// The rows below are what BINDS a capability row to the kit it describes; an
+// assertion that reads KIT_CAPABILITIES on both sides cannot see a kit drifting
+// away from its row.
 //
-// Each kit is built on a fixture key that has NO certificate chain, which is what
-// makes the `bindCertificate` probe below a clean detector of a `resolveCertBinding`
+// ⚠ Each kit is built on a fixture key with NO certificate chain, which is what
+// makes the `bindCertificate` probe a clean detector of a `resolveCertBinding`
 // call: the resolver throws for a cert-less key, so a kit that calls it throws and
 // a kit that does not mints happily.
 
@@ -127,21 +126,15 @@ describe("KIT_CAPABILITIES", () => {
   // ⚠ WHAT THE TESTS IN THIS BLOCK ARE, stated once so none of them reads as
   // coverage it does not provide.
   //
-  // A DECLARATION check compares the table to itself: to a literal copy of one of
-  // its own values, to another COLUMN of the same row, or to the row's own KEY.
-  // It cannot tell you that a kit behaves as its row says — only that the row is
-  // internally consistent and has not been edited by accident. That is worth
-  // something (these are the change detectors for a table with 49 cells) and it is
-  // NOT a binding, so each one below says which it is.
+  // A DECLARATION check compares the table to itself — to a literal copy of one of
+  // its own values, to another COLUMN of the same row, or to the row's own KEY. It
+  // is a change detector, NOT a binding, so each one below says which it is.
   //
-  // The BINDINGS are in the "bound to the kits" block, where a row is checked
-  // against the kit it describes. Seven of the forty-nine cells additionally have
-  // a PRODUCTION READER — `classes/CweKit.ts`, `classes/CwsKit.ts`,
-  // `internal/utils/jose-header.ts`, `internal/cose/cose-key.ts` — and for those,
-  // "the kit refuses exactly what its row lists" is CIRCULAR: the reader derives
-  // its behaviour FROM the row, so the test proves the WIRING (that the kit
-  // consults the row at all) and never the row's content. Each such test says so.
-  // The per-cell tally lives in `__fixtures__/coverage-census.ts`, bound by
+  // The BINDINGS are in the "bound to the kits" block. Where a kit has a PRODUCTION
+  // READER for its row, "the kit refuses exactly what its row lists" is CIRCULAR:
+  // the reader derives its behaviour FROM the row, so the test proves the WIRING
+  // and never the row's content. Each such test says so. The per-cell tally lives
+  // in `__fixtures__/coverage-census.ts`, bound by
   // `classes/Aegis.meta-coverage.test.ts`.
 
   // DECLARATION — and the population guard for every probe loop below, which is
@@ -195,13 +188,11 @@ describe("KIT_CAPABILITIES", () => {
     }
   });
 
-  // ⚠ AN IDENTITY, said out loud rather than left to look like a check. The `jwe`
-  // row is LITERALLY `new Set(KRYPTOS_ENC_ALGORITHMS)`, so comparing it with that
-  // constant compares a value with the expression that produced it and cannot
-  // fail while the row is constructed that way. It is kept because it DOES fail
-  // the day somebody hand-lists the row instead — which is the realistic drift —
-  // and because the useful half of the assertion is the `cwe` one, whose `["dir"]`
-  // is a real literal and IS bound to behaviour by the `keyManagement (cwe)` probe.
+  // ⚠ AN IDENTITY, said out loud rather than left to look like a check: the `jwe`
+  // row IS `new Set(KRYPTOS_ENC_ALGORITHMS)`, so it cannot fail while the row is
+  // constructed that way. It is kept because it DOES fail the day somebody
+  // hand-lists the row, and because the `cwe` half is a real literal bound to
+  // behaviour by the `keyManagement (cwe)` probe.
   test("a CWE is dir-ONLY while a JWE carries the full kryptos key-management set", () => {
     expect([...KIT_CAPABILITIES.cwe.keyManagement]).toEqual(["dir"]);
     expect(KIT_CAPABILITIES.jwe.keyManagement).toEqual(new Set(KRYPTOS_ENC_ALGORITHMS));
@@ -210,11 +201,8 @@ describe("KIT_CAPABILITIES", () => {
     );
   });
 
-  // ⚠ THE SAME IDENTITY, on both rows this time: each is `new Set(
-  // AES_ENCRYPTION_ALGORITHMS)`. Nothing here can fail while that holds, and the
-  // ONLY non-identity statement available — that a kit actually encrypts with
-  // every algorithm its row lists — belongs to the kits and not to the table.
-  // `jwe.contentEncryption` does have a reader and IS bound, by the
+  // ⚠ THE SAME IDENTITY, on both rows: each is `new Set(AES_ENCRYPTION_ALGORITHMS)`.
+  // `jwe.contentEncryption` has a reader and IS bound by the
   // `contentEncryption (jwe)` probe below; `cwe.contentEncryption` has neither a
   // reader nor a witness, which the coverage census records as `declared`.
   test("both encrypting kits cover the whole kryptos content-encryption set", () => {
@@ -223,18 +211,16 @@ describe("KIT_CAPABILITIES", () => {
     expect(KIT_CAPABILITIES.cwe.contentEncryption).toEqual(all);
   });
 
-  // DECLARATION — the rows against a literal copy of the shared constants they
-  // are built from. The JOSE set is bound to behaviour by the `cnfMembers:`
-  // probe below (`domainToJose`). The COSE half is NOT bound here any more: that
-  // probe drove `encodeCnf`, and once the row became DERIVED from the codec's
-  // own label table it could only agree with itself. `cose/cose-key.test.ts`
-  // drives the encoder now, and `claims/cnf-members.test.ts` pins the table
-  // against a literal (it inherited that duty when the label table became a
-  // DERIVATION of the member declaration and its own file went).
+  // DECLARATION — the rows against a literal copy of the shared constants they are
+  // built from. The JOSE set is bound to behaviour by the `cnfMembers:` probe below
+  // (`domainToJose`). The COSE half is NOT bound here: the row DERIVES from the
+  // codec's own label table, so probing the encoder could only agree with itself.
+  // `cose/cose-key.test.ts` drives the encoder; `claims/cnf-members.test.ts` pins
+  // the table against a literal.
   test("a COSE cnf carries only the embedded key and the key id", () => {
     // `encodeCnf` maps `jwk` -> COSE_Key (member 1) and `kid` -> kid (member 3).
-    // The thumbprint forms have NO COSE representation: RFC 9679 `ckt` hashes
-    // the CBOR canonicalisation, so it is a different value than RFC 7638 `jkt`,
+    // The thumbprint forms have NO COSE representation — `ckt` (RFC 9679) hashes the
+    // CBOR canonicalisation, so it is a different value than `jkt` (RFC 7638) and
     // not a translation of it.
     for (const format of ["cwt", "cwm", "cwe"] as const) {
       expect([...KIT_CAPABILITIES[format].cnfMembers].sort()).toEqual(["jwk", "kid"]);
@@ -250,12 +236,10 @@ describe("KIT_CAPABILITIES", () => {
     }
   });
 
-  // OBSERVED, not declared. `ckt` (RFC 9679 — the COSE Key SHA-256 Thumbprint) is
-  // in the `CnfMember` union so the type can describe COSE's capability honestly,
-  // and aegis derives none. The old form of this test read the value out of every
-  // row and compared it with `false`, which says nothing about whether a `ckt`
-  // could be produced; the encoder is asked directly instead, and the rows are
-  // held to its answer.
+  // OBSERVED, not declared. `ckt` (RFC 9679) is in the `CnfMember` union so the type
+  // can describe COSE's capability honestly, and aegis derives none. The ENCODER is
+  // asked directly and the rows are held to its answer — reading the value back out
+  // of every row would say nothing about whether a `ckt` could be produced.
   test("no kit claims a ckt, because no producer can make one", () => {
     const derivable = ((): boolean => {
       try {
@@ -275,24 +259,18 @@ describe("KIT_CAPABILITIES", () => {
     }
   });
 
-  // The OPAQUE rows. ⚠ Stated ONCE. It used to be here AND, verbatim, inside the
-  // "NOT YET BINDABLE" test at the end of the file — the same two assertions in
-  // two places, so deleting either would have looked safe and would have left the
-  // note at the end asserting the thing it says cannot be asserted.
-  //
-  // It is a DECLARATION and cannot be more: an opaque kit signs BYTES and has no
-  // claims layer, so there is no `cnf` producer to probe. The emptiness is held by
-  // the kit's SHAPE, which the type system already enforces.
+  // The OPAQUE rows, stated ONCE. A DECLARATION and it cannot be more: an opaque kit
+  // signs BYTES and has no claims layer, so there is no `cnf` producer to probe. The
+  // emptiness is held by the kit's SHAPE, which the type system enforces.
   test("the OPAQUE formats carry no claims layer, so no confirmation", () => {
     expect(KIT_CAPABILITIES.jws.cnfMembers.size).toBe(0);
     expect(KIT_CAPABILITIES.cws.cnfMembers.size).toBe(0);
   });
 
   test("certificate binding is a capability of every kit, on both wires", () => {
-    // RFC 7515 §4.1.6/§4.1.8 give JOSE `x5c`/`x5t#S256` and RFC 9360 §2 gives
-    // COSE `x5chain` (33)/`x5t` (34), and every kit derives its binding off the
-    // signing key through `resolveCertBinding`. A row that said otherwise would
-    // license the accept-and-ignore the disposition tables exist to refuse.
+    // Every kit derives its binding off the signing key through `resolveCertBinding`
+    // (RFC 7515 §4.1.6, RFC 7515 §4.1.8; RFC 9360 §2). A row that said otherwise would license
+    // the accept-and-ignore the disposition tables exist to refuse.
     for (const [format, row] of Object.entries(KIT_CAPABILITIES)) {
       expect(row.certificateBinding, `${format} certificate binding`).toBe(true);
     }
@@ -310,10 +288,8 @@ describe("KIT_CAPABILITIES", () => {
 
   // DECLARATION — same standing as the one above.
   test("every row reserves typ, because typ is what routes a token", () => {
-    // `typ` decides which format a token IS (`isCwt`/`isCws`) and which profile
-    // floor applies to it, so a caller must never be able to state it. The COSE
-    // rows used to omit it AND the kits used to spread `...options.header` last
-    // over their own computed value, so a caller `typ` won on that wire.
+    // `typ` decides which format a token IS (`isCwt`/`isCws`) and which profile floor
+    // applies, so a caller must never be able to state it.
     for (const format of FORMATS) {
       expect(
         KIT_CAPABILITIES[format].reserved,
@@ -345,12 +321,10 @@ describe("KIT_CAPABILITIES", () => {
    * ⭐ THE WHOLE ROW, for every format — the one pin that states what `reserved`
    * CONTAINS rather than what it must contain.
    *
-   * Every other assertion above is partial: `toContain("alg")`, `toContain("typ")`,
-   * the eight JWE key-management names, "no duplicates". Partial assertions cannot
-   * see a parameter LEAVING a row, and a parameter that leaves `reserved` stops
-   * being refused — a caller then writes it onto the wire under the kit's own
-   * name. The COSE binding probe below reads the row to decide what to refuse, so
-   * it agrees with the row whatever the row says.
+   * Every other assertion above is PARTIAL, and a partial assertion cannot see a
+   * parameter LEAVING a row — at which point it stops being refused and a caller
+   * writes it onto the wire under the kit's own name. The COSE binding probe below
+   * reads the row to decide what to refuse, so it agrees with whatever the row says.
    *
    * ⚠ Sorted, because `reserved` is a refusal SET: the order the two source arrays
    * happen to be written in is not a property anything depends on, and pinning it
@@ -361,11 +335,10 @@ describe("KIT_CAPABILITIES", () => {
    * be updated by `-u`.
    *
    * ⚠ "reserves", not "stamps". A row is the whole `KitOwnedHeaderParam` set less
-   * what its wire cannot carry — NOT the set the kit derives. `JwsKit` stamps
-   * none of `enc`/`epk`/`apu`/`apv`/`p2c`/`p2s`/`tag`/`iv` and reserves every one
-   * of them, which is the point: a signing kit derives no key-management output,
-   * so a caller value for one would ride onto a signed token advertising a
-   * content encryption that never happened.
+   * what its wire cannot carry — NOT the set the kit derives. A signing kit derives
+   * no key-management output and reserves every one of them, because otherwise a
+   * caller value rides onto a signed token advertising a content encryption that
+   * never happened.
    */
   test.each(FORMATS)(
     "%s reserves exactly its KitOwned params, filtered to its wire",
@@ -393,10 +366,9 @@ describe("KIT_CAPABILITIES", () => {
     });
 
     test("certificateBinding: exactly the rows that call resolveCertBinding", () => {
-      // Every probe kit is built on a CERT-LESS key, so `resolveCertBinding`
-      // throws `cert_binding_chain_required` when it runs at all. A kit that
-      // never calls it mints happily and silently ignores the option — which is
-      // the accept-and-inert defect the `false` rows record.
+      // Every probe kit is built on a CERT-LESS key, so `resolveCertBinding` throws
+      // `cert_binding_chain_required` when it runs at all. A kit that never calls it
+      // mints happily and silently ignores the option.
       for (const format of FORMATS) {
         const mint = () => MINT[format]({ bindCertificate: "chain" });
 
@@ -411,19 +383,14 @@ describe("KIT_CAPABILITIES", () => {
     });
 
     test("unprotectedBucket: the kit's own kid rides element 1 only where the row says one exists", () => {
-      // The column names a STRUCTURAL fact — "the kit's wire structure HAS an
-      // unauthenticated header bucket" — so it is measured on the parameter every
-      // kit stamps for itself: `kid`. Where it LANDS is the fact. A COSE kit puts
-      // it in element 1 of the COSE_Sign1/Mac0/Encrypt0 array (RFC 9052 §3.1); a
-      // JOSE compact serialisation has one header and nowhere else to put it
-      // (RFC 7515 §7.1).
+      // The column names a STRUCTURAL fact, so it is measured on the parameter every
+      // kit stamps for itself — `kid` — and WHERE IT LANDS is the fact. A COSE kit
+      // puts it in element 1 of the COSE_Sign1/Mac0/Encrypt0 array (RFC 9052 §3.1); a
+      // JOSE compact serialisation has one header (RFC 7515 §7.1).
       //
-      // ⚠ It used to be measured with a CALLER's `unprotected: { oid }`, which
-      // stopped measuring anything once the header registry's `placement` column
-      // became enforced: `oid` is protected-only, so the kit now refuses it, and
-      // no caller-settable parameter is permitted in that bucket on any kit. The
-      // bucket still exists and the kit still writes to it — which is what the
-      // column has always claimed.
+      // ⚠ It cannot be measured with a CALLER's `unprotected` value: the header
+      // registry's `placement` column permits no caller-settable parameter in that
+      // bucket on any kit, so the kit would refuse it.
       for (const format of FORMATS) {
         const token = MINT[format]({});
 
@@ -449,21 +416,16 @@ describe("KIT_CAPABILITIES", () => {
 
     test("reserved (COSE): the kit refuses exactly the labels its row lists", () => {
       // ⚠ CIRCULAR, and worth having anyway. `buildCoseHeaders` reads THIS ROW to
-      // decide what to refuse, so "the kit refuses exactly what the row lists"
-      // holds whatever the row says — it proves the WIRING (that the kit consults
-      // its row at all), never the row's content. What the row SHOULD contain is
-      // a declaration check above. The negative half is not circular: a param the
-      // row does not list must reach the wire, which a kit that refused
-      // everything would fail.
+      // decide what to refuse, so it proves the WIRING and never the row's content;
+      // what the row SHOULD contain is a declaration check above. The negative half
+      // is NOT circular: a param the row does not list must reach the wire, which a
+      // kit that refused everything would fail.
       //
-      // ⚠ EVERY DOOR TO EITHER BUCKET. `header` is the registered one and
-      // travels protected; `custom.protected`/`custom.unprotected` are the only
-      // way to reach a bucket with an unregistered key — and the unprotected one
-      // is where the omissions actually bit: `iv` is `placement: "either"` so
-      // `CweKit` can put its own there, which makes the reserved row the ONLY
-      // thing standing between a caller and a signature-uncovered `iv` in
-      // element 1. Both refusals say the same sentence, which is what lets one
-      // probe drive all three doors.
+      // ⚠ EVERY DOOR TO EITHER BUCKET. `header` is the registered one and travels
+      // protected; `custom.protected`/`custom.unprotected` are the only way to reach
+      // a bucket with an unregistered key — and `iv` is `placement: "either"`, so the
+      // reserved row is the ONLY thing between a caller and a signature-uncovered
+      // `iv` in element 1.
       for (const format of ["cwt", "cwm", "cws", "cwe"] as const) {
         for (const param of KIT_CAPABILITIES[format].reserved) {
           expect(
@@ -487,22 +449,16 @@ describe("KIT_CAPABILITIES", () => {
     });
 
     test("reserved (JOSE): the kit REFUSES exactly the params its row lists", () => {
-      // ⚠ CIRCULAR in the same way the COSE probe is, and kept for the same
-      // reason: `buildJoseHeader` reads THIS ROW to decide what to refuse out of
-      // the caller's bag, so the positive half proves the WIRING (that the kit
-      // consults its row at all), never the row's content. What the row SHOULD
-      // contain is the equality check below.
+      // ⚠ CIRCULAR in the same way the COSE probe is: `buildJoseHeader` reads THIS
+      // ROW to decide what to refuse out of the caller's bag, so the positive half
+      // proves the WIRING and never the row's content. What the row SHOULD contain is
+      // the equality check below.
       //
-      // ⚠ It THROWS where it used to DROP, which is the whole point of the
-      // change: "if cose throws on something, jose should also throw on it".
-      // A silent drop turned `header: { enc: "A256GCM" } as never` on a JWT into
-      // a token that looked exactly like one the caller never asked for, and the
-      // caller heard nothing.
-      //
-      // The guarantee before that was spread ORDER — the kit's own values written
-      // after `...options.header` — which silently relied on the kit HAVING a
-      // value for every reserved param. It does not: an absent one wrote
-      // `undefined` over the caller's and the parameter vanished from the wire.
+      // ⚠ IT THROWS RATHER THAN DROPPING, matching COSE. A silent drop turns
+      // `header: { enc: "A256GCM" } as never` on a JWT into a token the caller never
+      // asked for, with nothing reported. Spread ORDER is not a substitute either: it
+      // relies on the kit HAVING a value for every reserved param, and an absent one
+      // writes `undefined` over the caller's and takes the parameter off the wire.
       for (const format of ["jwt", "jws", "jwe"] as const) {
         for (const param of KIT_CAPABILITIES[format].reserved) {
           expect(
@@ -523,17 +479,15 @@ describe("KIT_CAPABILITIES", () => {
       }
     });
 
-    // ⭐ THE BINDING THAT CLOSES THE ROWS. It used to assert the JOSE signing
-    // rows were a SUBSET of the jwe row, and a subset relation is satisfied by
-    // the empty set — which is how `x5c` came to be unreserved on all four COSE
-    // rows and the eight key-management/AEAD params on `jwt`/`jws`. A caller
-    // could then forge a certificate chain onto a CWT (nothing else writes label
-    // 33, so the forgery was the only chain present) or put a
-    // signature-uncovered `iv` in a CWS's unprotected bucket.
+    // ⭐ THE BINDING THAT CLOSES THE ROWS, by EQUALITY. A subset relation would be
+    // satisfied by the empty set, which leaves a caller free to forge a certificate
+    // chain onto a CWT (nothing else writes label 33, so the forgery would be the
+    // only chain present) or put a signature-uncovered `iv` in a CWS's unprotected
+    // bucket.
     //
     // ⚠ The expected sets are LITERALS, deliberately. Reading them back out of
-    // `KIT_CAPABILITIES` — the constant the production code reads — would make
-    // the test agree with any row that was ever written.
+    // `KIT_CAPABILITIES` — the constant the production code reads — would make the
+    // test agree with any row that was ever written.
     test("reserved: every row IS its KitOwned set, filtered to what its wire carries", () => {
       const JOSE_EXPECTED = [
         "alg",
@@ -552,22 +506,21 @@ describe("KIT_CAPABILITIES", () => {
         "x5t#S256",
       ];
 
-      // The KitOwned params the COSE wire has a label for: alg (1), iv (5),
-      // kid (4), typ (16, RFC 9596), x5c (33, RFC 9360 x5chain) and x5t#S256
-      // (34, RFC 9360 x5t — one parameter whose hash algorithm is a member of
-      // its value, which is why the SHA-1-named `x5t` is NOT here).
+      // The KitOwned params the COSE wire has a label for. `x5t#S256` maps to label
+      // 34, whose hash algorithm is a member of its VALUE — which is why the
+      // SHA-1-named `x5t` is not here (RFC 9360 §2).
       const COSE_EXPECTED = ["alg", "iv", "kid", "typ", "x5c", "x5t#S256"];
 
-      // JOSE carries every KitOwned param, so the JOSE literal must BE the
-      // type-level set — the runtime backstop and the compile-time Omit stating
-      // one set, not two. (`jku` is on neither: the type offers it to callers,
-      // and a row that reserved it threw a caller's value away.)
+      // JOSE carries every KitOwned param, so the JOSE literal must BE the type-level
+      // set — the runtime backstop and the compile-time Omit stating one set, not
+      // two. (`jku` is on neither: the type offers it to callers, and a row that
+      // reserved it would REFUSE a caller's value, not discard it.)
       expect(new Set(JOSE_EXPECTED)).toEqual(new Set(Object.keys(KIT_OWNED)));
 
-      // …and the COSE literal must be exactly the part of that set the COSE wire
-      // can spell. `coseWireKey` is the writer's resolver `buildCoseHeaders`
-      // itself puts every reserved name through, so a param it refuses could not
-      // be listed on a COSE row without breaking every mint that kit makes.
+      // …and the COSE literal must be exactly the part of that set the COSE wire can
+      // spell. `buildCoseHeaders` puts every reserved name through `coseWireKey`, so
+      // a param it refuses cannot be listed on a COSE row without breaking every mint
+      // that kit makes.
       const carriable = Object.keys(KIT_OWNED).filter((param) => {
         try {
           coseWireKey(param, false);
@@ -595,15 +548,13 @@ describe("KIT_CAPABILITIES", () => {
     });
 
     test("reserved (JOSE): jku is NOT on it, so a caller's own reaches the wire", () => {
-      // The complement of the drop probe, and the one parameter this suite has
-      // to state positively: `jku` sits in the DEFAULTS tier, so the key's
-      // `jwksUri` fills in and a caller's value outranks it.
+      // The complement of the drop probe, and the one parameter this suite states
+      // positively: `jku` sits in the DEFAULTS tier, so the key's `jwksUri` fills in
+      // and a caller's value outranks it.
       //
-      // Both halves matter, and each fails on a different mistake. Every fixture
-      // key PUBLISHES a jwks uri, which is the case a reserved `jku` used to
-      // lose; a key that publishes NONE is the case the spread order lost even
-      // after that, by writing `undefined` over the caller and taking the
-      // parameter off the wire with it.
+      // ⚠ Both halves matter and each fails on a different mistake — a key that
+      // PUBLISHES a jwks uri is what a reserved `jku` loses, and a key that publishes
+      // NONE is what spread order loses by writing `undefined` over the caller.
       const KEYLESS = {
         jwt: KryptosKit.generate.sig.ec({ algorithm: "ES512" }),
         jws: KryptosKit.generate.sig.ec({ algorithm: "ES512" }),
@@ -676,32 +627,25 @@ describe("KIT_CAPABILITIES", () => {
     });
 
     test("cnfMembers (cose): the row is DERIVED from the codec's label table", () => {
-      // ⚠ CIRCULAR, and stated as such. `encodeCnf` and this row now read the
-      // same `COSE_CNF_LABELS`, so probing the encoder and comparing it with the
-      // row can only ever agree — which is the POINT: the two cannot drift, and
-      // the older probe (mint each member alone, collect what survives) was
-      // measuring a table against itself the moment the derivation landed.
+      // ⚠ CIRCULAR, and stated as such. `encodeCnf` and this row read the same
+      // `COSE_CNF_LABELS`, so probing the encoder and comparing it with the row can
+      // only agree — which is the POINT: the two cannot drift.
       //
-      // ⭐ WHAT MAKES THAT ACCEPTABLE RATHER THAN CIRCULAR: what the row SHOULD
-      // contain is pinned against a HAND-WRITTEN literal in
-      // `claims/cnf-members.test.ts` ("gives COSE exactly the two members RFC 8747
-      // §3.1 labels"), together with the mixed-confirmation probe that is the
-      // honest half of what this test used to do. Without that literal, this
-      // assertion would be the only statement about the set and would say nothing.
-      // ⚠ It used to name `cose-cnf-labels.test.ts`, which is gone with the table
-      // it pinned; the duty moved, it did not lapse.
+      // ⭐ WHAT MAKES THAT ACCEPTABLE: what the row SHOULD contain is pinned against a
+      // HAND-WRITTEN literal in `claims/cnf-members.test.ts`. Without that literal
+      // this assertion would be the only statement about the set, and would say
+      // nothing.
       expect(new Set(KIT_CAPABILITIES.cwt.cnfMembers)).toEqual(new Set(COSE_CNF_MEMBERS));
       expect(KIT_CAPABILITIES.cwm.cnfMembers).toBe(KIT_CAPABILITIES.cwt.cnfMembers);
       expect(KIT_CAPABILITIES.cwe.cnfMembers).toBe(KIT_CAPABILITIES.cwt.cnfMembers);
     });
 
     test("keyManagement (cwe): the kit refuses a key its row does not list", () => {
-      // ⚠ CIRCULAR in the same way — `CweKit`'s constructor reads this row — and
-      // kept for the same reason: it proves the constructor consults the row and
-      // pins the SHAPE of the refusal a caller sees. A non-`dir` key used to reach
-      // `@lindorm/aes`, which threw its own `Content primitive requires a direct
-      // key` several layers down — a foreign error naming neither the wire nor
-      // the reason. `CweKit`'s constructor now reads the row and refuses first.
+      // ⚠ CIRCULAR in the same way — `CweKit`'s constructor reads this row — and kept
+      // for the same reason: it proves the constructor consults the row and pins the
+      // SHAPE of the refusal a caller sees. Without it a non-`dir` key reaches
+      // `@lindorm/aes`, which throws a foreign error naming neither the wire nor the
+      // reason.
       expect([...KIT_CAPABILITIES.cwe.keyManagement]).toEqual(["dir"]);
       expect(() =>
         new CweKit({ kryptos: CWE_KEY, logger }).encrypt(BYTES, {}),
@@ -729,14 +673,13 @@ describe("KIT_CAPABILITIES", () => {
     });
 
     test("contentEncryption (jwe): the JOSE header decoder allowlists enc off the row", () => {
-      // ⚠ CIRCULAR on the accepting half — the decoder allowlists off this row —
-      // but the REFUSING half is real: `A128CBC-HS128` is not a kryptos encryption
-      // at all, so the row could not list it however it was written, and the
-      // refusal is a fact about the decoder rather than about the row.
-      // The read-side binding. `enc` arrives as an arbitrary wire STRING, so this
-      // is where the row can bite: a header naming an encryption the row does not
-      // list is refused at decode, before any key or AEAD work. `alg` had this
-      // allowlist and `enc` did not.
+      // ⚠ CIRCULAR on the accepting half — the decoder allowlists off this row — but
+      // the REFUSING half is real: `A128CBC-HS128` is not a kryptos encryption at
+      // all, so the row could not list it however it was written.
+      //
+      // The read-side binding: `enc` arrives as an arbitrary wire STRING, so a header
+      // naming an encryption the row does not list is refused at decode, before any
+      // key or AEAD work.
       const [supported] = [...KIT_CAPABILITIES.jwe.contentEncryption];
 
       const header = (enc: string): string =>
@@ -748,19 +691,12 @@ describe("KIT_CAPABILITIES", () => {
       );
     });
 
-    // ⚠ NOT A TEST, and it used to be one — it carried the two `cnfMembers` size
-    // assertions VERBATIM from the declaration block above, so the note that says
-    // "this cannot be bound" was carrying an assertion about something else
-    // entirely, and reading as though the unbindable thing had been checked.
-    //
-    // What it says stands and is stated where such statements now live: the
-    // per-cell tally in `__fixtures__/coverage-census.ts`, which records for each
-    // of the 49 capability cells whether a kit READS it, a probe OBSERVES it, or
-    // neither — and is bound to the real table by
+    // ⚠ NOT A TEST. The per-cell tally lives in `__fixtures__/coverage-census.ts`,
+    // which records for each capability cell whether a kit READS it, a probe
+    // OBSERVES it, or neither, and is bound to the real table by
     // `classes/Aegis.meta-coverage.test.ts`. `jwe.keyManagement` is `declared`
-    // there: `JweKit` hands the whole key-management matrix to `@lindorm/aes`
-    // without consulting a row, so the column has no runtime witness, and its
-    // declared value is built FROM `KRYPTOS_ENC_ALGORITHMS` — so comparing the two
-    // is an identity, not a check.
+    // there: `JweKit` hands the whole key-management matrix to `@lindorm/aes` without
+    // consulting a row, so the column has no runtime witness and its declared value
+    // is built FROM `KRYPTOS_ENC_ALGORITHMS`.
   });
 });

@@ -86,8 +86,9 @@ describe("the content-encryption floor resolves KEY FIRST", () => {
       defaultEncryption: "A256GCM",
     }).encrypt("plaintext");
 
-    // Label 1 on a COSE_Encrypt0 carries the CONTENT encryption, since RFC 9052
-    // §5.2 leaves no key management to name there.
+    // Label 1 on a COSE_Encrypt0 carries the CONTENT encryption: the structure
+    // has no recipients array and runs no recipient algorithm, so there is no key
+    // management to name there. RFC 9052 §5.2.
     const header = decodeProtectedHeader(splitEncrypt0(token).protectedBstr);
 
     expect(coseLabelToEnc(header.get(coseByJose("alg")) as number)).toBe("A128GCM");

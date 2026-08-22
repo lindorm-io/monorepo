@@ -24,34 +24,22 @@ const KID = coseByJose("kid");
 const TYP = coseByJose("typ");
 
 /**
- * AN UNSIGNED TYP CANNOT SATISFY A TYPE ASSERTION.
+ * AN UNSIGNED TYP CANNOT SATISFY A TYPE ASSERTION. RFC 9052 §3, RFC 9052 §4.4.
  *
- * RFC 9052 §3 splits a COSE header into a protected bucket the signature covers
- * and an unprotected bucket it does not. `typ` is what routes a token — it is
- * how a caller says "this must be an access token" and how the profile floor
- * decides which rules apply — so it may only ever be read from the bucket the
- * issuer signed. A `typ` that no signature covers can be rewritten by anyone
- * holding the token, so honouring it lets the PRESENTER answer the verifier's
- * question about what the token is.
+ * `typ` is what routes a token — how a caller says "this must be an access
+ * token", and what the profile floor compares against — so honouring an
+ * unprotected copy lets the PRESENTER answer the verifier's question.
  *
- * These are STANDALONE tests rather than conformance rows because the input
- * cannot be produced through the public mint: `buildCoseHeaders` refuses a caller
- * `typ` in either bag (it is kit-derived, `cose_reserved_header`), and on merge
- * the protected map wins anyway. The rule bites only on a CWT whose PROTECTED
- * header omits `typ` altogether — a shape only a hostile or foreign producer
- * emits, and therefore exactly the shape a verifier must not trust.
+ * STANDALONE rather than conformance rows: the input cannot come through the
+ * public mint. `buildCoseHeaders` refuses a caller `typ` in either bag
+ * (`cose_reserved_header`) and the protected map wins on merge, so the rule bites
+ * only on a CWT whose protected header omits `typ` — which only a foreign or
+ * hostile producer emits. The structure is therefore hand-built from the same
+ * primitives `CwsKit.sign` uses; only the typ's LOCATION differs.
  *
- * So the structure is hand-built from the same primitives `CwsKit.sign`
- * uses, with the signature computed over the PROTECTED bucket and not the
- * unprotected one — RFC 9052 §4.4 `Sig_structure`, which covers the context
- * string, the protected header, `external_aad` and the payload, and nothing
- * from the unprotected map. Everything an attacker cannot touch — the key, the
- * algorithm, the claims — is genuine; only the typ's LOCATION differs.
- *
- * The rule holds because the COSE kits report the two buckets SEPARATELY
- * ({@link CoseHeaderBuckets}) and the COSE verify path reads `typ` off the
- * PROTECTED one alone — a merged read would let the unprotected copy answer for
- * the signed one, which is what this file is here to catch.
+ * ⚠ It holds because the kits report the two buckets separately
+ * ({@link CoseHeaderBuckets}) and the verify path reads `typ` off the protected
+ * one alone. A merged read is what this file catches.
  */
 describe("COSE typ integrity", () => {
   let logger: ILogger;
@@ -118,11 +106,9 @@ describe("COSE typ integrity", () => {
     return encodeCbor(new Tag(COSE_TAG.cwt, sign1)).toString("base64url");
   };
 
-  // A signed typ IS authoritative — the issuer stated it and the signature covers
-  // it, so the assertion it answers is answered by the issuer. This also
-  // establishes that the hand-built structure is a genuine, verifiable CWT,
-  // without which a rejection below would be indistinguishable from a malformed
-  // token.
+  // A signed typ IS authoritative. This also establishes that the hand-built
+  // structure is a genuine, verifiable CWT — without it a rejection below is
+  // indistinguishable from a malformed token.
   test("should satisfy a token type assertion from an INTEGRITY-PROTECTED typ", async () => {
     const token = buildCwt({ typ: "application/at+cwt", protectTyp: true });
 
@@ -133,24 +119,16 @@ describe("COSE typ integrity", () => {
 
   // The rule itself, through the `tokenType` assertion door.
   //
-  // ⚠ Both unsigned-typ assertions here name `AegisError`, not a bare `toThrow()`
-  // and not a narrower class. Bare would go green on ANY throw — a TypeError from
-  // a botched repair, or a bare `LindormError`, which `AegisError` EXTENDS and is
-  // therefore not an instance of. `AegisError` excludes both and is what a
-  // consumer actually catches.
+  // ⚠ `AegisError`, not a bare `toThrow()`: bare goes green on a `TypeError` from
+  // a botched repair, and on a bare `LindormError`, which `AegisError` extends and
+  // is not an instance of.
   //
-  // It stays the BROAD class deliberately. The repair that landed reads `typ` off
-  // the protected bucket alone, so the typ comparisons fail exactly as they
-  // already do for a wrong typ — `AegisDomainError` here
-  // (`assert-cose-token-type.ts`) and at the floor (`enforce-verify-floor.ts`).
-  // Narrowing to that would pin WHICH check happens to notice, which is not the
-  // rule: the rule is that an unsigned typ answers nothing. ⚠ Scope that
-  // reasoning to `typ` alone — "a kit-derived header has no business in an
-  // unsigned bag" would be false here: `CwsKit.buildHeaders` puts the kit-derived
-  // `kid` in the UNPROTECTED map on every CWT/CWS aegis mints (deliberate COSE
-  // convention, RFC 9052 §3.1) and `decodeCwt` reads it back from there, so the
-  // broad form would refuse every token this package produces — including the
-  // signed-typ case above.
+  // ⚠ It stays the BROAD class: narrowing pins WHICH check happens to notice
+  // (`assert-cose-token-type.ts` or `enforce-verify-floor.ts`), and the rule is
+  // that an unsigned typ answers nothing. ⚠ Scope that to `typ` alone — a broad
+  // "no kit-derived header in an unsigned bag" is false here, because
+  // `CwsKit.buildHeaders` puts the kit-derived `kid` in the UNPROTECTED map on
+  // every CWT/CWS aegis mints (RFC 9052 §3.1) and `decodeCwt` reads it back.
   test("should NOT satisfy a token type assertion from an UNPROTECTED typ", async () => {
     const token = buildCwt({ typ: "application/at+cwt", protectTyp: false });
 
@@ -159,18 +137,13 @@ describe("COSE typ integrity", () => {
     );
   });
 
-  // The two readers of `typ` now AGREE, and this is what says so. The domain
-  // header IS a merge of the two buckets, but `typ` is `placement: "protected"`
-  // in the header registry, so an unsigned one is filtered out on the way in and
-  // produces no `tokenType` at all — where the two used to disagree, one reading
-  // the protected map and the other an unfiltered merge, giving one token two
-  // answers.
+  // The two readers of `typ` AGREE. The domain header IS a merge of both buckets,
+  // but `typ` is `placement: "protected"` in the header registry, so an unsigned
+  // one is filtered on the way in and produces no `tokenType` at all.
   //
-  // ⚠ The verify is DELIBERATELY assertion-free. Passing `{ tokenType: … }` here
-  // would route this through the very acceptance the rule above says must be
-  // REFUSED, and it would then be a duplicate of that rule rather than a
-  // statement about what the parsed header REPORTS. The parsed header is
-  // reachable without asserting anything, so assert nothing.
+  // ⚠ The verify is assertion-free on purpose: passing `{ tokenType: … }` routes
+  // this through the acceptance the rule above refuses, making it a duplicate of
+  // that rule rather than a statement about what the parsed header REPORTS.
   test("should report NO token type on the parsed header when the typ is UNPROTECTED", async () => {
     const token = buildCwt({ typ: "application/at+cwt", protectTyp: false });
 
@@ -180,9 +153,7 @@ describe("COSE typ integrity", () => {
   });
 
   // The same rule through the PROFILE floor, which compares the token's typ
-  // against `coseTyp(profile.typ)` — the access_token profile mandates one, so an
-  // unsigned typ deciding that comparison is the reachable consequence. The
-  // error-class reasoning is the one stated above.
+  // against `coseTyp(profile.typ)`. Error class as reasoned above.
   test("should NOT satisfy the access_token profile floor from an UNPROTECTED typ", async () => {
     const token = buildCwt({ typ: "application/at+cwt", protectTyp: false });
 

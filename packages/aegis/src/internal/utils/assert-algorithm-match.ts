@@ -29,7 +29,7 @@ export const assertAlgorithmMatch = ({
   details: string;
   /**
    * The error `data` bag. Defaults to `{ algorithm: actual }`; the JWE kit
-   * overrides it because it has always reported the value under `alg`.
+   * overrides it to report the value under `alg`.
    */
   data?: Dict;
 }): void => {

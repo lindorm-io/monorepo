@@ -3,24 +3,16 @@ import type { Dict } from "@lindorm/types";
 
 // Public, camelCase representation of the RFC 7800 `cnf` claim.
 //
-// The wire counterpart is `ConfirmationClaimWire` (`../wire/confirmation-claim-wire.ts`).
-// ⚠ The note that used to sit here said it was "consumed only by the wire<->public
-// mapping layer in jwt-payload.ts", and BOTH halves were wrong: the path it gave
-// was `./jwt/confirmation-claim-wire`, which has never existed, and
-// `jwt-payload.ts` is not a file in this package at all. The mapping lives in
-// `internal/claims/translate.ts`, driven by `internal/claims/cnf-members.ts`.
+// The wire counterpart is `ConfirmationClaimWire` (`../wire/confirmation-claim-wire.ts`);
+// the mapping lives in `internal/claims/translate.ts`, driven by
+// `internal/claims/cnf-members.ts`.
 //
-// ⚠⚠ THE MEMBER SET IS OPEN, AND THE RFC IS WHY. RFC 7800 §3.1: "Other members
-// of the 'cnf' object may be defined because a proof-of-possession key may not be
-// the only means of confirming the authenticity of the token." And: "in the
-// absence of such requirements, all confirmation members that are not understood
-// by implementations MUST be ignored." §6.2 establishes an IANA registry that
-// other specifications register into — two of the five below arrived that way
-// (`jkt`, RFC 9449 §6.1; `x5t#S256`, RFC 8705 §3.1) — and §6.2.2's own initial
-// contents name a member aegis does not carry (`jwe`, §3.3). So refusing an
-// undeclared member would refuse a conformant token, and aegis carries anything
-// it does not declare VERBATIM: §6.2.1 makes a confirmation method name "case
-// sensitive", so the house case flip would rewrite it.
+// ⚠⚠ THE MEMBER SET IS OPEN: other specifications register confirmation methods
+// (RFC 7800 §3.1, RFC 7800 §6.2), and two of the five below arrived that way
+// (`jkt`, RFC 9449 §6.1; `x5t#S256`, RFC 8705 §3.1). The registry also names a
+// member aegis does not carry (`jwe`, RFC 7800 §3.3, RFC 7800 §6.2.2), so
+// refusing an undeclared member would refuse a conformant token. Aegis carries
+// what it does not declare VERBATIM rather than case-flipped (RFC 7800 §6.2.1).
 //
 // ⚠ ONE THING IS STILL REFUSED: a tail member whose key COLLIDES with a declared
 // member's resolved key. Both would land on one key, and letting the last one win

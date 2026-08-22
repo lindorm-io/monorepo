@@ -18,15 +18,12 @@ describe("cnfShape", () => {
   });
 
   /**
-   * ⭐ THE RULE IS THE GRAMMAR, AND ONLY THE GRAMMAR. An allow list of the five
-   * declared members used to sit here and it was WRONG rather than merely
-   * duplicated: RFC 7800 §3.1 requires that "in the absence of such requirements,
-   * all confirmation members that are not understood by implementations MUST be
-   * ignored", and §6.2 establishes an IANA registry other specifications register
-   * into — §6.2.2's own initial contents name `jwe`, which aegis does not declare.
-   * So this rule refused a member RFC 7800 itself defines. The member SET is the
-   * claim translator's business now (`internal/claims/cnf-members.ts`), in both
-   * directions and under every profile.
+   * ⭐ THE RULE IS THE GRAMMAR, AND ONLY THE GRAMMAR. ⛔ An allow list of the
+   * declared members here would be WRONG rather than merely duplicated —
+   * RFC 7800 §3.1 and RFC 7800 §6.2 make the set extensible, so it would refuse
+   * members RFC 7800 itself defines. The member SET is the claim translator's
+   * business (`internal/claims/cnf-members.ts`), in both directions and under
+   * every profile.
    */
   test("ignores a confirmation member it does not understand", () => {
     expect(cnfShape({ confirmation: { thumbprint: VALID_JKT, surprise: true } })).toEqual(
@@ -35,9 +32,9 @@ describe("cnfShape", () => {
   });
 
   /**
-   * ⚠ THE EMPTY CONFIRMATION WAS UNTESTED HERE, and it stays unrefused here on
-   * purpose: it is refused by the translator on the way out and by the verify
-   * policy gate on the way in, neither of which a profile has to opt into. A
+   * ⚠ THE EMPTY CONFIRMATION stays unrefused HERE: it is refused by the
+   * translator on the way out and by the verify policy gate on the way in,
+   * neither of which a profile has to opt into. A
    * third refusal in a rule three profiles name would be the weakest of the
    * three and would say the same thing.
    */

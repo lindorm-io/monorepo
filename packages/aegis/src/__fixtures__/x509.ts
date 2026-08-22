@@ -48,16 +48,8 @@ export const TEST_X509_LEAF_PUBLIC_KEY_B64 =
   "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEg7-PZHaGSsppBpQK2uY8RXAkqq6k2HzCx2-lLAi3sN1kLbI-JoszWHd1qUQGij0Bc7O1T9RtXMMzxPUUC1tUtw";
 
 /**
- * The chain as RFC 7515 §4.1.6 requires it on the wire, derived from the PEMs
- * above rather than copied out of a token.
- *
- * §4.1.6: "The certificate or certificate chain is represented as a JSON array
- * of certificate value strings. Each string in the array is a base64-encoded
- * (Section 4 of [RFC4648] -- not base64url-encoded) DER [ITU.X690.2008] PKIX
- * certificate value. The certificate containing the public key corresponding to
- * the key used to digitally sign the JWS MUST be the first certificate. This MAY
- * be followed by additional certificates, with each subsequent certificate being
- * the one used to certify the previous one."
+ * The chain in its `x5c` wire form — base64 of the DER, leaf first — derived from
+ * the PEMs above rather than copied out of a token. RFC 7515 §4.1.6, RFC 4648 §4.
  *
  * ⚠ This is an ORACLE, not a copy of what the writer produced: the PEMs are the
  * INPUT the fixture key is built from, and the two transformations that matter —

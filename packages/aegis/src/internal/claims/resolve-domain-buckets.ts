@@ -39,17 +39,13 @@ const toBuckets = <C extends Dict = Dict>(
  * never answer for it, because the presenter chooses that spelling and the issuer
  * chose the other one.
  *
- * ⚠ The confidentiality gate is deliberately NOT applied here. It is a rule
- * about TOKENS — a sensitive claim is surfaced only from one that arrived
- * ENCRYPTED — so it stays with the caller that knows whether the outer token was
- * encrypted.
+ * ⚠ The confidentiality gate is deliberately NOT applied here. It is a rule about
+ * TOKENS — a sensitive claim is surfaced only from one that arrived ENCRYPTED —
+ * so it stays with the caller that knows whether the outer token was encrypted.
  *
- * ⚠ That rule is AEGIS POLICY. It carried an "OIDC Core §13.3" citation
- * throughout this package until 2026-08-11, when the primary text was checked:
- * OIDC Core §13 is "Serializations" and §13.3 is "JSON Serialization". No section
- * of OIDC Core requires it. Do not re-attach a citation to it. `claims` always has the sensitive keys stripped either
- * way, so an unencrypted token carrying them in cleartext leaks nothing
- * regardless.
+ * ⛔ That rule is AEGIS POLICY, not a specification's. Do not attach a citation to
+ * it. `claims` has the sensitive keys stripped either way, so an unencrypted token
+ * carrying them in cleartext leaks nothing regardless.
  */
 export const tokenToBuckets = <C extends Dict = Dict>(
   wire: Dict,

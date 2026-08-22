@@ -169,9 +169,9 @@ describe("create-hash", () => {
       expect(bitLength(payload.at_hash as string)).toBe(bits);
     });
 
-    // RFC 9964 registers ML-DSA for JOSE, and the domain surface has to carry a
-    // post-quantum signature end to end — the wire `alg` string a relying party
-    // matches on, and a verify that resolves the key by its `kid` and validates.
+    // The domain surface has to carry a post-quantum signature end to end
+    // (RFC 9964) — the wire `alg` string a relying party matches on, and a verify
+    // that resolves the key by its `kid` and validates.
     test("a post-quantum signature round-trips through the domain surface", async () => {
       const logger = createMockLogger();
       const amphora = new Amphora({ internal: { issuer: ISSUER }, logger });

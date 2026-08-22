@@ -99,9 +99,9 @@ describe("CwmKit (COSE_Mac0, symmetric)", () => {
 
     expect(error?.code).toBe("cwm_kid_mismatch");
     // ⚠ THE TITLE, and specifically the `CWM` in it. The refusal is built from
-    // the format tag, the way the algorithm-match refusal already was, so a
-    // COSE_Mac0 no longer reports itself as a CWT. Nothing else in the package
-    // asserts either title, which is why the spelling could change unobserved.
+    // the format tag, exactly as the algorithm-match refusal is, so a COSE_Mac0
+    // never reports itself as a CWT. Nothing else in the package asserts either
+    // title, which is why the spelling could change unobserved.
     expect(error?.title).toBe("CWM Kid Mismatch");
   });
 

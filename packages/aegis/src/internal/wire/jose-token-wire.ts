@@ -20,32 +20,15 @@ import { writtenHeader } from "../header/written-header.js";
 import type { TokenWire, WireInputDispositions } from "./token-wire.js";
 
 /**
- * What the JOSE wire does with each kit option it is handed.
+ * What the JOSE wire does with each kit option it is handed. Typed over the
+ * INTERSECTION of the two wires' kit option types, so the COSE-only members appear
+ * here too ({@link SignClaimsInput}).
  *
- * Every row is `forwarded`, and the claim that carries is the literal one: the
- * option REACHES the kit through the rest-spread. The tables are typed over the
- * INTERSECTION of the two wires' kit option types because ONE input crosses to
- * both wires ({@link SignClaimsInput}) and neither type is wider on its own, so
- * the COSE-only members appear here too.
- *
- * ⚠ A ROW SPEAKS FOR A TOP-LEVEL KEY AND NOTHING BELOW IT, so `forwarded` does
- * not promise every MEMBER of a nested bag is read. Two rows here are the
- * `forwarded`-but-not-read cases, and the TYPE is what closes each rather than
- * this table:
- *
- *   - `proprietary` is a COSE interop gate the JOSE kits ignore.
- *   - `custom` is forwarded whole, and `buildJoseHeader` reads `custom.header`
- *     alone — compact serialisation has one header and it is protected
- *     (`KIT_CAPABILITIES.<jose kit>.unprotectedBucket: false`), so there is no
- *     `custom.unprotected` for it to read.
- *
- * ⛔ Neither is a silent drop a caller can reach: the PUBLIC JOSE doors
- * (`aegis.jwt|jws|jwe.*`, `JwtKit`, `JwsKit`, `JweKit`) take `Jose*` option types
- * that declare no `proprietary`, and whose `custom` bag declares only `header` —
- * so `custom.unprotected` AND `custom.protected` are both COMPILE errors, not
- * accepted-and-ignored requests. Pinned in `types/header/wire-envelope.test.ts`.
- * They arrive here only through the untyped internal seam, which is the one this
- * table cannot speak below.
+ * ⚠ A ROW SPEAKS FOR A TOP-LEVEL KEY AND NOTHING BELOW IT. `proprietary`
+ * is a COSE interop gate the JOSE kits ignore, and `buildJoseHeader` reads
+ * `custom.header` alone. Neither is a silent drop a caller can reach — the JOSE doors take
+ * `Jose*` option types where both are COMPILE errors (pinned in
+ * `types/header/wire-envelope.test.ts`); they arrive only through the untyped seam.
  */
 const JOSE_DISPOSITIONS: WireInputDispositions = {
   signClaims: {
@@ -88,45 +71,32 @@ export const JOSE_TOKEN_WIRE: TokenWire = {
 
   nameOf: joseName,
 
-  // AEGIS POLICY, modelled on RFC 8725 §3.11, which says explicit typing is
-  // RECOMMENDED for new uses of JWTs — a SHOULD, not a mandate. Its only MUST is
-  // the inner typ of a NESTED JWT. Defaulting to required is our choice.
+  // AEGIS POLICY, modelled on RFC 8725 §3.11. Defaulting to required is our choice.
   defaultTypPresence: "required",
 
-  // The JOSE claims read has always required a non-empty `iss`.
+  // See the note on `TokenWire.issuerPresence`.
   issuerPresence: "required",
 
   encryptedFormat: "jwe",
 
-  // A JWE's plaintext may be a nested claims token, an opaque JWS, or another
-  // JWE — all three resolve today and all three stay.
+  // A JWE's plaintext may be a nested claims token, an opaque JWS, or another JWE.
   encryptedInner: ["jwt", "jws", "jwe"],
 
   // What a JOSE outer declares over each nested token it can seal. Stamped
-  // EXPLICITLY so it overrides the `text/plain` the codec would otherwise infer
-  // from a compact token STRING; the read side uses it to reconstruct the
-  // plaintext back to that string rather than to a text blob.
+  // EXPLICITLY so it overrides the `text/plain` the codec would infer from a compact
+  // token STRING, and the read side reconstructs the plaintext back to that string.
   nestedTokenCty: {
-    // ⚠ THE LITERAL STRING, and it is not a style choice. RFC 7519 §5.2: "In the
-    // case that nested signing or encryption is employed, this Header Parameter
-    // MUST be present; in this case, the value MUST be "JWT", to indicate that a
-    // Nested JWT is carried in this JWT." §5.2 goes on to RECOMMEND the uppercase
-    // spelling for compatibility with legacy implementations. Do NOT "correct"
-    // this to `application/jwt`.
+    // ⚠ THE LITERAL STRING, not a style choice — do NOT "correct" it to
+    // `application/jwt`. RFC 7519 §5.2.
     jwt: "JWT",
-    // A JWS that is not a JWT, and a JWE, are both COMPACT JOSE OBJECTS and
-    // nothing more — RFC 7515 §9.2.1 registers `application/jose` for exactly
-    // that: it "can be used to indicate that the content is a JWS or JWE using
-    // the JWS Compact Serialization or the JWE Compact Serialization". RFC 7515
-    // §4.1.10 permits shortening it to `jose`; the full media type is the
-    // conformant spelling and the one aegis writes. The read side accepts both.
+    // A JWS that is not a JWT, and a JWE, are both compact JOSE objects
+    // (RFC 7515 §9.2.1). aegis writes the full media type; the read side also
+    // accepts the shortened `jose` (RFC 7515 §4.1.10).
     jws: "application/jose",
     jwe: "application/jose",
   },
 
-  // ⚠ PRESERVED DIVERGENCE — see `TokenWire.nestedTokenTyp`. The JOSE outer has
-  // never carried the inner's type; the mint passed one and the old hand-written
-  // destructure did not name it.
+  // ⚠ The JOSE outer carries no inner type — see `TokenWire.nestedTokenTyp`.
   nestedTokenTyp: "none",
 
   profileTyp: (typ: TokenProfileTyp) => (typ.presence === "none" ? undefined : typ.value),
@@ -149,9 +119,8 @@ export const JOSE_TOKEN_WIRE: TokenWire = {
   decodeClaims: (token) => {
     const decoded = JwtKit.decode(token);
 
-    // The structural invariants a JWT must satisfy to be READ as one. They are
-    // NOT signature checks — a keyless parse still has to refuse a token whose
-    // own envelope is malformed, because everything downstream reads it as a JWT.
+    // A keyless parse checks no signature but still refuses a malformed envelope,
+    // because everything downstream reads the result as a JWT.
     assertWireTyp({
       typ: decoded.header.typ,
       accept: ["JWT"],
@@ -164,7 +133,7 @@ export const JOSE_TOKEN_WIRE: TokenWire = {
         "Header typ is present but is not JWT or a <type>+jwt media type, so the token cannot be parsed as a JWT.",
     });
 
-    // The header AS WRITTEN, not the typed bag alone — see `written-header.ts`.
+    // The header AS WRITTEN, not the typed bag alone (`written-header.ts`):
     // `validateCrit` asks whether the header CARRIES what its `crit` names, and a
     // custom parameter lives in the other bag.
     const written = writtenHeader(decoded.header, decoded.custom.header);
@@ -173,10 +142,9 @@ export const JOSE_TOKEN_WIRE: TokenWire = {
     if (critError) {
       throw new JwtError(`Invalid crit header: ${critError}`, {
         code: "jwt_invalid_crit",
-        // ⚠ `written`, not the typed bag: the verdict was decided on the header AS
-        // WRITTEN, so reporting `header` can hand a consumer
-        // `{ crit: undefined }` while the message names a member. The COSE twin
-        // and `reject-unknown-critical.ts` report the same value.
+        // ⚠ `written`, not the typed bag — the verdict is decided on the header AS
+        // WRITTEN, so reporting `header` could hand a consumer `{ crit: undefined }`
+        // while the message names a member. Same value the COSE twin reports.
         data: { crit: written.crit },
         title: "JWT Invalid Crit",
         details:
@@ -190,9 +158,8 @@ export const JOSE_TOKEN_WIRE: TokenWire = {
       matcher: withJoseDates(decoded.payload),
       protectedHeader: decoded.header,
       // The seam carries the COSE bucket pair, so the JOSE arms state the `{}`
-      // that compact serialisation always yields — `KIT_CAPABILITIES.jwt`/`.jws`/
-      // `.jwe` all declare `unprotectedBucket: false`, and a JOSE kit result has no
-      // such field to forward (`types/header/wire-buckets.ts`).
+      // compact serialisation yields — `KIT_CAPABILITIES.jwt`/`.jws`/`.jwe` all
+      // declare `unprotectedBucket: false`.
       unprotectedHeader: {},
     };
   },
@@ -201,9 +168,9 @@ export const JOSE_TOKEN_WIRE: TokenWire = {
     const decoded = JwtKit.decode(token);
 
     // Verifier-declared issuer wins; else the token's own UNVERIFIED `iss`; else
-    // unscoped. The unverified value is safe because the scope only ever NARROWS
-    // the candidate keys — a lie produces a miss, never a wider search. The `iss`
-    // claim itself is still checked, and only ever after the signature.
+    // unscoped. The unverified value only ever NARROWS the candidate keys, so a lie
+    // produces a miss rather than a wider search; the `iss` claim itself is still
+    // checked, after the signature.
     const kryptos = await deps.resolveVerifyKey({
       id: decoded.header.kid,
       algorithm: decoded.header.alg as KryptosSigAlgorithm,
@@ -240,10 +207,8 @@ export const JOSE_TOKEN_WIRE: TokenWire = {
   },
 
   verifyOpaque: async ({ token, deps, options, crit }) => {
-    // ⚠ The per-call key POLICY threads through here. It used to be dropped on
-    // this branch alone, so a caller stating an algorithm floor for an opaque
-    // JOSE signature had that floor silently discarded — the worst kind of
-    // policy, because the caller believes it is in force and stops checking.
+    // ⚠ The per-call key POLICY threads through here. Dropping it would silently
+    // discard a caller's algorithm floor for an opaque JOSE signature.
     const verified = await rawVerifyJws({
       jws: token,
       options: { key: options.key, crit },
@@ -258,9 +223,8 @@ export const JOSE_TOKEN_WIRE: TokenWire = {
     };
   },
 
-  // ⚠ `format` is named only to keep it OUT of the spread — it is the COSE
-  // structure selector and no JOSE kit takes one. Everything else the kits take
-  // travels as `options`, so this call cannot drop a kit option by omission.
+  // ⚠ `format` is named only to keep it OUT of the spread — it is the COSE structure
+  // selector and no JOSE kit takes one. Everything else travels as `options`.
   signClaims: ({ kryptos, deps, common, format, ...options }) => {
     const wireClaims = domainToWire(common, joseName);
 
@@ -269,39 +233,29 @@ export const JOSE_TOKEN_WIRE: TokenWire = {
     return buildSignedToken(token, wireClaims, options.header?.oid, "jwt", joseName);
   },
 
-  // DICT IN, DICT OUT. An object payload is handed to the kit AS AN OBJECT, so
-  // the shared content codec infers `application/json` and `verify` reconstructs
-  // the Dict the caller signed — the same contract `@lindorm/aes`
-  // has always had, where `calculateContentType` maps an object to
-  // `application/json` and the decrypt returns an object. A `string` stays
-  // `text/plain` and a `Buffer` `application/octet-stream`; both are opaque and
-  // round-trip unchanged. A caller-set `header.cty` still WINS as the wire label
-  // (that is how a nested token declares itself, and `cty` is not reserved) —
-  // `serialiseContent` takes it as an override. The COSE twin does the identical
-  // thing one level down in `rawSignCose`, so the two wires now agree.
+  // DICT IN, DICT OUT. An object payload reaches the kit AS AN OBJECT, so the shared
+  // content codec infers `application/json` and `verify` reconstructs the Dict the
+  // caller signed; a caller-set `header.cty` still WINS as the wire label, which is
+  // how a nested token declares itself.
   //
   // Reached by `aegis.jws.sign` through the shared opaque entry
   // (`raw-sign-opaque.ts`), which runs `assertWireInput` over this wire's
-  // `signOpaque` dispositions first. This is the package's only call site for
-  // `rawSignJws`.
+  // `signOpaque` dispositions first.
   //
-  // The emission normalisation is NOT applied here. It lives in `rawSignJws`,
-  // one level down, exactly where the COSE twin puts its own (`rawSignCose`);
-  // applying it here as well would run it twice on the same payload. Its
-  // behaviour is pinned by `sign-content-round-trip.test.ts`.
+  // ⚠ The emission normalisation is NOT applied here — it lives one level down in
+  // `rawSignJws`, where the COSE twin puts its own, so applying it here as well
+  // would run it twice on the same payload.
   signOpaque: ({ deps, payload, key, ...options }) =>
     rawSignJws({ data: payload, options: { ...options, key }, deps }),
 
   encryptContent: ({ kryptos, deps, content, ...options }) =>
     encryptJwe({
       kryptos,
-      // The caller's own value, untouched: JweKit's codec states what it IS
-      // (Dict→`application/json`, string→`text/plain`, Buffer→octet) and decrypt
-      // reconstructs that same type back.
+      // The caller's own value, untouched: JweKit's codec states what it IS and
+      // decrypt reconstructs that same type back.
       data: content,
       // The whole kit option surface, including the ECDH-ES party info
-      // (RFC 7518 §4.6) that JweKit gates and strips for every other algorithm,
-      // and a nested token's `header.cty`, which the composition stamped.
+      // (RFC 7518 §4.6) and a nested token's `header.cty`.
       options,
       defaultEncryption: deps.defaultEncryption,
       certBindingMode: deps.certBindingMode,
@@ -317,18 +271,13 @@ export const JOSE_TOKEN_WIRE: TokenWire = {
       deps,
     });
 
-    // The kit returns the WIRE header; the domain result carries the DOMAIN-named
-    // one, so translate through the ONE `domainTokenHeader` (NOT a bare
-    // `parseTokenHeader`) so `baseFormat` and the typ-derived `tokenType` are
-    // stamped — a bare parse left `header.tokenType` permanently `undefined`.
+    // The kit returns the WIRE header, so translate through the ONE
+    // `domainTokenHeader` (NOT a bare `parseTokenHeader`) — that is what stamps
+    // `baseFormat` and the typ-derived `tokenType`.
     //
-    // The unprotected bucket is EMPTY and always will be: RFC 7516 §7.1 gives the
-    // JWE compact serialisation no syntax for one. It is stated rather than
-    // omitted so both wires reach the merge through the same call.
-    //
-    // The plaintext is whatever the kit's codec reconstructed from the outer's
-    // own cty, reported verbatim. Nothing is re-read here to decide whether the
-    // value "is claims": a JWE's plaintext is the value its writer sealed.
+    // The unprotected bucket is EMPTY (RFC 7516 §7.1), stated rather than omitted so
+    // both wires reach the merge through the same call. The plaintext is whatever
+    // the kit's codec reconstructed from the outer's own cty, reported verbatim.
     return {
       header: domainTokenHeader(
         { protectedHeader: decrypted.header, unprotectedHeader: {} },
@@ -341,7 +290,6 @@ export const JOSE_TOKEN_WIRE: TokenWire = {
 
   decodeToken: (token) => token,
 
-  // A reconstructed object (a bare claims set) is not a token, so there is
-  // nothing to hand back; a compact JOSE token IS its string.
+  // A reconstructed object is not a token; a compact JOSE token IS its string.
   encodeToken: (content) => (isString(content) ? content : undefined),
 };

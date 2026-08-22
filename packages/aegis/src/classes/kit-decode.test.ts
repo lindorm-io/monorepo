@@ -74,8 +74,8 @@ describe("kit decode — per-wire header buckets, no signature check", () => {
       const { protectedHeader, unprotectedHeader, payload } = CwtKit.decode(token);
 
       // COSE integer labels translated to their JOSE wire names + string values,
-      // and the two buckets kept APART: `kid` is an advisory routing hint COSE
-      // convention puts in the bucket no signature covers (RFC 9052 §3.1).
+      // and the two buckets kept APART: `kid` is an advisory routing hint riding
+      // the bucket no signature covers (RFC 9052 §3.1).
       expect(protectedHeader.alg).toBe("ES512");
       expect(protectedHeader.typ).toBe("application/at+cwt");
       expect(protectedHeader.kid).toBeUndefined();
@@ -180,7 +180,7 @@ describe("kit decode — per-wire header buckets, no signature check", () => {
 
       // Label 1 in Encrypt0 is the AEAD, translated to the JOSE `enc` name (not
       // a key-management `alg`); kid + iv come off the unprotected map, which is
-      // where RFC 9052 §5.2 puts them.
+      // where they ride (RFC 9052 §3.1).
       expect(protectedHeader.enc).toBe("A256GCM");
       expect(protectedHeader.typ).toBe("application/at+cwe");
       expect(unprotectedHeader.kid).toBe(coseEncKey.id);

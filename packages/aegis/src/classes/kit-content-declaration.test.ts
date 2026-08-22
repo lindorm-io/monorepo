@@ -25,26 +25,19 @@ const COSE_CTY = 3;
  * A `cty` says what the secured payload IS. That is information on an OPAQUE
  * wire, where the payload can be anything, and it is a restatement of the format
  * on a CLAIMS wire, where the payload is a claim set by definition. Both
- * specifications say so in their own words:
- *
- * - RFC 7519 §5.2 — "In the normal case in which nested signing or encryption
- *   operations are not employed, the use of this Header Parameter is NOT
- *   RECOMMENDED."
- * - RFC 8392 §7.2 — "Verify that the Message is a valid CBOR map; let the CWT
- *   Claims Set be this CBOR map". There is no cty-driven decode on the CWT wire
- *   at all, and Appendix A.6 uses `cty` only to mark NESTING: "The content type
- *   is set to CWT to indicate that there are multiple layers of COSE protection
- *   before finding the CWT Claims Set."
+ * specifications say so: RFC 7519 §5.2, and RFC 8392 §7.2 — which drives no
+ * cty-based decode at all, `cty` on a CWT marking NESTING instead
+ * (RFC 8392 Appendix A.6).
  *
  * So the CLAIMS kits derive NO cty and the OPAQUE kits derive one from the value
  * they were handed. The rows below assert both halves TOGETHER, because either
  * alone would still pass if every kit did the same thing.
  *
- * ⚠ The claims kits used to disagree with each other about a payload carrying
- * the SAME domain claims: a JWT was stamped `application/json` and a CWT
- * `application/octet-stream`, purely because the COSE side handed its signer
- * pre-encoded bytes. Neither statement was useful and one of them was not even
- * true of the wire it rode on.
+ * ⚠ The claims kits must not disagree with each other about a payload carrying
+ * the SAME domain claims. Deriving from what each signer is handed stamps a JWT
+ * `application/json` and a CWT `application/octet-stream`, purely because the
+ * COSE side hands its signer pre-encoded bytes — neither statement useful, and
+ * one of them not even true of the wire it rides on.
  */
 describe("which cty a kit declares", () => {
   const logger = createMockLogger();
@@ -100,8 +93,8 @@ describe("which cty a kit declares", () => {
   });
 
   // `cty` is NOT reserved on any of the three claims wires, and that is what
-  // makes the omission a DEFAULT rather than a prohibition: RFC 7519 §5.2 and
-  // RFC 8392 Appendix A.6 both use the parameter to declare a NESTED token, so a
+  // makes the omission a DEFAULT rather than a prohibition: the parameter
+  // declares a NESTED token (RFC 7519 §5.2, RFC 8392 Appendix A.6), so a
   // caller must be able to set it. A kit that merely dropped it would take the
   // nesting declaration away with the restatement.
   describe("a caller-set cty still WINS on a claims kit", () => {

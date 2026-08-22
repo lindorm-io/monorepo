@@ -27,37 +27,22 @@ import { buildSignedToken } from "../utils/build-signed-token.js";
 import { computeTypHeader, extractTypPrefix } from "../utils/compute-typ-header.js";
 import type { TokenWire, WireInputDispositions } from "./token-wire.js";
 
-/** The two COSE claims formats one structure tag decides between. */
 type ClaimsCoseFormat = Extract<TokenFormatTag, "cwt" | "cwm">;
 
-/**
- * The COSE structure tag decides `cwt` vs `cwm` on READ: a COSE_Sign1 (tag 18,
- * asymmetric) is a `cwt`, a COSE_Mac0 (tag 17, symmetric) a `cwm`. The inner tag,
- * with the outer CWT tag 61 already stripped by the decoder.
- */
+/** The INNER structure tag — `decodeCwt` has already stripped the outer CWT tag 61. */
 const coseFormatOf = (cose: unknown): ClaimsCoseFormat =>
   cose instanceof Tag && cose.tag === COSE_TAG.mac0 ? "cwm" : "cwt";
 
-/**
- * RFC 7518 §4.6 scopes `apu`/`apv` to JOSE key-agreement algorithms, and aegis's
- * COSE outer is a COSE_Encrypt0 — RFC 9052 §5.2 defines that as single-recipient
- * DIRECT encryption. There is no key agreement for PartyUInfo/PartyVInfo to feed
- * and no COSE header parameter registered to carry either.
- */
 const NO_COSE_KEY_AGREEMENT =
-  "A COSE_Encrypt0 performs no key agreement. RFC 9052 §5.2 defines it as single-recipient direct encryption, and RFC 7518 §4.6 scopes the ECDH-ES party info to JOSE key-agreement algorithms, so there is nothing for the value to derive and no COSE header parameter to carry it.";
+  "A COSE_Encrypt0 carries no recipients array and runs no recipient algorithm, so there is no key-agreement step for the ECDH-ES party info to describe. See RFC 9052 §5.2 and RFC 7518 §4.6.";
 
 /**
  * What the COSE wire does with each kit option it is handed.
  *
- * ⚠ A ROW SPEAKS FOR A TOP-LEVEL KEY AND NOTHING BELOW IT, the same caveat the
- * JOSE table states: `custom` is forwarded whole, and `buildCoseHeaders` reads
- * `custom.protected`/`custom.unprotected` alone — `custom.header` is the JOSE
- * spelling and nothing here reads it. It is no silent drop a caller can reach:
- * the PUBLIC COSE doors take `Cose*`/`Cwe*` option types whose `custom` bag
- * declares no `header` at all, so supplying one is a COMPILE error (pinned in
- * `types/header/wire-envelope.test.ts`). It arrives here only through the untyped
- * internal seam, which is the one this table cannot speak below.
+ * ⚠ A ROW SPEAKS FOR A TOP-LEVEL KEY AND NOTHING BELOW IT: `buildCoseHeaders` reads
+ * `custom.protected`/`custom.unprotected` alone, and the JOSE-spelled
+ * `custom.header` is a COMPILE error on the public COSE doors (pinned in
+ * `types/header/wire-envelope.test.ts`); it arrives only through the untyped seam.
  */
 const COSE_DISPOSITIONS: WireInputDispositions = {
   signClaims: {
@@ -94,54 +79,31 @@ const COSE_DISPOSITIONS: WireInputDispositions = {
   },
 };
 
-/** The COSE wire: RFC 9052 structures, a protected and an unprotected bucket. */
+/** The COSE wire — RFC 9052 structures, a protected and an unprotected bucket. */
 export const COSE_TOKEN_WIRE: TokenWire = {
   dispositions: COSE_DISPOSITIONS,
 
   nameOf: coseName,
 
-  // RFC 9596 leaves the COSE `typ` (label 16) optional, so a conformant foreign
-  // CWT may carry none and a presence default of "required" would refuse it.
+  // RFC 9596 §2.
   defaultTypPresence: "optional",
 
-  // The COSE claims read has never required an `iss`, and nothing yet says it
-  // should — see the note on `TokenWire.issuerPresence`.
+  // See the note on `TokenWire.issuerPresence`.
   issuerPresence: "optional",
 
   encryptedFormat: "cwe",
 
-  // A COSE_Encrypt0 over an opaque CWS has never been readable here (the claims
-  // decoder refuses the `+cws` media type), so admitting one would be a new
-  // capability rather than a repair.
+  // No `cws`: the claims decoder refuses the `+cws` media type.
   encryptedInner: ["cwt", "cwm"],
 
   // What a COSE_Encrypt0 declares over each nested token it can seal, so the read
-  // side reconstructs the plaintext to the inner BYTES rather than to the
-  // inferred octet blob.
+  // side reconstructs the plaintext to the inner BYTES rather than an octet blob.
+  // BOTH claims structures answer `application/cwt` — a COSE_Mac0 CWT is a CWT
+  // (RFC 8392 §7.1, RFC 8392 §9.2).
   //
-  // ⚠ BOTH claims structures answer `application/cwt` (RFC 8392 §9.2), and that
-  // is not a shortcut: RFC 8392 §7.1 step 4 defines a CWT as the Message secured
-  // by a COSE_Sign1 *or* a COSE_Mac0 ("Else, if the CWT is MACed, create a
-  // COSE_Mac/COSE_Mac0 object using the Message as the … Payload"), and
-  // Appendix A.4 is titled "Example MACed CWT". A COSE_Mac0 CWT IS a CWT, so the
-  // registered CWT media type describes it exactly.
-  //
-  // There is deliberately NO `cws` entry, and for two reasons that hold on their
-  // own:
-  //
-  //  1. `encryptedInner` above admits only `cwt` and `cwm`, so a COSE_Encrypt0
-  //     from this wire can never seal a CWS. An entry here would declare a cty
-  //     for a nesting that cannot be built.
-  //  2. RFC 9052 §11.3.1 registers `application/cose` PLAIN, with `cose-type` an
-  //     OPTIONAL parameter — the qualified `application/cose;
-  //     cose-type="cose-sign1"` spelling belongs to Table 2, the CoAP
-  //     Content-Formats registry, which is a different registry. And §2 makes the
-  //     parameter's absence meaningful rather than free: "The parameter is
-  //     OPTIONAL if the tagged version of the structure is used. The parameter is
-  //     REQUIRED if the untagged version of the structure is used." So a bare
-  //     `application/cose` leaves the structure ambiguous unless the tag carries it.
-  //
-  // A gap is honest where an invented media type is not.
+  // ⚠ No `cws` entry: `encryptedInner` above admits only `cwt`/`cwm`, so this wire
+  // can never seal a CWS — and no unambiguous media type exists to declare for one
+  // (RFC 9052 §11.3.1). A gap is honest where an invented media type is not.
   nestedTokenCty: {
     cwt: "application/cwt",
     cwm: "application/cwt",
@@ -154,9 +116,8 @@ export const COSE_TOKEN_WIRE: TokenWire = {
 
   profileTyp: (typ: TokenProfileTyp) => coseTyp(typ),
 
-  // ⚠ The profile, and only the profile. A caller's explicit `typ` and the
-  // content's own `tokenType` have never reached the COSE mint; that gap is
-  // recorded, not closed here.
+  // ⚠ The profile only — a caller's explicit `typ` and the content's own
+  // `tokenType` do not reach the COSE mint. See `TokenWire.mintTypPrefix`.
   mintTypPrefix: ({ profile, format }) => extractTypPrefix(coseTyp(profile.typ), format),
 
   assertedTyp: (tokenType) =>
@@ -168,12 +129,8 @@ export const COSE_TOKEN_WIRE: TokenWire = {
     const { payload, protectedHeader, unprotectedHeader, custom } = decodeCwtWire(bytes);
     const format = coseFormatOf(decoded.cose);
 
-    // The structural invariants a CWT must satisfy to be READ as one — the twin
-    // of the JOSE keyless read's pair, and here for the same reason: a keyless
-    // parse checks no signature, but it still has to refuse a token whose own
-    // envelope is malformed, because everything downstream reads it as a CWT.
-    // Same shape as `verifyCwt`'s gate, one word apart — that path is about to
-    // check a signature and says "verified", this one says "parsed".
+    // A keyless parse checks no signature but still refuses a malformed envelope —
+    // the same gate `verifyCwt` runs, worded "parsed" rather than "verified".
     assertWireTyp({
       typ: decoded.typ,
       accept: ["application/cwt"],
@@ -181,16 +138,15 @@ export const COSE_TOKEN_WIRE: TokenWire = {
       presence: "optional",
       error: ERROR_BY_FORMAT[format],
       code: `${format}_invalid_typ`,
-      // Derived alongside the code, so a COSE_Mac0 reads as a CWM here too —
-      // `coseFormatOf` above resolves `cwm` on this very path.
+      // Derived alongside the code, so a COSE_Mac0 reads as a CWM here too
+      // (`coseFormatOf` above).
       title: `${format.toUpperCase()} Invalid Typ`,
       details:
         "Header typ is present but is not CWT or a <type>+cwt media type, so the token cannot be parsed as a CWT.",
     });
 
-    // `crit` off the PROTECTED bucket alone — the only one a signature covers and
-    // the only one RFC 9052 §3.1 permits it in.
-    // The header AS WRITTEN — see `written-header.ts` and the JOSE twin.
+    // `crit` off the PROTECTED bucket alone — the only one a signature covers
+    // (RFC 9052 §3.1) — and the header AS WRITTEN (`written-header.ts`).
     const written = writtenHeader(protectedHeader, custom.protected);
 
     const critError = validateCrit(written);
@@ -199,8 +155,7 @@ export const COSE_TOKEN_WIRE: TokenWire = {
         code: `${format}_invalid_crit`,
         // ⚠ `written`, not the typed bag — a foreign CWT carrying a tstr `"crit"`
         // and no integer label 2 reaches exactly the `{ crit: undefined }` this
-        // avoids, while the message names the member. Same value the JOSE twin
-        // and `reject-unknown-critical.ts` report.
+        // avoids. Same value the JOSE twin reports.
         data: { crit: written.crit },
         title: `${format.toUpperCase()} Invalid Crit`,
         details:
@@ -210,8 +165,8 @@ export const COSE_TOKEN_WIRE: TokenWire = {
 
     return {
       format,
-      // The COSE claim codec decodes temporal claims to `Date`s inside the kit,
-      // so the wire payload and the matcher payload are the same object here.
+      // The COSE claim codec decodes temporal claims to `Date`s inside the kit, so
+      // the wire payload and the matcher payload are the same object here.
       wire: payload,
       matcher: payload,
       protectedHeader,
@@ -224,8 +179,7 @@ export const COSE_TOKEN_WIRE: TokenWire = {
     const decoded = decodeCwt(bytes);
 
     // Verifier-declared issuer wins; else the CWT's own UNVERIFIED `iss` (a
-    // COSE_Sign1/Mac0 payload is cleartext CBOR); else unscoped. Narrowing only —
-    // the same contract the JOSE path uses.
+    // COSE_Sign1/Mac0 payload is cleartext CBOR); else unscoped. Narrowing only.
     const kryptos = await deps.resolveVerifyKey({
       id: decoded.kid,
       algorithm: undefined,
@@ -258,9 +212,8 @@ export const COSE_TOKEN_WIRE: TokenWire = {
       matcher: payload,
       protectedHeader,
       unprotectedHeader,
-      // The protected-header alg the kit has already refused to accept unless it
-      // equals the resolved key's own (`cwt_algorithm_mismatch` /
-      // `cwm_algorithm_mismatch`) — the COSE twin of the JOSE cross-check.
+      // The protected-header alg the kit already refuses unless it equals the
+      // resolved key's own (`cwt_algorithm_mismatch` / `cwm_algorithm_mismatch`).
       algorithm: decoded.algorithm as KryptosAlgorithm,
     };
   },
@@ -280,9 +233,9 @@ export const COSE_TOKEN_WIRE: TokenWire = {
     };
   },
 
-  // The WRITE side selects the kit by the explicit FORMAT, not by the resolved
-  // key's class: the kit's own class gate is then the backstop, so `format: "cwt"`
-  // with a symmetric key throws instead of silently MAC-ing.
+  // The WRITE side selects the kit by the explicit FORMAT, not by the resolved key's
+  // class — the kit's own class gate is the backstop, so `format: "cwt"` with a
+  // symmetric key throws instead of silently MAC-ing.
   signClaims: ({ kryptos, deps, common, format, ...options }) => {
     const wireClaims = domainToWire(common, coseName);
 
@@ -315,12 +268,9 @@ export const COSE_TOKEN_WIRE: TokenWire = {
   signOpaque: ({ deps, payload, key, ...options }) =>
     rawSignCose({ input: { payload, key, ...options }, deps }),
 
-  // ONE door. The content reaches the kit AS THE TYPE THE CALLER PASSED — a
-  // string stays a string, so the kit's codec answers `text/plain` and `decrypt`
-  // reconstructs the string; a Dict is serialised under its own literal keys.
-  // There is no second claims door to select between: an encrypt seals the value
-  // it was given, and a `{ iss: "x" }` that was never declared a claims set must
-  // not have its keys promoted to RFC 8392 integer labels a foreign reader trusts.
+  // ONE door. The content reaches the kit AS THE TYPE THE CALLER PASSED, so a
+  // `{ iss: "x" }` that was never declared a claims set does not have its keys
+  // promoted to RFC 8392 integer labels a foreign reader trusts.
   //
   // ⚠ A NESTED token's cty rides `options.header.cty`, resolved from
   // `nestedTokenCty` above the seam by whichever entry point sealed the token.
@@ -337,8 +287,6 @@ export const COSE_TOKEN_WIRE: TokenWire = {
   decrypt: async ({ token, deps, key, crit }) => {
     const bytes = Buffer.from(token, "base64url");
 
-    // The SHARED wire→domain translation, the same one the verify and parse
-    // paths run: both buckets in, one canonically merged domain header out.
     const header = coseEncryptDomainHeader(bytes);
 
     // The CWE (COSE_Encrypt0) outer resolves UNSCOPED — its claims sit behind the
@@ -350,10 +298,9 @@ export const COSE_TOKEN_WIRE: TokenWire = {
       key,
     );
 
-    // The plaintext, reconstructed by the cty on the PROTECTED bucket — which is
-    // the COSE_Encrypt0's AAD, so a tampered declaration fails the AEAD rather
-    // than steering the read. Reported verbatim: there is no second door to route
-    // to and nothing about the value is re-interpreted here.
+    // The plaintext, reconstructed by the cty on the PROTECTED bucket — the AEAD's
+    // AAD (RFC 9052 §5.3), so a tampered declaration fails the AEAD rather than
+    // steering the read. Reported verbatim.
     return {
       header,
       payload: decryptCose<TokenContent>({
@@ -369,9 +316,7 @@ export const COSE_TOKEN_WIRE: TokenWire = {
 
   decodeToken: (token) => Buffer.from(token, "base64url"),
 
-  // A COSE token's native form is its BYTES, so a Buffer plaintext re-serialises
-  // to the base64url string every aegis COSE surface speaks. A reconstructed
-  // object is not a token and yields nothing.
+  // A COSE token's native form is its BYTES; a reconstructed object is not a token.
   encodeToken: (content) =>
     isBuffer(content)
       ? content.toString("base64url")

@@ -2,21 +2,17 @@ import type { KryptosAlgClass } from "@lindorm/kryptos";
 import type { CoseError } from "../../errors/index.js";
 import { COSE_TAG } from "./structures.js";
 
-/** The COSE integrity structure a signed token can carry (RFC 9052 §4.4 / §6.3). */
+/** The COSE integrity structure a signed token can carry. */
 export type CoseStructureTag = typeof COSE_TAG.sign1 | typeof COSE_TAG.mac0;
 
 /**
- * The COSE integrity split (RFC 9052), decided by the KEY's `algClass` and
- * nothing else: an asymmetric key produces a COSE_Sign1 (tag 18) over
- * `Sig_structure`, a symmetric `oct` key a COSE_Mac0 (tag 17) over
- * `MAC_structure` — HMAC is a MAC algorithm, never a Sign1 signature.
+ * The COSE integrity split, decided by the KEY's `algClass` and nothing else: an
+ * asymmetric key gives a COSE_Sign1 over `Sig_structure` (RFC 9052 §4.4), a
+ * symmetric `oct` key a COSE_Mac0 over `MAC_structure` (RFC 9052 §6.3).
  *
- * Three sites asked this same question with three copies of the same switch (the
- * opaque signer's `sign` and `verify`, and the claims-kit dispatch), each
- * carrying a byte-identical `cose_unhandled_alg_class` throw. The throw is
- * unreachable — `KryptosAlgClass` is a closed two-member union, so it is the
- * compiler backstop — but `error` and `details` stay caller-supplied because each
- * site answers under its own leaf class and in its own words.
+ * ⚠ The `cose_unhandled_alg_class` throw is unreachable — `KryptosAlgClass` is a
+ * closed two-member union, so it is the compiler backstop. `error` and `details`
+ * stay caller-supplied because each site answers under its own leaf class.
  */
 export const coseStructureTag = ({
   algClass,

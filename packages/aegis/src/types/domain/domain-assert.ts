@@ -56,8 +56,8 @@ export type DomainTokenMatchers = {
  * The hash-DERIVE matchers — VERIFY-ONLY, and structurally so.
  *
  * Each names the RAW value whose SHA left half must equal the token's
- * `at_hash` / `c_hash` / `s_hash` (OIDC Core §3.1.3.6 and §3.3.2.11, and the
- * financial-grade `s_hash`). The source is HASHED with the token's own signing
+ * `at_hash` / `c_hash` / `s_hash` (OIDC Core §3.1.3.6, OIDC Core §3.3.2.11,
+ * FAPI 1.0 Part 2 §5.1.1). The source is HASHED with the token's own signing
  * algorithm, never compared literally — so the matcher key deliberately differs
  * from the claim it lands in.
  *

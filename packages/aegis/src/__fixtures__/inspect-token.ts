@@ -13,8 +13,8 @@ import { decode, Tag } from "cbor2";
  * SELF-CONSISTENT and nothing more: a mint bug and a read bug that mirror each
  * other round-trip perfectly. This package has already produced a wire-format
  * defect of exactly that shape — `crit` members written as JOSE text NAMES while
- * the parameters they named were keyed by INTEGER label, a message RFC 9052 §3.1
- * calls "a fatal error in processing" and a round trip calls fine.
+ * the parameters they named were keyed by INTEGER label — fatal to a conformant
+ * reader (RFC 9052 §3.1) and fine to a round trip.
  *
  * ⚠ EVERYTHING IS REPORTED IN THE WIRE'S OWN VOCABULARY: raw COSE labels (`7`,
  * `-70000`) and raw JOSE names (`jti`, `oid`) — never the domain names aegis
@@ -26,8 +26,8 @@ import { decode, Tag } from "cbor2";
  */
 
 /**
- * A COSE map key. RFC 9052 §1.5 defines `label = int / tstr`, so the integer `4`
- * and the text string `"4"` are DIFFERENT labels and are reported apart.
+ * A COSE map key — an int or a tstr (RFC 9052 §1.5), so the integer `4` and the
+ * text string `"4"` are DIFFERENT labels and are reported apart.
  */
 export type CoseLabel = number | string;
 
@@ -64,11 +64,9 @@ export type JoseInspection = {
   /** The decoded protected header object, JOSE-NAME-keyed (`alg`, `typ`, `kid`). */
   protectedHeader: Dict;
   /**
-   * ALWAYS `undefined`, and stated rather than omitted. RFC 7515 §7.1: "Only one
-   * signature/MAC is supported by the JWS Compact Serialization and it provides
-   * no syntax to represent a JWS Unprotected Header value." A JOSE compact token
-   * has no such bucket, so an empty object here would be a fabrication — and a
-   * truthy one.
+   * ALWAYS `undefined`, and stated rather than omitted: a JOSE compact token has
+   * no unprotected bucket (RFC 7515 §7.1), so an empty object here would be a
+   * fabrication — and a truthy one.
    */
   unprotectedHeader: undefined;
   /** The decoded payload object, JOSE-NAME-keyed — or why it cannot be read. */

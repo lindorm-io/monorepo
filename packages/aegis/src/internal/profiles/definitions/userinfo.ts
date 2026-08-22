@@ -2,9 +2,8 @@ import { defineProfile } from "../define-profile.js";
 import { ISSUER_IS_URI } from "./rule-predicates.js";
 
 /**
- * Signed UserInfo response JWT (OIDC Core §5.3.2 — no `typ` mandated).
- * REQUIRED: iss, sub, aud. Server-signed; confidential-client `HS*` permitted;
- * encryptable.
+ * Signed UserInfo response JWT — OIDC Core §5.3.2, which mandates no `typ`.
+ * Server-signed; confidential-client `HS*` permitted; encryptable.
  */
 export const userinfoProfile = defineProfile({
   name: "userinfo",

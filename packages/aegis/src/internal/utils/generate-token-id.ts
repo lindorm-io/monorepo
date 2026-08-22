@@ -14,14 +14,9 @@ import { B64U } from "../constants/format.js";
  * Implementation: 15 bytes of CSPRNG output, base64url-encoded without
  * padding. This gives 120 bits of entropy in exactly 20 characters.
  *
- * Why 15 bytes:
- * - RFC 7519 §4.1.7 requires only collision resistance for jti ("negligible
- *   probability that the same value will be accidentally assigned"), not
- *   guess resistance. 120 bits gives a birthday bound at ~2^60 tokens,
- *   which is astronomically safe for any realistic issuance rate.
- * - Within 2 bits of UUID v4's 122 random bits, so functionally equivalent
- *   to what Keycloak, ORY Hydra, and most OAuth providers use for jti.
- * - 20 characters is ~26% shorter on the wire than 20-byte variants.
+ * Why 15 bytes: `jti` needs collision resistance rather than guess resistance
+ * (RFC 7519 §4.1.7), and 120 bits puts the birthday bound at ~2^60 tokens — two
+ * bits short of a UUID v4, in 20 characters instead of 36.
  *
  * Note on scope: `jti` is not an authenticating secret — the token's
  * signature provides authentication, not knowledge of the jti. If you

@@ -15,13 +15,9 @@ import { isClaimSatisfied } from "./rules/is-claim-satisfied.js";
 
 /**
  * Assemble the unified domain result for a VERIFIED or PARSED claims token, on
- * either wire. It was two builders, one per wire, and they diverged in three
- * ways: the COSE one merged the two header buckets with no allowlist at all,
- * recovered the token type through its own translation, and enforced no issuer
- * gate where the JOSE one did. Only the last is a real per-wire fact, and it is a
- * PARAMETER here; the other two are now one shared translation
- * (`domainTokenHeader`), which merges the buckets under the header registry's
- * `placement` allowlist.
+ * either wire. The one genuine per-wire fact is the issuer gate, which is a
+ * PARAMETER here; the header translation is shared (`domainTokenHeader`, which
+ * merges the buckets under the header registry's `placement` allowlist).
  *
  * `delegation` is narrowed to REQUIRED on the way out: a claims-bearing token
  * always has an act summary (an absent `act` yields `isDelegated: false`, not
@@ -61,11 +57,9 @@ export const buildTokenResult = <C extends Dict = Dict>({
    * ⚠ It IS merged into the one domain header, and the merge is what keeps a
    * parameter nothing covers from reading as though the issuer had signed it:
    * `domainTokenHeader` admits only the parameters the header registry declares
-   * placeable there (`kid`, `iv` — the COSE routing and AEAD infrastructure), and
-   * the protected bucket overwrites them. Everything a verifier decides by is
-   * `placement: "protected"` and cannot enter this way at all. Reporting the two
-   * apart instead put COSE wire vocabulary on a surface that speaks neither wire,
-   * and left every JOSE result with a field that could never be populated.
+   * placeable there (`kid`, `iv`), and the protected bucket overwrites them.
+   * Everything a verifier decides by is `placement: "protected"` and cannot enter
+   * this way at all.
    */
   unprotectedHeader: Partial<WireTokenHeader> | undefined;
   token: string;
@@ -75,19 +69,16 @@ export const buildTokenResult = <C extends Dict = Dict>({
   /**
    * Whether this wire's read REQUIRES an `iss` claim.
    *
-   * ⚠ PRESERVED DIVERGENCE, not a design: the JOSE read has always refused a
-   * claims token with no non-empty string `iss`, and the COSE read has always
-   * accepted one. Making them agree is a policy change with no probe behind it,
-   * so the difference is stated here as data — one boolean to flip — rather than
-   * left implicit in two functions.
+   * ⚠ The wires DIVERGE: the JOSE read refuses a claims token with no non-empty
+   * string `iss`, the COSE read accepts one. Stated here as data — one boolean to
+   * flip — rather than left implicit in two functions.
    */
   issuerPresence: "required" | "optional";
 }): VerifiedToken<C> & { delegation: TokenDelegation } => {
-  // `iss` must be a NON-EMPTY string. Not a URI: this gate also reads RFC 7523
-  // client assertions, whose `iss` is the client_id (an opaque string, not a
-  // URL/URN). The platform-issuer exact match is enforced by the profile floor.
-  // NON-EMPTY is the demand notion, spelled as the rules layer spells it rather
-  // than as a hand-written length test — one question, one name.
+  // `iss` must be a NON-EMPTY string, not a URI: an assertion's `iss` is an
+  // opaque `client_id` (RFC 7523 §3). The platform-issuer exact match is enforced
+  // by the profile floor. NON-EMPTY is the demand notion, spelled as the rules
+  // layer spells it rather than as a hand-written length test.
   if (
     issuerPresence === "required" &&
     !(isString(wire.iss) && isClaimSatisfied(wire.iss))

@@ -8,10 +8,10 @@ export type Encrypt0Segments = {
   /** The protected header byte string — the AAD input, so it travels raw. */
   protectedBstr: Uint8Array;
   /**
-   * The unprotected bucket AS CBOR DECODED IT. Deliberately `unknown`: nothing
-   * has checked it is a map, and the two read paths answer that differently —
-   * `decode` narrows with `instanceof Map`, `decrypt` reads the IV straight off
-   * it. Typing it as a `Map` here would only move the unchecked assertion.
+   * The unprotected bucket AS CBOR DECODED IT. ⚠ `unknown` on purpose: nothing has
+   * checked it is a map, and the two read paths answer that differently — `decode`
+   * narrows with `instanceof Map`, `decrypt` reads the IV straight off it. Typing
+   * it as a `Map` would only move the unchecked assertion.
    */
   unprotected: unknown;
   /** The COSE ciphertext, which is `ciphertext ‖ tag`. */
@@ -20,11 +20,11 @@ export type Encrypt0Segments = {
 
 /**
  * Decode a CWE token to the COSE_Encrypt0 segments, or refuse it. The outer CWT
- * tag (61) is stripped, so a token another producer did not envelope reads too.
+ * tag is stripped, so an un-enveloped token reads too.
  *
- * This is the ONE opening both `CweKit.decrypt` and `CweKit.decode` share; the
- * IV read, the tag split and the AEAD stay with `decrypt`, because `decode` must
- * keep reading a header-only COSE_Encrypt0 that carries neither.
+ * The ONE opening `CweKit.decrypt` and `CweKit.decode` share. The IV read, the tag
+ * split and the AEAD stay with `decrypt`, because `decode` must keep reading a
+ * header-only COSE_Encrypt0 that carries neither.
  */
 export const splitEncrypt0 = (token: Buffer): Encrypt0Segments => {
   const [protectedBstr, unprotected, coseCiphertext] = requireCose(decodeCbor(token), {

@@ -23,15 +23,15 @@ import { CwtKit } from "./CwtKit.js";
  * ONE CLAIMS ENCODING FOR THE COSE CLAIMS WIRES — AND THE ENCRYPTED WIRE IS NOT
  * ONE OF THEM.
  *
- * RFC 8392 §7.1 step 2 makes the Message "the binary representation of the CWT
- * Claims Set", and step 4 hands the same Message to a COSE_Sign1 and a COSE_Mac0
- * as their Payload. Those are the wires with an AUTHOR: a claim is a statement
+ * A CWT's Message is the binary CWT Claims Set, handed to a COSE_Sign1 or a
+ * COSE_Mac0 as its Payload — RFC 8392 §7.1. Those are the wires with an AUTHOR:
+ * a claim is a statement
  * someone signed, so the registered integer labels — which tell a conformant
  * reader "this is an issuer" — belong exactly where a signature backs them.
  *
- * ⚠ A COSE_Encrypt0 written by aegis carries NO claims Message, and step 4's
- * third case (a CWT sealed as a COSE_Encrypt0) is deliberately not a thing
- * `aegis.encrypt` produces. That verb is pure confidentiality: it seals the value
+ * ⚠ A COSE_Encrypt0 written by aegis carries NO claims Message: a CWT sealed as
+ * a COSE_Encrypt0 (RFC 8392 §7.1) is deliberately not a thing `aegis.encrypt`
+ * produces. That verb is pure confidentiality: it seals the value
  * it is handed and returns it unchanged, so it has no authority to promote an
  * arbitrary `{ iss: … }` to label 1, where every conformant COSE reader would
  * take it for an asserted issuer. Sealing a CWT is still available and is what
@@ -40,10 +40,9 @@ import { CwtKit } from "./CwtKit.js";
  *
  * ⚠ THE CORPUS CANNOT SEE ANY OF THIS. A COSE_Encrypt0's plaintext is ciphertext
  * on the wire, so a total re-encoding of the claims — every registered claim
- * moved from its integer label to its wire string name — showed up in the frozen
- * corpus as a seven-character token-length delta and nothing else. It reached
- * HEAD that way. These rows read the plaintext, which is the only place the
- * encoding is legible.
+ * moved from its integer label to its wire string name — shows up in the frozen
+ * corpus as a token-LENGTH delta and nothing else. These rows read the
+ * plaintext, which is the only place the encoding is legible.
  *
  * The reader below is INDEPENDENT of `src/internal/`: raw `cbor2` for the
  * structure, the RFC 9052 §5.3 `Enc_structure` spelled out here for the AAD, and
@@ -179,8 +178,8 @@ describe("the COSE claims Message is one encoding across the claims wires", () =
 
       // The load-bearing row. Asserting integer labels on one wire alone would
       // still pass if the two drifted in some other way; equal bytes is the
-      // property RFC 8392 §7.1 step 4 actually states — one Message, whichever
-      // COSE structure carries it.
+      // property — one Message, whichever COSE structure carries it.
+      // RFC 8392 §7.1.
       expect(signed).toEqual(maced);
     });
 
@@ -201,8 +200,8 @@ describe("the COSE claims Message is one encoding across the claims wires", () =
       expect(interoperable.get("email")).toBe(WIRE_CLAIMS.email);
       expect(onPlatform.has("email")).toBe(false);
 
-      // RFC 8392 §9.1 marks Claim Keys "less than -65536" as Private Use, which
-      // is where every claim aegis labels beyond the registered ones sits.
+      // A Claim Key below -65536 is Private Use (RFC 8392 §9.1.1), which is where
+      // every claim aegis labels beyond the registered ones sits.
       const label = [...onPlatform.keys()].find(
         (candidate) => isNumber(candidate) && candidate < -65536,
       );
@@ -247,11 +246,10 @@ describe("the COSE claims Message is one encoding across the claims wires", () =
   });
 
   describe("an OPAQUE payload of the same shape", () => {
-    // ⚠ READ AS JSON, not as CBOR. The opaque door briefly serialised a
-    // structured value in the CBOR family, which put it on the same encoding the
-    // (now deleted) claims door used, so the two were indistinguishable to a
-    // reader. Every opaque door on both wires uses the `json` family, so the
-    // keys below survive in JSON.
+    // ⚠ READ AS JSON, not as CBOR. Every opaque door on both wires uses the
+    // `json` family, so the keys below survive in JSON. Serialising a structured
+    // value in the CBOR family instead would make an opaque payload
+    // indistinguishable from a claims one to a reader.
     test("keeps its literal keys through an encrypted wire", () => {
       const key = encryptionKey();
       const bytes = plaintextOf(
@@ -320,7 +318,7 @@ describe("the COSE claims Message is one encoding across the claims wires", () =
 
     // `proprietary` still reaches the ENCRYPTION REGISTRATION gate (that is what
     // its knob probe proves, by refusing an unregistered cipher without it); it
-    // no longer reaches a claim codec, because this verb writes no claims. So the
+    // does not reach a claim codec, because this verb writes no claims. So the
     // plaintext must be identical either way — a difference here would mean the
     // claim codec had found its way back onto this path.
     test("does not let proprietary reach the plaintext at all", async () => {
@@ -407,11 +405,11 @@ describe("the COSE claims Message is one encoding across the claims wires", () =
     };
 
     test("writes `cnf` as a COSE key map under INTEGER members, not the JOSE object", async () => {
-      // RFC 8747 §3.1 Table 1 gives the `cnf` members their keys — `kid` is 3,
-      // value type "binary string" (§3.4 shows the form); the `cnf` claim key 8
-      // itself is registered in §7.1. The JOSE form aegis was handed is a text
-      // key with a text value, so the two are distinguishable without asking
-      // aegis anything.
+      // The `cnf` members carry integer keys — `kid` is 3, valued as a byte
+      // string (RFC 8747 §3.1, RFC 8747 §3.4) — and the `cnf` claim key 8 is
+      // registered at RFC 8747 §7.1. The JOSE form aegis is handed is a text key
+      // with a text value, so the two are distinguishable without asking aegis
+      // anything.
       const map = await rawClaimsMap({
         iss: RAW_ISSUER,
         sub: "user-1",
@@ -457,7 +455,7 @@ describe("the COSE claims Message is one encoding across the claims wires", () =
       const interoperable = (await rawClaimsMap(claims, false)).get("act");
       const compact = (await rawClaimsMap(claims, true)).get("act");
 
-      // RFC 8693 §4.1 names the members `sub`/`iss`/`aud`/`client_id`; an
+      // The actor members are `sub`/`iss`/`aud`/`client_id` (RFC 8693 §4.1); an
       // interoperable token keys them by those strings.
       expect(interoperable).toBeInstanceOf(Map);
       expect((interoperable as Map<unknown, unknown>).get("sub")).toBe("actor-1");

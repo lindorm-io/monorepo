@@ -2,13 +2,12 @@ import { defineProfile } from "../define-profile.js";
 
 /**
  * Delegation designation — `delegation+jwt`. ⚠ NO SPECIFICATION DEFINES THIS
- * PROFILE: it is lindorm's own, which is why nothing is cited here and why its
- * shape is decided by the definition below rather than derived from a document.
+ * PROFILE: it is lindorm's own, which is why nothing is cited and why the
+ * definition below is the whole shape.
+ *
  * The token is signed by the CONSOLE rather than by the authorization server, so
- * the issuer is the requesting client's `client_id` and `issuer: "per-token"`
- * (carried on content, not the platform issuer). REQUIRED: iss, sub, aud, exp,
- * jti (single-use); iat RECOMMENDED. Asymmetric (the client's registered
- * keys); not encryptable.
+ * `issuer: "per-token"` carries the requesting client's `client_id` off content.
+ * Asymmetric (the client's registered keys); not encryptable.
  */
 export const delegationProfile = defineProfile({
   name: "delegation",

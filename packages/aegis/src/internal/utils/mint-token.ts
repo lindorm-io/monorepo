@@ -17,16 +17,9 @@ import { findSensitiveClaims, stripSensitiveClaims } from "./sensitive-content.j
  * assembled and validated, and only then is the token handed to the wire that
  * emits it.
  *
- * It was two encoders sharing a dispatch. What genuinely differed between them:
- * both profile guards were written out twice, the token-type derivation differed
- * (and still does — see `TokenWire.mintTypPrefix`), each resolved its signing and
- * encryption keys in its own order, and the COSE one hardcoded `objectId:
- * undefined` on its result even though the header parameter reached the wire. The
- * claim buckets and the header bag were ALREADY shared by an earlier step; this
- * step did not repair those and must not be read as having done so. What it does
- * add is that everything above `wire.signClaims` is now encoding-neutral by
- * construction: there is no second place left for a rule to be written
- * differently.
+ * ⚠ Everything above `wire.signClaims` is encoding-neutral by construction, so
+ * there is no second place for a rule to be written differently. The one genuine
+ * per-wire difference is the token-type derivation (`TokenWire.mintTypPrefix`).
  */
 export const mintToken = async ({
   name,
@@ -126,12 +119,9 @@ export const mintToken = async ({
     format,
   });
 
-  // The DOMAIN → WIRE assembly, done ONCE above the seam: the header bag is
-  // translated here rather than by each wire (both ran the identical
-  // `domainHeaderToWire` pass, which is duplication sitting exactly where the
-  // drops happened), and every value below is the CALLER's own — no deployment
-  // default is filled in, because the guard reads caller INTENT and a default is
-  // not a request.
+  // The DOMAIN → WIRE assembly, done ONCE above the seam rather than by each
+  // wire. Every value below is the CALLER's own — no deployment default is filled
+  // in, because the guard reads caller INTENT and a default is not a request.
   const signInput: SignClaimsInput = {
     kryptos,
     deps,

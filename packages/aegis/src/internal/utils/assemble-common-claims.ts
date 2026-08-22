@@ -33,11 +33,9 @@ export type AssembleCommonContext = {
  * (`issuer`, `subject`, `expiresAt`…), values are domain-shaped (`Date`s, the
  * domain `confirmation`/`act` objects, computed hash strings).
  *
- * It does NOT encode to any wire format — the wire maps this to wire claims via
- * the ONE registry-driven translator, keyed by its own name selector. This is the
- * structural guard against rebuilding a
- * JOSE-in-CBOR shim: business logic lives here, in domain terms, and translation
- * happens only at the encoder edges.
+ * ⚠ It does NOT encode to any wire format — the wire maps this to wire claims via
+ * the ONE registry-driven translator, keyed by its own name selector. Business
+ * logic lives here, in domain terms; translation happens only at the encoder edges.
  */
 export const assembleCommonClaims = (
   ctx: AssembleCommonContext,
@@ -103,10 +101,8 @@ export const assembleCommonClaims = (
   // `profile`) would otherwise collide with the `content.profile` container
   // object, leaking it onto the wire as a nested `profile` claim.
   //
-  // The two conditions were one three-way `category` before. They are separate
-  // columns now (a sensitive claim is `bucket: "claims"` AND
-  // `sensitivity: "sensitive"`), so this asks for both explicitly rather than
-  // relying on a category that could only say one thing at a time.
+  // ⚠ Both columns are asked explicitly: a sensitive claim is `bucket: "claims"`
+  // AND `sensitivity: "sensitive"`, so neither test alone selects the public set.
   const picked: Dict = {};
   for (const spec of CLAIM_SPECS) {
     if (spec.bucket !== "claims") continue;

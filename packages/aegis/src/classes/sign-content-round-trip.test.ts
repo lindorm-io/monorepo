@@ -187,8 +187,8 @@ describe("what an opaque signature hands back", () => {
   });
 
   /**
-   * `cty` is NOT reserved — RFC 7519 §5.2 and RFC 8392 Appendix A.6 both use it
-   * to declare a NESTED token — so the inferred label is a DEFAULT and a caller
+   * `cty` is NOT reserved — it declares a NESTED token (RFC 7519 §5.2,
+   * RFC 8392 Appendix A.6) — so the inferred label is a DEFAULT and a caller
    * must be able to override it. A wire that stamped the inferred type over a
    * stated one would take the nesting declaration away with it.
    */

@@ -2,10 +2,10 @@ import { describe, expect, test } from "vitest";
 import { AEGIS_PROFILE_WIRE_KEYS } from "./aegis-profile-keys.js";
 
 // Drift guard: AEGIS_PROFILE_WIRE_KEYS is DERIVED from the claim registry
-// (`category: "profile"` -> `spec.jose`). This pins the derived set to the exact
-// wire names it previously carried as a hand-kept list, so a future registry
-// edit (a new profile claim, a category flip, a renamed jose key) can't silently
-// change what parseTokenPayload buckets as profile vs. custom.
+// (`bucket: "profile"` -> `joseName`). This pins the derived set to a frozen
+// wire-name list, so a future registry edit (a new profile claim, a bucket flip,
+// a renamed jose name) can't silently change what parseTokenPayload buckets as
+// profile vs. custom.
 const FROZEN_PROFILE_WIRE_KEYS = [
   "address",
   "email",

@@ -11,8 +11,8 @@ import { CLAIM_SPECS, joseName } from "../claims/claims-registry.js";
 // drift-guard test pins the derived set to the frozen wire-name list, so a
 // registry edit can't silently change what parses as profile.
 //
-// ⚠ THIS SET IS TOP-LEVEL KEYS ONLY, and the nested `address` object's inner
-// keys are not in it and never were.
+// ⚠ THIS SET IS TOP-LEVEL KEYS ONLY: the nested `address` object's inner keys
+// are not in it.
 //
 // The sole consumer, `internal/utils/extract-aegis-profile.ts`, applies a DEEP
 // `camelKeys` to the profile bag it assembles, which does reach inside an
@@ -25,13 +25,8 @@ import { CLAIM_SPECS, joseName } from "../claims/claims-registry.js";
 // through `wireToDomain` first. The flip's wire-keyed branch is exercised only by
 // `extract-aegis-profile.test.ts` calling the function directly.
 //
-// ⛔ An earlier version of this note justified the flip by claiming
-// `extractAegisProfile` receives bags "of unknown provenance … that never passed
-// through the claim translator". That was FALSE and checkable — the
-// introspection/userinfo path is `dictToBuckets -> toBuckets -> wireToDomain ->
-// extractAegisProfile`, i.e. after the translator. It is recorded here because
-// this note exists to be checked, and a plausible-sounding justification is the
-// failure mode it was written to end.
+// The introspection/userinfo path is `dictToBuckets -> toBuckets -> wireToDomain
+// -> extractAegisProfile`, i.e. also after the translator.
 export const AEGIS_PROFILE_WIRE_KEYS: ReadonlySet<string> = new Set(
   CLAIM_SPECS.filter((spec) => spec.bucket === "profile").map(joseName),
 );

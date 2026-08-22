@@ -13,13 +13,11 @@ import { ownEntry } from "./own-entry.js";
 // COSE_Key parameter labels (RFC 9052 §7).
 const KEY = { kty: 1, kid: 2, alg: 3, crv: -1, x: -2, y: -3 } as const;
 
-// AKP (Algorithm Key Pair) key parameter labels (RFC 9964 §5): the raw ML-DSA
-// public key `pub` and 32-byte seed `priv`, both `bstr`. The integer labels
-// (-1/-2) coincide with the EC2/OKP crv/x labels but are kty-scoped, so they
-// carry a different meaning under kty 7.
+// AKP key parameter labels, RFC 9964 §3. ⚠ -1/-2 coincide with the EC2/OKP
+// crv/x labels but are kty-scoped, so they mean something else under kty 7.
 const AKP = { pub: -1, priv: -2 } as const;
 
-// kty labels (JWK kty -> COSE). JWK "EC" is COSE "EC2" (2); "AKP" is 7 (RFC 9964).
+// kty labels, JWK -> COSE. ⚠ JWK "EC" is COSE "EC2" (2), not 1.
 export const KTY_TO_COSE: Readonly<Record<string, number>> = {
   OKP: 1,
   EC: 2,
@@ -58,18 +56,13 @@ const unsupported = (detail: string): never => {
 };
 
 /**
- * An EC2/OKP coordinate off a FOREIGN COSE_Key. RFC 9052 §7.1 types `x` and `y`
- * as `bstr`, and a producer that writes anything else — or nothing — used to
- * reach `Buffer.from(undefined)` here and throw a raw `TypeError` out of the
- * KEYLESS `CwtKit.decode`/`CwmKit.decode` door, outside the structural-refusal
- * standard `internal/cose/decode-cwt-wire.ts` states for it.
+ * An EC2/OKP coordinate off a FOREIGN COSE_Key. RFC 9052 §7.1.
  *
- * ⚠ THE TEXT-STRING CASE WAS NOT A CRASH, WHICH IS WHY THE GUARD TESTS THE TYPE
- * RATHER THAN PRESENCE. `Buffer.from("not-a-bstr")` succeeds as UTF-8, so a `y`
- * written as a tstr was silently re-encoded and handed back as a real
- * coordinate: a confirmation key nobody supplied, on a token a caller may act on.
- * The AKP branch below already guarded `pub` with `instanceof`; this is the same
- * question asked of the other two members of the same function.
+ * ⚠ It tests the TYPE, not presence, and both halves matter. Absent reaches
+ * `Buffer.from(undefined)` and throws a raw `TypeError` out of the keyless
+ * `CwtKit.decode`/`CwmKit.decode` door (see `decode-cwt-wire.ts`); a tstr does
+ * NOT crash — `Buffer.from("not-a-bstr")` succeeds as UTF-8 and hands back a
+ * confirmation key nobody supplied.
  */
 const coordinate = (value: unknown, member: "x" | "y"): Buffer =>
   value instanceof Uint8Array
@@ -77,9 +70,8 @@ const coordinate = (value: unknown, member: "x" | "y"): Buffer =>
     : unsupported(`COSE_Key '${member}' is absent or is not a byte string.`);
 
 /**
- * Convert a JWK to a COSE_Key map (RFC 9052 §7). EC2 and OKP public keys and AKP
- * (RFC 9964 ML-DSA — `pub`, optional `priv` seed) keys are supported; RSA/oct
- * cnf keys are not yet handled.
+ * Convert a JWK to a COSE_Key map (RFC 9052 §7). EC2, OKP and AKP (RFC 9964 §3)
+ * keys only; RSA/oct cnf keys are not handled.
  */
 export const jwkToCoseKey = (jwk: Dict): Map<number, unknown> => {
   // ⚠ `ownEntry`, never `table[key]`: `jwk` is the caller's bag and a JSON body
@@ -95,11 +87,9 @@ export const jwkToCoseKey = (jwk: Dict): Map<number, unknown> => {
     const crvLabel = ownEntry(CRV_TO_COSE, jwk.crv);
     if (crvLabel === undefined) unsupported(`Unknown curve "${jwk.crv}".`);
     key.set(KEY.crv, crvLabel);
-    // ⚠ THE WRITE TWIN OF {@link coordinate}, and it needs its own guard rather
-    // than borrowing that one: here the coordinate is a base64url STRING off the
-    // CALLER's `cnf.jwk`, not a bstr off a token. `B64.toBuffer(undefined)` threw
-    // a raw `TypeError` at mint, so a JWK handed in as `{kty:"EC",crv:"P-256"}`
-    // — public-key shaped, coordinates forgotten — crashed instead of refusing.
+    // ⚠ The write twin of {@link coordinate}, needing its own guard: here the
+    // coordinate is a base64url STRING off the caller's `cnf.jwk`, not a bstr off
+    // a token, so `B64.toBuffer(undefined)` throws a raw `TypeError` at mint.
     if (!isString(jwk.x)) unsupported("EC2/OKP COSE_Key requires an 'x' member.");
     key.set(KEY.x, B64.toBuffer(jwk.x as string, B64U));
 
@@ -122,10 +112,9 @@ export const jwkToCoseKey = (jwk: Dict): Map<number, unknown> => {
 
 /** Convert a COSE_Key map back to a public JWK. */
 export const coseKeyToJwk = (key: Map<number, unknown>): Dict => {
-  // ⚠ EVERY LABEL HERE COMES OFF A FOREIGN TOKEN — a `cnf` COSE_Key reaches this
-  // from `decodeCnf` on any CWT read — so the tables are read through
-  // `ownEntry`, never indexed directly. See own-entry.ts for what a direct index
-  // admitted.
+  // ⚠ Every label here comes off a FOREIGN token — `decodeCnf` reaches this on any
+  // CWT read — so the tables go through `ownEntry`, never a direct index. See
+  // own-entry.ts.
   const kty = ownEntry(COSE_TO_KTY, key.get(KEY.kty));
   if (kty === undefined) unsupported("Unknown COSE_Key kty.");
 
@@ -134,9 +123,8 @@ export const coseKeyToJwk = (key: Map<number, unknown>): Dict => {
   if (kid instanceof Uint8Array) jwk.kid = Buffer.from(kid).toString("utf8");
 
   if (kty === "EC" || kty === "OKP") {
-    // FAIL CLOSED, as `kty` does one line up: a curve label this reader cannot
-    // name is refused rather than written onto the JWK, so a key nobody can
-    // resolve never reaches a caller as a confirmation it might act on.
+    // Fail closed, as `kty` does one line up: an unnameable curve label is refused
+    // rather than written onto the JWK a caller may act on.
     const crv = ownEntry(COSE_TO_CRV, key.get(KEY.crv));
     if (crv === undefined) unsupported("Unknown COSE_Key crv.");
 
@@ -160,19 +148,12 @@ export const coseKeyToJwk = (key: Map<number, unknown>): Dict => {
 };
 
 /**
- * A member that HAS a COSE label and a PRESENT value that cannot be written
- * under it.
+ * A member that HAS a COSE label and a PRESENT value that cannot be written under
+ * it. ⚠ It REFUSES rather than dropping: dropping `{ jwk, kid: 42 }` down to the
+ * key alone mints a token asserting a narrower binding than its author wrote.
  *
- * ⚠ This is a REFUSAL where the code used to drop silently. `cnf.kid = 42` failed
- * the string guard and simply produced no entry, so a `{ jwk, kid: 42 }`
- * confirmation minted with the key alone — a token asserting a binding narrower
- * than the one its author wrote. That is the same silent-PoP-drop the per-member
- * membership filter below was added to close, one level further in.
- *
- * ⚠ PRESENT is the whole scope. A member whose value is `undefined` is ABSENT —
- * that is how absence is spelled here — and never reaches this; the caller
- * supplied nothing, not something broken. `null`, `42` and `"not-a-jwk"` are
- * supplied values, and this is their answer.
+ * ⚠ PRESENT is the whole scope. `undefined` is how absence is spelled here and
+ * never reaches this; `null`, `42` and `"not-a-jwk"` are supplied values.
  */
 const unencodable = (member: CoseCnfMember, detail: string): never => {
   throw new CoseError(`Confirmation member "${member}" cannot be encoded`, {
@@ -201,12 +182,9 @@ const unhandledCnfMember = (member: never, direction: "written" | "read"): never
 /**
  * One member's COSE value, from the JOSE `cnf`.
  *
- * ⚠ It takes the VALUE, not the bag — the twin of `decodeCnfMember` below, and
- * for the same reason. Reading `cnf.jwk` inside `case "jwk"` spells the
- * discriminant and the read SEPARATELY, so a copy-paste that leaves the wrong
- * property name behind compiles and silently encodes the wrong member under the
- * right label. The caller reads `cnf[member]` once; there is nothing left to
- * mismatch.
+ * ⚠ It takes the VALUE, not the bag — as `decodeCnfMember` below does. Reading
+ * `cnf.jwk` inside `case "jwk"` spells the discriminant and the read separately,
+ * so a copy-paste compiles and encodes the wrong member under the right label.
  */
 const encodeCnfMember = (member: CoseCnfMember, value: unknown): unknown => {
   switch (member) {
@@ -216,12 +194,10 @@ const encodeCnfMember = (member: CoseCnfMember, value: unknown): unknown => {
         : unencodable(member, "not a JWK object");
 
     case "kid":
-      // ⚠ MALFORMED only — the shape, not the content. An EMPTY string is a
-      // string and is written as a zero-length bstr, exactly as it always has
-      // been. A special case refusing it briefly lived here and was reverted:
-      // "empty = refused" is a rule for ONE normalisation door applied once, and
-      // enforcing it in this codec put it on the COSE wire alone, which made a
-      // single domain call answer differently per format.
+      // ⚠ Shape only, not content. An EMPTY string is written as a zero-length
+      // bstr: "empty = refused" belongs to one normalisation door applied once,
+      // and enforcing it here binds the COSE wire alone, so one domain call would
+      // answer differently per format.
       return isString(value)
         ? Buffer.from(value, "utf8")
         : unencodable(member, "not a string");
@@ -238,10 +214,9 @@ const decodeCnfMember = (member: CoseCnfMember, value: unknown): unknown => {
       return value instanceof Map ? coseKeyToJwk(value) : undefined;
 
     case "kid":
-      // A zero-length bstr reconstructs to `""`, the value it encodes. It is NOT
-      // normalised to absent: doing so made a foreign `cnf:{"kid":""}` verify on
-      // COSE and be refused on JOSE, which is the read-side twin of the write
-      // divergence the encoder note above records.
+      // A zero-length bstr reconstructs to `""`, not to absent — normalising it
+      // away makes a foreign `cnf:{"kid":""}` verify on COSE and be refused on
+      // JOSE. Read-side twin of the encoder note above.
       return value instanceof Uint8Array
         ? Buffer.from(value).toString("utf8")
         : undefined;
@@ -252,47 +227,32 @@ const decodeCnfMember = (member: CoseCnfMember, value: unknown): unknown => {
 };
 
 /**
- * Encode the JOSE `cnf` to a COSE cnf map (RFC 8747): an embedded public key
- * (`jwk`) -> COSE_Key (label 1), a key id (`kid`) -> kid (label 3). The write door
- * (`domainToWire`) has already mapped the domain confirmation to its JOSE `cnf`
- * member names, so this accepts `{ jwk, kid, jkt, x5t#S256, jku }` (the
- * JOSE cnf), NOT the domain `{ key, keyId, thumbprint }`. The thumbprint-only
- * forms (`jkt`/`x5t#S256`/`jku`) have no COSE cnf representation (jkt ≠ ckt) and
- * are rejected.
+ * Encode the JOSE `cnf` to a COSE cnf map (RFC 8747 §3.1).
  *
- * ⚠ The labels are NOT written here. They come from `COSE_CNF_LABELS`, which is
- * also what derives the capability row, so the set a caller is told is
- * representable and the set this writes are one thing.
+ * ⚠ It takes the JOSE cnf — `{ jwk, kid, jkt, x5t#S256, jku }` — not the domain
+ * `{ key, keyId, thumbprint }`; `domainToWire` has already mapped the names. The
+ * thumbprint-only forms have no COSE cnf representation and are refused.
+ *
+ * ⚠ The labels come from `COSE_CNF_LABELS`, which also derives the capability
+ * row, so what a caller is told is representable and what this writes are one set.
  */
 export const encodeCnf = (cnf: Dict): Map<number, unknown> => {
-  // Refuse PER MEMBER, not per map. The refusal used to fire only when the output
-  // map came out EMPTY, so a MIXED confirmation — a thumbprint alongside a key id
-  // — silently dropped the thumbprint, kept the key id, and minted an UNBOUND
-  // BEARER CWT that verify never asked for a proof of possession for. A token
-  // that claims to be bound but is not is strictly worse than a bearer token,
-  // because the verifier stops asking.
-  // ⚠ `Object.hasOwn`, NOT `in`. `in` walks the PROTOTYPE CHAIN, so
-  // `"constructor" in COSE_CNF_LABELS` is `true` and a caller's `constructor`
-  // member would pass this filter as representable — then never be written by
-  // the loop below, which iterates the table's own keys. With one real member
-  // beside it the map is non-empty, the emptiness guard stays silent, and the
-  // token mints with the member DROPPED: the very defect this filter exists to
-  // close, re-entered through the object literal. A `ReadonlySet` had no such
-  // hole; a plain object does, so the lookup has to say `hasOwn`.
+  // ⚠ Refuse PER MEMBER, not per map: the emptiness guard below stays silent for a
+  // MIXED confirmation, so a thumbprint beside a key id drops and mints an UNBOUND
+  // CWT that verify never asks a proof of possession for.
   //
-  // ⚠ And it filters on the VALUE, not on key presence, so `undefined` means
-  // ABSENT here exactly as it does in the write loop below. A key list reports a
-  // key whatever it holds, so filtering on presence alone made the SAME
-  // `undefined` mean "absent" for `jwk`/`kid` and "present and unrepresentable"
-  // for `jkt`/`x5t#S256`/`jku` — one function, two meanings for one value. A
-  // caller assembling `{ jkt: claim.thumbprint, … }` with no thumbprint supplied
-  // nothing, and there is no member to fail closed over.
-  // ⚠ `Reflect.ownKeys`, and this WAS `Object.keys`, which is own-ENUMERABLE.
-  // The write loop's `Object.hasOwn` includes non-enumerable own keys, so a
-  // non-enumerable own member was neither flagged here nor written there — a
-  // silent drop, since the map still comes out non-empty beside a valid member.
-  // The two lookups have to ask the same question. Symbols are dropped: a symbol
-  // key is not a cnf member name and has no label.
+  // ⚠ `Object.hasOwn`, NOT `in` — `in` walks the prototype chain, so a caller's
+  // `constructor` member passes as representable here and is never written by the
+  // loop below, which is that same silent drop re-entered through the table's
+  // object literal.
+  //
+  // ⚠ It filters on the VALUE, not key presence, so `undefined` means ABSENT here
+  // exactly as in the write loop below — otherwise one `undefined` means "absent"
+  // for `jwk`/`kid` and "present and unrepresentable" for the thumbprint forms.
+  //
+  // ⚠ `Reflect.ownKeys`, not `Object.keys`: the write loop's `Object.hasOwn` sees
+  // non-enumerable own keys, and a member neither flagged here nor written there
+  // drops silently. Symbols have no label and are dropped.
   const unrepresentable = Reflect.ownKeys(cnf)
     .filter((member) => isString(member))
     .filter(
@@ -305,43 +265,27 @@ export const encodeCnf = (cnf: Dict): Map<number, unknown> => {
       data: { members: unrepresentable, supported: [...COSE_CNF_MEMBERS] },
       title: "COSE Confirmation Unsupported",
       details:
-        "Only an embedded key (jwk -> COSE_Key) or kid (-> kid) can go in a COSE cnf; jkt/x5t#S256/jku have no COSE form. A JOSE thumbprint cannot be relabelled as a COSE one — RFC 7638 hashes a key's canonical JSON and RFC 9679 its canonical CBOR, so the same key yields different bytes — so a confirmation this wire cannot carry fails closed rather than being dropped.",
+        "aegis writes only an embedded key (jwk -> COSE_Key) and a kid (-> kid) into a COSE cnf; jkt/x5t#S256/jku have no COSE label here. A JOSE thumbprint cannot be relabelled as a COSE one — one digests a canonical JSON JWK and the other a deterministically encoded COSE_Key, so the same key yields different bytes — so a confirmation this wire cannot carry fails closed rather than being dropped. RFC 7638, RFC 9679 §3.",
     });
   }
 
   const out = new Map<number, unknown>();
 
   for (const member of COSE_CNF_MEMBERS) {
-    // ⚠ ABSENT means `undefined`, not "the key is missing". `undefined` is how
-    // absence is spelled throughout this package — `omitUndefined` is the domain
-    // layer's own tool for it — so `{ jwk: undefined, kid }` is a caller who
-    // supplied no key, and refusing it would reject a confirmation this wire
-    // carries perfectly well. A key-PRESENCE test (`in`) would refuse it, and
-    // only the standalone `CwtKit.sign`/`CwmKit.sign` door can produce that
-    // shape: the domain path builds its cnf through `omitUndefined` already.
-    // ⚠ `undefined` ONLY. An EMPTY string is a supplied value and is written;
-    // "empty = refused" belongs to one normalisation door applied once, not to
-    // this codec, where it would bind the COSE wire alone.
+    // ⚠ ABSENT means `undefined` only — the spelling `omitUndefined` produces — so
+    // `{ jwk: undefined, kid }` is a caller who supplied no key. An EMPTY string is
+    // a supplied value and is written.
     //
-    // `null` is deliberately NOT absent. It is a value, and not one this codec
-    // can write, so it goes to `encodeCnfMember` and is refused.
-    // ⚠⚠ THIS IS THE PACKAGE'S ONE EXCEPTION TO "null IS ABSENCE"
-    // (`internal/claims/is-not-stated.ts`), and it is stated in the presence-notion
-    // table in `internal/utils/rules/index.ts` so it is not a fifth decision
-    // outside the map. It holds only because the TRANSLATOR agrees: when `cnf`
-    // briefly took the null carve-out, the member was erased in `domainToWire`
-    // before this loop ever ran, so the fail-closed guard — the `unrepresentable`
-    // check ABOVE, at the top of this function, not below this line — saw nothing
-    // to report and `mint("cwt", { thumbprint: null, keyId })` minted an UNBOUND
-    // CWT.
-    // A guard that tests `!== undefined` cannot defend a value someone upstream
-    // already turned into `undefined`.
-    // ⚠ `Object.hasOwn` HERE TOO, matching the filter above. The filter reads
-    // `Reflect.ownKeys` (own keys only), so an INHERITED member is never flagged
-    // unrepresentable — and if this loop then read it off the prototype the two
-    // lookups would disagree in the other direction, writing a member the caller
-    // never set on the object. It cannot silently drop, but the two lookups must
-    // answer the same question or one of them is deciding something alone.
+    // ⚠⚠ `null` is NOT absence here, the package's one exception to
+    // `internal/claims/is-not-stated.ts`, recorded in the presence-notion table in
+    // `internal/utils/rules/index.ts`. It holds only while the TRANSLATOR agrees:
+    // give `cnf` the null carve-out in `domainToWire` and the member is erased
+    // before this loop runs, so the `unrepresentable` guard above reports nothing
+    // and `mint("cwt", { thumbprint: null, keyId })` mints an UNBOUND CWT.
+    //
+    // ⚠ `Object.hasOwn` here too, matching the filter above: reading an INHERITED
+    // member off the prototype writes one the caller never set, so the two lookups
+    // must ask the same question.
     if (!Object.hasOwn(cnf, member) || cnf[member] === undefined) continue;
 
     out.set(COSE_CNF_LABELS[member], encodeCnfMember(member, cnf[member]));
@@ -353,7 +297,7 @@ export const encodeCnf = (cnf: Dict): Map<number, unknown> => {
       data: { members: Object.keys(cnf), supported: [...COSE_CNF_MEMBERS] },
       title: "COSE Confirmation Unsupported",
       details:
-        "Only an embedded key (jwk -> COSE_Key) or kid (-> kid) can go in a COSE cnf, and neither was present in a usable shape.",
+        "aegis writes only an embedded key (jwk -> COSE_Key) and a kid (-> kid) into a COSE cnf, and neither was present in a usable shape.",
     });
   }
 
@@ -361,26 +305,20 @@ export const encodeCnf = (cnf: Dict): Map<number, unknown> => {
 };
 
 /**
- * Decode a COSE cnf map back to the JOSE `cnf` shape (`{ jwk, kid }`) — the read
- * twin of {@link encodeCnf}, over the same label table. A MEMBER a foreign
- * producer wrote in a shape this codec cannot read is OMITTED rather than
- * refused: the read side reports what it could recover, and the confirmation is
- * then judged by whoever asked for the binding.
+ * Decode a COSE cnf map back to the JOSE `cnf` shape — the read twin of
+ * {@link encodeCnf}, over the same label table. RFC 8747 §3.1. A MEMBER written
+ * in a shape this codec cannot read is OMITTED, not refused: the read side
+ * reports what it recovered, and whoever asked for the binding judges it.
  *
- * ⚠ THE CONTAINER IS THE EXCEPTION TO THAT, and it takes `unknown` so the guard
- * cannot be cast away at the call site — which is how it was missed. RFC 8747
- * §3.1 makes the `cnf` VALUE a map; the caller (`internal/cose/cwt-spec.ts`) is
- * fed whatever CBOR the token carried, and `preferMap: false` hands back a plain
- * OBJECT for a wholly text-keyed map, so `cnf.get(...)` was not merely a
- * hypothetical. It threw `cnf.get is not a function` — a raw `TypeError` out of
- * the KEYLESS `CwtKit.decode`/`CwmKit.decode` door, which
- * `internal/cose/decode-cwt-wire.ts` says that door does not do.
+ * ⚠ The CONTAINER is the exception, and it takes `unknown` so the guard cannot be
+ * cast away at the call site. `cwt-spec.ts` feeds it whatever CBOR the token
+ * carried, and `preferMap: false` hands back a plain OBJECT for a wholly
+ * text-keyed map — `cnf.get is not a function`, a raw `TypeError` out of the
+ * keyless `CwtKit.decode`/`CwmKit.decode` door (see `decode-cwt-wire.ts`).
  *
- * ⛔ AND IT MUST NOT DEGRADE TO `{}`. Omitting a whole unreadable `cnf` the way a
- * single member is omitted would read a token that DECLARES a confirmation back
- * as an unbound one, so a sender-constrained token would present as a bearer
- * token to every check downstream. The member rule trades a member for what is
- * left; there is nothing left here.
+ * ⛔ It must NOT degrade to `{}`: a token that DECLARES a confirmation would then
+ * read back as unbound, presenting a sender-constrained token as a bearer one to
+ * every check downstream.
  */
 export const decodeCnf = (cnf: unknown): Dict => {
   if (!(cnf instanceof Map)) {
@@ -389,7 +327,7 @@ export const decodeCnf = (cnf: unknown): Dict => {
       data: { claim: "cnf", label: 8 },
       title: "COSE Confirmation Unsupported",
       details:
-        "RFC 8747 §3.1 defines the CWT cnf claim value as a map of confirmation members; this token carries something else, so the binding it declares cannot be read.",
+        "aegis reads a CWT confirmation as a CBOR map of confirmation members; this token carries something else, so the binding it declares cannot be read. RFC 8747 §3.1.",
     });
   }
 

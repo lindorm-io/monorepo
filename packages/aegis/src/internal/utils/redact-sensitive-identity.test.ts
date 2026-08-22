@@ -9,11 +9,10 @@ const NIN = "19900101-1234";
 const SSN = "078-05-1120";
 
 describe("redactSensitiveIdentity — registry drift guard", () => {
-  // The redacted key set is DERIVED from the claim registry (the sensitive
-  // claims whose value is the number string). Pin that derivation to the exact
-  // keys it previously carried as a hand-kept list, so a registry edit (a new
-  // sensitive text claim, a renamed jose key) can't silently change what is
-  // filtered from a logged payload.
+  // The redacted key set is DERIVED from the claim registry (the sensitive claims
+  // whose value is the number string). Pinned against a frozen list so a registry
+  // edit — a new sensitive text claim, a renamed jose key — cannot silently change
+  // what is filtered from a logged payload.
   test("the derived redaction key set equals the frozen number-claim keys", () => {
     const derived = CLAIM_SPECS.filter(
       (spec) => spec.sensitivity === "sensitive" && spec.codec.kind === "text",

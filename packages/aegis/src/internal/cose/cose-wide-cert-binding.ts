@@ -6,25 +6,22 @@ import type { ComputedCertBinding } from "../utils/verify-cert-binding.js";
 import type { CoseLabel } from "./cose-label.js";
 import { parseCoseCertHash } from "./cose-hash-algorithms.js";
 
-/** The COSE header label a `COSE_CertHash` rides under (RFC 9360 §2 `x5t`). */
+/** The COSE header label a `COSE_CertHash` rides under. RFC 9360 §2. */
 const X5T_LABEL = coseByJose("x5t#S256");
 
 /**
  * The `ShaKit` method that recomputes a digest under each algorithm.
  *
- * ⚠ TWO THINGS CARRY THE EXHAUSTIVENESS, and both are load-bearing: the scrutinee
- * is the `ShaAlgorithm` UNION (TS cannot exhaustiveness-check a `string`), and the
- * DECLARED RETURN TYPE excludes `undefined`, so an unhandled member leaves a
- * reachable end and `TS2366` fires. MEASURED both ways: deleting a case fails the
- * build; deleting a case AND widening the return type to `string | undefined`
- * compiles clean.
+ * ⚠ Two things carry the exhaustiveness, both load-bearing: the scrutinee is the
+ * `ShaAlgorithm` UNION (TS cannot exhaustiveness-check a `string`), and the
+ * declared return type excludes `undefined`, so an unhandled member leaves a
+ * reachable end and `TS2366` fires. Widen the return to `string | undefined` and
+ * a missing case compiles clean.
  *
- * ⚠ `header/cose-wire-header.ts#coseValueToWire` reaches the same guarantee by the
- * OTHER route — a `default` binding `const exhaustive: never` — and the reason is
- * visible in its signature: it returns `… | undefined`, so `TS2366` can never fire
- * there and the explicit `never` is the only backstop available (`noImplicitReturns`
- * is off repo-wide). Neither form is the house idiom to the exclusion of the other;
- * which one applies is decided by whether the return type admits `undefined`.
+ * ⚠ `header/cose-wire-header.ts#coseValueToWire` uses the other form — a `default`
+ * binding `const exhaustive: never` — because it returns `… | undefined`, so
+ * `TS2366` can never fire there. Which form applies is decided by whether the
+ * return type admits `undefined`.
  */
 const digestOf = (algorithm: ShaAlgorithm, der: Buffer): string => {
   switch (algorithm) {
@@ -40,60 +37,48 @@ const digestOf = (algorithm: ShaAlgorithm, der: Buffer): string => {
 };
 
 /**
- * RESOLVE A COSE CERTIFICATE BINDING THE DOMAIN HEADER CANNOT CARRY.
+ * RESOLVE A COSE CERTIFICATE BINDING THE DOMAIN HEADER CANNOT CARRY. A conformant
+ * issuer may bind with SHA-384 or SHA-512 (RFC 9360 §2, RFC 9054 §3.2), and JOSE
+ * registers only two thumbprint parameters (RFC 7515 §4.1.7, RFC 7515 §4.1.8), so
+ * `verifyCertBinding` has no string to compare.
  *
- * RFC 9360 §2's `COSE_CertHash = [ hashAlg, hashValue ]` admits any algorithm from
- * the COSE Algorithms registry, and RFC 9054 marks SHA-384 (`-43`) and SHA-512
- * (`-44`) `Recommended: Yes` — so a conformant issuer may bind with either. JOSE
- * registers exactly two thumbprint parameters (RFC 7517 §4.8/§4.9), so neither has
- * a domain header field to travel in and `verifyCertBinding` has no string to
- * compare.
+ * ⭐ The comparison happens HERE, where both halves exist, and what leaves is a
+ * VERDICT rather than a value: this function holds the wire and the key, while
+ * `verifyCertBinding` holds the MODE POLICY and stays wire-agnostic. Routing the
+ * computed digest through `certificateThumbprint` instead reports a SHA-512 digest
+ * under the SHA-256 parameter, RFC 7515 §4.1.8.
  *
- * ⭐ SO THE COMPARISON HAPPENS HERE, WHERE BOTH HALVES EXIST, and what leaves is a
- * VERDICT rather than a value. This function holds the wire (it reads a raw COSE
- * label map) and the key (it hashes the leaf's DER); `verifyCertBinding` holds the
- * MODE POLICY and stays wire-agnostic — it is told whether a binding matched, never
- * how the wire spelled one. Routing the computed digest through
- * `certificateThumbprint` instead would report a SHA-512 digest under a parameter
- * RFC 7515 §4.1.8 defines as SHA-256.
+ * `undefined` where the mode has nothing to decide: no `x5t`, a malformed
+ * `COSE_CertHash`, an algorithm outside `HASH_ALGORITHM`, or one JOSE carries
+ * itself — resolving those twice would be two answers to one question.
  *
- * `undefined` where there is nothing for the mode to decide about: no `x5t`, a
- * malformed `COSE_CertHash`, an algorithm outside `HASH_ALGORITHM`, or one JOSE
- * carries itself — SHA-256 and SHA-1 ride the domain header and are compared as
- * strings by `verifyCertBinding`, so resolving them twice would be two answers to
- * one question.
- *
- * ⚠ THE PROTECTED BUCKET ONLY. A binding the signature (or, for a COSE_Encrypt0,
- * the AAD) does not cover is one any holder could rewrite, so the caller passes
- * the bucket its cryptography authenticated and never the unprotected one.
+ * ⚠ THE PROTECTED BUCKET ONLY. A binding the cryptography does not cover is one
+ * any holder could rewrite.
  */
 export const resolveWideCertBinding = (
   protectedMap: Map<CoseLabel, unknown> | undefined,
   kryptos: IKryptos,
 ): ComputedCertBinding | undefined => {
-  // THE ONE structural parse of RFC 9360 §2's CDDL, shared with the codec —
-  // `cose-hash-algorithms.ts`. `undefined` covers an absent `x5t`, a malformed
-  // `COSE_CertHash`, and an algorithm the table does not carry.
+  // The ONE structural parse of RFC 9360 §2's CDDL, shared with the codec.
   const parsed = parseCoseCertHash(protectedMap?.get(X5T_LABEL));
 
   if (parsed === undefined) return undefined;
 
   const { algorithm, digest } = parsed;
 
-  // A `jose` cell means JOSE carries this digest, so the domain header already has
-  // it and this path must not answer for it too.
+  // A `jose` cell means the domain header already carries this digest, so this
+  // path must not answer for it too.
   if (algorithm.jose !== undefined) return undefined;
 
   const leaf = kryptos.certificate("der")?.chain[0];
 
-  // The binding is asserted and UNPROVABLE — the same state an absent chain puts
-  // a SHA-256 one in, and `verifyCertBinding` owns that policy for both.
+  // Asserted and UNPROVABLE — the same state an absent chain puts a SHA-256 one
+  // in, and `verifyCertBinding` owns that policy for both.
   if (leaf === undefined) return { algorithm: algorithm.name, matches: undefined };
 
   return {
     algorithm: algorithm.name,
-    // `ShaKit` answers base64url, which is the spelling both stored digests use,
-    // so the comparison is between two encodings of the same bytes.
+    // `ShaKit` answers base64url, the spelling both stored digests use.
     matches: digestOf(algorithm.sha, leaf) === Buffer.from(digest).toString("base64url"),
   };
 };

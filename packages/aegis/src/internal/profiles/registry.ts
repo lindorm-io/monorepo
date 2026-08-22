@@ -14,13 +14,12 @@ import { securityEventProfile } from "./definitions/security-event.js";
 import { userinfoProfile } from "./definitions/userinfo.js";
 
 /**
- * The built-in descriptors, in one array — the set every registry is seeded
- * from, and the only place a profile becomes a built-in.
+ * The built-in descriptors, in one array — the set every registry is seeded from,
+ * and the only place a profile becomes a built-in.
  *
- * Exported so a test can ENUMERATE the built-ins rather than restate them: a
- * hand-written list of "every profile that does X" undercounts the moment a
- * twelfth profile lands, and did — a list claiming every profile requiring
- * `audience` held seven of the ten.
+ * ⚠ Exported so a test can ENUMERATE the built-ins rather than restate them: a
+ * hand-written list of "every profile that does X" undercounts the moment another
+ * profile lands.
  */
 export const BUILT_IN_PROFILES: ReadonlyArray<TokenProfile> = [
   accessTokenProfile,
@@ -47,14 +46,12 @@ export type ProfileRegistry = {
 };
 
 /**
- * A profile table belonging to ONE `Aegis`. It was module-global, so a consumer
- * registering a custom profile — or one that shadowed a built-in — changed what
- * every other `Aegis` in the process minted and verified, including ones
- * constructed by an unrelated library. Registration is now scoped to the
- * instance it was called on.
+ * A profile table belonging to ONE `Aegis` — registration is scoped to the instance
+ * it was called on, so a consumer registering a custom profile (or one shadowing a
+ * built-in) cannot change what another `Aegis` in the process mints and verifies.
  *
- * The built-ins are seeded per registry from the SAME frozen descriptors, so
- * they cost one map insertion each and no instance can mutate another's.
+ * The built-ins are seeded per registry from the SAME frozen descriptors, so they
+ * cost one map insertion each and no instance can mutate another's.
  */
 export const createProfileRegistry = (): ProfileRegistry => {
   const registry = new Map<string, TokenProfile>(

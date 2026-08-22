@@ -10,14 +10,13 @@ import type { AegisError } from "../../errors/index.js";
  * accepted only when it is one of the family's exact spellings (`JWT`, `JWS`,
  * `JOSE`, `JWE`, `application/cwt`) or a structured `<type>+<suffix>` of it.
  *
- * This is NOT the typ MATCH check (does the typ equal the one this call
- * expects?), which lives at the call sites that have an expectation, and NOT the
- * typ PRESENCE policy, which is a domain/profile concern — except on the JWE
- * wire, whose decrypt has always REQUIRED a typ. Hence `presence`.
+ * This is NOT the typ MATCH check (does the typ equal the one this call expects?),
+ * which lives at the call sites that have an expectation, and NOT the typ PRESENCE
+ * policy, which is a domain/profile concern — except on the JWE wire, whose
+ * decrypt REQUIRES a typ. Hence `presence`.
  *
- * ⚠ The error is fully caller-supplied because each wire already answers in its
- * own words, under its own leaf error class and its own `<format>_invalid_typ`
- * code. Collapsing those would be a behaviour change; only the PREDICATE is
+ * ⚠ The error is fully caller-supplied: each wire answers in its own words, under
+ * its own leaf error class and `<format>_invalid_typ` code. Only the PREDICATE is
  * shared here.
  */
 export const assertWireTyp = ({
@@ -45,13 +44,10 @@ export const assertWireTyp = ({
 }): void => {
   if (presence === "optional" && typ === undefined) return;
 
-  // ⚠ BEHAVIOUR CHANGE (DEFENSIVE ONLY). The `isString` guard is new: the JwtKit
-  // and CWT call sites used to reach straight for `typ.endsWith(...)`, so a
-  // non-string typ would have thrown a raw `TypeError` rather than this leaf
-  // error. No wire can actually deliver one — the JOSE wires refuse a non-string
-  // typ in `decodeJoseHeader` (`jose_header_typ_invalid`) and the COSE wires
-  // normalise it to `undefined` in `decodeCwt` — so nothing observable changed;
-  // the guard exists so the predicate is answerable for any input it is handed.
+  // The `isString` guard is DEFENSIVE: no wire delivers a non-string typ — the
+  // JOSE wires refuse one in `decodeJoseHeader` (`jose_header_typ_invalid`) and
+  // the COSE wires normalise it to `undefined` in `decodeCwt` — but without it a
+  // bare `typ.endsWith(...)` throws a raw `TypeError` instead of this leaf error.
   if (isString(typ) && (accept.includes(typ) || typ.endsWith(suffix))) return;
 
   throw new error("Invalid token", { code, data: { typ }, title, details });

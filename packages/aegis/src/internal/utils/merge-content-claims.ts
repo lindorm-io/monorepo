@@ -9,12 +9,9 @@ import type { SignContent } from "../../types/index.js";
  * nesting them under a wrapper. Neither bucket has a wire representation; they
  * are a READ-side categorisation of ordinary registered claims.
  *
- * Shared by both encoders, and that is the point. It was two merges: the JOSE
- * encoder folded in `profile` and `sensitive`, the COSE encoder only
- * `sensitive` — so `mint(profile, { profile }, { format: "cwt" })` returned a
- * perfectly valid token with those claims written NOWHERE, while COSE verify
- * went on reading a `profile` bucket back. Silent data loss in both directions
- * at once.
+ * ⚠ Shared by both encoders: a per-wire merge that folds in one bucket and not
+ * the other emits a perfectly valid token with those claims written NOWHERE,
+ * while the read side goes on looking for them.
  *
  * Kept OFF the policy-validated `common` layer on purpose: neither bucket
  * carries profile policy, so they join after `enforcePolicy` has run.

@@ -152,13 +152,13 @@ export class Aegis implements IAegis {
     // a verify-only deployment that declares none.
     this.issuer = options.issuer ?? this.amphora.internal?.issuer ?? null;
 
-    // The two issuer strings are configured SEPARATELY, and since read-side key
-    // selection is scoped by issuer they now have to agree exactly. Amphora
+    // The two issuer strings are configured SEPARATELY, and read-side key
+    // selection is scoped by issuer, so they have to agree exactly. Amphora
     // stamps every key we add with ITS issuer; a token we mint carries THIS one.
-    // A difference that used to be invisible — a trailing slash, a hostname
-    // variant — becomes a hard verify failure on our own tokens, and the error
-    // it produces ("no such key under that issuer") does not point at the cause.
-    // So say it once, loudly, at construction.
+    // A difference — a trailing slash, a hostname variant — is a hard verify
+    // failure on our own tokens, and the error it produces ("no such key under
+    // that issuer") does not point at the cause. So say it once, loudly, at
+    // construction.
     const amphoraIssuer = this.amphora.internal?.issuer;
 
     if (options.issuer && amphoraIssuer && options.issuer !== amphoraIssuer) {
@@ -177,10 +177,9 @@ export class Aegis implements IAegis {
     this.partyRecipient = options.partyRecipient;
 
     // This instance's OWN profile table, seeded with the built-ins. A registry
-    // per Aegis, not per process: `registerProfile` used to write into a
-    // module-global map, so registering a custom profile — or one named after a
-    // built-in — silently redefined what every other Aegis in the process minted
-    // and verified.
+    // per Aegis, not per process: a module-global map would let a custom profile
+    // — or one named after a built-in — silently redefine what every other Aegis
+    // in the process mints and verifies.
     this.profiles = createProfileRegistry();
 
     // The DEPLOYMENT's key policy. Aegis ships no default selector of its own:
@@ -379,15 +378,13 @@ export class Aegis implements IAegis {
           // introspection, userinfo) mints tokens with no exp at all.
           //
           // ⚠ `expPresence` is DERIVED here rather than stood down to "optional"
-          // like `typPresence`, and that asymmetry is deliberate. Standing it
-          // down was tried and reverted: it changes no outcome — both gates
+          // like `typPresence`. Standing it down changes no outcome — both gates
           // resolve `exp` to `Date | undefined` before asking (`withJoseDates`
           // on JOSE, the claim codec on COSE, `toDate` at the floor), so every
           // degenerate `exp` is refused either way — while moving the refusal
           // BEHIND the caller's `assert` matchers, the actor check and the DPoP
-          // checks, so an exp-less token that also fails an `assert` reports
-          // `claims_invalid` instead of `missing_claim_exp`. An order change on
-          // a public path with no coverage to show for it.
+          // checks, so an exp-less token that also fails an `assert` would report
+          // `claims_invalid` instead of `missing_claim_exp`.
           typPresence: "optional",
           expPresence: floor.profile.lifetime === null ? "optional" : "required",
         },
@@ -429,15 +426,15 @@ export class Aegis implements IAegis {
   /**
    * Verify an RFC 9449 DPoP proof STANDALONE — signature over the embedded `jwk`,
    * `typ: dpop+jwt`, the RFC 7638 thumbprint against the token's bound `cnf.jkt`,
-   * the `ath` hash of the presented access token (§7), and `iat` freshness. The
+   * the `ath` hash of the presented access token (RFC 9449 §7), and `iat`
+   * freshness. The
    * same body `aegis.verify` runs for its `dpopProof` option, exposed as a static
    * because it needs no key resolution: the proof carries its own key.
    *
-   * A resource server needs this when the access token is NOT locally verifiable.
-   * RFC 9449 §6.2 conveys the binding via `cnf.jkt` in the introspection response
-   * and has the resource server "validate the access token binding itself
-   * locally", so the same proof check must run whether the thumbprint came from a
-   * verified JWT or from an introspection response.
+   * A resource server needs this when the access token is NOT locally verifiable:
+   * the binding then arrives as `cnf.jkt` in an introspection response
+   * (RFC 9449 §6.2), so the same proof check must run whether the thumbprint came
+   * from a verified JWT or from an introspection response.
    *
    * The request-context claims (`htm`/`htu`) are PARSED, never compared here —
    * aegis does not see the HTTP request. That comparison is the consumer's
@@ -534,12 +531,9 @@ export class Aegis implements IAegis {
    * The throwing layer over {@link Aegis.matches}: throws
    * `AegisDomainError("Invalid token")` naming every failing key.
    *
-   * ⚠ It used to promise a bare `LindormError`, and that promise was the defect:
-   * `AegisError` extends `LindormError`, so the instance failed every
-   * `instanceof AegisError` guard a consumer had written around it. Reversing the
-   * documented contract is deliberate — `instanceof AegisError` is what this
-   * package asks consumers to branch on, and a door that does not honour it is a
-   * door they cannot use.
+   * ⚠ The error is an `AegisDomainError`, never a bare `LindormError`:
+   * `instanceof AegisError` is what this package asks consumers to branch on, and
+   * a door that does not honour it is a door they cannot use.
    */
   static assert(claims: Dict, assert: DomainAssert, options?: AssertOptions): void {
     validate(

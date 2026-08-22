@@ -73,10 +73,10 @@ describe("content-codec", () => {
     });
 
     // ⚠ A READ-ONLY case, and the bytes are therefore produced by `encodeCbor`
-    // rather than by the codec: aegis never WRITES `application/cbor`, so the
-    // only producer of such a payload is a FOREIGN token declaring the media type
-    // RFC 8949 §9.1 registers. Without the case it fell through to the `buffer`
-    // fallback and a caller got bytes where the producer stated an object.
+    // rather than by the codec: aegis never WRITES `application/cbor`, so the only
+    // producer of such a payload is a FOREIGN token declaring the media type
+    // RFC 8949 §9.3 registers. Without the case it falls through to the `buffer`
+    // fallback and a caller gets bytes where the producer stated an object.
     test("a FOREIGN application/cbor payload → the deep-equal native object", () => {
       const original = { a: 1, nested: { b: [2, 3], c: "four" } };
       const bytes = encodeCbor(original);
@@ -108,16 +108,12 @@ describe("content-codec", () => {
     });
 
     /**
-     * `application/jose` is what an outer declares over a nested JWS or JWE —
-     * RFC 7515 §9.2.1 registers it for "a JWS or JWE using the JWS Compact
-     * Serialization or the JWE Compact Serialization".
+     * `application/jose` is what an outer declares over a nested JWS or JWE.
+     * RFC 7515 §9.2.1.
      *
-     * ⚠ BOTH spellings must resolve, and the bare one is the RFC's own preference:
-     * §4.1.10 RECOMMENDS omitting the `application/` prefix when no other `/`
-     * appears, and requires a recipient to "treat it as if 'application/' were
-     * prepended to any 'cty' value not containing a '/'". Reading only the full
-     * form would send a conformant producer's token to the `buffer` fallback,
-     * where a nested token is no longer a token.
+     * ⚠ BOTH spellings must resolve, and the bare one is the RFC's own preference
+     * (RFC 7515 §4.1.10): reading only the full form sends a conformant producer's
+     * token to the `buffer` fallback, where a nested token is not a token.
      */
     test("both spellings of application/jose → the native token STRING", () => {
       const jws = "aaa.bbb.ccc";

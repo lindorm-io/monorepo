@@ -47,8 +47,8 @@ describe("aegis.sign", () => {
   const asDict = (bucket: unknown): Dict =>
     bucket instanceof Map ? (Object.fromEntries(bucket) as Dict) : (bucket as Dict);
 
-  // A COSE_Mac0 is the MACed structure with an implicit key (RFC 9052 §6.2), so
-  // `cwm` is the one claims format that takes a shared secret.
+  // A COSE_Mac0 (RFC 9052 §6.2) is the one claims format that takes a shared
+  // secret.
   const keyFor = (format: ClaimsTokenFormat): typeof TEST_EC_KEY_SIG =>
     format === "cwm" ? TEST_OCT_KEY_SIG : TEST_EC_KEY_SIG;
 
@@ -93,10 +93,9 @@ describe("aegis.sign", () => {
    * EVERY FORMAT THE VERB ACCEPTS, each proved to be the wire it names — read off
    * the BYTES, so a `format` field and the token cannot disagree unnoticed.
    *
-   * `cwm` is the COSE_Mac0 twin of `cwt` and takes a SYMMETRIC key: RFC 9052 §6.2
-   * defines Mac0 as the MACed structure with an implicit key, so a shared secret
-   * is the only thing that can produce one. `cwt` signs a COSE_Sign1 (§4.2), and
-   * both are framed by the CWT tag (RFC 8392 §9.4).
+   * `cwm` is the COSE_Mac0 twin of `cwt` and takes a SYMMETRIC key
+   * (RFC 9052 §6.2); `cwt` signs a COSE_Sign1 (RFC 9052 §4.2). Both are framed by
+   * the CWT tag (RFC 8392 §9.4).
    */
   test.each([
     ["jwt", "jose", 3, undefined],
@@ -170,11 +169,10 @@ describe("aegis.sign", () => {
   /**
    * ⭐ THE DOMAIN → WIRE TRANSLATION, at the byte level, on both wires.
    *
-   * RFC 7519 §4.1.2 names the subject claim `sub` and RFC 8392 §3.1.2 keys the
-   * same claim at integer label `2`; §3.1.7 keys the token id at `7` where
-   * RFC 7519 §4.1.7 spells it `jti`. One domain payload therefore has to reach
-   * two different keyings, which is the entire reason this verb takes a format
-   * instead of making the caller pick a wire namespace.
+   * One domain payload has to reach two different keyings — RFC 7519 §4.1.2 and
+   * RFC 8392 §3.1.2 for the subject, RFC 7519 §4.1.7 and RFC 8392 §3.1.7 for the
+   * token id — which is why this verb takes a format instead of making the caller
+   * pick a wire namespace.
    */
   test("a JOSE claims token carries the registered JOSE claim NAMES", async () => {
     await expect(
@@ -194,7 +192,7 @@ describe("aegis.sign", () => {
     // decoder produced.
     expect(payload).toEqual({
       2: "u1",
-      // RFC 8392 §3.1.7 types `cti` as a byte string, so the id travels as bytes.
+      // The id travels as bytes — RFC 8392 §3.1.7.
       7: Buffer.from("tid"),
       // No registered label exists for `client_id`, so it keeps its text key.
       client_id: "c1",
@@ -202,7 +200,7 @@ describe("aegis.sign", () => {
   });
 
   test("the COSE_Mac0 twin keys its claims identically", async () => {
-    // The STRUCTURE differs (RFC 9052 §6.2 vs §4.2); the claim keying does not.
+    // The STRUCTURE differs (RFC 9052 §6.2 vs RFC 9052 §4.2); the keying does not.
     await expect(wirePayload("cwm", { subject: "u1", tokenId: "tid" })).resolves.toEqual({
       2: "u1",
       7: Buffer.from("tid"),
@@ -299,12 +297,11 @@ describe("aegis.sign", () => {
    * ⭐ A TOKEN TYPE WHOSE SHORT NAME IS THE BARE CONVENTIONAL FORM, on every
    * format the verb emits.
    *
-   * `id_token` maps to `JWT` (OIDC Core §2 — an ID Token is a plain JWT, and no
-   * structured `id+jwt` media type is registered), so there is no prefix and each
-   * kit stamps its own bare form: `JWT` on JOSE, `application/cwt` on a CWT or
-   * CWM, `application/cws` on a CWS. A derivation that answered the JOSE spelling
-   * for a COSE write would not merely mis-stamp the header — the value is not a
-   * representable COSE typ, so the whole call throws and no token is produced.
+   * `id_token` maps to `JWT` (OIDC Core §2), so there is no prefix and each kit
+   * stamps its own bare form: `JWT` on JOSE, `application/cwt` on a CWT or CWM,
+   * `application/cws` on a CWS. ⚠ A derivation answering the JOSE spelling for a
+   * COSE write does not merely mis-stamp the header — the value is not a
+   * representable COSE typ, so the call throws and no token is produced.
    */
   test.each([
     ["jwt", "typ", "JWT"],
@@ -333,8 +330,8 @@ describe("aegis.sign", () => {
   test.each([
     ["jwt", "typ", "application/custom+jwt"],
     ["cwt", 16, "application/custom+cwt"],
-    // The COSE_Mac0 twin takes the same derivation — it differs in STRUCTURE
-    // (RFC 9052 §6.2), not in how its type header is spelled.
+    // The COSE_Mac0 twin takes the same derivation — RFC 9052 §6.2 differs in
+    // STRUCTURE, not in how the type header is spelled.
     ["cwm", 16, "application/custom+cwt"],
   ] as const)(
     "%s honours an explicit typ over the token type",

@@ -67,9 +67,8 @@ const CLAIMS = { subject: "user-1", expires: "1h", tokenType: "access_token" } a
  * from `__fixtures__/keys.ts` because the shared keys expire in 2024 and this
  * file's clock sits inside the X.509 fixtures' validity window (2026).
  *
- * ⚠ NO CERTIFICATE, and that is the realistic shape: RFC 9052 §5.2 makes a
- * COSE_Encrypt0 direct encryption, so the recipient is a symmetric key and holds
- * no X.509 chain. A binding on this wire can therefore only ever arrive from a
+ * ⚠ NO CERTIFICATE, and that is the realistic shape: a `dir` key is symmetric and
+ * holds no X.509 chain, so a binding on this wire can only ever arrive from a
  * FOREIGN producer, and can only ever be unprovable.
  */
 const ENC_KEY = KryptosKit.from.b64({
@@ -94,10 +93,8 @@ const ENC_KEY = KryptosKit.from.b64({
  * proves only that the package agrees with itself, and this package has already
  * produced a wire-format defect of exactly that shape.
  *
- * The structures, from RFC 9360 §2: `x5chain` is label 33 with the value type
- * `COSE_X509 = bstr / [ 2*certs: bstr ]`, and `x5t` is label 34 with
- * `COSE_CertHash = [ hashAlg: (int / tstr), hashValue: bstr ]`. RFC 9054 §3.2
- * gives SHA-256 the identifier `-16`.
+ * The structures the byte assertions read — `x5chain` at label 33, `x5t` at
+ * label 34, and the SHA-256 identifier `-16`: RFC 9360 §2, RFC 9054 §3.2.
  */
 describe("COSE certificate binding", () => {
   let aegis: Aegis;
@@ -142,13 +139,10 @@ describe("COSE certificate binding", () => {
     });
 
     /**
-     * ⚠ THE CONTENTS, not merely the presence or the shape. RFC 9360 §2 fixes the
-     * encoding — *"The contents of "bstr" are the bytes of a DER-encoded
-     * certificate"* — and §2 fixes the order, `x5chain` being *"An ordered chain
-     * of X.509 certificates"* whose first member corresponds to the signing key.
-     * A truncated, reversed, PEM-armoured or base64url-mangled chain is still an
-     * array of byte strings, and it is one no relying party can build a path
-     * from, so a length-and-`instanceof` assertion passes on every one of them.
+     * ⚠ THE CONTENTS, not merely the presence or the shape. A truncated,
+     * reversed, PEM-armoured or base64url-mangled chain is still an array of byte
+     * strings, and it is one no relying party can build a path from, so a
+     * length-and-`instanceof` assertion passes on every one of them. RFC 9360 §2.
      */
     test("chain mode adds the COSE_X509 chain beside the digest", async () => {
       const { token } = await aegis.mint("default", CLAIMS, {
@@ -158,8 +152,7 @@ describe("COSE certificate binding", () => {
 
       const chain = protectedBucket(token).get(33);
 
-      // Three certificates, so RFC 9360 §2's array arm applies and each rides its
-      // own byte string.
+      // Three certificates, so each rides its own byte string. RFC 9360 §2.
       expect(Array.isArray(chain)).toBe(true);
       for (const cert of chain as Array<unknown>) {
         expect(cert).toBeInstanceOf(Uint8Array);
@@ -167,8 +160,7 @@ describe("COSE certificate binding", () => {
 
       // The DER bytes themselves, against the fixture, in order. Base64 is the
       // comparison vocabulary only because that is the spelling the fixture holds
-      // (RFC 7515 §4.1.6 is what makes JOSE's `x5c` base64); the wire carries the
-      // raw bytes these encode.
+      // (RFC 7515 §4.1.6); the wire carries the raw bytes these encode.
       expect((chain as Array<Uint8Array>).map((cert) => B64.encode(cert))).toEqual(
         TEST_X509_CHAIN_B64,
       );
@@ -249,10 +241,8 @@ describe("COSE certificate binding", () => {
   describe("a binding that cannot be honoured", () => {
     /**
      * ⭐ THE TAMPER. The digest is rewritten inside the PROTECTED bucket and the
-     * signature left as it was. RFC 9052 §4.4 puts *"The protected attributes from
-     * the body structure, encoded in a bstr type"* inside the `Sig_structure`, so
-     * the rewrite is covered by the signature and the token must be refused —
-     * which is what says the binding is not merely written but SECURED.
+     * signature left as it was, so the token must be refused — which is what says
+     * the binding is not merely written but SECURED. RFC 9052 §4.4.
      */
     test("a rewritten thumbprint is refused", async () => {
       const { token } = await aegis.mint("default", CLAIMS, { format: "cwt" } as never);
@@ -320,12 +310,10 @@ describe("COSE certificate binding", () => {
   /**
    * ⭐⭐ A FOREIGN BINDING UNDER SHA-384 / SHA-512.
    *
-   * RFC 9360 §2's `COSE_CertHash` admits any algorithm from the COSE Algorithms
-   * registry, and RFC 9054 §3.2 marks SHA-384 (`-43`) and SHA-512 (`-44`)
-   * `Recommended: Yes` — so a conformant issuer may legitimately bind with either.
-   * JOSE registers no parameter for either (RFC 7517 §4.8/§4.9 register two), so
-   * neither reaches the domain header and the comparison is resolved on the COSE
-   * read path against the leaf's own DER.
+   * A foreign issuer may bind with SHA-384 (`-43`) or SHA-512 (`-44`).
+   * RFC 9360 §2, RFC 9054 §3.2. Neither has a domain header field
+   * (`cose-wide-cert-binding.ts`), so the comparison is resolved on the COSE read
+   * path against the leaf's own DER.
    *
    * The fixtures are built by signing with the cert-bearing key and REWRITING
    * label 34 — the token is then re-signed with the same key, so the only thing
@@ -345,9 +333,9 @@ describe("COSE certificate binding", () => {
 
       const rewritten = Buffer.from(encode(bucket));
 
-      // Re-signed over the REWRITTEN protected bucket (RFC 9052 §4.4's
-      // `Sig_structure`), so the token is valid and only the binding differs from
-      // one aegis would have written.
+      // Re-signed over the REWRITTEN protected bucket (RFC 9052 §4.4), so the
+      // token is valid and only the binding differs from one aegis would have
+      // written.
       const secured = new SignatureKit({ kryptos: certBound(), raw: true }).sign(
         buildSigStructure(rewritten, Buffer.from(payload as Uint8Array)),
       );
@@ -423,10 +411,9 @@ describe("COSE certificate binding", () => {
     );
 
     /**
-     * ⚠ AN ALGORITHM AEGIS DOES NOT IMPLEMENT STILL DROPS, and the table says so:
-     * SHA-512/256 (`-17`, RFC 9054 §3.2) is a distinct truncated variant, not
-     * SHA-512 chopped by hand, and `ShaAlgorithm` offers no method for it. There
-     * is nothing to compare, so nothing to decide — in either mode.
+     * ⚠ AN ALGORITHM AEGIS DOES NOT IMPLEMENT STILL DROPS: `ShaAlgorithm` offers
+     * no method for SHA-512/256 (`-17`, RFC 9054 §3.2), so there is nothing to
+     * compare and nothing to decide — in either mode.
      */
     test.each(["strict", "lax"] as const)(
       "drops an algorithm it does not implement, in %s mode",
@@ -478,8 +465,9 @@ describe("COSE certificate binding", () => {
    * algorithm before it can decrypt) and passes that map to the resolver. Every
    * other COSE read gets `protectedMap` handed to it by `verifyCoseStructure`, so
    * this is the only site where wiring the resolver to the UNPROTECTED bucket
-   * would be a silent change — RFC 9052 §5.2 makes the protected bucket the
-   * `Enc_structure` AAD, and the unprotected one is covered by nothing.
+   * would be a silent change: `CweKit.encrypt` feeds the protected bucket to
+   * `buildEncStructure` as the AEAD's AAD, and the unprotected one is covered by
+   * nothing. RFC 9052 §5.3.
    *
    * The fixture is a FOREIGN COSE_Encrypt0 built here rather than by aegis: a
    * `dir` recipient key is symmetric and carries no X.509 certificate, so no aegis
@@ -515,8 +503,8 @@ describe("COSE certificate binding", () => {
       }).encryptContent(plaintext, { aad: buildEncStructure(protectedBstr) });
 
       const unprotectedMap = new Map<CoseLabel, unknown>([
-        // RFC 9052 §3.1 types `kid` as a `bstr`, so a foreign producer writes the
-        // utf-8 bytes rather than a text string.
+        // A foreign producer writes the `kid` as utf-8 bytes rather than a text
+        // string. RFC 9052 §3.1.
         [LABEL.kid, Buffer.from(kryptos.id, "utf8")],
         [LABEL.iv, iv],
       ]);

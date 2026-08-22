@@ -9,13 +9,11 @@ const protectedHeader = (header: Partial<WireTokenHeader>): WireTokenHeader =>
 
 describe("the placement allowlist", () => {
   /**
-   * THE LIST, spelled out. ⛔ Not derived from `placement` — that is the column
-   * the production code reads, so deriving it would make this test agree with any
-   * value the registry happens to hold. These two names are the ORACLE: `kid` is
-   * the routing hint RFC 9052 §3.1 permits outside the protected bucket, `iv` the
-   * AEAD nonce a COSE_Encrypt0 carries there (RFC 9052 §5.2), and nothing else
-   * may ever arrive unauthenticated. Widening the list is a security decision and
-   * has to be made HERE, deliberately, not by editing one registry row.
+   * THE LIST, spelled out. ⛔ Not derived from `placement` — that is the column the
+   * production code reads, so deriving it would make this test agree with whatever
+   * the registry happens to hold. These two names are the ORACLE (RFC 9052 §3.1),
+   * and widening the list is a security decision to be made HERE, deliberately,
+   * rather than by editing one registry row.
    */
   test("exactly kid and iv may travel unauthenticated", () => {
     const placeable = HEADER_SPECS.filter(
@@ -25,11 +23,9 @@ describe("the placement allowlist", () => {
     expect(placeable.sort()).toEqual(["iv", "kid"]);
   });
 
-  // Headers are a CLOSED set, and an unregistered name has no placement to
-  // consult. The write side hands it to `coseByJose`, which refuses it by name;
-  // the read side drops it in `parseTokenHeader`. Answering `true` here would
-  // replace both accurate answers with a placement error about a parameter that
-  // has none.
+  // An unregistered name has no placement to consult: the write side refuses it by
+  // name in `coseByJose`, the read side drops it in `parseTokenHeader`. Answering
+  // `true` here would replace both with a placement error.
   test("an unregistered parameter is not protected-only", () => {
     expect(isProtectedOnly("not-a-header-parameter")).toBe(false);
   });
@@ -45,9 +41,8 @@ describe("mergeHeaderBuckets", () => {
     expect(merged).toEqual({ alg: "ES512", kid: "key-1" });
   });
 
-  // The rule the domain tier's single header rests on: a parameter a verifier
-  // routes, audits or polices a token by cannot arrive from a bucket nothing
-  // covers. Every one of these is `placement: "protected"`.
+  // A parameter a verifier routes, audits or polices a token by cannot arrive from
+  // a bucket nothing covers. Every one of these is `placement: "protected"`.
   test("IGNORES every parameter that must be signed", () => {
     const merged = mergeHeaderBuckets({
       protectedHeader: protectedHeader({ alg: "ES512" }),
@@ -72,9 +67,8 @@ describe("mergeHeaderBuckets", () => {
     expect(merged.kid).toBe("signed");
   });
 
-  // An explicitly `undefined` value is an ABSENT parameter, not a value. Copying
-  // one would let the protected bucket clobber a legitimate unprotected `kid`
-  // with nothing — the exact hazard a whole-object spread carries.
+  // An explicitly `undefined` value is an ABSENT parameter — the exact hazard a
+  // whole-object spread carries.
   test("an undefined protected value does not clobber an unprotected one", () => {
     const merged = mergeHeaderBuckets({
       protectedHeader: protectedHeader({ alg: "ES512", kid: undefined }),

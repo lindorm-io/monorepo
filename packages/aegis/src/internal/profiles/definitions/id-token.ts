@@ -3,17 +3,15 @@ import { defineProfile } from "../define-profile.js";
 import { ISSUER_IS_URI } from "./rule-predicates.js";
 
 /**
- * ID token — bare `JWT` typ (OIDC ecosystem convention; OIDC Core §2).
- * REQUIRED: iss, sub, aud (= client_id), exp, iat. `at_hash` is REQUIRED
- * whenever an access token co-issues — OIDC Core §3.1.3.6 makes it OPTIONAL in
- * the code flow; we treat it as required. Encryptable; confidential-client `HS*`
- * permitted.
+ * ID token — bare `JWT` typ (OIDC Core §2). Encryptable; confidential-client `HS*`
+ * permitted. ⚠ `at_hash` is REQUIRED whenever an access token co-issues, which is
+ * STRICTER than OIDC Core §3.1.3.6.
  *
- * ⚠ The `at_hash` rule is the profile's only context-reading rule, so minting an
- * id_token REQUIRES the caller to state `accessTokenIssued` — as `false` when no
- * access token co-issues. There is no answer aegis can infer: a token with no
- * `at_hash` and a caller who forgot to mention the access token look identical
- * from here, and the second is the one that must not mint.
+ * ⚠ That is the profile's only context-reading rule, so minting an id_token
+ * REQUIRES the caller to state `accessTokenIssued` — as `false` when no access
+ * token co-issues. aegis can infer nothing: a token with no `at_hash` and a caller
+ * who forgot to mention the access token look identical from here, and the second
+ * is the one that must not mint.
  */
 export const idTokenProfile = defineProfile({
   name: "id_token",
@@ -34,8 +32,8 @@ export const idTokenProfile = defineProfile({
         if (context.accessTokenIssued === true) return true;
 
         // `requiredWhen` only reaches this predicate when `accessTokenHash` is
-        // EMPTY, so a claim the caller OMITTED here is the honest "no access
-        // token, therefore no hash" and nothing is owed.
+        // EMPTY, so a claim the caller OMITTED is the honest "no access token,
+        // therefore no hash" and nothing is owed.
         if (isClaimOmitted(claims.accessTokenHash)) return false;
 
         // What is left is a caller who NAMED `at_hash` and gave it nothing

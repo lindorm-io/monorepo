@@ -8,9 +8,8 @@ import { decodeCwtClaims, type EncodeCwtOptions, encodeCwtClaims } from "./cwt-c
 
 const AT_HASH = "LXEWQrcmsEQBYnyp-6wy9chTD7GQPMTbAiWHF5IaSIE"; // 32-byte b64url
 
-// `encodeCwtClaims`/`decodeCwtClaims` are the CODEC boundary (wire in / wire out);
-// the domain <-> wire translation is `domainToWire`/`wireToDomain` bound to
-// `coseName`. These helpers exercise the full domain round-trip the codec sits inside.
+// `encodeCwtClaims`/`decodeCwtClaims` are the CODEC boundary — wire in, wire out.
+// These helpers drive the full domain round trip the codec sits inside.
 const encode = (common: Dict, options?: EncodeCwtOptions) =>
   encodeCwtClaims(domainToWire(common, coseName), options);
 
@@ -21,7 +20,7 @@ const decodeToDomain = (map: Map<unknown, unknown> | Dict): Dict => {
 
 describe("encodeCwtClaims", () => {
   test("maps domain claims to CWT integer labels / string keys (proprietary)", () => {
-    // On-platform (proprietary:true) uses the compact private-use integer labels.
+    // On-platform: compact private-use integer labels.
     const map = encode(
       {
         issuer: "https://issuer/",
@@ -50,18 +49,16 @@ describe("encodeCwtClaims", () => {
   });
 
   test("encodes OIDC hash claims as byte strings", () => {
-    // ⚠ ALL THREE, not just `at_hash`. They are three separate registry cells
+    // ⚠ Every hash claim, not just `at_hash`: each is a SEPARATE registry cell
     // declaring the same `per: { cose: { kind: "bstr", encoding: "b64u" } }`
-    // override, and a typo in any one of them — a dropped override, or `"utf8"`
-    // — is a SILENT wrong-bytes bug: the claim still encodes, to a CBOR text
-    // string or to the 43 raw characters instead of the 32 bytes they mean.
-    // The b64url string is 43 chars; the digest it stands for is 32 bytes.
+    // override, and a typo in one is a SILENT wrong-bytes bug — the claim still
+    // encodes, as a CBOR text string or as the raw characters rather than the
+    // bytes they stand for.
     const map = encode(
       { accessTokenHash: AT_HASH, codeHash: AT_HASH, stateHash: AT_HASH },
       { proprietary: true },
     );
 
-    // at_hash / c_hash / s_hash private-use labels (P(0)/P(1)/P(2)).
     for (const [claim, label] of [
       ["at_hash", -65537 - 0],
       ["c_hash", -65537 - 1],
@@ -98,9 +95,8 @@ describe("proprietary encoding", () => {
 
   test("act is interoperable string-keyed by default (proprietary:false)", () => {
     const map = encode({ act }); // default is interoperable
-    // The interoperable object carries RFC 8693 wire member names
-    // (sub/iss/client_id) — the shape `internal/claims/translate.ts` produces,
-    // which is the ONE translator both wires now go through.
+    // The interoperable object carries RFC 8693 wire member names — the shape
+    // `internal/claims/translate.ts` produces for both wires.
     expect(map.get("act")).toEqual({
       sub: "actor",
       iss: "https://delegator/",
@@ -110,11 +106,11 @@ describe("proprietary encoding", () => {
 
   test("private-use claims degrade to their JOSE string key off-platform (never dropped)", () => {
     const withTenant = { issuer: "https://i/", tenantId: "t-1" };
-    // On-platform (proprietary:true): compact private-use integer label.
+    // On-platform: compact private-use integer label.
     const on = encode(withTenant, { proprietary: true });
     expect(on.get(-65537 - 14)).toBe("t-1"); // tenant_id private label
     expect(on.has("tenant_id")).toBe(false);
-    // Default (interoperable): degraded to the JOSE string key — NOT dropped.
+    // Interoperable: degraded to the JOSE string key, NOT dropped.
     const off = encode(withTenant);
     expect(off.has(-65537 - 14)).toBe(false);
     expect(off.get("tenant_id")).toBe("t-1");
@@ -131,9 +127,7 @@ describe("proprietary encoding", () => {
 
     for (const proprietary of [true, false]) {
       const map = encode(claims, { proprietary });
-      // No private integer labels — these have no registered CWT label.
       expect(map.has(-65537)).toBe(false);
-      // Always string-keyed under their JOSE name.
       expect(map.get("loa")).toBe(4);
       expect(map.get("aal")).toBe(2);
       expect(map.get("ial")).toBe(3);
@@ -144,8 +138,7 @@ describe("proprietary encoding", () => {
   test("sub_id is compact integer-keyed under a private-use label by default, JOSE string-keyed object when proprietary:false", () => {
     const subjectId = { format: "iss_sub", iss: "https://i/", sub: "u" };
 
-    // On-platform (proprietary:true): keyed by the private-use label P(12); value
-    // is the compact map.
+    // On-platform: keyed by the private-use label, value the compact map.
     const map = encode({ subjectId }, { proprietary: true });
     const compact = map.get(-65537 - 12) as Map<number, unknown>;
     expect(map.has("sub_id")).toBe(false);
@@ -154,7 +147,7 @@ describe("proprietary encoding", () => {
     expect(compact.get(1)).toBe("https://i/"); // iss reuses CWT label 1
     expect(compact.get(2)).toBe("u"); // sub reuses CWT label 2
 
-    // Off-platform: keyed by the JOSE string name; value is the plain object.
+    // Off-platform: keyed by the JOSE string name, value the plain object.
     const off = encode({ subjectId }, { proprietary: false });
     expect(off.has(-65537 - 12)).toBe(false);
     expect(off.get("sub_id")).toEqual(subjectId);
@@ -191,9 +184,8 @@ describe("CWT claims round-trip (domain -> CBOR -> domain)", () => {
     expect(decoded).toEqual(common);
   });
 
-  // A token covering several reclassified claims (now private-use integer labels
-  // on-platform): nonce, auth_time, client_id, entitlements, roles, groups,
-  // permissions, tenant_id, events — plus short string-keyed ones (loa/acr).
+  // A token mixing claims that take private-use integer labels on-platform with
+  // short string-keyed ones.
   const reclassified = {
     issuer: "https://issuer/",
     subject: "u1",
@@ -211,7 +203,7 @@ describe("CWT claims round-trip (domain -> CBOR -> domain)", () => {
 
   test("reclassified claims round-trip on-platform (integer labels)", () => {
     const map = encode(reclassified, { proprietary: true });
-    // On-platform: long claims are integer-keyed; short claims string-keyed.
+    // On-platform: long claims integer-keyed, short claims string-keyed.
     expect(map.get(-65537 - 3)).toBe("n-123"); // nonce
     expect(map.get(-65537 - 11)).toBe("client-1"); // client_id
     expect(map.get(-65537 - 14)).toBe("tenant-7"); // tenant_id

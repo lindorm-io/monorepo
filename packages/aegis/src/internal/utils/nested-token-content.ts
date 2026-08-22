@@ -13,14 +13,11 @@ export type NestedTokenContent = {
 /**
  * Is this plaintext a TOKEN, and if so what does the outer declare it to be?
  *
- * The ONE resolution behind both entry points that seal a token: the
- * sign-then-encrypt composition (`encrypt-outer.ts`), which always hands over a
- * claims token it just minted, and `aegis.encrypt` handed an already-minted
- * token by a caller. They used to be different behaviours — the composition
- * declared the nesting, a bare `aegis.encrypt(signed.token)` saw a string and
- * inferred `text/plain`, emitting a nested token with no declaration on it at
- * all. RFC 7519 §5.2 makes that declaration a MUST for a nested JWT, and a
- * foreign reader has nothing else to go on.
+ * ⚠ The ONE resolution behind both entry points that seal a token: the
+ * sign-then-encrypt composition (`encrypt-outer.ts`) and `aegis.encrypt` handed
+ * an already-minted token. Without it the bare call infers `text/plain` from the
+ * string and emits a nested token carrying no declaration, which a foreign reader
+ * has nothing else to go on. RFC 7519 §5.2.
  *
  * Two things have to line up, and the wire owns both:
  *

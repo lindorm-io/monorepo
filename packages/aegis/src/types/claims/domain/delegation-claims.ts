@@ -6,7 +6,7 @@ import type { ActClaim } from "./act-claim.js";
 // `may_act` lists parties authorized to become the actor.
 //
 // The derived view of these claims lives in TokenDelegation
-// (src/types/jwt/jwt-delegation.ts).
+// (`types/domain/delegation.ts`).
 //
 // https://datatracker.ietf.org/doc/html/rfc8693#section-4.1
 export type DelegationClaims = {

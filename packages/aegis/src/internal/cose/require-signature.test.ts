@@ -17,11 +17,10 @@ describe("requireSignature", () => {
     expect(bytes.equals(Buffer.from([7, 8, 9]))).toBe(true);
   });
 
-  // A zero-length signature is PRESENT — the producer put a byte string there,
-  // and it happens to hold no bytes. It verifies against nothing, but that is the
-  // signature cycle's verdict to give; only `null`/absent means the slot is empty,
-  // and conflating the two is exactly the lie the old `Buffer.alloc(0)` fallback
-  // in the CWT decode told.
+  // ⚠ A zero-length signature is PRESENT: the producer put a byte string there
+  // holding no bytes. It verifies against nothing, but that verdict is the
+  // signature cycle's — only `null`/absent means the slot is empty, and a
+  // `Buffer.alloc(0)` fallback conflates the two.
   test("accepts an EMPTY signature — present is not the same as non-empty", () => {
     expect(requireSignature(Uint8Array.from([]), words)).toHaveLength(0);
   });
@@ -44,8 +43,8 @@ describe("requireSignature", () => {
     expect(() => requireSignature(undefined, words)).toThrow(CwsError);
   });
 
-  // The words — and the leaf error class — are DATA, so each read path names the
-  // structure it expected in its own terms while the code stays one value.
+  // The words and the leaf error class are DATA, so each read path names the
+  // structure it expected while the code stays one value.
   test("throws under the leaf class the call site names", () => {
     let thrown: unknown;
 

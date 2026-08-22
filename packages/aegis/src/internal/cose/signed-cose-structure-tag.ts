@@ -3,20 +3,13 @@ import { CwsError } from "../../errors/index.js";
 import { type CoseStructureTag, coseStructureTag } from "./cose-structure-tag.js";
 
 /**
- * Which COSE integrity structure a resolved key implies (RFC 9052 §4.4 / §6.3) —
- * the ONE gate every signed COSE verb asks, and the only difference between a
- * COSE_Sign1 and a COSE_Mac0 on the wire.
+ * Which COSE integrity structure a resolved key implies. RFC 9052 §4.4,
+ * RFC 9052 §6.3. The ONE gate every signed COSE verb asks.
  *
- * ⚠ ONE call, not four. `signCwt`, `verifyCwt` and both of `CwsKit`'s verbs used
- * to ask it separately — the kit through a private method whose body was
- * character-for-character the claims core's, down to the details string — so
- * sign and verify could have come to disagree about which structure a key
- * produces. They cannot now: the tag is one function, and where a verb needs it
- * twice it is computed once and passed.
- *
- * The kits gate their key's `algClass` in their constructors, so this is settled
- * by the time any verb runs; asking it here is what keeps the WRITE and the READ
- * of one token answering the same way.
+ * ⚠ ONE function, so sign and verify cannot come to disagree about which
+ * structure a key produces; where a verb needs the tag twice it is computed once
+ * and passed. The kits gate `algClass` in their constructors, so this is settled
+ * by the time any verb runs.
  */
 export const signedCoseStructureTag = (kryptos: IKryptos): CoseStructureTag =>
   coseStructureTag({

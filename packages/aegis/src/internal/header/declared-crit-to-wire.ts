@@ -9,9 +9,8 @@ import { headerByDomain, headerByJose } from "./header-registry.js";
  * tiers.
  *
  * ⚠ IT REUSES `criticalToWire`, the ONE domain→wire resolver the write passes
- * apply. A second resolver is how the two spellings came apart before: members
- * were resolved one way while the header bag was keyed the other, so the
- * comparison missed and the header went out naming a parameter it did not carry.
+ * apply. A second resolver is how the two spellings come apart: members resolved
+ * one way against a bag keyed the other means the comparison misses.
  *
  * ⛔ A WIRE SPELLING AT THE DOMAIN DOOR IS REFUSED, not quietly accepted. That
  * resolver is IDEMPOTENT — a wire name misses `headerByDomain` and falls through

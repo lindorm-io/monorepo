@@ -39,8 +39,8 @@ const CLIENT = "client-1";
  *     RFC 7523 `client_secret_jwt` assertion's key is NOT.
  *   - `Aegis.resolveSignKey` merges the deployment's condition into the SELECTOR
  *     (a vault query) and never into the floor. Move it and a deployment that
- *     states a signing query can no longer sign with an injected key at all,
- *     while every test that only exercises vault keys stays green.
+ *     states a signing query cannot sign with an injected key at all, while
+ *     every test that only exercises vault keys stays green.
  */
 describe("the domain verbs' key selection", () => {
   let logger: ILogger;
@@ -48,8 +48,8 @@ describe("the domain verbs' key selection", () => {
   let aegis: Aegis;
 
   /**
-   * The client secret, spelled as a token the vault never sees. RFC 7523 §2.2
-   * has a client authenticate with an assertion it signed itself; a
+   * The client secret, spelled as a token the vault never sees. A client
+   * authenticates with an assertion it signed itself (RFC 7523 §2.2); a
    * `client_secret_jwt` one is MACed with the shared secret, which is the
    * client's registration record and never a vault resident.
    */

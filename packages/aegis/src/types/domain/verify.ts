@@ -2,21 +2,27 @@ import type { Condition } from "@lindorm/match";
 import type { AegisVerifyKey } from "../keys/key-selectors.js";
 import type { ActClaim } from "../claims/domain/act-claim.js";
 
-// How `allowedActors` is applied to the token's actor chain:
-// - "every"   (default) every actor in the chain must match the predicate.
-//             Fail-closed; the only scope that catches an unauthorized
-//             intermediary, since aegis does not validate `may_act`.
-// - "current" only the immediate actor (actorChain[0]) must match. Trusts
-//             the rest of the chain — "is my caller allowed".
-// - "some"    at least one actor matches. Attestation ("token passed
-//             through gateway G at some point").
-export type ActorScope = "every" | "current" | "some";
-
 export type VerifyActorOptions = {
   required?: boolean;
   forbidden?: boolean;
-  allowedActors?: Condition<ActClaim>;
-  actorScope?: ActorScope;
+  /**
+   * Matched against the CURRENT actor alone — `actorChain[0]`. Prior actors are
+   * not read. RFC 8693 §4.1.
+   *
+   * A token naming no actor cannot satisfy it and is refused — including under a
+   * condition stated as a denial, which the matcher's two-valued `$not` would
+   * otherwise let an absent actor satisfy.
+   *
+   * A condition that constrains nothing places no constraint this verifier can
+   * apply, so the CALL is refused (`actor_policy_invalid`) rather than the
+   * condition applied. That covers `{}`, a condition whose every key is
+   * `undefined`, and the logical forms reducing to them: an `$and` whose every
+   * member constrains nothing, an `$or` with any such member, a `$not` of a
+   * condition no actor satisfies. A logical operator's member is read for its own
+   * defined keys, so one carrying none — `[]`, `5`, `new Date()` — constrains
+   * nothing exactly as `{}` does.
+   */
+  allowedActor?: Condition<ActClaim>;
   maxChainDepth?: number;
 };
 
@@ -50,8 +56,8 @@ export type VerifyOptions = {
   currentDate?: Date;
   /**
    * Custom header parameters the CALLER takes responsibility for — it will act on
-   * them after aegis returns. RFC 7515 §4.1.11 puts the duty on the RECIPIENT, and
-   * aegis is never the final recipient; it verifies on the application's behalf.
+   * them after aegis returns: aegis is never the final recipient, it verifies on
+   * the application's behalf. RFC 7515 §4.1.11.
    *
    * A `crit` member is accepted only when it is named here AND carried by the
    * token. Absent means nothing is declared, so EVERY critical parameter is
@@ -76,9 +82,8 @@ export type VerifyOptions = {
    * verifies (its `exp` value is not bounded). Presence is independent — with
    * `expPresence: "required"` an exp-LESS token is still rejected, only the
    * VALUE is not range-checked. Signature/`iss`/`aud`/`nonce`/hashes stay
-   * enforced. Drives OIDC `id_token_hint` (OIDC Core §3.1.2.1): the OP must
-   * verify a previously-issued id_token's signature but MUST accept an expired
-   * one.
+   * enforced. The option exists for OIDC `id_token_hint`. OIDC Core §3.1.2.1,
+   * OIDC Core §3.1.2.2.
    */
   verifyExpiration?: boolean;
   /**
@@ -119,8 +124,8 @@ export type VerifyOptions = {
   /**
    * JOSE `typ` header presence policy at parse time (default `"required"`).
    * `"required"` rejects a typ-less token (`typ_required` — distinct from the
-   * kits' `jwt_invalid_typ`, which means a typ that is PRESENT and wrong) — the RFC 8725
-   * explicit-typing defense direct callers rely on. `"optional"` accepts an
+   * kits' `jwt_invalid_typ`, which means a typ that is PRESENT and wrong) — the
+   * explicit-typing defense direct callers rely on (RFC 8725 §3.11). `"optional"` accepts an
    * absent typ; profiled verify sets this, because the profile floor owns the
    * real presence policy (required-presence profiles still reject an absent
    * typ at the floor). Vocabulary matches TokenProfileTyp.
@@ -130,8 +135,8 @@ export type VerifyOptions = {
    * `exp` claim presence policy (default `"required"`). `"required"` rejects an
    * exp-less token (`missing_claim_exp`) — the default for direct/profile-less
    * callers. `"optional"` accepts an absent exp; profiled verify sets this for a
-   * `lifetime: null` profile (RFC 8417 / SSF `security_event` SETs carry no exp),
-   * where the profile floor owns the real presence policy. When exp IS present its
+   * `lifetime: null` profile (the `security_event` profile — RFC 8417), where the
+   * profile floor owns the real presence policy. When exp IS present its
    * value is always range-checked (with clock tolerance) regardless of this option.
    */
   expPresence?: "required" | "optional";

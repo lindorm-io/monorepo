@@ -62,12 +62,11 @@ describe("VerifiedToken (type witness)", () => {
     expect(verified.raw).toBe("opaque payload");
   });
 
-  // `raw` is the payload AS THE TYPE IT WAS SIGNED AS, and an OBJECT signed
-  // under `application/json` comes back a Dict on BOTH wires — always on `cws`,
-  // and on `jws` since the domain sign stopped JSON-stringifying first. The type
-  // was `Buffer | string`, which excluded the one shape the codec most commonly
-  // reconstructs, so a consumer holding an object payload had to cast to reach
-  // it. `Assert<false>` is the compile error if the union ever narrows back.
+  // `raw` is the payload AS THE TYPE IT WAS SIGNED AS, and an OBJECT signed under
+  // `application/json` comes back a Dict on BOTH wires. A `Buffer | string` union
+  // would exclude the one shape the codec most commonly reconstructs, forcing a
+  // consumer holding an object payload to cast. `Assert<false>` is the compile
+  // error if the union ever narrows to it.
   test("a Dict payload is expressible as raw", () => {
     type Assert<T extends true> = T;
     type _RawAdmitsADict = Assert<
@@ -84,8 +83,7 @@ describe("VerifiedToken (type witness)", () => {
     };
 
     // The literal above is the other half of the same statement: assigning an
-    // object to `raw` is itself the compile check, and it did not compile under
-    // the old union.
+    // object to `raw` is itself the compile check.
     expect(verified.raw).toEqual({ hello: "world" });
   });
 });

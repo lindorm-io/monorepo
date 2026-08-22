@@ -26,8 +26,8 @@ describe("decodeCwt", () => {
   });
 
   // The COSE mirror of `JwtKit.decode(...).payload`: a COSE_Sign1 payload is
-  // cleartext CBOR, so the claims are readable with no key — which is what lets
-  // the verify path scope its key lookup by the (still unverified) `iss`.
+  // cleartext CBOR, so the verify path can scope its key lookup by the still
+  // UNVERIFIED `iss`.
   test("exposes the cleartext WIRE claims of a COSE_Sign1", () => {
     const decoded = decodeCwt(
       signed({ iss: "https://iss.lindorm.io/", sub: "user-1", cti: "token-1" }),
@@ -52,9 +52,9 @@ describe("decodeCwt", () => {
     expect(decodeCwt(token).payload).toMatchObject({ iss: "https://iss.lindorm.io/" });
   });
 
-  // A DETACHED (nil) payload is legal COSE. There are simply no claims to read,
-  // so `payload` is undefined — the decode must not throw, because its job is to
-  // hand back what a key resolution needs, not to judge the structure.
+  // A DETACHED payload is legal COSE and has no claims to read, so `payload` is
+  // undefined. ⚠ The decode must not throw: its job is what a key resolution
+  // needs, not a verdict on the structure.
   test("reports no claims for a DETACHED (nil) payload, without throwing", () => {
     const protectedHeader = encodeProtectedHeader(
       new Map<number, unknown>([[coseByJose("alg"), -7]]),
@@ -76,10 +76,10 @@ describe("decodeCwt", () => {
     expect(decoded.payload).toBeUndefined();
   });
 
-  // ⚠ Where a non-string typ is actually answered on this wire. `verifyCwt`'s typ
-  // gate carries an `isString` guard, but nothing can reach it with a non-string:
-  // this decode NORMALISES anything that is not a string to `undefined`, and a
-  // typ-less CWT is well-formed. So a numeric typ is not refused — it is unread.
+  // ⚠ Where a non-string typ is answered on this wire. `verifyCwt`'s typ gate has
+  // an `isString` guard nothing can reach, because this decode NORMALISES a
+  // non-string to `undefined` and a typ-less CWT is well-formed. So a numeric typ
+  // is not refused — it is unread.
   test("normalises a NON-STRING typ to undefined rather than reporting it", () => {
     const protectedHeader = encodeProtectedHeader(
       new Map<number, unknown>([
@@ -106,9 +106,8 @@ describe("decodeCwt", () => {
     expect(decodeCwt(token).typ).toBeUndefined();
   });
 
-  // The same decode serves the OPAQUE CWS path, whose payload is arbitrary
-  // bytes rather than a CBOR claims map. It must report "no claims" rather than
-  // treat unreadable bytes as a malformed token.
+  // The same decode serves the OPAQUE CWS path, whose payload is arbitrary bytes,
+  // so unreadable bytes report "no claims" rather than a malformed token.
   test("reports no claims for an OPAQUE payload that is not a CBOR claims map", () => {
     const protectedHeader = encodeProtectedHeader(
       new Map<number, unknown>([[coseByJose("alg"), -7]]),

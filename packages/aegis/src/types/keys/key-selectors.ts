@@ -42,7 +42,7 @@ export type AegisEncCondition = Condition<AegisKeyAttributes>;
  * Selects the signing key.
  *
  * `kryptos` is a key supplied outright — e.g. an OIDC client secret used as the
- * `HS256` MAC key for an id_token (Core §10.1). Never a vault resident, so the
+ * `HS256` MAC key for an id_token (OIDC Core §10.1). Never a vault resident, so the
  * SELECTOR (`condition`) does not apply to it — but the profile FLOOR still
  * does, which is what makes injection safe rather than an escape hatch.
  *
@@ -54,12 +54,10 @@ export type AegisSignKey = AmphoraKeySelector<AegisSignCondition>;
  * Selects the encryption (recipient) key. `kryptos` is a key supplied outright
  * — e.g. a client secret used as an `A128KW` wrap key.
  *
- * ⚠ It selects the KEY and nothing else — exactly like {@link AegisSignKey}. It
- * used to carry an `encryption` beside the selector that named the content
- * AEAD, which is gone: the resolved key's own declaration picks the cipher, so
- * a member here could only ever have overridden the key or agreed with it.
- * Encrypting to a peer under a different AEAD is a property of the key you
- * name, not of the call.
+ * ⚠ It selects the KEY and nothing else — exactly like {@link AegisSignKey}. The
+ * resolved key's own declaration picks the content AEAD, so a member naming one
+ * here could only override the key or agree with it. Encrypting to a peer under a
+ * different AEAD is a property of the key you name, not of the call.
  */
 export type AegisEncKey = AmphoraKeySelector<AegisEncCondition>;
 

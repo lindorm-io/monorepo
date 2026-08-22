@@ -21,14 +21,13 @@ import { resolveWideCertBinding } from "./cose-wide-cert-binding.js";
 import { verifyCoseStructure } from "./verify-cose-structure.js";
 
 /**
- * WIRE verify: kid fail-fast + typ well-formedness + typ match (off the cheap
- * header decode), then the structural gates and the signature/MAC over the
- * structure the key's `algClass` implies, then the temporal range (validated IF
- * PRESENT) and the caller `assert`, in one pass over the WIRE claims. Returns
- * the native WIRE payload; NO named matchers, NO exp presence, NO domain
- * translation — those are the Aegis verify path's job.
+ * WIRE verify: kid fail-fast, typ well-formedness and typ match off the cheap
+ * header decode; then the structural gates and the signature/MAC over the
+ * structure the key's `algClass` implies; then the temporal range (validated IF
+ * PRESENT) and the caller `assert`, in one pass over the WIRE claims.
  *
- * The read twin of `signCwt`, differing in the same three places and no others.
+ * ⚠ It returns the native WIRE payload. No named matchers, no exp presence, no
+ * domain translation — those belong to the Aegis verify path.
  */
 export const verifyCwt = <C extends Dict = Dict>(
   kryptos: IKryptos,
@@ -49,8 +48,8 @@ export const verifyCwt = <C extends Dict = Dict>(
 
   const decoded = decodeCwt(token);
 
-  // kid fail-fast, before the (expensive) signature cycle. The JOSE claims kit
-  // runs the same one; the OPAQUE and ENCRYPTED doors deliberately run none.
+  // kid fail-fast, before the expensive signature cycle. The JOSE claims kit runs
+  // the same one; the OPAQUE and ENCRYPTED doors run none.
   assertKidMatch({
     actual: decoded.kid,
     expected: kryptos.id,
@@ -58,11 +57,9 @@ export const verifyCwt = <C extends Dict = Dict>(
     error: ERROR_BY_FORMAT[format],
   });
 
-  // typ well-formedness: a PRESENT typ must be a CWT media type — the registered
-  // `application/cwt` (RFC 8392, the COSE twin of JOSE's bare "JWT") or a
-  // structured `<type>+cwt` — so a COSE object of another shape cannot pass as
-  // this claims CWT. A typ-LESS token is accepted here — presence requiredness is
-  // a DOMAIN/profile policy.
+  // typ well-formedness: a PRESENT typ must be `application/cwt` or a structured
+  // `<type>+cwt`, so a COSE object of another shape cannot pass as a claims CWT.
+  // A typ-LESS token is accepted — presence is a DOMAIN/profile policy.
   const typ = decoded.typ;
   assertWireTyp({
     typ,
@@ -71,10 +68,9 @@ export const verifyCwt = <C extends Dict = Dict>(
     presence: "optional",
     error: ERROR_BY_FORMAT[format],
     code: `${format}_invalid_typ`,
-    // Derived, like the code beside it and like every other refusal on this
-    // path: a COSE_Mac0 reports itself as a CWM. This was the last hardcoded
-    // `CWT` left after the kid/typ-mismatch titles started deriving, so a `cwm`
-    // read answered under two different spellings depending on which gate fired.
+    // Derived, like every other refusal on this path: a COSE_Mac0 reports itself
+    // as a CWM. A hardcoded `CWT` here makes one `cwm` read answer under two
+    // spellings depending on which gate fired.
     title: `${format.toUpperCase()} Invalid Typ`,
     details:
       "Header typ is present but is not CWT or a <type>+cwt media type, so the token cannot be verified as a CWT.",
@@ -89,12 +85,10 @@ export const verifyCwt = <C extends Dict = Dict>(
     error: ERROR_BY_FORMAT[format],
   });
 
-  // ⛔ ONE OPENING, shared with the opaque `CwsKit.verify`. The structure the key
-  // implies is the ONLY one accepted — a COSE_Mac0 handed to an asymmetric key
-  // (or a COSE_Sign1 to a symmetric one) is refused as malformed rather than
-  // carried into a signature cycle it could never satisfy — the two
-  // protected-header gates answer a hostile header before any cryptography, and
-  // the signature or MAC is checked over the structure.
+  // ⛔ ONE OPENING, shared with the opaque `CwsKit.verify`: the structure the key
+  // implies is the ONLY one accepted, so a COSE_Mac0 handed to an asymmetric key
+  // is refused as malformed rather than carried into a signature cycle it could
+  // never satisfy.
   const { protectedHeader, unprotectedHeader, custom, protectedMap, content } =
     verifyCoseStructure({
       kryptos,
@@ -104,18 +98,16 @@ export const verifyCwt = <C extends Dict = Dict>(
       payloadDetail: "there are no CWT claims to verify",
     });
 
-  // Content tamper check: runs AFTER the signature/MAC has been verified with the
-  // resolved kryptos, exactly as `JwtKit.verify` does. NOT a key selection step —
-  // header cert fields remain forbidden as key sources.
+  // Content tamper check, AFTER the signature/MAC has been verified with the
+  // resolved kryptos, as `JwtKit.verify` does. ⚠ NOT a key selection step — header
+  // cert fields stay forbidden as key sources.
   //
-  // Off the PROTECTED bucket alone: a binding the signature does not cover is one
-  // any holder could rewrite. The two digests reach this bucket from ONE COSE
-  // label — RFC 9360 §2's `x5t` (34), dispatched on its `hashAlg` member by
-  // `internal/cose/cose-cert-hash.ts`.
-  // ⚠ THE THIRD DIGEST HAS NO DOMAIN FIELD. RFC 9360 §2 lets a conformant issuer
-  // bind with SHA-384 or SHA-512 (RFC 9054 marks both `Recommended: Yes`), and
-  // JOSE registers no parameter for either — so it is resolved against the raw
-  // PROTECTED bucket here and handed down as a verdict.
+  // Off the PROTECTED bucket alone: any holder could rewrite a binding the
+  // signature does not cover. Both JOSE-carried digests reach it from ONE COSE
+  // label (RFC 9360 §2 `x5t`), dispatched by `internal/cose/cose-cert-hash.ts`.
+  //
+  // ⚠ A SHA-384/SHA-512 binding has no domain field to travel in, so it is
+  // resolved against the RAW protected bucket here and handed down as a verdict.
   verifyCertBinding({
     header: {
       certificateThumbprint: protectedHeader["x5t#S256"],
@@ -127,15 +119,15 @@ export const verifyCwt = <C extends Dict = Dict>(
     mode: certBindingMode,
   });
 
-  // The verified payload IS the CWT Claims Set, read through the ONE Message
-  // codec every COSE claims wire shares (`decodeCwtMessage` — RFC 8392 §7.1
-  // step 2 / §7.2 step 7, which is also where the no-cty-driven-parse reasoning
-  // lives). The codec yields the COSE-name-keyed WIRE (temporal claims as Dates).
+  // The verified payload IS the CWT Claims Set, read through the ONE Message codec
+  // every COSE claims wire shares (`decodeCwtMessage`, which also carries the
+  // no-cty-driven-parse reasoning). It yields the COSE-name-keyed WIRE, temporal
+  // claims as Dates.
   const wire = decodeCwtMessage(content);
 
-  // Temporal range — every temporal claim validated IF PRESENT — plus the
-  // caller's wire `assert`, in one pass. The CBOR codec has already yielded
-  // `Date`s, which is why no lift happens here and one does on the JOSE wire.
+  // Temporal range — every temporal claim validated IF PRESENT — plus the caller's
+  // wire `assert`, in one pass. The CBOR codec already yielded `Date`s, which is
+  // why no lift happens here and one does on the JOSE wire.
   validateWireClaims({
     claims: wire,
     assert: assert as Condition<Dict> | undefined,

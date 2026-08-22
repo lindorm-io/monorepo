@@ -24,7 +24,7 @@ describe("splitEncrypt0", () => {
 
   test("strips the outer CWT tag (61)", () => {
     // aegis envelopes what it emits; a foreign COSE_Encrypt0 arrives bare, and
-    // both must read — `decrypt` and `decode` share this one opening.
+    // `decrypt` and `decode` share this one opening.
     const tagged = encodeCbor(
       new Tag(
         COSE_TAG.cwt,
@@ -76,9 +76,8 @@ describe("splitEncrypt0", () => {
   });
 
   test("does NOT require an IV — that gate belongs to `decrypt` alone", () => {
-    // `CweKit.decode` is a header-only read and has always accepted a
-    // COSE_Encrypt0 with no IV; folding the IV check in here would turn a
-    // readable token into a refused one.
+    // ⚠ `CweKit.decode` is a header-only read that accepts a COSE_Encrypt0 with no
+    // IV, so folding the IV check in here turns a readable token into a refused one.
     const noIv = encodeCbor(
       new Tag(COSE_TAG.encrypt0, [PROTECTED, new Map<number, unknown>(), CIPHERTEXT]),
     );

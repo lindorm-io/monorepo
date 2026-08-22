@@ -3,11 +3,12 @@ import { CoseError } from "../../errors/index.js";
 import { ownEntry } from "./own-entry.js";
 
 /**
- * OFFICIAL JOSE algorithm name <-> COSE algorithm label (IANA COSE Algorithms
- * registry). We emit the deprecated-but-universal polymorphic identifiers (RFC
- * 9864 deprecates them, but the installed base + @auth0/cose read these); the
- * curve for EdDSA (-8) is resolved from the key, not the label. These are the
- * NON-private-use registrations — the interop allowlist (`isOfficialCoseAlg`).
+ * OFFICIAL JOSE algorithm name <-> COSE algorithm label — the non-private-use
+ * registrations behind `isOfficialCoseAlg`.
+ *
+ * ⚠ aegis emits the POLYMORPHIC identifiers, which RFC 9864 deprecates, because
+ * the installed base and @auth0/cose read those. The EdDSA curve is therefore
+ * resolved from the KEY, not from the label.
  */
 const JOSE_TO_COSE_OFFICIAL: Readonly<Record<string, number>> = {
   // ECDSA
@@ -28,7 +29,7 @@ const JOSE_TO_COSE_OFFICIAL: Readonly<Record<string, number>> = {
   HS256: 5,
   HS384: 6,
   HS512: 7,
-  // ML-DSA (RFC 9964 — IANA-registered, Recommended: Yes; pure ML-DSA)
+  // ML-DSA — RFC 9964 §5
   "ML-DSA-44": -48,
   "ML-DSA-65": -49,
   "ML-DSA-87": -50,
@@ -38,18 +39,16 @@ const COSE_TO_JOSE: Readonly<Record<number, string>> = Object.fromEntries(
   Object.entries(JOSE_TO_COSE_OFFICIAL).map(([alg, label]) => [label, alg]),
 );
 
-// ⚠ BOTH TABLES ARE READ THROUGH `ownEntry`, never indexed directly. A plain
-// index resolves an `Object.prototype` member name — `algorithm in table` is
-// TRUE for `"toString"`, and `table["toString"]` is a FUNCTION, so the
-// `=== undefined` guards below never fire and a function reaches the CBOR
-// encoder as an alg label. See own-entry.ts.
+// ⚠ Both tables are read through `ownEntry`, never indexed directly: a plain index
+// resolves an `Object.prototype` member name, so `table["toString"]` is a FUNCTION
+// that reaches the CBOR encoder as an alg label. See own-entry.ts.
 
 /**
- * Interop gate: true iff the algorithm has an OFFICIAL (non-private-use)
- * COSE label, i.e. it is COSE-RFC compliant. A non-proprietary `sign` refuses
- * anything this returns `false` for. With ML-DSA now IANA-registered (RFC 9964),
- * every kryptos signing/MAC algorithm is official — the sig gate no longer fires
- * for any real key; the enc-side (AES-CBC-HMAC) gate still exercises the mechanism.
+ * Interop gate: true iff the algorithm has an OFFICIAL (non-private-use) COSE
+ * label. A non-proprietary `sign` refuses anything this returns `false` for.
+ *
+ * ⚠ Every kryptos signing/MAC algorithm is registered, so this gate does not fire
+ * for any real key; the enc-side (AES-CBC-HMAC) gate exercises the mechanism.
  */
 export const isOfficialCoseAlg = (algorithm: KryptosAlgorithm): boolean =>
   ownEntry(JOSE_TO_COSE_OFFICIAL, algorithm) !== undefined;

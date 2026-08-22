@@ -92,10 +92,10 @@ export class JweKit implements IJweKit {
 
     // Step 2: Build the protected header with key management output.
     //
-    // No `crit` is ever written: RFC 7515 §4.1.11 forbids `crit` from naming
-    // registered parameters, and every parameter the kit derives here (alg, enc,
-    // epk, iv, tag, p2c, p2s) is registered. Aegis implements no extension
+    // No `crit` is ever written: every parameter the kit derives here (alg, enc,
+    // epk, iv, tag, p2c, p2s) is registered, and aegis implements no extension
     // parameter, so the header carries no `crit` of its own at all.
+    // RFC 7515 §4.1.11.
     const header = encodeJoseHeader(
       buildJoseHeader({
         reserved: KIT_CAPABILITIES.jwe.reserved,
@@ -193,10 +193,7 @@ export class JweKit implements IJweKit {
     }
 
     // `crit` (RFC 7515 §4.1.11) then algorithm-match — the ONE pair, in the ONE
-    // order, that every wire runs ahead of its signature or AEAD cycle. The crit
-    // check used to be split in two HERE — malformed BEFORE the algorithm-match,
-    // unrecognised AFTER the encryption-match — so a JWE marking an unrecognised
-    // extension critical was answered by whichever of the three ran first.
+    // order, that every wire runs ahead of its signature or AEAD cycle.
     assertProtectedHeaderGates({
       protectedHeader: decoded.header,
       custom: decoded.custom,
@@ -293,9 +290,9 @@ export class JweKit implements IJweKit {
   /**
    * Is this the JWE Compact Serialization (RFC 7516 §7.1), encrypted with an
    * algorithm on the allowlist? Five segments and the two REQUIRED header
-   * parameters, `alg` (§4.1.1) and `enc` (§4.1.2) — never a `typ`, which RFC
-   * 7516 does not require at all, so an externally issued encrypted token
-   * carries none and used to be rejected as an unrecognised wire.
+   * parameters, `alg` (RFC 7516 §4.1.1) and `enc` (RFC 7516 §4.1.2) — never a
+   * `typ`, so an externally issued encrypted token that carries none still
+   * qualifies.
    */
   static isJwe(jwe: string): boolean {
     return isJweFormat(jwe) && isSupportedJoseAlgorithm(jwe);

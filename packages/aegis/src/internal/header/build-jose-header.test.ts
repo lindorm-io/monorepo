@@ -54,10 +54,9 @@ describe("buildJoseHeader", () => {
 
   describe("a tier contributes only the parameters it HAS", () => {
     test("an ABSENT derived value leaves the caller's standing", () => {
-      // ⛔ THE DEFECT. Three kits wrote `jku: kryptos.jwksUri ?? undefined` after
-      // the caller's bag, so a key that resolved no uri wrote `undefined` over
-      // the caller's value and the parameter left the wire altogether. An absent
-      // value is an absent PARAMETER — it never overwrites anything.
+      // ⛔ AN ABSENT VALUE IS AN ABSENT PARAMETER — it never overwrites anything.
+      // A `jku: kryptos.jwksUri ?? undefined` written after the caller's bag would
+      // blank the caller's value whenever the key resolves no uri.
       const header = build({
         header: { jku: "https://caller.lindorm.test/jwks.json" },
         derived: { alg: "ES512", kid: "key_test", typ: "JWT", jku: undefined },
@@ -84,11 +83,10 @@ describe("buildJoseHeader", () => {
 
     /**
      * ⚠ THE `crit` CHECK IS ON THE MERGED HEADER, and a parameter the header does
-     * not carry is REFUSED rather than carried. RFC 7515 §7.1 gives the compact
-     * serialisation ONE header, so the message is the merged result — but it is
-     * assembled from four separately normalised tiers, and a tier cannot answer a
-     * question about the whole. Asking once, at the end, is what makes the four
-     * tiers indistinguishable to the rule.
+     * not carry is REFUSED rather than carried. The compact serialisation has ONE
+     * header (RFC 7515 §7.1), assembled from separately normalised tiers, and a tier
+     * cannot answer a question about the whole. Asking once, at the end, is what
+     * makes the tiers indistinguishable to the rule.
      */
     test("a crit naming a parameter no tier holds is refused", () => {
       expect(() => build({ header: { crit: ["oid"] } as never })).toThrow(
@@ -123,18 +121,17 @@ describe("buildJoseHeader", () => {
 
     /**
      * ⚠ THE MERGE IS WHY THE CHECK RUNS LAST. `apu` is written by the DERIVED
-     * tier — `JweKit.ts:97` writes `apu: partyProducer` from `resolveEcdhParty`,
+     * tier — `JweKit.ts` writes `apu: partyProducer` from `resolveEcdhParty`,
      * which returns the caller's value verbatim — so a `crit` in the caller's bag
      * names a parameter no other tier can see. Checked per tier, this would refuse
      * a satisfied `crit`; checked on the merge, it accepts it.
      */
     /**
      * ⚠ THE MEMBER MUST BE THE ELIGIBLE ONE. The satisfaction check runs on the
-     * MERGED header, so a `crit` in the caller's tier may be answered by a
-     * parameter another tier contributed — that is what this pins. It cannot be
-     * pinned with `apu`/`x5t`/`cty` any more: RFC 7515 §4.1.11 forbids a producer
-     * naming a specification-defined parameter in `crit`, so the eligibility gate
-     * refuses those on the caller's bag before any tier is merged.
+     * MERGED header, so a `crit` in the caller's tier may be answered by a parameter
+     * another tier contributed — which is what this pins. It cannot be pinned with a
+     * specification-defined parameter, because the eligibility gate refuses those on
+     * the caller's bag before any tier is merged (RFC 7515 §4.1.11).
      *
      * `oid` is caller-supplied on every aegis path, so no PRODUCTION path writes
      * one into `derived`. It is placed there deliberately: this is a unit probe of
@@ -158,11 +155,10 @@ describe("buildJoseHeader", () => {
     });
 
     test("a crit naming a CERT parameter is refused before any tier is merged", () => {
-      // The cert tier crosses from DOMAIN names via `mapTokenHeader`, and all
-      // three of its parameters are defined by RFC 7515 (§4.1.6 `x5c`, §4.1.7
-      // `x5t`, §4.1.8 `x5t#S256`) — so §4.1.11 forbids a `crit` naming any of
-      // them, whatever the merge goes on to produce. The refusal is therefore at
-      // the gate, on the caller's bag, and never reaches the merge.
+      // The cert tier crosses from DOMAIN names via `mapTokenHeader`, and all three
+      // of its parameters are specification-defined (RFC 7515 §4.1.6,
+      // RFC 7515 §4.1.7, RFC 7515 §4.1.8), so RFC 7515 §4.1.11 refuses a `crit`
+      // naming any of them at the gate, on the caller's bag, before the merge.
       expect(() =>
         build({
           header: { crit: ["x5t"] } as never,
@@ -179,12 +175,11 @@ describe("buildJoseHeader", () => {
 
     /**
      * ⚠ A WIRE DOOR TAKES WIRE NAMES, AND A `crit` MEMBER IS A PARAMETER NAME.
-     * This used to MINT: `shapeWireHeader` runs `criticalToWire` over the
-     * caller's `crit` (`token-header.ts#encodeHeaderValue`), which remapped
-     * `objectId` to `oid` and left the header satisfied — while the COSE twin
-     * refused the identical call, because a COSE `crit` member is a LABEL (RFC
-     * 9052 §1.5) and `objectId` is none. One call, two verdicts, chosen by the
-     * encoding.
+     * `shapeWireHeader` runs `criticalToWire` over the caller's `crit`
+     * (`token-header.ts#encodeHeaderValue`), which would remap `objectId` to `oid`
+     * and leave the header satisfied — while the COSE twin refuses the identical
+     * call, because a COSE `crit` member is a LABEL (RFC 9052 §1.5). One call, two
+     * verdicts, chosen by the encoding.
      *
      * The eligibility gate runs on the caller's bag BEFORE that shaping, so both
      * wires now refuse. The domain door is where a domain name is translated,
@@ -202,20 +197,17 @@ describe("buildJoseHeader", () => {
     });
 
     /**
-     * ⚠ THE MEMBER IS A KEY, AND A KEY LOOKUP IS AN OWN-KEY LOOKUP. `crit`'s
-     * members are CALLER-CONTROLLED, so `name in header` — or `header[name]` on a
-     * plain object — resolves through `Object.prototype`: `crit: ["toString"]`
-     * found a function, `isEmpty` called it non-empty, and aegis minted a header
-     * whose `crit` names a parameter it does not carry. That is the token RFC 7515
-     * §4.1.11 makes invalid for every recipient, produced by the very check written
-     * to prevent it. The merged header is handed over as a `Map` (`Object.entries`
-     * in, own keys only), so there is no chain to walk. `in` on a caller-influenced
-     * key is a BANNED construct in this package.
+     * ⚠ THE MEMBER IS A KEY, AND A KEY LOOKUP IS AN OWN-KEY LOOKUP. `crit`'s members
+     * are CALLER-CONTROLLED, so `name in header` — or `header[name]` on a plain
+     * object — resolves through `Object.prototype`: `crit: ["toString"]` finds a
+     * function, `isEmpty` calls it non-empty, and aegis mints a header whose `crit`
+     * names a parameter it does not carry (RFC 7515 §4.1.11). The merged header is
+     * handed over as a `Map`, so there is no chain to walk. `in` on a
+     * caller-influenced key is a BANNED construct in this package.
      *
-     * ⚠ The ELIGIBILITY gate answers these first now (it looks the member up in a
-     * `Map` too), so the code is `jwt_crit_param_not_permitted` rather than
-     * `jwt_invalid_crit`. The refusal has moved one step earlier; what it refuses
-     * has not. The satisfaction check's own prototype defence is pinned directly
+     * ⚠ The ELIGIBILITY gate answers these first (it looks the member up in a `Map`
+     * too), so the code is `jwt_crit_param_not_permitted` rather than
+     * `jwt_invalid_crit`. The satisfaction check's own prototype defence is pinned
      * in `assert-crit-satisfied.test.ts`, where no gate stands in front of it.
      */
     test.each(["toString", "constructor", "valueOf", "hasOwnProperty", "__proto__"])(
@@ -256,10 +248,9 @@ describe("buildJoseHeader", () => {
       // to describe the key that actually signed.
       //
       // ⚠ It THROWS, matching `buildCoseHeaders`'s `cose_reserved_header` — one
-      // verdict on both wires. Overruling the value silently was survivable only
-      // while the kit HAD a value of its own for every reserved param; where it
-      // has none (a signing kit handed an `enc`) the caller's went straight to
-      // the wire, which is the gap the short reserved rows opened.
+      // verdict on both wires. Overruling the value silently only works while the kit
+      // HAS a value of its own for every reserved param; where it has none (a signing
+      // kit handed an `enc`) the caller's goes straight to the wire.
       expect(() => build({ header: { alg: "RSA-OAEP" } as never })).toThrow(
         /Header parameter "alg" is key-derived and cannot be set/,
       );
@@ -399,9 +390,8 @@ describe("buildJoseHeader", () => {
     });
 
     test("a value of the wrong shape is dropped by the registry's guard", () => {
-      // `jku` is codec `url`, so a bare word is not a jwks uri; dropping it here
-      // is what stops the caller's bag reaching the wire unguarded now that it
-      // no longer detours through the domain pass.
+      // `jku` is codec `url`, so a bare word is not a jwks uri — dropping it here is
+      // what stops the caller's bag reaching the wire unguarded.
       expect(build({ header: { jku: "not-a-uri" } }).jku).toBeUndefined();
       expect(build({ header: { cty: 42 } as never }).cty).toBeUndefined();
     });

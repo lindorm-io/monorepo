@@ -244,14 +244,10 @@ describe("CwtKit (COSE_Sign1, asymmetric)", () => {
  * The COSE structure the claims kit builds, and the header rules it enforces
  * while building it.
  *
- * ⚠ These used to be covered INCIDENTALLY. The claims core signed and verified by
- * constructing `CwsKit`, so `CwsKit.test.ts` drove the structure tag, the
- * reserved-parameter refusal, the two `crit` placement rules and the duplicate
- * rule on behalf of all three signed COSE formats. The claims core composes those
- * utilities itself now — a sibling of the opaque signer rather than a caller of
- * it — so the `cwt` wire owes its own end-to-end evidence: a util test cannot
- * tell which arguments a kit hands it, and `cws` passing says nothing about
- * `cwt`.
+ * ⚠ THE `cwt` WIRE OWES ITS OWN END-TO-END EVIDENCE. The claims core composes
+ * the shared COSE utilities itself — a sibling of the opaque signer rather than a
+ * caller of it — and a util test cannot tell which arguments a kit hands it, so
+ * `cws` passing says nothing about `cwt`.
  */
 describe("CwtKit — the COSE_Sign1 it builds and the header rules it enforces", () => {
   const kit = new CwtKit({ logger: createMockLogger(), kryptos: TEST_EC_KEY_SIG });
@@ -360,10 +356,10 @@ describe("CwtKit — the COSE_Sign1 it builds and the header rules it enforces",
   test("verify accepts the crit extension aegis implements once the caller declares it", () => {
     // ⛔ `oid` GETS NO EXCEPTION AT VERIFY. It is the registry's one
     // `critEligible` parameter, which is what lets the MINT gate write it — but
-    // RFC 7515 §4.1.11 puts the duty to understand a critical extension on the
-    // RECIPIENT, and a registry entry says nothing about whether the application
-    // behind this verify can act on one. So the round trip closes on the
-    // declaration, in WIRE vocabulary at a wire door.
+    // the duty to understand a critical extension is the RECIPIENT's
+    // (RFC 7515 §4.1.11), and a registry entry says nothing about whether the
+    // application behind this verify can act on one. So the round trip closes on
+    // the declaration, in WIRE vocabulary at a wire door.
     const token = kit.sign(wire, { header: { crit: ["oid"], oid: "1.2.3.4" } });
 
     expect(() => kit.verify(token)).toThrow(
@@ -399,10 +395,10 @@ describe("CwtKit — the COSE_Sign1 it builds and the header rules it enforces",
 
     const structure = [...(value as Array<unknown>)];
     const bucket = decodeCbor(structure[0] as Uint8Array) as Map<unknown, unknown>;
-    // Label 2 is `crit` and label 16 is `typ` (RFC 9052 §3.1 Table 3, RFC 9596
-    // §2). `typ` is already in this bucket, so the header stays well-formed and
-    // the only fault is the member itself — one RFC 7515 §4.1.11 forbids a
-    // producer to name and lets a recipient refuse the token for.
+    // Label 2 is `crit` and label 16 is `typ` (RFC 9052 §3.1, RFC 9596 §2). `typ`
+    // is already in this bucket, so the header stays well-formed and the only
+    // fault is the member itself — a specification-defined parameter a producer
+    // may not name in `crit` (RFC 7515 §4.1.11).
     //
     // ⚠ An UNREGISTERED text label reaches a DIFFERENT refusal — the unclaimed
     // one (`*_unsupported_crit_param`), or acceptance once the caller declares it
@@ -472,14 +468,14 @@ describe("CwtKit — the algorithm-match gate answers under the cwt tag", () => 
  * A DETACHED (nil) payload — legal COSE (RFC 9052 §4.1), where the content
  * travels out of band — is not a claims CWT: there are no claims to verify.
  *
- * What matters is HOW the kit says so. The claims verify used to cast the `null`
- * away and hand it to `Buffer.from`, which throws a raw `TypeError` outside the
- * `AegisError` contract, so a caller discriminating on that contract answered a
- * server fault where it should have answered a rejected token. The token costs
- * an attacker nothing: a legal 4-element COSE_Sign1 with a matching `kid` and
- * `alg` clears the kid fail-fast, the typ gates, the arity, the algorithm match
- * and the crit check before reaching the crash. `CwtKit.decode` already answered
- * `cose_malformed` for the same bytes, so the two verbs disagreed about it too.
+ * What matters is HOW the kit says so. Casting the `null` away and handing it to
+ * `Buffer.from` throws a raw `TypeError` outside the `AegisError` contract, so a
+ * caller discriminating on that contract answers a server fault where it should
+ * answer a rejected token. The token costs an attacker nothing: a legal
+ * 4-element COSE_Sign1 with a matching `kid` and `alg` clears the kid fail-fast,
+ * the typ gates, the arity, the algorithm match and the crit check before
+ * reaching the crash. `CwtKit.decode` answers `cose_malformed` for the same
+ * bytes, and the two verbs must not disagree about it.
  */
 describe("CwtKit — a DETACHED (nil) payload is refused under the error contract", () => {
   const kit = new CwtKit({ logger: createMockLogger(), kryptos: TEST_EC_KEY_SIG });
@@ -641,25 +637,25 @@ describe("CwtKit — a NIL signature is refused under the error contract", () =>
  * alg/kid/typ), so a caller may relabel the content it mints. That label must
  * not change how the CLAIMS are read.
  *
- * RFC 8392 §7.1 step 2 makes the Message "the binary representation of the CWT
- * Claims Set" and §7.2 verifies that "the Message is a valid CBOR map" — there
- * is no cty-driven decode anywhere in the CWT rules, and `cty` on a CWT signals
- * NESTING (RFC 8392 Appendix A.6), not a parse strategy.
+ * A CWT's Message is the binary CWT Claims Set, validated as a CBOR map
+ * (RFC 8392 §7.1, RFC 8392 §7.2) — there is no cty-driven decode anywhere in the
+ * CWT rules, and `cty` on a CWT signals NESTING (RFC 8392 Appendix A.6), not a
+ * parse strategy.
  *
- * Running the verified bytes through the content codec first let the caller's
- * own label decide the parse, so `CwtKit.sign(claims, { header: { cty:
- * "application/json" } })` minted a token its own `verify` could not read —
- * leaking a raw `SyntaxError`, outside the error contract — while
- * `CwtKit.decode` read the same token fine. Two verbs disagreeing about one
- * token, over a label the wire lets any caller set.
+ * Running the verified bytes through the content codec first would let the
+ * caller's own label decide the parse, so `CwtKit.sign(claims, { header: { cty:
+ * "application/json" } })` would mint a token its own `verify` could not read —
+ * leaking a raw `SyntaxError`, outside the error contract — while `CwtKit.decode`
+ * read the same token fine. Two verbs disagreeing about one token, over a label
+ * the wire lets any caller set.
  */
 describe("CwtKit — a caller cty relabels the content, it does not re-parse the claims", () => {
   const kit = new CwtKit({ logger: createMockLogger(), kryptos: TEST_EC_KEY_SIG });
 
-  // ⚠ The `absent` row expects NO cty on the wire, not an inferred one. RFC 8392
-  // §7.2 reads the payload as "a valid CBOR map" with no cty-driven decode, so a
-  // claims kit derives none — the parameter exists on this wire to declare
-  // NESTING (Appendix A.6), which is precisely what the other three rows do.
+  // ⚠ The `absent` row expects NO cty on the wire, not an inferred one. The
+  // payload is read as a CBOR map with no cty-driven decode (RFC 8392 §7.2), so a
+  // claims kit derives none — the parameter exists on this wire to declare NESTING
+  // (RFC 8392 Appendix A.6), which is precisely what the other three rows do.
   const cases: Array<[string, string | undefined, string | undefined]> = [
     ["absent", undefined, undefined],
     ["application/json", "application/json", "application/json"],
@@ -722,9 +718,9 @@ describe("CwtKit — verify logs at entry, so a refusal is traceable", () => {
  * `assert-wire-typ.test.ts` pins the shared predicate against a config it
  * declares itself, so it stays green over a kit that stopped calling it. Here
  * the token is a REAL foreign COSE object: `CwsKit` signs opaque content and
- * stamps `application/cws`, RFC 9596 §2 makes `typ` the declaration of what the
- * whole COSE object IS, and a COSE object of another shape must not pass as a
- * claims CWT. Signed with the SAME key, so the kid fail-fast is cleared and the
+ * stamps `application/cws`, `typ` declares what the whole COSE object IS
+ * (RFC 9596 §2), and a COSE object of another shape must not pass as a claims
+ * CWT. Signed with the SAME key, so the kid fail-fast is cleared and the
  * typ is the only thing that refuses it.
  */
 describe("CwtKit — the typ gate refuses a COSE object of another shape", () => {

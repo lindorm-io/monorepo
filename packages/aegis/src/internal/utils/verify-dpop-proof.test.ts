@@ -142,9 +142,9 @@ describe("verifyDpopProof", () => {
   /**
    * A DPoP proof is attacker-supplied: the presenter signs it, and the verifier
    * has only its own type checks between the wire and the values it hands back.
-   * RFC 9449 §4.2 makes `jti`/`htm`/`htu` REQUIRED, and each is REQUIRED because
-   * something downstream acts on it — `jti` is what makes the proof single-use,
-   * `htm`/`htu` are what bind it to one request. A claim carried as an empty
+   * `jti`/`htm`/`htu` are required (RFC 9449 §4.2) because something downstream
+   * acts on each — `jti` is what makes the proof single-use, `htm`/`htu` are what
+   * bind it to one request. A claim carried as an empty
    * string satisfies "present" while naming nothing: a replay cache keyed on an
    * empty `jti` collapses every proof onto one entry, and an empty `htu` binds
    * the proof to no request at all.

@@ -275,8 +275,8 @@ describe("JwtKit", () => {
         vectorTrustMark: "https://trustmark.lindorm.io/vot/P1.Cc.Ce.Aa",
       });
 
-      // The tokenId is a domain convenience the wire kit no longer returns; read
-      // it back off the wire jti.
+      // The tokenId is a domain convenience the wire kit does not return; read it
+      // back off the wire jti.
       const tokenId = JwtKit.decode(token).payload.jti;
 
       const wirePayload = {
@@ -503,7 +503,7 @@ describe("JwtKit", () => {
     test("⚠ a NON-STRING typ is refused by the HEADER decode, before the typ gate", () => {
       // The typ gate carries an `isString` guard, but nothing on this wire can
       // reach it with a non-string: `decodeJoseHeader` refuses one first, under
-      // its own JOSE-level code (RFC 7515 §4.1.9 makes typ a StringOrURI). So the
+      // its own JOSE-level code (typ is a StringOrURI — RFC 7515 §4.1.9). So the
       // guard is defensive, and THIS is the error a crafted header actually gets.
       const token = kit.sign({ iss: issuer, sub: "s", exp: 1704099600 });
       const decoded = JwtKit.decode(token);

@@ -49,7 +49,7 @@ export const describeKeyOperation = (operation: KeyOperation): KeyOperationCopy 
           message: "Verification key does not satisfy the verification policy",
           title: "Verification Key Policy Violation",
           details:
-            "The key named by the token's kid header does not satisfy the verification policy, so the token is rejected before its signature is checked; a token must not be able to choose the class of key that verifies it (RFC 8725 §3.1).",
+            "The key named by the token's kid header does not satisfy the verification policy, so the token is rejected before its signature is checked; a token must not be able to choose the class of key that verifies it. RFC 8725 §3.1.",
         },
       };
 

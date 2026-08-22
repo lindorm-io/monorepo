@@ -32,8 +32,8 @@ describe("coseStructure", () => {
   });
 
   test("a BARE array carries no tag to report", () => {
-    // Legal COSE, but a caller asking "which structure is this?" gets no answer
-    // — which is what `isCose` needs, since an untagged array is not evidence.
+    // Legal COSE, but no answer to "which structure is this?" — an untagged array
+    // is not evidence, which is what `isCose` needs.
     expect(coseStructure(SIGN1)).toBeUndefined();
   });
 });
@@ -50,8 +50,8 @@ describe("unwrapCose", () => {
   });
 
   test("refuses a structure whose tag the caller did not ask for", () => {
-    // A COSE_Mac0 is not a COSE_Sign1. Unwrapping it anyway would hand a MAC to
-    // a signature verifier, which then fails with the wrong diagnosis.
+    // Unwrapping a COSE_Mac0 as a COSE_Sign1 hands a MAC to a signature verifier,
+    // which then fails with the wrong diagnosis.
     const mac0 = new Tag(COSE_TAG.mac0, SIGN1);
 
     expect(

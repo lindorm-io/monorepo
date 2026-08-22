@@ -16,27 +16,20 @@ const RESOURCE = "https://rs.lindorm.io/";
 const CLIENT = "client-1";
 
 /**
- * THE MEDIA TYPE EACH BUILT-IN PROFILE STAMPS.
+ * THE MEDIA TYPE EACH BUILT-IN PROFILE STAMPS (RFC 8725 §3.11).
+ * `a-profile-refuses-a-token-typed-as-another-kind` in the conformance table
+ * states that the type is CHECKED; this states WHAT each type is. A check against
+ * a value nothing pins keeps working after the value silently changes, while every
+ * deployed relying party matching the old string starts refusing our tokens.
  *
- * RFC 8725 §3.11 recommends explicit typing so a token issued for one purpose
- * cannot be replayed where another is expected, and each profile's media type is
- * the concrete form of that: `a-profile-refuses-a-token-typed-as-another-kind`
- * in the conformance table states that the type is CHECKED, and this states WHAT
- * each profile's type is. Both are needed — a check against a value nothing pins
- * would keep working after the value silently changed, and every deployed
- * relying party matching on the old string would start refusing our tokens.
+ * ⚠ The expected strings are FROZEN LITERALS, not read off the descriptors: a
+ * table derived from the registry would compare the registry to itself.
  *
- * ⚠ The expected strings are FROZEN LITERALS, not read off the descriptors. A
- * table derived from the registry would compare the registry to itself and pass
- * over any change to it; these are the values other implementations match on, so
- * they are written out and a change to one is a deliberate edit here.
+ * ⚠ TOTAL over `keyof BuiltInProfiles`, so a new profile is a compile error rather
+ * than a profile whose type nothing states.
  *
- * ⚠ TOTAL over `keyof BuiltInProfiles`, so a twelfth profile is a compile error
- * rather than a profile whose type nothing states.
- *
- * ⚠ Not a conformance row: the table states ONE capability per row and this is
- * eleven values of the same one, bound to a collection by its own type. Beside
- * the registry is where the collection lives.
+ * ⚠ Not a conformance row: that table states ONE capability per row, and this is
+ * many values of the same one, bound to a collection by its own type.
  */
 type Expectation<P extends keyof BuiltInProfiles> =
   | {
@@ -51,9 +44,7 @@ type Expectation<P extends keyof BuiltInProfiles> =
 const EVENTS = { "urn:lindorm:event:test": {} };
 
 const PROFILE_TYP: { [P in keyof BuiltInProfiles]-?: Expectation<P> } = {
-  // RFC 9068 §2.1 — "JWT access tokens MUST include this media type in the `typ`
-  // header parameter to explicitly declare that the JWT represents an access
-  // token complying with this profile."
+  // RFC 9068 §2.1.
   access_token: {
     mints: true,
     typ: "application/at+jwt",
@@ -90,8 +81,8 @@ const PROFILE_TYP: { [P in keyof BuiltInProfiles]-?: Expectation<P> } = {
       'The profile declares `use: "verify"` — it exists to check a third party\'s token, so there is no token of ours to stamp. Its refusal to mint is stated in the conformance table.',
   },
 
-  // OIDC Core §2 defines the ID Token as a JWT and adds no media type of its own,
-  // so the bare conventional `JWT` is the conformant answer.
+  // OIDC Core §2 adds no media type of its own, so the bare conventional `JWT` is
+  // the conformant answer.
   id_token: {
     mints: true,
     typ: "JWT",

@@ -2,14 +2,12 @@ import type { CoseError } from "../../errors/index.js";
 import { type CoseArity, unwrapCose } from "./unwrap-cose.js";
 
 /**
- * {@link unwrapCose} with the refusal attached — the shape every COSE read path
- * actually needs: reach the structure array, or fail with the structural
- * `cose_malformed` verdict.
+ * {@link unwrapCose} with the refusal attached: reach the structure array, or fail
+ * with the structural `cose_malformed` verdict.
  *
- * `unwrapCose` itself stays a pure decision and never throws, because the words
- * differ per structure (a COSE_Sign1 and a COSE_Encrypt0 are malformed in
- * different terms, under different leaf error classes). Those words are DATA
- * here, so the code — `cose_malformed`, on every wire — cannot drift.
+ * `unwrapCose` stays a pure decision and never throws, because the words differ
+ * per structure and per leaf error class. Those words are DATA here, so the code
+ * — `cose_malformed`, on every wire — cannot drift.
  */
 export const requireCose = (
   value: unknown,

@@ -23,8 +23,7 @@ describe("requireCose", () => {
   });
 
   test("strips the outer CWT tag (61) to reach the structure", () => {
-    // aegis envelopes every COSE token it emits; a foreign producer need not, so
-    // both shapes must read.
+    // aegis envelopes every COSE token it emits; a foreign producer need not.
     expect(
       requireCose(new Tag(COSE_TAG.cwt, SIGN1), {
         arity: { exactly: 4 },
@@ -50,8 +49,8 @@ describe("requireCose", () => {
   });
 
   test("refuses a TAGGED structure whose tag is not among those asked for", () => {
-    // A COSE_Encrypt0 read as a COSE_Sign1 is not merely the wrong length — it is
-    // the wrong structure, and must not be unwrapped into the wrong shape.
+    // A COSE_Encrypt0 read as a COSE_Sign1 is the wrong STRUCTURE, not merely the
+    // wrong length, so it must not be unwrapped into the wrong shape.
     expect(() =>
       requireCose(ENCRYPT0, {
         arity: { exactly: 3 },
@@ -70,8 +69,7 @@ describe("requireCose", () => {
   });
 
   test("`atLeast` admits a LONGER structure", () => {
-    // The claims decoder reads `[protected, unprotected, payload, …]` and does not
-    // care what a future COSE revision appends.
+    // The claims decoder does not care what a future COSE revision appends.
     expect(
       requireCose(["p", "u", "payload", "sig", "extra"], {
         arity: { atLeast: 3 },

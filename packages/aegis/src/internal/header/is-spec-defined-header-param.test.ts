@@ -54,8 +54,8 @@ describe("isSpecDefinedHeaderParam", () => {
    * hand-written half of the predicate must be EXACTLY the registered names the
    * header registry does not answer for: an entry the registry also carries is a
    * second opinion about one parameter, and a registered name in NEITHER is a
-   * hole (that is how `iss`/`sub`/`aud`, which RFC 7519 §10.4.1 registers and
-   * §5.3 gives a checkable meaning, were forgeable through `custom`).
+   * hole (that is how `iss`/`sub`/`aud` were forgeable through `custom` —
+   * RFC 7519 §10.4.1, RFC 7519 §5.3).
    */
   test("the hand-written half is exactly IANA minus the header registry", () => {
     const registered = new Set(registeredJoseNames());

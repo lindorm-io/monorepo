@@ -175,12 +175,12 @@ export class JwsKit implements IJwsKit {
   /**
    * Is this the JWS Compact Serialization (RFC 7515 §7.1), signed with an
    * algorithm on the allowlist? Three segments and a REQUIRED `alg` — never a
-   * `typ`, which §4.1.9 makes OPTIONAL and which an external issuer usually
-   * omits, so routing on the `JWS`/`JOSE`/`+jws` spellings recognised only what
-   * aegis itself minted.
+   * `typ` (RFC 7515 §4.1.9), which an external issuer usually omits, so routing
+   * on the `JWS`/`JOSE`/`+jws` spellings would recognise only what aegis itself
+   * minted.
    *
-   * Deliberately a SUPERSET of {@link JwtKit.isJwt}: RFC 7519 §3 makes every JWT
-   * a JWS. The dispatchers ask the narrow question first, so a claims token
+   * Deliberately a SUPERSET of {@link JwtKit.isJwt} — every JWT is a JWS
+   * (RFC 7519 §3). The dispatchers ask the narrow question first, so a claims token
    * still reaches the JWT branch and only what is left over — the genuinely
    * opaque signed payloads — arrives here.
    */

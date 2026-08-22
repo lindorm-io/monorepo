@@ -216,9 +216,9 @@ describe("JwsKit", () => {
       });
 
       // Craft a malicious header with a well-formed crit naming a
-      // SPECIFICATION-DEFINED parameter the header already carries (`typ`). RFC 7515 §4.1.11
-      // forbids the producer that shape and lets a recipient treat the token as
-      // invalid for it, which aegis does. An UNREGISTERED member would reach a
+      // SPECIFICATION-DEFINED parameter the header already carries (`typ`) —
+      // RFC 7515 §4.1.11. Aegis treats the token as invalid for it. An
+      // UNREGISTERED member would reach a
       // DIFFERENT refusal — the unclaimed one — or be accepted once the caller
       // declares it (`internal/utils/reject-unknown-critical.ts`), so it cannot
       // serve as the MALFORMED probe this row needs.
@@ -244,8 +244,8 @@ describe("JwsKit", () => {
         header: { oid: "ba63b8d4-500a-4646-9aac-cb45543c966d" },
       });
 
-      // crit lists 'missing_ext' but the header does not contain it — violates
-      // RFC 7515 §4.1.11 well-formedness rules.
+      // crit lists 'missing_ext' but the header does not contain it
+      // (RFC 7515 §4.1.11).
       const decoded = JwsKit.decode(token);
       const headerWithCrit = {
         ...decoded.header,
@@ -266,7 +266,7 @@ describe("JwsKit", () => {
         header: { oid: "ba63b8d4-500a-4646-9aac-cb45543c966d" },
       });
 
-      // crit must not contain registered params per RFC 7515 §4.1.11.
+      // crit must not contain registered params (RFC 7515 §4.1.11).
       const decoded = JwsKit.decode(token);
       const headerWithCrit = { ...decoded.header, crit: ["alg"] };
 
@@ -319,8 +319,8 @@ describe("JwsKit", () => {
 describe("JwsKit — the verify gates answer under the jws tag", () => {
   test("refuses a JWT presented as a JWS, on its typ alone", () => {
     // A real JWT, signed by the SAME key, so nothing but the typ distinguishes
-    // it: RFC 7515 §4.1.9 makes `typ` the declaration of what the whole object
-    // is, and a claims JWT is not a thing this kit reads.
+    // it — `typ` declares what the whole object is (RFC 7515 §4.1.9), and a
+    // claims JWT is not a thing this kit reads.
     const jwt = new JwtKit({
       logger: createMockLogger(),
       kryptos: TEST_EC_KEY_SIG,

@@ -46,11 +46,9 @@ describe("rawSignOpaque — certificate binding across the two wires", () => {
    * imports nothing from `src/internal/` or `src/classes/` — a round trip through
    * aegis's own decoder would prove only that the package agrees with itself.
    *
-   * RFC 9360 §2 label 33 is `COSE_X509` — two adjacent bullets: *"If a single
-   * certificate is conveyed, it is placed in a CBOR byte string. […] If multiple
-   * certificates are conveyed, a CBOR array of byte strings is used […]"* — and
-   * label 34 is `COSE_CertHash`,
-   * `[ hashAlg, hashValue ]`, whose SHA-256 identifier is `-16` (RFC 9054 §3.2).
+   * Label 33 is `COSE_X509` — a single certificate as a CBOR byte string, several
+   * as an array of them — and label 34 is `COSE_CertHash`, `[ hashAlg, hashValue ]`
+   * with `-16` for SHA-256. RFC 9360 §2, RFC 9054 §3.2.
    */
   test("binds the certificate chain on the COSE wire, in RFC 9360 structures", async () => {
     const bound = await aegis.cws.sign("payload", { bindCertificate: "chain" });
@@ -143,10 +141,14 @@ describe("rawSignOpaque — certificate binding across the two wires", () => {
   });
 
   /**
-   * ⭐ THE PAIR, ON THE JOSE BYTES — the COSE row above asserts label 34 is the
-   * ONLY digest, and this is its twin: RFC 7515 §4.1.7 `x5t` (SHA-1) and §4.1.8
-   * `x5t#S256` (SHA-256) are SEPARATE parameters, so a JOSE token names its
-   * certificate with BOTH and no option turns either off.
+   * ⭐ THE PAIR, ON THE JOSE BYTES. RFC 7515 §4.1.7 `x5t` (SHA-1) and
+   * RFC 7515 §4.1.8 `x5t#S256` (SHA-256) are SEPARATE parameters, so a JOSE
+   * token names its certificate with BOTH digests where its COSE twin has one
+   * label to key them under (`header-registry.ts`, the COSE cell on
+   * `certificateThumbprintSha1`).
+   *
+   * ⚠ The two are dropped TOGETHER rather than one at a time —
+   * pinned: scenarios.ts#a-mint-told-not-to-bind-a-certificate-emits-none.
    */
   test("a cert-bearing key names its certificate with both JOSE digests", async () => {
     const { token } = await aegis.jws.sign("payload");

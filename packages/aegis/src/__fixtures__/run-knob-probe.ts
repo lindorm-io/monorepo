@@ -166,11 +166,10 @@ export const KNOB_PROBE_FAILURE = {
    * The act WITH the knob set reached the SAME verdict as without it — the
    * option is dropped.
    *
-   * ⚠ It says "the two runs agree" and it now means it. The emitter never
-   * compares the two runs to each other; it compares each against its own
-   * declaration, and it used to raise THIS tag for either mismatch — including
-   * the baseline's, which is a statement about the probe. It is raised for the
-   * FLIPPED run alone now, and that is enough to make the name true: the flipped
+   * ⚠ The emitter never compares the two runs to each other; it compares each
+   * against its own declaration, and raises THIS tag for the FLIPPED run alone —
+   * a baseline mismatch is a statement about the probe and raises
+   * `BASELINE_DISAGREES` instead. That is what makes the name true: the flipped
    * check is reached only after the baseline matched its declaration, and the
    * table requires a probe's two declared verdicts to DIFFER, so a flipped run
    * that misses its own declaration has reached the baseline's verdict.

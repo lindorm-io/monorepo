@@ -30,12 +30,10 @@ const carrierOf = (content: SignContent, key: (typeof CARRIERS)[number]): Dict =
 export const findSensitiveClaims = (content: SignContent): Array<string> => {
   const found = new Set<string>();
 
-  // The VOCABULARY question — did the caller NAME this claim — and it reads the
-  // named predicate for the same reason every other presence check in the domain
-  // layer does. Not the demand notion: a sensitive claim the caller named with an
-  // empty value is still a sensitive claim they wrote, and the disposal below
-  // (encrypt, or strip) must see it. Deciding otherwise would let `""` route a
-  // national identity number past the confidentiality gate.
+  // ⚠ The VOCABULARY question — did the caller NAME this claim — never the demand
+  // notion: a sensitive claim named with an empty value is still one the caller
+  // wrote, and the disposal below (encrypt, or strip) must see it. The demand
+  // notion would let `""` route a national identity number past this gate.
   for (const carrier of CARRIERS) {
     const values = carrierOf(content, carrier);
     for (const domain of SENSITIVE_DOMAINS) {
@@ -61,10 +59,8 @@ export const stripSensitiveClaims = (
 ): SignContent => {
   const stripped: Dict = { ...(content as Dict) };
 
-  // Both emptiness tests read the named predicate for the same reason the
-  // detector above does — a carrier bag and a claim value are the same question
-  // asked of the same caller data, and a hand-written key count is that question
-  // under a second name.
+  // Both emptiness tests read the named predicate: a carrier bag and a claim value
+  // are the same question asked of the same caller data.
   for (const carrier of CARRIERS) {
     const values = carrierOf(content, carrier);
     if (!isClaimSatisfied(values)) continue;

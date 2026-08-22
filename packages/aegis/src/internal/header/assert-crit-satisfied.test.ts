@@ -70,22 +70,18 @@ const verdict = (format: string, header: WireProtectedHeader): string => {
 describe("assertCritSatisfied", () => {
   describe("the bucket is read STRUCTURALLY, never through the prototype chain", () => {
     /**
-     * ⚠ `crit: ["toString"]` is the shape that got through twice. A member is
-     * CALLER-CONTROLLED, so a membership test spelled `name in header` — or a
-     * lookup spelled `header[name]` on a plain object — resolves through
-     * `Object.prototype` and finds a function `isEmpty` calls non-empty. aegis
-     * then minted a `crit` naming a parameter no header carries: a token RFC 7515
-     * §4.1.11 and RFC 9052 §3.1 both make fatal for every recipient. The bucket is
-     * a `Map` for exactly this reason — there is no chain to walk.
+     * ⚠ `crit: ["toString"]` is the shape that has got through twice. A member is
+     * CALLER-CONTROLLED, so a membership test spelled `name in header` — or a lookup
+     * spelled `header[name]` on a plain object — resolves through `Object.prototype`
+     * and finds a function `isEmpty` calls non-empty, so aegis mints a `crit` naming
+     * a parameter no header carries (RFC 7515 §4.1.11, RFC 9052 §3.1). The bucket is
+     * a `Map` for exactly this reason.
      *
-     * ⚠ THE TWO WIRES NOW REFUSE IT UNDER ONE NAME, and they used to refuse it
-     * under two: JOSE reached this check (`*_invalid_crit`) while a COSE `crit`
-     * member is a LABEL (RFC 9052 §1.5), so the label resolver refused it first
-     * (`header_no_cose_label`). Both are answered earlier now, by the
-     * ELIGIBILITY gate — a prototype member is no registered parameter, so it is
-     * not a critical extension aegis implements — which is what collapses the
-     * standing asymmetry. Neither wire minted before and neither mints now; the
-     * verdict is simply the same one on both.
+     * ⚠ BOTH WIRES REFUSE IT UNDER ONE NAME, answered by the ELIGIBILITY gate: a
+     * prototype member is no registered parameter, so it is not a critical extension
+     * aegis implements. Without that gate the two verdicts diverge — JOSE reaches
+     * this check while a COSE `crit` member is a LABEL (RFC 9052 §1.5) and the label
+     * resolver refuses it first.
      */
     test.each(["toString", "constructor", "valueOf", "hasOwnProperty", "__proto__"])(
       "a crit naming the Object.prototype member %s is refused on every wire",
@@ -140,25 +136,19 @@ describe("assertCritSatisfied", () => {
   });
 
   /**
-   * ⚠ A `crit` NAMING A KIT-DERIVED PARAMETER NO LONGER REACHES THIS CHECK, and
-   * the matrix that used to live here has moved to
-   * `assert-crit-eligible.test.ts` rather than being deleted. It pinned that
-   * `crit: ["alg"|"typ"|"cty"|"kid"]` reached ONE verdict on both wires, which
-   * was worth pinning while the question was "does the bucket carry a value for
-   * this member" — a question `cty` and `kid` answered differently per wire,
-   * because the two wires derive and place them differently.
+   * ⚠ A `crit` NAMING A KIT-DERIVED PARAMETER DOES NOT REACH THIS CHECK — the
+   * matrix for it lives in `assert-crit-eligible.test.ts`.
    *
-   * The ELIGIBILITY gate asks a prior question that no bucket can influence: RFC
-   * 7515 §4.1.11 forbids a producer naming a specification-defined parameter in
-   * `crit` at all, so all four are refused at every door before a bucket is
-   * consulted. Keeping a copy of the matrix here would pin the same seven doors
-   * against the same members twice, and the surviving copy is the one beside the
-   * check that now decides them.
+   * The ELIGIBILITY gate asks a prior question no bucket can influence — a producer
+   * may not name a specification-defined parameter in `crit` at all
+   * (RFC 7515 §4.1.11) — so each is refused at every door before a bucket is
+   * consulted. A copy of the matrix here would pin the same doors against the same
+   * members twice.
    */
   describe("a satisfied crit still mints, and an unsatisfied one still refuses", () => {
-    // `oid` is the one parameter aegis owns that RFC 7515 §4.1.11 permits a `crit`
-    // to name at all — every other one is IANA-registered — so it is the member
-    // that reaches the decision rather than agreeing with it by accident.
+    // `oid` is the one parameter aegis owns that a `crit` may name at all — every
+    // other one is IANA-registered (RFC 7515 §4.1.11) — so it is the member that
+    // reaches the decision rather than agreeing with it by accident.
     test("crit: [oid] beside a real oid mints on every wire", () => {
       for (const format of Object.keys(MINTERS)) {
         expect(verdict(format, { crit: ["oid"], oid: "1.2.3.4" })).toBe("MINTS");

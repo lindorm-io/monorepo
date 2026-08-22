@@ -24,12 +24,12 @@ const forged = (): Record<string, unknown> =>
 /**
  * ⛔⛔ AN ISSUER MUST NOT BE ABLE TO SIGN A CLAIM IT NEVER STATED.
  *
- * `normaliseClaims` is `pruneEmptyClaims(omitUndefined(dict))`. `omitFromObject`
- * deliberately PRESERVES an own `__proto__` (`omit-from-object.ts:32`), so it
- * reaches the prune live — and a plain `result[key] = value` there makes it the
- * result's PROTOTYPE. The COSE claims codec then reads registered claims off that
- * bag BY PROPERTY, so every inherited member is encoded as though the issuer had
- * written it.
+ * `normaliseClaims` is `pruneEmptyClaims(omitUndefined(dict))`, and
+ * `omitFromObject` PRESERVES an own `__proto__` — it writes with
+ * `Object.defineProperty` — so the key reaches the prune live, where a plain
+ * `result[key] = value` makes it the result's PROTOTYPE. The COSE claims codec
+ * then reads registered claims off that bag BY PROPERTY, so every inherited
+ * member is encoded as though the issuer had written it.
  *
  * ⚠ `aud` IS THE ONE THAT MATTERS. RFC 7519 §4.1.3 makes it the claim by which an
  * issuer names who a token is for, and every relying party checks it — so a
@@ -57,8 +57,8 @@ describe("a `__proto__` claim key cannot forge a signed claim", () => {
     (_, mint) => {
       const payload = mint() as Record<string, unknown>;
 
-      // MEASURED before the repair, through this exact door: the COSE payload came
-      // back `{iss, sub, aud:"https://victim.example/", cti:"forged-token-id"}`.
+      // The failure this closes: the COSE payload coming back
+      // `{iss, sub, aud:"https://victim.example/", cti:"forged-token-id"}`.
       expect(payload.aud).toBeUndefined();
       expect(payload.cti).toBeUndefined();
 
@@ -84,7 +84,8 @@ describe("a `__proto__` claim key cannot forge a signed claim", () => {
    * running `cd packages/aegis && npm test` proves nothing. It bites in CI because
    * `.github/workflows/pull-request.yml` runs `npm run build` before `test:unit`.
    * Verified by reverting the disposal, rebuilding cbor, and watching this row and
-   * the mint rows above go red together.
+   * the `cwt` mint row above go red together. The `jwt` row stays green: the JOSE
+   * path never enters `@lindorm/cbor`.
    *
    * ⚠ ASSERT ON THE PROPERTY. A swapped prototype serialises as absent, so
    * `JSON.stringify`/`toEqual` reads clean on exactly the hostile input.

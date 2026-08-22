@@ -24,7 +24,7 @@ const logger = createMockLogger();
 
 const WIRE_CLAIMS = { iss: "https://issuer.lindorm.io/", sub: "user-1" };
 
-/** A COSE_Encrypt0 recipient key: RFC 9052 §5.2 is direct encryption, so `dir`. */
+/** A COSE_Encrypt0 recipient key — aegis's CWE outer takes a `dir` key (RFC 9052 §5.2). */
 const CWE_KEY = KryptosKit.generate.enc.oct({
   algorithm: "dir",
   encryption: "A256GCM",
@@ -35,9 +35,8 @@ const HINT = "x-lindorm-hint";
 
 /**
  * A header bag carrying `__proto__` as an OWN property — the shape `JSON.parse`
- * produces and an object literal cannot. A service builds its header from parsed
- * input, so this is the realistic arrival path for the registered bag, whose TYPE
- * is otherwise closed.
+ * produces and an object literal cannot. It is the realistic arrival path for the
+ * registered bag, whose TYPE is otherwise closed.
  */
 const poisoned = (inner: string): Record<string, unknown> =>
   JSON.parse(String.raw`{"__proto__":` + inner + `}`) as Record<string, unknown>;
@@ -57,14 +56,13 @@ const codeOf = (fn: () => unknown): unknown => {
  * doors on both wires.
  *
  * ⚠ THE ROUND TRIP IS THE CLAIM, not the emission: a parameter aegis writes and
- * cannot read back is worse than one it refuses, because the loss is silent and
- * only the recipient sees it. So every carriage row mints through a kit and reads
- * the SAME kit's decode, and asserts the value came back byte-identical.
+ * cannot read back loses silently, so every carriage row mints through a kit and
+ * reads the SAME kit's decode.
  *
- * The refusal rows state where the open set STOPS: `header` keeps its registered
+ * The refusal rows state where the open set STOPS — `header` keeps its registered
  * vocabulary and `custom` keeps everything else, which is what lets a typo in
- * `header` stay a compile error while a typo in `custom` is simply a custom
- * parameter — the thing the caller asked for.
+ * `header` stay a compile error while a typo in `custom` is just a custom
+ * parameter.
  */
 describe("custom header parameters", () => {
   describe("carriage", () => {
@@ -82,8 +80,7 @@ describe("custom header parameters", () => {
       // exist, so a reader that found one there would be reading a typed lie.
       expect(decoded.header).not.toHaveProperty(HINT);
       // ONE bucket, not an empty second one: a JOSE kit result has no unprotected
-      // half of either bag (`KIT_CAPABILITIES.jwt.unprotectedBucket: false`), which
-      // `types/header/wire-envelope.test.ts` pins at the type level.
+      // half of either bag (`KIT_CAPABILITIES.jwt.unprotectedBucket: false`).
       expect(Object.keys(decoded.custom)).toEqual(["header"]);
     });
 
@@ -96,9 +93,9 @@ describe("custom header parameters", () => {
 
       const decoded = CwtKit.decode(token);
 
-      // The key IS the label (RFC 9052 §1.4 `label = int / tstr`): an unregistered
-      // parameter has no integer label to be written under, so the two wires spell
-      // it identically and the read side keys the custom bag by `String(label)`.
+      // An unregistered parameter has no integer label to be written under, so the
+      // two wires spell it identically and the read side keys the custom bag by
+      // `String(label)`. RFC 9052 §1.5.
       expect(decoded.custom.protected).toEqual({ [HINT]: "carried" });
       expect(decoded.protectedHeader).not.toHaveProperty(HINT);
     });
@@ -145,11 +142,9 @@ describe("custom header parameters", () => {
       expect(decoded.custom.header).toEqual({ [HINT]: "carried" });
     });
 
-    // ⛔ THE WRITE SIDE HAS THE SAME ASSIGNMENT HAZARD, from a caller's key rather
-    // than a stranger's: `bag[key] = value` on a plain `{}` with `key` of
-    // `"__proto__"` sets the prototype instead of the parameter, so the request
-    // vanishes and the bag inherits whatever was passed. Same repair, same file
-    // (`build-custom-header.ts`).
+    // ⛔ THE WRITE SIDE HAS THE SAME ASSIGNMENT HAZARD: `bag[key] = value` on a
+    // plain `{}` with `key` of `"__proto__"` sets the prototype instead of the
+    // parameter, so the request vanishes (`build-custom-header.ts`).
     test("a caller's `__proto__` custom param round-trips instead of vanishing", () => {
       const kit = new JwtKit({ kryptos: TEST_EC_KEY_SIG, logger });
 
@@ -161,22 +156,18 @@ describe("custom header parameters", () => {
       expect(({} as Record<string, unknown>).carried).toBeUndefined();
     });
     /**
-     * ⛔ THE REGISTERED BAG HAS THE SAME ASSIGNMENT HAZARD as the custom one, and
-     * it bites HARDER: `build-jose-header.ts` copies the caller's header into a
-     * plain `{}` and then reads `caller.crit` off it, so an own `__proto__`
-     * carrying a `crit` makes the gate refuse a token whose caller never wrote
-     * one — a refusal attributable to nothing in the request. `pruneEmptyHeaders`
-     * copies the same way one step earlier.
+     * ⛔ THE REGISTERED BAG HAS THE SAME ASSIGNMENT HAZARD, and it bites HARDER:
+     * `build-jose-header.ts` copies the caller's header into a plain `{}` and then
+     * reads `caller.crit` off it, so an own `__proto__` carrying a `crit` refuses a
+     * token whose caller never wrote one. `pruneEmptyHeaders` copies the same way.
      *
-     * ⚠ The bag is TYPED closed, so this arrives only from an untyped path — a
-     * header built by `JSON.parse` of caller input, which is the shape a service
-     * actually has. The type is not the guard here; the copy is.
+     * ⚠ The bag is TYPED closed, so this arrives only from an untyped path. The
+     * type is not the guard here; the copy is.
      */
     test("an own `__proto__` in the REGISTERED bag does not forge a `cty`", () => {
-      // MEASURED before the repair: the signed header carried `cty: text/plain`
-      // and the Dict payload was serialised as text — a content type the caller
-      // never wrote, on the SIGNED bytes, because `JwsKit.sign` reads
-      // `callerHeader.cty` off the normalised bag and the prototype answered.
+      // `JwsKit.sign` reads `callerHeader.cty` off the normalised bag, so a
+      // prototype that answers puts a content type the caller never wrote on the
+      // SIGNED bytes.
       const kit = new JwsKit({ kryptos: TEST_EC_KEY_SIG, logger });
 
       const token = kit.sign({ a: 1 }, { header: poisoned('{"cty":"text/plain"}') });
@@ -186,16 +177,11 @@ describe("custom header parameters", () => {
     });
 
     test("an own `__proto__` in the REGISTERED bag does not forge a `crit`", () => {
-      // MEASURED before the repair: `cwt_crit_param_not_permitted`, for a token
-      // whose caller wrote no `crit` at all — `build-cose-headers.ts` reads
-      // `headerBag.crit`, and the prototype answered. A refusal attributable to
-      // nothing in the request.
-      //
-      // ⚠ IT STILL THROWS, and the CODE is the whole assertion: `__proto__` is
-      // now an ordinary own key of the registered bag, so it is refused as the
-      // UNREGISTERED name it is — the closed-set rule, which on COSE refuses
-      // rather than drops. That is a verdict about what the caller wrote; the
-      // crit one was a verdict about what the prototype said.
+      // ⚠ IT STILL THROWS, and the CODE is the whole assertion: `__proto__` is an
+      // ordinary own key of the registered bag, so it is refused as the UNREGISTERED
+      // name it is — a verdict about what the CALLER wrote. A `crit` verdict here
+      // would be a verdict about what the prototype said (`build-cose-headers.ts`
+      // reads `headerBag.crit`).
       const cwt = new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger });
 
       expect(
@@ -215,17 +201,15 @@ describe("custom header parameters", () => {
   });
 
   describe("what the custom bag refuses", () => {
-    // ⚠ A REGISTERED name belongs in `header`, where its value codec and its
-    // bucket placement apply. Accepting it in `custom` would make the split an
-    // override door: the parameter would travel raw, past every rule the registry
-    // row states about it.
+    // ⚠ A REGISTERED name belongs in `header`, where its value codec and its bucket
+    // placement apply. Accepting it in `custom` would make the split an override
+    // door — the parameter travelling raw, past every rule its registry row states.
     test("the JOSE doors refuse a REGISTERED name in custom.header", () => {
       const custom = { header: { cty: "application/json" } };
 
       // `data.bucket` names the field the caller wrote, so the JOSE verdict says
-      // `header` — the JOSE envelope declares no `protected` for a caller to have
-      // written (`types/header/wire-envelope.ts`). The COSE mirror of this
-      // assertion is in `build-cose-headers.test.ts`.
+      // `header` — the JOSE envelope declares no `protected`
+      // (`types/header/wire-envelope.ts`).
       const refusal = expect.objectContaining({
         code: "header_registered_in_custom",
         data: { parameter: "cty", bucket: "header" },
@@ -255,27 +239,15 @@ describe("custom header parameters", () => {
     });
 
     /**
-     * ⛔ A SPEC-DEFINED NAME AEGIS DOES NOT IMPLEMENT IS STILL NOT CUSTOM.
-     * `b64` (RFC 7797), `ppt` (RFC 8225), `url`/`nonce` (RFC 8555) and `svt`
-     * (RFC 9321) are JOSE header parameters aegis has no registry row for. Absent
-     * this rule they were admitted into `custom`, and the mint/verify invariant
-     * broke in two ways at once: `validate-crit.ts` refuses an IANA-registered
-     * `crit` member, so a token aegis minted with `crit: ["b64"]` was refused by
-     * aegis on read; and the parameter itself would ride as an unregistered hint
-     * while every conformant reader gives it its RFC meaning.
+     * ⛔ A SPEC-DEFINED NAME AEGIS DOES NOT IMPLEMENT IS STILL NOT CUSTOM. Admitted
+     * into `custom` it would ride as an unregistered hint while a conformant reader
+     * gives it its published meaning — and for `iss`/`sub`/`aud` that meaning is an
+     * unencrypted replica of the claim (RFC 7519 §5.3), so a forged one is a
+     * confusion attack rather than an inert hint.
      *
-     * ⚠ Whether a name is spec-defined is now ONE predicate both sides read
-     * (`internal/header/is-spec-defined-header-param.ts`), because two lists
-     * disagreeing is exactly what produced the asymmetry.
-     */
-    /**
-     * ⛔ RFC 7519 §10.4.1 REGISTERS `iss`, `sub` and `aud` AS HEADER PARAMETERS,
-     * and §5.3 gives them a meaning: an unencrypted replica of the claim, which a
-     * recipient "SHOULD verify that their values are identical" against the
-     * encrypted claims set. A forged replica in `custom` is therefore not an
-     * inert hint — it is the exact confusion this bag's refusals exist to
-     * prevent, on a name `header` cannot express and the registry does not
-     * answer for.
+     * ⚠ Whether a name is spec-defined is ONE predicate both sides read
+     * (`internal/header/is-spec-defined-header-param.ts`); two lists disagreeing is
+     * what produces the asymmetry.
      */
     test.each(["iss", "sub", "aud", "client_id", "trust_chain"])(
       "a registered name aegis does not implement (%s) cannot be forged as custom",
@@ -321,10 +293,10 @@ describe("custom header parameters", () => {
       ).toBe("header_registered_in_custom");
     });
 
-    // ⚠ A SUBSET of the rule above with its OWN code, and the split is the repair
-    // it points at: a kit-owned parameter is refused from `header` too, so
-    // "put it in the header bag" would send the caller to a bag whose type Omits
-    // it (`KitOwnedHeaderParam`).
+    // ⚠ A SUBSET of the rule above with its OWN code, because the repair differs: a
+    // kit-owned parameter is refused from `header` too, so "put it in the header
+    // bag" would send the caller to a bag whose type Omits it
+    // (`KitOwnedHeaderParam`).
     test("both wires refuse a KIT-OWNED name in custom, distinctly", () => {
       const jwt = new JwtKit({ kryptos: TEST_EC_KEY_SIG, logger });
       const cwt = new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger });
@@ -350,10 +322,8 @@ describe("custom header parameters", () => {
       );
     });
 
-    // BOTH BUCKETS, like the registered-name rule beside it. `buildCustomHeader`
-    // is bucket-agnostic, so this states that rather than leaving it inferred from
-    // one bucket's row — the sibling rule loops both, and a reader comparing them
-    // would otherwise read the difference as meaningful.
+    // BOTH BUCKETS, like the registered-name rule beside it: `buildCustomHeader` is
+    // bucket-agnostic, and a row covering one bucket would read as meaningful.
     test.each(["protected", "unprotected"] as const)(
       "the COSE doors refuse a KIT-OWNED name in custom.%s",
       (bucket) => {
@@ -367,8 +337,7 @@ describe("custom header parameters", () => {
   });
 
   describe("crit and custom parameters", () => {
-    // RFC 7515 §4.1.11 forbids `crit` to name spec-defined parameters, which
-    // leaves an issuer's own extension as exactly what it is for.
+    // An issuer's own extension is what `crit` is for (RFC 7515 §4.1.11).
     test("a crit naming a custom.header key mints, and a DECLARING kit verifies it", () => {
       const kit = new JwtKit({ kryptos: TEST_EC_KEY_SIG, logger });
 
@@ -378,20 +347,18 @@ describe("custom header parameters", () => {
       });
 
       expect(JwtKit.decode(token).header.crit).toEqual([HINT]);
-      // ⛔ A token aegis mints is a token aegis verifies — for a recipient that
-      // takes the parameter on. RFC 7515 §4.1.11 makes understanding the
-      // extension the RECIPIENT's duty, and aegis is never the final recipient,
-      // so it refuses until the caller declares it.
+      // ⛔ A token aegis mints is a token aegis verifies — for a recipient that takes
+      // the parameter on. aegis is never the final recipient, so it refuses until
+      // the caller declares it (RFC 7515 §4.1.11).
       expect(() => kit.verify(token)).toThrow(
         expect.objectContaining({ code: "jwt_unsupported_crit_param" }),
       );
       expect(() => kit.verify(token, undefined, { crit: [HINT] })).not.toThrow();
     });
 
-    // ⛔ THE KEYLESS DOOR TOO. `parse` and `verify` read the same bytes and must
-    // agree: `verify` merges the unregistered bag before asking `validateCrit`
-    // whether the header carries what its `crit` names, and a `parse` that asked
-    // the registered bag alone would refuse a token this package had just signed.
+    // ⛔ THE KEYLESS DOOR TOO. `verify` merges the unregistered bag before asking
+    // `validateCrit` whether the header carries what its `crit` names; a `parse`
+    // asking the registered bag alone would refuse a token aegis just signed.
     test.each(["jwt", "cwt"] as const)(
       "%s: the KEYLESS parse accepts the same token",
       async (wire) => {
@@ -437,8 +404,7 @@ describe("custom header parameters", () => {
 
       // `critToCoseLabels` leaves an unregistered member as its own tstr label —
       // asking `coseWireKey` for it would throw for a parameter this very message
-      // carries (`internal/utils/token-header.ts`, gated by
-      // `internal/header/assert-crit-eligible.ts`).
+      // carries (`internal/utils/token-header.ts`).
       expect(CwtKit.decode(token).protectedHeader.crit).toEqual([HINT]);
       expect(() => kit.verify(token)).toThrow(
         expect.objectContaining({ code: "cwt_unsupported_crit_param" }),
@@ -446,16 +412,13 @@ describe("custom header parameters", () => {
       expect(() => kit.verify(token, undefined, { crit: [HINT] })).not.toThrow();
     });
 
-    // RFC 9052 §3.1 requires critical parameters to be integrity-protected, and
-    // the unprotected bucket is covered by nothing.
+    // RFC 9052 §3.1.
     //
-    // ⛔ THE VERDICT MUST NAME THE REPAIR THE CALLER CAN MAKE. The caller DID
-    // write this parameter, so "cannot be marked critical" sends them to remove a
-    // `crit` that is legal; the fault is the BUCKET, and moving it to
-    // `custom.protected` is the fix. The eligibility gate is therefore handed the
-    // keys of BOTH custom buckets — "may this name stand in a `crit` at all" is
-    // prior to "is it in the right bucket", which is the ordering this file's
-    // docstring states — so the placement rule is the one that answers.
+    // ⛔ THE VERDICT MUST NAME THE REPAIR THE CALLER CAN MAKE. The caller DID write
+    // this parameter, so "cannot be marked critical" would send them to remove a
+    // legal `crit`; the fault is the BUCKET. The eligibility gate is therefore
+    // handed the keys of BOTH custom buckets, so the PLACEMENT rule is the one
+    // that answers.
     test("a crit naming ONLY a custom.UNPROTECTED key is refused for its PLACEMENT", () => {
       const kit = new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger });
 
@@ -498,8 +461,8 @@ describe("custom header parameters", () => {
     test("a crit naming a key NO bag carries is still refused", () => {
       const kit = new JwtKit({ kryptos: TEST_EC_KEY_SIG, logger });
 
-      // The eligibility gate reads the caller's `custom.header` KEYS, so a
-      // member naming nothing at all is no more permitted than it ever was.
+      // The eligibility gate reads the caller's `custom.header` KEYS, so a member
+      // naming nothing at all is not permitted either.
       expect(codeOf(() => kit.sign(WIRE_CLAIMS, { header: { crit: [HINT] } }))).toBe(
         "jwt_crit_param_not_permitted",
       );
@@ -507,15 +470,11 @@ describe("custom header parameters", () => {
   });
 
   /**
-   * ⭐ EVERY READ DOOR TAKES THE DECLARATION, INCLUDING THE ENCRYPTED ONES.
-   *
-   * The sealing doors MINT a critical custom parameter (`header.crit` beside the
-   * custom bag on `JweEncryptOptions`/`CweEncryptOptions`), so a decrypt
-   * that could not be told about one would refuse the tokens this package itself
-   * produces. And `aegis.verify` of a NESTED token runs the crit gate on the
-   * OUTER envelope inside that same decrypt
-   * (`src/internal/utils/verify-token.ts#decryptOuter`), so without the thread a
-   * nested token whose outer carries one is permanently unverifiable.
+   * ⭐ EVERY READ DOOR TAKES THE DECLARATION, INCLUDING THE ENCRYPTED ONES. The
+   * sealing doors MINT a critical custom parameter, so a decrypt that could not be
+   * told about one would refuse aegis's own output — and `aegis.verify` of a NESTED
+   * token runs the crit gate on the OUTER envelope inside that same decrypt
+   * (`src/internal/utils/verify-token.ts#decryptOuter`).
    */
   describe("the crit declaration reaches the encrypted doors", () => {
     let amphora: IAmphora;
@@ -570,8 +529,8 @@ describe("custom header parameters", () => {
       });
 
       const { token: outer } = await aegis.jwe.encrypt(inner, {
-        // RFC 7519 §5.2 requires the nested JWT's `cty`; the crit rides beside it
-        // on the SAME protected header, which is the envelope the peel gates.
+        // The nested JWT's `cty` (RFC 7519 §5.2); the crit rides beside it on the
+        // SAME protected header, which is the envelope the peel gates.
         header: { cty: "JWT", crit: [HINT] },
         custom: { header: { [HINT]: "carried" } },
       });
@@ -604,12 +563,10 @@ describe("custom header parameters", () => {
       amphora.add(TEST_EC_KEY_SIG);
     });
 
-    // ⛔ UNKNOWNS STOP AT THE WIRE TIER. The domain surface exists so a caller
-    // never has to learn the wire's vocabulary, and an unregistered wire
-    // parameter has no domain name by definition — there are TWO gates
-    // (`merge-header-buckets.ts` takes only the two typed buckets by `Pick`, and
-    // `parseTokenHeader` keeps only what `headerByJose` answers for) and this
-    // pins the outcome through the public door rather than either of them.
+    // ⛔ UNKNOWNS STOP AT THE WIRE TIER: an unregistered wire parameter has no
+    // domain name. TWO gates enforce it (`merge-header-buckets.ts` takes only the
+    // two typed buckets by `Pick`; `parseTokenHeader` keeps only what
+    // `headerByJose` answers for) and this pins the outcome through the public door.
     test("a custom param the wire carries does NOT reach VerifiedToken.header", async () => {
       const { token } = await aegis.jwt.sign(
         // The AMPHORA's own issuer, so the verify key resolves — this row is
@@ -632,13 +589,11 @@ describe("custom header parameters", () => {
       expect(Object.values(verified.header)).not.toContain("carried");
     });
 
-    // ⚠ THE SECOND GATE, PINNED SEPARATELY BECAUSE THE PUBLIC DOOR CANNOT SEE IT.
-    // Measured: with the row above alone, restoring the passthrough in
-    // `parseTokenHeader` leaves the suite GREEN — `mergeHeaderBuckets` takes only
-    // the two typed buckets (`Pick`), so nothing unregistered ever reaches the
-    // parse. Two independent gates with one of them unobservable is one gate plus
-    // a comment, so the parse is asked DIRECTLY here, with a wire header that
-    // carries what only a foreign producer could have written.
+    // ⚠ THE SECOND GATE, PINNED SEPARATELY BECAUSE THE PUBLIC DOOR CANNOT SEE IT:
+    // `mergeHeaderBuckets` takes only the two typed buckets (`Pick`), so nothing
+    // unregistered reaches the parse through it and a passthrough restored in
+    // `parseTokenHeader` would leave the row above green. The parse is asked
+    // DIRECTLY here, with a header only a foreign producer could have written.
     test("the wire -> domain parse drops a key no registry row answers for", () => {
       const wire = {
         alg: "ES512",

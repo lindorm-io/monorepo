@@ -89,8 +89,8 @@ describe("inspectToken", () => {
 
     ctx = await createScenarioContext();
     ctx.amphora.add(TEST_EC_KEY_ENC);
-    // A COSE_Encrypt0 (RFC 9052 §5.2) has a single recipient and no key
-    // management layer, so the CWE half needs a `dir` key in the vault.
+    // A COSE_Encrypt0 has a single recipient and no key management layer
+    // (RFC 9052 §5.2), so the CWE half needs a `dir` key in the vault.
     ctx.amphora.add(TEST_OCT_KEY_ENC);
   });
 
@@ -145,9 +145,8 @@ describe("inspectToken", () => {
     });
 
     test("should distinguish an integer label from the text label that spells it", () => {
-      // RFC 9052 §1.5: `label = int / tstr`. The int 4 and the tstr "4" are
-      // different labels, and an inspector that stringified its keys would
-      // conflate them.
+      // The int 4 and the tstr "4" are different labels (RFC 9052 §1.5), and an
+      // inspector that stringified its keys would conflate them.
       const textLabelled = handBuiltCose({
         protectedLabels: [[1, -36]],
         unprotectedLabels: [["4", utf8("key-1")]],
@@ -174,8 +173,8 @@ describe("inspectToken", () => {
     });
 
     test("should report an empty protected bucket as an empty map", () => {
-      // RFC 9052 §3: an empty protected bucket is a zero-length byte string
-      // (`h''`), NOT the encoding of an empty map.
+      // An empty protected bucket is a zero-length byte string (`h''`), NOT the
+      // encoding of an empty map. RFC 9052 §3.
       const token = Buffer.from(
         encode(
           new Tag(CBOR_TAG.cwt, [
@@ -225,9 +224,9 @@ describe("inspectToken", () => {
     });
 
     test("should report no unprotected bucket at all", () => {
-      // RFC 7515 §7.1: the JWS Compact Serialization "provides no syntax to
-      // represent a JWS Unprotected Header value". `undefined`, never `{}` —
-      // an empty object is truthy and would read as a bucket that exists.
+      // A JWS compact serialisation has no unprotected bucket (RFC 7515 §7.1).
+      // `undefined`, never `{}` — an empty object is truthy and would read as a
+      // bucket that exists.
       const inspection = jose(inspectToken("eyJhbGciOiJFUzUxMiJ9.e30.AAAA"));
 
       expect(inspection.unprotectedHeader).toBeUndefined();
@@ -251,9 +250,7 @@ describe("inspectToken", () => {
       expect(inspection.protectedHeader.get(1)).toBe(-36);
       expect(inspection.protectedHeader.get(16)).toBe("application/cwt");
 
-      // `kid` (label 4) rides in the UNPROTECTED bucket — RFC 9052 §3.1 calls it
-      // a hint that "is not a security-critical field", so it "can be placed in
-      // the unprotected-header-parameters bucket".
+      // `kid` (label 4) rides in the UNPROTECTED bucket. RFC 9052 §3.1.
       expect(inspection.protectedHeader.has(4)).toBe(false);
       expect(textOf(inspection.unprotectedHeader.get(4))).toBe(KEY_ID);
 

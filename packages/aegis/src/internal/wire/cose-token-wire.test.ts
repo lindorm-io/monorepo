@@ -12,19 +12,15 @@ import { COSE_TOKEN_WIRE } from "./cose-token-wire.js";
 MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
 
 /**
- * The COSE wire's KEYLESS claims read — the `aegis.parse` half of the CWT
- * envelope gates, and the twin of `jose-token-wire.test.ts`.
+ * The COSE wire's KEYLESS claims read — the `aegis.parse` half of the CWT envelope
+ * gates, and the twin of `jose-token-wire.test.ts`.
  *
- * A keyless parse checks no signature, but it still has to refuse a token whose
- * own ENVELOPE is malformed, because everything downstream reads the result as a
- * CWT. The JOSE side has always done that; this side did not, so
- * `aegis.parse(cwt)` accepted a `typ` naming another media type entirely and a
- * `crit` naming a parameter the header does not carry — RFC 9052 §3.1 calls the
- * latter "a fatal error in processing" — while `aegis.parse(jwt)` refused both.
- * A rule honoured on one encoding and skipped on the other is a rule an attacker
- * chooses to be bound by, since the encoding is the issuer's choice.
+ * A keyless parse checks no signature but still refuses a malformed ENVELOPE,
+ * because everything downstream reads the result as a CWT (RFC 9052 §3.1). A rule
+ * honoured on one encoding and skipped on the other is a rule an attacker chooses
+ * to be bound by, since the encoding is the issuer's choice.
  *
- * `assert-wire-typ.test.ts` pins the PREDICATE against configs it declares
+ * ⚠ `assert-wire-typ.test.ts` pins the PREDICATE against configs it declares
  * itself, so it stays green over a call site that never runs it. This drives the
  * real wire.
  */
@@ -32,13 +28,12 @@ describe("COSE_TOKEN_WIRE keyless read gates", () => {
   const kit = new CwtKit({ logger: createMockLogger(), kryptos: TEST_EC_KEY_SIG });
 
   /**
-   * A real CWT with its PROTECTED bucket rewritten — the same instrument the
-   * JOSE twin uses, and for the same reason: a sign floor would never emit one
-   * of these, and the broken signature is irrelevant to a keyless read.
+   * A real CWT with its PROTECTED bucket rewritten — a sign floor would never emit
+   * one, and the broken signature is irrelevant to a keyless read.
    *
-   * ⚠ The labels are spelled as RFC 9052 §3.1 Table 2 numbers rather than read
-   * off the registry the wire itself reads, so the test states the WIRE and not
-   * the package's opinion of it.
+   * ⚠ The labels are spelled as RFC 9052 §3.1 numbers rather than read off the
+   * registry the wire itself reads, so the test states the WIRE and not the
+   * package's opinion of it.
    */
   const rewritten = (edit: (header: Map<number | string, unknown>) => void): string => {
     const tags: Array<number> = [];
@@ -76,14 +71,12 @@ describe("COSE_TOKEN_WIRE keyless read gates", () => {
     throw new Error("expected a refusal");
   };
 
-  // Label 16 is `typ` (RFC 9596 §4.1). The value names a JOSE encryption media
-  // type — nothing a COSE claims reader can honour — and RFC 9596 §2 makes the
-  // parameter the declaration of what the whole COSE object IS.
+  // Label 16 is `typ` (RFC 9596 §4.1); the value names a JOSE encryption media type,
+  // which no COSE claims reader can honour.
   const evilTyp = (): string =>
     rewritten((header) => header.set(16, "application/evil+jwe"));
 
-  // Label 2 is `crit` (RFC 9052 §3.1 Table 2), naming a parameter the header
-  // does not carry — the shape §3.1 calls a fatal error.
+  // Label 2 is `crit` (RFC 9052 §3.1), naming a parameter the header does not carry.
   const unknownCrit = (): string => rewritten((header) => header.set(2, ["fake-param"]));
 
   test("the keyless wire read refuses a foreign typ in its OWN words", () => {
@@ -103,12 +96,9 @@ describe("COSE_TOKEN_WIRE keyless read gates", () => {
   });
 
   /**
-   * ⚠ THE COSE_Mac0 HALF. `coseFormatOf` resolves `cwm` on this very path, so
-   * both refusals above have a `cwm` spelling that nothing drove: every case in
-   * this file signs with an EC key, so every snapshot is `cwt_*`, and the two
-   * titles could be reverted to a hardcoded "CWT" with the suite still green.
-   * A `cwm` token answering under a `CWT` title is the same half-applied
-   * inconsistency `CwtKit.test.ts` pins for the keyed read.
+   * ⚠ THE COSE_Mac0 HALF. `coseFormatOf` resolves `cwm` on this path, and every
+   * other case in this file signs with an EC key — so without these rows the two
+   * titles could be hardcoded to "CWT" with the suite still green.
    */
   describe("the same gates, under the COSE_Mac0 tag", () => {
     const macKit = new CwmKit({ logger: createMockLogger(), kryptos: TEST_OCT_KEY_SIG });
@@ -158,13 +148,9 @@ describe("COSE_TOKEN_WIRE keyless read gates", () => {
   });
 
   test("⚠ the parse-side and verify-side typ wordings DIFFER, deliberately", () => {
-    // Same code, same title, one word apart — and the word is the operation the
-    // caller actually asked for. `CwtKit.verify` is about to check a signature,
-    // so it says the token "cannot be verified"; the wire read is keyless and
-    // checks nothing, so it says "cannot be parsed". Telling a parse caller their
-    // token cannot be VERIFIED would name a check that path never runs.
-    //
-    // ⛔ The two are NOT a copy-paste slip. Do not collapse them.
+    // ⛔ NOT a copy-paste slip — do not collapse them. The word is the operation the
+    // caller asked for: telling a parse caller their token cannot be VERIFIED would
+    // name a check that path never runs.
     const token = evilTyp();
 
     const parsed = refusalOf(() => COSE_TOKEN_WIRE.decodeClaims(token)) as {

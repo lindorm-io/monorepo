@@ -10,16 +10,12 @@ import { headerByJose } from "./header-registry.js";
  * ({@link HeaderSpec.whenEmpty}), read through the same `headerByJose` lookup.
  *
  * ⚠⚠ WHY A THIRD VERDICT EXISTS. The prune's two answers each assume the empty
- * value can be DISPOSED of — dropped as noise, or carried as a statement. One
- * parameter admits neither. `x5t#S256` is the only header parameter aegis's
- * verify ENFORCES (`verify-cert-binding.ts`), and the check is PRESENCE-GATED:
- * skipped when the parameter is absent, refusing a mismatch when it is present.
- * So pruning an empty one converts an unsatisfiable binding into NO binding and
- * hands the audience a token the issuer meant to constrain, while keeping it
- * mints a binding no certificate can satisfy (RFC 7515 §4.1.8 defines it as the
- * thumbprint of the certificate corresponding to the signing key). Both are
- * silent, so the only answer left is to fail at the WRITE, where the value is
- * still in the producer's hands.
+ * value can be DISPOSED of — dropped as noise, or carried as a statement — and
+ * `x5t#S256` admits neither. It is the only header parameter aegis's verify
+ * ENFORCES (`verify-cert-binding.ts`), and the check is PRESENCE-GATED, so pruning
+ * an empty one converts an unsatisfiable binding into NO binding while keeping it
+ * mints a binding no certificate can satisfy (RFC 7515 §4.1.8). Both are silent, so
+ * the only answer left is to fail at the WRITE.
  *
  * ⚠ IT GUARDS A BOUNDARY, not a path aegis walks. `DomainProtectedHeader` and
  * `WireProtectedHeader` both Omit the parameter, `mapTokenHeader` overwrites it
@@ -45,21 +41,16 @@ export const refuseEmptyHeaders = (dict: Dict): void => {
 
     // ⚠ `whenEmpty` IS PART OF THE OBSERVABLE VERDICT, not decoration. `parameter`
     // alone does not identify this refusal: on JOSE `x5t#S256` is also in every
-    // kit's `reserved` row, so `jose_reserved_header` throws the SAME class with
-    // the SAME `data: { parameter }`, and a probe pinning only those two passes
-    // whether or not this guard exists — measured by deleting the call from
-    // `normaliseHeaders`, which left the JOSE cell green. The two refusals answer
-    // different questions (who may SET this parameter, versus what its EMPTY value
-    // means), so naming the cell that decided is what tells them apart.
+    // kit's `reserved` row, so `jose_reserved_header` throws the SAME class with the
+    // SAME `data: { parameter }`, and a probe pinning only those two stays green
+    // whether or not this guard exists. The two refusals answer different questions
+    // — who may SET this parameter, versus what its EMPTY value means — so naming
+    // the cell that decided is what tells them apart.
     //
-    // ⛔ `AegisError`, not the `CoseError` the sibling registry verdict throws
-    // (`header-registry.ts`'s `header_no_cose_label`) — do not "fix" the
-    // inconsistency. "COSE has no label for this parameter" is a fact about one
-    // wire; "this parameter refuses an empty value" is wire-agnostic, and four of
-    // this function's call sites hold no format tag to spell a wire-specific class
-    // with. `AegisError` is the base every aegis error extends, so a consumer
-    // bracketing on `JoseError`/`CoseError` brackets more narrowly than the
-    // contract promises.
+    // ⛔ `AegisError`, not the `CoseError` the sibling registry verdict throws — do
+    // not "fix" the inconsistency. "COSE has no label for this parameter" is a fact
+    // about one wire; "this parameter refuses an empty value" is wire-agnostic, and
+    // several call sites hold no format tag to spell a wire-specific class with.
     throw new AegisError(`Header parameter "${key}" carries no value`, {
       code: "header_empty_parameter",
       data: { parameter: key, whenEmpty: "refuse" },

@@ -520,9 +520,9 @@ export const readWirePayload = (token: string, format?: string): WirePayload => 
  * One RAW wire bucket in the form the assertions consume: a `has` over the wire's
  * OWN key type, and a record for `toMatchObject`.
  *
- * ⚠ `has` takes the raw key. RFC 9052 §1.5 defines `label = int / tstr`, so a
- * lookup that stringified its key would merge the integer label `4` with the text
- * label `"4"` — two different parameters. The RECORD is stringified because that
+ * ⚠ `has` takes the raw key: a lookup that stringified its key would merge the
+ * integer label `4` with the text label `"4"` — two different parameters.
+ * RFC 9052 §1.5. The RECORD is stringified because that
  * is what a JS object literal in a row already is (`{ 16: … }` has the key
  * `"16"`), and it is only ever used for value comparison.
  */
@@ -867,14 +867,13 @@ const STRUCTURED_ONLY_VERIFY_OPTIONS: Readonly<
  * The COSE side reuses the framing the interop suite established: `@auth0/cose`
  * emits a BARE COSE_Sign1 (tag 18) and aegis reads `Tag(61, Tag(18, …))`
  * (RFC 8392 §6 — the CWT CBOR tag), so their structure is re-framed rather than
- * re-signed. The `kid` rides the UNPROTECTED bucket, which is where RFC 9052
- * §3.1 permits a non-integrity-critical parameter to sit and where aegis's key
- * resolution reads it from.
+ * re-signed. The `kid` rides the UNPROTECTED bucket, which is where aegis's key
+ * resolution reads it from. RFC 9052 §3.1.
  */
 const webCryptoSignParams = (kryptos: IKryptos): EcdsaParams => {
   switch (kryptos.algorithm) {
-    // RFC 7518 §3.4 — ES512 is ECDSA using P-521 and SHA-512, and the JWS
-    // signature is the raw `R || S` pair `subtle.sign` already returns.
+    // ES512 maps to P-521 with SHA-512, and the JWS signature is the raw
+    // `R || S` pair `subtle.sign` already returns. RFC 7518 §3.4.
     case "ES512":
       return { name: "ECDSA", hash: "SHA-512" };
     default:
@@ -889,7 +888,7 @@ const webCryptoSignParams = (kryptos: IKryptos): EcdsaParams => {
  * `jose` refuses to write (see the caller for which one and why).
  *
  * ⚠ THE SIGNATURE IS REAL: `subtle.sign` over the exact
- * `BASE64URL(header) "." BASE64URL(payload)` input RFC 7515 §5.1 defines, with
+ * `BASE64URL(header) "." BASE64URL(payload)` signing input (RFC 7515 §5.1), with
  * the key `jose` would have used. ⛔ NOT because today's callers need it —
  * every JOSE reader runs `assertProtectedHeaderGates` BEFORE its signature or
  * AEAD cycle (`JwsKit.verify`, `JwtKit.verify`, `JweKit.decrypt`), so a garbage
@@ -976,8 +975,8 @@ const signForeignJose = async (
   }
 
   // Same guard, same reason: a JOSE header is a JSON object with ONE name-space,
-  // so RFC 9052 §1.4's second label form has no meaning here and this builder has
-  // nowhere to put the entries. Without the throw the field is silently dropped
+  // so the second label form (RFC 9052 §1.5) has no meaning here and this builder
+  // has nowhere to put the entries. Without the throw the field is silently dropped
   // and the row signs a token that tests nothing.
   if (buckets?.textLabelledProtected !== undefined) {
     throw new Error(
@@ -1021,16 +1020,16 @@ const signForeignJose = async (
   // ⚠ ONE SHAPE `jose` WILL NOT WRITE AT ALL: a `crit` member the header does not
   // carry, which its producer check refuses before signing
   // (`jose/dist/webapi/lib/validate_crit.js` — `Extension Header Parameter "…" is
-  // missing`). That is NOT a reason to scope such a row off this wire: RFC 9052
-  // §3.1 puts the same prohibition on a COSE producer, `@auth0/cose` does not
-  // check it, and aegis's read gate is wire-agnostic
+  // missing`). That is NOT a reason to scope such a row off this wire:
+  // `@auth0/cose` does not check the same shape, and aegis's read gate is
+  // wire-agnostic
   // (`src/internal/utils/validate-crit.ts#export const validateCrit` refuses the
-  // member on either encoding). A
-  // row asking for the shape is modelling a producer that does not validate
-  // either — hostile or merely buggy — so it is signed by hand instead. ⚠ The
-  // membership test is `Object.hasOwn`, never `in`: the members come off the row
-  // and `header` is a plain object, so `in` would find `crit: ["toString"]` on
-  // `Object.prototype` and route a row that needs this path back to `jose`.
+  // member on either encoding). RFC 9052 §3.1. A row asking for the shape is
+  // modelling a producer that does not validate either — hostile or merely
+  // buggy — so it is signed by hand instead. ⚠ The membership test is
+  // `Object.hasOwn`, never `in`: the members come off the row and `header` is a
+  // plain object, so `in` would find `crit: ["toString"]` on `Object.prototype`
+  // and route a row that needs this path back to `jose`.
   if (
     isArray(declared) &&
     declared.some((member) => !Object.hasOwn(header, String(member)))
@@ -1044,10 +1043,9 @@ const signForeignJose = async (
 };
 
 /**
- * The COSE `typ` header label. RFC 9596 §2 DEFINES the parameter and §4.1 is the
- * IANA registration that assigns it label 16 — which postdates `@auth0/cose`'s
- * `Headers` enum, hence the numeric literal and the one cast below. Stated here
- * rather than inline so the number is not a mystery.
+ * The COSE `typ` header label — 16, which postdates `@auth0/cose`'s `Headers`
+ * enum, hence the numeric literal and the one cast below. Stated here rather
+ * than inline so the number is not a mystery. RFC 9596 §2, RFC 9596 §4.1.
  */
 const COSE_TYP_LABEL = 16;
 
@@ -1059,10 +1057,10 @@ const COSE_TYP_LABEL = 16;
  */
 const coseAlgorithmOf = (kryptos: IKryptos): number => {
   switch (kryptos.algorithm) {
-    // RFC 9053 §2.1 Table 1 — ES512 is -36.
+    // ES512 → COSE algorithm -36. RFC 9053 §2.1.
     case "ES512":
       return Algorithms.ES512;
-    // RFC 9053 §3.1 Table 7 — HMAC 256/256 is 5.
+    // HS256 → COSE algorithm 5, HMAC 256/256. RFC 9053 §3.1.
     case "HS256":
       return MacAlgorithms.HS256;
     default:
@@ -1085,10 +1083,10 @@ const coseAlgorithmOf = (kryptos: IKryptos): number => {
  * carry (`x5t#S256`), which is a row asking for a label that does not exist.
  *
  * ⚠ A name the registry does not know AT ALL is written as its TEXT label
- * instead. RFC 9052 §1.5 defines `label = int / tstr`, so that is a label in its
- * own right, and it is how a third party's own extension parameter actually
- * travels — there is no integer for aegis to look up, and inventing one would be
- * the hand-picked label the paragraph above rules out. This is the only way to
+ * instead — a label in its own right (RFC 9052 §1.5), and how a third party's own
+ * extension parameter actually travels. There is no integer for aegis to look up,
+ * and inventing one would be the hand-picked label the paragraph above rules out.
+ * This is the only way to
  * state a rule ABOUT a foreign extension, which is a capability aegis's own
  * writers cannot produce (headers are a closed set).
  */
@@ -1116,7 +1114,7 @@ const signForeignCose = async (
 
   // The row's TEXT-labelled entries, appended verbatim — no registry lookup, which
   // is the whole point: they state the tstr form of a name whose integer form may
-  // already be in this same bucket (RFC 9052 §1.4 admits both).
+  // already be in this same bucket — both are labels (RFC 9052 §1.5).
   protectedEntries.push(
     ...Object.entries(buckets?.textLabelledProtected ?? {}).map(
       ([name, value]): [CoseLabel, unknown] => [name, value],
@@ -1129,7 +1127,7 @@ const signForeignCose = async (
   // ⚠ `as never` on the row's own entries, for the same reason the protected
   // bucket above takes one: `@auth0/cose`'s `UnprotectedHeaders` types its value
   // union per KNOWN label, and a row here places parameters at labels it has
-  // never heard of (RFC 9596's `typ` = 16, the lindorm private-use `oid`) —
+  // never heard of (`typ` at 16 — RFC 9596 §4.1 — and the lindorm private-use `oid`) —
   // which is exactly the point of a foreign producer.
   const unprotectedHeaders = new UnprotectedHeaders([
     [Headers.KeyID, Buffer.from(kryptos.id, "utf8")],
@@ -1153,12 +1151,11 @@ const signForeignCose = async (
   );
 
   // A SHARED SECRET authenticates a CWT as a COSE_Mac0 and never as a
-  // COSE_Sign1: RFC 9052 §4.2 defines the latter as carrying a digital
-  // signature, whose whole property is that only the private-key holder could
-  // have produced it, and §6.2 defines the former as the MACed structure with an
-  // implicit key. Emitting a symmetric token under the signature structure would
-  // be the confusion the two structures exist to prevent, so the producer picks
-  // the structure the key admits.
+  // COSE_Sign1 — a signature's whole property is that only the private-key holder
+  // could have produced it, and a shared secret has two holders. Emitting a
+  // symmetric token under the signature structure would be the confusion the two
+  // structures exist to prevent, so the producer picks the structure the key
+  // admits. RFC 9052 §4.2, RFC 9052 §6.2.
   if (kryptos.type === "oct") {
     const { kty, k } = jwk;
 
@@ -1229,10 +1226,9 @@ const COSE_CLAIM_KEY_BY_DOMAIN: ReadonlyMap<string, number | string> = new Map(
 );
 
 /**
- * The CBOR key ONE forged member travels under. RFC 9052 §1.5 admits both forms
- * ("In COSE, we use text strings, negative integers, and unsigned integers as map
- * keys", grammar `label = int / tstr`), and CBOR keys them apart — so the row's
- * `keyedBy` cell is what decides, never the shape of the text in `key`.
+ * The CBOR key ONE forged member travels under. Both label forms are admitted
+ * (RFC 9052 §1.5) and CBOR keys them apart — so the row's `keyedBy` cell is what
+ * decides, never the shape of the text in `key`.
  */
 const INTEGER_LABEL = /^-?\d+$/;
 
@@ -1245,9 +1241,8 @@ const forgedMemberKey = (member: ForgedMember): number | string => {
   // exactly what a Gherkin data table produces, and this is the one wrong form
   // the old guard accepted. `Number` is lenient in four further ways that all
   // reach a real label: "2.0" → 2, " 2 " → 2, "0x10" → 16, "1e3" → 1000. The
-  // digits have to BE the cell. ⚠ `-?` because RFC 9052 §1.5 admits negative
-  // labels ("we use text strings, negative integers, and unsigned integers as map
-  // keys"), and the private-use range is entirely negative.
+  // digits have to BE the cell. ⚠ `-?` because a label may be negative
+  // (RFC 9052 §1.5), and the private-use range is entirely negative.
   if (INTEGER_LABEL.test(member.key)) return Number(member.key);
 
   throw new Error(
@@ -1285,58 +1280,18 @@ const forgedClaimMap = (
 };
 
 /**
- * THE FORGERS — the write half of the forged-token step, one per wire.
+ * THE FORGER — the write half of the forged-token step.
  *
- * ⭐⭐ THEY EXIST BECAUSE A CLAIMS DICT IS A CEILING. Every other producer in this
+ * ⭐⭐ IT EXISTS BECAUSE A CLAIMS DICT IS A CEILING. Every other producer in this
  * file takes an object and serialises it, so the shapes it can put in front of a
- * reader are exactly the shapes a JS object can hold — and three hostile wire
- * shapes are not among them: a member named `__proto__` (a literal invokes the
- * prototype setter), a CBOR map keying one member at both its integer label and
- * its text name, and a compact COSE map with a text `__proto__` label. These two
- * functions assemble the wire directly so a row can state one.
+ * reader are exactly the shapes a JS object can hold — and a CBOR map keying one
+ * member at both its integer label and its text name is not among them. This
+ * function assembles the wire directly so a row can state one.
  *
- * ⛔ THE ROW STILL CARRIES NO BYTES. It states a payload text or a member table;
- * the header, the tag chain, the algorithm identifier and the signature are
- * written here. A row holding base64url or CBOR would be asserting against a wire
- * it had produced itself.
+ * ⛔ THE ROW STILL CARRIES NO BYTES. It states a member table; the envelope, the
+ * tag chain, the algorithm identifier and the signature are written here. A row
+ * holding CBOR would be asserting against a wire it had produced itself.
  */
-
-/**
- * A forged JOSE token: the row's payload TEXT, byte for byte, under a header this
- * function writes.
- *
- * The payload is never re-serialised — that is the whole point of the text form,
- * since `JSON.parse(JSON.stringify(x))` cannot round-trip a `__proto__` member.
- */
-const forgeJose = async (
-  payload: string,
-  signature: ForgedSignature,
-): Promise<string> => {
-  const bytes = Buffer.from(payload, "utf8");
-
-  if (signature === "junk") {
-    // ⚠ THE ALGORITHM IS DERIVED FROM THE BASELINE KEY, not spelled. An unsigned
-    // token still has to declare one a reader recognises, or the refusal comes
-    // from the header and the row never reaches its own claim.
-    return [
-      b64u(JSON.stringify({ alg: KEY_FIXTURES["ec-sig"].algorithm, typ: "JWT" })),
-      b64u(bytes),
-      b64u(JUNK_SIGNATURE),
-    ].join(".");
-  }
-
-  const kryptos = KEY_FIXTURES[signature];
-
-  if (kryptos === undefined) {
-    throw new Error(`the row forges a token signed by the unknown key "${signature}"`);
-  }
-
-  const key = await importJWK(kryptos.export("jwk") as never, kryptos.algorithm);
-
-  return new CompactSign(bytes)
-    .setProtectedHeader({ alg: kryptos.algorithm, kid: kryptos.id, typ: "JWT" })
-    .sign(key);
-};
 
 /**
  * A forged CWT: the minimum envelope a reader needs to REACH the forged claim,
@@ -1399,8 +1354,8 @@ const forgeCose = async (
     throw new Error(`the row forges a token signed by the unknown key "${signature}"`);
   }
 
-  // RFC 9052 §4.2 defines COSE_Sign1 as carrying a DIGITAL SIGNATURE, so a shared
-  // secret has no place in it — the foreign producer emits a COSE_Mac0 for one.
+  // A COSE_Sign1 carries a DIGITAL SIGNATURE (RFC 9052 §4.2), so a shared secret
+  // has no place in it — the foreign producer emits a COSE_Mac0 for one.
   // A forged row asking for a signed token is asking for the signature structure.
   if (kryptos.type === "oct") {
     throw new Error(
@@ -1455,8 +1410,8 @@ const signDpopProof = async (
 
   const key = await importJWK(kryptos.export("jwk") as never, kryptos.algorithm);
 
-  // RFC 9449 §4.2 — `ath` is the base64url SHA-256 of the ASCII access token the
-  // proof is presented with.
+  // `ath` commits to the access token the proof is presented with, as the
+  // base64url SHA-256 of its ASCII form. RFC 9449 §4.2.
   const committedToken = given.ath === "other" ? DPOP_OTHER_ACCESS_TOKEN : presentedToken;
 
   return new CompactSign(
@@ -1629,21 +1584,12 @@ const materialise = async (
     }
 
     case "forged": {
-      // ⚠ Dispatched on the STEP's own wire rather than the run's. They are the
-      // same value — `artifactWireOf` reports this step's declaration, so
-      // `wiresOf` has already restricted the run to it — and reading the
-      // declaration is what makes the union's narrowing do the work: the payload
-      // form cannot be reached on `"cose"` and the member table cannot be reached
-      // on `"jose"`.
-      return artifact.wire === "cose"
-        ? {
-            token: await forgeCose(artifact.claim, artifact.carries, artifact.signature),
-            format: "cwt",
-          }
-        : {
-            token: await forgeJose(artifact.payload, artifact.signature),
-            format: "jwt",
-          };
+      // `artifactWireOf` reports this step's `wire`, so `wiresOf` has already
+      // restricted the run to `"cose"` before this is reached.
+      return {
+        token: await forgeCose(artifact.claim, artifact.carries, artifact.signature),
+        format: "cwt",
+      };
     }
 
     default: {
@@ -1661,16 +1607,16 @@ const materialise = async (
  * trips the algorithm match, changing `kid` makes the key unresolvable — and each
  * of those refusals arrives BEFORE the signature is checked, so the row would
  * pass while saying nothing about integrity. An unregistered member is inert on
- * both wires: RFC 7515 §4 leaves an unrecognised JOSE Header Parameter to be
- * ignored when it is not listed in `crit`, and an unregistered COSE label has no
- * JOSE wire name so it lands in the read result's `custom` bag rather than in a
- * typed one (`src/internal/header/cose-wire-header.ts#custom[String(label)] = value;`).
+ * both wires: an unrecognised JOSE Header Parameter not listed in `crit` is
+ * ignored (RFC 7515 §4), and an unregistered COSE label has no JOSE wire name so
+ * it lands in the read result's `custom` bag rather than in a typed one
+ * (`src/internal/header/cose-wire-header.ts#custom[String(label)] = value;`).
  * ⚠ That bag is NOT inert to everything: `rejectUnknownCritical` merges it into
  * the header it validates, so an added member can SATISFY a `crit` that names it
- * (`src/internal/utils/validate-crit.ts#is not present in the header`) — standing in
- * a `crit` then still needs the
- * caller's declaration. It is inert to this tamper because the tokens here carry
- * no `crit` for the added member to be named in.
+ * (`src/internal/utils/validate-crit.ts#is not present in the header`) — standing
+ * in a `crit` then still needs the caller's declaration. It is inert to this
+ * tamper because the tokens here carry no `crit` for the added member to be
+ * named in.
  */
 const TAMPERED_MEMBER = "tampered";
 
@@ -1756,8 +1702,8 @@ const tamperCose = (token: string, segment: TamperSegment): string => {
   switch (segment) {
     case "header": {
       const header = decodeProtectedHeader(structure[0] as Uint8Array);
-      // The label is a tstr, which RFC 9052 §1.5 admits (`label = int / tstr`)
-      // alongside the integer labels the bucket already carries. The map is typed
+      // The label is a tstr, admitted alongside the integer labels the bucket
+      // already carries (RFC 9052 §1.5). The map is typed
       // `Map<number, unknown>` because every label aegis WRITES is an integer.
       (header as Map<number | string, unknown>).set(TAMPERED_MEMBER, true);
       structure[0] = encodeCbor(header);
@@ -1868,8 +1814,8 @@ const act = async (
 
     case "verify": {
       // The proof is signed HERE, over the artifact the GIVEN just produced:
-      // RFC 9449 §4.2 makes `ath` commit to the access token it is presented
-      // with, so a conformant proof does not exist until the token does and no
+      // `ath` commits to the access token the proof is presented with
+      // (RFC 9449 §4.2), so a conformant proof does not exist until the token does and no
       // row could hold a finished one. The bag is left EXACTLY as the row wrote
       // it when no proof is presented — an `options` the row omitted stays
       // omitted rather than becoming a bag carrying `dpopProof: undefined`.
@@ -2264,9 +2210,9 @@ const assertObservation = (step: ThenStep, result: ScenarioResult, wire: Wire): 
     }
 
     case "wirePayload": {
-      // ⚠ `payload`, not `wire` — this used to SHADOW the `wire: Wire` parameter,
-      // so every mention of the run's wire inside this branch would have read a
-      // `WirePayload` instead.
+      // ⚠ `payload`, not `wire`: naming it `wire` SHADOWS the `wire: Wire`
+      // parameter, so every mention of the run's wire inside this branch would
+      // read a `WirePayload` instead.
       const payload = readWirePayload(result.token, result.format);
 
       // A wire assertion against a payload that cannot be read is VACUOUS, not
@@ -2403,7 +2349,7 @@ const assertObservation = (step: ThenStep, result: ScenarioResult, wire: Wire): 
       ).toBeDefined();
       expect(dpop.thumbprint).toBe(boundThumbprint);
 
-      // RFC 9449 §4.2 — `ath` is the base64url SHA-256 of the ASCII access token.
+      // `ath` is the base64url SHA-256 of the ASCII access token. RFC 9449 §4.2.
       expect(dpop.accessTokenHash).toBe(
         createHash("sha256").update(result.token, "ascii").digest("base64url"),
       );
@@ -2580,8 +2526,8 @@ export const runScenario = async (
   if (built !== undefined) {
     // ⚠ OUTSIDE every try, on BOTH paths. A tamper that cannot be applied is the
     // harness's own failure, and a row asserting "the altered token is refused"
-    // would otherwise pass on the alteration never having happened. The mint
-    // path used to run it inside the catch, which is exactly that hole.
+    // would otherwise pass on the alteration never having happened. Inside a
+    // catch it would be exactly that hole.
     let current = applyTamper(built, artifact);
 
     try {

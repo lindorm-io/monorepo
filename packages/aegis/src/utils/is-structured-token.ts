@@ -17,10 +17,10 @@ const STRUCTURED: Record<StructuredFormat, true> = { jwt: true, cwt: true, cwm: 
 
 /**
  * ⚠ `Object.hasOwn`, never `in`. The table is a plain object literal and the key
- * comes off a CALLER-SUPPLIED token — this guard narrows a value handed in from
- * outside, so `{ format: "constructor" }` resolved through `Object.prototype`
- * and narrowed to a claims-bearing token that carries no claims. `in` on a
- * caller-influenced key is a BANNED construct in this package.
+ * comes off a CALLER-SUPPLIED token, so an `in` test resolves
+ * `{ format: "constructor" }` through `Object.prototype` and narrows it to a
+ * claims-bearing token that carries no claims. `in` on a caller-influenced key is
+ * a BANNED construct in this package.
  */
 const isStructuredFormat = (format: TokenFormat): format is StructuredFormat =>
   Object.hasOwn(STRUCTURED, format);
@@ -37,10 +37,9 @@ const isStructuredFormat = (format: TokenFormat): format is StructuredFormat =>
  * `{ format: "jwt", wrapper: "jwe" }`, so it answers the same test as a plain
  * one: `wrapper` carries the envelope and never changes what the token IS.
  *
- * Nullish input is FALSE rather than a caller's problem: the check this replaces
- * is `if (!token || token.format !== "jwt")`, and collapsing both halves into one
- * guard is the point. A `jws`/`cws` is false whether or not it was wrapped — the
- * plaintext is opaque either way.
+ * Nullish input is FALSE rather than a caller's problem: collapsing the null test
+ * and the format test into ONE guard is the point. A `jws`/`cws` is false whether
+ * or not it was wrapped — the plaintext is opaque either way.
  *
  * ⚠ Not to be confused with `isClaimsBearingToken`, which asks the same question
  * of an UNVERIFIED wire STRING (should this be verified locally or introspected?).

@@ -158,8 +158,8 @@ describe("enforceVerifyFloor", () => {
         expect.objectContaining({
           code: "profile_typ_mismatch",
           // The wire the failure came from is DIAGNOSTIC and travels in `data`;
-          // the code itself is neutral, so a CWT no longer reports itself as a
-          // JWT problem.
+          // the code itself is neutral, so a CWT does not report itself as a JWT
+          // problem.
           data: expect.objectContaining({ format: "cwt" }),
         }),
       );
@@ -325,10 +325,10 @@ describe("enforceVerifyFloor", () => {
      * prune runs on a token being read. An empty one is a claim the issuer made
      * badly, not a claim it did not make.
      *
-     * This previously read the other way — `""` and `null` passed the rule —
-     * which is a fail-open on the profile whose `forbidden` list carries the
-     * whole weight: `external_access_token` mandates no `typ`, so forbidding the
-     * id_token claims is all that keeps an id_token out.
+     * ⚠ Letting `""` and `null` pass is a fail-open on the profile whose
+     * `forbidden` list carries the whole weight: `external_access_token` mandates
+     * no `typ`, so forbidding the id_token claims is all that keeps an id_token
+     * out.
      */
     test.each([
       ["an empty string", ""],
@@ -403,7 +403,7 @@ describe("enforceVerifyFloor", () => {
     });
 
     // It rejects the CLASS the profile named, never algorithms in general: a
-    // profile that declares none is unconstrained (RFC 8417 / SSF permits HS*).
+    // profile that declares none is unconstrained.
     test("ignores the algorithm entirely for a profile with no algClass", () => {
       expect(() =>
         enforceVerifyFloor({

@@ -17,19 +17,16 @@ import { matcherWireName } from "./matcher-wire-name.js";
  * is the kit's sole responsibility (`createTemporalMatchers`); `exp` PRESENCE is
  * a domain policy enforced separately (`expPresence`, at the verify sites).
  *
- * The input `matchers` is a CLEAN claim-matcher bag — the domain `assert`
- * (named-8 + folded-14 equality claims + the three hash-derive inputs
- * `accessToken`/`authCode`/`authState`), less `tokenType`, which asserts the
- * token's TYPE HEADER and is enforced by the caller before this builds. It
- * carries no verify knobs (those never reach here), so there is nothing to
- * skip; every key maps to a claim via the registry (or the hash table).
+ * The input `matchers` is a CLEAN claim-matcher bag — the domain `assert` less
+ * `tokenType`, which asserts the token's TYPE HEADER and is enforced by the caller
+ * before this builds. It carries no verify knobs, so every key maps to a claim via
+ * the registry or the hash table.
  *
- * `nameOf` picks the WIRE SPELLING, and it is REQUIRED rather than defaulted to
- * JOSE: the predicate this returns is applied to a wire-keyed dict, and the two
- * wires disagree about `tokenId` (`jti` vs `cti`). A default is precisely how the
- * COSE caller silently inherited JOSE keys — an exact match then rejected a
- * legitimate token, and `$exists: false` passed on a token that had one. Making
- * it explicit forces any new call site to answer the question.
+ * ⚠ `nameOf` picks the WIRE SPELLING and is REQUIRED, never defaulted to JOSE: the
+ * predicate is applied to a wire-keyed dict and the two wires disagree about
+ * `tokenId` (`jti` vs `cti`), so a default silently gives a COSE caller JOSE keys
+ * — an exact match then rejects a legitimate token and `$exists: false` passes on
+ * a token that has one.
  */
 export const createIdentityMatchers = (
   algorithm: KryptosAlgorithm,
@@ -41,12 +38,11 @@ export const createIdentityMatchers = (
   const predicate: Record<string, ConditionOperator<any>> = {};
 
   for (const [key, value] of Object.entries(matchers)) {
-    // The wire name comes from `matcherWireName`, which reads the registry — the
-    // single source of truth for the domain->wire claim-name map — and is the same
-    // resolution `applyVerifyPolicy` inverts to report a refusal in the caller's
-    // vocabulary. The three hash-derive matchers name a SOURCE value rather than a
-    // claim, so the hash branch below still needs which domain claim they land in.
-    // An unmapped key has no claim to build a predicate for and throws.
+    // The wire name comes from `matcherWireName`, the same registry resolution
+    // `applyVerifyPolicy` inverts to report a refusal in the caller's vocabulary.
+    // The hash-derive matchers name a SOURCE value rather than a claim, so the
+    // hash branch below still needs which domain claim they land in; an unmapped
+    // key throws.
     // ⚠ `Object.hasOwn`, never a truthy index: `key` comes from the caller, and
     // `HASH_MATCHERS.toString` is inherited from the prototype and truthy.
     const hashDomain = Object.hasOwn(HASH_MATCHERS, key) ? HASH_MATCHERS[key] : undefined;

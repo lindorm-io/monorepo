@@ -1,73 +1,47 @@
 /**
  * The single header registry: the one place that maps each JOSE protected header
- * parameter to its aegis DOMAIN name, its spelling on EVERY wire, how its value
- * is shaped, and where it comes from.
+ * parameter to its aegis DOMAIN name, its spelling on EVERY wire, how its value is
+ * shaped, and where it comes from. It is the header-side twin of
+ * `internal/claims/claims-registry.ts` and shares the {@link ParamSpec} base.
  *
- * It is the header-side twin of `internal/claims/claims-registry.ts` and shares
- * the {@link ParamSpec} base with it (`internal/registry/`) — a header parameter
- * and a claim are the same kind of thing, and used to be described by two
- * unrelated types.
- *
- * `token-header.ts` (the header translator, mirroring `claims/translate.ts`) is
- * DATA-DRIVEN: it iterates the actual header data (domain-keyed options on
- * write, wire-keyed decoded claims on read) and looks each key up in the
- * registry. The drift-guard test binds the domain names to `DomainTokenHeader`
- * and the JOSE names to `WireTokenHeader`, so a rename on either side fails the
- * build instead of silently drifting. `internal/cose/*` resolves its integer
- * labels from here via `coseByJose`.
+ * `token-header.ts` is DATA-DRIVEN: it iterates the actual header data and looks
+ * each key up here. The drift-guard test binds the domain names to
+ * `DomainTokenHeader` and the JOSE names to `WireTokenHeader`, so a rename on
+ * either side fails the build. `internal/cose/*` resolves its integer labels
+ * through `coseByJose`.
  *
  * --- `absent` is a STATED fact ---
  *
- * Most parameters have no COSE form, and each states WHY: a required `reason` on
- * its `absent` wire key, which `coseByJose` reports when it refuses. A missing
- * optional field would be indistinguishable from an oversight. The `cose` codec
- * cell is `null` on exactly those rows, bound to the `absent` cell in
- * `header-registry.test.ts`, so a parameter cannot be carried by one wire and
- * described by neither.
+ * A parameter with no COSE form carries a required `reason` on its `absent` wire
+ * key, which `coseByJose` reports when it refuses; an optional field would be
+ * indistinguishable from an oversight. The `cose` codec cell is `null` on exactly
+ * those rows, bound to the `absent` cell in `header-registry.test.ts`.
  *
- * --- The one column that is CONSTANT ---
+ * --- `sensitivity` ---
  *
- * `sensitivity` is `public` on all twenty-one entries, and that is an honest
- * reading of the code rather than an omission: a header parameter is never
- * encrypted content, so nothing is sensitive. It is declared per entry anyway,
- * so the first parameter that breaks the pattern has to say so here.
+ * A header parameter is never encrypted content, so every row is `public`. It is
+ * declared per entry anyway, so the first parameter that breaks the pattern has to
+ * say so here.
  *
- * ⚠ `direction`, `matchable` and `provenance` USED TO SIT BESIDE IT, twenty-one
- * cells each, and nothing read any of them. `matchable` was not merely unread but
- * WRONG: every row said `false` and this docstring said "there is no header
- * MATCHER door at all", while `internal/utils/verify-token.ts` raises
- * `token_type_mismatch` against `DomainAssert.tokenType` — a header-derived
- * assertion, through the matcher door, on every profiled verify.
+ * --- `critEligible` ---
  *
- * ⚠ `critEligible` IS NOT A CONSTANT COLUMN — `oid` answers `true` and every other
- * row `false` — and it is WRITE-SIDE ONLY: `internal/header/is-crit-eligible.ts`
- * is its one reader, serving the mint gate `assert-crit-eligible.ts`. The verify
- * gate reads the registry too — but only ever to REFUSE, and never this cell; the
- * read rule is stated once, on `internal/utils/reject-unknown-critical.ts`. So
- * this cell decides whether a PRODUCER may name a REGISTERED parameter, and
- * nothing else.
- * Why a column rather than an `oid`-shaped test: `is-crit-eligible.ts`.
+ * WRITE-SIDE ONLY: `internal/header/is-crit-eligible.ts` is its one reader,
+ * serving the mint gate `assert-crit-eligible.ts`. The verify gate reads the
+ * registry too, but never this cell — the read rule is stated once, on
+ * `internal/utils/reject-unknown-critical.ts`. So this cell decides whether a
+ * PRODUCER may name a REGISTERED parameter, and nothing else.
  *
  * --- `whenEmpty` ---
  *
- * REQUIRED on every entry and with no default, for the same reason the claim
- * registry gives: each verdict fails open in a different direction. TWENTY
- * prune, ONE refuses, NONE keeps.
+ * REQUIRED on every entry with no default: each verdict fails open in a different
+ * direction. The one `refuse` is `x5t#S256`, where presence IS the binding, so an
+ * empty value can be neither dropped (an unbound token) nor carried (a token no
+ * certificate satisfies).
  *
- * The one `refuse` is `x5t#S256` — the only header parameter aegis's verify
- * enforces, where presence IS the binding, so an empty value can be neither
- * dropped (an unbound token) nor carried (a token no certificate satisfies) and
- * the write throws instead. `x5t` and `x5c` sit beside it and prune, because
- * nothing reads them.
- *
- * ⚠ `keep` HAS NO HEADER USERS, and it is not dead — eleven CLAIMS hold it
+ * ⚠ `keep` HAS NO HEADER USERS and is not dead — claims hold it
  * (`internal/claims/claims-registry.ts`), which is why the union is not narrowed
- * to the two verdicts this registry uses. It is unused HERE because a `keep`
- * needs an empty value a RECIPIENT can act on, and no header parameter has one:
- * the emptiness of a header parameter is either noise (twenty of them) or an
- * unsatisfiable guarantee (one). A header parameter whose empty form says
- * something a recipient can honour — an explicitly empty list that narrows
- * rather than describes — would say `keep`, and this paragraph would change.
+ * here. A `keep` needs an empty value a RECIPIENT can act on, and no header
+ * parameter has one.
  */
 
 import { isNumber } from "@lindorm/is";
@@ -93,12 +67,10 @@ export type { CoseHeaderCodec } from "../registry/cose-header-codec.js";
 
 /**
  * The registry. Ordered alphabetically by JOSE name for readability only — the
- * codec reads neither position nor any subset. Lookups are derived from the Maps
- * below.
+ * codec reads neither position nor any subset. Lookups derive from the Maps below.
  *
- * RFC references: RFC 7515 §4.1 (JWS), RFC 7516 §4.1 (JWE), RFC 7518 §4.6
- * (ECDH-ES), RFC 9052 §3.1 Table 3 (core COSE labels), RFC 9360 (X.509 COSE
- * labels), RFC 9596 (COSE `typ`), plus the lindorm-proprietary `oid`.
+ * RFC 7515 §4.1 · RFC 7516 §4.1 · RFC 7518 §4.6 · RFC 9052 §3.1 · RFC 9360 §2 ·
+ * RFC 9596 §2, plus the lindorm-proprietary `oid`.
  */
 export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
   {
@@ -114,11 +86,9 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     cose: { kind: "algorithmLabel" },
     sensitivity: "public",
     sample: "ES256",
-    // PRUNE: `alg` is REQUIRED (RFC 7515 §4.1.1) and `""` names no algorithm — a
-    // missing `alg` wearing a value. Absent is the state `encodeJoseHeader`
-    // already refuses by name (`jose-header.ts:19-25`), so pruning routes the
-    // failure to the check written for it. `kryptos.algorithm` is a closed union,
-    // so aegis's own write cannot reach the cell.
+    // PRUNE: `""` names no algorithm — a missing `alg` wearing a value, and absent
+    // is the state `encodeJoseHeader` already refuses by name. `kryptos.algorithm`
+    // is a closed union, so aegis's own write cannot reach the cell.
     whenEmpty: "prune",
     placement: "protected",
     critEligible: false,
@@ -135,24 +105,16 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     wire: {
       jose: wireName("apu"),
       cose: wireAbsent(
-        "ECDH-ES key agreement (RFC 7518 §4.6) has no COSE counterpart on any aegis path: COSE encryption is COSE_Encrypt0 with direct encryption, so no Concat-KDF party info is ever produced.",
+        "ECDH-ES key agreement (RFC 7518 §4.6) has no COSE counterpart on any aegis path: a COSE_Encrypt0 carries no recipients array and runs no key-agreement step, so no Concat-KDF party info is produced.",
       ),
     },
     codec: { kind: "string" },
     cose: null,
     sensitivity: "public",
     sample: "cGFydHktdQ",
-    // PRUNE, and RFC 7518 §4.6.2 proves it rather than merely permitting it.
-    // PartyUInfo is Concat-KDF input, and the RFC defines the present-but-empty
-    // case to compute what the ABSENT case computes: "If an "apu" (agreement
-    // PartyUInfo) Header Parameter is present, Data is set to the result of
-    // base64url decoding the "apu" value and Datalen is set to the number of
-    // octets in Data. Otherwise, Datalen is set to 0 and Data is set to the empty
-    // octet sequence." Decoding `""` yields the empty octet sequence and a
-    // Datalen of 0 — the two branches agree exactly — so an empty `apu` derives
-    // the SAME key an absent one does. It is a header parameter that changes
-    // nothing, and aegis never even feeds it in: `resolve-ecdh-party.ts:44`
-    // decodes the value only when it is truthy.
+    // PRUNE: an empty `apu` derives the SAME key an absent one does (RFC 7518
+    // §4.6.2), so it is a header parameter that changes nothing — and
+    // `resolve-ecdh-party.ts` decodes the value only when it is truthy.
     whenEmpty: "prune",
     placement: "protected",
     critEligible: false,
@@ -169,15 +131,14 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     wire: {
       jose: wireName("apv"),
       cose: wireAbsent(
-        "ECDH-ES key agreement (RFC 7518 §4.6) has no COSE counterpart on any aegis path: COSE encryption is COSE_Encrypt0 with direct encryption, so no Concat-KDF party info is ever produced.",
+        "ECDH-ES key agreement (RFC 7518 §4.6) has no COSE counterpart on any aegis path: a COSE_Encrypt0 carries no recipients array and runs no key-agreement step, so no Concat-KDF party info is produced.",
       ),
     },
     codec: { kind: "string" },
     cose: null,
     sensitivity: "public",
     sample: "cGFydHktdg",
-    // PRUNE: the `apu` argument, for PartyVInfo — RFC 7518 §4.6.2 states the
-    // absent/empty equivalence for this parameter in the same words.
+    // PRUNE: the `apu` argument, for PartyVInfo (RFC 7518 §4.6.2).
     whenEmpty: "prune",
     placement: "protected",
     critEligible: false,
@@ -194,20 +155,14 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     codec: { kind: "critical" },
     cose: { kind: "critical" },
     sensitivity: "public",
-    // ⚠ DOMAIN spelling. This entry's own VALUE holds DOMAIN names like every
-    // other domain-keyed value here, and `criticalToWire` maps each member
-    // domain -> wire (`objectId` -> `oid`) while passing an unrecognised member
-    // through unchanged. The sample was `["oid"]` — the WIRE spelling — which
-    // therefore survived the write by falling through the passthrough arm and
-    // came back from the read as `["objectId"]`, so the one value the column
-    // exists to demonstrate did not round-trip to itself.
+    // ⚠ DOMAIN spelling. `criticalToWire` maps each member domain -> wire
+    // (`objectId` -> `oid`) and passes an unrecognised member through unchanged, so
+    // a WIRE spelling here would survive the write and read back as the domain one.
     sample: ["objectId"],
-    // PRUNE, and the only cell where both wires forbid the empty value outright.
-    // RFC 7515 §4.1.11: "Producers MUST NOT use the empty list "[]" as the "crit"
-    // value." RFC 9052 §3.1: "The array MUST have at least one value in it."
-    // aegis's own reader already refuses one (`validate-crit.ts:66-69`), so an
-    // empty `crit` that reached the wire was a token aegis minted and would not
-    // verify.
+    // PRUNE, and the only cell both wires forbid the empty value on outright
+    // (RFC 7515 §4.1.11, RFC 9052 §3.1). aegis's own reader refuses one
+    // (`validate-crit.ts`), so an empty `crit` on the wire is a token aegis minted
+    // and would not verify.
     whenEmpty: "prune",
     placement: "protected",
     critEligible: false,
@@ -225,13 +180,10 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     cose: { kind: "passthrough" },
     sensitivity: "public",
     sample: "application/json",
-    // PRUNE: `cty` names the payload's media type (RFC 7515 §4.1.10) and `""` is
-    // not one. It is worse than noise here: `serialiseContent` prefers it over the
-    // inferred type (`content-codec.ts:175`, `??` passes `""` through) and
-    // `reconstructStrategy("")` falls to the raw-bytes default
-    // (`content-codec.ts:92-114`), so a sealed object came back a Buffer. Absent
-    // is the state both aegis and the RFC already define; empty is a second
-    // spelling of it, and the one nothing has a rule for.
+    // PRUNE: `""` is not a media type, and it is worse than noise —
+    // `serialiseContent` prefers it over the inferred type (`??` passes `""`
+    // through) and `reconstructStrategy("")` falls to the raw-bytes default
+    // (`content-codec.ts`), so a sealed object comes back a Buffer.
     whenEmpty: "prune",
     placement: "protected",
     critEligible: false,
@@ -254,13 +206,10 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     cose: null,
     sensitivity: "public",
     sample: "A256GCM",
-    // PRUNE: RFC 7516 §4.1.2 makes `enc` REQUIRED on a JWE, and `""` names no
-    // content-encryption algorithm — indistinguishable from a header that never
-    // had one. `JweKit.ts` writes it from the kit's own `this.encryption` and
-    // never from the caller's bag, so aegis's own write cannot reach the cell; it
-    // states the direction a smuggled
-    // one fails in, and `decodeJoseHeader` refuses an unknown `enc` on the read
-    // (`jose-header.ts:99-107`).
+    // PRUNE: `""` names no content-encryption algorithm, and is indistinguishable
+    // from a header that never had one. `JweKit` writes it from the kit's own
+    // `this.encryption` and never from the caller's bag, so aegis's own write cannot
+    // reach the cell; `decodeJoseHeader` refuses an unknown `enc` on the read.
     whenEmpty: "prune",
     placement: "protected",
     critEligible: false,
@@ -276,20 +225,16 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     wire: {
       jose: wireName("epk"),
       cose: wireAbsent(
-        "The ephemeral public key is an ECDH-ES key-management output; aegis's COSE encryption is direct, so no ephemeral key is produced.",
+        "The ephemeral public key is an ECDH-ES key-management output; a COSE_Encrypt0 runs no recipient algorithm, so no ephemeral key is produced.",
       ),
     },
     codec: { kind: "jwk" },
     cose: null,
     sensitivity: "public",
     sample: { kty: "EC", crv: "P-256", x: "eHNhbXBsZQ", y: "eXNhbXBsZQ" },
-    // PRUNE: RFC 7518 §4.6.1.1 makes `epk` the ephemeral public key "created by
-    // the originator", which the recipient agrees against — yielding the CEK
-    // directly for `ECDH-ES` and the KEY-WRAPPING key for the `+A*KW` variants
-    // (§4.6.2). `{}` carries no `kty`, `crv` or coordinates, so no key agreement
-    // can be performed from it — and "no ephemeral key was produced" is exactly
-    // what an ABSENT `epk` reports, which is the honest shape of every
-    // non-ECDH-ES token aegis writes.
+    // PRUNE: `{}` carries no `kty`, `crv` or coordinates, so no key agreement can
+    // be performed from it — and an ABSENT `epk` already reports "no ephemeral key
+    // was produced", the shape of every non-ECDH-ES token aegis writes.
     whenEmpty: "prune",
     placement: "protected",
     critEligible: false,
@@ -307,16 +252,13 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     cose: { kind: "base64Bytes" },
     sensitivity: "public",
     sample: Buffer.alloc(12),
-    // PRUNE. ⚠ The cell does NOT govern a zero-length Buffer: `isEmpty` treats a
-    // Buffer as non-empty by design (`is-empty.ts:18-21`), and a zero-length nonce
-    // is a crypto-layer defect that must fail in the AEAD rather than be pruned
-    // into "no IV". What it does govern is the non-Buffer empty the guardless
-    // `buffer` arm lets through (`token-header.ts:89-90` applies no guard at all)
-    // — `""`, `null`, `{}`, `[]`. None of them is a nonce; an AEAD nonce is bytes
-    // or absent.
+    // PRUNE. ⚠ It does NOT govern a zero-length Buffer: `isEmpty` treats a Buffer
+    // as non-empty, and a zero-length nonce must fail in the AEAD rather than be
+    // pruned into "no IV". What it governs is the non-Buffer empty the guardless
+    // `buffer` arm lets through (`token-header.ts`) — `""`, `null`, `{}`, `[]`.
     whenEmpty: "prune",
-    // JOSE carries it on the protected header; COSE_Encrypt0 puts it in the
-    // unprotected bucket (it is an AEAD input, not integrity-protected data).
+    // JOSE carries it on the protected header; a COSE_Encrypt0 puts it in the
+    // unprotected bucket (RFC 9052 §3.1).
     placement: "either",
     critEligible: false,
   },
@@ -338,10 +280,8 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     cose: null,
     sensitivity: "public",
     sample: "https://issuer.lindorm.test/.well-known/jwks.json",
-    // PRUNE, and no empty value can reach the cell: `isUrlLike("")` is false, so
-    // the codec guard (`token-header.ts:83-84`) already drops every empty form. The
-    // cell records the same answer at the bag level rather than leaving this the
-    // one row with no verdict.
+    // PRUNE, and no empty value can reach the cell: `isUrlLike("")` is false, so the
+    // codec guard (`token-header.ts`) already drops every empty form.
     whenEmpty: "prune",
     placement: "protected",
     critEligible: false,
@@ -364,10 +304,9 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     cose: null,
     sensitivity: "public",
     sample: { kty: "EC", crv: "P-256", x: "eHNhbXBsZQ", y: "eXNhbXBsZQ" },
-    // PRUNE: `{}` is a JWK with no `kty`, which RFC 7517 §4.1 makes REQUIRED — it
-    // identifies no key. aegis never trusts a header-embedded key on any wire
-    // (stated on this entry's COSE absence), so an empty one is noise no recipient
-    // can act on.
+    // PRUNE: `{}` is a JWK with no `kty` (RFC 7517 §4.1) and identifies no key.
+    // aegis never trusts a header-embedded key on any wire, so an empty one is
+    // noise no recipient can act on.
     whenEmpty: "prune",
     placement: "protected",
     critEligible: false,
@@ -385,27 +324,23 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     cose: { kind: "textBytes" },
     sensitivity: "public",
     sample: "key_sample",
-    // PRUNE: `kid` is the lookup hint a verifier resolves the key by, and `""`
-    // matches nothing — indistinguishable from a token that gave no hint.
-    // `encodeJoseHeader` already refuses a falsy `kid` (`jose-header.ts:42-49`).
-    // On COSE it also travels unprotected (`placement: "either"`), where an empty
-    // one would be a routing hint that routes nowhere.
+    // PRUNE: `""` matches nothing and is indistinguishable from a token that gave
+    // no hint; `encodeJoseHeader` already refuses a falsy `kid`. On COSE it also
+    // travels unprotected, where an empty one routes nowhere.
     whenEmpty: "prune",
-    // COSE convention: kid is an advisory routing hint read BEFORE the signature
-    // is checked, so the COSE kits emit it unprotected; JOSE has one header.
+    // An advisory routing hint read BEFORE the signature is checked, so the COSE
+    // kits emit it unprotected (RFC 9052 §3.1); JOSE has one header.
     placement: "either",
     critEligible: false,
   },
   // `oid` (lindorm object id) has no IANA COSE label, so it rides COSE under a
-  // lindorm PRIVATE-USE header-parameter label. RFC 8152 §16.2 is where the range
-  // is stated — "Integer values less than -65536 are marked as private use." —
-  // and RFC 9052 §11.1 only re-points the IANA registry; it does not restate the
-  // range. Chosen well clear of the private-use CLAIM/enc label band
-  // (-65537…) so a grep never confuses a header label with a claim/enc label.
+  // lindorm PRIVATE-USE header-parameter label (the range: RFC 8152 §16.2). Chosen
+  // well clear of the private-use CLAIM/enc label band so a grep never confuses a
+  // header label with a claim/enc label.
   //
-  // ⚠ A private-use label is UNINTERPRETABLE to a foreign reader, so it is only
-  // written as an integer when the caller asks for the proprietary spelling; the
-  // interoperable default emits the string label `"oid"` instead. That choice is
+  // ⚠ A private-use label is UNINTERPRETABLE to a foreign reader, so it is written
+  // as an integer only when the caller asks for the proprietary spelling; the
+  // interoperable default emits the string label `"oid"`. That choice is
   // `coseWireKey` below, gated on the RANGE and never on this name.
   {
     domain: "objectId",
@@ -418,40 +353,25 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     cose: { kind: "passthrough" },
     sensitivity: "public",
     sample: "oid_sample",
-    // PRUNE: `oid` names the domain object the token is about; `""` names none,
-    // and nothing in aegis or on the platform reads an empty object id as anything
+    // PRUNE: `""` names no object, and nothing reads an empty object id as anything
     // but "not stated".
     whenEmpty: "prune",
     placement: "protected",
     // ⭐ THE ONE ELIGIBLE REGISTERED PARAMETER — the only name in THIS REGISTRY a
-    // caller may put in `crit`. RFC 7515 §4.1.11: "Producers MUST NOT include
-    // Header Parameter names defined by this specification or [JWA] for use with
-    // JWS […] in the "crit" list." `oid` is the sole parameter aegis owns that no
-    // specification defines; the other twenty JOSE names here are IANA-registered,
-    // so `crit` may not name them and every one of them is `false`.
+    // caller may put in `crit`, because it is the sole parameter aegis owns that no
+    // specification defines (RFC 7515 §4.1.11).
     //
     // ⛔ IT IS NOT THE ONLY NAME A `crit` MAY CARRY, and it is a WRITE-side column.
     // The MINT gate ORs it with the keys of the custom bag the same call writes
-    // (`internal/header/assert-crit-eligible.ts`) — by the same RFC sentence,
-    // since a name no specification defines is exactly what it leaves available.
-    // The READ gate does not consult this column at all; what it does consult,
-    // and why a declaration alone never admits a member there, is stated once on
+    // (`internal/header/assert-crit-eligible.ts`). The READ gate does not consult
+    // this column at all — that rule is stated once, on
     // `internal/utils/reject-unknown-critical.ts`.
     //
-    // ⚠ WHAT "AEGIS IMPLEMENTS IT" MEANS, said out loud because RFC 7515
-    // §4.1.11's own phrase — "understood and supported by the recipient" — reads
-    // stronger than what any library can provide for this parameter. It is AEGIS
-    // POLICY and not a reading of the RFC: aegis holds a registry entry for
-    // `oid`, translates it in BOTH directions on BOTH wires, drops it on READ
-    // from a bucket the signature does not cover (`placement: "protected"`, read
-    // through `internal/header/merge-header-buckets.ts`), and REPORTS its value
-    // on the verified domain header as `objectId`. It does
-    // not act on the value, and no library could — the object identifier belongs
-    // to the deployment. So a producer marking it critical is asserting that the
-    // RECIPIENT'S OWN code reads `header.objectId` before acting on the token,
-    // and aegis's part of that bargain is to deliver it rather than to interpret
-    // it. That is interoperable aegis-to-aegis, which is a real deployment, and
-    // is why this is an extension rather than a dead header parameter.
+    // ⚠ MARKING IT CRITICAL IS AEGIS POLICY, not a reading of the RFC. aegis
+    // translates `oid` on both wires and REPORTS it as `objectId`; it does not act
+    // on the value, because the object identifier belongs to the deployment. A
+    // producer marking it critical is asserting that the RECIPIENT'S OWN code reads
+    // `header.objectId` — aegis's part is to deliver it, not to interpret it.
     critEligible: true,
   },
   {
@@ -465,21 +385,18 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     wire: {
       jose: wireName("p2c"),
       cose: wireAbsent(
-        "PBES2 (RFC 7518 §4.8) is a JWE key-management algorithm; aegis's COSE encryption is direct, so no password-derived key is produced.",
+        "PBES2 (RFC 7518 §4.8) is a JWE key-management algorithm; a COSE_Encrypt0 runs no recipient algorithm, so no password-derived key is produced.",
       ),
     },
     codec: { kind: "number" },
     cose: null,
-    // The PBES2 iteration count `JweKit.ts` reads back off the key-management
-    // output, beside the `p2s` salt that has always been declared `computed`.
     sensitivity: "public",
     sample: 310000,
     // PRUNE, and no empty value exists for it to act on: `isEmpty` is false for
-    // every number (`is-empty.ts:30`) and `isFinite` rejects every non-number
-    // (`token-header.ts:85-86`). ⚠ `p2c: 0` is a VALUE, not an absence, and is never
-    // pruned — a zero iteration count is a key-management defect that must fail
-    // where the derivation happens, not vanish from the header a recipient needs
-    // to reproduce it (RFC 7518 §4.8.1.2).
+    // every number and `isFinite` rejects every non-number (`token-header.ts`).
+    // ⚠ `p2c: 0` is a VALUE, not an absence, and is never pruned — a zero iteration
+    // count must fail where the derivation happens rather than vanish from the
+    // header a recipient needs to reproduce it (RFC 7518 §4.8.1.2).
     whenEmpty: "prune",
     placement: "protected",
     critEligible: false,
@@ -495,15 +412,15 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     wire: {
       jose: wireName("p2s"),
       cose: wireAbsent(
-        "PBES2 (RFC 7518 §4.8) is a JWE key-management algorithm; aegis's COSE encryption is direct, so no password-derived key is produced.",
+        "PBES2 (RFC 7518 §4.8) is a JWE key-management algorithm; a COSE_Encrypt0 runs no recipient algorithm, so no password-derived key is produced.",
       ),
     },
     codec: { kind: "buffer" },
     cose: null,
     sensitivity: "public",
     sample: Buffer.alloc(16),
-    // PRUNE, on the `iv` argument — and with the same ⚠: a zero-length Buffer is
-    // not empty and is not governed here.
+    // PRUNE, on the `iv` argument: a zero-length Buffer is not empty and is not
+    // governed here.
     whenEmpty: "prune",
     placement: "protected",
     critEligible: false,
@@ -519,7 +436,7 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     wire: {
       jose: wireName("tag"),
       cose: wireAbsent(
-        "The key-wrap authentication tag is an AES-GCM-KW key-management output; aegis's COSE encryption is direct, so no key is wrapped.",
+        "The key-wrap authentication tag is an AES-GCM-KW key-management output; a COSE_Encrypt0 wraps no key.",
       ),
     },
     codec: { kind: "buffer" },
@@ -543,26 +460,15 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     wire: { jose: wireName("typ"), cose: wireLabel(16, "typ") }, // RFC 9596 §4.1
     codec: { kind: "string" },
     cose: { kind: "passthrough" },
-    // Every kit builds the full media type itself from the `tokenType` PREFIX
-    // (`buildMediaType`/`computeTypHeader`). A caller supplies the prefix, never
-    // the parameter — which is why every row reserves it.
     sensitivity: "public",
-    // The FULL media type. RFC 7515 §4.1.9 permits the `application/` prefix to be
-    // omitted on the wire, but the DOMAIN column reports what aegis reads back —
-    // and aegis always writes and reports the complete media type — so the bare
-    // `"at+jwt"` this held could never round-trip to itself.
+    // The FULL media type: aegis always writes and reports the complete form, so a
+    // bare `"at+jwt"` here could not round-trip to itself (RFC 7515 §4.1.9).
     sample: "application/at+jwt",
-    // PRUNE: `typ` declares the type of the complete object, and ROUTING ON IT IS
-    // AEGIS POLICY rather than a library requirement — RFC 9596 §2 has `typ`
-    // "ignored by COSE implementations […] other than being passed through to
-    // applications using those implementations", and aegis is the application.
-    // `assertWireTyp` gates every read on it, so `""` would leave the token
-    // unroutable while looking declared. RFC 7515 §4.1.9 makes ABSENT a defined
-    // state; empty is not one.
-    // `buildMediaType` never returns `""` (`compute-typ-header.ts:47-49` floors an
-    // empty prefix to the bare conventional form) and `encodeJoseHeader` refuses a
-    // falsy `typ` (`jose-header.ts:35-41`), so aegis's own write cannot reach the
-    // cell.
+    // PRUNE. ROUTING ON `typ` IS AEGIS POLICY, not a library requirement
+    // (RFC 9596 §2): `assertWireTyp` gates every read on it, so `""` would leave the
+    // token unroutable while looking declared. `buildMediaType` never returns `""`
+    // and `encodeJoseHeader` refuses a falsy `typ`, so aegis's own write cannot
+    // reach the cell.
     whenEmpty: "prune",
     placement: "protected",
     critEligible: false,
@@ -582,18 +488,14 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     sample: ["MIIBsample"],
     // PRUNE. ⚠ NOT a restriction, and this is where it splits from `x5t#S256`
     // below: nothing reads `x5c` — the binding check consults a THUMBPRINT alone
-    // (`verify-cert-binding.ts`) — so an empty chain restricts nothing and pruning
-    // removes nothing. RFC 7515 §4.1.6 makes the first member the certificate
-    // corresponding to the key, and a chain with no members corresponds to no key.
-    // `resolve-cert-binding.ts` already refuses to emit one, so the writer has made
-    // the same call.
+    // (`verify-cert-binding.ts`) — so an empty chain restricts nothing.
+    // `resolve-cert-binding.ts` already refuses to emit one.
     whenEmpty: "prune",
     placement: "protected",
     critEligible: false,
   },
-  // RFC 7515 §4.1.7 — X.509 certificate SHA-1 thumbprint (base64url). Kit-derived
-  // from the signing/encrypting kryptos (like `x5t#S256`), auto-emitted on JOSE
-  // whenever a cert is bound and the boolean resolves true.
+  // RFC 7515 §4.1.7. Kit-derived from the signing/encrypting kryptos, auto-emitted
+  // on JOSE whenever a cert is bound and the boolean resolves true.
   {
     domain: "certificateThumbprintSha1",
     spec: {
@@ -605,17 +507,16 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     wire: {
       jose: wireName("x5t"),
       cose: wireAbsent(
-        "RFC 9360 \u00a72 gives COSE ONE thumbprint parameter, x5t (label 34), whose value is a COSE_CertHash `[ hashAlg, hashValue ]` — the digest algorithm is a member of the value rather than the difference between two parameter names, so COSE has no second, SHA-1-named parameter to key. This row is therefore unreachable on the WRITE side, which is what it states: a COSE token names its certificate by exactly one digest, and aegis writes SHA-256. On READ the SHA-1 digest still arrives — label 34's `certHash` codec dispatches on hashAlg and lands a -14 value on THIS domain field.",
+        "aegis keys a certificate thumbprint to one COSE parameter, x5t (label 34), whose COSE_CertHash value carries the digest algorithm as a member — so there is no second, SHA-1-named parameter to key. Unreachable on the WRITE side, where aegis emits SHA-256; on READ the SHA-1 digest still lands on this domain field, because label 34's `certHash` codec dispatches on hashAlg. RFC 9360 §2.",
       ),
     },
     codec: { kind: "string" },
     cose: null,
     sensitivity: "public",
     sample: "dGh1bWJwcmludC1zaGEx",
-    // PRUNE, and the split from `x5t#S256` is the whole reason the two cells
-    // differ: this digest is checked only where NO SHA-256 one arrived, and only
-    // in lax mode (`verify-cert-binding.ts`), so its presence is never itself the
-    // binding. An empty value binds nothing and is pure noise on the wire.
+    // PRUNE: this digest is checked only where NO SHA-256 one arrived, and only in
+    // lax mode (`verify-cert-binding.ts`), so its presence is never itself the
+    // binding and an empty value binds nothing.
     whenEmpty: "prune",
     placement: "protected",
     critEligible: false,
@@ -630,44 +531,33 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     },
     wire: {
       jose: wireName("x5t#S256"),
-      // RFC 9360 §2 x5t. It carries the `certHash` codec rather than the plain
-      // relabel the other cert parameters take: a COSE x5t is a COSE_CertHash
-      // `[ hashAlg, hashValue ]`, so the digest algorithm is a member of the VALUE.
-      // That is also why ONE COSE label reaches TWO domain fields — the codec
-      // dispatches a decode on `hashAlg`, and a CBOR map cannot carry a duplicate
-      // key, so the write emits SHA-256 and nothing else.
+      // RFC 9360 §2. It carries the `certHash` codec rather than a plain relabel
+      // because the digest algorithm is a member of the VALUE — which is also why
+      // ONE COSE label reaches TWO domain fields, and why the write emits SHA-256
+      // and nothing else.
       cose: wireLabel(34, "x5t"),
     },
     codec: { kind: "string" },
     cose: { kind: "certHash" },
     sensitivity: "public",
     sample: "dGh1bWJwcmludC1zaGEyNTY",
-    // REFUSE: `x5t#S256` is the ONE header parameter aegis's verify ENFORCES —
-    // `verify-cert-binding.ts` skips the check when it is absent and refuses a
-    // mismatch when it is present, so PRESENCE IS THE BINDING. That leaves an
-    // empty value with no disposal at all, which is why this is the one cell that
-    // is neither `prune` nor `keep`: pruning converts an unsatisfiable binding
-    // into NO binding and hands the audience an unbound token (the `cnf`
-    // fail-open in header form), while keeping emits a token whose binding no
-    // certificate can ever satisfy — one every conformant recipient rejects. The
-    // WRITE is the only place left where the producer still holds the value and
-    // can either supply it or drop the parameter, so the write throws
-    // (`refuse-empty-headers.ts`).
+    // REFUSE: `verify-cert-binding.ts` skips the check when this is absent and
+    // refuses a mismatch when it is present, so PRESENCE IS THE BINDING. Pruning an
+    // empty value would convert an unsatisfiable binding into NO binding; keeping it
+    // would emit a token no certificate can satisfy. The write throws instead
+    // (`refuse-empty-headers.ts`), where the producer still holds the value.
     //
-    // ⚠ It is a BOUNDARY guard, not a repair of an aegis path. The value is
-    // derived from the signing key, both caller-facing header types Omit it, and
-    // `resolveCertBinding` reads it off a kryptos that answers `null` or a real
-    // digest — so the one producer of `""` is a foreign `IKryptos`, an interface
-    // aegis publishes and does not implement.
+    // ⚠ A BOUNDARY guard, not a repair of an aegis path: both caller-facing header
+    // types Omit the field and `resolveCertBinding` reads a kryptos that answers
+    // `null` or a real digest, so the one producer of `""` is a foreign `IKryptos`.
     //
-    // ⚠ Do NOT generalise it to the other two cert parameters. It holds because
-    // presence of THIS one is the binding; `x5c` is read by nothing, and `x5t` is
-    // consulted only in lax mode when this parameter did not arrive at all.
+    // ⚠ Do NOT generalise it to `x5c` or `x5t` — neither one's presence is a
+    // binding.
     whenEmpty: "refuse",
     placement: "protected",
     critEligible: false,
   },
-  // RFC 7515 §4.1.5 — X.509 URL. COSE label 35 (RFC 9360 x5u).
+  // RFC 7515 §4.1.5; COSE label 35 (RFC 9360 §2).
   {
     domain: "certificateUrl",
     spec: {
@@ -681,14 +571,14 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     cose: { kind: "passthrough" },
     sensitivity: "public",
     sample: "https://issuer.lindorm.test/certs.pem",
-    // PRUNE: RFC 7515 §4.1.5 makes `x5u` a URI, and `""` is not one. ⚠ Note this
-    // row carries the `string` codec, not `url` like `jku` — so unlike `jku` the
-    // guard does NOT already drop an empty value, and this cell is what stops it.
+    // PRUNE: `""` is not a URI (RFC 7515 §4.1.5). ⚠ This row carries the `string`
+    // codec, not `url` like `jku`, so no guard drops an empty value earlier — this
+    // cell is what stops it.
     whenEmpty: "prune",
     placement: "protected",
     critEligible: false,
   },
-  // RFC 7516 §4.1.3 — compression algorithm ("DEF" is the only registered value).
+  // RFC 7516 §4.1.3 — compression algorithm.
   {
     domain: "zip",
     spec: {
@@ -700,19 +590,18 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     wire: {
       jose: wireName("zip"),
       cose: wireAbsent(
-        "COSE registers no compression header parameter, and aegis compresses nothing on the COSE wire.",
+        "aegis compresses nothing on the COSE wire, so there is no compression algorithm to declare.",
       ),
     },
     codec: { kind: "string" },
     cose: null,
     sensitivity: "public",
     sample: "DEF",
-    // PRUNE: RFC 7516 §4.1.3 DEFINES "DEF" as the one compression algorithm value
-    // that specification gives (the IANA registration is RFC 7518 §7.3 / §7.3.2);
-    // `""` names none. aegis compresses nothing on any write path, so an empty `zip`
-    // declares a transform that did not happen — on a token `JweKit.decrypt` then
-    // refuses for merely CARRYING the parameter (`JweKit.ts:174-182`). The refusal for
-    // a FOREIGN token's `zip` is untouched: the read path is not normalised.
+    // PRUNE: `""` names no compression algorithm (RFC 7518 §7.3). aegis compresses
+    // nothing on any write path, so an empty `zip` declares a transform that did not
+    // happen — on a token `JweKit.decrypt` then refuses for merely CARRYING the
+    // parameter. A FOREIGN token's `zip` is untouched: the read path is not
+    // normalised.
     whenEmpty: "prune",
     placement: "protected",
     critEligible: false,
@@ -740,8 +629,7 @@ const byJose = new Map<string, HeaderSpec>(
 const byDomain = new Map<string, HeaderSpec>(
   HEADER_SPECS.map((spec) => [spec.domain, spec]),
 );
-// Integer COSE label -> spec. Only entries carrying a label are keyed; parameters
-// COSE has no plain integer label for are absent.
+// Integer COSE label -> spec. Only entries carrying a label are keyed.
 const byCose = new Map<number, HeaderSpec>(
   HEADER_SPECS.flatMap((spec) => {
     const label = headerCoseLabel(spec);
@@ -749,16 +637,13 @@ const byCose = new Map<number, HeaderSpec>(
   }),
 );
 /**
- * COSE TEXT label -> spec, and deliberately NOT one entry per parameter: only the
- * parameters that can legitimately BE string-keyed on the COSE wire are here —
- * a `name`-keyed one (none today), and a PRIVATE-USE label, whose string spelling
- * is what the interoperable default emits.
+ * COSE TEXT label -> spec, and NOT one entry per parameter: only the parameters
+ * that can legitimately BE string-keyed on the COSE wire.
  *
- * ⚠ The same {@link isPrivateUseLabel} the write side gates on, which is what
- * keeps the two spellings a single fact. A blanket "any label may also arrive as
- * its name" would let a foreign token deliver `typ` or `cty` under a text label
- * aegis never writes, i.e. a second spelling for a registered parameter that no
- * specification gives it.
+ * ⚠ Gated on the same {@link isPrivateUseLabel} the write side uses, which keeps
+ * the two spellings a single fact. A blanket "any label may also arrive as its
+ * name" would let a foreign token deliver `typ` or `cty` under a text label aegis
+ * never writes.
  */
 const byCoseName = new Map<string, HeaderSpec>(
   HEADER_SPECS.flatMap((spec) => {
@@ -782,16 +667,13 @@ export const headerByDomain = (domain: string): HeaderSpec | undefined =>
 export const headerByCose = (label: number): HeaderSpec | undefined => byCose.get(label);
 
 /**
- * The JOSE wire name for a COSE label, or `undefined` if COSE carries no
- * registered parameter under it. The COSE read paths translate labels back to
- * JOSE names, which is the vocabulary the domain layer speaks.
+ * The JOSE wire name for a COSE label, or `undefined` if COSE carries no registered
+ * parameter under it.
  *
- * ⚠ It takes a {@link CoseLabel}, not an integer, because RFC 9052 §1.5 makes a
- * text label a label too — and the interoperable default WRITES one for every
- * private-use parameter. A token minted either way must therefore read back to
- * the same domain header, so this is the READ half of `coseWireKey`: an integer
- * resolves through the label table, a string through the text-label table, and
- * neither table answers for the other.
+ * ⚠ It takes a {@link CoseLabel}, not an integer (RFC 9052 §1.5), because the
+ * interoperable default WRITES a text label for every private-use parameter. This
+ * is the READ half of `coseWireKey`: an integer resolves through the label table, a
+ * string through the text-label table, and neither answers for the other.
  */
 export const joseByCose = (label: CoseLabel): string | undefined => {
   const spec = isNumber(label) ? byCose.get(label) : byCoseName.get(label);
@@ -813,16 +695,13 @@ const noCoseLabel = (jose: string, spec: HeaderSpec | undefined): CoseError =>
   });
 
 /**
- * The COSE INTEGER header label for a JOSE wire parameter. THROWS if COSE does
- * not carry the parameter, reporting the registry's stated `reason`, which is the
- * drift guard against a caller asking for a label that does not exist.
+ * The COSE INTEGER header label for a JOSE wire parameter. THROWS if COSE does not
+ * carry the parameter, reporting the registry's stated `reason`.
  *
  * ⚠ NOT the writer's resolver — that is {@link coseWireKey}. This answers the
- * narrower question "which integer is this parameter registered at", which is
- * what the READ paths need to look a decoded label up (`CweKit`'s `iv`,
- * `decode-cwt`'s `kid`/`alg`/`typ`) and what the derived-parameter tables are
- * keyed by. A writer that reaches for it instead would put a private-use integer
- * on an interoperable wire.
+ * narrower "which integer is this parameter registered at", which is what the READ
+ * paths need to look a decoded label up. A writer reaching for it would put a
+ * private-use integer on an interoperable wire.
  */
 export const coseByJose = (jose: string): number => {
   const spec = byJose.get(jose);
@@ -834,29 +713,19 @@ export const coseByJose = (jose: string): number => {
 };
 
 /**
- * THE WRITER'S RESOLVER: the COSE label a parameter is spelled by on the wire,
- * in the interop mode the caller asked for. Every COSE write path resolves
- * through this and nothing else, so a parameter, a `crit` member naming it and
- * the reserved-parameter guard all agree on one spelling.
+ * THE WRITER'S RESOLVER: the COSE label a parameter is spelled by on the wire, in
+ * the interop mode the caller asked for. Every COSE write path resolves through
+ * this and nothing else, so a parameter, a `crit` member naming it and the
+ * reserved-parameter guard all agree on one spelling. RFC 9052 §1.5.
  *
- * RFC 9052 §1.5 defines `label = int / tstr`, so a text label is a label — which
- * is what makes the interoperable answer possible at all:
- *
- *   - a REGISTERED integer label is interoperable as it stands, so it is written
- *     as the integer in both modes;
+ *   - a REGISTERED integer label is written as the integer in both modes;
  *   - a PRIVATE-USE integer label ({@link isPrivateUseLabel}) means nothing to a
- *     foreign reader, so `proprietary: false` — the default — writes the
- *     parameter's string label instead. Nothing is dropped and nothing is
- *     renamed; only the encoding of the key changes.
- *   - `proprietary: true` is the on-platform token: the compact private-use
- *     integer, which is the shorter encoding and the one aegis reads either way.
+ *     foreign reader, so the default `proprietary: false` writes the parameter's
+ *     string label instead — only the encoding of the key changes;
+ *   - `proprietary: true` writes the compact private-use integer, which aegis
+ *     reads either way.
  *
- * That is the header twin of the promise `EncodeCwtOptions` already kept for
- * claims — a token minted with the default carries nothing a conformant COSE
- * reader cannot interpret.
- *
- * THROWS for a parameter COSE does not carry, exactly as {@link coseByJose} does
- * and with the same verdict: a caller naming one must hear so.
+ * THROWS for a parameter COSE does not carry, as {@link coseByJose} does.
  */
 export const coseWireKey = (
   jose: string,
@@ -871,10 +740,9 @@ export const coseWireKey = (
   switch (key.kind) {
     case "absent":
       throw noCoseLabel(jose, spec);
-    // A parameter COSE keys by its NAME is already the string on every wire; the
-    // interop mode has nothing to choose. None today — the registry's `name` cells
-    // are all interop fallbacks for a label — but `WireKey` declares the case, so
-    // the resolver answers it rather than casting it away.
+    // A parameter COSE keys by its NAME is already the string on every wire, so the
+    // interop mode has nothing to choose. `WireKey` declares the case, so the
+    // resolver answers it rather than casting it away.
     case "name":
       return key.name;
     case "label":
@@ -897,14 +765,12 @@ export const coseWireKey = (
 
 /**
  * THE COSE VALUE CODEC for a JOSE wire parameter — the shape half of what
- * {@link coseWireKey} answers for the key half. Both COSE passes resolve through
- * it and switch over the result exhaustively.
+ * {@link coseWireKey} answers for the key half. Both COSE passes resolve through it
+ * and switch over the result exhaustively.
  *
- * THROWS for a parameter COSE does not carry, with the same verdict
- * {@link coseByJose} gives: a parameter with no COSE spelling has no COSE
- * representation either. Reaching that from the write pass takes registry drift —
- * `coseWireKey` has already refused the parameter one line earlier — which is the
- * drift `header-registry.test.ts` binds the two cells against.
+ * THROWS for a parameter COSE does not carry. Reaching that from the write pass
+ * takes registry drift, which `header-registry.test.ts` binds the two cells
+ * against.
  */
 export const coseHeaderCodec = (jose: string): CoseHeaderCodec => {
   const spec = byJose.get(jose);

@@ -84,9 +84,8 @@ export const specWiresOf = (disposition: SpecDisposition): ReadonlyArray<Wire> =
  * on the way back.
  *
  * A `date` claim leaves as a `Date` and returns as a `Date`, but through a
- * NumericDate it loses sub-second precision (RFC 7519 §2 — "the number of
- * seconds from 1970-01-01T00:00:00Z UTC"), so the comparison is on whole
- * seconds. Everything else must come back exactly as it went out — a looser
+ * NumericDate it loses sub-second precision (RFC 7519 §2), so the comparison is
+ * on whole seconds. Everything else must come back exactly as it went out — a looser
  * comparison here is how a codec bug passes as a round trip.
  */
 const expectSameValue = (actual: unknown, expected: unknown, label: string): void => {
@@ -114,10 +113,10 @@ const critMembersOf = (sample: unknown): Dict =>
 /**
  * A KIT result's two header buckets as ONE lookup, for a presence observation.
  *
- * ⚠ Which bucket a parameter rides is a WIRE fact, not a domain one: RFC 9052
- * §3.1 puts the `kid` hint in the unprotected bucket because it "is not a
- * security-critical field", while JOSE compact serialisation has only the
- * protected one (RFC 7515 §7.1). An observation that read the protected bucket
+ * ⚠ Which bucket a parameter rides is a WIRE fact, not a domain one: a COSE `kid`
+ * hint rides the unprotected bucket (RFC 9052 §3.1), while a JOSE compact
+ * serialisation has only the protected one (RFC 7515 §7.1). An observation that
+ * read the protected bucket
  * alone would report a COSE `kid` as absent — which is a statement about the
  * observation, not about the token.
  *
@@ -212,8 +211,8 @@ const openDoor = async (door: SpecDoor, input: DoorInput): Promise<unknown> => {
     }
 
     case "mint.sensitive": {
-      // BOTH recipient keys: JOSE seals with the ECDH-ES key and COSE_Encrypt0 is
-      // direct encryption (RFC 9052 §5.2), so the COSE run needs the symmetric one.
+      // BOTH recipient keys: JOSE seals with the ECDH-ES key, and a COSE_Encrypt0
+      // takes a `dir` key, so the COSE run needs the symmetric one. RFC 9052 §5.2.
       ctx.amphora.add(TEST_EC_KEY_ENC);
       ctx.amphora.add(TEST_OCT_KEY_ENC);
 
@@ -231,9 +230,9 @@ const openDoor = async (door: SpecDoor, input: DoorInput): Promise<unknown> => {
     }
 
     case "mint.header": {
-      // ⚠ `crit` names OTHER parameters, and RFC 9052 §3.1 makes a member whose
-      // parameter is not in the protected bucket "a fatal error in processing the
-      // message" — RFC 7515 §4.1.11 says the same for JOSE. So the one parameter
+      // ⚠ `crit` names OTHER parameters, and a member whose parameter is not in
+      // the protected bucket is fatal on both wires (RFC 9052 §3.1,
+      // RFC 7515 §4.1.11). So the one parameter
       // whose value is a list of parameter NAMES has to put those parameters in
       // the header too, or the artifact it builds is malformed by construction
       // and the read fails for a reason that has nothing to do with the round
@@ -284,8 +283,8 @@ const openDoor = async (door: SpecDoor, input: DoorInput): Promise<unknown> => {
  * its parameter would ride, plus WHICH VOCABULARY that bucket is keyed in.
  *
  * ⚠ The two are not interchangeable. The domain read surface reports a decrypted
- * token's PROTECTED header only, so a COSE_Encrypt0's IV — which RFC 9052 §3.1
- * puts in the UNPROTECTED bucket under label 5 — is invisible there; the kit
+ * token's PROTECTED header only, so a COSE_Encrypt0's IV — which rides the
+ * UNPROTECTED bucket at label 5 (RFC 9052 §3.1) — is invisible there; the kit
  * door reports both buckets but in the WIRE vocabulary. An observation that read
  * the domain bucket alone would report such a parameter as absent, which is a
  * statement about the reader and not about the token.

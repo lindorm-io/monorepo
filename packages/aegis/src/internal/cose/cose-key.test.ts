@@ -13,13 +13,12 @@ import { coseKeyToJwk, decodeCnf, encodeCnf, jwkToCoseKey } from "./cose-key.js"
 import { decodeCwtWire } from "./decode-cwt-wire.js";
 import { COSE_TAG, encodeProtectedHeader } from "./structures.js";
 
-// COSE_Key labels (RFC 9052 §7 + RFC 9964 §5): kty = 1, and for AKP (kty 7) the
-// raw public key `pub` = -1 and the 32-byte seed `priv` = -2, both bstr.
+// COSE_Key labels: RFC 9052 §7, and RFC 9964 §3 for AKP (kty 7).
 const KTY = 1;
 const AKP_PUB = -1;
 const AKP_PRIV = -2;
 const AKP_KTY = 7;
-// RFC 8747 §3.1 registers the CWT `cnf` claim at label 8.
+// RFC 8747 §3.1
 const CNF_LABEL = 8;
 const ML_DSA_SEED_SIZE = 32;
 
@@ -91,13 +90,9 @@ const thrownBy = (fn: () => unknown): AegisError => {
 };
 
 /**
- * The MIXED confirmation — the case the per-member refusal exists for.
- *
- * A confirmation carrying more than one member is where a silent drop does real
- * damage: the output map is non-empty, so the emptiness refusal never fires, and
- * the token ships asserting a binding NARROWER than its author wrote. A verifier
- * then checks the binding it can see, is satisfied, and stops asking about the
- * one that vanished.
+ * The MIXED confirmation — the case the per-member refusal exists for. With more
+ * than one member the output map stays non-empty, so the emptiness refusal never
+ * fires and the token ships asserting a binding NARROWER than its author wrote.
  */
 describe("encodeCnf, on a confirmation with more than one member", () => {
   test("writes EVERY member it was given, under its own label", () => {
@@ -109,10 +104,9 @@ describe("encodeCnf, on a confirmation with more than one member", () => {
   });
 
   test("REFUSES a malformed member rather than dropping it", () => {
-    // The silent drop this closed: `kid` is not a string, so it produced no
-    // entry, the map came out with the `jwk` alone and non-empty, and the
-    // emptiness refusal never fired. The token minted bound by the key and NOT
-    // by the key id.
+    // Without the per-member refusal: a non-string `kid` produces no entry, the
+    // map comes out with the `jwk` alone and non-empty, and the token mints bound
+    // by the key and NOT by the key id.
     const error = thrownBy(() => encodeCnf({ jwk: CNF_JWK, kid: 42 }));
 
     expect(error.code).toBe("cose_cnf_member_invalid");
@@ -126,12 +120,9 @@ describe("encodeCnf, on a confirmation with more than one member", () => {
     expect(error.data).toEqual({ member: "jwk" });
   });
 
-  // ⚠ ALL THREE thumbprint forms, one row each. `KIT_CAPABILITIES`'s own probe
-  // used to mint each JOSE cnf member alone and collect what survived, which
-  // covered `x5t#S256` and `jku` behaviourally; that probe became circular once
-  // the capability row was derived from the label table and was replaced by a
-  // literal pin. This is where the behavioural half lives now — without it,
-  // `jkt` was the only unrepresentable member any test actually drove.
+  // ⚠ Every thumbprint form gets a row. `KIT_CAPABILITIES` pins the set
+  // literally, derived from the label table, so this file is the only place the
+  // refusal is driven behaviourally.
   test.each(["jkt", "x5t#S256", "jku"])(
     "still refuses %s — a member the wire cannot carry at all",
     (member) => {
@@ -150,20 +141,18 @@ describe("encodeCnf, on a confirmation with more than one member", () => {
 });
 
 /**
- * ⚠ WHICH KEYS COUNT — the two ways the membership filter and the write loop can
- * disagree about what a caller actually supplied. Both are the SAME silent-drop
- * defect the per-member refusal exists to close, and both are reachable only
- * through the STANDALONE kit door: the domain path builds its cnf with
- * `omitUndefined` over a fixed member list (`claims/translate.ts`), so neither
- * shape can arise there. `CwtKit.sign` takes the caller's wire dict verbatim.
+ * ⚠ WHICH KEYS COUNT — the ways the membership filter and the write loop can
+ * disagree about what a caller supplied, each the same silent-drop defect. Only
+ * reachable through the standalone kit door: `CwtKit.sign` takes the caller's
+ * wire dict verbatim, while the domain path builds its cnf with `omitUndefined`
+ * over a fixed member list (`claims/translate.ts`).
  */
 describe("encodeCnf, on keys that are not what they look like", () => {
   test("a PROTOTYPE key is unrepresentable, not silently skipped", () => {
-    // `"constructor" in { jwk: 1, kid: 3 }` is TRUE — `in` walks the prototype
-    // chain — so a membership filter written with `in` finds `constructor`
-    // "representable" and raises nothing. The write loop then iterates the
-    // table's OWN keys, never writes it, and `out.size` is 1, so the emptiness
-    // guard is silent too: the member vanishes and the token mints.
+    // `"constructor" in { jwk: 1, kid: 3 }` is TRUE, so a filter written with `in`
+    // finds it representable and raises nothing; the write loop iterates the
+    // table's OWN keys and never writes it; `out.size` is 1 so the emptiness guard
+    // is silent too. The member vanishes and the token mints.
     const error = thrownBy(() => encodeCnf({ jwk: CNF_JWK, constructor: "x" }));
 
     expect(error.code).toBe("cose_cnf_unsupported");
@@ -174,9 +163,8 @@ describe("encodeCnf, on keys that are not what they look like", () => {
     const kryptos = KryptosKit.generate.sig.ec({ algorithm: "ES256" });
     const kit = new CwtKit({ kryptos, logger: createMockLogger() });
 
-    // ⚠ `as never` on purpose — the same idiom the capability probes use. The
-    // type cannot express a prototype key, and the caller this guards against is
-    // exactly the one the compiler never saw: a JS consumer or a JSON body.
+    // ⚠ `as never`: the type cannot express a prototype key, and the caller this
+    // guards against is one the compiler never saw — a JS consumer or a JSON body.
     const error = thrownBy(() =>
       kit.sign({
         iss: "https://issuer.lindorm.io/",
@@ -188,10 +176,8 @@ describe("encodeCnf, on keys that are not what they look like", () => {
   });
 
   test("an own key holding `undefined` is ABSENT, and the rest still mints", () => {
-    // `undefined` means absent across this package — `omitUndefined` is how the
-    // domain layer spells it — so `{ jwk: undefined }` is a caller who supplied
-    // no key, not one who supplied a broken one. Refusing it would reject a
-    // confirmation the wire can carry perfectly well.
+    // `undefined` means absent across this package (`omitUndefined` spells it), so
+    // `{ jwk: undefined }` is a caller who supplied no key, not a broken one.
     const out = encodeCnf({ jwk: undefined, kid: "key_probe" });
 
     expect(out.size).toBe(1);
@@ -206,24 +192,19 @@ describe("encodeCnf, on keys that are not what they look like", () => {
   });
 
   test("an INHERITED member is not written — the two lookups agree", () => {
-    // The mirror of the prototype hole closed on the filter side. The filter uses
-    // `Reflect.ownKeys` (OWN keys only), so an inherited `kid` is never flagged
-    // unrepresentable; if the write loop then read it off the prototype, the two
-    // lookups would disagree and the map would carry a member the caller never
-    // set on the object. It fails closed rather than writing more.
+    // The mirror of the prototype hole on the filter side: `Reflect.ownKeys` never
+    // flags an inherited `kid`, so a write loop reading it off the prototype would
+    // carry a member the caller never set.
     const error = thrownBy(() => encodeCnf(Object.create({ kid: "inherited" })));
 
     expect(error.code).toBe("cose_cnf_unsupported");
   });
 
   test("a NON-ENUMERABLE own member is unrepresentable, not silently skipped", () => {
-    // The third way a key can hide, and the reason the filter reads
-    // `Reflect.ownKeys` rather than `Object.keys`: an own property defined
-    // without `enumerable` is invisible to `Object.keys`, so it was never
-    // flagged unrepresentable, and the write loop iterates the LABEL TABLE's
-    // keys so it never wrote it either. Beside a valid `kid` the map comes out
-    // non-empty, the emptiness guard stays quiet, and the binding ships dropped
-    // — the same silent-drop class as the prototype and mixed-member cases.
+    // Why the filter reads `Reflect.ownKeys` and not `Object.keys`: a
+    // non-enumerable own property is invisible to `Object.keys`, and the write
+    // loop iterates the LABEL TABLE's keys, so neither side sees it. Beside a
+    // valid `kid` the map is non-empty and the binding ships dropped.
     const bag: Dict = { kid: "key_probe" };
     Object.defineProperty(bag, "jkt", { value: "jkt_probe" });
 
@@ -234,13 +215,11 @@ describe("encodeCnf, on keys that are not what they look like", () => {
   });
 
   test("`undefined` is absent for an UNREPRESENTABLE member too", () => {
-    // The doctrine has to hold on BOTH sides of the function or it is not a
-    // doctrine. The write loop skipped an own key holding `undefined`; the
-    // filter above it did not, because a key list reports the key regardless of
-    // its value — so the same `undefined` meant "absent" for `jwk`/`kid` and
-    // "present and unrepresentable" for `jkt`/`x5t#S256`/`jku`. A caller
-    // assembling `{ jkt: claim.thumbprint, kid: claim.keyId }` with no
-    // thumbprint supplied NOTHING; there is no member to fail closed over.
+    // `undefined` has to mean absent on BOTH sides. A key list reports a key
+    // whatever it holds, so a filter reading presence alone makes one `undefined`
+    // mean "absent" for `jwk`/`kid` and "present and unrepresentable" for the
+    // thumbprint forms — and `{ jkt: claim.thumbprint }` with no thumbprint
+    // supplied nothing to fail closed over.
     const out = encodeCnf({ jkt: undefined, kid: "key_probe" });
 
     expect(out.size).toBe(1);
@@ -274,12 +253,11 @@ describe("encodeCnf, on keys that are not what they look like", () => {
 });
 
 /**
- * A COSE_Key reaches this codec from a FOREIGN token — `decodeCnf` runs it on
- * every CWT carrying a `cnf` embedded key — so every label in it is written by a
- * stranger. The tables are plain objects, and a plain-object index resolves
- * through `Object.prototype`: `COSE_TO_CRV["constructor"]` is the `Object`
- * function, not `undefined`, so an `=== undefined` guard never fires on it.
- * `own-entry.ts` is the one answer; these rows are what makes it load-bearing.
+ * A COSE_Key reaches this codec from a FOREIGN token — `decodeCnf` runs on every
+ * CWT carrying a `cnf` embedded key — so every label is a stranger's. The tables
+ * are plain objects, and `COSE_TO_CRV["constructor"]` is the `Object` function,
+ * not `undefined`, so an `=== undefined` guard never fires. `own-entry.ts` is the
+ * answer; these rows are what makes it load-bearing.
  */
 describe("COSE_Key labels that name an Object.prototype member", () => {
   const PROTO_KEYS = ["constructor", "toString", "valueOf", "hasOwnProperty"] as const;
@@ -301,9 +279,8 @@ describe("COSE_Key labels that name an Object.prototype member", () => {
     ).toBe("cose_key_unsupported");
   });
 
-  // The WRITE twin: the JWK is the caller's bag, and a JSON body can spell `crv`
-  // any way it likes. Unguarded, the function set a live function as the COSE
-  // curve label and handed it to the CBOR encoder.
+  // The WRITE twin: the JWK is the caller's bag, so unguarded, a live function
+  // becomes the COSE curve label and reaches the CBOR encoder.
   test.each(PROTO_KEYS)(
     "a caller JWK whose crv is `%s` is refused at the write",
     (name) => {
@@ -323,10 +300,9 @@ describe("COSE_Key labels that name an Object.prototype member", () => {
   );
 
   /**
-   * ⭐ THROUGH A REAL READ DOOR, because the claim is about what a foreign token
-   * can do to a caller: `CwtKit.decode` needs no key, so a stranger's CWT reaches
-   * this codec on the keyless read as readily as on verify. Unguarded, this
-   * token's `confirmation.key.crv` was the `Object` constructor.
+   * Through a REAL read door: `CwtKit.decode` needs no key, so a stranger's CWT
+   * reaches this codec on the keyless read as readily as on verify. Unguarded,
+   * this token's `confirmation.key.crv` is the `Object` constructor.
    */
   test("a foreign CWT whose cnf key names a prototype curve is refused at decode", () => {
     const protectedHeader = encodeProtectedHeader(
@@ -346,8 +322,8 @@ describe("COSE_Key labels that name an Object.prototype member", () => {
         new Tag(COSE_TAG.sign1, [
           protectedHeader,
           new Map<number, unknown>([[coseByJose("kid"), Buffer.from("k", "utf8")]]),
-          // RFC 8747 §3.1: the `cnf` VALUE is a map, and the embedded COSE_Key
-          // sits under its member label 1 — not the COSE_Key itself.
+          // RFC 8747 §3.1 — the embedded COSE_Key sits under member label 1
+          // inside the cnf map, not in its place.
           encodeCbor(
             new Map<number, unknown>([
               [CNF_LABEL, new Map<number, unknown>([[COSE_CNF_LABELS.jwk, coseKey]])],
@@ -363,19 +339,11 @@ describe("COSE_Key labels that name an Object.prototype member", () => {
 });
 
 /**
- * ⭐ THE STRUCTURAL REFUSALS THE KEYLESS DOOR OWES. `CwtKit.decode` takes NO key
- * and checks NO signature (`CwtKit.ts:85`), so every byte reaching this codec
- * through it was written by a stranger. `decode-cwt-wire.ts:44-48` states the
- * house standard for that door — a structure this reader cannot use is refused
- * with a `CoseError` "rather than letting `Buffer.from(null)` throw a raw,
- * confusing TypeError" — and these members were outside it: an EC2/OKP COSE_Key
- * whose `x`/`y` is absent or is not a byte string reached
- * `Buffer.from(undefined)`, and a `cnf` that is not a map reached `cnf.get`.
- * Both escaped an UNAUTHENTICATED read as a raw `TypeError`, which no caller can
- * catch as an `AegisError`.
- *
- * The AKP branch of the same function already guarded `pub` with `instanceof
- * Uint8Array`; the asymmetry was inside one function.
+ * The structural refusals the KEYLESS door owes. `CwtKit.decode` takes no key and
+ * checks no signature, so every byte reaching this codec through it is a
+ * stranger's, and `decode-cwt-wire.ts` sets the standard: a structure this reader
+ * cannot use is refused with a `CoseError`, never left to throw a raw `TypeError`
+ * no caller can catch as an `AegisError`.
  */
 describe("a foreign CWT whose cnf is structurally unusable", () => {
   const foreignCwt = (claims: Map<number | string, unknown>): Buffer =>
@@ -454,8 +422,7 @@ describe("a foreign CWT whose cnf is structurally unusable", () => {
     expect(error.code).toBe("cose_key_unsupported");
   });
 
-  // RFC 8747 §3.1 makes the `cnf` VALUE a map. A producer that writes anything
-  // else reached `cnf.get(...)` on a non-Map — `cnf.get is not a function`.
+  // RFC 8747 §3.1. Anything else reaches `cnf.get(...)` on a non-Map.
   test.each([
     ["an integer", 42],
     ["a text string", "not-a-map"],
@@ -471,9 +438,8 @@ describe("a foreign CWT whose cnf is structurally unusable", () => {
     expect(error.code).toBe("cose_cnf_unsupported");
   });
 
-  // The WRITE twin, on the same members: `cnf.jwk` is the CALLER's bag, and a
-  // JWK missing its coordinates is as easy to hand in as a foreign one is to
-  // receive.
+  // The WRITE twin, on the same members: `cnf.jwk` is the CALLER's bag, and a JWK
+  // missing its coordinates is as easy to hand in as to receive.
   test.each([
     ["x", { kty: "EC", crv: "P-256", y: "eQ" }],
     ["y", { kty: "EC", crv: "P-256", x: "eA" }],

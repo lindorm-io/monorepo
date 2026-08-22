@@ -27,9 +27,8 @@ describe("createProfileRegistry", () => {
     );
   });
 
-  // A consumer's profile omits `use`, and the registry resolves it to "both" —
-  // the whole point of the default, since it leaves every existing custom
-  // profile mint-and-verify exactly as before.
+  // A consumer's profile omits `use` and the registry resolves it to "both", which
+  // leaves a custom profile mint-and-verify unless it says otherwise.
   test("registers and resolves a custom profile, defaulting its use", () => {
     const registry = createProfileRegistry();
 
@@ -49,9 +48,8 @@ describe("createProfileRegistry", () => {
     expect(registry.resolve("custom_verify_only").use).toBe("verify");
   });
 
-  // The registration is scoped to the registry it was made on. As a module-global
-  // map, one consumer registering a profile — or one NAMED after a built-in —
-  // redefined what every other Aegis in the process minted and verified.
+  // Registration is scoped to the registry it was made on: a module-global map
+  // would let one consumer redefine what every other Aegis in the process mints.
   test("a registration does not reach another registry", () => {
     const one = createProfileRegistry();
     const two = createProfileRegistry();

@@ -46,11 +46,11 @@ export type Violation = {
 export const MATCH_VIOLATIONS: Readonly<Record<string, Violation>> = {
   issuer: {
     claims: { issuer: "not-a-uri" },
-    note: "RFC 7519 §4.1.1 holds `iss` to a StringOrURI value (defined in §2), and a bare word carries no scheme, so it fails the URI predicate the profiles hold the claim to.",
+    note: "A bare word carries no scheme, so it fails the URI predicate the profiles hold `iss` to. RFC 7519 §4.1.1, RFC 7519 §2.",
   },
   audience: {
     claims: { audience: ["https://a.lindorm.test", "https://b.lindorm.test"] },
-    note: 'AEGIS POLICY, not an RFC MUST: an access token resolves to exactly ONE resource, so a two-element audience fails the single-resource predicate. RFC 9068 §3 is the basis and stops short of requiring it — "If the request includes a `resource` parameter (as defined in [RFC8707]), the resulting JWT access token `aud` claim SHOULD have the same value as the `resource` parameter in the request" — a SHOULD about one resource, which aegis tightens into a rule.',
+    note: "AEGIS POLICY, not an RFC MUST: an access token resolves to exactly ONE resource, so a two-element audience fails the single-resource predicate. RFC 9068 §3 is the basis and stops short of requiring it; aegis tightens it into a rule.",
   },
 };
 
@@ -61,26 +61,26 @@ export const MATCH_VIOLATIONS: Readonly<Record<string, Violation>> = {
 export const SHAPE_VIOLATIONS: Readonly<Record<ShapeRuleName, Violation>> = {
   actChain: {
     claims: { act: { subject: 1 } },
-    note: "RFC 8693 §4.1 — an `act` claim's members 'are claims that identify the actor', and a subject identifier that is not a string identifies nobody: no verifier can match it against a principal, so the token asserts a delegation to a party that cannot be named. ⚠ THE VIOLATION USED TO BE AN UNDECLARED MEMBER (`{ act: { nested: {} } }`) AND HAD TO MOVE. RFC 8693 §4.1 defines an actor's members as \"claims that identify the actor\" and §4.4 names `email` as one, so the registry declares the actor set OPEN and an undeclared member is CARRIED by every layer — the old input violates nothing at all now, which is exactly the shape of an exercise that proves a rule enforced when it is not. ⚠ The note this replaced claimed the input violated 'an actor with no subject at any depth', and that was never what it tested: `actChainShape` has never required a subject.",
+    note: "An `act` claim's members identify the actor, and a subject identifier that is not a string identifies nobody: no verifier can match it against a principal, so the token asserts a delegation to a party that cannot be named. ⚠ AN UNDECLARED MEMBER (`{ act: { nested: {} } }`) IS NOT A VIOLATION HERE: the registry declares the actor set OPEN, so every layer carries an undeclared member and such an input would prove a rule enforced when it is not. ⚠ `actChainShape` requires no subject at any depth, so an actor without one is not a violation either. RFC 8693 §4.1, RFC 8693 §4.4.",
   },
   confirmation: {
     claims: { confirmation: { thumbprint: "too-short" } },
-    note: "RFC 9449 §6.1 — the `jkt` confirmation member is the base64url-encoded SHA-256 JWK thumbprint of the bound key, so a value that does not decode to 32 bytes cannot be one; a verifier comparing it against a real thumbprint would never match, and the token would be treated as bound to a key nobody holds. ⚠ An EMPTY confirmation is deliberately NOT the violation used here — `cnfShape` accepts one, so it would report nothing and the exercise would prove the rule unenforced when it is the input that is wrong.",
+    note: "`jkt` is a base64url SHA-256 JWK thumbprint, so a value that does not decode to 32 bytes cannot be one; a verifier comparing it against a real thumbprint would never match, and the token would be treated as bound to a key nobody holds. RFC 9449 §6.1. ⚠ An EMPTY confirmation is deliberately NOT the violation used here — `cnfShape` accepts one, so it would report nothing and the exercise would prove the rule unenforced when it is the input that is wrong.",
   },
   crossField: {
     claims: {
       issuedAt: new Date("2026-06-01T00:00:00.000Z"),
       expiresAt: new Date("2026-01-01T00:00:00.000Z"),
     },
-    note: "RFC 7519 §4.1.4 — a token that expires before it was issued has no live interval at all.",
+    note: "A token that expires before it was issued has no live interval at all. RFC 7519 §4.1.4.",
   },
   events: {
     claims: { events: { "https://schemas.lindorm.test/event/sample": "not-an-object" } },
-    note: "RFC 8417 §2.2 — the `events` claim is a JSON object whose members are the event payloads, so a scalar payload is not an event.",
+    note: "The `events` claim is an object whose members are the event payloads, so a scalar payload is not an event. RFC 8417 §2.2.",
   },
   subjectId: {
     claims: { subjectId: { id: "subject_sample" } },
-    note: "RFC 9493 §3 — `format` is what says how the remaining members of a Subject Identifier are read, so one without it cannot be resolved.",
+    note: "`format` is what says how the remaining members of a Subject Identifier are read, so one without it cannot be resolved. RFC 9493 §3.",
   },
 };
 
@@ -93,6 +93,6 @@ export const REQUIRED_WHEN_VIOLATIONS: Readonly<Record<string, Violation>> = {
   "id_token:accessTokenHash": {
     claims: {},
     context: { accessTokenIssued: true },
-    note: "OIDC Core §3.1.3.6 — when an access token is issued alongside the id token, `at_hash` binds the two; without it the id token cannot vouch for the access token it was issued with.",
+    note: "When an access token is issued alongside the id token, `at_hash` binds the two; without it the id token cannot vouch for the access token it was issued with. OIDC Core §3.1.3.6.",
   },
 };

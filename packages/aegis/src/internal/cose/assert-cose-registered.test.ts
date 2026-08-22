@@ -4,11 +4,10 @@ import { CweError, CwsError } from "../../errors/index.js";
 import { assertCoseRegistered } from "./assert-cose-registered.js";
 
 /**
- * A PRIVATE-USE signing algorithm — one COSE never registered, so the interop
- * gate must refuse it. Every algorithm kryptos currently offers carries an
- * official label (ML-DSA joined via RFC 9964), so the `alg` branch has no real
- * key that reaches it; the cast is what stands in for the future one, and
- * without it the branch would go untested until that algorithm exists.
+ * A PRIVATE-USE signing algorithm the interop gate must refuse. ⚠ Every algorithm
+ * kryptos offers carries an official label, so no real key reaches the `alg`
+ * branch — the cast stands in for a future one, and without it the branch goes
+ * untested until that algorithm exists.
  */
 const PRIVATE_USE_ALG = "XS256" as KryptosAlgorithm;
 
@@ -142,8 +141,7 @@ describe("assertCoseRegistered", () => {
     });
 
     test("`proprietary: true` admits the private-use encryption", () => {
-      // The flag is the caller saying the token is on-platform only; the same flag
-      // threads to the claim codec, so the two cannot disagree.
+      // The same flag threads to the claim codec, so the two cannot disagree.
       expect(() =>
         assertCoseRegistered({
           kind: "enc",
@@ -187,10 +185,8 @@ describe("assertCoseRegistered", () => {
   });
 
   test("the two kinds carry DISTINCT codes and data keys", () => {
-    // `cose_alg_not_registered` reports `{ algorithm }`, `cose_enc_not_registered`
-    // reports `{ encryption }` — a consumer routes on the code, so they must not
-    // collapse into one. Both branches are driven here: asserting one and
-    // trusting the other is what let the `alg` branch go uncovered.
+    // ⚠ The two codes report different `data` keys and a consumer routes on the
+    // code, so they must not collapse. BOTH branches are driven here.
     let algThrown: { code?: string; data?: unknown } = {};
     let encThrown: { code?: string; data?: unknown } = {};
 

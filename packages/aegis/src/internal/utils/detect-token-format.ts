@@ -14,11 +14,9 @@ import {
 } from "../cose/is-cose-format.js";
 
 /**
- * The ONE format detector. Every domain verb — verify, parse, decrypt — asks the
- * same question of a token it was handed, and each used to answer it with its own
- * ladder of `isJwt` / `isJws` / `isJwe` / `isCose` checks in its own order. A
- * ladder is a decision, and three copies of a decision are three chances to
- * disagree about what a token IS.
+ * The ONE format detector. ⚠ Every domain verb — verify, parse, decrypt — asks
+ * the same question, and a per-verb ladder of `isJwt` / `isJws` / `isJwe` /
+ * `isCose` checks is three chances to disagree about what a token IS.
  *
  * `undefined` means "not a token aegis recognises"; the caller owns the refusal,
  * because each verb refuses for its own reason.
@@ -47,12 +45,10 @@ export const detectTokenFormat = (token: string): TokenFormatTag | undefined => 
   if (isCwmBytes(bytes)) return "cwm";
   if (isCweBytes(bytes)) return "cwe";
 
-  // ⚠ A COSE token may legitimately carry NO typ at all — RFC 9596 leaves label
-  // 16 optional, where aegis POLICY requires one on JOSE — so the four
+  // ⚠ A COSE token may legitimately carry NO typ at all (RFC 9596), so the four
   // typ-driven guards above all decline a conformant foreign CWT. The STRUCTURE
-  // is what remains, and it is exactly what the read path uses to report `cwt` vs
-  // `cwm` once the token is decoded: COSE_Sign1 is a claims-bearing CWT,
-  // COSE_Mac0 a CWM, COSE_Encrypt0 a CWE.
+  // is what remains, and it is what the read path uses to report `cwt` vs `cwm`
+  // once the token is decoded.
   switch (coseStructure(decodeCbor(bytes))?.tag) {
     case COSE_TAG.sign1:
       return "cwt";

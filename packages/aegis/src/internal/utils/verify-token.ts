@@ -97,11 +97,7 @@ export const resolveVerifyFloor = (
  * defaults are each decided ONCE here. A per-wire copy of any of them is a second
  * answer to a question `internal/constants/verify-option-parity.ts` states has
  * one — pinned by `classes/Aegis.knob-matrix.test.ts`, which runs every option on
- * every wire it can be STATED on (a wire where the flip is declared
- * `unobservable`, or one a declared `defect` covers, is skipped with its reason
- * on the row) and proves the option is read by DIFFERENCE, against the verdict
- * that wire declares — a probe carrying per-wire `overrides` declares a different
- * one for each.
+ * every wire it can be stated on and proves it is read by DIFFERENCE.
  */
 export const verifyToken = async <C extends Dict = Dict>({
   token,
@@ -180,11 +176,10 @@ export const verifyToken = async <C extends Dict = Dict>({
       );
     }
 
-    // A `cty` is a DECLARATION about the plaintext, and one that names a nested
-    // CLAIMS token (RFC 7519 §5.2) must be TRUE: a wrapper that says "claims
-    // inside" and delivers an opaque signature would verify to an EMPTY domain,
-    // which a caller routing on the declaration reads as an authenticated
-    // credential with nothing in it.
+    // A `cty` naming a nested claims token (RFC 7519 §5.2) must be TRUE: a
+    // wrapper that says "claims inside" and delivers an opaque signature verifies
+    // to an EMPTY domain, which a caller routing on the declaration reads as an
+    // authenticated credential with nothing in it.
     if (isClaimsContentType(contentType) && TOKEN_FORMAT_KIND[innerFormat] !== "claims") {
       throw new AegisDomainError(
         "Encrypted token does not contain the declared claims token",
@@ -280,11 +275,10 @@ export const verifyToken = async <C extends Dict = Dict>({
 
   // The caller's own type assertion, ONE implementation for both wires.
   //
-  // ⚠ It lives here and not in the kits, and the whole media type is compared
-  // rather than the bare prefix the kits take. A type whose short name IS the
-  // bare conventional form — `id_token` reduces to `JWT` — yields no prefix at
-  // all, and the kits gate their check on the prefix being defined, so for
-  // exactly that type the assertion silently did not run.
+  // ⚠ It compares the whole media type, not the bare prefix the kits take. A type
+  // whose short name IS the conventional form — `id_token` reduces to `JWT` —
+  // yields no prefix, and the kits gate their check on the prefix being defined,
+  // so a kit-side assertion silently does not run for it.
   if (tokenType !== undefined) {
     const expected = wire.assertedTyp(tokenType);
 
@@ -330,12 +324,11 @@ export const verifyToken = async <C extends Dict = Dict>({
   });
 
   if (floor) {
-    // The floor payload comes from the RAW wire claims, not from `result.claims`:
-    // it reports true wire presence and leaves every non-domain claim flat under
-    // its ORIGINAL spelling, which is what a presence check needs. Both wires read
-    // it the same way — the COSE floor used to get the full domain read instead,
-    // where a custom `expires_at` had already been camelCased into an `expiresAt`
-    // that satisfied the exp-presence check.
+    // ⚠ The floor payload comes from the RAW wire claims, not from
+    // `result.claims`: it reports true wire presence and leaves every non-domain
+    // claim flat under its ORIGINAL spelling. Handed the full domain read instead,
+    // a custom `expires_at` arrives camelCased as `expiresAt` and satisfies the
+    // exp-presence check.
     const { claims: domain, custom } = wireToFloorClaims(read.wire, wire.nameOf);
 
     enforceVerifyFloor({

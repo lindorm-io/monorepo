@@ -8,18 +8,14 @@ import { BUILT_IN_PROFILES } from "./registry.js";
 
 /**
  * Every built-in profile that names `audience` in a PRESENCE rule — DERIVED from
- * the registry's own list, never restated.
- *
- * A hand-written version of this held seven of the ten and the three it dropped
- * were exactly the ones nothing else covered, which is the failure mode: an
- * exhaustiveness claim in a comment is not checked by anything, so it decays
- * silently as profiles are added.
+ * the registry's own list, never restated. ⚠ A hand-written version decays
+ * silently as profiles are added, because nothing checks an exhaustiveness claim
+ * made in a comment.
  */
 const namesAudience = (rule: PolicyRule): boolean => {
-  // All THREE demand-side rules, not the two obvious ones: `requiredWhen` reads
-  // the same notion and carries a single `claim`, so a future
-  // `{ rule: "requiredWhen", claim: "audience" }` would otherwise drop out of
-  // this filter silently and gain no row.
+  // ⚠ All THREE demand-side rules: `requiredWhen` reads the same notion and carries
+  // a single `claim`, so a `{ rule: "requiredWhen", claim: "audience" }` would
+  // otherwise drop out of this filter silently and gain no row.
   if (rule.rule === "required") return rule.claims.includes("audience");
   if (rule.rule === "atLeastOneOf") return rule.claims.includes("audience");
   if (rule.rule === "requiredWhen") return rule.claim === "audience";
@@ -57,9 +53,8 @@ const run = (
   });
 
 describe("enforcePolicy", () => {
-  // The whole reason the list exists: WHICH rules run is decided by the rule,
-  // not by the caller. The same call with a different direction runs a different
-  // subset, and nothing else about the call changes.
+  // WHICH rules run is decided by the rule, not by the caller: the same call with a
+  // different direction runs a different subset, and nothing else changes.
   describe("direction selection", () => {
     const policy: ReadonlyArray<PolicyRule> = [
       { rule: "required", on: ["mint"], claims: ["subject"] },
@@ -153,9 +148,9 @@ describe("enforcePolicy", () => {
     });
   });
 
-  // A context-reading rule that is not given its context does not FAIL — it
-  // silently does not fire, which is indistinguishable from the fact being false.
-  // Refusing the mint is the only answer that tells the two apart.
+  // A context-reading rule not given its context does not FAIL — it silently does
+  // not fire, which is indistinguishable from the fact being false. Refusing the
+  // mint is the only answer that tells the two apart.
   describe("declared context", () => {
     const policy: ReadonlyArray<PolicyRule> = [
       {
@@ -177,19 +172,16 @@ describe("enforcePolicy", () => {
     });
 
     /**
-     * ⚠ A GATE THAT FAILED OPEN. Read with `in`, a `needs` key spelled like an
-     * `Object.prototype` member resolved through the chain and was judged SUPPLIED
-     * by every context, including `{}` — so the refusal never fired and
-     * `requiredWhen` evaluated the author's predicate against a context that does
-     * not hold the fact, which is the exact silence this rule exists to break.
+     * ⚠ A GATE THAT FAILS OPEN UNDER `in`: a `needs` key spelled like an
+     * `Object.prototype` member resolves through the chain and reads as SUPPLIED by
+     * every context, including `{}`, so `requiredWhen` evaluates the author's
+     * predicate against a context that does not hold the fact.
      *
      * ⚠ The RUNTIME BACKSTOP for a type-level guarantee, the same shape
      * `buildCoseHeaders`'s reserved check has. `BoundRule.needs` is
-     * `ReadonlyArray<ContextKey>` = `keyof SignContext`, so a TYPED profile cannot
-     * spell one of these — hence the `as never` below, which states that the input
-     * is off-contract on purpose. A profile is CALLER-REGISTERED
-     * (`Aegis.registerProfile`), and an untyped registration — a JSON body, a JS
-     * consumer, an `as any` — walks straight past the compiler.
+     * `ReadonlyArray<ContextKey>`, so a TYPED profile cannot spell one of these —
+     * hence the `as never` below. A profile is CALLER-REGISTERED
+     * (`Aegis.registerProfile`), and an untyped registration walks past the compiler.
      */
     test.each(["constructor", "toString", "valueOf", "hasOwnProperty"])(
       "refuses a mint whose context omits the prototype-named key %s",
@@ -243,8 +235,8 @@ describe("enforcePolicy", () => {
     });
   });
 
-  // One bad token reports every reason it is bad. Each category used to throw
-  // from its own block, so the first one reached hid the rest.
+  // One bad token reports every reason it is bad — a throw per category would let
+  // the first one reached hide the rest.
   test("collects failures across every rule before throwing", () => {
     expect(() =>
       run(
@@ -273,18 +265,17 @@ describe("enforcePolicy", () => {
   });
 
   /**
-   * The BUILT-IN profiles, resolved from a real registry rather than assembled
-   * here — a synthetic policy proves the enforcer reads a rule, not that the
-   * profiles shipped to consumers declare one that holds.
+   * The BUILT-IN profiles, resolved from a real registry rather than assembled here:
+   * a synthetic policy proves the enforcer reads a rule, not that the profiles
+   * shipped to consumers declare one.
    */
   describe("built-in profiles", () => {
     /**
      * A superset satisfying every built-in `required` list at once, so a thrown
      * `invalid` list names only the claim a test deliberately emptied.
      *
-     * ⚠ Not usable as-is for every profile: `security_event` FORBIDS `subject`
-     * and `expiresAt` while requiring `subjectId`. {@link bagFor} removes each
-     * profile's forbidden claims, which is why the superset can name them.
+     * ⚠ Not usable as-is for every profile — some FORBID what others require.
+     * {@link bagFor} removes each profile's forbidden claims.
      */
     const COMPLETE: Dict = {
       audience: ["https://api.lindorm.test"],
@@ -300,9 +291,9 @@ describe("enforcePolicy", () => {
       tokenId: "tok_1",
     };
 
-    // The superset minus whatever THIS profile forbids — derived from its own
-    // policy, so a profile's demands and its prohibitions cannot be satisfied by
-    // a bag hand-tuned to one of them.
+    // The superset minus whatever THIS profile forbids, derived from its own policy
+    // — a bag hand-tuned to one profile could satisfy its demands and not its
+    // prohibitions.
     const bagFor = (profile: TokenProfile): Dict => {
       const forbidden = new Set(
         profile.policy.flatMap((rule) => (rule.rule === "forbidden" ? rule.claims : [])),
@@ -336,12 +327,10 @@ describe("enforcePolicy", () => {
     /**
      * `aud: []` addresses nobody, so it cannot satisfy a demand for an audience.
      *
-     * ⚠ `access_token` IS in this set. It was also the one profile the old
-     * single predicate could not fail open on — but only because
-     * `AUD_SINGLE_RESOURCE` (`$length: 1`, `definitions/rule-predicates.ts`)
-     * rejected the empty list as a CARDINALITY violation, which is a different
-     * rule answering a different question. Relax that profile to multiple
-     * audiences and the presence rule asserted here is the only defence left.
+     * ⚠ `access_token` IS in this set, and `AUD_SINGLE_RESOURCE` (`$length: 1`,
+     * `definitions/rule-predicates.ts`) is NOT what covers it: that rejects the
+     * empty list as a CARDINALITY violation, a different question. Relax the profile
+     * to multiple audiences and the presence rule asserted here is the only defence.
      */
     test.each(AUDIENCE_REQUIRING)("$name refuses an empty audience", (profile) => {
       expect(() => enforce(profile, { ...bagFor(profile), audience: [] })).toThrow(
@@ -356,19 +345,17 @@ describe("enforcePolicy", () => {
       );
     });
 
-    // The derivation is only as good as its reach. Ten built-ins name `audience`
-    // in a presence rule; pinning the COUNT is what makes a future profile that
-    // silently drops out of the filter visible.
+    // The derivation is only as good as its reach: pinning the COUNT is what makes a
+    // profile silently dropping out of the filter visible.
     test("every built-in naming audience in a presence rule is covered", () => {
       expect(AUDIENCE_REQUIRING.map((profile) => profile.name).sort()).toMatchSnapshot();
     });
 
     /**
      * `external_access_token` has `typ: { presence: "none" }`, so its `forbidden`
-     * list is the whole of what keeps an id_token out — there is no structural
-     * discriminator behind it. `forbidden` therefore reads presence as
-     * VOCABULARY: an issuer that named `at_hash` stated an access-token hash,
-     * and the registry's `whenEmpty: "keep"` cell means the empty form is not
+     * list is the whole of what keeps an id_token out. `forbidden` therefore reads
+     * presence as VOCABULARY: an issuer that named `at_hash` stated an access-token
+     * hash, and the registry's `whenEmpty: "keep"` cell means the empty form is not
      * swept up on the way to the wire either.
      */
     test("external_access_token refuses a named-but-empty access token hash", () => {

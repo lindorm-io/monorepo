@@ -46,12 +46,10 @@ const bucket = (value: unknown): Map<CoseLabel, unknown> => new Map([[34, value]
 const digest = (b64u: string): Buffer => Buffer.from(b64u, "base64url");
 
 /**
- * THE VERDICT THE COSE READ PATH HANDS THE MODE POLICY.
- *
- * RFC 9360 §2's `COSE_CertHash` admits any algorithm from the COSE Algorithms
- * registry; RFC 7517 §4.8/§4.9 register two JOSE thumbprint parameters. This
- * function is what bridges the two — it holds the wire AND the key, so the
- * comparison happens here and `verifyCertBinding` stays wire-agnostic.
+ * THE VERDICT THE COSE READ PATH HANDS THE MODE POLICY. A conformant issuer may
+ * bind with a hash JOSE has no parameter for (RFC 9360 §2, RFC 7515 §4.1.7,
+ * RFC 7515 §4.1.8), so this function — which holds the wire AND the key — makes the
+ * comparison and `verifyCertBinding` stays wire-agnostic.
  */
 describe("resolveWideCertBinding", () => {
   test.each([
@@ -66,8 +64,7 @@ describe("resolveWideCertBinding", () => {
     });
   });
 
-  // RFC 9360 §2 admits the registry NAME as well as the integer, so a conformant
-  // producer spelling it as text names the same algorithm.
+  // The registry NAME spelling. RFC 9360 §2.
   test("matches a hashAlg spelled as its registry name", () => {
     expect(
       resolveWideCertBinding(bucket(["SHA-512", digest(ShaKit.S512(LEAF))]), CERT_KEY),
@@ -84,13 +81,11 @@ describe("resolveWideCertBinding", () => {
   });
 
   /**
-   * ⚠ `matches: undefined` is the ASSERTED-BUT-UNPROVABLE state, not a mismatch.
-   * Reporting `false` here would refuse the token for carrying a WRONG certificate
-   * when the truth is that this key holds none to compare against.
+   * ⚠ `matches: undefined` is ASSERTED-BUT-UNPROVABLE, not a mismatch: `false`
+   * would blame the token for a WRONG certificate when this key holds none.
    *
-   * ⚠ `toStrictEqual`, and the difference decides this row: `toEqual` treats a
-   * MISSING property as equal to an `undefined` one, so a resolver returning
-   * `{ algorithm }` with no `matches` key would satisfy it — while
+   * ⚠ `toStrictEqual` decides this row — `toEqual` treats a MISSING property as
+   * equal to an `undefined` one, so `{ algorithm }` alone would satisfy it, while
    * `verifyCertBinding` reads `matches === undefined` to choose this arm.
    */
   test("reports a binding it cannot prove when the key holds no certificate", () => {
@@ -100,9 +95,9 @@ describe("resolveWideCertBinding", () => {
   });
 
   /**
-   * ⭐ THE TWO JOSE-CARRIED ALGORITHMS ARE NOT ANSWERED HERE. They ride the domain
-   * header and `verifyCertBinding` compares them as strings; resolving them twice
-   * would be two answers to one question, and the two could disagree.
+   * ⚠ The JOSE-carried algorithms are NOT answered here: they ride the domain
+   * header and `verifyCertBinding` compares them as strings, so resolving them
+   * twice would be two answers to one question.
    */
   test.each([
     [-16, "SHA-256"],
@@ -121,8 +116,8 @@ describe("resolveWideCertBinding", () => {
     ["a non-array value", bucket("nonsense")],
     ["a one-element array", bucket([-44])],
     ["a non-bstr hash value", bucket([-44, "nonsense"])],
-    // SHA-512/256 (RFC 9054 §3.2) is a distinct truncated variant, and
-    // `ShaAlgorithm` offers no method for it — so it stays genuinely unimplemented.
+    // SHA-512/256 is a distinct truncated variant and `ShaAlgorithm` offers no
+    // method for it, so it stays unimplemented. RFC 9054 §3.2.
     ["SHA-512/256, which has no ShaKit method", bucket([-17, Buffer.alloc(32, 1)])],
     ["an unregistered algorithm", bucket([-999, Buffer.alloc(32, 1)])],
   ])("declines %s", (_what, map) => {

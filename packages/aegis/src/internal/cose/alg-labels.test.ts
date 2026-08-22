@@ -25,15 +25,13 @@ describe("alg-labels", () => {
 
   /**
    * The table is a plain object, so a bare index resolves through
-   * `Object.prototype`: `"toString" in JOSE_TO_COSE_OFFICIAL` is TRUE and
-   * `JOSE_TO_COSE_OFFICIAL["toString"]` is a FUNCTION, which clears the
-   * `=== undefined` guard and reaches the CBOR encoder as an alg label. Read
-   * through `own-entry.ts` instead; these rows are what makes that load-bearing.
+   * `Object.prototype` and `JOSE_TO_COSE_OFFICIAL["toString"]` is a FUNCTION that
+   * clears the `=== undefined` guard and reaches the CBOR encoder as an alg label.
+   * Read through `own-entry.ts`; these rows make that load-bearing.
    *
-   * ⚠ MEASURED AT THE FUNCTION, not at a kit door, and that is the honest place:
-   * the argument is a `KryptosAlgorithm` off a key, so no token can supply it —
-   * this is a config/JS-caller reachability, not a token one. The token-reachable
-   * twin of the same table class is `CweKit.decrypt`, pinned in `CweKit.test.ts`.
+   * ⚠ Driven AT THE FUNCTION, not a kit door: the argument is a `KryptosAlgorithm`
+   * off a key, so this is a config/JS-caller reachability, not a token one. The
+   * token-reachable twin is `CweKit.decrypt`, pinned in `CweKit.test.ts`.
    */
   const PROTO_NAMES = ["constructor", "toString", "valueOf", "hasOwnProperty"];
 

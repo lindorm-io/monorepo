@@ -6,95 +6,60 @@ import { writtenHeader } from "../header/written-header.js";
 import { validateCrit } from "./validate-crit.js";
 
 /**
- * The `crit` enforcement, for BOTH wires.
+ * The `crit` enforcement, for BOTH wires. RFC 7515 §4.1.11, RFC 9052 §3.1.
  *
- * ⚠ THE TWO WIRES DO NOT SAY THE SAME THING. They agree on the DUTY and differ on
- * whether a consequence is written down:
- *
- * - RFC 7515 §4.1.11 states it outright: *"If any of the listed extension Header
- *   Parameters are not understood and supported by the recipient, then the JWS
- *   is invalid."*
- * - RFC 9052 §3.1 states the duty with NO consequence attached: `crit` indicates
- *   *"which protected header parameters an application that is processing a
- *   message is required to understand"*. Its one fatal-error clause is quoted
- *   under bullet 1 below and belongs to a DIFFERENT condition. So the COSE
- *   refusal for a not-understood member is aegis deriving the obvious
- *   consequence — a processor required to understand a parameter, and unable to,
- *   cannot claim to have processed the message — not a quotable mandate.
- *
- * ⭐ ONE GROUND, AND IT IS THE CALLER'S DECLARATION. RFC 7515 §4.1.11 puts the
- * duty to understand a critical extension on the RECIPIENT, and aegis is never
- * the final recipient: it verifies on an application's behalf, so it cannot
- * discharge the duty itself and can only refuse until the application claims the
- * parameter. `declared` is that claim, and it is EMPTY when the caller states
- * none — fail closed.
+ * ⭐ ONE GROUND, AND IT IS THE CALLER'S DECLARATION. The duty to understand a
+ * critical extension sits on the RECIPIENT, and aegis is never the final
+ * recipient — it verifies on an application's behalf, so it can only refuse until
+ * the application claims the parameter. `declared` is that claim, and it is EMPTY
+ * when the caller states none: fail closed.
  *
  * ⭐⭐ THE READ RULE, STATED ONCE — every other site points here.
  *
- *  a. NO REGISTRY COLUMN CAN ADMIT A MEMBER ON THIS PATH; the registry reads
- *     here only ever REFUSE. `validateCrit` runs FIRST and refuses every
- *     SPECIFICATION-DEFINED name through `isSpecDefinedHeaderParam`, which reads
- *     the registry's `spec` column
- *     (`internal/header/is-spec-defined-header-param.ts`).
- *  b. THE CALLER'S DECLARATION IS NECESSARY, NEVER SUFFICIENT. Among the members
- *     that survive `validateCrit` — well-formed, carried, non-empty, not
- *     spec-defined — admission requires the caller to have named the member,
- *     `oid` included. A DECLARED member is still refused when it fails any of
- *     those, and when it rides the COSE bucket the signature does not cover:
+ *  a. NO REGISTRY COLUMN CAN ADMIT A MEMBER ON THIS PATH; the registry reads here
+ *     only ever REFUSE. `validateCrit` runs FIRST and refuses every
+ *     specification-defined name through
+ *     `internal/header/is-spec-defined-header-param.ts`.
+ *  b. THE CALLER'S DECLARATION IS NECESSARY, NEVER SUFFICIENT. A declared member
+ *     is still refused when it is not carried, is empty, is spec-defined, or
+ *     rides the COSE bucket the signature does not cover:
  *     `scenarios.ts#a-crit-declaration-does-not-substitute-for-the-parameter-being-carried`,
  *     `#a-crit-declaration-does-not-admit-a-specification-defined-parameter`,
  *     `#a-crit-declaration-does-not-reach-the-unprotected-bucket`.
  *  c. `critEligible` IS THE WRITE SIDE'S COLUMN ALONE —
  *     `internal/header/is-crit-eligible.ts` is its one reader, serving the mint
- *     gate `internal/header/assert-crit-eligible.ts`. That aegis REGISTERS a
- *     parameter says nothing about whether the application behind it can act on
- *     one, which is why this gate does not share a predicate with that one: may
+ *     gate `internal/header/assert-crit-eligible.ts`. Two different questions: may
  *     a PRODUCER name this, versus has the RECIPIENT claimed it.
  *
- * ⇒ "A token aegis mints is a token aegis verifies" holds CONDITIONALLY, and the
- * condition is the point: it verifies when the verifier declares what the
- * producer marked critical.
+ * ⇒ "A token aegis mints is a token aegis verifies" holds CONDITIONALLY: it
+ * verifies when the verifier declares what the producer marked critical.
  *
  * The two checks below decide which refusal a token gets:
  *
  *  1. MALFORMED — `crit` is not a non-empty array of strings, names an
  *     IANA-registered parameter (`crit` is for extensions only), or names a
- *     parameter that is not in the header it was read from. RFC 9052 §3.1 calls
- *     the last one out explicitly, and THIS is the sentence with the fatal-error
- *     clause — note the antecedent, which is the misplaced label and nothing
- *     else: *"If the 'crit' value list includes a label for which the header
- *     parameter is not in the protected-header-parameters bucket, this is a
- *     fatal error in processing the message."* ⛔ Do not lift this quote to
- *     bullet 2; it does not cover a not-understood member.
+ *     parameter the header it was read from does not carry. RFC 9052 §3.1.
  *  2. UNCLAIMED — a well-formed member the caller did not declare, so nothing on
- *     this call has taken responsibility for understanding it. Mandated by RFC
- *     7515 §4.1.11 on JOSE; DERIVED on COSE, per the note above. No §3.1 sentence
- *     says this.
+ *     this call has taken responsibility for understanding it. RFC 7515 §4.1.11
+ *     on JOSE; on COSE it is aegis deriving the consequence of the same duty.
  *
  * ⚠ THE KEYLESS PARSE NEVER REACHES THIS FUNCTION — `internal/wire/jose-token-wire.ts`
- * and `internal/wire/cose-token-wire.ts` run `validateCrit` alone. That is correct
- * in itself (reading a token asserts nothing about UNDERSTANDING it), but
- * `validateCrit` still has to be handed the header AS WRITTEN: it asks whether the
- * header carries what its `crit` names, and the read side splits the registered
- * parameters from the unregistered ones. Both doors therefore call
- * {@link writtenHeader} first, exactly as this function does — without it a parse
- * refuses a `crit`-carrying token a mint had just produced.
- * ⇒ "aegis refuses an unrecognised crit" is a statement about
- * VERIFY and DECRYPT, never about `aegis.parse`.
+ * and `internal/wire/cose-token-wire.ts` run `validateCrit` alone, because reading
+ * a token asserts nothing about UNDERSTANDING it. Both doors still call
+ * {@link writtenHeader} first, as this function does; without it a parse refuses a
+ * `crit`-carrying token a mint had just produced. ⇒ "aegis refuses an
+ * unrecognised crit" is about VERIFY and DECRYPT, never about `aegis.parse`.
  *
- * ⚠ `header` MUST be the INTEGRITY-PROTECTED header, JOSE-named, and `custom`
- * the SAME bucket's params no registry row answers for. On COSE that is the protected bucket
- * alone (the unprotected one carries no crit — the writer refuses to put one
- * there) and the integer labels are already translated back to their JOSE names
- * by the read path, which is what lets one implementation serve both wires. On
- * JOSE the single protected header IS that header.
+ * ⚠ `header` MUST be the INTEGRITY-PROTECTED header, JOSE-named, and `custom` the
+ * SAME bucket's params no registry row answers for. On COSE that is the protected
+ * bucket alone, with its integer labels already translated back to JOSE names by
+ * the read path; on JOSE the single protected header IS that header.
  *
- * ⚠ THE TWO BAGS ARE ONE HEADER. `validateCrit`'s presence rule (RFC 9052 §3.1's
- * fatal error above) asks a question about the header the producer WROTE, which
- * the read side splits in two only because a registered param has a typed home
- * and an unregistered one does not. Asked on `header` alone, every custom member
- * a conformant producer marked critical reads as "not present in the header" —
- * the write side would mint a token this side refuses for the wrong reason.
+ * ⚠ THE TWO BAGS ARE ONE HEADER. `validateCrit`'s presence rule asks about the
+ * header the producer WROTE, which the read side splits in two only because a
+ * registered param has a typed home and an unregistered one does not. Asked on
+ * `header` alone, every custom critical member reads as "not present in the
+ * header" and the write side mints tokens this side refuses.
  */
 export const rejectUnknownCritical = ({
   header,
@@ -149,13 +114,9 @@ export const rejectUnknownCritical = ({
   const crit = written.crit;
   if (!isArray(crit)) return;
 
-  // `validateCrit` has refused an empty array, a non-string member, an
-  // IANA-registered name (`internal/header/is-spec-defined-header-param.ts`), and
-  // a member the header does not carry or carries empty. What reaches here is a
-  // well-formed extension name the header DOES carry, and the only question left
-  // is whether the caller claimed it — RFC 7515 §4.1.11's recipient duty, *"If
-  // any of the listed extension Header Parameters are not understood and
-  // supported by the recipient, then the JWS is invalid"*, enforced on the
+  // What reaches here is a well-formed extension name the header DOES carry
+  // (`validateCrit` refused the rest), so the only question left is whether the
+  // caller claimed it — the recipient duty of RFC 7515 §4.1.11, discharged on the
   // application's behalf.
   //
   // ⚠ The FIRST UNCLAIMED member is reported, not `crit[0]`: with a declared

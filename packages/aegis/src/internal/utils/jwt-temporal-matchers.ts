@@ -67,27 +67,17 @@ export type TemporalMatcherOptions = {
  * (`expiresAt`/`notBefore`/`issuedAt`/`authTime`). Nothing else differs — which
  * is what makes an assert and a verify with the same options answer the same.
  *
- * Range-checks the registry's temporal claims against "now" with
- * `clockTolerance`. Every claim is validated IF PRESENT: an absent claim is
- * tolerated (the `$exists: false` escape), a PRESENT value is bounded per its
- * direction.
+ * Every claim is bounded IF PRESENT (the `$exists: false` escape). "now" is
+ * `currentDate` when the caller overrides it, otherwise the wall-clock. With
+ * `maxTokenAge` (seconds), `iat` gains a lower bound AND becomes required.
  *
- * "now" is the effective clock: `currentDate` when the caller overrides it,
- * otherwise the real wall-clock. When `maxTokenAge` (seconds) is supplied, `iat`
- * gains a LOWER bound — `iat >= now - maxTokenAge - clockTolerance` — and becomes
- * REQUIRED (a token with no `iat` cannot prove its age), rejecting a stale token.
+ * ⚠ `exp` PRESENCE is not decided here — that is a DOMAIN policy (`expPresence`,
+ * enforced Aegis-side). This builder is the single authority on the RANGE.
  *
- * `exp` PRESENCE requiredness is NOT decided here — presence is a DOMAIN policy
- * (`expPresence`, enforced Aegis-side). This builder is the SINGLE authority on
- * the temporal RANGE.
- *
- * Each registry temporal claim's range bound can be individually skipped by its
- * per-call flag (`verifyExpiration`/`verifyNotBefore`/`verifyIssuedAt`/
- * `verifyAuthTime`, default `true`). A flag set to `false` drops that claim's
- * bound entirely — the claim is then neither range-checked nor required here, so
- * an EXPIRED token verifies while its PRESENCE stays governed by the domain. The
- * `maxTokenAge` iat bound is INDEPENDENT of `verifyIssuedAt`: it still applies
- * its own lower bound + presence even when the iat range flag is `false`.
+ * A per-call flag set to `false` (`verifyExpiration`/`verifyNotBefore`/
+ * `verifyIssuedAt`/`verifyAuthTime`) drops that claim's bound entirely, so an
+ * EXPIRED token verifies while its PRESENCE stays governed by the domain. The
+ * `maxTokenAge` iat bound is INDEPENDENT of `verifyIssuedAt`.
  */
 // The DOMAIN key namespace — the `assert` half of the two namespaces below. It
 // is deliberately NOT a `NameSelector`: that type means "which WIRE name", and a
@@ -132,10 +122,9 @@ const buildTemporalMatchers = (
     };
   }
 
-  // maxTokenAge (RFC-style): the token's `iat` must be within `maxTokenAge`
-  // seconds of now. `iat` is a "past" claim (already upper-bounded above); this
-  // adds the lower bound AND requires presence — every operator in one object
-  // must hold, so the three sit side by side as a conjunction.
+  // The token's `iat` must be within `maxTokenAge` seconds of now. `iat` is
+  // already upper-bounded above; this adds the lower bound AND requires presence —
+  // every operator in one object must hold, so the three sit side by side.
   if (maxTokenAge !== undefined) {
     const issuedAt = TEMPORAL_SPECS.find((spec) => joseName(spec) === "iat");
 

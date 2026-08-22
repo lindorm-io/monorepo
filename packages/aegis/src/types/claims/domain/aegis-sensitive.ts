@@ -4,9 +4,9 @@
 // stricter handling.
 //
 // Wire: FLAT individual top-level claims (`national_identity_number`,
-// `social_security_number`, and their OIDC §5.1 verified flags), exactly
+// `social_security_number`, and their verified flags — OIDC Core §5.1), exactly
 // like any other registered claim — they are NOT nested under a wrapper.
-// The registry marks each with `category: "sensitive"`, which drives two
+// The registry marks each with `sensitivity: "sensitive"`, which drives two
 // guarantees (surfaced only from a signed-and-encrypted token):
 //   - mint forces encryption when any sensitive field is present, and omits
 //     them entirely when no recipient key resolves (never emitted in clear);
@@ -19,7 +19,7 @@
 // Norwegian/Danish/Finnish national identity numbers (CPR, HETU), and US
 // Social Security Numbers (SSN).
 //
-// Verified flags follow OIDC §5.1 conventions (paired boolean per field).
+// Verified flags are a paired boolean per field (OIDC Core §5.1).
 
 export type AegisSensitive = {
   nationalIdentityNumber?: string | null;

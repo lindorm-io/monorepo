@@ -22,57 +22,31 @@ import {
   type NameSelector,
 } from "./claims-registry.js";
 import { isNotStated } from "./is-not-stated.js";
-import { protoMemberViolations } from "./proto-member-violations.js";
 
 /**
- * The ONE claim translator. It consolidates every claim mapper that existed
- * before — `map-content-to-claims.ts` (domain -> jose, write), the hand-written
- * `extractDomainClaims` (jose/camel -> domain, read), and the `domain <-> jose`
- * remap loops around `CWT_CLAIMS_KIT` in `cwt-claims.ts` — into a single
- * registry-driven, single-PASS pair per direction.
+ * The ONE claim translator: TWO parameterized cores (`domainToWire` /
+ * `wireToDomain`), with the wire as a `NameSelector` PARAMETER of both.
  *
- * ⚠ The read half of `extract-claims.ts` was not merely a second caller: it held
- * FIVE value decoders character-identical to the ones below (`toDate`,
- * `toStringArray`, `toAudience`, `toActClaim`, `toConfirmation`) plus a
- * hand-listed field-by-field extraction of ~45 claims. All of it is gone; what
- * genuinely differed survives as {@link ClaimReadMode}, and nothing else.
- * (`toActClaim` has since gone the rest of the way — the RFC 8693 actor chain is
- * a DECLARED, recursive member set now, walked by the generic walker below.
- * `toConfirmation` has gone too: it and its write twin are ONE declaration now,
- * `internal/claims/cnf-members.ts`, walked by the pair below.)
+ * The only thing that varies between JOSE and COSE is the wire NAME emitted or
+ * looked up — `joseName` vs `coseName` (the RFC 8392 §3.1.7 divergence set, today
+ * just `jti` <-> `cti`). The VALUE transforms are identical here; the downstream
+ * CWT codec turns the jose-shaped values into COSE labels and CBOR bytes. ⛔ There
+ * is deliberately no `domainToCose` / `coseToDomain` beside the two cores: a
+ * second named entry point per wire is a second place for a rule to be written
+ * differently.
  *
- * TWO parameterized cores (write / read), and the wire is a PARAMETER of both.
- * The ONLY thing that varies between JOSE and COSE is the wire NAME emitted or
- * looked up — `joseName` vs `coseName` (the RFC 8392 divergence set, today just
- * `jti` <-> `cti`). The VALUE transforms are identical at this level; only the
- * downstream CWT codec turns the jose-shaped values into COSE labels and CBOR
- * bytes. The two cores are `domainToWire` and `wireToDomain`, each taking the wire
- * as a `NameSelector` argument; there is deliberately no `domainToCose` /
- * `coseToDomain` beside them, because a second named entry point per wire is a
- * second place for a rule to be written differently, which is exactly what this
- * file exists to remove.
+ * It is the ONLY domain-aware claim code — both format paths meet here. Value
+ * transforms come from the registry's `ClaimCodec`; a co-located BESPOKE builder
+ * table holds the two claims the generic member-set walker cannot serve (`cnf`,
+ * `events` — see `internal/claims/cnf-members.ts` and {@link BespokeKind}), and
+ * the generic structure walker handles the rest. A registered claim takes the
+ * registry path (name + value transform); anything NOT registered is a custom
+ * claim whose KEY case flips mechanically (snake on write, camel on read) with
+ * its value untouched.
  *
- * It is the ONLY domain-aware claim code: both the JOSE and the COSE format
- * paths meet here. Value transforms come from the registry's `ClaimCodec`; a
- * shrinking co-located BESPOKE builder table (below) holds the per-claim shapes
- * of the two claims the generic member-set walker cannot serve (`cnf`,
- * `events` — each for a stated, durable reason rather than a deferral: see
- * `internal/claims/cnf-members.ts` and {@link BespokeKind}), and the generic
- * structure walker beside it handles the ones it can
- * (`act`/`may_act`, `address`, `authorization_details`, `sub_id`). All
- * case/name conversion is Aegis-side: a registered claim
- * takes the explicit registry path (name + value transform); anything NOT in the
- * registry is a custom claim whose KEY case flips mechanically (snake on write,
- * camel on read) with its value untouched.
- *
- * Hash DERIVATION is NOT here (it needs the signing algorithm and stays in
- * `assemble-common-claims.ts`); the translator only maps the already-derived
- * `accessTokenHash` -> `at_hash`, so it is fully mechanical and algorithm-free.
+ * Hash DERIVATION is NOT here — it needs the signing algorithm and stays in
+ * `assemble-common-claims.ts`, so this file is mechanical and algorithm-free.
  */
-
-// The wire-name selector — the ONE parameter that separates the JOSE and COSE
-// variants of both cores — now lives on the registry that owns the divergence,
-// so the identity-matcher builder keys its predicate by the same rule.
 
 // --- Value decoders (read side) ----------------------------------------------
 
@@ -97,42 +71,26 @@ const toAudience = (value: unknown): Array<string> | undefined => {
 // --- The RFC 7800 confirmation, in both directions ---------------------------
 
 /**
- * ⭐ BOTH DIRECTIONS ARE DRIVEN BY ONE DECLARATION — `internal/claims/cnf-members.ts`.
- * They used to be two hand-written literals here, and a member could be added to
- * one and not the other with nothing to notice: the write table spelled five
- * members out as an object literal, the read table spelled the same five out again
- * as a chain of ternaries.
+ * ⭐ BOTH DIRECTIONS ARE DRIVEN BY ONE DECLARATION — `internal/claims/cnf-members.ts`
+ * — so a member cannot be added to one side and not the other.
  *
- * ⚠⚠ NEITHER SIDE ACCEPTS THE OTHER VOCABULARY'S SPELLING FOR A DECLARED MEMBER,
- * AND THAT IS A CONSUMER-VISIBLE BREAK. `toConfirmation` used to read
- * `v.thumbprint ?? v.jkt` at every member, PREFERRING the domain form — so a
- * token whose `cnf` carried `thumbprint` rather than RFC 9449's `jkt` was
- * honoured as if it were the registered member, and a presenter-supplied
- * look-alike could answer for an absent one. It is the same look-alike hazard the
+ * ⚠⚠ NEITHER SIDE ACCEPTS THE OTHER VOCABULARY'S SPELLING FOR A DECLARED MEMBER.
+ * Tolerating one (reading `v.thumbprint ?? v.jkt`) lets a presenter-supplied
+ * look-alike answer for an absent registered member — the same hazard the
  * top-level read closes by resolving a claim under its WIRE name alone
- * ({@link ClaimReadMode}), and the same tolerance the RFC 8693 actor chain shed
- * when it migrated. A misspelled member is REFUSED for the collision now — see
- * the unconditional reservation in {@link walkConfirmation}, and read that note
- * before weakening this one: an earlier version of this paragraph asserted the
- * property while the code only had it when BOTH names were present, which left
- * the single-name case writing a look-alike straight into the declared slot.
+ * ({@link ClaimReadMode}). A misspelled member is REFUSED for the collision; see
+ * the UNCONDITIONAL reservation in {@link walkConfirmation}, which is what makes
+ * that hold when only ONE of the two names is present.
  *
  * ⚠⚠ A MEMBER WHOSE VALUE CONTRADICTS ITS DECLARED SHAPE IS REFUSED, NOT DROPPED,
- * ON BOTH SIDES. That is the ruling that closes a live fail-open, and it was
- * measured through the public doors before the change: a foreign token carrying
- * `cnf: { jkt: null }`, `cnf: { jkt: 42 }`, `cnf: { jkt: {} }` or a `cnf` that is
- * not an object at all had the offending member ERASED to `undefined` by the old
- * decoder, the whole confirmation then collapsed to `undefined`, and every one of
- * them VERIFIED AS A PLAIN BEARER TOKEN — an attacker who can blank one field
+ * ON BOTH SIDES. Erasing it collapses the whole confirmation to `undefined` and
+ * the token VERIFIES AS A PLAIN BEARER — an attacker who can blank one field
  * turns a sender-constrained token into one anybody holding a copy may present.
- * A binding the issuer STATED and this package cannot read is a binding that
- * cannot be honoured, and the only safe disposal of one is a refusal.
+ * A binding the issuer STATED and this package cannot read cannot be honoured,
+ * and the only safe disposal of one is a refusal.
  *
- * ⚠ AN EMPTY CONFIRMATION IS REFUSED TOO — see {@link cnfBinding}. The registry
- * entry for `cnf` has always claimed "an empty one confirms no key and is
- * refused"; until now the write side collapsed it to `undefined` and MINTED A
- * BEARER TOKEN instead, so a caller that asked for a proof-of-possession binding
- * silently got none.
+ * ⚠ AN EMPTY CONFIRMATION IS REFUSED TOO — see {@link cnfBinding}. Collapsing it
+ * to `undefined` mints the same silent bearer token.
  */
 const cnfValueMatches = (member: CnfMemberSpec, value: unknown): boolean =>
   member.value === "jwk" ? isObject(value) : isString(value);
@@ -163,43 +121,29 @@ const walkConfirmation = (
   const out: Dict = {};
 
   /**
-   * ⭐⭐ EVERY DECLARED MEMBER'S OUTGOING KEY IS RESERVED UNCONDITIONALLY —
-   * whether or not that member is present. This is the whole of the collision
-   * defence, and the UNCONDITIONAL part is the correction that matters.
+   * ⭐⭐ EVERY DECLARED MEMBER'S OUTGOING KEY IS RESERVED UNCONDITIONALLY, whether
+   * or not that member is present. This is the whole of the collision defence,
+   * and the UNCONDITIONAL part is what makes it hold.
    *
-   * ⛔⛔ RESERVING ONLY WHAT ARRIVES LEAVES THE ATTACK FULLY OPEN, and it was
-   * measured on the version that did. `walkObject`'s defence registers a key as a
-   * VALUE claims it, so a tail key landing on a declared member's outgoing key is
-   * refused only when the declared member is ALSO there. A `cnf` naming just ONE
-   * of the pair has nothing to collide with, so the look-alike is written into the
-   * declared member's own slot:
-   *   - WRITE. `mint("access_token", { confirmation: { jkt: "abc" } })` — the
-   *     caller spelling the WIRE name in a DOMAIN bag, which is the likely
-   *     mistake rather than an exotic one, since `jkt` is what every RFC and every
-   *     other library calls it — minted `cnf: { jkt: "abc" }` with the RFC 7638
-   *     32-byte grammar never run, because the shape rule reads the DOMAIN name.
-   *     `{ jkt: "" }` minted too, so aegis issued a token its own verifier then
-   *     refused `confirmation_binds_no_key`.
-   *   - READ. A foreign `cnf: { thumbprint: "abc" }` — a member RFC 7800 §3.1
-   *     requires a reader to IGNORE — landed on `confirmation.thumbprint`, the
-   *     exact slot `internal/utils/apply-verify-policy.ts` reads as the bound
-   *     thumbprint, and drove the DPoP gate.
-   * ⇒ A key a declared member OWNS is refused to the tail outright. The tail is
-   * carried because §3.1 says an unknown member must be ignored; a member that is
-   * not unknown but MISSPELLED is not that, and honouring it would let the caller
-   * or the token's writer choose which vocabulary aegis reads the binding in.
+   * ⛔⛔ RESERVING ONLY WHAT ARRIVES LEAVES THE ATTACK FULLY OPEN. A `cnf` naming
+   * just ONE of a declared/wire pair has nothing to collide with, so the
+   * look-alike takes the declared member's own slot: on WRITE, a caller spelling
+   * `confirmation: { jkt }` skips the DOMAIN-keyed shape rule entirely; on READ, a
+   * foreign `cnf: { thumbprint }` lands where
+   * `internal/utils/apply-verify-policy.ts` reads the bound thumbprint and drives
+   * the DPoP gate. ⇒ A key a declared member OWNS is refused to the tail
+   * outright. The tail rides because an unknown member must be ignored
+   * (RFC 7800 §3.1); a MISSPELLED one is not unknown, and honouring it lets the
+   * token's writer choose which vocabulary aegis reads the binding in.
    *
-   * ⚠ IT ALSO SUBSUMES THE PRESENT-AND-PRESENT CASE, which is why there is no
-   * second mechanism beside it. `{ jkt: JKT, thumbprint: "evil" }` on read used to
-   * let the look-alike WIN — `toConfirmation` preferred the domain spelling, so it
-   * returned `thumbprint: "evil"` and discarded the real `jkt` — and both orders
-   * are refused now, by this one check, whichever arrives first.
+   * ⚠ IT ALSO SUBSUMES THE BOTH-PRESENT CASE, which is why there is no second
+   * mechanism beside it: `{ jkt, thumbprint }` is refused by this one check
+   * whichever arrives first.
    *
    * ⚠ A `Map` keyed by the OUTGOING name, holding the member's own INCOMING name,
    * so the refusal can say which two names met. Two declared members cannot
-   * collide with each other (`cnf-members.test.ts` pins the five spellings apart)
-   * and two tail keys cannot collide at all — they are keys of one object — so
-   * tail-versus-declared is the only pair there is.
+   * collide with each other (`cnf-members.test.ts` pins the spellings apart) and
+   * two tail keys cannot collide at all — they are keys of one object.
    */
   const declaredOutKeys = new Map<string, string>();
   for (const [incoming, member] of lookup) {
@@ -209,11 +153,9 @@ const walkConfirmation = (
   for (const [key, inner] of Object.entries(value)) {
     const member = lookup.get(key);
 
-    // An undeclared member. RFC 7800 §3.1 requires a reader to IGNORE what it
-    // does not understand, so it rides verbatim rather than being refused — and
-    // verbatim rather than case-flipped, because a tail member is another
-    // specification's registered confirmation-method name and §6.2.1 makes those
-    // names case sensitive.
+    // An undeclared member rides VERBATIM rather than being refused or
+    // case-flipped: a tail member is another specification's registered
+    // confirmation-method name (RFC 7800 §3.1, RFC 7800 §6.2.1).
     if (member === undefined) {
       const owner = declaredOutKeys.get(key);
 
@@ -228,11 +170,10 @@ const walkConfirmation = (
       }
 
       // ⚠ `=== undefined`, not {@link isNotStated} — the tail takes the same `cnf`
-      // exemption the declared members take, and for the same reason: RFC 7800 §6.2
-      // lets another specification register a confirmation method, so a tail member
-      // is somebody's confirmation method and not a spare attribute. Erasing a null
-      // one would let a caller state a binding this package silently drops, which is
-      // the fault the declared-member note below measures.
+      // exemption the declared members take (RFC 7800 §6.2): a tail member is
+      // somebody's confirmation method, not a spare attribute, so erasing a null
+      // one lets a caller state a binding this package silently drops. See the
+      // declared-member note below.
       if (inner === undefined) continue;
 
       Object.defineProperty(out, key, {
@@ -244,49 +185,32 @@ const walkConfirmation = (
       continue;
     }
 
-    // `undefined` is how absence is spelled throughout this package, so a member
-    // a caller assembled from an optional it did not have is ABSENT rather than
+    // `undefined` is how absence is spelled throughout this package, so a member a
+    // caller assembled from an optional it did not have is ABSENT rather than
     // malformed. Neither JSON nor CBOR can express it, so on the read side it can
     // only come from a caller's own dict at the vocabulary door.
     //
     // ⛔⛔ `null` IS **NOT** ABSENCE HERE, AND `cnf` IS THE ONE CLAIM EXEMPT FROM
     // THAT RULING. Everywhere else a null member is omitted ({@link isNotStated});
-    // a confirmation member falls through to the refusal below instead, and the
-    // exemption is load-bearing rather than conservative:
+    // a confirmation member falls through to the refusal below instead, for three
+    // reasons that hold together:
     //
-    //   1. IT MINTED AN UNBOUND TOKEN. `domainToWire` erases a member before the
-    //      COSE fail-closed guard ever runs, and that guard asks
+    //   1. ERASING ONE MINTS AN UNBOUND TOKEN. `domainToWire` would erase the
+    //      member before the COSE fail-closed guard runs, and that guard asks
     //      `cnf[member] !== undefined` (`internal/cose/cose-key.ts`) — so an
     //      already-erased `jkt` is not "unrepresentable on COSE", it is nothing at
-    //      all. MEASURED with a control, on the carve-out build:
-    //        `mint("cwt", { thumbprint: JKT,  keyId: KID })`  REFUSE
-    //                                        `cose_cnf_unsupported {members:["jkt"]}`
-    //        `mint("cwt", { thumbprint: null, keyId: KID })`  MINTED, and the token
-    //                                        verified with NO PROOF
-    //        `mint("cwt", { keyId: KID })`                    MINTED, BYTE-IDENTICAL
-    //      The JOSE half is the same shape and no better: `{ jkt: JKT, keyId }`
-    //      mints and then refuses `dpop_proof_required` at verify, while
-    //      `{ jkt: null, keyId }` minted and verified ACCEPTED. A caller asking for
-    //      a thumbprint binding received a token nobody is ever asked to prove
-    //      possession for, indistinguishable from a legitimate key-id binding.
-    //      `classes/confirmation-claim-wire.test.ts` documents that exact defect as
-    //      FIXED; the carve-out reopened it through a different spelling.
-    //   2. RFC 9449 §6.1 TYPES THE MEMBER, BY MUST — "The value of the jkt member
-    //      MUST be the base64url encoding (as defined in [RFC7515]) of the JWK
-    //      SHA-256 Thumbprint (according to [RFC7638]) of the DPoP public key (in
-    //      JWK format) to which the access token is bound." So `jkt: null` is a
-    //      value CONTRADICTING the declared shape, not a position left unfilled.
-    //      ⚠ NOT RFC 7800 §3.1, which these notes cited for a while: that section
-    //      defines the `cnf` container and names `jwk`/`jwe`/`jku`, and RFC 7800's
-    //      one thumbprint mention is about a `kid` value. `cnf-members.ts` had the
-    //      right citation throughout.
-    //      The ordinary argument for the carve-out — a nullable database column is
-    //      an unset optional — does not reach a claim whose whole content is a key
-    //      the recipient must be able to confirm.
+    //      all. A caller asking for a thumbprint binding would receive a token
+    //      nobody is ever asked to prove possession for, byte-indistinguishable
+    //      from a legitimate key-id binding, on both wires.
+    //      pinned: `classes/confirmation-claim-wire.test.ts`.
+    //   2. RFC 9449 §6.1 TYPES THE MEMBER, BY MUST, so `jkt: null` is a value
+    //      CONTRADICTING the declared shape rather than a position left unfilled.
+    //      The ordinary argument for a carve-out — a nullable database column is an
+    //      unset optional — does not reach a claim whose whole content is a key the
+    //      recipient must be able to confirm.
     //   3. "ERASED" AND "ABSENT" MUST NOT COLLAPSE ON THIS CLAIM. Every other
     //      structured claim reports a fact; `cnf` states a security property whose
-    //      failure mode is exactly the two becoming indistinguishable — which is
-    //      what §1 measures.
+    //      failure mode is exactly the two becoming indistinguishable.
     // ⇒ A `cnf` member is judged by {@link cnfValueMatches} alone, and `undefined`
     //   is the only absence it recognises.
     if (inner === undefined) continue;
@@ -306,20 +230,15 @@ const walkConfirmation = (
 };
 
 /**
- * THE VERDICT AN EMPTY CONFIRMATION GETS, asked at the emission side of the
- * translator so a caller hears it before anything is signed.
+ * THE VERDICT AN EMPTY CONFIRMATION GETS (RFC 7800 §3), asked at the emission side
+ * so a caller hears it before anything is signed. Neither alternative disposal is
+ * a token anyone asked for: dropping it hands the audience a BEARER token where
+ * the issuer asked for a bound one, and emitting it puts a binding on the wire
+ * that no verifier can honour.
  *
- * RFC 7800 §3 — "By including a 'cnf' (confirmation) claim in a JWT, the issuer
- * of the JWT declares that the presenter possesses a particular key and that the
- * recipient can cryptographically confirm that the presenter has possession of
- * that key." A confirmation naming no key declares a possession nobody can
- * confirm, so neither disposal below it is a token anyone asked for: dropping it
- * hands the audience a BEARER token where the issuer asked for a bound one, and
- * emitting it puts a binding on the wire that every conformant verifier must
- * reject.
- *
- * ⚠ The same verdict is taken again at VERIFY (`internal/utils/apply-verify-policy.ts`),
- * on a token this package did not mint. One rule, two doors — not two rules.
+ * ⚠ The same verdict is taken again at VERIFY
+ * (`internal/utils/apply-verify-policy.ts`), on a token this package did not
+ * mint. One rule, two doors — not two rules.
  */
 const cnfBinding = (cnf: Dict, context: WalkContext): Dict => {
   if (!isClaimSatisfied(cnf)) {
@@ -335,27 +254,27 @@ const cnfBinding = (cnf: Dict, context: WalkContext): Dict => {
 // -----------------------------------------------------------------------------
 
 /**
- * The RFC 8417 SET `events` map, guarded in EITHER direction — ONE function,
- * because the two directions ask exactly one question of this claim and asking
- * it in two places is how they came to disagree before (the read arm was a bare
- * `return value` while the write arm guarded, so
- * `Aegis.toDomain({ events: "not-an-object" })` returned the string in a field
- * typed `Record<string, Dict>`).
+ * The RFC 8417 §2.2 SET `events` map, guarded in EITHER direction — ONE function,
+ * because the two directions ask exactly one question of this claim and asking it
+ * in two places is how they come to disagree.
  *
- * ⚠⚠ A NON-OBJECT IS REFUSED, NOT DROPPED — the same disposition {@link walkObject}
- * and {@link walkElements} state, reaching the one structured claim that has no
- * member set to walk. RFC 8417 §2.2 defines the claim as a map of event-type URIs
- * to payloads, so a scalar under that name is not a partial event map, it is not
- * one; and dropping it is invisible from both sides — a caller's events vanish
- * from a signed token with nothing said, and a stranger's token is reported as
- * carrying no events when it carries a value.
+ * ⚠⚠ A NON-OBJECT IS REFUSED, NOT DROPPED — the same disposition
+ * {@link walkObject} and {@link walkElements} state, reaching the one structured
+ * claim with no member set to walk. A scalar under this name is not a partial
+ * event map, and dropping it is invisible from both sides: a caller's events
+ * vanish from a signed token with nothing said, and a stranger's token is
+ * reported as carrying no events when it carries a value.
  *
- * ⚠ The KEYS are untouched, which is the whole reason this claim has its own arms:
- * an event-type URI is an identifier, and the house case flip would rewrite it.
+ * ⚠ The KEYS are untouched, which is the whole reason this claim has its own
+ * arms: an event-type URI is an identifier, and the house case flip would rewrite
+ * it. ⚠ NOTHING IS SAID ABOUT THE PAYLOADS — aegis has no shape to hold one to.
  *
- * ⚠ NOTHING IS SAID ABOUT THE PAYLOADS, and that is correct rather than a gap.
- * §2.2 makes each payload's contents the event type's own business, so aegis has
- * no shape to hold one to.
+ * ⛔ NEITHER ARM REBUILDS THE MAP, which is why this claim never reaches
+ * {@link walkObject}'s `emit` and a `__proto__` event-type key keeps the own-key
+ * disposal it arrived with. Rewriting either arm to rebuild with
+ * `out[key] = value` would newly make that key the map's PROTOTYPE and drop the
+ * member.
+ * pinned: translate.test.ts#carries a `__proto__` event-type key as an own key.
  */
 const eventsMap = (value: unknown, context: WalkContext): Dict | undefined => {
   if (isObject(value)) return value;
@@ -408,19 +327,16 @@ const encodeBespoke = (
 // --- The generic structure walker --------------------------------------------
 
 /**
- * THE OPEN TAIL'S CASE FLIP, applied ONE KEY AT A TIME.
+ * THE OPEN TAIL'S CASE FLIP, applied ONE KEY AT A TIME — per key because the walk
+ * below follows the VALUE's own key order rather than the declaration order, so a
+ * declared and an undeclared member may interleave and the wire bytes are
+ * order-sensitive.
  *
- * It has to be per key because the walk below follows the VALUE's own key order
- * rather than the declaration order, so a declared and an undeclared member may
- * interleave — and the wire bytes are order-sensitive.
- *
- * ⚠ It is EXACTLY the blanket `snakeKeys(value)` / `camelKeys(value)` this
- * replaced, not an approximation of it: `@lindorm/case` walks an object entry by
- * entry and transforms each independently, so flipping a one-entry bag per key
- * and flipping the whole bag once produce the same keys at every depth. Flipping
- * only the TOP key — which is what an unregistered TOP-LEVEL claim gets — would
- * NOT: an undeclared member holding a nested object would keep its inner
- * spelling and the round trip would stop being symmetric.
+ * ⚠ IT MUST FLIP THE VALUE TOO, not just the top key. `@lindorm/case` transforms
+ * each entry independently, so a one-entry bag per key and the whole bag at once
+ * give the same keys at every depth; flipping only the TOP key would leave an
+ * undeclared member's nested object under its inner spelling and break the round
+ * trip's symmetry.
  */
 const flipOneKey = (
   key: string,
@@ -436,32 +352,26 @@ const flipOneKey = (
  * WHERE A WALK IS, AND WHAT IT HAS FOUND — the two facts a refusal needs and
  * neither the codec nor the direction can supply.
  *
- * ⚠⚠ `claim` AND `path` ARE NOT THE SAME FACT ONE LEVEL APART, and collapsing
- * them was a real defect. `claim` is the TOP-LEVEL claim the walk was entered
- * for and never changes; `path` grows with every level descended. Deriving the
- * first from the second — or, as this file did, passing the member's own domain
- * as both — makes a violation at `act.act.subject` report `claim: "act"`,
- * `key: "act.subject"`: indistinguishable from depth 1, and identical for `act`
- * and `mayAct`, which share one member set. A refusal that cannot locate the
- * member it is about is a repair instruction nobody can follow.
+ * ⚠⚠ `claim` AND `path` ARE NOT THE SAME FACT ONE LEVEL APART. `claim` is the
+ * TOP-LEVEL claim the walk was entered for and never changes; `path` grows with
+ * every level descended. Deriving the first from the second — or passing the
+ * member's own domain as both — makes a violation at `act.act.subject` report
+ * `claim: "act"`, `key: "act.subject"`: indistinguishable from depth 1, and
+ * identical for `act` and `mayAct`, which share one member set.
  *
  * ⚠ ONE ACCUMULATOR PER CLAIM, not per structure. Every violation anywhere under
  * a claim — across a collection's elements AND across nesting depth — is
  * collected before anything is thrown, which is the stance
  * `internal/profiles/enforce-policy.ts` takes for a whole token.
  *
- * ⭐ `claim` IS READ BELOW DEPTH 1, AND EXACTLY ONE MEMBER MAKES IT SO. It is
- * read at the claim boundary (always the top context) and in ONE place a child
- * context can reach: the non-array message in {@link walkElements}, which needs a
- * MEMBER whose codec is `array` WITH `of`. RFC 9493 §3.2.8's `sub_id.identifiers`
- * is that member — "a JSON array containing one or more Subject Identifiers" —
- * so `subjectId: { format: "aliases", identifiers: "not-an-array" }` reports
- * `Claim "subjectId" must be an array` at key `subjectId.identifiers`.
- * ⚠ THIS WAS AN EQUIVALENT MUTANT UNTIL THAT MEMBER ARRIVED: a `childPath` that
- * overwrote `claim` with the member's own domain would have said
- * `Claim "identifiers" must be an array` with nothing to notice it, because no
- * declared member reached the collection arm at depth. `act`'s `audience` is an
- * array with NO `of`. The pin lives in `classes/sub-id-claim-wire.test.ts`.
+ * ⭐ `claim` IS READ BELOW DEPTH 1, AND EXACTLY ONE MEMBER MAKES IT SO: the
+ * non-array message in {@link walkElements}, which needs a MEMBER whose codec is
+ * `array` WITH `of`. `sub_id.identifiers` (RFC 9493 §3.2.8) is that member, so
+ * `subjectId: { format: "aliases", identifiers: "not-an-array" }` reports
+ * `Claim "subjectId" must be an array` at key `subjectId.identifiers`. ⚠ Without
+ * it a `childPath` overwriting `claim` with the member's own domain would be an
+ * EQUIVALENT MUTANT — `act`'s `audience` is an array with NO `of`.
+ * pinned: `classes/sub-id-claim-wire.test.ts`.
  */
 type WalkContext = {
   /** The claim the walk was entered for. Constant for the whole descent. */
@@ -487,11 +397,10 @@ const elementPath = (context: WalkContext, index: number): WalkContext => ({
 });
 
 /**
- * The half of a structure walk that DIFFERS between writing and reading, named
- * so that a direction-dependent rule cannot be smuggled into the shared walk as
- * a symmetric one. That is not hypothetical: `whenEmpty` was applied in both
- * directions here, and being symmetric BY CONSTRUCTION is exactly why nothing
- * announced it.
+ * The half of a structure walk that DIFFERS between writing and reading, named so
+ * a direction-dependent rule cannot be smuggled into the shared walk as a
+ * symmetric one — being symmetric BY CONSTRUCTION is exactly what stops anything
+ * announcing it.
  */
 type WalkDirection = {
   /** Which key the INCOMING bag spells a member by. */
@@ -523,54 +432,42 @@ type WalkDirection = {
 };
 
 /**
- * Walk a DECLARED structure in ONE direction, driven by the registry's member
- * set — the generic replacement for the per-claim builders that used to write a
- * structure's shape out by hand.
+ * Walk a DECLARED structure in ONE direction, driven by the registry's member set.
  *
- * ⭐ IT WALKS THE VALUE, NOT THE MEMBER LIST, and that is load-bearing rather
- * than incidental. JSON preserves insertion order, so the JOSE bytes of a
- * structured claim are decided by the order its members were written in; walking
- * the declaration instead would re-order every caller's address and move bytes
- * on a signed wire while every round trip still passed. It is the same
+ * ⭐ IT WALKS THE VALUE, NOT THE MEMBER LIST. JSON preserves insertion order, so
+ * the JOSE bytes of a structured claim are decided by the order its members were
+ * written in; walking the declaration instead re-orders every caller's address and
+ * moves bytes on a signed wire while every round trip still passes. The same
  * discipline `prune-empty-claims.ts` states for the top-level bag, one level in.
- * (The COSE side is indifferent — CBOR deterministic encoding sorts the keys —
- * so JOSE is where the rule is observable and where it must hold.)
+ * (CBOR deterministic encoding sorts the keys, so JOSE is where it is observable.)
  *
- * ⚠ A member is resolved through a `Map`, never through `in` on the incoming
- * bag. The keys come from a stranger's payload on the read side, and `in` walks
+ * ⚠ A member is resolved through a `Map`, never through `in` on the incoming bag.
+ * The keys come from a stranger's payload on the read side, and `in` walks
  * `Object.prototype` — so `constructor` or `toString` would resolve as a member
  * name. A `Map` cannot be reached that way at all.
  *
  * ⚠⚠ A NON-OBJECT VALUE IS REFUSED, NOT DROPPED — the ruling that makes every
- * declared structure answer the same way. It used to yield `undefined`, so the
- * claim simply did not resolve, and that left ONE fault class with THREE
- * dispositions across the registry: `address` dropped a non-object in silence,
- * `authorizationDetails` refused a non-array ({@link walkElements}), and `cnf`
- * refused a non-object ({@link walkConfirmation}). A drop is invisible from both
- * sides — a caller's claim vanishes from a signed token with nothing said, and a
- * stranger's token is reported as saying less than it says — which is the same
- * argument the closed-set branch below already made about an undeclared member.
- * A reader that silently discards a claim reports a token that made no statement
- * where its issuer signed one.
+ * declared structure answer the same way ({@link walkElements},
+ * {@link walkConfirmation}). A drop is invisible from both sides: a caller's claim
+ * vanishes from a signed token with nothing said, and a stranger's token is
+ * reported as saying less than its issuer signed.
  *
- * ⚠ `null` NEVER REACHES THIS GUARD, and each of the three entry points is why:
- * a CLAIM's value is classified at the read/write core, a MEMBER's at the loop
- * below, and an ELEMENT's by {@link walkElements}'s own `isObject` — which is a
- * DIFFERENT rule, because an array slot is positional and cannot be left
- * unfilled. The first two are one predicate, {@link isNotStated}, and it is the
- * one place that boundary is decided.
+ * ⚠ `null` NEVER REACHES THIS GUARD. A CLAIM's value is classified at the
+ * read/write core and a MEMBER's at the loop below — both by {@link isNotStated},
+ * the one place that boundary is decided — while an ELEMENT takes
+ * {@link walkElements}'s own `isObject`, a DIFFERENT rule because an array slot is
+ * positional and cannot be left unfilled.
  *
  * ⚠ THE MESSAGE NAMES THE CLAIM AND THE `key` NAMES THE POSITION, so a member
  * whose own codec is a structure reports `Claim "act" must be an object` at key
- * `act.act`. That is deliberate and matches {@link walkElements}: the CLAIM is
- * what a caller repairs and what `data.claim` carries at every depth, while the
- * path is what says which part of it.
+ * `act.act`. The CLAIM is what a caller repairs and what `data.claim` carries at
+ * every depth; the path says which part of it.
  *
- * ⚠ IT REPORTS A {@link ClaimMemberSpec.required} VIOLATION, IT DOES NOT THROW
- * ON ONE. The throw belongs at the CLAIM boundary ({@link encodeClaim} /
- * {@link decodeClaim}), because that is the only level at which "everything
- * wrong with this claim" is a complete answer — across a collection's elements
- * and across nesting depth alike.
+ * ⚠ IT REPORTS A {@link ClaimMemberSpec.required} VIOLATION, IT DOES NOT THROW ON
+ * ONE. The throw belongs at the CLAIM boundary ({@link encodeClaim} /
+ * {@link decodeClaim}) — the only level at which "everything wrong with this
+ * claim" is a complete answer, across a collection's elements and across nesting
+ * depth alike.
  */
 const walkObject = (
   codec: ObjectCodec,
@@ -594,55 +491,34 @@ const walkObject = (
 
   /**
    * ⭐⭐ EVERY DECLARED MEMBER'S OUTGOING KEY, RESERVED UNCONDITIONALLY — built
-   * from the DECLARATION before the walk begins, so it does not matter whether
-   * the member the key belongs to is present, valid, or absent entirely.
+   * from the DECLARATION before the walk begins, so it does not matter whether the
+   * member the key belongs to is present, valid, or absent entirely.
    *
-   * ⚠⚠ THE HAZARD IS SPECIFIC AND IT WAS MEASURED, on the real `address`
-   * declaration, through the public vocabulary door:
-   * `Aegis.toDomain({ address: { street_address: "DECLARED", streetAddress: "SHADOW" } })`
-   * yielded `{ streetAddress: "SHADOW" }` — the declared member resolved to the
-   * domain key, the open tail flipped onto the SAME key, and the last one in
-   * `Object.entries` order won. An OPEN `act` has exactly that shape one level in
-   * (`{ sub: "audited-service", subject: "rogue-service" }` — `sub` resolves to
-   * `subject`, and a verbatim tail `subject` lands on `subject`), which hands
-   * ACTOR IDENTIFICATION to whoever wrote the token, silently, by key order.
+   * ⚠⚠ THE HAZARD IS THAT A DECLARED MEMBER AND AN OPEN TAIL KEY REACH THE SAME
+   * OUTGOING KEY, and the last one in `Object.entries` order wins. On `address`,
+   * `{ street_address, streetAddress }` resolves to one domain key; an OPEN `act`
+   * has the same shape one level in (`sub` resolves to `subject`, and a verbatim
+   * tail `subject` lands on `subject`), which hands ACTOR IDENTIFICATION to
+   * whoever wrote the token, silently, by key order.
    *
-   * ⛔⛔ RESERVING ONLY WHAT ARRIVES LEAVES THE ATTACK FULLY OPEN, and TWO
-   * successive versions of this guard did exactly that.
-   *   - The FIRST registered the key inside the write, after translation and
-   *     after the emptiness prune, so a declared member whose value FAILED ITS
-   *     OWN CODEC vacated its slot in silence. Measured then:
-   *     `Aegis.toWire({ act: { subject: 42, sub: "shadow" } })` ->
-   *     `{ act: { sub: "shadow" } }`, and `Aegis.toDomain({ act: { sub: 42,
-   *     subject: "rogue-service" } })` -> `{ act: { subject: "rogue-service" } }`
-   *     — the read side, so entirely in the hands of whoever wrote the token:
-   *     make the ISSUER'S member invalid and the look-alike is believed.
-   *   - The SECOND took the reservation from the KEY rather than the value, which
-   *     closed that — and still only for a member that ARRIVED. A structure naming
-   *     just ONE of the pair has nothing to collide with, so the look-alike took
-   *     the declared slot uncontested. Measured on that version:
-   *     `Aegis.toDomain({ act: { subject: "rogue" } })` -> `{ act: { subject:
-   *     "rogue" } }` with no refusal — BYTE-IDENTICAL to what a genuine
-   *     `act: {"sub":"rogue"}` produces, so a consumer reading `claims.act.subject`
-   *     for an allowlist or an audit record cannot tell the two apart. The same on
-   *     `sub_id` (`{ format, subject }`), on `address` (`{ streetAddress }`), and
-   *     on the WRITE side: `Aegis.toWire({ act: { sub: "shadow" } })` put a value
-   *     onto a signed wire with NO codec guard at all, because the guard belongs to
-   *     the declared member whose slot it was stealing.
-   * ⇒ The reservation is taken from `codec.children()`, once, before any key of
-   * the incoming value is looked at.
+   * ⛔⛔ RESERVING ONLY WHAT ARRIVES LEAVES THE ATTACK FULLY OPEN, in two ways.
+   * Registering the key from the WRITTEN VALUE lets a declared member whose value
+   * FAILS ITS OWN CODEC vacate its slot in silence — on the read side that is
+   * entirely in the hands of whoever wrote the token. Registering it from the KEY
+   * closes that and still covers only a member that ARRIVED: a structure naming
+   * just ONE of the pair has nothing to collide with, so the look-alike takes the
+   * declared slot uncontested and produces output BYTE-IDENTICAL to the genuine
+   * claim. ⇒ The reservation is taken from `codec.children()`, once, before any
+   * key of the incoming value is looked at.
    *
-   * ⚠⚠ THIS DOES NOT NARROW THE OPEN TAIL, AND THE DISTINCTION IS THE RULING.
-   * RFC 8693 §4.1 and RFC 7800 §3.1 both say an unknown member is carried or
-   * ignored — and neither says a member may be written INTO ANOTHER MEMBER'S OWN
-   * SLOT, which is what makes the look-alike indistinguishable downstream. So a
-   * tail key that does NOT collide is still carried, exactly as before; a tail key
-   * that DOES is refused. Carrying an unknown member and carrying it into a
-   * declared member's domain slot are two different acts.
+   * ⚠⚠ THIS DOES NOT NARROW THE OPEN TAIL, AND THE DISTINCTION IS THE RULING. A
+   * tail key that does NOT collide is still carried (RFC 8693 §4.1, RFC 7800 §3.1);
+   * one that DOES is refused. Carrying an unknown member and carrying it into a
+   * declared member's own slot are two different acts.
    *
    * ⚠ A `Map` and not `Object.hasOwn` on `out`, because a member legitimately
-   * named `constructor` or `toString` would resolve through `Object.prototype`
-   * and be reported as a collision that never happened.
+   * named `constructor` or `toString` would resolve through `Object.prototype` and
+   * be reported as a collision that never happened.
    */
   const declaredOutKeys = new Map<string, string>();
   for (const member of codec.children()) {
@@ -653,17 +529,16 @@ const walkObject = (
    * The outgoing keys a TAIL member has taken — a SECOND map, because the two
    * answer different questions and only one of them can be built ahead of time.
    *
-   * ⚠ IT EXISTS FOR `open: "flip"` ALONE, and that is why it survives the
+   * ⚠ IT EXISTS FOR `open: "flip"` ALONE, which is why it survives the
    * unconditional reservation above. Two DISTINCT undeclared keys can flip onto
    * one key (`foo_bar` and `fooBar` both camelise to `fooBar`), so a tail can
-   * collide with another tail — which no declaration can predict. A
-   * `"verbatim"` tail cannot: its outgoing key IS its incoming key, and an object
-   * has each key once.
+   * collide with another tail — which no declaration can predict. A `"verbatim"`
+   * tail cannot: its outgoing key IS its incoming key.
    *
-   * ⚠ THE DECLARED MEMBERS NO LONGER REGISTER HERE. Their keys are reserved by
-   * construction above, and a tail that would land on one is refused before it
-   * reaches this map — so a declared member's own write can no longer be refused
-   * by a key some other member took, because no other member can take it.
+   * ⛔ DECLARED MEMBERS MUST NOT REGISTER HERE. Their keys are reserved by
+   * construction above, and a tail that would land on one is refused before
+   * reaching this map — so a declared member's own write cannot be refused by a
+   * key some other member took.
    */
   const claimedByTail = new Map<string, string>();
 
@@ -672,11 +547,9 @@ const walkObject = (
    * the mandatory-member check below cannot recover afterwards.
    *
    * ⚠ `out` CANNOT STAND IN FOR IT. Three different faults leave a member missing
-   * from `out` — it was absent, it was pruned as empty (`whenEmpty: "prune"`), or
-   * its value failed its codec — and only the third is a shape problem. A guard
-   * built on `Object.hasOwn(out, …)` reports the pruned case as a shape fault,
-   * which is how a row pinning an EMPTY `type` went red the first time this was
-   * attempted.
+   * from `out` — absent, pruned as empty (`whenEmpty: "prune"`), or a value that
+   * failed its codec — and only the third is a shape problem. A guard built on
+   * `Object.hasOwn(out, …)` reports the pruned case as a shape fault.
    */
   const codecRejected = new Set<string>();
 
@@ -714,32 +587,16 @@ const walkObject = (
   };
 
   /**
-   * `Object.defineProperty` rather than `out[key] = value`.
-   *
-   * ⚠⚠ NO MEMBER KEY DISTINGUISHES THE TWO FORMS TODAY. `__proto__` is the only
-   * accessor on `Object.prototype` — plain assignment carries `toString`,
-   * `constructor` and `valueOf` as own data properties just as this does — and a
-   * claim carrying `__proto__` is refused upstream ({@link protoMemberViolations},
-   * asked once per claim in {@link claimContext}). Replacing this with an
-   * assignment therefore leaves the suite green, correctly.
-   *
-   * ⭐ IT IS KEPT BECAUSE IT IS A MECHANISM AND THE REFUSAL IS A POLICY. It holds
-   * whatever the policy says, and it is what keeps `out` clean while an
-   * ALREADY-DOOMED walk runs to completion: the refusal is accumulated, not
-   * thrown, so a hostile `__proto__` reaches the open tail below and is written
-   * here before the boundary discards the whole result.
-   *
-   * ⛔ DELETING THE REFUSAL DOES NOT MAKE THIS THE LAST LINE OF DEFENCE — nor is
-   * pollution what follows. Downstream `__proto__` reaches `omitFromObject`, which
-   * also writes with `Object.defineProperty` (`omit-from-object.ts:32`), so the own
-   * key is preserved and nothing is polluted (measured through the built package).
-   * The rebuilds that DID swap a prototype are closed by the same mechanism —
-   * `prune-empty-claims.ts` and this file's own custom bag (built here, rebuilt in
-   * `wireToFloorClaims`). ⛔ NOT the COSE claims decode: aegis rebuilds nothing
-   * there and the disposal is entirely `@lindorm/cbor`'s
-   * (`internal/cose/cwt-claims.ts` states the measurement). See
-   * `proto-member-violations.ts`, where the refusal's justification is filed for
-   * removal.
+   * ⛔ `Object.defineProperty`, NEVER `out[key] = value`. The `open: "verbatim"`
+   * tail below is the site that needs it: its outgoing key IS the incoming one,
+   * so `__proto__` arrives as an own key and an assignment would make it `out`'s
+   * prototype instead of a member. The other two callers cannot reach that key —
+   * a `"flip"` tail's key has been through `flipOneKey`, where `snakeCase` and
+   * `camelCase` both yield `proto`, and a declared member's key comes from
+   * `codec.children()`, a closed registry list — so they share this writer rather
+   * than a second rule. The same disposal {@link wireToDomain} and
+   * {@link wireToFloorClaims} take with `Object.fromEntries`.
+   * pinned: translate.test.ts#carries a `__proto__` member of an open tail as an own key.
    */
   const emit = (outKey: string, outValue: unknown): void => {
     Object.defineProperty(out, outKey, {
@@ -750,17 +607,6 @@ const walkObject = (
     });
   };
 
-  // ⛔⛔ `__proto__` IS NOT REFUSED HERE, AND THAT IS A CORRECTION RATHER THAN A
-  // RELAXATION. This loop used to carry the refusal, and it refused the member
-  // names it walked PAST — which is strictly less than the member names a claim
-  // CARRIES. Measured at `aegis.parse` on forged tokens: an `open: "verbatim"`
-  // tail's nested value is emitted untouched and never descended, so
-  // `sub_id: {"format":"opaque","tail":{"__proto__":{"pwn":"yes"}}}` produced
-  // `{"format":"opaque","tail":{}}` with `subjectId.tail.pwn` reading `"yes"` —
-  // on a claim that had already migrated onto this walker. A `bool` claim
-  // (`email_verified`) did the same with no structure involved at all.
-  // ⇒ The rule is a CLAIM-level one and is asked once per claim, of the whole
-  // value, in {@link claimContext} — see `internal/claims/proto-member-violations.ts`.
   for (const [key, inner] of Object.entries(value)) {
     const member = members.get(key);
 
@@ -777,24 +623,15 @@ const walkObject = (
       // at depth the leaf name alone ("surprise") does not say which actor in a
       // chain carried it.
       //
-      // ⛔⛔ NO REGISTERED CLAIM IS CLOSED TODAY, AND THE LAST CANDIDATE IS RULED
-      // OUT BY ITS OWN SPECIFICATION. `act`/`mayAct` were closed for one step and
-      // RFC 8693 §4.1/§4.4 describe an open set, so they were opened. `cnf` was
-      // the remaining prospect — and RFC 7800 §3.1 reverses it outright: "Other
-      // members of the 'cnf' object may be defined", and "in the absence of such
-      // requirements, all confirmation members that are not understood by
-      // implementations MUST be ignored", with §6.2 establishing an IANA registry
-      // other specifications register into. Refusing an undeclared confirmation
-      // member would violate that MUST, so `cnf` carries a verbatim tail like the
-      // actor chain does.
-      // ⇒ THE BRANCH IS KEPT AND THE CELL IS REQUIRED INSTEAD. The hazard was
-      // never this arm's lack of a user; it was that `open?:` let a structure
-      // reach it BY OMISSION, at any depth, with nothing said — which is exactly
-      // how the nested `act` member shipped closed while `act` itself was open.
-      // {@link ObjectCodec.open} is now a required three-way cell, so a new
-      // structure has to answer, and `"closed"` is what a structure says when its
-      // specification enumerates its members and forbids the rest. Nothing in the
-      // registry says it today; `translate.test.ts` is what keeps the arm live.
+      // ⛔⛔ NO REGISTERED CLAIM IS CLOSED TODAY — `act`/`mayAct` (RFC 8693 §4.1,
+      // RFC 8693 §4.4) and `cnf` (RFC 7800 §3.1, RFC 7800 §6.2) all carry an open
+      // tail. ⇒ THE BRANCH IS KEPT AND THE CELL IS REQUIRED INSTEAD: the hazard is
+      // that `open?:` lets a structure reach this arm BY OMISSION, at any depth,
+      // with nothing said, which is how a nested `act` member can ship closed while
+      // `act` itself is open. {@link ObjectCodec.open} is a required three-way
+      // cell, and `"closed"` is what a structure says when its specification
+      // enumerates its members and forbids the rest. `translate.test.ts` keeps the
+      // arm live.
       if (codec.open === "closed") {
         context.invalid.push({
           key: `${context.path}.${key}`,
@@ -857,38 +694,27 @@ const walkObject = (
     /**
      * ⚠⚠ A MEMBER WHOSE VALUE FAILS A **LEAF** CODEC IS STILL DROPPED HERE, AND
      * SILENTLY — the RESIDUE of the refusal ruling, stated rather than implied.
+     * A member whose codec is `{ kind: "object" }` or `{ kind: "array", of }`
+     * reaches {@link walkObject} or {@link walkElements}, each pushing its own
+     * entry before returning `undefined`, so `act: { act: 42 }` is REFUSED at
+     * every depth. A LEAF codec — `text`, `int`, `date`, `bool`, `bstr`, an array
+     * of strings — has no walker to speak for it, so
+     * `Aegis.toWire({ act: { subject: 42 } })` yields `{ act: {} }`.
      *
-     * The ruling is that a value contradicting a DECLARED STRUCTURE is refused,
-     * and it is held one level up from this line: a member whose codec is
-     * `{ kind: "object" }` or `{ kind: "array", of }` reaches {@link walkObject}
-     * or {@link walkElements}, and each pushes its own entry at the member's own
-     * path before returning `undefined`. So `act: { act: 42 }` is REFUSED, at
-     * every depth, and so is a member of a member.
+     * ⛔ THE LEAF GAP IS NOT THE SAME AT EVERY DEPTH, and the WRITE side is the
+     * open half: `Aegis.toWire({ subject: 42 })` yields `{"sub":42}`, CARRIED,
+     * because `domainToWire` runs no derived-decoder probe and the top level has
+     * no walker, while the member one level in is guarded by {@link encodeMember}.
+     * (The READ side agrees at both depths — `Aegis.toDomain({ sub: 42 })` reports
+     * no subject.) Closing it changes what EVERY registered claim writes and
+     * reports, so it needs its own corpus gate and is deliberately not done here.
      *
-     * What is left is a LEAF codec — `text`, `int`, `date`, `bool`, `bstr`, an
-     * array of strings — which has no walker to speak for it. Measured through the
-     * public vocabulary door: `Aegis.toWire({ act: { subject: 42 } })` yields
-     * `{ act: {} }` with nothing said, and the read side does the same for a
-     * foreign token.
+     * ⚠ `null` NEVER REACHES THIS LINE — classified as absence above, so neither
+     * dropped-as-malformed nor refused. See {@link isNotStated}.
      *
-     * ⚠⚠ THE LEAF GAP IS NOT THE SAME AT EVERY DEPTH, and an earlier version of
-     * this note claimed it was. It is the same on the READ side —
-     * `Aegis.toDomain({ sub: 42 })` reports no subject, exactly as the member does
-     * — and it is NOT on the WRITE side: `Aegis.toWire({ subject: 42 })` yields
-     * `{"sub":42}`, CARRIED, because `domainToWire` runs no derived-decoder probe
-     * and the top level has no walker either. So a top-level leaf claim reaches a
-     * signed wire with no codec guard at all, while the member one level in is
-     * guarded by {@link encodeMember}. Closing it changes what EVERY registered
-     * claim writes and reports — each claim needs its own disposition for a value
-     * of the wrong shape — so it needs its own corpus gate and is deliberately
-     * not done here.
-     *
-     * ⚠ `null` NEVER REACHES THIS LINE. It is classified as absence above and is
-     * neither dropped-as-malformed nor refused — see {@link isNotStated}.
-     *
-     * ⚠ THE DROP IS RECORDED even though it is not refused, so the mandatory-member
-     * check below can tell "you wrote a value of the wrong shape" from "you wrote
-     * nothing". Nothing else reads it.
+     * ⚠ THE DROP IS RECORDED even though it is not refused, so the
+     * mandatory-member check below can tell "you wrote a value of the wrong shape"
+     * from "you wrote nothing". Nothing else reads it.
      */
     if (translated === undefined) {
       codecRejected.add(member.domain);
@@ -926,18 +752,16 @@ const walkObject = (
     if (isClaimSatisfied(out[direction.outKeyOf(member)])) continue;
 
     // ⚠ THE MESSAGE NAMES WHAT IS WRONG WHEN THE TWO FAULTS DIFFER, and only then.
-    // `isClaimSatisfied` is false in three situations and they are not one repair:
-    // the member is ABSENT, the member is present and EMPTY, or the member was
-    // WRITTEN and its value did not survive its own codec. The third used to be
-    // told "is required and must not be empty" — so a caller who wrote
-    // `authorizationDetails: [{ type: 42 }]` was sent looking for a field they had
-    // already written.
+    // `isClaimSatisfied` is false in three situations that are not one repair: the
+    // member is ABSENT, it is present and EMPTY, or it was WRITTEN and its value
+    // did not survive its own codec. Telling the third "must not be empty" sends a
+    // caller who wrote `authorizationDetails: [{ type: 42 }]` looking for a field
+    // they already wrote.
     //
     // ⚠ THE DISCRIMINATOR IS RECORDED AT THE DROP, not reconstructed here — see
-    // `codecRejected` above for why `out` cannot tell the three apart.
-    // ⚠ The first two keep the original wording deliberately: they are the common
-    // case, several scenario rows pin the string, and "must not be empty" is the
-    // right instruction for both.
+    // `codecRejected` above for why `out` cannot tell the three apart. The first
+    // two share their wording deliberately: several scenario rows pin the string,
+    // and "must not be empty" is the right instruction for both.
     context.invalid.push({
       key: `${context.path}.${member.domain}`,
       message: codecRejected.has(member.domain)
@@ -954,15 +778,11 @@ const walkObject = (
  * DATA — as opposed to the drift refusals around it, which are about the
  * REGISTRY disagreeing with the translator.
  *
- * ⚠⚠ IT RUNS IN BOTH DIRECTIONS AND UNDER EVERY PROFILE, INCLUDING NONE, and
- * that is a deliberate widening of where structural validation happens. The
- * fact it enforces used to be a profile `shape` rule
- * (`everyElementHasKey(claims, "authorizationDetails", "type")`), bound by
- * exactly ONE profile — `access_token` — so a token minted under any other
- * profile, or through the profile-less vocabulary door, carried an untypeable
- * authorization detail with nothing said about it. A structure's mandatory
- * member is a SHAPE fact: it holds wherever the structure does, and a rule a
- * profile can decline to declare is not that.
+ * ⚠⚠ IT RUNS IN BOTH DIRECTIONS AND UNDER EVERY PROFILE, INCLUDING NONE. A
+ * structure's mandatory member is a SHAPE fact: it holds wherever the structure
+ * does, so a profile `shape` rule cannot carry it — one bound to a single profile
+ * lets every other profile, and the profile-less vocabulary door, mint the same
+ * malformed structure with nothing said.
  *
  * ⚠ `AegisDomainError` carrying an `invalid` list, deliberately: it is the shape
  * a consumer already branches on for a policy refusal, and the entries carry the
@@ -1020,20 +840,17 @@ const readDirection = (nameOf: NameSelector): WalkDirection => ({
 /**
  * Translate ONE array-of-structures value, in either direction.
  *
- * ⚠ EVERY ELEMENT IS WALKED BEFORE ANYTHING IS REPORTED, and every violation
- * goes into the CLAIM's accumulator. The deleted profile rule pushed one entry
- * per bad element and let the enforcer report them together; stopping at the
- * first would report one reason where the caller has two to fix.
+ * ⚠ EVERY ELEMENT IS WALKED BEFORE ANYTHING IS REPORTED, and every violation goes
+ * into the CLAIM's accumulator — stopping at the first would report one reason
+ * where the caller has two to fix.
  *
  * ⚠⚠ A NON-ARRAY VALUE, AND A NON-OBJECT ELEMENT, ARE BOTH REPORTED AS
  * VIOLATIONS — which is NOT what the sibling `array` arm does. `decodeArray`'s
- * `strict` policy DROPS a scalar (returns `undefined`), and that is right for an
- * array of strings: `ArrayScalar` answers a tolerance question about a scalar
- * standing in for an array, and a dropped `amr` is a claim the token is read as
- * not stating. It cannot be right here, because no scalar can stand in for a
- * structure at all — a value that is not a collection of structures is not a
- * partial `authorization_details`, it is not one. Dropping it would also lose
- * the two refusals the deleted profile rule made.
+ * `strict` policy DROPS a scalar, which is right for an array of strings:
+ * `ArrayScalar` answers a tolerance question about a scalar standing in for an
+ * array, and a dropped `amr` is a claim the token is read as not stating. No
+ * scalar can stand in for a STRUCTURE, so a value that is not a collection of
+ * structures is not a partial `authorization_details`.
  */
 const walkElements = (
   of: ObjectCodec,
@@ -1053,21 +870,15 @@ const walkElements = (
   return value.map((element, index) => {
     const at = elementPath(context, index);
 
-    // ⚠ THE ELEMENT'S OWN SHAPE IS JUDGED HERE, NOT INSIDE {@link walkObject},
-    // and the guard has to sit on this side to keep ONE entry per fault. Since
-    // the walker began REFUSING a non-object rather than returning `undefined`
-    // for one, letting a bad element fall into it produced TWO entries at one
-    // path — the walker's `Claim "…" must be an object` and this one — which
-    // reports a caller two faults where there is one, and would satisfy a row
-    // pinning either message alone.
-    // ⚠ This message is the one kept because it is the more precise of the two:
-    // it names the INDEX, and "element 0 of a collection is not a structure" is a
-    // different repair from "this claim is not a structure".
+    // ⚠ THE ELEMENT'S OWN SHAPE IS JUDGED HERE, NOT INSIDE {@link walkObject}, to
+    // keep ONE entry per fault: {@link walkObject} REFUSES a non-object, so letting
+    // a bad element fall into it pushes TWO entries at one path. This message is
+    // the one kept because it names the INDEX — "element 0 of a collection is not a
+    // structure" is a different repair from "this claim is not a structure".
     // ⚠⚠ AN ELEMENT IS POSITIONAL, SO `null` IS **NOT** ABSENCE HERE — the one
-    // place in this file where it is not. A member is named and can go unnamed;
-    // an array slot cannot be left unfilled without changing every later index,
-    // so `[null]` is a caller stating a first element that is not a structure,
-    // and RFC 9396 §2 has no reading under which that is one.
+    // place in this file where it is not. A member is named and can go unnamed; an
+    // array slot cannot be left unfilled without changing every later index, so
+    // `[null]` states a first element that is not a structure (RFC 9396 §2).
     if (isObject(element)) return walkObject(of, element, direction, at);
 
     context.invalid.push({
@@ -1089,34 +900,19 @@ const walkElements = (
  * and across nesting depth alike. It is also what makes `data.claim` the CLAIM's
  * name at every depth: the level that names it is the level that entered.
  *
- * ⚠ THAT COMPLETENESS STOPS AT THE CLAIM, AND A TOKEN CAN BE WRONG IN TWO
- * PLACES AT ONCE. `internal/utils/mint-token.ts` enforces the profile policy
- * BEFORE any wire assembly, so a token failing both a policy rule and a
- * structure reports only the POLICY half and this refusal never runs. Measured
- * on a `mint("access_token", …)` missing `clientId` AND carrying an untyped
- * authorization detail: `invalid: [clientId]` alone, where the profile shape
- * rule this replaced reported `[clientId, authorizationDetails[0]]` in one
- * error. Both attempts still REFUSE, so it costs a caller a second round trip
- * rather than a wrong token — but it cuts against the stance above and is
- * recorded rather than left for someone to hit. Fixing it means the structural
- * walk running before, or alongside, policy enforcement; that is an ordering
- * change across the whole mint pipeline and is filed, not smuggled in here.
- *
- * ⭐⭐ THE ACCUMULATOR DOES NOT START EMPTY. Every claim value is scanned for
- * `__proto__` before its codec runs at all, and the findings SEED the list rather
- * than pre-empting it — so a claim that is both hostile and malformed still
- * reports both, and the `__proto__` entries come first in a stable order.
- *
- * ⚠ IT IS ASKED OF EVERY CLAIM, NOT OF EVERY STRUCTURE, and that is what the
- * measurement forced: the hazard is created by the read side's
- * `omitUndefined(claims)` rebuild, which asks nothing about a claim's codec. A
- * `bool` claim and a `bespoke` passthrough were both live. See
- * {@link protoMemberViolations} for the mechanism and the measurements.
+ * ⚠ THAT COMPLETENESS STOPS AT THE CLAIM, AND A TOKEN CAN BE WRONG IN TWO PLACES
+ * AT ONCE. `internal/utils/mint-token.ts` enforces the profile policy BEFORE any
+ * wire assembly, so a token failing both a policy rule and a structure reports
+ * only the POLICY half and this refusal never runs. Both attempts still REFUSE, so
+ * it costs a caller a second round trip rather than a wrong token — but it cuts
+ * against the stance above. Fixing it means the structural walk running before, or
+ * alongside, policy enforcement: an ordering change across the whole mint
+ * pipeline, filed rather than smuggled in here.
  */
-const claimContext = (spec: ClaimMemberSpec, value: unknown): WalkContext => ({
+const claimContext = (spec: ClaimMemberSpec): WalkContext => ({
   claim: spec.domain,
   path: spec.domain,
-  invalid: protoMemberViolations(value, spec.domain),
+  invalid: [],
 });
 
 const refuseIfInvalid = <T>(context: WalkContext, value: T): T => {
@@ -1135,9 +931,9 @@ const refuseIfInvalid = <T>(context: WalkContext, value: T): T => {
  * The guard it exists for cannot be written any other way: the walker's
  * direction-dependent rules — `whenEmpty` applying on the write side and NOT on
  * the read side — are unobservable through the public doors while every declared
- * member is `whenEmpty: "keep"`, and the registry has no `"prune"` member to
- * lend a test. A synthetic {@link ClaimMemberSpec} handed to the REAL boundary is
- * what exercises the real path with the one cell the registry does not yet have.
+ * member is `whenEmpty: "keep"`, and the registry has no `"prune"` member to lend
+ * a test. A synthetic {@link ClaimMemberSpec} handed to the REAL boundary
+ * exercises the real path with the one cell the registry does not have.
  * ⭐ The BOUNDARY is exported rather than the recursion beneath it, so the guard
  * runs the same entry point production does, context creation and refusal
  * included.
@@ -1147,7 +943,7 @@ export const encodeClaim = (
   value: unknown,
   nameOf: NameSelector,
 ): unknown => {
-  const context = claimContext(spec, value);
+  const context = claimContext(spec);
 
   return refuseIfInvalid(context, encodeValue(spec, value, nameOf, context));
 };
@@ -1158,7 +954,7 @@ export const decodeClaim = (
   value: unknown,
   nameOf: NameSelector,
 ): unknown => {
-  const context = claimContext(spec, value);
+  const context = claimContext(spec);
 
   return refuseIfInvalid(context, decodeValue(spec, value, nameOf, context));
 };
@@ -1166,93 +962,45 @@ export const decodeClaim = (
 /**
  * ENCODE ONE MEMBER — and REFUSE TO WRITE WHAT THIS PACKAGE COULD NOT READ BACK.
  *
- * ⚠⚠ THE ASYMMETRY THIS CLOSES IS A REAL ONE AND IT WAS LIVE. `encodeValue`'s
- * scalar arms return the caller's value UNCHECKED, while `decodeValue`'s check
- * it (`text` is `isString(value) ? value : undefined`), so aegis could sign a
- * token asserting a member its own reader then reported as never stated. A token
- * whose issuer and reader disagree about what it says is the one thing a
- * signature is supposed to make impossible.
- *
- * ⚠ THE EXAMPLE THIS NOTE WAS BUILT ON HAS SINCE MOVED, and saying so keeps the
- * note honest rather than merely current: it was `region: null`, chosen because
- * `AegisProfileAddress` PERMITS `null` while no text codec accepts it, so a
- * `whenEmpty: "keep"` member could meet a value its own codec rejected. `null` is
- * an ABSENCE now ({@link isNotStated}) and never reaches this function, so the
- * live example is a value of the wrong TYPE — `region: 42` from a JavaScript
- * caller, an introspection response, or any door with no declaration behind it.
- * The check is unchanged and so is the reason for it.
+ * ⚠⚠ THE ASYMMETRY IT CLOSES IS REAL. `encodeValue`'s scalar arms return the
+ * caller's value UNCHECKED while `decodeValue`'s check it (`text` is
+ * `isString(value) ? value : undefined`), so without this probe aegis signs a
+ * token asserting a member its own reader reports as never stated — `region: 42`
+ * from a JavaScript caller, an introspection response, or any door with no
+ * declaration behind it.
  *
  * ⛔⛔ THE SAME HOLE IS OPEN AT THE TOP LEVEL, KNOWN, AND DELIBERATELY OUT OF
- * SCOPE HERE. This note used to claim the two "never meet" at the top level,
- * because a claim that can fail its own decoder is "either pruned at the
- * emission boundary or never reaches the wire empty". THAT IS FALSE, and neither
- * escape applies: a value can be NON-EMPTY — so the prune never touches it — and
- * still fail its own decoder.
- *
- * ⚠ IT FAILS DIFFERENTLY ON EACH WIRE, AND THE SECOND HALF IS THE WORSE ONE.
- * Measured from ONE domain bag,
- * `aegis.mint("default", { subject: "user-1", expires: "1h", profile: { nickname: 42 } })`,
- * with the signed payload read by the INDEPENDENT inspector
- * (`__fixtures__/inspect-token.ts`):
- *   - JOSE — the payload carries `nickname: 42`; `aegis.parse(token).profile` is
- *     `undefined`. The claim is LOST: issuer and reader disagree.
- *   - COSE — the payload carries `nickname: "42"`, a TEXT STRING;
- *     `aegis.parse(token).profile` is `{ nickname: "42" }`. The claim is
- *     REWRITTEN: aegis signs a value the caller never supplied.
- * `internal/cose/cwt-spec.ts`'s `fieldForClaim` maps `{ kind: "text" }` onto
- * cbor's native `text` field kind, which COERCES the number before signing.
- * ⇒ A deployment minting a JWT and a CWT from the same content issues two
- * tokens that SAY DIFFERENT THINGS — the same "one domain call, two answers per
- * encoding" shape four of this package's six declared conformance reds have.
- * The vocabulary doors show the bare form: `Aegis.toWire({ subject: 42 })`
- * yields `{ sub: 42 }` while `Aegis.toDomain({ sub: 42 })` yields no claims.
- *
- * ⭐ THE ASYMMETRY IS THE ARGUMENT FOR EVENTUALLY CLOSING IT. The probe below
- * closes this exact hole ONE LEVEL IN — a member declared `{ kind: "text" }` and
- * handed `42` is refused, on both wires — so a structure's MEMBERS are protected
- * and the TOP-LEVEL claims around them are not. The same package answers the
- * same question two ways depending on depth.
- *
- * It is NOT fixed here because the fix is `domainToWire` running this same
- * derived check, which changes behaviour for every registered claim in both
- * directions and is its own step with its own corpus gate. It is filed as a
- * defect with the measurement rather than argued away — an asserted-away hole is
- * worse than a recorded one, and this note asserting it away is what kept it
- * invisible.
+ * SCOPE HERE. A value can be NON-EMPTY — so the emission prune never touches it —
+ * and still fail its own decoder, and it then fails DIFFERENTLY on each wire:
+ *   - JOSE carries `nickname: 42` and `aegis.parse(token).profile` is `undefined`.
+ *     The claim is LOST — issuer and reader disagree.
+ *   - COSE carries `nickname: "42"`, a TEXT STRING, and the read returns it.
+ *     `internal/cose/cwt-spec.ts`'s `fieldForClaim` maps `{ kind: "text" }` onto
+ *     cbor's native `text` field kind, which COERCES before signing, so aegis
+ *     signs a value the caller never supplied.
+ * ⇒ A deployment minting a JWT and a CWT from one domain bag issues two tokens
+ * that SAY DIFFERENT THINGS. The bare form is `Aegis.toWire({ subject: 42 })` ->
+ * `{ sub: 42 }` where `Aegis.toDomain({ sub: 42 })` yields no claims. Closing it
+ * means `domainToWire` running this same derived check, which changes behaviour
+ * for every registered claim in both directions; it is filed with its own gate
+ * rather than argued away.
  *
  * ⭐ THE CHECK IS DERIVED FROM THE DECODER, not restated beside it. Asking "would
- * the read side keep this?" by running the read side is the only formulation
- * that cannot drift from it; a hand-written per-kind predicate here would be a
- * third copy of codec knowledge and would disagree with the decoder the first
- * time either changed.
+ * the read side keep this?" by RUNNING the read side is the only formulation that
+ * cannot drift; a hand-written per-kind predicate would be a third copy of codec
+ * knowledge.
  *
  * ⚠ It does NOT make the member's EMPTINESS a codec question. `""` is a text
- * value, so the codec accepts it and `whenEmpty` alone decides whether it rides
- * — which is what that column's docstring already claims to be true.
+ * value, so the codec accepts it and `whenEmpty` alone decides whether it rides.
  *
- * ⚠⚠ IT IS ONLY AS STRONG AS THE DECODE ARM IT ASKS, AND TWO ARMS ANSWER
- * NOTHING. The list is EXHAUSTIVE over `decodeValue`'s arms, so a new codec kind
- * has to be placed in one column or the other:
- *   - CHECKS, so the promise above holds: `text` (`isString`), `int`
- *     (`isFinite`), `date` (`toDate`), `bstr` (`isString`), `array` (its
- *     `ArrayScalar` policy, or its element walk when it declares `of`), and
- *     `object` (a non-object walks to `undefined`), and BOTH `bespoke` sub-kinds
- *     (the `events` arm returns `undefined` for a non-object; the `confirmation`
- *     arm goes further and REFUSES one, along with any member whose value
- *     contradicts its declared shape).
- *   - VACUOUS, so the promise buys nothing: `bool` alone, which returns its input
- *     unchanged, so `"yes"`, `null` and `{ a: 1 }` are all "accepted".
- * ⚠ `bespoke: "events"` USED TO SIT IN THE SECOND COLUMN and no longer does. The
- * reason given was that "an RFC 8417 event map's payloads are third-party shapes
- * this package cannot describe" — which is true of the PAYLOADS and says nothing
- * about whether the claim is a map at all. The arm checks that much now; what it
- * still does not check, correctly, is anything about the keys or the payloads.
- * `bool` is inherited unchanged and is not this walker's to tighten:
- * `emailVerified` and `phoneNumberVerified` are top-level `bool` claims, so
- * narrowing it changes what a READ of an existing foreign token reports, which
- * is a public-surface decision. Named here rather than left for a reader to
- * discover, because a guarantee with an unstated hole is worse than a narrower
- * one stated plainly.
+ * ⚠⚠ IT IS ONLY AS STRONG AS THE DECODE ARM IT ASKS, and `bool` ANSWERS NOTHING —
+ * it returns its input unchanged, so `"yes"`, `null` and `{ a: 1 }` all pass.
+ * Every other arm checks: `text`/`bstr` (`isString`), `int` (`isFinite`), `date`
+ * (`toDate`), `array` (its `ArrayScalar` policy, or its element walk under `of`),
+ * `object` (a non-object walks to `undefined`), and both `bespoke` sub-kinds.
+ * ⛔ `bool` is NOT this walker's to tighten: `emailVerified` and
+ * `phoneNumberVerified` are top-level `bool` claims, so narrowing it changes what
+ * a READ of an existing foreign token reports.
  */
 const encodeMember = (
   member: ClaimMemberSpec,
@@ -1276,22 +1024,18 @@ const encodeMember = (
 // Encode ONE registered claim's value to its JOSE wire form per the registry
 // codec (exhaustive over ClaimCodec; an unknown kind throws).
 //
-// The translator reads the BASE codec, never a per-wire override: it produces
-// the jose-shaped values BOTH wires start from, and the COSE byte layer
-// (`cose/cwt-spec.ts`) applies the per-wire codec when it turns those values into
-// labels and CBOR bytes. That is why `bstr` — a COSE-only codec — returns the
-// value untouched here.
+// ⚠ It reads the BASE codec, never a per-wire override: it produces the
+// jose-shaped values BOTH wires start from, and `internal/cose/cwt-spec.ts`
+// applies the per-wire codec when it turns those into labels and CBOR bytes —
+// which is why `bstr`, a COSE-only codec, returns the value untouched here.
 //
-// RECURSIVE over `{ kind: "object" }`: a declared structure's members are
-// encoded by this same function, so a member's codec may itself be a structure
-// and nesting costs no new code. The wire SELECTOR travels with the recursion —
-// a member is spelled by the wire the claim is being written for, never by a
-// second rule kept somewhere else.
+// RECURSIVE over `{ kind: "object" }`, and the wire SELECTOR travels with the
+// recursion, so a member is spelled by the wire the claim is being written for.
 /**
  * ⚠ THE RECURSION, not a door. Every caller — including the drift guard — enters
  * through {@link encodeClaim}, which owns the context and the refusal; entering
- * here would mean inventing a context, and a walk whose context was invented for
- * it reports paths nobody would see in production.
+ * here means inventing a context, and a walk on an invented context reports paths
+ * nobody would see in production.
  */
 const encodeValue = (
   spec: ClaimMemberSpec,
@@ -1336,16 +1080,14 @@ const encodeValue = (
 };
 
 /**
- * The write core (domain -> wire), single-pass over the claims. Registered
- * claims map to the selected wire NAME with their value encoded per `spec.value`;
- * unregistered custom claims keep their value and flip their KEY to snake_case.
- * Undefined results (an absent value, an empty `cnf`) are dropped. The
+ * The write core (domain -> wire), single-pass over the claims. A registered claim
+ * maps to the selected wire NAME with its value encoded per its codec; an
+ * unregistered custom claim keeps its value and flips its KEY to snake_case. The
  * VALUE encoding is identical for JOSE and COSE — only `nameOf` differs.
  *
  * EXPORTED, and the only write door: the wire is a PARAMETER, so there is no
- * `domainToCose` to keep in agreement with it. `domainToJose` below is not a
- * second door but a one-line binding of `joseName`, because the public vocabulary
- * door (`Aegis.toWire`) speaks JOSE.
+ * `domainToCose` to keep in agreement with it. {@link domainToJose} is a one-line
+ * binding of `joseName`, not a second door.
  */
 export const domainToWire = (common: Dict, nameOf: NameSelector): Dict => {
   const wire: Dict = {};
@@ -1355,28 +1097,26 @@ export const domainToWire = (common: Dict, nameOf: NameSelector): Dict => {
 
     const spec = claimByDomain(key);
     if (spec) {
-      // ⚠⚠ `null` IS NOT STATED AT THE CLAIM LEVEL TOO, and the alternative was
-      // measured before it was declined: with the structure refusal below in
-      // place and this line absent, `address: null` — the ordinary shape of a
+      // ⚠⚠ `null` IS NOT STATED AT THE CLAIM LEVEL TOO. Without this line the
+      // structure refusal below turns `address: null` — the ordinary shape of a
       // nullable column, and the exact case the member-level ruling exists for —
-      // becomes a THROWN error one level up from where it is omitted. Whatever
-      // the answer is, it cannot be "absent inside a structure and refused at the
-      // top of one".
-      // ⚠ It is asked for a REGISTERED claim ONLY. An unregistered custom claim
-      // has no declared shape for a value to contradict and no disposition aegis
-      // has stated for it; it is carried exactly as written, which is the same
-      // rule `internal/claims/prune-empty-claims.ts` keeps at the emission
-      // boundary ("aegis does not reshape what it has not declared").
+      // into a THROWN error one level up from where it is omitted. Whatever the
+      // answer is, it cannot be "absent inside a structure and refused at the top
+      // of one".
+      // ⚠ It is asked for a REGISTERED claim ONLY. An unregistered custom claim has
+      // no declared shape for a value to contradict, so it is carried exactly as
+      // written — the same rule `internal/claims/prune-empty-claims.ts` keeps at
+      // the emission boundary.
       if (isNotStated(value)) continue;
 
       const encoded = encodeClaim(spec, value, nameOf);
       if (encoded !== undefined) wire[nameOf(spec)] = encoded;
     } else {
-      // ⚠ SAFE ONLY BECAUSE `snakeCase` CANNOT RETURN `__proto__` — measured:
-      // `__proto__`, `__PROTO__` and `--proto--` all yield `proto`. That is what
-      // makes a plain assignment admissible here where the unconverted bags need
-      // `Object.fromEntries`. A key transform that preserved leading underscores
-      // would reopen it.
+      // ⚠ SAFE ONLY BECAUSE `snakeCase` CANNOT RETURN `__proto__` (`__proto__`,
+      // `__PROTO__` and `--proto--` all yield `proto`), which is what makes a plain
+      // assignment admissible here where the unconverted bags need
+      // `Object.fromEntries`. A key transform preserving leading underscores
+      // reopens it.
       wire[snakeCase(key)] = value;
     }
   }
@@ -1396,10 +1136,9 @@ export type WireToDomainResult = {
   custom: Dict;
 };
 
-// Dispatch ONE `bespoke` claim's value to its per-claim DOMAIN decoder, keyed by
-// the registry codec's `bespoke` sub-kind — the read-side twin of
-// `encodeBespoke`. Every {@link BespokeKind} is enumerated here; an unhandled
-// sub-kind (a registry/translator drift) throws loudly (the house
+// Dispatch ONE `bespoke` claim's value to its per-claim DOMAIN decoder — the
+// read-side twin of `encodeBespoke`. Every {@link BespokeKind} is enumerated here;
+// an unhandled sub-kind (a registry/translator drift) throws (the house
 // exhaustive-switch idiom).
 const decodeBespoke = (
   spec: ClaimMemberSpec,
@@ -1409,21 +1148,17 @@ const decodeBespoke = (
 ): unknown => {
   switch (bespoke) {
     case "confirmation":
-      // ⚠ NO EMPTINESS VERDICT ON THIS SIDE. A read reports what a PRODUCER
-      // wrote, and a `cnf: {}` on a foreign token is a statement the reader must
-      // be able to see — it is the VERIFIER's gate that refuses it
-      // (`internal/utils/apply-verify-policy.ts`), where the refusal is about the
-      // token being presented rather than about a claim being assembled. Erasing
-      // it here would put this decoder back where it was: reporting a token as
-      // saying less than it says.
+      // ⚠ NO EMPTINESS VERDICT ON THIS SIDE. A read reports what a PRODUCER wrote,
+      // and a `cnf: {}` on a foreign token is a statement the reader must be able
+      // to see — the VERIFIER's gate is what refuses it
+      // (`internal/utils/apply-verify-policy.ts`), because that refusal is about
+      // the token being presented rather than about a claim being assembled.
       return walkConfirmation(value, cnfMemberByJose, (member) => member.domain, context);
     case "events":
-      // The SAME guard the write arm asks, and the same refusal — a SET events
-      // map is keyed by event-type URIs (RFC 8417 §2.2), which are identifiers
-      // rather than field names, so the keys are carried verbatim and must NOT be
-      // case-converted (which is what the `address` arm that used to sit below
-      // this one did). See {@link eventsMap} for why a non-object is refused
-      // rather than dropped, and for the asymmetry the shared function closed.
+      // The SAME guard the write arm asks, and the same refusal — a SET events map
+      // is keyed by event-type URIs (RFC 8417 §2.2), which are identifiers rather
+      // than field names, so the keys are carried verbatim and must NOT be
+      // case-converted. See {@link eventsMap}.
       return eventsMap(value, context);
     default: {
       const exhaustive: never = bespoke;
@@ -1439,10 +1174,8 @@ const decodeBespoke = (
 };
 
 // How an array claim tolerates a SCALAR on read, per the codec's own policy.
-// This used to be a hardcoded `spec.domain === "audience"` branch plus a set
-// derived from the registry; it is one exhaustive switch over registry data now.
 //
-// The `default` is NOT redundant: the declared return type is `unknown`, so
+// ⚠ The `default` is NOT redundant: the declared return type is `unknown`, so
 // falling off the end is legal and a new {@link ArrayScalar} member would compile
 // clean and DROP the claim on read. The `never` binding is what makes the
 // compiler bite instead (the house exhaustive-switch idiom, as in
@@ -1454,7 +1187,7 @@ const decodeArray = (
 ): unknown => {
   switch (scalar) {
     case "wrap":
-      return toAudience(value); // RFC 7519 aud: string-OR-array
+      return toAudience(value); // RFC 7519 §4.1.3
     case "spaced":
       return toStringArray(value); // scope, roles, permissions, conformsTo
     case "strict":
@@ -1473,16 +1206,13 @@ const decodeArray = (
 };
 
 // Decode ONE registered claim's value from its wire form to the domain form
-// (exhaustive over ClaimCodec; an unknown kind throws), reproducing
-// hand-written per-claim decoders exactly. The `array` case refines by the
-// codec's own scalar-tolerance policy — `wrap` for `aud` (RFC 7519 string-OR-
-// array), `spaced` for the space-delimited sets, `strict` for the rest — which
-// used to be a hardcoded `spec.domain === "audience"` branch here.
+// (exhaustive over ClaimCodec; an unknown kind throws). The `array` case refines
+// by the codec's own scalar-tolerance policy.
 //
-// RECURSIVE over `{ kind: "object" }`, the mirror of `encodeValue`: the member
-// set is keyed by WIRE name here and answers under its DOMAIN name, and the same
-// wire selector travels down, so a COSE-keyed structure is read by the COSE
-// spelling of its members and a JOSE-keyed one by the JOSE spelling.
+// RECURSIVE over `{ kind: "object" }`, the mirror of `encodeValue`: the member set
+// is keyed by WIRE name here and answers under its DOMAIN name, and the same wire
+// selector travels down, so a COSE-keyed structure is read by the COSE spelling of
+// its members and a JOSE-keyed one by the JOSE spelling.
 const decodeValue = (
   spec: ClaimMemberSpec,
   value: unknown,
@@ -1577,30 +1307,20 @@ type ClaimReadRules = {
 /**
  * ⚠ BOTH LOOKUPS USE `Object.hasOwn`, NEVER `in`.
  *
- * `wire` is a STRANGER'S payload — a decoded token, or the dict a public door
- * was handed — and `in` walks the prototype chain, so `toString`, `constructor`,
- * `valueOf`, `hasOwnProperty` and `__proto__` are members of every object
- * literal that ever reaches here. A registry name colliding with one of those
- * would make the lookup answer YES for a claim the payload does not carry, and
- * the decoder would then read a FUNCTION off `Object.prototype` as a claim value.
+ * `wire` is a STRANGER'S payload — a decoded token, or the dict a public door was
+ * handed — and `in` walks the prototype chain, so `toString`, `constructor`,
+ * `valueOf`, `hasOwnProperty` and `__proto__` are members of every object literal
+ * that reaches here. The lookup would answer YES for a claim the payload does not
+ * carry, and the decoder would read a FUNCTION off `Object.prototype` as its value.
  *
- * ⚠⚠ THIS NOTE USED TO CLAIM COVERAGE IT DID NOT HAVE. It said the fault is
- * LATENT because no registered name collides with an `Object.prototype` member,
- * and pointed at `translate.test.ts` as deriving that non-collision from the
- * registry. The derivation is real — and it is a proposition about the REGISTRY,
- * not about this lookup. Measured: swapping `Object.hasOwn` for `in` here left the
- * whole suite green.
- *
- * ⛔ IT IS ALSO NOT ONLY LATENT. A collision is not the only way to reach the
- * fault: ANY library in the process that writes to `Object.prototype` supplies one
- * — `Object.prototype.aud = ["evil-rs"]` and a token that carries no `aud` is
- * suddenly read as stating one, which is an access decision handed to whatever
- * else is loaded. `translate.test.ts` now drives exactly that, so the MECHANISM is
- * pinned rather than the registry's current shape.
- *
- * The house rule stands regardless: a membership test whose KEY can come from a
- * caller uses `Object.hasOwn`, because the alternative is a fault that only
- * announces itself through a wrong answer.
+ * ⛔ "NO REGISTERED NAME COLLIDES WITH AN `Object.prototype` MEMBER" DOES NOT
+ * COVER THIS. That is a proposition about the REGISTRY, not about this lookup, and
+ * swapping `Object.hasOwn` for `in` here leaves the whole suite green. A collision
+ * is also not the only way in: ANY library in the process that writes to
+ * `Object.prototype` supplies one — `Object.prototype.aud = ["evil-rs"]` and a
+ * token carrying no `aud` is read as stating one, an access decision handed to
+ * whatever else is loaded. `translate.test.ts` drives exactly that, so the
+ * MECHANISM is pinned rather than the registry's current shape.
  */
 
 /** A token states a claim under its WIRE name. Nothing else answers for it. */
@@ -1656,8 +1376,8 @@ const claimReadRules = (mode: ClaimReadMode): ClaimReadRules => {
  * four-bucket shape every read door shares.
  *
  * ⚠ This TWO-bucket form is the right one for the profiled verify FLOOR, which
- * needs every domain claim flat in one dict: a profile's `required` rules may name a
- * profile-category claim, and bucketing it away would report a present claim as
+ * needs every domain claim flat in one dict: a profile's `required` rules may name
+ * a profile-category claim, and bucketing it away reports a present claim as
  * missing.
  */
 export const wireToDomain = (
@@ -1698,16 +1418,13 @@ export const wireToDomain = (
 
   // ⛔ `Object.fromEntries`, NEVER `custom[key] = value`. The keys are the WIRE's,
   // so a token carrying `__proto__` reaches here as an own property — the FLOOR
-  // read keys unconverted (`customKey: (key) => key`), so it arrives verbatim —
-  // and a plain assignment makes it this bag's PROTOTYPE instead of a member.
-  // `fromEntries` DEFINES each key, so the name is carried like any other.
+  // read keys unconverted (`customKey: (key) => key`) — and a plain assignment
+  // makes it this bag's PROTOTYPE instead of a member.
   //
-  // ⚠ THIS IS ONE OF TWO REBUILDS ON THIS PATH, and closing it alone is not
-  // enough: `wireToFloorClaims` rebuilds the same bag again to drop shadowing
-  // names. Both define their keys; a fix to either that skipped the other left the
-  // door broken while this function passed.
-  // pinned where the second rebuild lives:
-  // translate.test.ts#carries a `__proto__` wire key as an own key.
+  // ⚠ THIS IS ONE OF TWO REBUILDS ON THIS PATH: `wireToFloorClaims` rebuilds the
+  // same bag again to drop shadowing names, so a fix to either alone leaves the
+  // door broken while this function passes.
+  // pinned: translate.test.ts#carries a `__proto__` wire key as an own key.
   const custom: Dict = Object.fromEntries(
     Object.entries(wire)
       .filter(([key]) => !consumed.has(key))
@@ -1734,26 +1451,21 @@ export const wireToFloorClaims = (
 
   // ⚠ A key the pass did NOT consume that is spelled like a claim the floor
   // resolves can only be a LOOK-ALIKE: the real claim would have been consumed
-  // under its wire name. The floor's caller flattens `custom` and `claims` into
-  // one dict, so leaving it in would let a presenter-supplied `audience` answer
-  // for an ABSENT `aud` — a token that states no audience clearing the audience
-  // floor. Which claim the issuer stated is decided by the registered wire claim
-  // and by nothing else, and that has to hold when the claim is missing too.
+  // under its wire name. The floor's caller flattens `custom` and `claims` into one
+  // dict, so leaving it in lets a presenter-supplied `audience` answer for an
+  // ABSENT `aud` — a token stating no audience clearing the audience floor.
   //
-  // Only the RESOLVED set is filtered. A profile may require a claim under its
-  // wire spelling (`introspection` requires `token_introspection`) or a claim the
-  // floor does not resolve at all (`events`), and both must survive verbatim.
-  // ⛔ `Object.fromEntries`, for the same reason the bag was built with it: this is
-  // a SECOND rebuild over the same wire-controlled keys, and the floor read keys
-  // unconverted, so `__proto__` reaches here as an own property. An assignment
-  // makes it this bag's prototype, which DROPS the member.
+  // Only the RESOLVED set is filtered. A profile may require a claim under its wire
+  // spelling (`introspection` requires `token_introspection`) or one the floor does
+  // not resolve at all (`events`), and both must survive verbatim.
   //
-  // ⚠ WHAT THAT COSTS IS A FLOOR JUDGEMENT ON CLAIMS THE TOKEN DID NOT PRESENT.
-  // This bag is spread into `enforceVerifyFloor`'s payload
-  // (`internal/utils/verify-token.ts`), so a dropped claim is one a `forbidden`
-  // rule no longer sees and a `required` rule reports missing. It reaches no
-  // caller — the floor bag is consumed there and discarded — so the cost is the
-  // verdict, not a polluted result.
+  // ⛔ `Object.fromEntries`, for the same reason the bag was built with it: a
+  // SECOND rebuild over the same wire-controlled keys, keyed unconverted, so an
+  // assignment makes `__proto__` this bag's prototype and DROPS the member. ⚠ The
+  // cost is a FLOOR JUDGEMENT ON CLAIMS THE TOKEN DID NOT PRESENT — this bag is
+  // spread into `enforceVerifyFloor`'s payload (`internal/utils/verify-token.ts`),
+  // so a dropped claim is one a `forbidden` rule no longer sees and a `required`
+  // rule reports missing. It reaches no caller, so the cost is the verdict.
   // pinned: translate.test.ts#carries a `__proto__` wire key as an own key.
   const filtered: Dict = Object.fromEntries(
     Object.entries(custom).filter(([key]) => !floorShadows(key)),

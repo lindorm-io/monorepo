@@ -8,12 +8,9 @@ import {
 import { registerEncoder, writeUint8Array } from "cbor2/encoder";
 import { CoseError } from "../../errors/index.js";
 
-// cbor2 only treats a plain `Uint8Array` as a CBOR byte string; a Node `Buffer`
-// (a Uint8Array subclass) otherwise falls through to its `toJSON()` and encodes
-// as a `{ type: "Buffer", data: [...] }` map. COSE byte strings (keys, payloads,
-// tags) are everywhere and the whole lindorm stack is Buffer-centric, so
-// register Buffer to encode as a byte string. aegis is the only cbor2 consumer
-// in this package, so this one-time global registration is intentional.
+// ⚠ Without this registration a Node `Buffer` falls through to its `toJSON()` and
+// encodes as a `{ type: "Buffer", data: [...] }` map instead of a CBOR byte
+// string. aegis is the only cbor2 consumer here, so the global registration is safe.
 registerEncoder(Buffer, (buffer, writer) => {
   writeUint8Array(buffer, writer);
   return undefined;
@@ -21,29 +18,24 @@ registerEncoder(Buffer, (buffer, writer) => {
 
 export type CborEncodeOptions = {
   /**
-   * Emit deterministic (RFC 8949 §4.2.1 core / CDE) CBOR. Defaults to `true`:
-   * COSE `Sig_structure`/`Enc_structure` and CWT payloads MUST be reproducible
-   * byte-for-byte. Set `false` only when canonical ordering is not required.
+   * Emit deterministic CBOR (RFC 8949 §4.2.1). Defaults to `true`: COSE
+   * `Sig_structure`/`Enc_structure` and CWT payloads must be reproducible
+   * byte-for-byte. `false` only where canonical ordering is not required.
    */
   deterministic?: boolean;
 };
 
 export type CborDecodeOptions = {
   /**
-   * Decode CBOR maps to JS `Map` (default `true`). COSE/CWT maps are
+   * Decode CBOR maps to JS `Map` (default `true`) — COSE/CWT maps are
    * integer-keyed, which JS object keys cannot represent faithfully.
    */
   preferMap?: boolean;
-  /**
-   * Reject duplicate map keys (default `true`) — a parsing-ambiguity attack
-   * surface called out in the CBOR/COSE/CWT security considerations.
-   */
+  /** Reject duplicate map keys (default `true`) — a parsing ambiguity. */
   rejectDuplicateKeys?: boolean;
 };
 
-/**
- * Encode a value as CBOR, canonical by default. Returns a `Buffer`.
- */
+/** Encode a value as CBOR, canonical by default. */
 export const encodeCbor = (value: unknown, options: CborEncodeOptions = {}): Buffer => {
   const { deterministic = true } = options;
 
@@ -63,9 +55,8 @@ export const encodeCbor = (value: unknown, options: CborEncodeOptions = {}): Buf
 };
 
 /**
- * Decode CBOR. Lenient about canonical form (accepts non-canonical input from
- * other COSE implementations) but preserves integer-keyed maps and rejects
- * duplicate keys.
+ * Decode CBOR. Lenient about canonical form — other COSE implementations emit
+ * non-canonical input — but preserves integer-keyed maps and rejects duplicates.
  */
 export const decodeCbor = <T = unknown>(
   input: Buffer | Uint8Array,
@@ -86,6 +77,5 @@ export const decodeCbor = <T = unknown>(
   }
 };
 
-// Re-export the cbor2 Tag for COSE tag construction (COSE_Sign1 = 18,
-// COSE_Encrypt0 = 16, CWT = 61).
+// Re-exported for COSE tag construction; the numbers live in `COSE_TAG`.
 export { Tag } from "cbor2";

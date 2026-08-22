@@ -64,12 +64,10 @@ const CNF_JWK = {
 const CNF_COSE_CLAIM_LABEL = 8;
 
 /**
- * The MEMBER labels RFC 8747 §3.1 Table 1 registers, written out.
- *
- * §3.1 gives `COSE_Key` the label 1 and `kid` the label 3. They are IANA-
- * registered, which is why the COSE `cnf` map rides them on EVERY token rather
- * than only in the proprietary encoding: an interoperable reader is expected to
- * understand them.
+ * The MEMBER labels registered for `cnf` — `COSE_Key` 1, `kid` 3 (RFC 8747 §3.1),
+ * written out. They are IANA-registered, which is why the COSE `cnf` map rides
+ * them on EVERY token rather than only in the proprietary encoding: an
+ * interoperable reader is expected to understand them.
  */
 const COSE_KEY = 1;
 const COSE_KID = 3;
@@ -199,11 +197,10 @@ describe("the confirmation claim on the wire", () => {
   });
 
   test("a JOSE token carries an undeclared confirmation member untouched", async () => {
-    // RFC 7800 §3.1 — "Other members of the 'cnf' object may be defined", and
-    // §6.2 establishes an IANA registry other specifications register into. §6.2.1
-    // makes a confirmation method name "case sensitive", so the member must reach
-    // the wire with the spelling its own specification gave it: NOT snake_cased,
-    // and not dropped.
+    // Other specifications register confirmation methods (RFC 7800 §3.1,
+    // RFC 7800 §6.2) and a method name is case sensitive (RFC 7800 §6.2.1), so the
+    // member must reach the wire with the spelling its own specification gave it:
+    // NOT snake_cased, and not dropped.
     const token = await mint("jwt", { keyId: KID, tlsClientAuth: "surprise" });
 
     expect(cnfOf(token, "cnf")).toEqual({ kid: KID, tlsClientAuth: "surprise" });
@@ -261,12 +258,12 @@ describe("the confirmation claim on the wire", () => {
   });
 
   test("a foreign token spelling a member in the DOMAIN vocabulary is refused on read", async () => {
-    // ⛔ THE READ HALF, and it is the half that reaches a security gate. RFC 7800
-    // §3.1 requires a reader to IGNORE a member it does not understand — and
+    // ⛔ THE READ HALF, and it is the half that reaches a security gate. A reader
+    // ignores a confirmation member it does not understand (RFC 7800 §3.1) — and
     // `thumbprint` is not a member anyone registered, it is aegis's own domain
-    // name. Carried verbatim it landed on `confirmation.thumbprint`, the exact
-    // slot `internal/utils/apply-verify-policy.ts` reads as the bound thumbprint,
-    // so a stranger's token drove the DPoP gate through a name no RFC defines.
+    // name. Carried verbatim it lands on `confirmation.thumbprint`, the exact slot
+    // `internal/utils/apply-verify-policy.ts` reads as the bound thumbprint, so a
+    // stranger's token would drive the DPoP gate through a name no RFC defines.
     //
     // ⭐ What genuinely improved beside it: at HEAD `{ jkt, thumbprint }` let the
     // look-alike WIN — the old decoder preferred the domain spelling, returning
@@ -288,7 +285,8 @@ describe("the confirmation claim on the wire", () => {
   });
 
   test("a COSE token keys the confirmation by RFC 8747's registered labels, on an interoperable token", async () => {
-    // ⚠ NO `proprietary` FLAG. RFC 8747 §3.1's labels are IANA-registered, so the
+    // ⚠ NO `proprietary` FLAG. The `cnf` member labels are IANA-registered
+    // (RFC 8747 §3.1), so the
     // COSE `cnf` map is what a STOCK reader expects — unlike the actor chain's
     // compact map, whose `client_id` (4) and `act` (5) are lindorm's own and ride
     // only on-platform. A `cnf` that degraded to string keys off-platform would be
@@ -298,8 +296,7 @@ describe("the confirmation claim on the wire", () => {
     const cnf = cnfOf(token, CNF_COSE_CLAIM_LABEL) as Map<number | string, unknown>;
 
     expect(cnf).toBeInstanceOf(Map);
-    // ⭐ LABEL 1, WHICH NOTHING PINNED BEFORE. RFC 8747 §3.1 gives the embedded
-    // key label 1 and its value type is a COSE_Key — an integer-labelled CBOR map,
+    // ⭐ LABEL 1 IS A COSE_Key (RFC 8747 §3.1) — an integer-labelled CBOR map,
     // NOT the JWK the caller handed over. Every parameter is asserted, because a
     // transcoder that wrote the right label with the wrong curve mints a binding
     // to a key nobody holds.
@@ -311,12 +308,13 @@ describe("the confirmation claim on the wire", () => {
         [KEY_Y, Buffer.from(CNF_JWK.y, "base64url")],
       ]),
     );
-    // Label 3, as a BYTE STRING (§3.4) rather than the text the JOSE form carries.
+    // Label 3, as a BYTE STRING (RFC 8747 §3.4) rather than the text the JOSE form
+    // carries.
     expect(cnf.get(COSE_KID)).toEqual(Buffer.from(KID, "utf8"));
 
-    // ⛔ AND THE JOSE SPELLINGS ARE GONE. RFC 9052 §1.5 keys the integer `1` and
-    // the text `"jwk"` apart — grammar `label = int / tstr` — so a shaper that
-    // handed the JOSE object through untouched would put members on the wire that
+    // ⛔ AND THE JOSE SPELLINGS ARE GONE. The integer `1` and the text `"jwk"` are
+    // different labels (RFC 9052 §1.5), so a shaper that handed the JOSE object
+    // through untouched would put members on the wire that
     // no CWT reader looks for. This is the half that fails on a pass-through.
     expect(cnf.has("jwk")).toBe(false);
     expect(cnf.has("kid")).toBe(false);
@@ -340,14 +338,14 @@ describe("the confirmation claim on the wire", () => {
     // ⭐ THE `wireAbsent` MEMBERS, PROVEN ABSENT BY THE REFUSAL THAT SAYS WHY.
     // There is no positive byte assertion to make for `jkt` / `x5t#S256` / `jku` on
     // COSE — the whole point is that no bytes exist — so what is pinned instead is
-    // that the mint FAILS CLOSED rather than dropping them. RFC 9679 §5.5 declines
-    // to register a CWT confirmation method for `jkt`, and RFC 8747 registers none
-    // for the other two.
+    // that the mint FAILS CLOSED rather than dropping them. No CWT confirmation
+    // method is registered for `jkt` (RFC 9679 §5.5), and none for the other two
+    // (RFC 8747 §3.1).
     //
     // ⚠ `keyId` IS representable and is absent from the reported list, which is
-    // what makes this a per-MEMBER refusal rather than an all-or-nothing one: a
-    // MIXED confirmation used to drop the unrepresentable members, keep the rest,
-    // and mint an UNBOUND CWT the verifier never asked for a proof for.
+    // what makes this a per-MEMBER refusal rather than an all-or-nothing one:
+    // dropping the unrepresentable members and keeping the rest would mint an
+    // UNBOUND CWT the verifier never asked for a proof for.
     await expect(
       mint("cwt", {
         thumbprint: JKT,
@@ -365,31 +363,26 @@ describe("the confirmation claim on the wire", () => {
   test("a null confirmation member is refused, not erased into a weaker binding", async () => {
     // ⭐⭐ THE `cnf` EXEMPTION FROM THE NULL RULING, PINNED WITH THE FAULT THAT
     // EARNED IT. Everywhere else a null member is an ABSENCE and is omitted; a
-    // confirmation member is not, and this row is the reason. When `cnf` took the
-    // carve-out, the null member was erased inside `domainToWire` BEFORE the COSE
-    // fail-closed guard ran — and that guard asks `cnf[member] !== undefined`
-    // (`internal/cose/cose-key.ts`), so an erased `jkt` was not "unrepresentable",
-    // it was nothing. MEASURED on that build, with a control:
+    // confirmation member is not, and this row is the reason. Taking the carve-out
+    // erases the null member inside `domainToWire` BEFORE the COSE fail-closed
+    // guard runs — and that guard asks `cnf[member] !== undefined`
+    // (`internal/cose/cose-key.ts`), so an erased `jkt` is not "unrepresentable",
+    // it is nothing:
     //   `{ thumbprint: JKT,  keyId: KID }` → REFUSE `cose_cnf_unsupported`
-    //   `{ thumbprint: null, keyId: KID }` → MINTED a CWT that verified WITH NO
+    //   `{ thumbprint: null, keyId: KID }` → MINTS a CWT that verifies WITH NO
     //                                        PROOF, byte-identical to `{ keyId }`
-    // A caller who asked for a thumbprint binding received a token nobody is ever
-    // asked to prove possession for. That is verbatim the defect the row below
-    // records as fixed, reopened through a different spelling of the same erasure.
+    // A caller who asked for a thumbprint binding would receive a token nobody is
+    // ever asked to prove possession for.
     //
-    // ⚠ RFC 9449 §6.1 TYPES THE MEMBER BY MUST — the `jkt` value "MUST be the
-    // base64url encoding (as defined in [RFC7515]) of the JWK SHA-256 Thumbprint
-    // (according to [RFC7638]) of the DPoP public key (in JWK format) to which the
-    // access token is bound" — so `jkt: null` CONTRADICTS
-    // the member's declared shape rather than leaving it unstated. `undefined`
-    // remains the one absence a confirmation member recognises — see the row above
-    // for `{ jwk: undefined, kid }` minting on the `kid` alone.
+    // ⚠ The `jkt` value is a base64url thumbprint (RFC 9449 §6.1), so `jkt: null`
+    // CONTRADICTS the member's declared shape rather than leaving it unstated.
+    // `undefined` remains the one absence a confirmation member recognises — see
+    // the row above for `{ jwk: undefined, kid }` minting on the `kid` alone.
     //
-    // ⚠⚠ THE SECOND ASSERTION IS THE ONE THAT BITES, and an earlier version of
-    // this test asserted its OPPOSITE — it minted `{ thumbprint: null, keyId }`
-    // and pinned `cnf: { kid }`, calling the result "the key-id binding its issuer
-    // wrote". The issuer wrote a THUMBPRINT binding. A row that pins the downgrade
-    // while its title denies it is worse than no row at all.
+    // ⚠⚠ THE SECOND ASSERTION IS THE ONE THAT BITES: pinning `cnf: { kid }` for a
+    // minted `{ thumbprint: null, keyId }` would call the result "the key-id
+    // binding its issuer wrote" when the issuer wrote a THUMBPRINT binding. A row
+    // that pins the downgrade while its title denies it is worse than no row.
     await expect(
       mint("jwt", { thumbprint: null, keyId: KID } as Dict),
     ).rejects.toMatchObject({
@@ -437,16 +430,16 @@ describe("the confirmation claim on the wire", () => {
     // this row exists because a mutation proved nothing else pinned it: flipping
     // the tail arm alone to the null carve-out left the whole suite green.
     //
-    // RFC 7800 §6.2 lets another specification register a confirmation method, so
-    // a tail member is SOMEBODY'S confirmation method rather than a spare
-    // attribute — and §3.1 requires a reader to ignore what it does not
-    // understand, not to edit it. Erasing a null one would let a caller state a
+    // Another specification may register a confirmation method (RFC 7800 §6.2),
+    // so a tail member is SOMEBODY'S confirmation method rather than a spare
+    // attribute — and a reader ignores what it does not understand rather than
+    // editing it (RFC 7800 §3.1). Erasing a null one would let a caller state a
     // binding this package silently deletes, which is the same erasure the
     // declared-member row above measures, one column over.
     //
-    // ⚠ The value rides UNTOUCHED and the KEY is not case-flipped: §6.2.1 makes a
-    // confirmation method name case sensitive. `toEqual`, so a build that dropped
-    // the member or renamed it fails rather than passing on a subset.
+    // ⚠ The value rides UNTOUCHED and the KEY is not case-flipped: a confirmation
+    // method name is case sensitive (RFC 7800 §6.2.1). `toEqual`, so a build that
+    // dropped the member or renamed it fails rather than passing on a subset.
     expect(cnfOf(await mint("jwt", { thumbprint: JKT, someExt: null } as Dict), "cnf")) //
       .toEqual({ jkt: JKT, someExt: null });
 

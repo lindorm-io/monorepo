@@ -19,12 +19,13 @@ const requiredClaims = (profile: TokenProfile, direction: Direction): Array<stri
 };
 
 /**
- * Drift guard: the domain keys a profile's *Content type marks as REQUIRED
- * must each map to a wire claim present in the descriptor's `required` floor.
- * If the two drift apart (a content type requires something the descriptor
- * does not enforce, or vice-versa), a token could type-check yet fail at mint,
- * or pass mint with a hole the types claim is closed. The mapping below mirrors
- * the Pick<...> in types/jwt/profile.ts; update both together.
+ * Drift guard: the domain keys a profile's *Content type marks as REQUIRED must
+ * each map to a wire claim in the descriptor's `required` floor. Drift either way
+ * lets a token type-check and fail at mint, or pass mint with a hole the types
+ * claim is closed.
+ *
+ * ⚠ The mapping below MIRRORS the `Pick<...>` in `types/jwt/profile.ts` — update
+ * both together.
  */
 const REQUIRED_DOMAIN_KEYS: Record<string, Array<string>> = {
   access_token: ["subject", "audience", "clientId"],
@@ -53,10 +54,8 @@ describe("profile content/descriptor drift guard", () => {
   }
 });
 
-// The auto-injectable envelope claims, by DOMAIN name. A descriptor must never
-// name a WIRE claim here (the old `{ iat; jti; nbf; iss }` object leaked wire
-// names into the profile surface); the mint pipeline maps these to their wire
-// claims via the ONE translator.
+// The auto-injectable envelope claims, by DOMAIN name. ⚠ A descriptor must never
+// name a WIRE claim here — the mint pipeline maps these through the ONE translator.
 const AUTO_INJECTABLE = new Set(["issuedAt", "tokenId", "notBefore", "issuer"]);
 const WIRE_LEAK = new Set(["iat", "jti", "nbf", "iss"]);
 
@@ -76,17 +75,14 @@ describe("autoInject is domain-named (no wire-name leak)", () => {
 });
 
 /**
- * The DIRECTION every built-in declares. `"both"` is the behaviour-preserving
- * answer and the default, so this table is really a list of the ONE profile
- * deliberately narrowed — `external_access_token`, which exists to verify a
- * token another authorization server issued.
+ * The DIRECTION every built-in declares. `"both"` is the default, so the table is
+ * really a list of the profiles deliberately narrowed.
  *
- * Everything else is genuinely two-sided: an `introspection` (RFC 9701 §5) or
- * `userinfo` (OIDC Core §5.3.2) response is a signed JWT the RECIPIENT
- * validates, a `jarm` response is validated by the client, a `logout_token` by
- * the RP (Back-Channel Logout §2.6), a `security_event` by the SSF receiver.
- * Narrowing any of them would break a consumer silently, so none is narrowed on
- * a guess.
+ * ⚠ Everything else is genuinely two-sided — an `introspection` (RFC 9701 §5) or
+ * `userinfo` (OIDC Core §5.3.2) response is validated by its RECIPIENT, a `jarm`
+ * response by the client, a `logout_token` by the RP (OIDC Back-Channel Logout
+ * §2.6), a `security_event` by the SSF receiver — so narrowing one would break a
+ * consumer silently.
  */
 const PROFILE_USE: Record<string, "mint" | "verify" | "both"> = {
   access_token: "both",

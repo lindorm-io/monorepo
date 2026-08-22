@@ -30,8 +30,7 @@ export type EncryptOuterInput = {
  * Sign-then-encrypt: wrap an already-signed token in its own wire's encrypting
  * outer. NOT a wire operation — a COMPOSITION over one, written once for both
  * wires, so the nested-token declaration cannot be spelled differently in two
- * places. It was two hand-written calls, and each dropped a different field of
- * the envelope it was handed.
+ * places.
  *
  * Everything that genuinely differs is a declared value on the wire: how a token
  * string becomes sealable content (`decodeToken`), what the outer declares its
@@ -59,9 +58,9 @@ export const encryptOuter = (
     deps,
     content: nested?.content ?? wire.decodeToken(inner),
     ...options,
-    // RFC 7519 §5.2 / RFC 9052 §3.1 — the outer DECLARES a nested token, so the
-    // read side reconstructs the plaintext to the inner token rather than to
-    // whatever value shape the bytes resemble. Written AFTER the spread: on this
+    // The outer DECLARES a nested token, so the read side reconstructs the
+    // plaintext to the inner token rather than to whatever value shape the bytes
+    // resemble (RFC 7519 §5.2, RFC 9052 §3.1). Written AFTER the spread: on this
     // path the declaration is the composition's own statement about a token it
     // produced, not a default for the caller to override.
     header: { ...options.header, cty: nested?.cty ?? options.header?.cty },

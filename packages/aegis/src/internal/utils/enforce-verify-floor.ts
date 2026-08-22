@@ -31,8 +31,8 @@ export type VerifyFloorInput = {
   expectedIssuer: string | undefined;
   /**
    * The wire the token actually is — DIAGNOSTIC only. Every code this floor
-   * raises is wire-neutral; a reader still needs to know which encoding produced
-   * the failure, and it used to be told `jwt_` whichever wire it was.
+   * raises is wire-neutral, so this is the only thing telling a reader which
+   * encoding produced the failure.
    */
   format: TokenFormatTag;
   /**
@@ -81,10 +81,9 @@ const typMismatch = (
  * `nbf`/`exp` value enforcement (with clock tolerance) is handled by the
  * standard verify; this floor only adds the presence + identity assertions.
  *
- * What lives here rather than in the policy list is exactly what the policy list
- * cannot state: the algorithm the signature was verified under, the header typ,
- * and the two identities the VERIFIER supplies (its expected issuer and its own
- * audience). None of those is a property of the claims alone.
+ * What lives here rather than in the policy list is what the policy list cannot
+ * state: the algorithm the signature was verified under, the header typ, and the
+ * two identities the VERIFIER supplies. None is a property of the claims alone.
  */
 export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
   const { algorithm, audience, decodedTyp, expectedIssuer, format, payload, profile } =
@@ -94,13 +93,12 @@ export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
   // reporting a claim mismatch on a token whose signing class the profile
   // rejects would name the lesser problem.
   //
-  // `algClass` is the mirror of what mint does when it makes the class part of
-  // the SIGNING floor, and the mint half alone buys nothing: `access_token`,
-  // `external_access_token` and `delegation` declare `asymmetric` because a
-  // shared MAC secret both verifies AND forges, which is a statement about
-  // reading SOMEONE ELSE's token. A profile declaring no class is unconstrained
-  // — `alg: none` is not a Kryptos algorithm, so "asymmetric or HS*" is the
-  // whole space — and RFC 8417 / SSF (`security_event`) genuinely permits HS*.
+  // `algClass` mirrors the class mint makes part of the SIGNING floor, and the
+  // mint half alone buys nothing: a profile declaring `asymmetric` does so because
+  // a shared MAC secret both verifies AND forges, which is a statement about
+  // reading SOMEONE ELSE's token. A profile declaring no class is unconstrained —
+  // `alg: none` is not a Kryptos algorithm, so "asymmetric or HS*" is the whole
+  // space.
   if (profile.algClass) {
     const invalid = algPermitted(algorithm, profile.algClass);
 
@@ -168,35 +166,18 @@ export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
     });
   }
 
-  // The `exp` presence gate. It asks the DEMAND question in the same words
-  // `required` uses, so it reads presence through the same predicate rather than
-  // a bare comparison that could drift from it.
+  // The `exp` presence gate, read through the same predicate `required` uses so
+  // the two spellings cannot drift.
   //
-  // ⚠ A SPELLING consolidation, NOT a coverage gain, and the difference matters
-  // to whoever reads this next. TWO things rule the widened arm (`null`, `""`,
-  // `[]`, `{}`) out, and BOTH are needed — `payload` is `{ ...custom, ...domain }`
-  // (`verify-token.ts`), so naming only the first is not an argument:
-  //   - the DOMAIN half comes from `toDate` (`internal/claims/translate.ts`),
-  //     which returns `Date | undefined` and nothing else, into a bag that is
-  //     then `omitUndefined`ed;
-  //   - the CUSTOM half holds unconsumed wire keys under their ORIGINAL
-  //     spelling, so a token carrying a literal `expiresAt` key would land there
-  //     — `floorShadows` (same file) is what strips it, because a custom key may
-  //     not impersonate a name the floor read resolves.
-  // So no token exhibits a difference. What the predicate buys is that the
-  // notion is named once: this was the last bare presence check in the floor.
+  // ⚠ `payload` is `{ ...custom, ...domain }` (`verify-token.ts`): the domain half
+  // is `Date | undefined` from `toDate`, and the custom half has had every key
+  // impersonating a domain name stripped by `floorShadows`
+  // (`internal/claims/translate.ts`) — so neither half can present a blank value
+  // here.
   //
-  // ⚠ It is NOT the only gate, nor a later-but-surer one. A profiled verify
-  // reaches `applyVerifyPolicy` first, and its `expPresence` knob — which
-  // `Aegis.verify` derives from this same `lifetime`, for a consumer-registered
-  // profile exactly as for a built-in — refuses an absent `exp` there. This gate
-  // is a duplicate that fires second and costs nothing; standing the earlier one
-  // down was tried and reverted (see the derivation for why).
-  //
-  // ⚠ The negation stands where the house guard idiom would normally remove it:
-  // this function is a flat sequence of `if (violated) throw` checks with no
-  // early return to hang a happy-side guard on, and every sibling here is
-  // likewise a negated positive test (`!audList.includes(audience)` above).
+  // ⚠ Deliberately redundant with `applyVerifyPolicy`'s `expPresence` gate, which
+  // `Aegis.verify` derives from this same `lifetime` and which runs first on a
+  // profiled verify.
   if (profile.lifetime !== null && !isClaimSatisfied(payload.expiresAt)) {
     throw new AegisDomainError("Invalid token", {
       code: "missing_claim_exp",
@@ -209,12 +190,10 @@ export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
   }
 
   // LAST, and it is the WHOLE profile policy — the same list mint enforces, run
-  // by the same enforcer with `direction: "verify"`. Every rule that names the
-  // verify direction bites here, so nothing a profile declares can be a
-  // mint-only constraint by accident of which call site remembered it. That
-  // matters most for a profile reading someone else's token: an
-  // `external_access_token` is never minted at all, so a mint-only rule of its
-  // would never run anywhere.
+  // by the same enforcer with `direction: "verify"`, so nothing a profile declares
+  // becomes mint-only by accident of which call site remembered it. That matters
+  // most for a profile that is never minted at all, whose mint-only rule would
+  // then run nowhere.
   //
   // Verify passes an EMPTY context and always can: a context-reading rule is
   // pinned to mint by its own type.

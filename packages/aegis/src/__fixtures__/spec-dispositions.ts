@@ -37,13 +37,11 @@ import type { Wire } from "./scenarios.js";
  * declared defect and requires it to FAIL FOR THE REASON IT NAMES — otherwise
  * the field is a way of turning a red cell green by writing a sentence.
  *
- * ⚠ "For the reason it names" is the whole of it, and this comment used to claim
- * it while the check underneath was a bare "it did not round-trip" that ANY
- * thrown message satisfied — including the interpreter's own "declares a
- * roundTrip with no door", which sits one line above the door call. That is the
- * coarse binary the knob matrix's tags were introduced to replace, so the same
- * discipline applies here: `run-spec-disposition.ts` tags every way a cell can
- * fail, and only the tags naming a SHORTFALL count as proof.
+ * ⚠ "For the reason it names" is the whole of it. A bare "it did not round-trip"
+ * check is satisfied by ANY thrown message — including the interpreter's own
+ * "declares a roundTrip with no door", which sits one line above the door call —
+ * so `run-spec-disposition.ts` tags every way a cell can fail, and only the tags
+ * naming a SHORTFALL count as proof.
  */
 
 /**
@@ -120,16 +118,13 @@ const SENSITIVE: SpecDisposition = { disposition: "roundTrip", door: "mint.sensi
 const SIGN_OPTION: SpecDisposition = { disposition: "roundTrip", door: "mint.sign" };
 
 /**
- * The COSE reason shared by every JOSE key-management parameter. RFC 9052 §5.2:
- * "The COSE_Encrypt0 encrypted structure does not have the ability to specify
- * recipients of the message. The structure assumes that the recipient of the
- * object will already know the identity of the key to be used in order to decrypt
- * the message." So no key is wrapped, no ephemeral key is agreed and no password
- * is stretched — there is no key-management output to carry and no label to carry
- * it under.
+ * The COSE reason shared by every JOSE key-management parameter: aegis wraps no
+ * key, agrees no ephemeral key and stretches no password on that wire, so there
+ * is no key-management output to carry and no label to carry it under.
+ * RFC 9052 §5.2.
  */
 const NO_COSE_KEY_MANAGEMENT =
-  "COSE_Encrypt0 specifies no recipients and assumes the recipient already knows the decryption key (RFC 9052 §5.2), so aegis performs no key management on that wire and the parameter has no output to name; the registry marks it absent on COSE.";
+  "A COSE_Encrypt0 carries no recipients array, so aegis performs no key management on that wire and the parameter has no output to name; the registry marks it absent on COSE. RFC 9052 §5.2.";
 
 /**
  * One entry per {@link CLAIM_SPECS} member, keyed by its DOMAIN name. The matrix
@@ -150,12 +145,11 @@ export const CLAIM_DISPOSITIONS: Readonly<Record<string, SpecDisposition>> = {
   // the sixth — so the door is what decides the disposition, never a summary of
   // where the value usually comes from.
   //
-  // ⚠ This paragraph is why the registry's `provenance` column is GONE. The
-  // column answered "where does the value usually come from?"; the only question
-  // a consumer asks is "is there a caller door, and which one?", and this table
-  // already answered it BY EXECUTION while explicitly refusing to derive from the
-  // column. A column contradicted by the one artifact organised around it is a
-  // second source of truth, not a fact.
+  // ⚠ This paragraph is why the registry carries no `provenance` column. Such a
+  // column answers "where does the value usually come from?"; the only question a
+  // consumer asks is "is there a caller door, and which one?", and this table
+  // answers that BY EXECUTION. A column contradicted by the one artifact organised
+  // around it is a second source of truth, not a fact.
   expiresAt: { disposition: "roundTrip", door: "mint.expires" },
   notBefore: CALLER,
   issuedAt: SIGN_OPTION,
@@ -272,7 +266,7 @@ export const HEADER_DISPOSITIONS: Readonly<Record<string, SpecDisposition>> = {
         disposition: "refused",
         door: "mint.header",
         reason:
-          "aegis maps no COSE header parameter for an embedded key, so `coseByJose` has no label to write it under and refuses with `header_no_cose_label` rather than dropping it. RFC 9052 §3.1 defines the COSE common header parameters and registers no embedded-key parameter among them.",
+          "aegis maps no COSE header parameter for an embedded key, so `coseByJose` has no label to write it under and refuses with `header_no_cose_label` rather than dropping it. RFC 9052 §3.1.",
       },
     },
   },
@@ -285,7 +279,7 @@ export const HEADER_DISPOSITIONS: Readonly<Record<string, SpecDisposition>> = {
         disposition: "refused",
         door: "mint.header",
         reason:
-          "aegis maps no COSE header parameter for a key SOURCE, so `coseByJose` refuses with `header_no_cose_label`. RFC 9052 §3.1's common header parameters contain no key-set URI.",
+          "aegis maps no COSE header parameter for a key SOURCE, so `coseByJose` refuses with `header_no_cose_label`. RFC 9052 §3.1.",
       },
     },
   },
@@ -298,7 +292,7 @@ export const HEADER_DISPOSITIONS: Readonly<Record<string, SpecDisposition>> = {
         disposition: "refused",
         door: "mint.header",
         reason:
-          "COSE registers no compression header parameter — RFC 9052 §3.1 defines the common header parameters and none of them names a compression algorithm — so the registry marks it absent and `coseByJose` refuses it.",
+          "aegis maps no COSE header parameter for compression, so the registry marks it absent and `coseByJose` refuses it. RFC 9052 §3.1.",
       },
     },
   },
@@ -321,30 +315,30 @@ export const HEADER_DISPOSITIONS: Readonly<Record<string, SpecDisposition>> = {
   // one: the sample `["MIIBsample"]` is a representative shape, never a value the
   // surface accepts. What IS assertable is that the binding appears when the mode
   // asks for it, which is what the observation runs — on BOTH wires, since
-  // RFC 9360 §2 gives COSE `x5chain` at label 33 and every COSE writer derives it.
+  // every COSE writer derives it too, at label 33 (RFC 9360 §2).
   certificateChain: {
     disposition: "notSuppliable",
     observe: "certificate",
     reason:
-      "Derived from the key's own certificate chain. RFC 7515 §4.1.6 makes `x5c` the X.509 certificate chain CORRESPONDING TO THE KEY used to digitally sign the JWS, so a caller-stated chain would be a chain that does not belong to the signature it accompanies.",
+      "Derived from the key's own certificate chain: a caller-stated `x5c` would be a chain that does not belong to the signature it accompanies. RFC 7515 §4.1.6.",
   },
   certificateThumbprint: {
     disposition: "notSuppliable",
     observe: "certificate",
     reason:
-      "Derived from the key's own certificate. RFC 7515 §4.1.8 makes `x5t#S256` the base64url-encoded SHA-256 thumbprint of the DER encoding of the certificate corresponding to the signing key, so it is a digest of the key material and not a caller value.",
+      "Derived from the key's own certificate: `x5t#S256` is a digest of the signing key's certificate, not a caller value. RFC 7515 §4.1.8.",
   },
   certificateThumbprintSha1: {
     disposition: "notSuppliable",
     observe: "certificate",
     reason:
-      "Derived from the key's own certificate. RFC 7515 §4.1.7 makes `x5t` the base64url-encoded SHA-1 thumbprint of the DER encoding of the certificate corresponding to the signing key.",
+      "Derived from the key's own certificate: `x5t` is a SHA-1 digest of the signing key's certificate, not a caller value. RFC 7515 §4.1.7.",
     per: {
       cose: {
         disposition: "notSuppliable",
         observe: "none",
         reason:
-          "RFC 9360 §2 gives COSE ONE thumbprint parameter, `x5t` at label 34, whose value is a COSE_CertHash `[ hashAlg, hashValue ]` — the digest algorithm is a member of the value rather than the difference between two parameter names. There is no SHA-1-NAMED parameter for a COSE writer to emit, so no COSE path produces one to observe. (A foreign token's SHA-1 COSE_CertHash DOES read back onto this domain field, through label 34's hashAlg dispatch; what is unobservable here is a write.)",
+          "COSE has ONE thumbprint parameter, `x5t` at label 34, whose value is a COSE_CertHash `[ hashAlg, hashValue ]` — the digest algorithm is a member of the value rather than the difference between two parameter names. There is no SHA-1-NAMED parameter for aegis to emit, so no COSE path produces one to observe. (A foreign token's SHA-1 COSE_CertHash DOES read back onto this domain field, through label 34's hashAlg dispatch; what is unobservable here is a write.) RFC 9360 §2.",
       },
     },
   },
@@ -377,25 +371,25 @@ export const HEADER_DISPOSITIONS: Readonly<Record<string, SpecDisposition>> = {
     disposition: "notSuppliable",
     observe: "sign",
     reason:
-      "Derived from the signing key. RFC 7515 §4.1.1 makes `alg` the algorithm used to secure the JWS and RFC 9052 §3.1 gives label 1 the same meaning, so a value a caller could state independently of the key would be a header that disagrees with the signature it describes.",
+      "Derived from the signing key: a value a caller could state independently of the key would be a header that disagrees with the signature it describes. RFC 7515 §4.1.1, RFC 9052 §3.1.",
   },
   keyId: {
     disposition: "notSuppliable",
     observe: "sign",
     reason:
-      "Derived from the resolved key. RFC 7515 §4.1.4 makes `kid` a hint identifying the key that secured the token, so it is the key's own identity and nothing a caller supplies alongside it.",
+      "Derived from the resolved key: `kid` is the key's own identity, not something a caller supplies alongside it. RFC 7515 §4.1.4.",
   },
   encryption: {
     disposition: "notSuppliable",
     observe: "encrypt",
     reason:
-      "Taken from the recipient key, or the deployment's default encryption. RFC 7516 §4.1.2 makes `enc` the content-encryption algorithm actually applied, so it states what happened rather than what was asked for.",
+      "Taken from the recipient key, or the deployment's default encryption — `enc` states the content encryption actually applied rather than what was asked for. RFC 7516 §4.1.2.",
     per: {
       cose: {
         disposition: "notSuppliable",
         observe: "none",
         reason:
-          "COSE_Encrypt0 carries the content-encryption algorithm in `alg` (label 1) — RFC 9052 §5.2 gives direct encryption one algorithm and one label — so there is no separate `enc` parameter to observe.",
+          "A COSE_Encrypt0 written by aegis carries the content-encryption algorithm in `alg` (label 1), so there is no separate `enc` parameter to observe. RFC 9052 §3.1, RFC 9052 §5.2.",
       },
     },
   },
@@ -403,7 +397,7 @@ export const HEADER_DISPOSITIONS: Readonly<Record<string, SpecDisposition>> = {
     disposition: "notSuppliable",
     observe: "none",
     reason:
-      "Produced by the AEAD, and on JOSE it is not a header parameter at all: RFC 7516 §7.1 makes the Initialization Vector its own SEGMENT of the compact serialisation, and the `iv` HEADER parameter belongs to AES-GCM key wrapping (RFC 7518 §4.7.1.1) — for which aegis holds no fixture recipient key. So there is no JOSE artifact this suite can build that carries the parameter.",
+      "Produced by the AEAD, and on JOSE it is not a header parameter at all — the Initialization Vector is its own SEGMENT of the compact serialisation, and the `iv` HEADER parameter belongs to AES-GCM key wrapping, for which aegis holds no fixture recipient key. So there is no JOSE artifact this suite can build that carries the parameter. RFC 7516 §7.1, RFC 7518 §4.7.1.1.",
     per: {
       cose: {
         disposition: "notSuppliable",
@@ -417,7 +411,7 @@ export const HEADER_DISPOSITIONS: Readonly<Record<string, SpecDisposition>> = {
     disposition: "notSuppliable",
     observe: "encrypt.ecdh",
     reason:
-      "The ephemeral public key of the agreement. RFC 7518 §4.6.1.1 makes `epk` the ephemeral public key created by the ORIGINATOR for the agreement, so it exists only because aegis generated it.",
+      "The ephemeral public key of the agreement — it exists only because aegis generated it. RFC 7518 §4.6.1.1.",
     per: {
       cose: {
         disposition: "notSuppliable",
@@ -430,7 +424,7 @@ export const HEADER_DISPOSITIONS: Readonly<Record<string, SpecDisposition>> = {
     disposition: "notSuppliable",
     observe: "none",
     reason:
-      "The AES-GCM key-wrap authentication tag (RFC 7518 §4.7.1.2 — `tag` is the authentication tag resulting from the key encryption). aegis's fixtures hold no GCMKW recipient key, so no token this suite can build carries one; the parameter is observable only on a deployment that wraps its content key.",
+      "The AES-GCM key-wrap authentication tag (RFC 7518 §4.7.1.2). aegis's fixtures hold no GCMKW recipient key, so no token this suite can build carries one; the parameter is observable only on a deployment that wraps its content key.",
     per: {
       cose: {
         disposition: "notSuppliable",
@@ -443,7 +437,7 @@ export const HEADER_DISPOSITIONS: Readonly<Record<string, SpecDisposition>> = {
     disposition: "notSuppliable",
     observe: "none",
     reason:
-      "PBES2 key derivation input (RFC 7518 §4.8.1.1 — `p2s` is the PBES2 salt input). aegis holds no password-based recipient key, so no token this suite can build carries one.",
+      "PBES2 salt input (RFC 7518 §4.8.1.1). aegis holds no password-based recipient key, so no token this suite can build carries one.",
     per: {
       cose: {
         disposition: "notSuppliable",
@@ -456,7 +450,7 @@ export const HEADER_DISPOSITIONS: Readonly<Record<string, SpecDisposition>> = {
     disposition: "notSuppliable",
     observe: "none",
     reason:
-      "PBES2 key derivation input (RFC 7518 §4.8.1.2 — `p2c` is the PBES2 count). Same absent recipient key as `pbkdfSalt`.",
+      "PBES2 iteration count (RFC 7518 §4.8.1.2). Same absent recipient key as `pbkdfSalt`.",
     per: {
       cose: {
         disposition: "notSuppliable",

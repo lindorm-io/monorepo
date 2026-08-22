@@ -480,14 +480,10 @@ describe("JweKit", () => {
     });
 
     test("should leave EMPTY party info off the wire on an ECDH-ES algorithm", () => {
-      // RFC 7518 §4.6.2 defines the Concat-KDF inputs, and it makes an EMPTY
-      // apu/apv derive the same key an ABSENT one does: "If an "apu" (agreement
-      // PartyUInfo) Header Parameter is present, Data is set to the result of
-      // base64url decoding the "apu" value and Datalen is set to the number of
-      // octets in Data. Otherwise, Datalen is set to 0 and Data is set to the
-      // empty octet sequence." Decoding `""` gives the empty octet sequence and a
-      // Datalen of 0, which is the "otherwise" branch verbatim — so the two spell
-      // one derivation, and only one of them says so honestly on the wire.
+      // An EMPTY apu/apv derives the same key an ABSENT one does: decoding `""`
+      // gives the empty octet sequence and a Datalen of 0, which is exactly the
+      // absent branch of the Concat-KDF inputs (RFC 7518 §4.6.2). So the two
+      // spell one derivation, and only one of them says so honestly on the wire.
       // aegis does not even feed it in: `resolveEcdhParty` decodes the value only
       // when it is truthy.
       const kryptos = KryptosKit.generate.enc.ec({ algorithm: "ECDH-ES" });

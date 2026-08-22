@@ -75,8 +75,8 @@ export type VerifiedToken<C extends Dict = Dict> = {
    * merged under the header registry's `placement` allowlist — the unprotected
    * one first, filtered to the parameters permitted there, then overwritten by
    * the protected one — so the only values that can arrive unauthenticated are
-   * `kid` and `iv`, the routing/AEAD infrastructure RFC 9052 §3.1 puts in the
-   * unprotected bucket precisely because it is not security-critical. Every
+   * `kid` and `iv`, the routing/AEAD infrastructure that rides the unprotected
+   * bucket (RFC 9052 §3.1). Every
    * parameter a verifier routes, audits or polices a token by is
    * `placement: "protected"` and is dropped on read exactly as it is refused on
    * write, so it cannot reach this header unsigned.
@@ -125,9 +125,7 @@ export type StructuredVerifiedToken<C extends Dict = Dict> = VerifiedToken<C> & 
  * The domain claims a profile's policy GUARANTEES on a verified token — the
  * `required` rules that name the VERIFY direction, intersected with the actual
  * claim keys, so entries that are not domain claims (e.g. `events`,
- * `token_introspection`) are simply skipped, never over-narrowed. The
- * domain-surface twin of `narrowed-jwt.ts`'s `GuaranteedKeys`, retargeted from
- * `ParsedJwtPayload` to `DomainClaims`.
+ * `token_introspection`) are simply skipped, never over-narrowed.
  *
  * ⚠ The direction filter is load-bearing: a requirement a profile declares for
  * mint alone says nothing about the token that arrived, so narrowing off it

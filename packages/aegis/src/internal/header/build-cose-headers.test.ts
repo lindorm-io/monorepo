@@ -23,11 +23,10 @@ const build = (
  * refused on one encoding and accepted on the other is refused or accepted by the
  * presenter's choice of encoding, not by the deployment's policy.
  *
- * ⚠ ONLY THE `custom` BAGS CAN PUT ANYTHING IN THE UNPROTECTED BUCKET. A
- * registered parameter has no caller-chosen bucket — see the function's docstring
- * — so every unprotected row here states an UNREGISTERED key, and the rows that
- * once stated a registered one in `unprotected` now state the refusal that
- * replaced them (`header_registered_in_custom`).
+ * ⚠ ONLY THE `custom` BAGS CAN PUT ANYTHING IN THE UNPROTECTED BUCKET, because a
+ * registered parameter has no caller-chosen bucket (`build-cose-headers.ts`). So
+ * every unprotected row here states an UNREGISTERED key, and a registered one in
+ * `unprotected` states its refusal instead (`header_registered_in_custom`).
  */
 describe("buildCoseHeaders", () => {
   describe("a parameter that emits nothing is not a parameter", () => {
@@ -67,9 +66,8 @@ describe("buildCoseHeaders", () => {
     });
 
     test("an empty crit list is neither emitted nor treated as a crit", () => {
-      // RFC 7515 §4.1.11 and RFC 9052 §3.1 both forbid producing the empty list,
-      // and aegis's own reader refuses one — so the parameter must not reach the
-      // protected bucket at all.
+      // Both wires forbid the empty list (RFC 7515 §4.1.11, RFC 9052 §3.1) and
+      // aegis's own reader refuses one, so it must not reach the protected bucket.
       const { protectedEntries } = build({ header: { crit: [] } });
 
       expect(protectedEntries.has(2)).toBe(false);
@@ -78,9 +76,8 @@ describe("buildCoseHeaders", () => {
     test("an EMPTY crit list in the UNPROTECTED bucket is still refused", () => {
       // ⚠ THE PRUNE DOES NOT REACH THE CUSTOM BAGS, so unlike the protected `crit`
       // above, an empty one written into `custom.unprotected` is not normalised
-      // away — and the refusal is right either way: RFC 9052 §3.1 requires
-      // critical parameters to be integrity-protected, so `crit` has no business
-      // in that bucket whatever its value.
+      // away — and the refusal is right either way, because `crit` has no business
+      // in that bucket whatever its value (RFC 9052 §3.1).
       expect(() => build({ custom: { unprotected: { crit: [] } } })).toThrow(
         expect.objectContaining({ code: "cose_crit_unprotected" }),
       );
@@ -139,9 +136,9 @@ describe("buildCoseHeaders", () => {
     });
 
     test("crit is still refused from the unprotected bucket when it names something", () => {
-      // RFC 9052 §3.1 requires critical parameters to be integrity-protected, and
-      // that verdict is reported ahead of the registered-in-custom one: the wire's
-      // own constraint outranks aegis's split policy.
+      // RFC 9052 §3.1, and that verdict is reported ahead of the
+      // registered-in-custom one: the wire's own constraint outranks aegis's split
+      // policy.
       expect(() => build({ custom: { unprotected: { crit: ["oid"] } } })).toThrow(
         expect.objectContaining({ code: "cose_crit_unprotected" }),
       );
@@ -161,27 +158,25 @@ describe("buildCoseHeaders", () => {
 
     /**
      * ⚠ RULE 2 ASKS AN OWN-KEY QUESTION, and `in` answers a different one: it walks
-     * `Object.prototype`, so every one of these members "was" in a bucket the
-     * caller never supplied. `{ crit: ["toString"] }` alone — no `unprotected` bag
-     * anywhere — was refused as a crit-listed parameter that "cannot be
-     * unprotected". `Object.hasOwn` is the only membership test this package uses
-     * on a caller-influenced key.
+     * `Object.prototype`, so every one of these members reads as present in a bucket
+     * the caller never supplied — `{ crit: ["toString"] }` with no `unprotected` bag
+     * anywhere is refused as a crit-listed parameter that cannot be unprotected.
+     * `Object.hasOwn` is the only membership test this package uses on a
+     * caller-influenced key.
      */
     test("a crit member named after an Object.prototype member is not 'unprotected'", () => {
       for (const member of ["toString", "constructor", "valueOf", "hasOwnProperty"]) {
-        // The member is still refused — now by the ELIGIBILITY gate, which runs
-        // ahead of all four rules and is the accurate verdict for a member that
-        // is no registered parameter at all — and NOT by rule 2, which had it
-        // "placed in a bucket" the caller never supplied. (Before the gate the
-        // refusal came one step later, from the label resolver.)
+        // The member is refused by the ELIGIBILITY gate, which runs ahead of all
+        // four rules and is the accurate verdict for a member that is no registered
+        // parameter at all — NOT by rule 2, which would report it as placed in a
+        // bucket the caller never supplied.
         expect(() => build({ header: { crit: [member] } })).toThrow(
           expect.objectContaining({ code: "cwt_crit_param_not_permitted" }),
         );
 
-        // …and the normalisation that turned an absent bag into `{}` does not
-        // resurrect rule 2 either: an own-key test on an empty object is the same
-        // statement the old `unprotected &&` guard made, with nothing to keep in
-        // step. A REAL unprotected bag beside it changes nothing.
+        // …and the normalisation that turns an absent bag into `{}` does not
+        // resurrect rule 2 either: an own-key test on an empty object says what an
+        // `unprotected &&` guard would. A REAL unprotected bag changes nothing.
         expect(() =>
           build({
             header: { crit: [member] },
@@ -212,14 +207,11 @@ describe("buildCoseHeaders", () => {
     });
 
     /**
-     * ⚠ `crit: ["alg"]` USED TO PASS THIS STAGE and now does not, and the reason
-     * is a different question rather than a stricter answer to the same one.
-     * Whether the FINISHED bucket carries a value for the member is still not
-     * this function's question — `alg` is written by `mergeCoseProtected`, which
-     * is where the satisfaction check lives. Whether the member may be named in
-     * `crit` AT ALL is answerable here, on the caller's bag, and RFC 7515
-     * §4.1.11 answers it: a producer must not name a specification-defined
-     * parameter, whatever any bucket goes on to carry.
+     * ⚠ TWO DIFFERENT QUESTIONS, not a stricter answer to one. Whether the FINISHED
+     * bucket carries a value is NOT this function's question — `alg` is written by
+     * `mergeCoseProtected`, where the satisfaction check lives. Whether the member
+     * may be named in `crit` AT ALL is answerable here, on the caller's bag
+     * (RFC 7515 §4.1.11), whatever any bucket goes on to carry.
      */
     test("a crit naming a specification-defined parameter is refused at this stage", () => {
       expect(() => build({ header: { crit: ["alg"] } as never })).toThrow(
@@ -246,11 +238,10 @@ describe("buildCoseHeaders", () => {
      * compare members against the protected map's keys without translating either.
      *
      * ⚠ A DOMAIN-spelled member does not reach that translation at all: the
-     * eligibility gate runs on the WIRE-NAMED bag first, and `objectId` is no
-     * JOSE wire name, so it is refused before any label is resolved. That closes
-     * the standing JOSE/COSE asymmetry this test used to record — the JOSE wire
-     * door mapped the same member to `oid` and MINTED, while this one threw
-     * `header_no_cose_label`. The DOMAIN door is unaffected on both wires:
+     * eligibility gate runs on the WIRE-NAMED bag first, and `objectId` is no JOSE
+     * wire name, so it is refused before any label is resolved. Without that gate
+     * the JOSE wire door maps the same member to `oid` and MINTS while this one
+     * throws `header_no_cose_label`. The DOMAIN door is unaffected on both wires —
      * `mapTokenHeader` runs `criticalToWire` at the crossing, so
      * `critical: ["objectId"]` arrives here already spelled `oid`.
      */

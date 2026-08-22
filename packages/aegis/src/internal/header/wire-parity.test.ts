@@ -19,14 +19,13 @@ const logger = createMockLogger();
  * encodings, for the parameters a caller can set and COSE can carry, generated
  * FROM the registry so no new parameter has to be remembered into it.
  *
- * A caller who can choose the encoding must not be able to choose the OUTCOME. If
- * a parameter reaches the JOSE wire and vanishes on the COSE one — or is refused
- * on one and minted on the other — then the same call means two different things,
- * and which one it means is picked by whoever picks the wire. That is the class of
- * defect this exists for, and every instance of it found so far was found by
- * someone happening to check: a caller `cty: ""` was pruned on JOSE and written to
- * COSE as `[3, ""]`, because the JOSE tiers cross a normalisation and the COSE
- * derived tier is written straight into the label map.
+ * A caller who can choose the encoding must not be able to choose the OUTCOME. If a
+ * parameter reaches the JOSE wire and vanishes on the COSE one — or is refused on
+ * one and minted on the other — then the same call means two different things, and
+ * which one it means is picked by whoever picks the wire. The shape of it: the JOSE
+ * tiers cross a normalisation while the COSE derived tier is written straight into
+ * the label map, so a caller `cty: ""` prunes on one wire and emits `[3, ""]` on
+ * the other.
  *
  * ⚠ IT IS NOT THE GUARD FOR THE REGISTRY, AND MUST NOT BE READ AS ONE. It compares
  * the two wires with each other; it says nothing about whether either is RIGHT.
@@ -37,24 +36,20 @@ const logger = createMockLogger();
  * `normalise-headers.test.ts` plus the scenario rows; what this file owns is that
  * the two encodings answer the SAME call the same way.
  *
- * ⚠ THE PARTICIPANTS ARE DERIVED, NEVER LISTED. Two exclusions, and each is read
- * off data that already exists for its own reasons — an allowlist written here
- * would be one more thing to keep in step, which is the failure mode the guard is
- * meant to remove:
+ * ⚠ THE PARTICIPANTS ARE DERIVED, NEVER LISTED. Two exclusions, each read off data
+ * that already exists for its own reasons — an allowlist written here would be one
+ * more thing to keep in step, the failure mode the guard exists to remove:
  *
  *   - a parameter the KITS RESERVE (`KitCapabilities.reserved`, the union of the
- *     JOSE and COSE rows — 14 of the 21 entries). A caller cannot set it at all,
- *     so a caller's choice of encoding reaches nothing.
- *   - of the seven that survive, a parameter COSE DOES NOT CARRY (`wire.cose` is
- *     `absent`) — `jku`, `jwk`, `zip`. There is no label for it to be present
- *     under, so the wires cannot agree and are not asked to. The registry states
- *     the absence with its reason, on the entry. (Twelve entries are COSE-absent;
- *     the other nine are reserved as well, so this exclusion is what removes only
- *     these three.)
+ *     JOSE and COSE rows). A caller cannot set it at all, so a caller's choice of
+ *     encoding reaches nothing.
+ *   - a parameter COSE DOES NOT CARRY (`wire.cose` is `absent`). There is no label
+ *     for it to be present under, so the wires cannot agree and are not asked to;
+ *     the registry states the absence with its reason, on the entry.
  *
- * That leaves FOUR — `crit`, `cty`, `oid`, `x5u` — and the count is the registry's,
- * not a target: it moves when a parameter is added, when one gains a COSE label, or
- * when the kits reserve one.
+ * The surviving count is the registry's, not a target: it moves when a parameter is
+ * added, when one gains a COSE label, or when the kits reserve one. It is asserted
+ * below rather than restated here.
  *
  * ⚠ THE VERDICT IS A CLASS, NOT A CODE. The two wires namespace their refusals
  * differently by design — `jose_reserved_header` / `cose_reserved_header`,
@@ -186,13 +181,11 @@ describe("the JOSE and COSE wires answer the same call identically", () => {
   });
 
   /**
-   * ⚠ THE FLOOR, and it is here because the guard did not have one: every verdict
-   * above maps ANY throw to `"refused"`, so a shared cause — a broken fixture key,
-   * a gate added to both kits, a renamed `sign` — collapses both wires to the same
-   * wrong answer and every parity row agrees. Measured, not reasoned: a blanket
-   * `throw` planted at the top of `JwsKit.sign` AND `CwsKit.sign` left all nine of
-   * the rows this file had at the time GREEN. With this row and the snapshots, the
-   * same sabotage reddens eight of ten.
+   * ⚠ THE FLOOR. Every verdict above maps ANY throw to `"refused"`, so a shared
+   * cause — a broken fixture key, a gate added to both kits, a renamed `sign` —
+   * collapses both wires to the same wrong answer and every parity row agrees. A
+   * blanket `throw` at the top of `JwsKit.sign` AND `CwsKit.sign` leaves the
+   * relative rows GREEN; this row and the snapshots are what redden it.
    *
    * So one row asserts an ABSOLUTE verdict rather than a relative one: `cty` is
    * the parameter both wires are known to mint (JOSE `cty`, COSE label 3), stated
@@ -226,9 +219,9 @@ describe("the JOSE and COSE wires answer the same call identically", () => {
     },
   );
 
-  // ⚠ THE EMPTY FORM IS THE HALF THAT BROKE. A real value crosses the same tiers
-  // on both wires; an empty one meets a PRUNE on the way, and the prune is what
-  // the two encodings had reached differently.
+  // ⚠ THE EMPTY FORM IS THE FRAGILE HALF. A real value crosses the same tiers on
+  // both wires; an empty one meets a PRUNE on the way, which is the step the two
+  // encodings reach at different points.
   test.each(PARTICIPANTS.filter((p) => p.empty !== undefined))(
     "$jose is present on both wires or absent from both — the empty form",
     ({ jose, label, empty }) => {

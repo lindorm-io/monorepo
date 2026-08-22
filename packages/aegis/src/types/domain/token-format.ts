@@ -7,9 +7,8 @@ import type { TokenFormatTag } from "./verified-token.js";
  * `encrypt` option or `aegis.encrypt`, never by naming the format.
  *
  * Public because it is the type of `ProfileMintOptions.format` and
- * `RawSignInput.format` — both caller-facing. It used to sit unexported beside a
- * one-line identity function that "selected" it, so a consumer annotating a
- * variable it was about to pass had no name to reach for.
+ * `RawSignInput.format` — both caller-facing, so a consumer annotating a variable
+ * it is about to pass has a name to reach for.
  */
 export type TokenFormat = Exclude<TokenFormatTag, "jwe" | "cwe">;
 
@@ -18,8 +17,7 @@ export type TokenFormat = Exclude<TokenFormatTag, "jwe" | "cwe">;
  *
  * ⚠ Narrower than {@link TokenFormat} on purpose. A profile is a statement about
  * CLAIMS, so it has nothing to say about an opaque signature: `mint(profile, …,
- * { format: "jws" })` used to silently emit a JWT, and `{ format: "cws" }` used
- * to reach the COSE typ derivation and throw about a media type the caller never
- * wrote — after both keys had been resolved. Neither is expressible now.
+ * { format: "jws" })` and `{ format: "cws" }` are compile errors rather than
+ * calls that resolve two keys and then emit the wrong wire.
  */
 export type ClaimsTokenFormat = Extract<TokenFormat, "jwt" | "cwt" | "cwm">;
