@@ -33,7 +33,6 @@
   "scripts": {
     "build": "rimraf dist && tsc -b ./tsconfig.build.json",
     "corpus": "tsx src/__fixtures__/run-corpus.ts",
-    "corpus:rfc": "tsx src/__fixtures__/spec-corpus/refresh.ts",
     "prettier": "prettier --write ./src/*",
     "test": "vitest run",
     "test:unit": "vitest run --exclude '**/*.integration.test.ts'",
