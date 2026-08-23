@@ -13,6 +13,7 @@ import type {
   StdClaims,
 } from "../claims/domain/index.js";
 import type { AegisSignKey } from "../keys/key-selectors.js";
+import type { DerivedHashClaim } from "./domain-assert.js";
 import type { DomainTokenEnvelope } from "./domain-envelope.js";
 import type { EncryptedToken } from "./encrypted-token.js";
 import type { TokenFormat } from "./token-format.js";
@@ -21,7 +22,7 @@ export type SignJwtContent = Omit<
   StdClaims,
   "expiresAt" | "issuedAt" | "issuer" | "tokenId"
 > &
-  Omit<OidcClaims, "accessTokenHash" | "codeHash" | "stateHash"> &
+  Omit<OidcClaims, DerivedHashClaim> &
   PopClaims &
   DelegationClaims &
   OAuthClaims &

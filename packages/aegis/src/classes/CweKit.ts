@@ -1,4 +1,5 @@
 import { AesKit } from "@lindorm/aes";
+import { isString } from "@lindorm/is";
 import type { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import { CweError } from "../errors/index.js";
@@ -27,6 +28,8 @@ import { normaliseHeaders } from "../internal/header/normalise-headers.js";
 import { coseByJose } from "../internal/header/header-registry.js";
 import { KIT_CAPABILITIES } from "../internal/registry/kit-capabilities.js";
 import { reconstructContent, serialiseContent } from "../internal/utils/content-codec.js";
+import { assertEncryptionMatch } from "../internal/utils/assert-encryption-match.js";
+import { assertWireTyp } from "../internal/utils/assert-wire-typ.js";
 import { buildMediaType } from "../internal/utils/compute-typ-header.js";
 import { rejectUnknownCritical } from "../internal/utils/reject-unknown-critical.js";
 import { resolveWideCertBinding } from "../internal/cose/cose-wide-cert-binding.js";
@@ -260,25 +263,63 @@ export class CweKit implements ICweKit {
         "The COSE_Encrypt0 ciphertext slot is not a byte string, so there is nothing to decrypt.",
     });
 
-    // The content-encryption algorithm is self-describing — read it from the
-    // protected header (label 1) rather than the key. It also fixes the tag
-    // length (GCM/CCM-128 = 16 bytes, CCM-64 = 8).
     const decodedProtected = decodeProtectedHeader(protectedBstr);
-    const encryption = coseLabelToEnc(decodedProtected.get(coseByJose("alg")) as number);
 
     const protectedWire = coseWireHeader(decodedProtected, "enc");
     const protectedHeader = protectedWire.header;
     const unprotectedWire = coseWireHeader(unprotected, "enc");
 
+    // A typ-LESS COSE_Encrypt0 is accepted here; a PRESENT string typ must be this
+    // family's. A NON-STRING typ reaches the gate as absent — the same answer
+    // `internal/cose/decode-cwt.ts` gives the CWT door for the identical value, so
+    // the two COSE doors agree on what a typ IS. It rides the protected bucket,
+    // which is the AEAD's AAD, so nothing here is attacker-settable.
+    // RFC 9596 §2, RFC 9596 §3.
+    assertWireTyp({
+      typ: isString(protectedHeader.typ) ? protectedHeader.typ : undefined,
+      accept: ["application/cwe"],
+      suffix: "+cwe",
+      presence: "optional",
+      error: CweError,
+      code: "cwe_invalid_typ",
+      title: "CWE Invalid Typ",
+      details:
+        "Header typ must be application/cwe or a <type>+cwe media type to decrypt as a COSE_Encrypt0.",
+    });
+
     // `crit` (RFC 9052 §3.1) off the PROTECTED bucket — which for a COSE_Encrypt0
     // is the AAD, so it is the one bucket the AEAD covers. Enforced BEFORE the
-    // decryption, exactly as JweKit does.
+    // decryption, exactly as JweKit does, and before the encryption gate below: a
+    // critical extension this reader does not implement is the producer saying the
+    // header cannot be correctly interpreted without it, so a verdict about any
+    // other parameter's value rests on a reading the producer already called
+    // insufficient.
     rejectUnknownCritical({
       header: protectedHeader,
       custom: protectedWire.custom,
       declared: options.crit,
       format: "cwe",
       error: CweError,
+    });
+
+    // Label 1 also fixes the AEAD tag length (GCM/CCM-128 = 16 bytes, CCM-64 = 8),
+    // which is what splits the ciphertext below.
+    const encryption = coseLabelToEnc(decodedProtected.get(coseByJose("alg")) as number);
+
+    // The label names what the SENDER used; `this.encryption` is what this
+    // deployment configured. The protected bucket is the AEAD's AAD, so the two
+    // disagreeing is a producer's choice rather than something an attacker can
+    // reach — what it would otherwise mean is that a `dir` secret shared with a
+    // peer serves an AEAD, a tag length and a key split this recipient never
+    // agreed to, with its own `defaultEncryption` silently ignored. The JOSE twin
+    // is `JweKit.decrypt`.
+    assertEncryptionMatch({
+      actual: encryption,
+      expected: this.encryption,
+      format: "cwe",
+      error: CweError,
+      details:
+        "The protected header's content-encryption label does not match the content-encryption algorithm this kit is configured to accept.",
     });
 
     // COSE ciphertext = ciphertext ‖ tag (the tag is the trailing bytes).
@@ -302,8 +343,6 @@ export class CweKit implements ICweKit {
     const tag = coseCiphertext.subarray(coseCiphertext.length - tagBytes);
 
     const aad = buildEncStructure(protectedBstr);
-    // The label off the protected header is the authority here — it names what
-    // the sender used, which may not be what this key declares.
     const plaintext = new AesKit({ kryptos: this.kryptos }).decryptContent({
       encryption,
       aad,

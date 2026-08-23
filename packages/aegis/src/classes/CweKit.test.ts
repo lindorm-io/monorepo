@@ -9,7 +9,10 @@ import {
   decodeProtectedHeader,
   encodeProtectedHeader,
 } from "../internal/cose/structures.js";
+import { TEST_OCT_KEY_ENC, TEST_OCT_KEY_ENC_CBC } from "../__fixtures__/keys.js";
+import { foreignEncrypt0 } from "../__fixtures__/foreign-encrypt0.js";
 import { spliceCoseSlot } from "../__fixtures__/splice-cose-slot.js";
+import { splitEncrypt0 } from "../internal/cose/split-encrypt0.js";
 import { CweKit } from "./CweKit.js";
 
 describe("CweKit (COSE_Encrypt0)", () => {
@@ -55,6 +58,206 @@ describe("CweKit (COSE_Encrypt0)", () => {
 
     expect(thrown).toBeInstanceOf(AesError);
     expect((thrown as AesError).code).toBe("decryption_failed");
+  });
+
+  // ⛔ THE READ SIDE MUST MEAN WHAT THE WRITE SIDE MEANT. The label off the
+  // protected header names what the SENDER used; it is not authority for what
+  // this recipient agreed to accept. Both fixtures below carry the SAME 32 secret
+  // bytes and differ only in the content encryption they declare, which is what
+  // makes the confusion reachable at all: one `dir` secret satisfies the CEK
+  // length of an AES-256-GCM key AND of an `A128CBC-HS256` (HMAC key ‖ AES-128
+  // key) pair, so a peer holding it can produce a token this key decrypts under a
+  // cipher, a tag length and a key split the deployment never configured.
+  describe("the content-encryption label against the configured encryption", () => {
+    const logger = createMockLogger();
+    const payload = Buffer.from("the cwt claims bytes");
+
+    test("carries one secret under two declared encryptions, which is what makes the pair reachable", () => {
+      expect(TEST_OCT_KEY_ENC.export("b64").privateKey).toBe(
+        TEST_OCT_KEY_ENC_CBC.export("b64").privateKey,
+      );
+      expect(TEST_OCT_KEY_ENC.encryption).toBeNull();
+      expect(TEST_OCT_KEY_ENC_CBC.encryption).toBe("A128CBC-HS256");
+    });
+
+    test("refuses a token whose label names an encryption this kit is not configured to accept", () => {
+      const cbcToken = new CweKit({ kryptos: TEST_OCT_KEY_ENC_CBC, logger }).encrypt(
+        payload,
+        { tokenType: "at", proprietary: true },
+      );
+
+      let thrown: unknown;
+
+      try {
+        new CweKit({ kryptos: TEST_OCT_KEY_ENC, logger }).decrypt(cbcToken);
+      } catch (error) {
+        thrown = error;
+      }
+
+      // ⚠ THE WORDS, not just the code — the same reason the typ row below states
+      // them: `details` is a per-call-site literal a consumer reads, and nothing
+      // else in the package holds it.
+      expect(thrown).toBeInstanceOf(CweError);
+      expect({
+        code: (thrown as CweError).code,
+        title: (thrown as CweError).title,
+        details: (thrown as CweError).details,
+        debug: (thrown as CweError).debug,
+      }).toEqual({
+        code: "cwe_encryption_mismatch",
+        title: "CWE Encryption Mismatch",
+        details:
+          "The protected header's content-encryption label does not match the content-encryption algorithm this kit is configured to accept.",
+        debug: { actual: "A128CBC-HS256", encryption: "A256GCM" },
+      });
+    });
+
+    // The CONTRAST: the same kit reading its OWN output is unaffected, so the
+    // refusal above is attributable to the disagreement and not to the gate
+    // refusing everything.
+    test("accepts a token whose label names the encryption this kit is configured to accept", () => {
+      const kit = new CweKit({ kryptos: TEST_OCT_KEY_ENC, logger });
+
+      expect(kit.decrypt(kit.encrypt(payload, { tokenType: "at" })).payload).toEqual(
+        payload,
+      );
+    });
+
+    // ⚠⚠ THE DEPLOYMENT FALLBACK IS PART OF THE COMPARISON. A key declaring no
+    // `encryption` takes the deployment's `defaultEncryption`, so a read door that
+    // did not receive the same one resolves a different floor from the door that
+    // wrote the token and refuses aegis's own output. Both `internal/utils/
+    // raw-decrypt-cwe.ts` and `internal/cose/cose-encryption.ts#decryptCose` pass
+    // it for that reason; at the A256GCM default this test passes either way.
+    test("round-trips a token minted under a deployment defaultEncryption", () => {
+      const settings = {
+        kryptos: TEST_OCT_KEY_ENC,
+        logger,
+        defaultEncryption: "A128CBC-HS256" as const,
+      };
+      const token = new CweKit(settings).encrypt(payload, { proprietary: true });
+
+      expect(new CweKit(settings).decrypt(token).payload).toEqual(payload);
+      expect(() =>
+        new CweKit({ kryptos: TEST_OCT_KEY_ENC, logger }).decrypt(token),
+      ).toThrow(expect.objectContaining({ code: "cwe_encryption_mismatch" }));
+    });
+
+    // The ORDER both gates share with every other wire: a token tripping `crit`
+    // and the encryption gate answers the crit refusal, because a critical
+    // extension this reader does not implement makes every other verdict rest on
+    // a reading the producer already called insufficient.
+    test("answers the crit refusal for a token failing crit and the encryption gate together", () => {
+      const cbcToken = new CweKit({ kryptos: TEST_OCT_KEY_ENC_CBC, logger }).encrypt(
+        payload,
+        { tokenType: "at", proprietary: true, header: { crit: ["oid"], oid: "1.2.3" } },
+      );
+
+      expect(() =>
+        new CweKit({ kryptos: TEST_OCT_KEY_ENC, logger }).decrypt(cbcToken),
+      ).toThrow(expect.objectContaining({ code: "cwe_unsupported_crit_param" }));
+    });
+  });
+
+  // A producer may omit the typ and this door accepts one that does. What it
+  // refuses is a PRESENT string typ from another family. RFC 9596 §2, RFC 9596 §3.
+  describe("the protected typ", () => {
+    const kit = new CweKit({ kryptos, logger: createMockLogger() });
+    const payload = Buffer.from("the cwt claims bytes");
+
+    /**
+     * The protected map of a genuine aegis COSE_Encrypt0, for a foreign producer
+     * to re-seal with one cell changed. ⚠ Re-sealing rather than splicing is what
+     * makes the ACCEPTING rows sayable at all — slot 0 is the AEAD's own AAD.
+     */
+    const foreignProtected = (typ: unknown): Map<number | string, unknown> => {
+      const map = decodeProtectedHeader(
+        splitEncrypt0(kit.encrypt(payload, { tokenType: "at" })).protectedBstr,
+      );
+
+      if (typ === undefined) map.delete(coseByJose("typ"));
+      else map.set(coseByJose("typ"), typ);
+
+      return map;
+    };
+
+    test("accepts a COSE_Encrypt0 that declares no typ at all", () => {
+      const token = foreignEncrypt0(kryptos, foreignProtected(undefined), payload);
+
+      expect(kit.decrypt(token).payload).toEqual(payload);
+      expect(kit.decrypt(token).protectedHeader.typ).toBeUndefined();
+    });
+
+    // ⚠ A `uint` typ carries no media-type spelling to compare against a family, so
+    // it reaches the gate as absent — the same answer `decodeCwt` gives the CWT
+    // door for the identical value, which is what keeps the two COSE doors
+    // agreeing on what a typ IS. RFC 9596 §2.
+    test("accepts a COSE_Encrypt0 whose typ is a CoAP Content-Format uint", () => {
+      const token = foreignEncrypt0(kryptos, foreignProtected(61), payload);
+
+      // The typ is asserted as the UINT it is, not merely absent: without it the
+      // row would still pass if the passthrough arm ever stopped delivering the
+      // raw value, and it would then be pinning the wrong reason.
+      expect(kit.decrypt(token).protectedHeader.typ).toBe(61);
+      expect(kit.decrypt(token).payload).toEqual(payload);
+    });
+
+    // ⚠ THE WORDS, not just the code. `internal/utils/assert-wire-typ.test.ts`
+    // enumerates this configuration, but its constants are COPIES that never read
+    // production — so only driving the real door catches an edit to what THIS call
+    // site passes, which is what a consumer reads.
+    test("refuses a COSE_Encrypt0 typed as another media family", () => {
+      const token = foreignEncrypt0(
+        kryptos,
+        foreignProtected("application/at+cwt"),
+        payload,
+      );
+
+      let thrown: { code?: string; title?: string; details?: string; data?: unknown } =
+        {};
+
+      try {
+        kit.decrypt(token);
+      } catch (error) {
+        thrown = error as typeof thrown;
+      }
+
+      expect(thrown).toBeInstanceOf(CweError);
+      expect({
+        code: thrown.code,
+        title: thrown.title,
+        details: thrown.details,
+        data: thrown.data,
+      }).toEqual({
+        code: "cwe_invalid_typ",
+        title: "CWE Invalid Typ",
+        details:
+          "Header typ must be application/cwe or a <type>+cwe media type to decrypt as a COSE_Encrypt0.",
+        data: { typ: "application/at+cwt" },
+      });
+    });
+
+    // The two spellings the mint itself writes, both accepted — so the gate cannot
+    // refuse aegis's own output. `buildMediaType` produces exactly these.
+    test("accepts both spellings the mint writes", () => {
+      expect(kit.decrypt(kit.encrypt(payload, { tokenType: "at" })).payload).toEqual(
+        payload,
+      );
+      expect(kit.decrypt(kit.encrypt(payload, {})).payload).toEqual(payload);
+    });
+
+    // The ORDER, and it is the SAME on every door that has both gates: typ answers
+    // before crit (`JweKit`/`JwsKit`/`JwtKit`, and the CWT wire in
+    // `internal/wire/cose-token-wire.ts`).
+    test("answers the typ refusal for a token failing typ and crit together", () => {
+      const map = foreignProtected("application/at+cwt");
+      map.set(coseByJose("crit"), ["oid"]);
+      map.set("oid", "1.2.3");
+
+      expect(() => kit.decrypt(foreignEncrypt0(kryptos, map, payload))).toThrow(
+        expect.objectContaining({ code: "cwe_invalid_typ" }),
+      );
+    });
   });
 });
 

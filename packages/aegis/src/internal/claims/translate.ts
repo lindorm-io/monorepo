@@ -701,14 +701,6 @@ const walkObject = (
      * of strings — has no walker to speak for it, so
      * `Aegis.toWire({ act: { subject: 42 } })` yields `{ act: {} }`.
      *
-     * ⛔ THE LEAF GAP IS NOT THE SAME AT EVERY DEPTH, and the WRITE side is the
-     * open half: `Aegis.toWire({ subject: 42 })` yields `{"sub":42}`, CARRIED,
-     * because `domainToWire` runs no derived-decoder probe and the top level has
-     * no walker, while the member one level in is guarded by {@link encodeMember}.
-     * (The READ side agrees at both depths — `Aegis.toDomain({ sub: 42 })` reports
-     * no subject.) Closing it changes what EVERY registered claim writes and
-     * reports, so it needs its own corpus gate and is deliberately not done here.
-     *
      * ⚠ `null` NEVER REACHES THIS LINE — classified as absence above, so neither
      * dropped-as-malformed nor refused. See {@link isNotStated}.
      *
@@ -822,7 +814,7 @@ const refuseInvalidStructure = (claim: string, invalid: Array<InvalidEntry>): ne
 const writeDirection = (nameOf: NameSelector): WalkDirection => ({
   keyOf: (member) => member.domain,
   outKeyOf: nameOf,
-  translate: (member, inner, context) => encodeMember(member, inner, nameOf, context),
+  translate: (member, inner, context) => encodeIfReadable(member, inner, nameOf, context),
   flip: snakeKeys,
   prunesEmpty: true,
 });
@@ -945,7 +937,7 @@ export const encodeClaim = (
 ): unknown => {
   const context = claimContext(spec);
 
-  return refuseIfInvalid(context, encodeValue(spec, value, nameOf, context));
+  return refuseIfInvalid(context, encodeIfReadable(spec, value, nameOf, context));
 };
 
 /** Decode ONE claim from its wire form — the read-side twin of {@link encodeClaim}. */
@@ -960,30 +952,18 @@ export const decodeClaim = (
 };
 
 /**
- * ENCODE ONE MEMBER — and REFUSE TO WRITE WHAT THIS PACKAGE COULD NOT READ BACK.
+ * ENCODE — and REFUSE TO WRITE WHAT THIS PACKAGE COULD NOT READ BACK.
+ *
+ * ⭐ ONE function at BOTH depths: {@link encodeClaim} enters here for a top-level
+ * claim and {@link walkObject} for a member of one, so nothing about the rule is
+ * decided by how deep the value sits.
  *
  * ⚠⚠ THE ASYMMETRY IT CLOSES IS REAL. `encodeValue`'s scalar arms return the
  * caller's value UNCHECKED while `decodeValue`'s check it (`text` is
  * `isString(value) ? value : undefined`), so without this probe aegis signs a
- * token asserting a member its own reader reports as never stated — `region: 42`
+ * token asserting a claim its own reader reports as never stated — `region: 42`
  * from a JavaScript caller, an introspection response, or any door with no
  * declaration behind it.
- *
- * ⛔⛔ THE SAME HOLE IS OPEN AT THE TOP LEVEL, KNOWN, AND DELIBERATELY OUT OF
- * SCOPE HERE. A value can be NON-EMPTY — so the emission prune never touches it —
- * and still fail its own decoder, and it then fails DIFFERENTLY on each wire:
- *   - JOSE carries `nickname: 42` and `aegis.parse(token).profile` is `undefined`.
- *     The claim is LOST — issuer and reader disagree.
- *   - COSE carries `nickname: "42"`, a TEXT STRING, and the read returns it.
- *     `internal/cose/cwt-spec.ts`'s `fieldForClaim` maps `{ kind: "text" }` onto
- *     cbor's native `text` field kind, which COERCES before signing, so aegis
- *     signs a value the caller never supplied.
- * ⇒ A deployment minting a JWT and a CWT from one domain bag issues two tokens
- * that SAY DIFFERENT THINGS. The bare form is `Aegis.toWire({ subject: 42 })` ->
- * `{ sub: 42 }` where `Aegis.toDomain({ sub: 42 })` yields no claims. Closing it
- * means `domainToWire` running this same derived check, which changes behaviour
- * for every registered claim in both directions; it is filed with its own gate
- * rather than argued away.
  *
  * ⭐ THE CHECK IS DERIVED FROM THE DECODER, not restated beside it. Asking "would
  * the read side keep this?" by RUNNING the read side is the only formulation that
@@ -998,11 +978,10 @@ export const decodeClaim = (
  * Every other arm checks: `text`/`bstr` (`isString`), `int` (`isFinite`), `date`
  * (`toDate`), `array` (its `ArrayScalar` policy, or its element walk under `of`),
  * `object` (a non-object walks to `undefined`), and both `bespoke` sub-kinds.
- * ⛔ `bool` is NOT this walker's to tighten: `emailVerified` and
- * `phoneNumberVerified` are top-level `bool` claims, so narrowing it changes what
+ * ⛔ `bool` is NOT this probe's to tighten: narrowing the decode arm changes what
  * a READ of an existing foreign token reports.
  */
-const encodeMember = (
+const encodeIfReadable = (
   member: ClaimMemberSpec,
   value: unknown,
   nameOf: NameSelector,

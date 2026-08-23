@@ -25,7 +25,7 @@ import { isClaimOmitted } from "./is-claim-omitted.js";
  * ⛔ THE VALUE-SHAPE RULES ARE NOT SUBSUMED, AND THAT IS WHY THIS FILE EXISTS.
  * The walker's disposal for a value it cannot describe is a DROP, not a refusal:
  * a non-object actor walks to `undefined` and the claim is left off, and a member
- * whose value fails its own codec is skipped by `encodeMember`'s probe read. So
+ * whose value fails its own codec is skipped by `encodeIfReadable`'s probe read. So
  * `act: "service-1"` and `act: { subject: 1 }` would both mint a token — the
  * second carrying `act: {}`, an actor that identifies nobody — where here they
  * are refused with the position named.

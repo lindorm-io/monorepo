@@ -465,10 +465,9 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     // bare `"at+jwt"` here could not round-trip to itself (RFC 7515 §4.1.9).
     sample: "application/at+jwt",
     // PRUNE. ROUTING ON `typ` IS AEGIS POLICY, not a library requirement
-    // (RFC 9596 §2): `assertWireTyp` gates every read on it, so `""` would leave the
-    // token unroutable while looking declared. `buildMediaType` never returns `""`
-    // and `encodeJoseHeader` refuses a falsy `typ`, so aegis's own write cannot
-    // reach the cell.
+    // (RFC 9596 §2): `""` would leave the token unroutable while looking declared.
+    // `buildMediaType` never returns `""` and `encodeJoseHeader` refuses a falsy
+    // `typ`, so aegis's own write cannot reach the cell.
     whenEmpty: "prune",
     placement: "protected",
     critEligible: false,

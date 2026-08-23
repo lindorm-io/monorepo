@@ -195,6 +195,37 @@ describe("domainToJose — content -> wire mapping", () => {
     });
   });
 
+  // ⚠⚠ THE SAME SYMMETRY, ONE LEVEL OUT. The row above states it for a MEMBER of
+  // a structure; a top-level claim declares a value shape in the same registry and
+  // is read back through the same decoder, so depth cannot be what decides whether
+  // aegis signs a claim its own reader reports as never stated.
+  test("should refuse a wrongly-typed top-level claim on BOTH sides, exactly as it does one level in", () => {
+    expect(domainToJose({ subject: 42 as unknown as string })).toEqual({});
+    expect(joseToDomain({ sub: 42 }).claims).toEqual({});
+  });
+
+  // The strict-array form of the same rule: `amr` tolerates no scalar on read
+  // (`internal/claims/translate.ts#case "strict"`), so it must take none on write.
+  test("should refuse a scalar for a top-level array claim whose codec tolerates none", () => {
+    expect(domainToJose({ authMethods: "pwd" as unknown as Array<string> })).toEqual({});
+    expect(joseToDomain({ amr: "pwd" }).claims).toEqual({});
+  });
+
+  // The CONTRAST that keeps the two rows above from being read as "a scalar is
+  // dropped": an array claim whose codec DOES tolerate one keeps it, because the
+  // read side keeps it. `aud` wraps (RFC 7519 §4.1.3) and `scope` splits.
+  test("should carry a scalar for a top-level array claim whose codec tolerates one", () => {
+    expect(domainToJose({ audience: "a" as unknown as Array<string> })).toEqual({
+      aud: "a",
+    });
+    expect(joseToDomain({ aud: "a" }).claims.audience).toEqual(["a"]);
+
+    expect(domainToJose({ scope: "a b" as unknown as Array<string> })).toEqual({
+      scope: "a b",
+    });
+    expect(joseToDomain({ scope: "a b" }).claims.scope).toEqual(["a", "b"]);
+  });
+
   // The BOUNDARY row: the same two doors, the same member, a `null` instead — and
   // the same bytes, for a different reason. It is here rather than folded into
   // the row above because the two are separate rules that happen to agree on a

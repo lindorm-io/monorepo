@@ -634,6 +634,43 @@ describe("JweKit", () => {
       });
     });
 
+    // ⚠⚠ THE CODE AND THE TITLE ARE COMPUTED, not literals a reader can see:
+    // `internal/utils/assert-encryption-match.ts` derives both from the `format`
+    // argument this call site passes. So the wire tag is asserted here exactly —
+    // a mistyped one renames a caller-facing code and nothing else would notice.
+    test("refuses an enc the kit is not configured to accept, under this wire's own tag", () => {
+      let thrown: {
+        code?: string;
+        title?: string;
+        details?: string;
+        debug?: unknown;
+      } = {};
+
+      try {
+        kwKit.decrypt(craftJwe({ alg: "A256KW", enc: "A128GCM", typ: "JWE" }));
+      } catch (error) {
+        thrown = error as typeof thrown;
+      }
+
+      expect(thrown.code).toBe("jwe_encryption_mismatch");
+      expect(thrown.title).toBe("JWE Encryption Mismatch");
+      expect(thrown.details).toBe(
+        "The header enc does not match the content-encryption algorithm this kit is configured to accept.",
+      );
+      expect(thrown.debug).toEqual({ actual: "A128GCM", encryption: "A256GCM" });
+    });
+
+    // The CONTRAST: the configured enc gets PAST this gate and dies on the junk
+    // body instead, so the refusal above is the enc's doing and not the gate
+    // refusing every crafted token.
+    test("the configured enc passes the gate", () => {
+      expect(
+        codeOf(() =>
+          kwKit.decrypt(craftJwe({ alg: "A256KW", enc: "A256GCM", typ: "JWE" })),
+        ),
+      ).not.toBe("jwe_encryption_mismatch");
+    });
+
     test("⚠ an algorithm mismatch reports the offending value under `alg`", () => {
       // This wire answers with `data: { alg }`; JWT/JWS/CWT answer with
       // `data: { algorithm }`. The difference is a deliberate override at the

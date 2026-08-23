@@ -42,8 +42,15 @@ export const encryptCose = ({
    * data carries none and floors to the inferred `application/octet-stream`.
    */
   options: CweEncryptOptions;
-  /** Deployment fallback for a key that declares no `encryption`. */
-  defaultEncryption?: KryptosEncryption;
+  /**
+   * Deployment fallback for a key that declares no `encryption`.
+   *
+   * ⛔ REQUIRED-BUT-UNDEFINED, never optional, matching `AegisDeps`: with `?:` a
+   * caller that omits it compiles clean and the read kit resolves a DIFFERENT
+   * floor from the write kit, which is the shape of the defect this parameter was
+   * threaded to close.
+   */
+  defaultEncryption: KryptosEncryption | undefined;
 }): Buffer =>
   new CweKit({ certBindingMode, kryptos, logger, defaultEncryption }).encrypt(
     content,
@@ -58,6 +65,7 @@ export const encryptCose = ({
 export const decryptCose = <T extends TokenContent = Buffer>({
   certBindingMode,
   crit,
+  defaultEncryption,
   kryptos,
   logger,
   token,
@@ -65,14 +73,22 @@ export const decryptCose = <T extends TokenContent = Buffer>({
   certBindingMode?: CertificateBindingMode;
   /** The caller's `crit` declaration, handed to the kit's crit gate. */
   crit?: Array<string>;
+  /**
+   * The SAME deployment fallback {@link encryptCose} resolves from, and
+   * required-but-undefined for the same reason it is there.
+   */
+  defaultEncryption: KryptosEncryption | undefined;
   kryptos: IKryptos;
   logger: ILogger;
   token: Buffer;
 }): T => {
   // `CweKit.decrypt` strips the outer CWT tag itself; hand it the token verbatim.
-  const { payload } = new CweKit({ certBindingMode, kryptos, logger }).decrypt<T>(token, {
-    crit,
-  });
+  const { payload } = new CweKit({
+    certBindingMode,
+    defaultEncryption,
+    kryptos,
+    logger,
+  }).decrypt<T>(token, { crit });
   return payload;
 };
 

@@ -10,6 +10,7 @@ import { normaliseHeaders } from "../internal/header/normalise-headers.js";
 import { KIT_CAPABILITIES } from "../internal/registry/kit-capabilities.js";
 import { assertWireTyp } from "../internal/utils/assert-wire-typ.js";
 import { buildJweDecryptionRecord } from "../internal/utils/build-jwe-decryption-record.js";
+import { assertEncryptionMatch } from "../internal/utils/assert-encryption-match.js";
 import { buildMediaType } from "../internal/utils/compute-typ-header.js";
 import { reconstructContent, serialiseContent } from "../internal/utils/content-codec.js";
 import { isSupportedJoseAlgorithm } from "../internal/utils/is-supported-jose-algorithm.js";
@@ -158,8 +159,6 @@ export class JweKit implements IJweKit {
     token: string,
     options: DecryptTokenOptions = {},
   ): JoseDecryptedEncryptedToken<T> {
-    // Decrypt is driven by the DECRYPTION RECORD assembled below — the wire's
-    // own `enc` — so the kit needs no encryption of its own.
     const kit = new AesKit({ kryptos: this.kryptos });
 
     this.logger.debug("Decrypting token", { token: sanitiseToken(token) });
@@ -212,15 +211,14 @@ export class JweKit implements IJweKit {
     // header, so `decoded.header` is what is returned.
     const header: DomainTokenHeader = parseTokenHeader(decoded.header);
 
-    if (header.encryption !== this.encryption) {
-      throw new JweError("Unexpected encryption", {
-        code: "jwe_encryption_mismatch",
-        debug: { actual: header.encryption, encryption: this.encryption },
-        title: "JWE Encryption Mismatch",
-        details:
-          "The header enc does not match the content-encryption algorithm this kit is configured to accept.",
-      });
-    }
+    assertEncryptionMatch({
+      actual: header.encryption,
+      expected: this.encryption,
+      format: "jwe",
+      error: JweError,
+      details:
+        "The header enc does not match the content-encryption algorithm this kit is configured to accept.",
+    });
 
     // ECDH-ES party info (RFC 7518 §4.6): the recipient MUST re-derive with the
     // on-wire apu/apv or the Concat-KDF yields a different key and AEAD fails.
