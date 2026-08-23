@@ -6,8 +6,8 @@ type RawJwk = Record<string, unknown>;
 /**
  * Computes an RFC 7638 JWK Thumbprint from a raw JWK object.
  *
- * The canonical form uses only the required public-key fields for
- * each key type, serialised in lexicographic order per RFC 7638 s3.2.
+ * The canonical form uses only the required public-key fields for each key type
+ * (RFC 7638 §3.2), serialised in lexicographic order (RFC 7638 §3.3).
  */
 export const computeJwkThumbprint = (jwk: RawJwk): string => {
   const canonical = computeCanonicalJwk(jwk);

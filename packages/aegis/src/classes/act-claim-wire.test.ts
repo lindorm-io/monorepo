@@ -278,16 +278,19 @@ describe("the act / may_act claims on the wire", () => {
   });
 
   test("an actor member aegis does not declare rides UNTOUCHED on both wires, at depth", async () => {
-    // The actor's member set is OPEN (RFC 8693 §4.1, RFC 8693 §4.4). The member
-    // is carried VERBATIM — a case flip would rewrite a name another
-    // specification chose — and it is asserted at DEPTH because a tail policy
-    // declared on the claim and forgotten on the nested member would pass a
-    // depth-1 row and refuse this one: `open` sits on the CODEC, and the nested
-    // `act` member declares its own.
+    // AEGIS leaves the actor's member set open: the `act` and `may_act` codecs in
+    // `internal/claims/claims-registry.ts` declare `open: "verbatim"`, so a member
+    // aegis does not declare is carried rather than dropped, and carried
+    // VERBATIM — a case flip would rewrite a name another specification chose.
+    // Asserted at BOTH DEPTHS because `open` sits on the CODEC and the nested
+    // `act` member declares its own (`internal/claims/act-members.ts`): `closed`
+    // there REFUSES `registeredBy` one level down, and `flip` there spells it
+    // `registered_by`.
+    // RFC 8693 §4.1, RFC 8693 §4.4.
     const chain = {
       subject: "service-1",
-      registeredBy: "https://scheme.example.test",
-      act: { subject: "service-2", email: "service-2@example.test" },
+      registeredBy: "https://scheme-1.example.test",
+      act: { subject: "service-2", registeredBy: "https://scheme-2.example.test" },
     };
 
     for (const format of ["jwt", "cwt"] as const) {
@@ -297,8 +300,8 @@ describe("the act / may_act claims on the wire", () => {
         format,
         act: {
           sub: "service-1",
-          registeredBy: "https://scheme.example.test",
-          act: { sub: "service-2", email: "service-2@example.test" },
+          registeredBy: "https://scheme-1.example.test",
+          act: { sub: "service-2", registeredBy: "https://scheme-2.example.test" },
         },
       });
     }

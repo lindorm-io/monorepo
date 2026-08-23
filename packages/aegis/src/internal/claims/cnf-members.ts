@@ -36,11 +36,21 @@ import { type WireKey, wireAbsent, wireLabel, wireName } from "../registry/wire-
  *      with no name. That is a missing selector variant, not an impossibility —
  *      reason 1 is what decides it.
  *
- * ⚠⚠ THE MEMBER SET IS **OPEN** (RFC 7800 §3.1), so an unrecognised confirmation
- * member is carried rather than refused; the registry it is drawn from is open
- * too (RFC 7800 §6.2), and two of the five below entered by that route —
- * RFC 9449 §6.1 and RFC 8705 §3.1. `jwe` (RFC 7800 §3.3) is registered and aegis
- * does not carry it, which a closed set would have turned into a refusal.
+ * ⚠⚠ THE FIVE BELOW ARE NOT AN ALLOWLIST ON JOSE, AND THEY ARE ON COSE — so a
+ * `cnf` member aegis does not declare is carried on one wire and refused on the
+ * other. JOSE carries it verbatim through the translator (RFC 7800 §3.1,
+ * RFC 7800 §6.2); the COSE cnf is a registered label map (RFC 8747 §3.1,
+ * RFC 8747 §7.2), and `encodeCnf` (`internal/cose/cose-key.ts`) reaches only
+ * `jwk`/`kid` and answers `cose_cnf_unsupported` for every other PRESENT, OWN,
+ * STRING-KEYED member.
+ *
+ * Pinned by `cose-key.test.ts`'s "a PROTOTYPE key is unrepresentable, not silently
+ * skipped" and, at the public mint door, `confirmation-claim-wire.test.ts`'s "a
+ * COSE mint refuses an undeclared member the JOSE wire carries untouched".
+ *
+ * Two of the five entered through the IANA JWT Confirmation Methods registry
+ * (RFC 7800 §6.2) — RFC 9449 §6.1 and RFC 8705 §3.1 — and `jwe` (RFC 7800 §3.3)
+ * is registered but not carried here.
  *
  * ⚠ THE TAIL RIDES VERBATIM, never case-flipped: a tail member is another
  * specification's registered confirmation-method name (RFC 7800 §6.2.1), so the
@@ -84,7 +94,7 @@ export type CnfMemberSpec = {
  * the latter — and `wireAbsent` is what keeps the two apart.
  */
 const NO_COSE_JKT =
-  "aegis gives `jkt` no COSE label: the COSE thumbprint digests a deterministically encoded COSE_Key where the JOSE one digests a canonical JSON JWK, so the same key yields different bytes and neither can be relabelled as the other. RFC 9679 §5.5, RFC 7638.";
+  "aegis gives `jkt` no COSE label: the COSE thumbprint digests a deterministically encoded COSE_Key where the JOSE one digests a canonical JSON JWK, so the same key yields different bytes and neither can be relabelled as the other. RFC 9679 §5.5, RFC 7638 §3.";
 const NO_COSE_X5T =
   "The COSE cnf is a registered label map, so aegis will not invent a label for a member that has none — `x5t#S256` is carried on JOSE only. RFC 8705 §3.1, RFC 8747 §3.1.";
 const NO_COSE_JKU =
@@ -92,7 +102,7 @@ const NO_COSE_JKU =
 
 export const CNF_MEMBERS = [
   {
-    // RFC 9449 §6.1, RFC 7638 — the key a DPoP-bound token is bound to.
+    // RFC 9449 §6.1, RFC 7638 §3 — the key a DPoP-bound token is bound to.
     domain: "thumbprint",
     spec: {
       kind: "rfc",

@@ -13,8 +13,10 @@ import { type WireKey, wireLabel, wireName } from "../registry/wire-key.js";
  * shaper, the registry's sample checker — keys its visited set on that thunk,
  * which is stable where the array it returns is not.
  *
- * ⚠⚠ THE MEMBER SET IS OPEN (RFC 8693 §4.1, RFC 8693 §4.4), so the five below are not an
- * allowlist and a conformant foreign token stays readable.
+ * ⚠⚠ AEGIS CARRIES A MEMBER IT DOES NOT DECLARE rather than refusing it — the
+ * `open: "verbatim"` cell below — so the five declared here are not an allowlist
+ * and a foreign token naming the actor some other way stays readable.
+ * RFC 8693 §4.1, RFC 8693 §4.4.
  *
  * ⛔ OPENING IT IS ONLY SAFE BECAUSE THE COLLISION REFUSAL EXISTS. An open tail
  * writes into the same bag as the declared members, so a verbatim `subject`

@@ -11,8 +11,8 @@ import { isClaimSatisfied } from "./is-claim-satisfied.js";
  * accepted structurally (no extra required members).
  *
  * ⚠ A format's required members are a DEMAND, so they read `isClaimSatisfied`
- * rather than mere presence — a bare `=== undefined` check accepts an empty one.
- * RFC 9493 §3.2. Live on `security_event`, which requires `subjectId` and forbids
+ * rather than mere presence — a bare `=== undefined` check accepts an empty one
+ * (RFC 9493 §3.2). Live on `security_event`, which requires `subjectId` and forbids
  * `subject`, so `sub_id` is the only thing naming the subject of the event.
  *
  * ⚠⚠ IT REPORTS IN THE **DOMAIN** VOCABULARY — `subjectId.phoneNumber`, never the

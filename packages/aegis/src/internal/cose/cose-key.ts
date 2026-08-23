@@ -265,7 +265,7 @@ export const encodeCnf = (cnf: Dict): Map<number, unknown> => {
       data: { members: unrepresentable, supported: [...COSE_CNF_MEMBERS] },
       title: "COSE Confirmation Unsupported",
       details:
-        "aegis writes only an embedded key (jwk -> COSE_Key) and a kid (-> kid) into a COSE cnf; jkt/x5t#S256/jku have no COSE label here. A JOSE thumbprint cannot be relabelled as a COSE one — one digests a canonical JSON JWK and the other a deterministically encoded COSE_Key, so the same key yields different bytes — so a confirmation this wire cannot carry fails closed rather than being dropped. RFC 7638, RFC 9679 §3.",
+        "aegis writes only an embedded key (jwk -> COSE_Key) and a kid (-> kid) into a COSE cnf; jkt/x5t#S256/jku have no COSE label here. A JOSE thumbprint cannot be relabelled as a COSE one — one digests a canonical JSON JWK and the other a deterministically encoded COSE_Key, so the same key yields different bytes — so a confirmation this wire cannot carry fails closed rather than being dropped. RFC 7638 §3, RFC 9679 §3.",
     });
   }
 

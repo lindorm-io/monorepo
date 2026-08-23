@@ -360,6 +360,24 @@ describe("the confirmation claim on the wire", () => {
     });
   });
 
+  test("a COSE mint refuses an undeclared member the JOSE wire carries untouched", async () => {
+    // ⭐ THE JOSE/COSE ASYMMETRY AT THE PUBLIC DOOR, on the SAME confirmation the
+    // JOSE row above mints: `internal/claims/cnf-members.ts` is not an allowlist on
+    // JOSE and is one on COSE. The member is UNDECLARED, so it reaches the byte
+    // layer through `aegis.mint` rather than through the standalone `encodeCnf`
+    // door `internal/cose/cose-key.ts`'s unit rows use.
+    //
+    // ⚠ `keyId` is representable and is absent from the reported list, which is what
+    // says the refusal names the member rather than the whole confirmation.
+    await expect(
+      mint("cwt", { keyId: KID, tlsClientAuth: "surprise" }),
+    ).rejects.toMatchObject({
+      name: "CoseError",
+      code: "cose_cnf_unsupported",
+      data: { members: ["tlsClientAuth"] },
+    });
+  });
+
   test("a null confirmation member is refused, not erased into a weaker binding", async () => {
     // ⭐⭐ THE `cnf` EXEMPTION FROM THE NULL RULING, PINNED WITH THE FAULT THAT
     // EARNED IT. Everywhere else a null member is an ABSENCE and is omitted; a

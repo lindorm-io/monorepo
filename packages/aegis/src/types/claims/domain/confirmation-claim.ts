@@ -7,7 +7,13 @@ import type { Dict } from "@lindorm/types";
 // the mapping lives in `internal/claims/translate.ts`, driven by
 // `internal/claims/cnf-members.ts`.
 //
-// ⚠⚠ THE MEMBER SET IS OPEN: other specifications register confirmation methods
+// ⚠⚠ THE MEMBER SET IS OPEN ON JOSE AND CLOSED ON COSE AT THE MINT DOOR: the COSE
+// wire is a registered label map and `internal/cose/cose-key.ts`'s `encodeCnf`
+// writes only `jwk` (1) and `kid` (3), refusing anything else with
+// `cose_cnf_unsupported`. Its read twin `decodeCnf` walks those same two labels
+// and OMITS every other one, so the refusal is aegis's mint-side strictness and
+// not a read-side gate a caller can lean on.
+// On JOSE other specifications register confirmation methods
 // (RFC 7800 §3.1, RFC 7800 §6.2), and two of the five below arrived that way
 // (`jkt`, RFC 9449 §6.1; `x5t#S256`, RFC 8705 §3.1). The registry also names a
 // member aegis does not carry (`jwe`, RFC 7800 §3.3, RFC 7800 §6.2.2), so
