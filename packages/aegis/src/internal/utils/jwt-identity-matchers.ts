@@ -37,6 +37,11 @@ export const createIdentityMatchers = (
   // yields, and the COSE selector produces `cti`, which is not a JOSE wire name.
   const predicate: Record<string, ConditionOperator<any>> = {};
 
+  // Which CALLER key claimed each wire name. `predicate` alone would answer THAT a
+  // name was taken but not BY WHAT, and the refusal below has to name both
+  // spellings or it points the caller at a key they did not write.
+  const claimedBy = new Map<string, string>();
+
   for (const [key, value] of Object.entries(matchers)) {
     // The wire name comes from `matcherWireName`, the same registry resolution
     // `applyVerifyPolicy` inverts to report a refusal in the caller's vocabulary.
@@ -58,6 +63,25 @@ export const createIdentityMatchers = (
           "A verify option key does not map to any known JWT claim, so no predicate can be built for it.",
       });
     }
+
+    // ⛔ TWO CALLER KEYS, ONE WIRE NAME. A raw hash SOURCE and its DIGEST claim
+    // both resolve here (`accessToken` and `accessTokenHash` are both `at_hash`),
+    // and the assignments below are plain indexed writes — so without this the
+    // later key overwrites the earlier one and the accept/reject verdict turns on
+    // the order the caller happened to write them in.
+    const collision = claimedBy.get(mapped);
+
+    if (collision !== undefined) {
+      throw new AegisDomainError(`Conflicting matchers for claim: ${mapped}`, {
+        code: "jwt_verify_conflicting_matchers",
+        data: { claim: mapped, keys: [collision, key] },
+        title: "JWT Verify Conflicting Matchers",
+        details:
+          "Two verify option keys resolve to the same claim, so only one of them could be checked. State the raw source or the digest, never both.",
+      });
+    }
+
+    claimedBy.set(mapped, key);
 
     if (hashDomain && isString(value)) {
       predicate[mapped] = { $eq: createHash(algorithm, value) };

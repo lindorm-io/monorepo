@@ -1,8 +1,9 @@
+import type { AegisDomainError } from "../../errors/index.js";
 import { createHash } from "./create-hash.js";
 import { HASH_MATCHERS } from "./hash-matchers.js";
 import { createIdentityMatchers } from "./jwt-identity-matchers.js";
 import { createJwtValidate } from "./jwt-validate.js";
-import { claimByDomain, joseName } from "../claims/claims-registry.js";
+import { claimByDomain, coseName, joseName } from "../claims/claims-registry.js";
 import { describe, expect, test } from "vitest";
 
 // The claims the registry marks `value: "array"` AND the domain matcher surface
@@ -217,6 +218,68 @@ describe("createJwtValidate / createIdentityMatchers parity", () => {
 
         expect(verifyPredicate[jose]).toEqual({ $eq: digest });
         expect(assertPredicate[domain]).toEqual({ $eq: digest });
+      }
+    });
+
+    // ⛔ THE VERDICT MUST NOT TURN ON KEY ORDER. A raw source and its digest claim
+    // resolve to ONE wire name, and the predicate is a plain object — so the
+    // second write would displace the first and the caller would believe two
+    // bindings were checked when one was. Both orders, all three pairs, because a
+    // refusal on one order alone is the bug wearing a test.
+    test("should refuse a raw hash source presented beside the digest claim it derives, in either order, on either wire", () => {
+      for (const nameOf of [joseName, coseName]) {
+        for (const [source, digestClaim] of Object.entries(HASH_MATCHERS)) {
+          const raw = sources[source as keyof typeof sources];
+
+          for (const bag of [
+            { [source]: raw, [digestClaim]: "a-digest" },
+            { [digestClaim]: "a-digest", [source]: raw },
+          ]) {
+            let thrown: unknown;
+
+            try {
+              createIdentityMatchers("ES256", bag, nameOf);
+            } catch (error) {
+              thrown = error;
+            }
+
+            // ⚠ THE WORDS, not just the code: `title` and `details` are what a
+            // consumer reads, and nothing else in the package holds them.
+            expect(
+              {
+                code: (thrown as AegisDomainError)?.code,
+                title: (thrown as AegisDomainError)?.title,
+                details: (thrown as AegisDomainError)?.details,
+              },
+              JSON.stringify(bag),
+            ).toEqual({
+              code: "jwt_verify_conflicting_matchers",
+              title: "JWT Verify Conflicting Matchers",
+              details:
+                "Two verify option keys resolve to the same claim, so only one of them could be checked. State the raw source or the digest, never both.",
+            });
+            expect((thrown as AegisDomainError).data.keys).toEqual(
+              expect.arrayContaining([source, digestClaim]),
+            );
+          }
+        }
+      }
+    });
+
+    // The CONTRAST: each spelling ALONE still builds, so the refusal above is
+    // about the pair and not about either key.
+    test("should accept the raw source alone and the digest claim alone", () => {
+      for (const [source, digestClaim] of Object.entries(HASH_MATCHERS)) {
+        const raw = sources[source as keyof typeof sources];
+
+        for (const nameOf of [joseName, coseName]) {
+          expect(() =>
+            createIdentityMatchers("ES256", { [source]: raw }, nameOf),
+          ).not.toThrow();
+          expect(() =>
+            createIdentityMatchers("ES256", { [digestClaim]: "a-digest" }, nameOf),
+          ).not.toThrow();
+        }
       }
     });
   });

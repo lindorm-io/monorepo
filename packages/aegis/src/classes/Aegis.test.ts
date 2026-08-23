@@ -49,6 +49,55 @@ describe("Aegis", () => {
     amphora.add(TEST_OKP_KEY_ENC);
   });
 
+  // ⛔ THE ACCEPT/REJECT VERDICT MUST NOT TURN ON KEY ORDER. A raw hash source and
+  // its digest claim are two spellings of one wire claim, so a verify handed both
+  // could only check one — and which one it checked was decided by the order the
+  // caller wrote them in, with the other silently discarded. The binding
+  // `at_hash` exists to provide (OIDC Core §3.1.3.6) is what that discards.
+  describe("a raw hash source presented beside its digest claim", () => {
+    const ACCESS_TOKEN = "the-real-access-token";
+
+    const mintWithHashes = () =>
+      aegis.mint("default", {
+        subject: "user-1",
+        expires: "1h",
+        tokenType: "test_token",
+        accessToken: ACCESS_TOKEN,
+      });
+
+    test("should refuse the pair whichever way round the caller writes it", async () => {
+      const { token } = await mintWithHashes();
+
+      for (const assert of [
+        { accessToken: ACCESS_TOKEN, accessTokenHash: "not-the-hash" },
+        { accessTokenHash: "not-the-hash", accessToken: ACCESS_TOKEN },
+      ]) {
+        await expect(aegis.verify(token, assert), JSON.stringify(assert)).rejects.toThrow(
+          expect.objectContaining({ code: "jwt_verify_conflicting_matchers" }),
+        );
+      }
+    });
+
+    // The CONTRAST that makes the refusal attributable to the PAIR: the same
+    // token, the same false digest, stated alone — and it is refused for being
+    // false rather than for colliding.
+    test("should still refuse a digest that does not match, stated alone", async () => {
+      const { token } = await mintWithHashes();
+
+      await expect(
+        aegis.verify(token, { accessTokenHash: "not-the-hash" }),
+      ).rejects.toThrow(expect.objectContaining({ code: "claims_invalid" }));
+    });
+
+    test("should still accept the raw source that does hash to the claim, stated alone", async () => {
+      const { token } = await mintWithHashes();
+
+      await expect(
+        aegis.verify(token, { accessToken: ACCESS_TOKEN }),
+      ).resolves.toBeDefined();
+    });
+  });
+
   // The issuer aegis STAMPS is the service's own — amphora's `internal` scope,
   // which is the one reader of that setting. A verify-only deployment declares
   // none, and stamps none.

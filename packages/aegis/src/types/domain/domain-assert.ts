@@ -78,6 +78,9 @@ export type DomainHashMatchers = {
   authState?: string;
 };
 
+/** The digest claims each {@link DomainHashMatchers} source derives into. */
+export type DerivedHashClaim = "accessTokenHash" | "codeHash" | "stateHash";
+
 /**
  * The domain `assert` argument — the domain twin of the raw kit's
  * `Condition<WireClaims>`: the eight named {@link DomainClaimMatchers},
@@ -93,5 +96,10 @@ export type DomainAssert = DomainClaimMatchers &
  * The positional `assert` argument of `aegis.verify` — {@link DomainAssert}
  * plus the {@link DomainHashMatchers} only a surface holding a key (and thus an
  * algorithm) can evaluate.
+ *
+ * ⚠ A raw source and its digest claim are both statable here, and the PAIR is
+ * refused at `internal/utils/jwt-identity-matchers.ts` — the one place the two
+ * spellings meet on a single wire name, and the only guard that holds for a
+ * caller reaching this API with no type behind it.
  */
 export type VerifyAssert = DomainAssert & DomainHashMatchers;
