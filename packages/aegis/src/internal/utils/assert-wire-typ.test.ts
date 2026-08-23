@@ -1,18 +1,27 @@
 import { describe, expect, test } from "vitest";
-import { CwmError, CwtError, JweError, JwsError, JwtError } from "../../errors/index.js";
+import {
+  CwmError,
+  CwtError,
+  CweError,
+  JweError,
+  JwsError,
+  JwtError,
+} from "../../errors/index.js";
 import { assertWireTyp } from "./assert-wire-typ.js";
 
 /**
- * The FIVE configurations aegis actually runs — one per call site, and there are
- * five sites, not four, because the JWT family has two:
+ * The configurations aegis actually runs, one constant per call site:
  *
- * 1. {@link JWT} — `JwtKit.verify` (`classes/JwtKit.ts`).
- * 2. {@link JWT_PARSE} — the JOSE wire's keyless `decodeClaims`
- *    (`internal/wire/jose-token-wire.ts`), which differs from (1) by ONE WORD.
- * 3. {@link JWS} — `JwsKit.verify` (`classes/JwsKit.ts`).
- * 4. {@link JWE} — `JweKit.decrypt` (`classes/JweKit.ts`).
- * 5. {@link CWT} — `verifyCwt`, serving both claims kits
- *    (`internal/cose/verify-cwt.ts`), whose `code` is namespaced per format.
+ * - {@link JWT} — `JwtKit.verify` (`classes/JwtKit.ts`).
+ * - {@link JWT_PARSE} — the JOSE wire's keyless `decodeClaims`
+ *   (`internal/wire/jose-token-wire.ts`), which differs from `JWT` by ONE WORD.
+ * - {@link JWS} — `JwsKit.verify` (`classes/JwsKit.ts`).
+ * - {@link JWE} — `JweKit.decrypt` (`classes/JweKit.ts`).
+ * - {@link CWT} — `verifyCwt`, serving both claims kits
+ *   (`internal/cose/verify-cwt.ts`), whose `code` is namespaced per format.
+ * - {@link CWT_PARSE} — the COSE wire's keyless read
+ *   (`internal/wire/cose-token-wire.ts`), the same one-word split as `JWT_PARSE`.
+ * - {@link CWE} — `CweKit.decrypt` (`classes/CweKit.ts`).
  *
  * ⚠ These constants pin the PREDICATE, not the call sites: nothing here reads
  * production, so a config edited in a kit still passes every row below. What the
@@ -82,6 +91,27 @@ const CWT = {
     "Header typ is present but is not CWT or a <type>+cwt media type, so the token cannot be verified as a CWT.",
 } as const;
 
+/**
+ * The COSE wire's KEYLESS read. The same one-word split {@link JWT_PARSE} makes
+ * against {@link JWT}, for the same reason: that site never verifies anything.
+ */
+const CWT_PARSE = {
+  ...CWT,
+  details:
+    "Header typ is present but is not CWT or a <type>+cwt media type, so the token cannot be parsed as a CWT.",
+} as const;
+
+const CWE = {
+  accept: ["application/cwe"],
+  suffix: "+cwe",
+  presence: "optional",
+  error: CweError,
+  code: "cwe_invalid_typ",
+  title: "CWE Invalid Typ",
+  details:
+    "Header typ must be application/cwe or a <type>+cwe media type to decrypt as a COSE_Encrypt0.",
+} as const;
+
 describe("assertWireTyp", () => {
   describe("the exact spellings each family accepts", () => {
     test.each([
@@ -91,6 +121,8 @@ describe("assertWireTyp", () => {
       ["JWS (JOSE)", JWS, "JOSE"],
       ["JWE", JWE, "JWE"],
       ["CWT", CWT, "application/cwt"],
+      ["CWT (parse)", CWT_PARSE, "application/cwt"],
+      ["CWE", CWE, "application/cwe"],
     ])("%s accepts %#", (_name, config, typ) => {
       expect(() => assertWireTyp({ ...config, typ })).not.toThrow();
     });
@@ -104,6 +136,8 @@ describe("assertWireTyp", () => {
       [JWS, "example+jws"],
       [JWE, "example+jwe"],
       [CWT, "at+cwt"],
+      [CWT_PARSE, "at+cwt"],
+      [CWE, "at+cwe"],
     ])("accepts %#", (config, typ) => {
       expect(() => assertWireTyp({ ...config, typ })).not.toThrow();
     });
@@ -112,7 +146,7 @@ describe("assertWireTyp", () => {
   test("a typ-LESS token is well-formed wherever presence is optional", () => {
     // Presence requiredness is a DOMAIN/profile policy, not a wire-grammar one —
     // RFC 7515 §4.1.9 makes typ optional and an id_token carries none.
-    for (const config of [JWT, JWT_PARSE, JWS, CWT]) {
+    for (const config of [JWT, JWT_PARSE, JWS, CWT, CWT_PARSE, CWE]) {
       expect(() => assertWireTyp({ ...config, typ: undefined })).not.toThrow();
     }
   });
@@ -130,6 +164,8 @@ describe("assertWireTyp", () => {
       ["jws", JWS, "JWT"],
       ["jwe", JWE, "JWT"],
       ["cwt", CWT, "JWT"],
+      ["cwt (parse)", CWT_PARSE, "JWT"],
+      ["cwe", CWE, "application/at+cwt"],
     ])("%s", (_name, config, typ) => {
       let thrown: { code?: string; title?: string; details?: string; data?: unknown } =
         {};
@@ -156,6 +192,7 @@ describe("assertWireTyp", () => {
     expect(() => assertWireTyp({ ...JWS, typ: "JWT" })).toThrow(JwsError);
     expect(() => assertWireTyp({ ...JWE, typ: "JWT" })).toThrow(JweError);
     expect(() => assertWireTyp({ ...CWT, typ: "JWT" })).toThrow(CwtError);
+    expect(() => assertWireTyp({ ...CWE, typ: "JWT" })).toThrow(CweError);
   });
 
   test("the code, class and title the caller supplies are the ones raised", () => {

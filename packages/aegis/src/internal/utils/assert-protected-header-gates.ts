@@ -5,7 +5,7 @@ import { assertAlgorithmMatch } from "./assert-algorithm-match.js";
 import { rejectUnknownCritical } from "./reject-unknown-critical.js";
 
 /**
- * ⛔ THE TWO PROTECTED-HEADER GATES, IN ONE FIXED ORDER, FOR EVERY WIRE.
+ * ⛔ THE TWO PROTECTED-HEADER GATES, IN ONE FIXED ORDER.
  *
  * Both refuse BEFORE the signature or AEAD cycle, so a hostile header is answered
  * without spending cryptography on it. What the order decides is which refusal a
@@ -19,12 +19,7 @@ import { rejectUnknownCritical } from "./reject-unknown-critical.js";
  * parameter's VALUE rests on a reading the producer already called insufficient.
  * The algorithm-match is aegis's own defence-in-depth.
  *
- * ⚠ `CweKit.decrypt` CALLS THE CRIT GATE DIRECTLY and runs no algorithm-match: a
- * COSE_Encrypt0 carries the content encryption in label 1 rather than a
- * key-management `alg` to compare against a configured one, so there is no second
- * gate for an order to be stated between.
- *
- * ⛔ Both callers must pass the INTEGRITY-PROTECTED header, JOSE-named, and the
+ * ⛔ A caller must pass the INTEGRITY-PROTECTED header, JOSE-named, and the
  * SAME bucket's custom params. On COSE that is the protected bucket alone; the
  * unprotected one is covered by nothing. On JOSE the single header IS that header.
  */

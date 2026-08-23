@@ -84,6 +84,56 @@ describe("the raw namespace wrappers", () => {
     macAmphora.add(TEST_OCT_KEY_SIG); // HS256 — COSE_Mac0
   });
 
+  // ⚠⚠ THE DEPLOYMENT SETTING IS A FORWARDED FIELD TOO, and it has to reach BOTH
+  // doors. `CweKit.decrypt` compares the wire's content-encryption label against
+  // what the kit is configured to accept, and a key declaring no `encryption`
+  // takes that from `defaultEncryption` — so a decrypt wrapper that did not
+  // forward it resolves a different floor from the encrypt wrapper and refuses
+  // aegis's OWN output. Invisible at the `A256GCM` default, which both doors reach
+  // anyway; only a deployment that states something else can see it.
+  describe("the deployment content-encryption default reaches the decrypt wrapper", () => {
+    // ⚠ TWO DOORS, and they are threaded separately: `internal/utils/raw-decrypt-cwe.ts`
+    // for the raw namespace, `internal/wire/cose-token-wire.ts` for the encrypted-CWT
+    // VERIFY path. A test of one says nothing about the other.
+    test("mint -> verify round-trips a sealed CWT under a non-default deployment encryption", async () => {
+      // An OFFICIAL COSE label (RFC 9053 §4), so the interop gate is not what this
+      // row is measuring, and 256-bit so the 32-byte `dir` fixture satisfies it.
+      const deployment = new Aegis({
+        amphora,
+        logger,
+        defaultEncryption: "AES-CCM-16-64-256",
+      });
+
+      const { token } = await deployment.mint(
+        "id_token",
+        { subject: "user-1", audience: ["client-1"] },
+        { context: { accessTokenIssued: false }, encrypt: {}, format: "cwt" },
+      );
+
+      const verified = await deployment.verify("id_token", token, undefined, {
+        audience: "client-1",
+      });
+
+      expect(verified.claims.subject).toBe("user-1");
+    });
+
+    test("cwe.encrypt -> cwe.decrypt round-trips under a non-default deployment encryption", async () => {
+      const deployment = new Aegis({
+        amphora,
+        logger,
+        defaultEncryption: "A128CBC-HS256",
+      });
+
+      const { token } = await deployment.cwe.encrypt("hello cose", {
+        proprietary: true,
+      });
+
+      const { payload } = await deployment.cwe.decrypt(token);
+
+      expect(payload.toString()).toBe("hello cose");
+    });
+  });
+
   describe("a write wrapper forwards the caller's option bag to the kit", () => {
     // ⚠ The COSE carrier here is the PROTECTED header bag plus `tokenType`. aegis
     // decides which bucket a parameter travels in (the header registry's

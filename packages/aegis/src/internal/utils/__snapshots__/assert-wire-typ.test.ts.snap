@@ -1,5 +1,27 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`assertWireTyp > each wire refuses a foreign typ under its OWN code and words > cwe 1`] = `
+{
+  "code": "cwe_invalid_typ",
+  "data": {
+    "typ": "application/at+cwt",
+  },
+  "details": "Header typ must be application/cwe or a <type>+cwe media type to decrypt as a COSE_Encrypt0.",
+  "title": "CWE Invalid Typ",
+}
+`;
+
+exports[`assertWireTyp > each wire refuses a foreign typ under its OWN code and words > cwt (parse) 1`] = `
+{
+  "code": "cwt_invalid_typ",
+  "data": {
+    "typ": "JWT",
+  },
+  "details": "Header typ is present but is not CWT or a <type>+cwt media type, so the token cannot be parsed as a CWT.",
+  "title": "CWT Invalid Typ",
+}
+`;
+
 exports[`assertWireTyp > each wire refuses a foreign typ under its OWN code and words > cwt 1`] = `
 {
   "code": "cwt_invalid_typ",

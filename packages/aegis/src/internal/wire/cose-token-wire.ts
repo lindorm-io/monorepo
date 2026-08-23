@@ -306,6 +306,7 @@ export const COSE_TOKEN_WIRE: TokenWire = {
       payload: decryptCose<TokenContent>({
         certBindingMode: deps.certBindingMode,
         crit,
+        defaultEncryption: deps.defaultEncryption,
         kryptos,
         logger: deps.logger,
         token: bytes,
