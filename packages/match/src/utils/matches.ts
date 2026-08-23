@@ -43,9 +43,11 @@ const matchRootKey = <T extends Dict>(
       break;
   }
 
-  // The root of a condition names FIELDS. A condition operator here has no
-  // field to apply to, so it is malformed rather than a criterion that quietly
-  // matches nothing.
+  // The root of a condition names FIELDS, so nothing spelled as an operator has
+  // a field to apply to. ⚠ The `$` test is what makes the refusal complete: an
+  // UNREGISTERED `$` key clears `isConditionOperatorKey` and would otherwise be
+  // read as a field name and quietly match nothing.
+  // pinned: matches.test.ts, "M-7 — a condition operator at the ROOT throws".
   if (isConditionOperatorKey(key) || key.startsWith("$")) {
     throw new TypeError(`Operator ${key} cannot be used at the root of a condition`);
   }
