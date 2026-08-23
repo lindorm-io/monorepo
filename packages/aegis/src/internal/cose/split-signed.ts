@@ -4,6 +4,7 @@ import type { WireTokenHeader } from "../../types/index.js";
 import type { CoseLabel } from "./cose-label.js";
 import { coseWireHeader } from "../header/cose-wire-header.js";
 import { decodeCbor } from "./cbor.js";
+import { requireBstr } from "./require-bstr.js";
 import { requireCose } from "./require-cose.js";
 import { decodeProtectedHeader } from "./structures.js";
 import type { CoseArity } from "./unwrap-cose.js";
@@ -11,20 +12,22 @@ import type { CoseArity } from "./unwrap-cose.js";
 /** The wire segments of a signed COSE structure — COSE_Sign1 or COSE_Mac0. */
 export type SignedSegments = {
   /** The protected header byte string — the Sig/MAC structure input, so it travels raw. */
-  protectedBstr: Uint8Array;
+  protectedBstr: Buffer;
   /**
-   * ⚠ The payload byte string AS CBOR DECODED IT, which may be `null`: a DETACHED
-   * payload is legal COSE. Every read path refuses it, but in its own words, so
-   * the decision stays at the call site.
+   * ⚠ The payload slot AS CBOR DECODED IT — `unknown` because the arity gate
+   * counts ELEMENTS and nothing before this point checks the slot's type, so a
+   * producer that does not conform to RFC 9052 §4.2, RFC 9052 §6.2 arrives here
+   * with any CBOR type. Every read path refuses a nil slot, but in its own words,
+   * so the decision stays at the call site; `requireBstr` is what reaches the bytes.
    */
-  payload: Uint8Array | null | undefined;
+  payload: unknown;
   /**
-   * ⚠ The signature or authentication tag bytes AS CBOR DECODED THEM, which may be
-   * `null`: an `exactly: 4` arity counts ELEMENTS, not non-nil ones, so `null` in
-   * slot 4 reaches here intact. `requireSignature` refuses it at the call site,
-   * under that site's own leaf error class.
+   * ⚠ The signature or authentication tag slot AS CBOR DECODED IT — `unknown` for
+   * the same reason as `payload`: RFC 9052 §4.2, RFC 9052 §6.2 constrain it and
+   * the arity gate does not enforce them. `requireBstr` refuses a non-bstr at the
+   * call site, under that site's own leaf error class.
    */
-  signature: Uint8Array | null | undefined;
+  signature: unknown;
   /** The PROTECTED bucket in the JOSE wire vocabulary — the one a signature covers. */
   protectedHeader: WireTokenHeader;
   /**
@@ -68,25 +71,47 @@ export const splitSigned = (
     error,
     message,
     title,
-    details,
+    arityDetails,
+    protectedDetails,
   }: {
     arity: CoseArity;
     tags?: ReadonlyArray<number>;
     error: typeof CoseError;
     message: string;
     title: string;
-    details: string;
+    /** What a structure of the wrong SHAPE costs, in the caller's words. */
+    arityDetails: string;
+    /**
+     * What a slot-0 holding something other than a byte string costs, in the
+     * caller's words. ⚠ A SEPARATE string, because the two refusals share the
+     * `cose_malformed` code: handed the arity sentence, a reader whose structure
+     * has the right element count is told nothing that is true of its token.
+     */
+    protectedDetails: string;
   },
 ): SignedSegments => {
-  const [protectedBstr, unprotected, payload, signature] = requireCose(
-    decodeCbor(token),
-    { arity, tags, error, message, title, details },
-  ) as [
-    Uint8Array,
-    unknown,
-    Uint8Array | null | undefined,
-    Uint8Array | null | undefined,
-  ];
+  const contents = requireCose(decodeCbor(token), {
+    arity,
+    tags,
+    error,
+    message,
+    title,
+    details: arityDetails,
+  });
+
+  // The protected bucket is a bstr in every signed structure (RFC 9052 §3), so the
+  // refusal is identical on every path and belongs here rather than copied to each
+  // reader. ⚠ `decodeProtectedHeader` (`structures.ts`) judges the CBOR INSIDE the
+  // byte string and never the slot's own type, so this is the only gate that can
+  // name a non-bstr slot 0 — and the only one keeping it inside the `AegisError`
+  // contract a caller branches on to answer 401 rather than 500.
+  const protectedBstr = requireBstr(contents[0], {
+    error,
+    message,
+    title,
+    details: protectedDetails,
+  });
+  const [, unprotected, payload, signature] = contents;
 
   // Decoded ONCE and used twice: a second decode is a second chance for the raw
   // and translated buckets to disagree about the same bytes.

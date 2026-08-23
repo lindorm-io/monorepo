@@ -26,7 +26,9 @@ const OPTIONS = {
   error: CwsError,
   message: "Malformed COSE structure",
   title: "Malformed COSE Structure",
-  details: "A COSE_Sign1/COSE_Mac0 must be a 4-element array.",
+  arityDetails: "A COSE_Sign1/COSE_Mac0 must be a 4-element array.",
+  protectedDetails:
+    "The COSE_Sign1/COSE_Mac0 protected header slot is not a byte string.",
 };
 
 describe("splitSigned", () => {
@@ -142,6 +144,57 @@ describe("splitSigned", () => {
     const notAMap = sign1([PROTECTED, "not a map", PAYLOAD, SIGNATURE]);
 
     expect(splitSigned(notAMap, OPTIONS).unprotectedHeader).toEqual({});
+  });
+
+  // RFC 9052 §3. This gate is the only one that judges the slot's own TYPE —
+  // `decodeProtectedHeader` (`structures.ts`) judges the CBOR INSIDE a byte string
+  // — so it is what keeps a non-bstr slot 0 inside the `AegisError` contract a
+  // caller branches on to answer 401 rather than 500.
+  //
+  // ⚠ The `details` assertion is what separates this refusal from the ARITY one:
+  // both are `cose_malformed`, so a code-only row stays green while the caller is
+  // told its 4-element structure must be a 4-element array.
+  test.each([
+    ["nil", null],
+    ["an int", 42],
+    ["a tstr", "not bytes"],
+    ["a map", new Map<number, unknown>([[1, -7]])],
+  ])("refuses %s protected header under the caller's leaf class", (_, value) => {
+    const spliced = sign1([value, unprotected(), PAYLOAD, SIGNATURE]);
+
+    let thrown: unknown;
+
+    try {
+      splitSigned(spliced, OPTIONS);
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(CwsError);
+    expect((thrown as CwsError).code).toBe("cose_malformed");
+    expect((thrown as CwsError).details).toBe(OPTIONS.protectedDetails);
+  });
+
+  // The protected bucket is `bstr .cbor header_map` (RFC 9052 §3), and `requireBstr`
+  // reaches only the outer `bstr`. `decodeProtectedHeader` (`structures.ts`) is
+  // where the inner half is enforced, which is why all four rows answer under
+  // `CoseError` rather than the caller's leaf class.
+  test.each([
+    ["an int", encodeCbor(42)],
+    ["an array", encodeCbor([1, 2])],
+    ["nil", encodeCbor(null)],
+    ["a tstr", encodeCbor("hi")],
+  ])("refuses a protected byte string holding %s", (_, bstr) => {
+    let thrown: unknown;
+
+    try {
+      splitSigned(sign1([bstr, unprotected(), PAYLOAD, SIGNATURE]), OPTIONS);
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(CoseError);
+    expect((thrown as CoseError).code).toBe("cose_malformed");
   });
 
   test("the refusal carries the caller's words under the shared code", () => {

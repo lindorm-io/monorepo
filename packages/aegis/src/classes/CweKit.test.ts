@@ -1,3 +1,4 @@
+import { AesError } from "@lindorm/aes";
 import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { describe, expect, test } from "vitest";
@@ -8,6 +9,7 @@ import {
   decodeProtectedHeader,
   encodeProtectedHeader,
 } from "../internal/cose/structures.js";
+import { spliceCoseSlot } from "../__fixtures__/splice-cose-slot.js";
 import { CweKit } from "./CweKit.js";
 
 describe("CweKit (COSE_Encrypt0)", () => {
@@ -32,6 +34,10 @@ describe("CweKit (COSE_Encrypt0)", () => {
     expect(echoed.equals(token)).toBe(true);
   });
 
+  // ⚠ The CLASS and the CODE, not merely "it throws": this row is what the
+  // structural describe below points at for the AEAD verdict, and a bare
+  // `toThrow()` would pin nothing about which error a failed authentication
+  // answers.
   test("rejects tampered ciphertext", () => {
     const encrypt0 = decodeCbor<Tag>(kit.encrypt(Buffer.from("secret payload")));
     const arr = encrypt0.contents as Array<Buffer>;
@@ -39,7 +45,16 @@ describe("CweKit (COSE_Encrypt0)", () => {
     tampered[0] ^= 0xff;
     arr[2] = tampered;
 
-    expect(() => kit.decrypt(encodeCbor(encrypt0))).toThrow();
+    let thrown: unknown;
+
+    try {
+      kit.decrypt(encodeCbor(encrypt0));
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(AesError);
+    expect((thrown as AesError).code).toBe("decryption_failed");
   });
 });
 
@@ -317,4 +332,195 @@ describe("CweKit — a COSE_Encrypt0 whose unprotected bucket is not a map", () 
   ])("decode reads it as an empty unprotected bucket when it is %s", (_name, bucket) => {
     expect(CweKit.decode(withUnprotected(bucket)).unprotectedHeader).toEqual({});
   });
+});
+
+// ⛔ A STRUCTURALLY malformed foreign token must be refused as an `AegisError`,
+// BEFORE any cryptography is spent: a consumer branches on it to answer 401, so a
+// raw `TypeError` — or a leaf error from `@lindorm/aes` reached with fabricated
+// bytes — is a 500 for a token that should simply have been rejected.
+//
+// ⚠ The AEAD VERDICT is deliberately NOT in that contract: a ciphertext of legal
+// length that fails to authenticate answers `AesError decryption_failed`, pinned
+// by "rejects tampered ciphertext" above. This describe covers only what is
+// refused before the AEAD runs.
+describe("CweKit — a slot holding something other than a byte string", () => {
+  const kryptos = KryptosKit.generate.enc.oct({
+    algorithm: "dir",
+    encryption: "A256GCM",
+  });
+  const kit = new CweKit({ kryptos, logger: createMockLogger() });
+  const token = kit.encrypt(Buffer.from("the plaintext"));
+
+  // ⚠ THE TSTR IS LONGER THAN THE 16-BYTE A256GCM TAG, and that length is what
+  // makes the ciphertext row below discriminate: `decrypt` runs a TYPE gate and
+  // then a LENGTH gate, both answering `cose_malformed`, so a text string shorter
+  // than the tag stays green over a missing type gate. At this length a missing
+  // type gate reaches `AesKit` instead — outside the `AegisError` contract.
+  const NOT_BSTR: Array<[string, unknown]> = [
+    ["nil", null],
+    ["an int", 42],
+    ["a tstr", "a text string longer than the sixteen-byte A256GCM tag"],
+  ];
+
+  // The protected bucket carries bytes (RFC 9052 §3) and those bytes are the
+  // `Enc_structure` slot that makes it this message's AAD (RFC 9052 §5.3,
+  // `buildEncStructure`), so neither door has a reading for a slot holding no bytes.
+  test.each(NOT_BSTR)(
+    "decrypt refuses %s protected header inside the contract",
+    (_name, value) => {
+      let thrown: unknown;
+
+      try {
+        kit.decrypt(spliceCoseSlot(token, 0, value));
+      } catch (error) {
+        thrown = error;
+      }
+
+      expect(thrown).toBeInstanceOf(AegisError);
+      expect((thrown as CweError).code).toBe("cose_malformed");
+    },
+  );
+
+  test.each(NOT_BSTR)(
+    "decode refuses %s protected header inside the contract",
+    (_name, value) => {
+      let thrown: unknown;
+
+      try {
+        CweKit.decode(spliceCoseSlot(token, 0, value));
+      } catch (error) {
+        thrown = error;
+      }
+
+      expect(thrown).toBeInstanceOf(AegisError);
+      expect((thrown as CweError).code).toBe("cose_malformed");
+    },
+  );
+
+  test.each(NOT_BSTR)(
+    "decrypt refuses %s ciphertext inside the contract",
+    (_name, value) => {
+      let thrown: unknown;
+
+      try {
+        kit.decrypt(spliceCoseSlot(token, 2, value));
+      } catch (error) {
+        thrown = error;
+      }
+
+      expect(thrown).toBeInstanceOf(AegisError);
+      expect((thrown as CweError).code).toBe("cose_malformed");
+      // The TYPE gate's words, so the row cannot be satisfied by the LENGTH gate
+      // that shares its code.
+      expect((thrown as CweError).details).toBe(
+        "The COSE_Encrypt0 ciphertext slot is not a byte string, so there is nothing to decrypt.",
+      );
+    },
+  );
+
+  // ⚠ RFC 9052 §5.2. `decode` reads headers only, so a detached-ciphertext token
+  // must stay readable through it — the ciphertext gate belongs to `decrypt`,
+  // which has to AEAD the bytes.
+  test("decode still reads a DETACHED (nil) ciphertext", () => {
+    const detached = spliceCoseSlot(token, 2, null);
+
+    expect(CweKit.decode(detached).protectedHeader.enc).toBe("A256GCM");
+  });
+
+  // The protected bucket is `bstr .cbor header_map` (RFC 9052 §3) and `requireBstr`
+  // reaches only the outer `bstr`. `decodeProtectedHeader` (`structures.ts`) is
+  // where the inner half is enforced, and both doors read it.
+  test.each([
+    ["an int", encodeCbor(42)],
+    ["an array", encodeCbor([1, 2])],
+    ["nil", encodeCbor(null)],
+    ["a tstr", encodeCbor("hi")],
+  ])("both doors refuse a protected byte string holding %s", (_name, bstr) => {
+    for (const door of [
+      () => kit.decrypt(spliceCoseSlot(token, 0, bstr)),
+      () => CweKit.decode(spliceCoseSlot(token, 0, bstr)),
+    ]) {
+      let thrown: unknown;
+
+      try {
+        door();
+      } catch (error) {
+        thrown = error;
+      }
+
+      expect(thrown).toBeInstanceOf(AegisError);
+      expect((thrown as CweError).code).toBe("cose_malformed");
+    }
+  });
+
+  // ⚠ A ciphertext slot SHORTER than the AEAD tag has no tag to split off, and the
+  // split fabricates one from whatever is there: without the length gate in
+  // `CweKit.decrypt`, `AesKit` answers `AesError invalid_auth_tag_length` — a leaf
+  // error from `@lindorm/aes`, not an `AegisError`.
+  test.each([
+    ["empty", Buffer.alloc(0)],
+    ["4 bytes", Buffer.alloc(4)],
+    ["15 bytes — one short of the A256GCM tag", Buffer.alloc(15)],
+  ])("decrypt refuses a ciphertext of %s inside the contract", (_name, value) => {
+    let thrown: unknown;
+
+    try {
+      kit.decrypt(spliceCoseSlot(token, 2, value));
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(AegisError);
+    expect((thrown as CweError).code).toBe("cose_malformed");
+  });
+
+  // ⚠ THE WORDS. Both ciphertext refusals share the `cose_malformed` code with each
+  // other and with `splitEncrypt0`'s two, so every row above stays green over a
+  // gate that reports the wrong one — and the length sentence is the only place the
+  // reader is told the tag size the slot fell short of.
+  test.each([
+    [
+      "the TYPE refusal names the slot",
+      () => kit.decrypt(spliceCoseSlot(token, 2, 42)),
+      "The COSE_Encrypt0 ciphertext slot is not a byte string, so there is nothing to decrypt.",
+    ],
+    [
+      "the LENGTH refusal names the tag it fell short of",
+      () => kit.decrypt(spliceCoseSlot(token, 2, Buffer.alloc(15))),
+      "The COSE_Encrypt0 ciphertext slot is shorter than the 16-byte A256GCM authentication tag, so it carries no tag to verify.",
+    ],
+  ])("%s", (_name, door, details) => {
+    let thrown: unknown;
+
+    try {
+      door();
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(CweError);
+    expect((thrown as CweError).code).toBe("cose_malformed");
+    expect((thrown as CweError).details).toBe(details);
+  });
+
+  // ⚠ What fixes that gate at `<` rather than `<=`: an EMPTY plaintext encrypts to
+  // a ciphertext of EXACTLY the tag length, so a `<=` gate would refuse a token
+  // this kit itself mints.
+  test("encrypts and decrypts an EMPTY plaintext", () => {
+    expect(kit.decrypt(kit.encrypt(Buffer.alloc(0))).payload).toHaveLength(0);
+  });
+
+  // ⚠ Slot 1 is NOT a byte-string slot — it is the unprotected bucket, and on a
+  // COSE_Encrypt0 it carries the IV, so narrowing it to a `Map` costs the IV and
+  // `decrypt` refuses (pinned by "CweKit — a COSE_Encrypt0 whose unprotected
+  // bucket is not a map" above). `decode` needs nothing from it, and the protected
+  // bucket it does read is unaffected.
+  test.each(NOT_BSTR)(
+    "decode still reads the protected header when the unprotected bucket is %s",
+    (_name, value) => {
+      expect(CweKit.decode(spliceCoseSlot(token, 1, value)).protectedHeader.enc).toBe(
+        "A256GCM",
+      );
+    },
+  );
 });

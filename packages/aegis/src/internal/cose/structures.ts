@@ -1,3 +1,4 @@
+import { CoseError } from "../../errors/index.js";
 import { encodeCbor, decodeCbor } from "./cbor.js";
 import type { CoseLabel } from "./cose-label.js";
 
@@ -22,8 +23,29 @@ const EMPTY = Buffer.alloc(0);
 export const encodeProtectedHeader = (header: Map<CoseLabel, unknown>): Buffer =>
   header.size === 0 ? EMPTY : encodeCbor(header);
 
-export const decodeProtectedHeader = (bstr: Uint8Array): Map<CoseLabel, unknown> =>
-  bstr.length === 0 ? new Map() : decodeCbor<Map<CoseLabel, unknown>>(bstr);
+/**
+ * The protected header as its COSE label map, or the structural refusal.
+ *
+ * ⚠ NARROWED, NOT CAST. The byte string arrives off a foreign wire and CBOR
+ * decodes whatever a producer wrote there, so a declared `Map` return without this
+ * check is an unchecked assertion. RFC 9052 §3.
+ *
+ * ⚠ A ZERO-LENGTH byte string is the empty header map — the encoder above emits
+ * exactly that — so it reads as an empty `Map` and never reaches the decode.
+ */
+export const decodeProtectedHeader = (bstr: Uint8Array): Map<CoseLabel, unknown> => {
+  if (bstr.length === 0) return new Map();
+
+  const decoded = decodeCbor<unknown>(bstr);
+
+  if (decoded instanceof Map) return decoded as Map<CoseLabel, unknown>;
+
+  throw new CoseError("Malformed COSE protected header", {
+    code: "cose_malformed",
+    title: "Malformed COSE Protected Header",
+    details: "The protected header byte string does not hold a CBOR map.",
+  });
+};
 
 /** The to-be-signed bytes for COSE_Sign1 — `Sig_structure`. RFC 9052 §4.4. */
 export const buildSigStructure = (

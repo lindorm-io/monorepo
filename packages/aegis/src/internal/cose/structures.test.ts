@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { CoseError } from "../../errors/index.js";
 import { decodeCbor, encodeCbor } from "./cbor.js";
 import {
   COSE_TAG,
@@ -75,5 +76,42 @@ describe("encodeProtectedHeader", () => {
       new Map([[1, -7]]),
     );
     expect(decodeProtectedHeader(Buffer.alloc(0))).toEqual(new Map());
+  });
+});
+
+// The protected bucket is `bstr .cbor header_map` (RFC 9052 §3) — TWO conditions,
+// and `requireBstr` reaches only the outer one. This is where the inner one is
+// enforced, for every reader of the decoded map.
+describe("decodeProtectedHeader — the inner `.cbor header_map`", () => {
+  test.each([
+    ["an int", encodeCbor(42)],
+    ["an array", encodeCbor([1, 2])],
+    ["nil", encodeCbor(null)],
+    ["a tstr", encodeCbor("hi")],
+    ["a bool", encodeCbor(true)],
+  ])("refuses a byte string holding %s", (_name, bstr) => {
+    let thrown: unknown;
+
+    try {
+      decodeProtectedHeader(bstr);
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(CoseError);
+    expect((thrown as CoseError).code).toBe("cose_malformed");
+    // THE WORDS. `requireBstr`'s OUTER slot refusal shares this code, so the
+    // sentence is the only thing telling the two apart at a call site.
+    expect((thrown as CoseError).details).toBe(
+      "The protected header byte string does not hold a CBOR map.",
+    );
+  });
+
+  // ⚠ The gate must not become a CBOR-decode gate: a zero-length byte string is
+  // the empty header map, which `encodeProtectedHeader` emits for every aegis
+  // token carrying no protected parameter, and it is not valid CBOR on its own.
+  test("a ZERO-LENGTH byte string is still the empty map", () => {
+    expect(decodeProtectedHeader(Buffer.alloc(0))).toEqual(new Map());
+    expect(() => decodeCbor(Buffer.alloc(0))).toThrow();
   });
 });

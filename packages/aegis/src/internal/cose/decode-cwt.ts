@@ -6,6 +6,7 @@ import { coseLabelToAlg } from "./alg-labels.js";
 import { decodeCbor } from "./cbor.js";
 import { decodeCwtClaims } from "./cwt-claims.js";
 import type { CwtDecoded } from "./cwt-format.js";
+import { requireBstr } from "./require-bstr.js";
 import { requireCose } from "./require-cose.js";
 import { decodeProtectedHeader } from "./structures.js";
 import { stripCwtTag } from "./unwrap-cose.js";
@@ -16,13 +17,12 @@ import { stripCwtTag } from "./unwrap-cose.js";
  *
  * ⚠ It NEVER throws: every caller is resolving a key, not reading claims, and two
  * legitimate inputs carry no claims at all — a DETACHED payload, and an OPAQUE
- * CWS payload of arbitrary bytes. An unreadable payload is "no claims"; the
- * structural verdict belongs to `verifyCwt`/`decodeCwtWire`.
+ * CWS payload of arbitrary bytes. An unreadable payload — including a slot holding
+ * something other than a byte string — is "no claims"; the structural verdict
+ * belongs to `verifyCwt`/`decodeCwtWire`.
  */
-const decodeUnverifiedClaims = (
-  payloadBstr: Uint8Array | null | undefined,
-): CwtClaimsWire | undefined => {
-  if (payloadBstr == null) return undefined;
+const decodeUnverifiedClaims = (payloadBstr: unknown): CwtClaimsWire | undefined => {
+  if (!(payloadBstr instanceof Uint8Array)) return undefined;
 
   try {
     const decoded = decodeCbor<unknown>(Buffer.from(payloadBstr), { preferMap: false });
@@ -50,14 +50,25 @@ export const decodeCwt = (token: Buffer): CwtDecoded => {
     details: "The CWT does not contain a recognisable COSE structure.",
   });
 
-  const [protectedBstr, unprotected, payloadBstr] = contents as [
-    Uint8Array,
-    Map<number, unknown>,
-    Uint8Array | null | undefined,
-  ];
+  // The protected bucket is a bstr (RFC 9052 §3), and this door reads the key hint
+  // off it before any key exists. ⚠ `decodeProtectedHeader` (`structures.ts`)
+  // judges the CBOR INSIDE the byte string and never the slot's own type, so this
+  // is the only gate that can name a non-bstr slot 0 — and the only one keeping it
+  // inside the `AegisError` contract.
+  const protectedBstr = requireBstr(contents[0], {
+    error: CoseError,
+    message: "Malformed CWT",
+    title: "Malformed CWT",
+    details: "The CWT protected header slot is not a byte string.",
+  });
+  const [, unprotected, payloadBstr] = contents;
   const protectedHeader = decodeProtectedHeader(protectedBstr);
 
-  const kidValue = unprotected.get(coseByJose("kid"));
+  // ⚠ NARROWED, NOT CAST — the same narrowing `splitSigned` and `CweKit` apply to
+  // this slot. An unindexable bucket carries no kid hint, and this door hands back
+  // a best-effort view rather than a verdict, so it reads as absent.
+  const kidValue =
+    unprotected instanceof Map ? unprotected.get(coseByJose("kid")) : undefined;
   const algLabel = protectedHeader.get(coseByJose("alg"));
   const typ = protectedHeader.get(coseByJose("typ"));
 

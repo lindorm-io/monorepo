@@ -17,6 +17,7 @@ import {
   buildEncStructure,
   decodeProtectedHeader,
 } from "../internal/cose/structures.js";
+import { requireBstr } from "../internal/cose/require-bstr.js";
 import { splitEncrypt0 } from "../internal/cose/split-encrypt0.js";
 import { buildCoseHeaders } from "../internal/header/build-cose-headers.js";
 import { coseWireHeader } from "../internal/header/cose-wire-header.js";
@@ -228,14 +229,10 @@ export class CweKit implements ICweKit {
     // The kit takes the ENCODED bytes and decodes internally (parallel to
     // JweKit.decrypt). The outer CWT tag (61) is stripped by `splitEncrypt0`.
     const segments = splitEncrypt0(token);
-    const { protectedBstr, coseCiphertext } = segments;
-    // ⚠ NARROWED, NOT CAST. `splitEncrypt0` types this slot `unknown` on purpose
-    // — a producer writes whatever it likes there, and `preferMap: false` hands a
-    // wholly text-keyed CBOR map back as a plain OBJECT — so the cast made
-    // `.get` a raw `TypeError` on a token this door has not authenticated yet.
-    // The static `decode` below already narrows the same slot with `instanceof
-    // Map`; a rule one read verb applies and its twin does not is an accident of
-    // which door a caller used.
+    const { protectedBstr } = segments;
+    // ⚠ NARROWED, NOT CAST. `splitEncrypt0` types this slot `unknown` because a
+    // producer writes whatever it likes there, so a cast would put `.get` on a
+    // value this door has not authenticated yet.
     const unprotected =
       segments.unprotected instanceof Map
         ? (segments.unprotected as Map<CoseLabel, unknown>)
@@ -250,6 +247,18 @@ export class CweKit implements ICweKit {
         details: "The unprotected header has no IV (label 5).",
       });
     }
+
+    // RFC 9052 §5.2. `decode` keeps reading a nil ciphertext, but this door has to
+    // AEAD it, and a non-bstr slot reaches `Buffer.from` and the tag split outside
+    // the `AegisError` contract. Refused beside the IV, before any cryptography is
+    // spent.
+    const coseCiphertext = requireBstr(segments.coseCiphertext, {
+      error: CweError,
+      message: "Malformed COSE_Encrypt0",
+      title: "Malformed COSE_Encrypt0",
+      details:
+        "The COSE_Encrypt0 ciphertext slot is not a byte string, so there is nothing to decrypt.",
+    });
 
     // The content-encryption algorithm is self-describing — read it from the
     // protected header (label 1) rather than the key. It also fixes the tag
@@ -273,12 +282,26 @@ export class CweKit implements ICweKit {
     });
 
     // COSE ciphertext = ciphertext ‖ tag (the tag is the trailing bytes).
-    const ct = Buffer.from(coseCiphertext);
     const tagBytes = tagBytesForEncryption(encryption);
-    const ciphertext = ct.subarray(0, ct.length - tagBytes);
-    const tag = ct.subarray(ct.length - tagBytes);
 
-    const aad = buildEncStructure(Buffer.from(protectedBstr));
+    // ⚠ A slot SHORTER than the tag has no tag to split off: `subarray` clamps the
+    // negative bound, so `AesKit` is handed the whole slot as a short tag and
+    // answers `AesError invalid_auth_tag_length` — a leaf error from
+    // `@lindorm/aes`, outside the `AegisError` contract a consumer branches on.
+    // ⚠ The boundary is `<`, not `<=`: an EMPTY plaintext encrypts to exactly
+    // `tagBytes`, pinned by `CweKit.test.ts`.
+    if (coseCiphertext.length < tagBytes) {
+      throw new CweError("Malformed COSE_Encrypt0", {
+        code: "cose_malformed",
+        title: "Malformed COSE_Encrypt0",
+        details: `The COSE_Encrypt0 ciphertext slot is shorter than the ${tagBytes}-byte ${encryption} authentication tag, so it carries no tag to verify.`,
+      });
+    }
+
+    const ciphertext = coseCiphertext.subarray(0, coseCiphertext.length - tagBytes);
+    const tag = coseCiphertext.subarray(coseCiphertext.length - tagBytes);
+
+    const aad = buildEncStructure(protectedBstr);
     // The label off the protected header is the authority here — it names what
     // the sender used, which may not be what this key declares.
     const plaintext = new AesKit({ kryptos: this.kryptos }).decryptContent({

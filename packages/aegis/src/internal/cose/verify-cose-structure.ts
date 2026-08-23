@@ -5,8 +5,7 @@ import type { WireTokenHeader } from "../../types/index.js";
 import type { CoseLabel } from "./cose-label.js";
 import { assertProtectedHeaderGates } from "../utils/assert-protected-header-gates.js";
 import { ERROR_BY_FORMAT, type SignedCoseFormat } from "./error-by-format.js";
-import { requireAttachedPayload } from "./require-attached-payload.js";
-import { requireSignature } from "./require-signature.js";
+import { requireBstr } from "./require-bstr.js";
 import { signedCoseStructureTag } from "./signed-cose-structure-tag.js";
 import { splitSigned, type SignedSegments } from "./split-signed.js";
 import { COSE_TAG, buildSecuredStructure } from "./structures.js";
@@ -58,8 +57,8 @@ export const verifyCoseStructure = ({
   /** Namespaces the header-gate refusals. The structural ones are shared. */
   format: SignedCoseFormat;
   /**
-   * What a DETACHED payload means on this path, in the path's own words. The
-   * wording is what tells a reader which door refused them.
+   * What an unreadable payload slot costs on this path, in the path's own words.
+   * The wording is what tells a reader which door refused them.
    */
   payloadDetail: string;
 }): VerifiedCoseStructure => {
@@ -81,7 +80,8 @@ export const verifyCoseStructure = ({
     error: CwsError,
     message: `Malformed ${label}`,
     title: `Malformed ${label}`,
-    details: `A ${label} must be a 4-element array [protected, unprotected, payload, signature/tag].`,
+    arityDetails: `A ${label} must be a 4-element array [protected, unprotected, payload, signature/tag].`,
+    protectedDetails: `The ${label} protected header slot is not a byte string, so its parameters cannot be read.`,
   });
 
   // ⛔ Both PROTECTED-header gates — `crit`, then the algorithm-match — run ahead
@@ -104,26 +104,27 @@ export const verifyCoseStructure = ({
   });
 
   // No aegis read path carries out-of-band content, so a detached (nil) payload
-  // has nothing to authenticate — refused with the structural `cose_malformed`
-  // verdict rather than a raw `Buffer.from(null)` TypeError outside `AegisError`.
-  const content = requireAttachedPayload(payload, {
+  // has nothing to authenticate, and any other non-bstr slot is malformed —
+  // refused with the structural `cose_malformed` verdict rather than a raw
+  // `Buffer.from` TypeError outside `AegisError`.
+  const content = requireBstr(payload, {
     error: CwsError,
     message: `Malformed ${label}`,
     title: `Malformed ${label}`,
-    details: `The ${label} has a detached or nil payload, so ${payloadDetail}.`,
+    details: `The ${label} payload slot is not a byte string, so ${payloadDetail}.`,
   });
 
-  // The twin on the other nil-able slot: `exactly: 4` counts ELEMENTS, so `null`
-  // in slot 4 clears the arity, algorithm and crit gates intact.
-  const secured = requireSignature(signature, {
+  // The twin on the other slot: `exactly: 4` counts ELEMENTS, so `null` — or an
+  // int, or a tstr — in slot 4 clears the arity, algorithm and crit gates intact.
+  const secured = requireBstr(signature, {
     error: CwsError,
     message: `Malformed ${label}`,
     title: `Malformed ${label}`,
-    details: `The ${label} has a nil ${sign1 ? "signature" : "authentication tag"}, so there is nothing to verify.`,
+    details: `The ${label} ${sign1 ? "signature" : "authentication tag"} slot is not a byte string, so there is nothing to verify.`,
   });
 
   const valid = new SignatureKit({ kryptos, raw: sign1 }).verify(
-    buildSecuredStructure(tag, Buffer.from(protectedBstr), content),
+    buildSecuredStructure(tag, protectedBstr, content),
     secured,
   );
 

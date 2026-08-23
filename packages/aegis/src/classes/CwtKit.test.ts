@@ -1,3 +1,4 @@
+import { EcError } from "@lindorm/ec";
 import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import MockDate from "mockdate";
@@ -11,6 +12,7 @@ import {
 import { Tag, decodeCbor, encodeCbor } from "../internal/cose/cbor.js";
 import { COSE_TAG, encodeProtectedHeader } from "../internal/cose/structures.js";
 import { coseByJose } from "../internal/header/header-registry.js";
+import { spliceCoseSlot } from "../__fixtures__/splice-cose-slot.js";
 import { CwmKit } from "./CwmKit.js";
 import { CwsKit } from "./CwsKit.js";
 import { CwtKit } from "./CwtKit.js";
@@ -513,7 +515,7 @@ describe("CwtKit — a DETACHED (nil) payload is refused under the error contrac
     // but this and its `CwsKit.test.ts` twin can tell the two apart. Without the
     // pair, swapping the two call sites' arguments left the suite green.
     expect((thrown as CwsError).details).toBe(
-      "The COSE_Sign1 has a detached or nil payload, so there are no CWT claims to verify.",
+      "The COSE_Sign1 payload slot is not a byte string, so there are no CWT claims to verify.",
     );
   });
 
@@ -604,10 +606,11 @@ describe("CwtKit — a NIL signature is refused under the error contract", () =>
   // back as it found it, and verify must carry it into the SIGNATURE CYCLE, or
   // the guard would be rejecting emptiness rather than absence.
   //
-  // ⚠ FLAGGED, NOT FIXED: for an EC key that cycle currently answers with a raw
-  // `EcError: Invalid raw signature length` from `@lindorm/ec`, which is NOT an
-  // `AegisError` either — the signature cycle's own escape, separate from this
-  // guard's. The row pins the boundary this guard owns, not that error.
+  // ⚠ FLAGGED, NOT FIXED: for an EC key that cycle answers `EcError
+  // invalid_raw_signature_length` from `@lindorm/ec`, which is NOT an
+  // `AegisError` — the signature cycle's own escape, separate from this guard's.
+  // Asserted rather than merely "not cose_malformed", so closing that escape
+  // reddens this row and names what changed.
   test("an EMPTY signature is a signature — decoded as-is, carried to the cycle", () => {
     const empty = encodeCbor(
       new Tag(
@@ -625,10 +628,10 @@ describe("CwtKit — a NIL signature is refused under the error contract", () =>
 
     expect(CwtKit.decode(empty).signature).toHaveLength(0);
 
-    const thrown = thrownBy(() => kit.verify(empty)) as { code?: string };
+    const thrown = thrownBy(() => kit.verify(empty));
 
-    expect(thrown).toBeDefined();
-    expect(thrown.code).not.toBe("cose_malformed");
+    expect(thrown).toBeInstanceOf(EcError);
+    expect((thrown as EcError).code).toBe("invalid_raw_signature_length");
   });
 });
 
@@ -763,11 +766,385 @@ describe("CwmKit — the typ gate refuses a COSE object of another shape", () =>
 
     expect(thrown).toBeInstanceOf(CwmError);
     expect(thrown?.code).toBe("cwm_invalid_typ");
-    // ⚠ Was "CWT Invalid Typ" — a `cwm` code under a `CWT` title, because this
-    // was the last refusal on the claims read path whose title was hardcoded
-    // while its code derived from the format. It derives now, both here and on
-    // the keyless wire read.
+    // ⚠ THE TITLE, not just the code: both derive from the format, so a `cwm`
+    // read reports itself as a CWM under either spelling (`verify-cwt.ts`).
     expect(thrown?.title).toBe("CWM Invalid Typ");
     expect(thrown?.data).toEqual({ typ: "application/cws" });
+  });
+});
+
+// ⛔ A STRUCTURALLY malformed foreign token must be refused as an `AegisError`: a
+// consumer branches on it to answer 401, so a raw `TypeError` escaping here is a
+// 500 for a token that should simply have been rejected. `verify` opens the
+// structure TWICE — the keyless `decodeCwt` view that resolves the key, then
+// `verifyCoseStructure` — so both openings have to hold the contract.
+//
+// ⚠ ONE structural fault is OUTSIDE that contract and stays flagged: a signature of
+// the WRONG LENGTH is still a byte string, so ANY of them — zero-length, 2 bytes,
+// 10 — clears these gates and reaches the signature cycle, which for an EC key
+// answers `EcError invalid_raw_signature_length` (pinned by "an EMPTY signature is
+// a signature — decoded as-is, carried to the cycle" above, which is one instance
+// of the class, not its boundary). Closing it needs a length the ALGORITHM knows; a
+// slot gate that reaches only the CBOR type cannot state one.
+describe("CwtKit — a slot holding something other than a byte string", () => {
+  const kit = new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger: createMockLogger() });
+  const token = kit.sign(wire);
+
+  const NOT_BSTR: Array<[string, unknown]> = [
+    ["nil", null],
+    ["an int", 42],
+    ["a tstr", "not bytes"],
+  ];
+
+  describe.each([
+    ["the protected header", 0],
+    ["the payload", 2],
+    ["the signature", 3],
+  ])("%s (slot %i)", (_slot, index) => {
+    test.each(NOT_BSTR)("decode refuses %s inside the contract", (_name, value) => {
+      let thrown: unknown;
+
+      try {
+        CwtKit.decode(spliceCoseSlot(token, index, value));
+      } catch (error) {
+        thrown = error;
+      }
+
+      expect(thrown).toBeInstanceOf(AegisError);
+      expect((thrown as CwsError).code).toBe("cose_malformed");
+    });
+
+    test.each(NOT_BSTR)("verify refuses %s inside the contract", (_name, value) => {
+      let thrown: unknown;
+
+      try {
+        kit.verify(spliceCoseSlot(token, index, value));
+      } catch (error) {
+        thrown = error;
+      }
+
+      expect(thrown).toBeInstanceOf(AegisError);
+      expect((thrown as CwsError).code).toBe("cose_malformed");
+    });
+  });
+
+  // ⚠ THE WORDS, per SLOT. `splitSigned` takes the arity sentence and the slot-0
+  // sentence as two separate parameters that share the `cose_malformed` code, so
+  // every row above stays green over a call site that wired them the wrong way
+  // round — a token whose element count is right, told it does not contain a
+  // recognisable COSE structure. `split-signed.test.ts` declares its own pair,
+  // which pins the plumbing and not the wiring; on this wire the wiring is in
+  // `decode-cwt-wire.ts` (decode) and `decode-cwt.ts` (verify, which opens the
+  // structure keylessly first and so refuses slot 0 in its own words).
+  test.each([
+    [
+      "decode names the protected slot",
+      () => CwtKit.decode(spliceCoseSlot(token, 0, 42)),
+      "The CWT protected header slot is not a byte string, so its parameters cannot be read.",
+    ],
+    [
+      "decode names the arity",
+      () =>
+        CwtKit.decode(
+          encodeCbor(
+            new Tag(COSE_TAG.sign1, [Buffer.alloc(0), new Map<number, unknown>()]),
+          ),
+        ),
+      "The CWT does not contain a recognisable COSE structure.",
+    ],
+    [
+      "decode names the payload slot",
+      () => CwtKit.decode(spliceCoseSlot(token, 2, 42)),
+      "The CWT payload slot is not a byte string, so its claims cannot be decoded.",
+    ],
+    [
+      "decode names the signature slot",
+      () => CwtKit.decode(spliceCoseSlot(token, 3, 42)),
+      "The CWT signature slot is not a byte string, so the structure is incomplete.",
+    ],
+    [
+      "verify names the protected slot",
+      () => kit.verify(spliceCoseSlot(token, 0, 42)),
+      "The CWT protected header slot is not a byte string.",
+    ],
+  ])("%s", (_name, door, details) => {
+    let thrown: unknown;
+
+    try {
+      door();
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(AegisError);
+    expect((thrown as CwsError).code).toBe("cose_malformed");
+    expect((thrown as CwsError).details).toBe(details);
+  });
+
+  // ⛔ `requireBstr` reaches only the OUTER byte string of the payload slot; what
+  // those bytes must decode to is RFC 8392 §2, RFC 8392 §7.2. The inner half is
+  // `decodeCwtMessage`
+  // (`cwt-message.ts`), and it guards BOTH failure directions on this pre-verification
+  // door — nil escapes the `AegisError` contract as a raw `TypeError` from
+  // `Object.entries` (`cwt-claims.ts`), while an array or a tstr is quietly
+  // INDEXED into a claims bag (`[1, 2]` reads back as `{ "0": 1, "1": 2 }`) on a
+  // token that carries no claims set at all.
+  //
+  // ⚠ `verify` needs no row: the signature covers the payload, so a rewritten one
+  // is refused as `cose_signature_invalid` before the claims are read.
+  test.each([
+    ["nil", encodeCbor(null)],
+    ["an array", encodeCbor([1, 2])],
+    ["a tstr", encodeCbor("hi")],
+    ["an int", encodeCbor(42)],
+    ["a bool", encodeCbor(true)],
+  ])("decode refuses a payload byte string holding %s", (_name, bstr) => {
+    let thrown: unknown;
+
+    try {
+      CwtKit.decode(spliceCoseSlot(token, 2, bstr));
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(AegisError);
+    expect((thrown as CwsError).code).toBe("cose_malformed");
+    expect((thrown as CwsError).details).toBe(
+      "The CWT payload does not hold a CBOR claims map.",
+    );
+  });
+
+  // The protected bucket is `bstr .cbor header_map` (RFC 9052 §3) and `requireBstr`
+  // reaches only the outer `bstr`. `decodeProtectedHeader` (`structures.ts`) is
+  // where the inner half is enforced, and both doors read it.
+  test.each([
+    ["an int", encodeCbor(42)],
+    ["an array", encodeCbor([1, 2])],
+    ["nil", encodeCbor(null)],
+    ["a tstr", encodeCbor("hi")],
+  ])("both doors refuse a protected byte string holding %s", (_name, bstr) => {
+    for (const door of [
+      () => CwtKit.decode(spliceCoseSlot(token, 0, bstr)),
+      () => kit.verify(spliceCoseSlot(token, 0, bstr)),
+    ]) {
+      let thrown: unknown;
+
+      try {
+        door();
+      } catch (error) {
+        thrown = error;
+      }
+
+      expect(thrown).toBeInstanceOf(AegisError);
+      expect((thrown as CwsError).code).toBe("cose_malformed");
+    }
+  });
+
+  // ⚠ The UNPROTECTED bucket is a map, not a bstr, and NO signature covers it —
+  // `decodeCwt` reads the kid hint off it before any key exists. An unindexable
+  // bucket is an ABSENT hint, not a refusal, so rewriting it must leave a token
+  // this kit's own key verifies exactly as verifiable as it was.
+  test.each(NOT_BSTR)(
+    "verify still authenticates a token whose unprotected bucket is %s",
+    (_name, value) => {
+      const { payload } = kit.verify(spliceCoseSlot(token, 1, value));
+
+      expect(payload.sub).toBe(wire.sub);
+    },
+  );
+});
+
+// The COSE_Mac0 twin of the block above — `CwmKit.decode`/`CwmKit.verify` reach the
+// SAME `splitSigned`/`decodeCwt`/`verifyCoseStructure` bodies, but each refusal's
+// words are built from the structure the KEY implies (`signedCoseStructureTag`), so
+// the mac0 half of every templated sentence is unreached by the CWT rows.
+describe("CwmKit — a slot holding something other than a byte string", () => {
+  const kit = new CwmKit({ kryptos: TEST_OCT_KEY_SIG, logger: createMockLogger() });
+  const token = kit.sign(wire);
+
+  const NOT_BSTR: Array<[string, unknown]> = [
+    ["nil", null],
+    ["an int", 42],
+    ["a tstr", "not bytes"],
+  ];
+
+  describe.each([
+    ["the protected header", 0],
+    ["the payload", 2],
+    ["the authentication tag", 3],
+  ])("%s (slot %i)", (_slot, index) => {
+    test.each(NOT_BSTR)("decode refuses %s inside the contract", (_name, value) => {
+      let thrown: unknown;
+
+      try {
+        CwmKit.decode(spliceCoseSlot(token, index, value));
+      } catch (error) {
+        thrown = error;
+      }
+
+      expect(thrown).toBeInstanceOf(AegisError);
+      expect((thrown as CwsError).code).toBe("cose_malformed");
+    });
+
+    test.each(NOT_BSTR)("verify refuses %s inside the contract", (_name, value) => {
+      let thrown: unknown;
+
+      try {
+        kit.verify(spliceCoseSlot(token, index, value));
+      } catch (error) {
+        thrown = error;
+      }
+
+      expect(thrown).toBeInstanceOf(AegisError);
+      expect((thrown as CwsError).code).toBe("cose_malformed");
+    });
+  });
+
+  // ⚠ THE WORDS, per SLOT — the CWM half of the wiring the CWT rows pin. Slot 3 is
+  // where the two wires visibly part: `verifyCoseStructure` names it the
+  // AUTHENTICATION TAG on a COSE_Mac0 and the SIGNATURE on a COSE_Sign1, off one
+  // ternary that only a mac0 row reaches.
+  test.each([
+    [
+      "decode names the protected slot",
+      () => CwmKit.decode(spliceCoseSlot(token, 0, 42)),
+      "The CWT protected header slot is not a byte string, so its parameters cannot be read.",
+    ],
+    [
+      "decode names the arity",
+      () =>
+        CwmKit.decode(
+          encodeCbor(
+            new Tag(COSE_TAG.mac0, [Buffer.alloc(0), new Map<number, unknown>()]),
+          ),
+        ),
+      "The CWT does not contain a recognisable COSE structure.",
+    ],
+    [
+      "verify names the protected slot",
+      () => kit.verify(spliceCoseSlot(token, 0, 42)),
+      "The CWT protected header slot is not a byte string.",
+    ],
+    [
+      "verify names the payload slot as a COSE_Mac0",
+      () => kit.verify(spliceCoseSlot(token, 2, 42)),
+      "The COSE_Mac0 payload slot is not a byte string, so there are no CWT claims to verify.",
+    ],
+    [
+      "verify names the authentication tag slot",
+      () => kit.verify(spliceCoseSlot(token, 3, 42)),
+      "The COSE_Mac0 authentication tag slot is not a byte string, so there is nothing to verify.",
+    ],
+    [
+      "verify names the arity",
+      () =>
+        kit.verify(
+          encodeCbor(
+            new Tag(COSE_TAG.mac0, [
+              Buffer.alloc(0),
+              new Map<number, unknown>(),
+              Buffer.from("c"),
+            ]),
+          ),
+        ),
+      "A COSE_Mac0 must be a 4-element array [protected, unprotected, payload, signature/tag].",
+    ],
+  ])("%s", (_name, door, details) => {
+    let thrown: unknown;
+
+    try {
+      door();
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(AegisError);
+    expect((thrown as CwsError).code).toBe("cose_malformed");
+    expect((thrown as CwsError).details).toBe(details);
+  });
+
+  // The CWM half of the claims-set gate — `decodeCwtMessage` is shared, and this is
+  // the door that reads it before any key is held. RFC 8392 §2, RFC 8392 §7.2.
+  test.each([
+    ["nil", encodeCbor(null)],
+    ["an array", encodeCbor([1, 2])],
+    ["a tstr", encodeCbor("hi")],
+  ])("decode refuses a payload byte string holding %s", (_name, bstr) => {
+    let thrown: unknown;
+
+    try {
+      CwmKit.decode(spliceCoseSlot(token, 2, bstr));
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(AegisError);
+    expect((thrown as CwsError).details).toBe(
+      "The CWT payload does not hold a CBOR claims map.",
+    );
+  });
+
+  // The inner `bstr .cbor header_map` half (RFC 9052 §3), on the mac0 wire.
+  test.each([
+    ["an int", encodeCbor(42)],
+    ["an array", encodeCbor([1, 2])],
+    ["nil", encodeCbor(null)],
+    ["a tstr", encodeCbor("hi")],
+  ])("both doors refuse a protected byte string holding %s", (_name, bstr) => {
+    for (const door of [
+      () => CwmKit.decode(spliceCoseSlot(token, 0, bstr)),
+      () => kit.verify(spliceCoseSlot(token, 0, bstr)),
+    ]) {
+      let thrown: unknown;
+
+      try {
+        door();
+      } catch (error) {
+        thrown = error;
+      }
+
+      expect(thrown).toBeInstanceOf(AegisError);
+      expect((thrown as CwsError).code).toBe("cose_malformed");
+    }
+  });
+
+  // ⚠ The UNPROTECTED bucket is a map, not a bstr, and no MAC covers it — an
+  // unindexable one is an ABSENT kid hint, not a refusal, so the token stays as
+  // verifiable as it was.
+  test.each(NOT_BSTR)(
+    "verify still authenticates a token whose unprotected bucket is %s",
+    (_name, value) => {
+      const { payload } = kit.verify(spliceCoseSlot(token, 1, value));
+
+      expect(payload.sub).toBe(wire.sub);
+    },
+  );
+});
+
+/**
+ * A CLAIMS SET OF CUSTOM CLAIMS ONLY — a token aegis minted itself.
+ *
+ * No custom claim carries an integer label, so `preferMap: false` decodes such a
+ * Message as a plain OBJECT rather than a `Map`, and `decodeCwtMessage`
+ * (`cwt-message.ts`) admits both. The malformed-payload rows above cannot reach
+ * that half: every one of them is a refusal.
+ */
+describe("a CWT whose claims are ALL custom", () => {
+  const custom = { alpha: "a", beta: "b" };
+
+  test("CwtKit reads its own all-custom claims back through decode and verify", () => {
+    const kit = new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger: createMockLogger() });
+    const token = kit.sign(custom);
+
+    expect(CwtKit.decode(token).payload).toEqual(custom);
+    expect(kit.verify(token).payload).toEqual(custom);
+  });
+
+  test("CwmKit reads its own all-custom claims back through decode and verify", () => {
+    const kit = new CwmKit({ kryptos: TEST_OCT_KEY_SIG, logger: createMockLogger() });
+    const token = kit.sign(custom);
+
+    expect(CwmKit.decode(token).payload).toEqual(custom);
+    expect(kit.verify(token).payload).toEqual(custom);
   });
 });

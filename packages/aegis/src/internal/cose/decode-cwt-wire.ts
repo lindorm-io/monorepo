@@ -2,8 +2,7 @@ import type { Dict } from "@lindorm/types";
 import { CoseError } from "../../errors/index.js";
 import type { CoseDecodedStructuredToken, CwtClaimsWire } from "../../types/index.js";
 import { decodeCwtMessage } from "./cwt-message.js";
-import { requireAttachedPayload } from "./require-attached-payload.js";
-import { requireSignature } from "./require-signature.js";
+import { requireBstr } from "./require-bstr.js";
 import { splitSigned } from "./split-signed.js";
 
 /**
@@ -28,7 +27,9 @@ export const decodeCwtWire = <C extends Dict = Dict>(
     error: CoseError,
     message: "Malformed CWT",
     title: "Malformed CWT",
-    details: "The CWT does not contain a recognisable COSE structure.",
+    arityDetails: "The CWT does not contain a recognisable COSE structure.",
+    protectedDetails:
+      "The CWT protected header slot is not a byte string, so its parameters cannot be read.",
   });
 
   // ⚠ `splitSigned` decodes and translates the protected header EAGERLY, so a
@@ -37,25 +38,29 @@ export const decodeCwtWire = <C extends Dict = Dict>(
   // `CoseError` refusals; the eager decode is what lets one opening serve all
   // three callers.
   //
-  // A DETACHED (nil) payload is legal COSE but has no claims to decode. Refused
-  // with the structural error rather than letting `Buffer.from(null)` throw a raw
-  // TypeError.
-  const payloadBytes = requireAttachedPayload(payloadBstr, {
+  // A DETACHED (nil) payload is legal COSE but has no claims to decode. ⚠ The gate
+  // is a TYPE check, not a presence one: a nil or an int reaches `Buffer.from` as
+  // a raw `TypeError` outside the `AegisError` contract. A tstr is refused either
+  // way — the claims codec below reads the fabricated UTF-8 as CBOR and answers
+  // `cbor_decode_failed` — so this gate is what makes ALL of them one verdict.
+  const payloadBytes = requireBstr(payloadBstr, {
     error: CoseError,
     message: "Malformed CWT",
     title: "Malformed CWT",
-    details: "The CWT has a detached or nil payload, so its claims cannot be decoded.",
+    details:
+      "The CWT payload slot is not a byte string, so its claims cannot be decoded.",
   });
 
-  // Slot 4 can be nil too. Refused on the same structural verdict, so decode and
-  // verify agree about a nil-signature token exactly as they do about a nil
-  // payload — fabricating `Buffer.alloc(0)` would hand back an empty signature a
-  // caller cannot tell from a real zero-length one.
-  const signatureBytes = requireSignature(signature, {
+  // Slot 4 is bstr-or-nothing too. Refused on the same structural verdict, so
+  // decode and verify agree about a nil-signature token exactly as they do about
+  // a nil payload — fabricating `Buffer.alloc(0)` would hand back an empty
+  // signature a caller cannot tell from a real zero-length one.
+  const signatureBytes = requireBstr(signature, {
     error: CoseError,
     message: "Malformed CWT",
     title: "Malformed CWT",
-    details: "The CWT has a nil signature, so the structure is incomplete.",
+    details:
+      "The CWT signature slot is not a byte string, so the structure is incomplete.",
   });
 
   // The payload byte string is the CWT Message, decoded through the ONE codec

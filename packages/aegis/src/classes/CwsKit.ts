@@ -7,8 +7,7 @@ import { assertCoseRegistered } from "../internal/cose/assert-cose-registered.js
 import { Tag, encodeCbor } from "../internal/cose/cbor.js";
 import type { CoseLabel } from "../internal/cose/cose-label.js";
 import { ERROR_BY_FORMAT } from "../internal/cose/error-by-format.js";
-import { requireAttachedPayload } from "../internal/cose/require-attached-payload.js";
-import { requireSignature } from "../internal/cose/require-signature.js";
+import { requireBstr } from "../internal/cose/require-bstr.js";
 import { signedCoseStructureTag } from "../internal/cose/signed-cose-structure-tag.js";
 import { splitSigned } from "../internal/cose/split-signed.js";
 import { COSE_THUMBPRINT_SHA1 } from "../internal/cose/cose-thumbprint-sha1.js";
@@ -86,32 +85,36 @@ export class CwsKit implements ICwsKit {
         error: CwsError,
         message: "Malformed COSE structure",
         title: "Malformed COSE Structure",
-        details:
+        arityDetails:
           "A COSE_Sign1/COSE_Mac0 must be a 4-element array [protected, unprotected, payload, signature/tag].",
+        protectedDetails:
+          "The COSE_Sign1/COSE_Mac0 protected header slot is not a byte string, so its parameters cannot be read.",
       });
 
     // A DETACHED (nil) payload is legal COSE, but this kit carries no out-of-band
-    // content, so there is nothing for it to decode — refused with the structural
-    // `cose_malformed` verdict rather than a raw `Buffer.from(null)` TypeError.
-    const content = requireAttachedPayload(payload, {
+    // content, so there is nothing for it to decode. ⚠ The gate is a TYPE check,
+    // not a presence one: a nil or an int reaches `Buffer.from` as a raw TypeError
+    // outside the `AegisError` contract, and a tstr does not throw at all — it
+    // fabricates UTF-8 bytes and hands them back as content.
+    const content = requireBstr(payload, {
       error: CwsError,
       message: "Malformed COSE structure",
       title: "Malformed COSE Structure",
       details:
-        "The COSE_Sign1/COSE_Mac0 has a detached or nil payload, so there is no content to decode.",
+        "The COSE_Sign1/COSE_Mac0 payload slot is not a byte string, so there is no content to decode.",
     });
 
-    // The other nil-able slot: `exactly: 4` counts ELEMENTS, so a structure
-    // carrying `null` in slot 4 arrives here intact. There is no signature to hand
-    // back, and fabricating an empty Buffer for one would be a lie a caller cannot
-    // tell from a real zero-length signature — refused with the same structural
-    // verdict `verify` gives the same bytes.
-    const secured = requireSignature(signature, {
+    // The other slot, under the same TYPE gate: `exactly: 4` counts ELEMENTS, so
+    // `null` — or an int, or a tstr — in slot 4 arrives here intact. Fabricating an
+    // empty Buffer for any of them would be a lie a caller cannot tell from a real
+    // zero-length signature — refused with the same structural verdict `verify`
+    // gives the same bytes.
+    const secured = requireBstr(signature, {
       error: CwsError,
       message: "Malformed COSE structure",
       title: "Malformed COSE Structure",
       details:
-        "The COSE_Sign1/COSE_Mac0 has a nil signature/tag, so the structure is incomplete.",
+        "The COSE_Sign1/COSE_Mac0 signature/tag slot is not a byte string, so the structure is incomplete.",
     });
 
     return {
