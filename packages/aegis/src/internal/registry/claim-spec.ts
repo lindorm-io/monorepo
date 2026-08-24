@@ -7,6 +7,13 @@
 import type { MemberSpec, ParamSpec } from "./param-spec.js";
 
 /**
+ * The ONLY input to the aegis confidentiality gate: a `"sensitive"` claim may be
+ * published only on an encrypted token. ⚠ A fact about the CLAIM — a caller cannot
+ * declassify it by routing the value through another container.
+ */
+export type Sensitivity = "public" | "sensitive";
+
+/**
  * How an array claim tolerates a SCALAR on read. Required on every `array`
  * codec; the three cases are exhaustive and none of them is a default.
  *   - `"spaced"` a space-delimited STRING is accepted and SPLIT (`"a b"` ->
@@ -179,9 +186,11 @@ export type ClaimSpec<D = unknown> = ParamSpec<D, ClaimCodec, "keep" | "prune"> 
    *   - `"profile"` the OIDC Core §5.1 profile set (`AegisProfile`).
    * A claim NOT in the registry buckets to `custom`, so `custom` is the ABSENCE of
    * an entry and never a bucket value. SENSITIVITY is a SEPARATE column
-   * ({@link ParamSpec.sensitivity}) so the two facts compose.
+   * ({@link ClaimSpec.sensitivity}) so the two facts compose.
    */
   bucket: "claims" | "profile";
+  /** See {@link Sensitivity}. */
+  sensitivity: Sensitivity;
   /**
    * The claim is part of `DomainClaims`, so the verify-FLOOR read resolves it to its
    * domain name. Absent ⇒ the floor leaves it in `custom` under its wire spelling.

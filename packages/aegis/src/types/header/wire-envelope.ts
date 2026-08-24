@@ -77,7 +77,7 @@ export type WireTokenEnvelope = {
  * The JOSE sign/encrypt envelope — {@link WireTokenEnvelope} plus the custom bag.
  *
  * Compact JWS/JWE serialisation carries ONE header and it is integrity-protected
- * (`KIT_CAPABILITIES.<jose kit>.unprotectedBucket: false`), so the custom bucket
+ * (RFC 7515 §7.1, RFC 7516 §7.1), so the custom bucket
  * is named `header` for that one header — `protected` would name a bucket-vs-bucket
  * contrast this wire has no second bucket for — and there is no `custom.unprotected`
  * to write. The COSE spelling is a compile error here (pinned: `wire-envelope.test.ts`).

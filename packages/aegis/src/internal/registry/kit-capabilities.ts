@@ -4,8 +4,8 @@
  *
  * It records what each kit CAN do, and each kit READS its own row: the COSE kits
  * derive their reserved-parameter set from `reserved`, `CweKit` gates its key
- * management on `keyManagement` and its AEAD on `contentEncryption`, and the JOSE
- * header decoder allowlists `enc` against the `jwe` row. Without it an unsupported
+ * management on `keyManagement`, and the JOSE header decoder allowlists `enc`
+ * against the `jwe` row. Without it an unsupported
  * request surfaces `@lindorm/aes`'s own error from several layers down instead of
  * an aegis refusal.
  */
@@ -119,8 +119,6 @@ export const KIT_CAPABILITIES: Readonly<Record<TokenFormatTag, KitCapabilities>>
     keyManagement: NONE_ALG,
     contentEncryption: NONE_ENC,
     cnfMembers: JOSE_CNF,
-    certificateBinding: true,
-    unprotectedBucket: false,
     reserved: JOSE_RESERVED,
   },
   jws: {
@@ -128,8 +126,6 @@ export const KIT_CAPABILITIES: Readonly<Record<TokenFormatTag, KitCapabilities>>
     keyManagement: NONE_ALG,
     contentEncryption: NONE_ENC,
     cnfMembers: NO_CNF,
-    certificateBinding: true,
-    unprotectedBucket: false,
     reserved: JOSE_RESERVED,
   },
   jwe: {
@@ -140,8 +136,6 @@ export const KIT_CAPABILITIES: Readonly<Record<TokenFormatTag, KitCapabilities>>
     keyManagement: new Set(KRYPTOS_ENC_ALGORITHMS),
     contentEncryption: new Set(AES_ENCRYPTION_ALGORITHMS),
     cnfMembers: JOSE_CNF,
-    certificateBinding: true,
-    unprotectedBucket: false,
     reserved: JOSE_RESERVED,
   },
   cwt: {
@@ -149,12 +143,6 @@ export const KIT_CAPABILITIES: Readonly<Record<TokenFormatTag, KitCapabilities>>
     keyManagement: NONE_ALG,
     contentEncryption: NONE_ENC,
     cnfMembers: COSE_CNF,
-    // Every COSE writer derives `x5chain` (33) and `x5t` (34) from the signing key
-    // through `resolveCertBinding`, as the JOSE kits do (RFC 9360 §2). The SHA-1
-    // digest does not cross: the writers hand the resolver `false` for it, because
-    // label 34 carries its algorithm inside the value.
-    certificateBinding: true,
-    unprotectedBucket: true,
     // `typ` is what routes a COSE token — `isCwt`/`isCws` and the profile floor read
     // it — so a caller value for it is refused, not merged.
     reserved: COSE_RESERVED,
@@ -164,8 +152,6 @@ export const KIT_CAPABILITIES: Readonly<Record<TokenFormatTag, KitCapabilities>>
     keyManagement: NONE_ALG,
     contentEncryption: NONE_ENC,
     cnfMembers: COSE_CNF,
-    certificateBinding: true,
-    unprotectedBucket: true,
     reserved: COSE_RESERVED,
   },
   cws: {
@@ -173,8 +159,6 @@ export const KIT_CAPABILITIES: Readonly<Record<TokenFormatTag, KitCapabilities>>
     keyManagement: NONE_ALG,
     contentEncryption: NONE_ENC,
     cnfMembers: NO_CNF,
-    certificateBinding: true,
-    unprotectedBucket: true,
     reserved: COSE_RESERVED,
   },
   cwe: {
@@ -189,14 +173,6 @@ export const KIT_CAPABILITIES: Readonly<Record<TokenFormatTag, KitCapabilities>>
     // mode (`enc-labels.ts`).
     contentEncryption: new Set(AES_ENCRYPTION_ALGORITHMS),
     cnfMembers: COSE_CNF,
-    // ⚠ THE KIT CALLS THE RESOLVER — the sense every row of this column states, and
-    // what `kit-capabilities.test.ts` measures (a cert-less key makes
-    // `resolveCertBinding` throw, so a kit that never called it would mint happily).
-    // It is NOT a claim that a binding can be PRODUCED here: a `cwe` recipient is a
-    // symmetric `dir` key and carries no X.509 certificate.
-    // `knob-probes.ts`'s `unobservable.cose` states that second fact.
-    certificateBinding: true,
-    unprotectedBucket: true,
     reserved: COSE_RESERVED,
   },
 };

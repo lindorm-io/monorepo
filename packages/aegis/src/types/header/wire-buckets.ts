@@ -4,9 +4,8 @@ import type { WireTokenHeader } from "./wire-header.js";
  * The header buckets a JOSE kit result reports.
  *
  * Compact JWS/JWE serialisation carries exactly ONE header and it is
- * integrity-protected, which is what `KIT_CAPABILITIES.<jose kit>.unprotectedBucket:
- * false` states (`internal/registry/kit-capabilities.ts`). There is no second
- * bucket for a name like `protected` to contrast with, so the field is `header` —
+ * integrity-protected (RFC 7515 §7.1, RFC 7516 §7.1). There is no second bucket for
+ * a name like `protected` to contrast with, so the field is `header` —
  * the read twin of {@link JoseWireTokenEnvelope}'s write bag. Type-pinned in
  * `types/header/wire-envelope.test.ts`.
  */

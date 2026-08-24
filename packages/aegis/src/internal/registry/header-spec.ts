@@ -34,7 +34,7 @@ export type HeaderCodec =
 
 /**
  * Which header BUCKET a parameter may occupy — where it is ALLOWED, not where it
- * lands. Whether a given kit HAS an unprotected bucket is a kit capability.
+ * lands.
  *
  *   - `"protected"`   integrity-protected only.
  *   - `"unprotected"` unauthenticated bucket only.

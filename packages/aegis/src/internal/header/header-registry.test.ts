@@ -234,16 +234,6 @@ describe("HEADER_SPECS", () => {
     }
   });
 
-  test("no header parameter is sensitive", () => {
-    // The one CONSTANT column, and it is grounded: a header parameter is never
-    // encrypted content. Pinning it means the first parameter that breaks the
-    // pattern has to change this test deliberately. (`critEligible` is not constant
-    // and is pinned by name below.)
-    for (const spec of HEADER_SPECS) {
-      expect(spec.sensitivity, `${spec.domain} is sensitive`).toBe("public");
-    }
-  });
-
   /**
    * The `critEligible` set, frozen by name — the REGISTERED parameters a PRODUCER
    * may name in `crit`.

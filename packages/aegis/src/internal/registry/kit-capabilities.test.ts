@@ -163,19 +163,6 @@ describe("KIT_CAPABILITIES", () => {
     }
   });
 
-  // DECLARATION — one column against another. Bound to behaviour by the
-  // `unprotectedBucket:` probe below.
-  test("only the COSE kits have an unprotected bucket", () => {
-    // COSE_Sign1/Mac0/Encrypt0 are `[protected, unprotected, …]`; JOSE compact
-    // serialisation has one header and no unauthenticated bucket at all. This is
-    // the fact that makes an unprotected `typ` representable on one wire only.
-    for (const [format, row] of Object.entries(KIT_CAPABILITIES)) {
-      expect(row.unprotectedBucket, `${format} unprotected bucket`).toBe(
-        row.wire === "cose",
-      );
-    }
-  });
-
   // DECLARATION — two columns against the row's own KEY.
   test("only the encrypting kits declare key management or content encryption", () => {
     for (const [format, row] of Object.entries(KIT_CAPABILITIES)) {
@@ -267,18 +254,8 @@ describe("KIT_CAPABILITIES", () => {
     expect(KIT_CAPABILITIES.cws.cnfMembers.size).toBe(0);
   });
 
-  test("certificate binding is a capability of every kit, on both wires", () => {
-    // Every kit derives its binding off the signing key through `resolveCertBinding`
-    // (RFC 7515 §4.1.6, RFC 7515 §4.1.8; RFC 9360 §2). A row that said otherwise would license
-    // the accept-and-ignore the disposition tables exist to refuse.
-    for (const [format, row] of Object.entries(KIT_CAPABILITIES)) {
-      expect(row.certificateBinding, `${format} certificate binding`).toBe(true);
-    }
-  });
-
   // DECLARATION — the rows against literals. The COSE rows are bound by the
-  // (circular) reserved probe; the JOSE rows by the spread-order probe, which is
-  // not circular because no JOSE kit reads its row.
+  // (circular) reserved probe.
   test("every row reserves alg and the key id", () => {
     for (const [format, row] of Object.entries(KIT_CAPABILITIES)) {
       expect(row.reserved, `${format} does not reserve alg`).toContain("alg");
@@ -365,26 +342,22 @@ describe("KIT_CAPABILITIES", () => {
       }
     });
 
-    test("certificateBinding: exactly the rows that call resolveCertBinding", () => {
+    test("every kit throws when bindCertificate is asked of a key with no certificate chain", () => {
       // Every probe kit is built on a CERT-LESS key, so `resolveCertBinding` throws
       // `cert_binding_chain_required` when it runs at all. A kit that never calls it
       // mints happily and silently ignores the option.
       for (const format of FORMATS) {
         const mint = () => MINT[format]({ bindCertificate: "chain" });
 
-        if (KIT_CAPABILITIES[format].certificateBinding) {
-          expect(mint, `${format} claims cert binding but ignores it`).toThrow(
-            /bindCertificate requires kryptos with certificateChain/,
-          );
-        } else {
-          expect(mint, `${format} disclaims cert binding but enforces it`).not.toThrow();
-        }
+        expect(mint, `${format} ignores bindCertificate`).toThrow(
+          /bindCertificate requires kryptos with certificateChain/,
+        );
       }
     });
 
-    test("unprotectedBucket: the kit's own kid rides element 1 only where the row says one exists", () => {
-      // The column names a STRUCTURAL fact, so it is measured on the parameter every
-      // kit stamps for itself — `kid` — and WHERE IT LANDS is the fact. A COSE kit
+    test("wire: the kit's own kid rides element 1 of a COSE structure and the sole JOSE header", () => {
+      // A STRUCTURAL fact, so it is measured on the parameter every kit stamps for
+      // itself — `kid` — and WHERE IT LANDS is the fact. A COSE kit
       // puts it in element 1 of the COSE_Sign1/Mac0/Encrypt0 array (RFC 9052 §3.1); a
       // JOSE compact serialisation has one header (RFC 7515 §7.1).
       //
@@ -409,7 +382,7 @@ describe("KIT_CAPABILITIES", () => {
         })();
 
         expect(bucket, `${format} kid bucket`).toBe(
-          KIT_CAPABILITIES[format].unprotectedBucket ? "unprotected" : "protected",
+          KIT_CAPABILITIES[format].wire === "cose" ? "unprotected" : "protected",
         );
       }
     });

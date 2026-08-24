@@ -35,10 +35,6 @@ export type KitCapabilities = {
    * OPAQUE formats (jws/cws), which have no claims layer of their own.
    */
   cnfMembers: ReadonlySet<CnfMember>;
-  /** Whether the kit can bind an X.509 certificate to the token it produces. */
-  certificateBinding: boolean;
-  /** Whether the kit's wire structure HAS an unauthenticated header bucket. */
-  unprotectedBucket: boolean;
   /**
    * The wire header parameters the KIT stamps itself, in the JOSE spelling. A caller
    * value for one of these is refused, or silently overwritten where the kit does

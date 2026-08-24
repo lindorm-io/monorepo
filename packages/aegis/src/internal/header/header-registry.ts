@@ -17,12 +17,6 @@
  * indistinguishable from an oversight. The `cose` codec cell is `null` on exactly
  * those rows, bound to the `absent` cell in `header-registry.test.ts`.
  *
- * --- `sensitivity` ---
- *
- * A header parameter is never encrypted content, so every row is `public`. It is
- * declared per entry anyway, so the first parameter that breaks the pattern has to
- * say so here.
- *
  * --- `critEligible` ---
  *
  * WRITE-SIDE ONLY: `internal/header/is-crit-eligible.ts` is its one reader,
@@ -84,7 +78,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     wire: { jose: wireName("alg"), cose: wireLabel(1, "alg") },
     codec: { kind: "string" },
     cose: { kind: "algorithmLabel" },
-    sensitivity: "public",
     sample: "ES256",
     // PRUNE: `""` names no algorithm — a missing `alg` wearing a value, and absent
     // is the state `encodeJoseHeader` already refuses by name. `kryptos.algorithm`
@@ -110,7 +103,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     },
     codec: { kind: "string" },
     cose: null,
-    sensitivity: "public",
     sample: "cGFydHktdQ",
     // PRUNE: an empty `apu` derives the SAME key an absent one does (RFC 7518
     // §4.6.2), so it is a header parameter that changes nothing — and
@@ -136,7 +128,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     },
     codec: { kind: "string" },
     cose: null,
-    sensitivity: "public",
     sample: "cGFydHktdg",
     // PRUNE: the `apu` argument, for PartyVInfo (RFC 7518 §4.6.2).
     whenEmpty: "prune",
@@ -154,7 +145,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     wire: { jose: wireName("crit"), cose: wireLabel(2, "crit") },
     codec: { kind: "critical" },
     cose: { kind: "critical" },
-    sensitivity: "public",
     // ⚠ DOMAIN spelling. `criticalToWire` maps each member domain -> wire
     // (`objectId` -> `oid`) and passes an unrecognised member through unchanged, so
     // a WIRE spelling here would survive the write and read back as the domain one.
@@ -178,7 +168,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     wire: { jose: wireName("cty"), cose: wireLabel(3, "cty") },
     codec: { kind: "string" },
     cose: { kind: "passthrough" },
-    sensitivity: "public",
     sample: "application/json",
     // PRUNE: `""` is not a media type, and it is worse than noise —
     // `serialiseContent` prefers it over the inferred type (`??` passes `""`
@@ -204,7 +193,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     },
     codec: { kind: "string" },
     cose: null,
-    sensitivity: "public",
     sample: "A256GCM",
     // PRUNE: `""` names no content-encryption algorithm, and is indistinguishable
     // from a header that never had one. `JweKit` writes it from the kit's own
@@ -230,7 +218,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     },
     codec: { kind: "jwk" },
     cose: null,
-    sensitivity: "public",
     sample: { kty: "EC", crv: "P-256", x: "eHNhbXBsZQ", y: "eXNhbXBsZQ" },
     // PRUNE: `{}` carries no `kty`, `crv` or coordinates, so no key agreement can
     // be performed from it — and an ABSENT `epk` already reports "no ephemeral key
@@ -250,7 +237,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     wire: { jose: wireName("iv"), cose: wireLabel(5, "iv") },
     codec: { kind: "buffer" },
     cose: { kind: "base64Bytes" },
-    sensitivity: "public",
     sample: Buffer.alloc(12),
     // PRUNE. ⚠ It does NOT govern a zero-length Buffer: `isEmpty` treats a Buffer
     // as non-empty, and a zero-length nonce must fail in the AEAD rather than be
@@ -278,7 +264,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     },
     codec: { kind: "url" },
     cose: null,
-    sensitivity: "public",
     sample: "https://issuer.lindorm.test/.well-known/jwks.json",
     // PRUNE, and no empty value can reach the cell: `isUrlLike("")` is false, so the
     // codec guard (`token-header.ts`) already drops every empty form.
@@ -302,7 +287,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     },
     codec: { kind: "jwk" },
     cose: null,
-    sensitivity: "public",
     sample: { kty: "EC", crv: "P-256", x: "eHNhbXBsZQ", y: "eXNhbXBsZQ" },
     // PRUNE: `{}` is a JWK with no `kty` (RFC 7517 §4.1) and identifies no key.
     // aegis never trusts a header-embedded key on any wire, so an empty one is
@@ -322,7 +306,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     wire: { jose: wireName("kid"), cose: wireLabel(4, "kid") },
     codec: { kind: "string" },
     cose: { kind: "textBytes" },
-    sensitivity: "public",
     sample: "key_sample",
     // PRUNE: `""` matches nothing and is indistinguishable from a token that gave
     // no hint; `encodeJoseHeader` already refuses a falsy `kid`. On COSE it also
@@ -351,7 +334,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     wire: { jose: wireName("oid"), cose: wireLabel(-70000, "oid") },
     codec: { kind: "string" },
     cose: { kind: "passthrough" },
-    sensitivity: "public",
     sample: "oid_sample",
     // PRUNE: `""` names no object, and nothing reads an empty object id as anything
     // but "not stated".
@@ -390,7 +372,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     },
     codec: { kind: "number" },
     cose: null,
-    sensitivity: "public",
     sample: 310000,
     // PRUNE, and no empty value exists for it to act on: `isEmpty` is false for
     // every number and `isFinite` rejects every non-number (`token-header.ts`).
@@ -417,7 +398,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     },
     codec: { kind: "buffer" },
     cose: null,
-    sensitivity: "public",
     sample: Buffer.alloc(16),
     // PRUNE, on the `iv` argument: a zero-length Buffer is not empty and is not
     // governed here.
@@ -441,7 +421,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     },
     codec: { kind: "buffer" },
     cose: null,
-    sensitivity: "public",
     sample: Buffer.alloc(16),
     // PRUNE, on the `iv` argument. The key-wrap authentication tag is bytes or
     // absent; the non-Buffer empties the guardless `buffer` arm admits are neither.
@@ -460,7 +439,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     wire: { jose: wireName("typ"), cose: wireLabel(16, "typ") }, // RFC 9596 §4.1
     codec: { kind: "string" },
     cose: { kind: "passthrough" },
-    sensitivity: "public",
     // The FULL media type: aegis always writes and reports the complete form, so a
     // bare `"at+jwt"` here could not round-trip to itself (RFC 7515 §4.1.9).
     sample: "application/at+jwt",
@@ -483,7 +461,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     wire: { jose: wireName("x5c"), cose: wireLabel(33, "x5c") }, // RFC 9360 x5chain
     codec: { kind: "array" },
     cose: { kind: "certChain" },
-    sensitivity: "public",
     sample: ["MIIBsample"],
     // PRUNE. ⚠ NOT a restriction, and this is where it splits from `x5t#S256`
     // below: nothing reads `x5c` — the binding check consults a THUMBPRINT alone
@@ -511,7 +488,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     },
     codec: { kind: "string" },
     cose: null,
-    sensitivity: "public",
     sample: "dGh1bWJwcmludC1zaGEx",
     // PRUNE: this digest is checked only where NO SHA-256 one arrived, and only in
     // lax mode (`verify-cert-binding.ts`), so its presence is never itself the
@@ -538,7 +514,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     },
     codec: { kind: "string" },
     cose: { kind: "certHash" },
-    sensitivity: "public",
     sample: "dGh1bWJwcmludC1zaGEyNTY",
     // REFUSE: `verify-cert-binding.ts` skips the check when this is absent and
     // refuses a mismatch when it is present, so PRESENCE IS THE BINDING. Pruning an
@@ -568,7 +543,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     wire: { jose: wireName("x5u"), cose: wireLabel(35, "x5u") },
     codec: { kind: "string" },
     cose: { kind: "passthrough" },
-    sensitivity: "public",
     sample: "https://issuer.lindorm.test/certs.pem",
     // PRUNE: `""` is not a URI (RFC 7515 §4.1.5). ⚠ This row carries the `string`
     // codec, not `url` like `jku`, so no guard drops an empty value earlier — this
@@ -594,7 +568,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     },
     codec: { kind: "string" },
     cose: null,
-    sensitivity: "public",
     sample: "DEF",
     // PRUNE: `""` names no compression algorithm (RFC 7518 §7.3). aegis compresses
     // nothing on any write path, so an empty `zip` declares a transform that did not

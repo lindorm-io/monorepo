@@ -174,7 +174,7 @@ describe("Aegis — meta coverage", () => {
     expect([...new Set(uncensused)]).toEqual([]);
   });
 
-  // The 49 cells, bound to the real table rather than to the type alone. The
+  // The census cells, bound to the real table rather than to the type alone. The
   // mapped type makes a new KIT or a new COLUMN a compile error; this catches a
   // row or column renamed on one side.
   test("should census every kit-capability cell", () => {
@@ -271,8 +271,8 @@ describe("Aegis — meta coverage", () => {
     expect(missing, "a cited source file does not exist").toEqual([]);
   });
 
-  // The measurement the census exists to make VISIBLE: nine of the forty-nine
-  // capability cells have a production reader. The table's premise is that a kit
+  // The measurement the census exists to make VISIBLE: nine capability cells
+  // have a production reader. The table's premise is that a kit
   // reads its own row, and for most of it that is not yet true. Pinned so the
   // number moves in review — up when a kit starts reading its row, and never
   // silently down.
@@ -289,7 +289,7 @@ describe("Aegis — meta coverage", () => {
   test("should record how many capability cells a kit actually reads", () => {
     const cells = Object.values(KIT_CELL_CENSUS).flatMap((row) => Object.values(row));
 
-    expect(cells.length).toBe(49);
+    expect(cells.length).toBe(35);
     expect(cells.filter((cell) => cell.exercised === "reader").length).toBe(9);
     expect(cells.filter((cell) => cell.exercised === "observed").length).toBeGreaterThan(
       0,

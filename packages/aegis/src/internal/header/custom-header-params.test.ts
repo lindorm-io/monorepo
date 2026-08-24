@@ -79,8 +79,8 @@ describe("custom header parameters", () => {
       // ⚠ NOT in the typed bag. `WireTokenHeader` says an unregistered key cannot
       // exist, so a reader that found one there would be reading a typed lie.
       expect(decoded.header).not.toHaveProperty(HINT);
-      // ONE bucket, not an empty second one: a JOSE kit result has no unprotected
-      // half of either bag (`KIT_CAPABILITIES.jwt.unprotectedBucket: false`).
+      // ONE bucket, not an empty second one: a JWT has no unprotected half of
+      // either bag (RFC 7515 §7.1).
       expect(Object.keys(decoded.custom)).toEqual(["header"]);
     });
 

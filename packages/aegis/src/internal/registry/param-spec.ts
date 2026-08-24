@@ -9,13 +9,6 @@ import type { Wire } from "./wire.js";
 import type { WireKey } from "./wire-key.js";
 
 /**
- * The ONLY input to the aegis confidentiality gate: a `"sensitive"` parameter may
- * be published only on an encrypted token. ⚠ A fact about the PARAMETER — a
- * caller cannot declassify it by routing the value through another container.
- */
-export type Sensitivity = "public" | "sensitive";
-
-/**
  * Each registry supplies its OWN closed union of kinds (`ClaimCodec`,
  * `HeaderCodec`) rather than one widened union, so both translators keep an
  * exhaustive `switch` with a `never` default.
@@ -51,7 +44,6 @@ export type ParamSpec<
    * guard in `internal/claims/claims-registry.test.ts` notices one flipping.
    */
   codec: WireCodec<C>;
-  sensitivity: Sensitivity;
   /**
    * What the emission-boundary prune does to an EMPTY value (`""`, `null`, `[]`,
    * `{}` — `0`, `false` and a zero-length Buffer are values). REQUIRED with no
@@ -95,11 +87,8 @@ export type ParamSpec<
 };
 
 /**
- * A MEMBER of a parameter whose codec declares a structure. ⚠ An `Omit`, not a
- * copy, so a new base column is a compile error in every member. The one omission
- * is {@link ParamSpec.sensitivity}: the confidentiality gate filters TOP-LEVEL
- * specs (`internal/utils/extract-sensitive-claims.ts`), and a per-member gate
- * would be a new capability.
+ * A MEMBER of a parameter whose codec declares a structure. ⚠ An EXTENSION of the
+ * shared base, not a copy, so a new base column is a compile error in every member.
  *
  * ⚠ `jwk` and `epk` declare no children: a JWK is a union discriminated by `kty`
  * (`internal/cose/cose-key.ts` branches EC/OKP/AKP, and the AKP `pub` label -1 is
@@ -114,7 +103,7 @@ export type MemberSpec<
   D = unknown,
   C extends ValueCodec = ValueCodec,
   E extends WhenEmpty = WhenEmpty,
-> = Omit<ParamSpec<D, C, E>, "sensitivity"> & {
+> = ParamSpec<D, C, E> & {
   /**
    * MANDATORY whenever the structure carrying it is present; absent ⇒ optional.
    *

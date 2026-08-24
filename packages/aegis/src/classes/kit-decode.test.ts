@@ -202,8 +202,8 @@ describe("kit decode — per-wire header buckets, no signature check", () => {
       );
 
       // ⛔ THE TWO KEY SETS DIFFER, AND THAT IS THE RULE. Compact JOSE carries ONE
-      // header (`KIT_CAPABILITIES.jwt.unprotectedBucket: false`), so a JWT result
-      // has no unprotected bucket to report — not an empty one, none at all.
+      // header (RFC 7515 §7.1), so a JWT result has no unprotected bucket to
+      // report — not an empty one, none at all.
       expect(Object.keys(jwt).sort()).toEqual([
         "custom",
         "header",

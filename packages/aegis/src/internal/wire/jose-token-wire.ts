@@ -145,8 +145,8 @@ export const JOSE_TOKEN_WIRE: TokenWire = {
       matcher: withJoseDates(decoded.payload),
       protectedHeader: decoded.header,
       // The seam carries the COSE bucket pair, so the JOSE arms state the `{}`
-      // compact serialisation yields — `KIT_CAPABILITIES.jwt`/`.jws`/`.jwe` all
-      // declare `unprotectedBucket: false`.
+      // compact serialisation yields: one header, integrity-protected
+      // (RFC 7515 §7.1, RFC 7516 §7.1).
       unprotectedHeader: {},
     };
   },

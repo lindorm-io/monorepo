@@ -82,10 +82,11 @@ export const SHAPE_RULE_CENSUS: { [S in ShapeRuleName]-?: CensusEntry } = {
 };
 
 /**
- * THE 49 KIT-CAPABILITY CELLS — seven kits × seven columns, TOTAL in both
- * directions, so a new kit or a new column is a compile error here.
+ * THE 35 KIT-CAPABILITY CELLS — seven kits × five columns, TOTAL in both
+ * directions, so a new kit or a new column is a compile error here. Counts pinned:
+ * `classes/Aegis.meta-coverage.test.ts`.
  *
- * ⚠ NINE of the forty-nine have a production reader. The other forty are
+ * ⚠ NINE of the thirty-five have a production reader. The other twenty-six are
  * declarations about a kit, and a declaration nothing consults is a comment with
  * a type: the table's whole premise is that a kit reads its own row, and for
  * most of the table that is not yet true. Each such cell therefore says whether
@@ -111,14 +112,6 @@ export const KIT_CELL_CENSUS: {
       exercised: "observed",
       note: "the members `domainToJose` emits for a fully-populated confirmation ARE the JOSE capability",
     },
-    certificateBinding: {
-      exercised: "observed",
-      note: "a cert-less key makes `resolveCertBinding` throw, so a kit that calls it throws and a kit that does not mints",
-    },
-    unprotectedBucket: {
-      exercised: "observed",
-      note: "the bucket the kit's OWN derived kid lands in — element 1 on a COSE structure, the sole protected header on a JOSE one",
-    },
     reserved: {
       exercised: "reader",
       site: "src/classes/JwtKit.ts#reserved: KIT_CAPABILITIES.jwt.reserved",
@@ -141,14 +134,6 @@ export const KIT_CELL_CENSUS: {
       reason:
         "Empty because an OPAQUE kit has no claims layer at all, so there is no `cnf` producer to probe. The emptiness is held by the kit's SHAPE — it signs bytes, not claims — which the type system already enforces.",
     },
-    certificateBinding: {
-      exercised: "observed",
-      note: "the cert-less-key probe, as for `jwt`",
-    },
-    unprotectedBucket: {
-      exercised: "observed",
-      note: "the scenario row `a-wire-with-no-unprotected-bucket-signs-every-parameter-it-carries` reads the token's raw bytes and finds no such bucket — a JOSE compact serialisation has none, which holds for every kit on this wire (RFC 7515 §7.1)",
-    },
     reserved: {
       exercised: "reader",
       site: "src/classes/JwsKit.ts#reserved: KIT_CAPABILITIES.jws.reserved",
@@ -170,14 +155,6 @@ export const KIT_CELL_CENSUS: {
       exercised: "observed",
       note: "shares the JOSE set with `jwt`, observed through `domainToJose`",
     },
-    certificateBinding: {
-      exercised: "observed",
-      note: "the cert-less-key probe, as for `jwt`",
-    },
-    unprotectedBucket: {
-      exercised: "observed",
-      note: "the scenario row `a-wire-with-no-unprotected-bucket-signs-every-parameter-it-carries` reads the token's raw bytes and finds no such bucket — a JOSE compact serialisation has none, which holds for every kit on this wire (RFC 7515 §7.1)",
-    },
     reserved: {
       exercised: "reader",
       site: "src/classes/JweKit.ts#reserved: KIT_CAPABILITIES.jwe.reserved",
@@ -197,20 +174,11 @@ export const KIT_CELL_CENSUS: {
     },
     cnfMembers: {
       exercised: "observed",
-      // ⚠ It WAS a reader: `encodeCnf` read this row to decide what to refuse.
-      // The direction is now INVERTED — the row is DERIVED from the label table
-      // the codec switches over — so nothing reads it back. That is a tighter
-      // binding than the read, not a looser one: the encoder cannot represent a
-      // member the row omits because there is no second list to disagree with.
+      // ⚠ The row is DERIVED from the label table the codec switches over, so
+      // nothing reads it back. That is a tighter binding than a read, not a
+      // looser one: the encoder cannot represent a member the row omits because
+      // there is no second list to disagree with.
       note: "DERIVED from `src/internal/claims/cnf-members.ts#export const COSE_CNF_LABELS`, itself derived from the `wire.cose` cell of each declared member, whose test pins the resulting table against a hand-written literal AND NOTHING ELSE. The behaviour is driven one file over, at `src/internal/cose/cose-key.test.ts#encodeCnf({ jwk: CNF_JWK, kid: 42 })` and the rows beside it: a mixed `{ jwk, kid }` writes BOTH labels, a malformed member refuses instead of dropping, and a member with no label (`jkt`) fails the map closed",
-    },
-    certificateBinding: {
-      exercised: "observed",
-      note: "`false`, and observed: the cert-less-key probe mints happily, which is the accept-and-inert the `false` records",
-    },
-    unprotectedBucket: {
-      exercised: "observed",
-      note: "the scenario rows `an-unprotected-routing-hint-reaches-the-domain-header`, `an-unauthenticated-parameter-cannot-restate-a-signed-one` and `an-unauthenticated-parameter-a-verifier-decides-by-is-ignored` read the raw bucket off the wire — every COSE structure has one, so the fact holds for every kit on this wire (RFC 9052 §3)",
     },
     reserved: {
       exercised: "reader",
@@ -233,14 +201,6 @@ export const KIT_CELL_CENSUS: {
       reason:
         "Every COSE row derives from the ONE label table — a COSE_Sign1 and a COSE_Mac0 share one claims codec — so this row is the same object as the `cwt` row and consulted nowhere. Its value is checked against the `cwt` row's, which is an identity and not a binding.",
     },
-    certificateBinding: {
-      exercised: "observed",
-      note: "the cert-less-key probe mints happily, which is what `false` records",
-    },
-    unprotectedBucket: {
-      exercised: "observed",
-      note: "the scenario rows `an-unprotected-routing-hint-reaches-the-domain-header`, `an-unauthenticated-parameter-cannot-restate-a-signed-one` and `an-unauthenticated-parameter-a-verifier-decides-by-is-ignored` read the raw bucket off the wire — every COSE structure has one, so the fact holds for every kit on this wire (RFC 9052 §3)",
-    },
     reserved: {
       exercised: "reader",
       site: "src/internal/cose/sign-cwt.ts#reserved: KIT_CAPABILITIES[format].reserved",
@@ -260,14 +220,6 @@ export const KIT_CELL_CENSUS: {
       exercised: "declared",
       reason:
         "Empty because an OPAQUE kit has no claims layer, so there is no `cnf` producer to probe — the same shape argument as `jws`.",
-    },
-    certificateBinding: {
-      exercised: "observed",
-      note: "the cert-less-key probe mints happily, which is what `false` records",
-    },
-    unprotectedBucket: {
-      exercised: "observed",
-      note: "the scenario rows `an-unprotected-routing-hint-reaches-the-domain-header`, `an-unauthenticated-parameter-cannot-restate-a-signed-one` and `an-unauthenticated-parameter-a-verifier-decides-by-is-ignored` read the raw bucket off the wire — every COSE structure has one, so the fact holds for every kit on this wire (RFC 9052 §3)",
     },
     reserved: {
       exercised: "reader",
@@ -290,14 +242,6 @@ export const KIT_CELL_CENSUS: {
       exercised: "declared",
       reason:
         "Derived from the ONE label table the `cwt` row names, so this row IS that row's object; nothing consults it.",
-    },
-    certificateBinding: {
-      exercised: "observed",
-      note: "the cert-less-key probe mints happily, which is what `false` records",
-    },
-    unprotectedBucket: {
-      exercised: "observed",
-      note: "the scenario rows `an-unprotected-routing-hint-reaches-the-domain-header`, `an-unauthenticated-parameter-cannot-restate-a-signed-one` and `an-unauthenticated-parameter-a-verifier-decides-by-is-ignored` read the raw bucket off the wire — every COSE structure has one, so the fact holds for every kit on this wire (RFC 9052 §3)",
     },
     reserved: {
       exercised: "reader",

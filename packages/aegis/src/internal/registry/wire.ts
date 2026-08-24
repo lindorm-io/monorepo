@@ -1,8 +1,7 @@
 /**
- * The WIRES aegis speaks, and the one place they are enumerated. `Wire` is the
+ * The wires aegis speaks, and the one place they are enumerated. `Wire` is the
  * type every registry entry is TOTAL over (`wire: Record<Wire, WireKey>`), so a
- * third wire is a compile error in every entry rather than a silent hole; `WIRES`
- * is the value-level twin.
+ * third wire is a compile error in every entry rather than a silent hole.
  *
  * A wire is the SERIALISATION vocabulary, not the token format: `jose` covers
  * JWS/JWE/JWT, `cose` covers CWS/CWM/CWE/CWT. Per-KIT facts live in the kit
@@ -11,25 +10,11 @@
 
 export type Wire = "jose" | "cose";
 
-export type WireDescriptor = {
-  /** The wire's own tag — the key this descriptor is filed under. */
-  wire: Wire;
-  /** Human-facing name, used in error data and reports. */
-  name: string;
-  /**
-   * Whether the wire may key a parameter by an INTEGER label (RFC 9052 §1.5). JOSE
-   * names are always strings.
-   */
-  labelled: boolean;
-};
-
-export const WIRES = {
-  jose: { wire: "jose", name: "JOSE", labelled: false },
-  cose: { wire: "cose", name: "COSE", labelled: true },
-} as const satisfies Record<Wire, WireDescriptor>;
+const WIRE_KEYS = { jose: true, cose: true } as const satisfies Record<Wire, true>;
 
 /**
- * Every wire tag, in declaration order — DERIVED from {@link WIRES} so there is
- * never a second hand-kept list to fall out of step with the first.
+ * Every wire tag, in declaration order — DERIVED from a keyset the compiler holds
+ * TOTAL over {@link Wire}, so there is never a second hand-kept list to fall out
+ * of step with the first.
  */
-export const WIRE_TAGS = Object.keys(WIRES) as ReadonlyArray<Wire>;
+export const WIRE_TAGS = Object.keys(WIRE_KEYS) as ReadonlyArray<Wire>;
