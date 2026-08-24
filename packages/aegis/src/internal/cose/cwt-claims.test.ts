@@ -1,7 +1,8 @@
 import type { Dict } from "@lindorm/types";
 import { describe, expect, test } from "vitest";
 import { AegisError } from "../../errors/index.js";
-import { coseName } from "../claims/claims-registry.js";
+import { CLAIM_SPECS, coseName } from "../claims/claims-registry.js";
+import { codecFor } from "../registry/param-spec.js";
 import { domainToWire, wireToDomain } from "../claims/translate.js";
 import { decodeCbor, encodeCbor } from "./cbor.js";
 import { decodeCwtClaims, type EncodeCwtOptions, encodeCwtClaims } from "./cwt-claims.js";
@@ -228,5 +229,36 @@ describe("CWT claims round-trip (domain -> CBOR -> domain)", () => {
       decodeCbor<Map<unknown, unknown>>(encodeCbor(map), { preferMap: false }),
     );
     expect(decoded).toEqual(reclassified);
+  });
+});
+
+/**
+ * The CODEC's OWN emptiness rule, which the aegis claim registry does not govern.
+ *
+ * `whenEmpty` is read in ONE place — `internal/utils/normalise-claims.ts`, above
+ * both wires — and neither this file's codec nor `cwt-spec.ts` consults it. The
+ * COSE side then applies a second, unconditional rule of its own at
+ * `packages/cbor/src/internal/utils/encode-cbor-map.ts`, so a claim the registry
+ * says to KEEP when empty is kept on JOSE and dropped here.
+ *
+ * ⚠ Which is not live, and the second test is what keeps it that way: no claim is
+ * `text` on COSE and `whenEmpty: "keep"`, so the registry's column does govern
+ * both wires today. That test reddens on the flip that would make it stop.
+ */
+describe("the codec's own empty-value rule", () => {
+  test("an empty TEXT claim is dropped and an empty ARRAY claim survives", () => {
+    // Both halves, so the row cannot pass by everything dropping. `iss` is text
+    // (label 1); `aud` is an array (label 3). RFC 8392 §3.1.
+    expect([...encodeCwtClaims({ iss: "" }).entries()]).toEqual([]);
+    expect([...encodeCwtClaims({ aud: [] }).entries()]).toEqual([[3, []]]);
+  });
+
+  test("no claim is text on COSE and kept when empty, so the registry governs both wires", () => {
+    const ungoverned = CLAIM_SPECS.filter(
+      (spec) => spec.whenEmpty === "keep" && codecFor(spec, "cose").kind === "text",
+    ).map((spec) => spec.domain);
+
+    expect(CLAIM_SPECS.length).toBeGreaterThan(0);
+    expect(ungoverned).toEqual([]);
   });
 });

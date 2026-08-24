@@ -1,6 +1,5 @@
 import type { IKryptos, KryptosAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
-import type { TokenType } from "../../constants/token-type.js";
 import type {
   AegisDecryptKey,
   AegisSignKey,
@@ -18,7 +17,6 @@ import type {
   TokenFormat,
   StructuredFormat,
   TokenFormatTag,
-  TokenProfile,
   TokenProfileTyp,
   VerifyOptions,
   WireTokenHeader,
@@ -119,22 +117,6 @@ export type SignClaimsInput = {
   format: TokenFormat;
 } & JoseSignStructuredTokenOptions &
   CoseSignStructuredTokenOptions;
-
-/**
- * The input to a PROFILED write's typ derivation.
- *
- * ⚠ No profile-LESS member: with no profile to consult the derivation is identical
- * on both wires, so `aegis.sign` resolves its prefix above this seam through the
- * one shared `signTypPrefix` (`internal/utils/sign-typ-prefix.ts`).
- */
-export type MintTypInput = {
-  profile: TokenProfile;
-  /** The content's own domain `tokenType`, when it carries one. */
-  contentTokenType: TokenType | undefined;
-  /** The caller's explicit `SignTokenOptions.typ`. */
-  signTyp: string | null | undefined;
-  format: TokenFormat;
-};
 
 /**
  * The input to an OPAQUE signature — a JWS or a CWS. No claims layer, so no domain
@@ -306,17 +288,6 @@ export type TokenWire = {
    * the token's own type header to be.
    */
   profileTyp(typ: TokenProfileTyp): string | undefined;
-  /**
-   * The bare typ PREFIX a PROFILED mint stamps on this wire.
-   *
-   * ⚠ THE TWO WIRES DIVERGE: the JOSE mint falls back to the caller's explicit `typ`
-   * and then to the content's `tokenType`; the COSE mint consults the profile alone,
-   * so a caller `typ` for a `cwt`/`cwm` mint is dropped. Pinned as a defect by
-   * `spec-dispositions.ts` (`headerType`) and `knob-probes.ts` (`typ`).
-   *
-   * ⚠ `aegis.sign` does NOT reach this — see {@link MintTypInput}.
-   */
-  mintTypPrefix(input: MintTypInput): string | undefined;
   /**
    * The FULL type header a caller's `assert.tokenType` expects on this wire.
    *

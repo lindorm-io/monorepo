@@ -679,11 +679,6 @@ export const MINT_SIGN_KNOB_PROBES = {
         includes: { "16": "application/custom+cwt" },
       },
     ],
-    defect: {
-      site: "src/internal/wire/cose-token-wire.ts#mintTypPrefix:",
-      note: "`mintTypPrefix` on the COSE wire reads the PROFILE's typ and nothing else — the caller's explicit `sign.typ` and the content's own `tokenType` are both accepted and dropped, so a COSE token minted under a profile that mandates no type always carries the bare `application/cwt`. ⚠ MINT ONLY: `aegis.sign` resolves its typ above the wire seam, at `src/internal/utils/sign-typ-prefix.ts#signTypPrefix`, and honours both there on both wires.",
-      wires: ["cose"],
-    },
   },
 
   bindCertificate: {
@@ -818,10 +813,6 @@ export const MINT_ENCRYPT_KNOB_PROBES = {
         excludes: [-70000],
       },
     ],
-    defect: {
-      site: "src/internal/utils/mint-token.ts#const token = encryptOuter(wire, {",
-      note: "`encryptOuter` is called with a NAMED subset of the encrypt envelope — `partyProducer` and `partyRecipient` — so `header` never reaches the outer on either wire.",
-    },
   },
 
   tokenType: {
@@ -850,10 +841,6 @@ export const MINT_ENCRYPT_KNOB_PROBES = {
         includes: { "16": "application/custom+cwe" },
       },
     ],
-    defect: {
-      site: "src/internal/utils/mint-token.ts#const token = encryptOuter(wire, {",
-      note: "`encryptOuter` is handed the tokenType derived from the PROFILE, and the encrypt envelope's own `tokenType` is not among the named fields forwarded, so a caller's outer type is accepted and dropped on both wires.",
-    },
   },
 
   bindCertificate: {
@@ -876,11 +863,6 @@ export const MINT_ENCRYPT_KNOB_PROBES = {
     observed: [{ step: "wireProtectedHeader", on: "jose", present: ["x5c"] }],
     unobservable: {
       cose: "A COSE_Encrypt0 has no certificate to bind. It carries no recipients array, so aegis requires the recipient key to BE the content-encryption key — a kryptos `dir` key — and a symmetric key carries no X.509 certificate for a thumbprint or a chain to be derived from. The parameters themselves are representable; what cannot exist on this wire is a cert-bearing recipient. RFC 9052 §5.2, RFC 9360 §2.",
-    },
-    defect: {
-      site: "src/internal/utils/mint-token.ts#const token = encryptOuter(wire, {",
-      note: "Not among the named fields forwarded to `encryptOuter`, so the encrypt envelope's binding mode never reaches the JOSE outer.",
-      wires: ["jose"],
     },
   },
 
@@ -905,11 +887,6 @@ export const MINT_ENCRYPT_KNOB_PROBES = {
     flipped: "accepts",
     unobservable: {
       jose: "There is no gate to open. AES-CBC-HMAC is a standard JOSE `enc` value, so that wire is interoperable either way; on COSE aegis has to emit it under a lindorm private-use label (`src/internal/cose/enc-labels.ts#const ENC_TO_COSE_PRIVATE`), which is what gives this knob something to decide. RFC 7518 §5.2.3, RFC 9053 §4.",
-    },
-    defect: {
-      site: "src/internal/utils/mint-token.ts#const token = encryptOuter(wire, {",
-      note: "`encryptOuter` is handed the MINT-level `options.proprietary`; the encrypt envelope's own `proprietary` is not forwarded, so an outer-specific interop decision cannot be stated.",
-      wires: ["cose"],
     },
   },
 

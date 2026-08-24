@@ -422,9 +422,12 @@ export const runSpecDisposition = async (input: {
         },
       );
 
+      // ⚠ The door is SUPPLIED the registry sample and the read-back is compared
+      // against `disposition.sample` — the two differ only where the wire
+      // re-spells what it was handed, which is a translation and not a loss.
       expectSameValue(
         value,
-        sample,
+        disposition.sample ?? sample,
         `${SPEC_DISPOSITION_FAILURE.parameterLost} — ${domain} [${wire}] did not come back from the ${door} door under its domain name`,
       );
       return;

@@ -119,4 +119,39 @@ describe("encryptOuter — the type the encrypting outer declares", () => {
 
     expect(coseTyp(cose.token)).toBe("application/resource-token+cwe");
   });
+
+  /**
+   * ⭐ THE PRECEDENCE, and the COSE half is the only thing that can state it. A
+   * caller's `encrypt.tokenType` describes the ENVELOPE, so it beats the wire's
+   * own answer — and on JOSE the wire's answer is `undefined`, which means either
+   * ordering of the two would produce the caller's value there. Only a wire that
+   * HAS a fallback can tell "caller wins" from "wire wins", so the assertion that
+   * carries this rule is the COSE one, on a profile whose inner type is a real
+   * prefix rather than the bare form. RFC 9596 §2.
+   */
+  test("a stated envelope type beats the type the wire would carry", async () => {
+    const cose = await aegis.mint(
+      "resource_token",
+      CONTENT as never,
+      {
+        format: "cwt",
+        encrypt: { tokenType: "override" },
+      } as never,
+    );
+    const jose = await aegis.mint(
+      "resource_token",
+      CONTENT as never,
+      {
+        format: "jwt",
+        encrypt: { tokenType: "override" },
+      } as never,
+    );
+
+    // NOT `application/resource-token+cwe` — the inner's prefix is what this wire
+    // carries when the caller states nothing, and it is stated here.
+    expect(coseTyp(cose.token)).toBe("application/override+cwe");
+    expect(inspectToken(jose.token).protectedHeader).toMatchObject({
+      typ: "application/override+jwe",
+    });
+  });
 });

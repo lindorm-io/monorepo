@@ -37,10 +37,9 @@ export type EncryptOuterInput = {
  * plaintext to be (`nestedTokenCty`), and whether the outer carries the inner's
  * type (`nestedTokenTyp`).
  *
- * The two `header`/`tokenType` entries below are the composition's OWN
- * statements, written after the spread so they cannot be silently displaced:
- * the nested-token cty is what makes a reader treat the plaintext as a token,
- * and the outer's type is the wire's decision rather than the envelope's.
+ * The `cty` written after the spread is the composition's OWN statement, placed
+ * there so it cannot be silently displaced: it is what makes a reader treat the
+ * plaintext as a token.
  */
 export const encryptOuter = (
   wire: TokenWire,
@@ -64,7 +63,11 @@ export const encryptOuter = (
     // path the declaration is the composition's own statement about a token it
     // produced, not a default for the caller to override.
     header: { ...options.header, cty: nested?.cty ?? options.header?.cty },
-    tokenType: wire.nestedTokenTyp === "inner" ? innerTokenType : undefined,
+    // The `typ` is the caller's to state — it is a routing hint about the
+    // ENVELOPE, the same statement `aegis.encrypt` takes. What is the wire's is
+    // the FALLBACK, and only this composition knows it. RFC 9596 §2.
+    tokenType:
+      options.tokenType ?? (wire.nestedTokenTyp === "inner" ? innerTokenType : undefined),
   };
 
   assertWireInput(wire.dispositions.encryptContent, input, {

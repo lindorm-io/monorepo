@@ -174,7 +174,10 @@ describe("Aegis — per-spec matrix", () => {
   test("should name a repairable site in every declared defect", () => {
     const defects = ROWS.filter(([, disposition]) => disposition.defect !== undefined);
 
-    expect(defects.length).toBeGreaterThan(0);
+    // ⚠ `ROWS`, not the defect list: an EMPTY register is the GOAL, so requiring a
+    // defect to exist would make the last repair impossible to land. What must
+    // never be empty is the table this filters.
+    expect(ROWS.length).toBeGreaterThan(0);
     expect(
       defects
         .filter(([, d]) => !/^src\/.+\.ts#.+$/.test(d.defect?.site ?? ""))

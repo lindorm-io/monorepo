@@ -230,7 +230,10 @@ describe("Aegis — knob matrix", () => {
       .filter(([, , , probe]) => !/^src\/.+\.ts#.+$/.test(probe.defect?.site ?? ""))
       .map(([label]) => label);
 
-    expect(defects.length).toBeGreaterThan(0);
+    // ⚠ `PROBES`, not the defect list: an EMPTY register is the GOAL, so requiring a
+    // defect to exist would make the last repair impossible to land. What must
+    // never be empty is the table this filters.
+    expect(PROBES.length).toBeGreaterThan(0);
     expect(unsited).toEqual([]);
     expect(defects.filter(([, , , probe]) => !probe.defect?.note.trim())).toEqual([]);
   });
@@ -276,9 +279,8 @@ describe("Aegis — knob matrix", () => {
       );
     });
 
-    expect(
-      PROBES.filter(([, , , probe]) => probe.defect !== undefined).length,
-    ).toBeGreaterThan(0);
+    // Same reason as above: the table must be non-empty, the defect list may be.
+    expect(PROBES.length).toBeGreaterThan(0);
     expect(blind).toEqual([]);
   });
 

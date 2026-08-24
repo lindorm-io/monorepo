@@ -102,11 +102,7 @@ export type TokenProfile<
  * ⛔ MINUS `custom`, and the `Omit` is the tier rule made structural. `aegis.mint`
  * is a DOMAIN verb: a caller reaches it without learning either wire's
  * vocabulary, and an UNREGISTERED header parameter has no domain name by
- * definition. Leaving `custom` reachable is worse than merely off-tier:
- * `mint-token.ts` forwards a NAMED subset of this envelope to `encryptOuter`, so
- * the bag would typecheck and then be silently dropped — precisely the
- * accepted-and-ignored outcome the wire disposition tables exist to prevent.
- * Custom parameters are a KIT-tier capability: `aegis.jwe.encrypt` /
+ * definition. Custom parameters are a KIT-tier capability: `aegis.jwe.encrypt` /
  * `aegis.cwe.encrypt` take them. Pinned in `types/header/wire-envelope.test.ts`.
  */
 export type MintEncryptOptions = Omit<JweEncryptOptions & CweEncryptOptions, "custom"> & {

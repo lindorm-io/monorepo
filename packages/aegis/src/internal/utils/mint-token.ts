@@ -8,6 +8,7 @@ import type { AegisDeps } from "./aegis-deps.js";
 import { assembleCommonClaims } from "./assemble-common-claims.js";
 import { domainHeaderToWire } from "./domain-header-to-wire.js";
 import { encryptOuter } from "./encrypt-outer.js";
+import { mintTypPrefix } from "./mint-typ-prefix.js";
 import { mergeContentClaims } from "./merge-content-claims.js";
 import { findSensitiveClaims, stripSensitiveClaims } from "./sensitive-content.js";
 
@@ -18,8 +19,7 @@ import { findSensitiveClaims, stripSensitiveClaims } from "./sensitive-content.j
  * emits it.
  *
  * ⚠ Everything above `wire.signClaims` is encoding-neutral by construction, so
- * there is no second place for a rule to be written differently. The one genuine
- * per-wire difference is the token-type derivation (`TokenWire.mintTypPrefix`).
+ * there is no second place for a rule to be written differently.
  */
 export const mintToken = async ({
   name,
@@ -112,11 +112,10 @@ export const mintToken = async ({
     profile,
   });
 
-  const tokenType = wire.mintTypPrefix({
-    profile,
+  const tokenType = mintTypPrefix({
     contentTokenType: signContent.tokenType,
+    profile,
     signTyp: options.sign?.typ,
-    format,
   });
 
   // The DOMAIN → WIRE assembly, done ONCE above the seam rather than by each
@@ -149,14 +148,23 @@ export const mintToken = async ({
   // declares a nested token so the read side reconstructs the plaintext to the
   // inner token rather than to an inferred blob, then decrypts-then-verifies it
   // against the profile floor.
+  //
+  // ⚠ The envelope travels WHOLE, not as a named subset: a hand-written forward
+  // that lists its fields drops a new one silently, and a dropped option raises
+  // nothing. `key` is the exception because it was already spent resolving
+  // `encKryptos` above, and `MintEncryptOptions` omits `custom` structurally, so
+  // nothing off-tier can ride the spread.
+  const { key, ...envelope } = options.encrypt ?? {};
   const token = encryptOuter(wire, {
+    ...envelope,
     kryptos: encKryptos,
     deps,
     inner: signed.token,
     innerTokenType: tokenType,
-    proprietary: options.proprietary,
-    partyProducer: options.encrypt?.partyProducer,
-    partyRecipient: options.encrypt?.partyRecipient,
+    // The only value the two altitudes both state. The envelope's is a decision
+    // about THIS outer; the mint-level flag is the pipeline default it falls back
+    // to. Resolved here because this is the only place both are in scope.
+    proprietary: envelope.proprietary ?? options.proprietary,
   });
 
   // The token's OWN kind SURVIVES the wrapping — `signed.format` rides through

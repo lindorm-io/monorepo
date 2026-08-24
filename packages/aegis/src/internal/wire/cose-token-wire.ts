@@ -24,7 +24,7 @@ import { writtenHeader } from "../header/written-header.js";
 import { rawSignCose } from "../utils/raw-sign-cose.js";
 import { rawVerifyCws } from "../utils/raw-verify-cws.js";
 import { buildSignedToken } from "../utils/build-signed-token.js";
-import { computeTypHeader, extractTypPrefix } from "../utils/compute-typ-header.js";
+import { computeTypHeader } from "../utils/compute-typ-header.js";
 import type { TokenWire, WireInputDispositions } from "./token-wire.js";
 
 type ClaimsCoseFormat = Extract<TokenFormatTag, "cwt" | "cwm">;
@@ -115,10 +115,6 @@ export const COSE_TOKEN_WIRE: TokenWire = {
   nestedTokenTyp: "inner",
 
   profileTyp: (typ: TokenProfileTyp) => coseTyp(typ),
-
-  // ⚠ The profile only — a caller's explicit `typ` and the content's own
-  // `tokenType` do not reach the COSE mint. See `TokenWire.mintTypPrefix`.
-  mintTypPrefix: ({ profile, format }) => extractTypPrefix(coseTyp(profile.typ), format),
 
   assertedTyp: (tokenType) =>
     coseTyp({ presence: "required", value: computeTypHeader(tokenType, "jwt") }),

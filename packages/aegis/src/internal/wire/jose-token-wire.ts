@@ -7,7 +7,7 @@ import { joseName } from "../claims/claims-registry.js";
 import { domainToWire } from "../claims/translate.js";
 import { assertWireTyp } from "../utils/assert-wire-typ.js";
 import { buildSignedToken } from "../utils/build-signed-token.js";
-import { computeTypHeader, extractTypPrefix } from "../utils/compute-typ-header.js";
+import { computeTypHeader } from "../utils/compute-typ-header.js";
 import { domainTokenHeader } from "../utils/domain-header.js";
 import { encryptJwe } from "../utils/encrypt-jwe.js";
 import { withJoseDates } from "../utils/jose-dates.js";
@@ -100,19 +100,6 @@ export const JOSE_TOKEN_WIRE: TokenWire = {
   nestedTokenTyp: "none",
 
   profileTyp: (typ: TokenProfileTyp) => (typ.presence === "none" ? undefined : typ.value),
-
-  // The profile's mandated type wins; then the caller's explicit one; then the
-  // content's own tokenType, which floors to the bare `JWT` the kit requires.
-  mintTypPrefix: ({ profile, contentTokenType, signTyp }) => {
-    const full =
-      profile.typ.presence !== "none"
-        ? profile.typ.value
-        : signTyp != null
-          ? signTyp
-          : computeTypHeader(contentTokenType, "jwt");
-
-    return extractTypPrefix(full, "jwt");
-  },
 
   assertedTyp: (tokenType) => computeTypHeader(tokenType, "jwt"),
 

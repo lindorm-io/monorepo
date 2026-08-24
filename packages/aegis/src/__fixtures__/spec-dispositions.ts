@@ -100,6 +100,21 @@ export type SpecDisposition = {
    * where the reason is a specification fact.
    */
   reason?: string;
+  /**
+   * The value a `roundTrip` must come back as, where the wire RE-SPELLS the
+   * registry's own {@link ParamSpec.sample}. Defaults to that sample, which is
+   * what every parameter both wires spell identically wants.
+   *
+   * ⚠ A re-spelling is NOT a shortfall, so it is not a {@link defect}: the
+   * parameter IS suppliable and DOES come back, under its domain name, in the
+   * spelling that wire registers for it. The one instance is the type header —
+   * `application/at+jwt` on JOSE, `application/at+cwt` on COSE (RFC 9596 §2).
+   *
+   * ⛔ A LITERAL, never derived from the code under test. Computing it from the
+   * translator would put the same expression on both sides of the comparison, and
+   * the cell would agree with a wrong translation as readily as a right one.
+   */
+  sample?: unknown;
   /** A DIFFERENT disposition on one wire, with its own reason. */
   per?: Partial<Record<Wire, Omit<SpecDisposition, "per">>>;
   /**
@@ -301,10 +316,12 @@ export const HEADER_DISPOSITIONS: Readonly<Record<string, SpecDisposition>> = {
   headerType: {
     disposition: "roundTrip",
     door: "mint.typ",
-    defect: {
-      site: "src/internal/wire/cose-token-wire.ts#mintTypPrefix:",
-      note: "`SignTokenOptions.typ` is honoured on JOSE and SILENTLY DROPPED on COSE: `mintTypPrefix` there reads the profile and nothing else, so a caller `typ` for a `cwt`/`cwm` mint is accepted by the type, ignored by the writer, and the token carries the profile's media type instead. The COSE kits RESERVE `typ` — a caller value in the kit-tier header bag is refused — so the same option is refused at one door and silently dropped at another. The gap is recorded in the source comment above that line; this is the runnable proof it is still there.",
-      wires: ["cose"],
+    per: {
+      // The SAME media type in the COSE spelling: the structured suffix is the
+      // wire's own, and the kits re-wrap the bare prefix a mint derives. Written
+      // out rather than translated here, per the `sample` note above.
+      // RFC 9596 §2, RFC 8392 §9.2.
+      cose: { disposition: "roundTrip", door: "mint.typ", sample: "application/at+cwt" },
     },
   },
 

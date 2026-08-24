@@ -8,15 +8,13 @@ import { domainTokenTypePrefix, extractTypPrefix } from "./compute-typ-header.js
  * ⭐ ONE derivation, ABOVE the wire seam, and the placement is the rule rather
  * than a convenience: with no profile to consult, nothing in this chain differs
  * between a JOSE and a COSE write, so it is NOT a `TokenWire` member. A per-wire
- * copy would be two expressions with nothing holding them equal, and only the
- * profile makes the two wires genuinely disagree (`TokenWire.mintTypPrefix`).
+ * copy would be two expressions with nothing holding them equal.
  *
  * The caller's explicit `typ` wins; else their `tokenType`. BOTH are OPTIONS on
  * `RawSignInput`, siblings of `payload` — this verb reads nothing out of the
  * payload, so a `tokenType` written among the claims is a claim and never a
  * directive. (`mint` is the one that reads a CONTENT `tokenType`, through
- * `TokenWire.mintTypPrefix` — on the JOSE wire; the COSE arm takes `profile`
- * and `format` alone, so it reads neither the content type nor a caller `typ`.)
+ * {@link import("./mint-typ-prefix.js").mintTypPrefix}.)
  *
  * Both reduce through the JOSE spelling, which is what the kits re-wrap: the prefix
  * `"at"` becomes `application/at+jwt` on a JWS/JWT and `application/at+cwt` on a
