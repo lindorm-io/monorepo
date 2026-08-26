@@ -11,7 +11,7 @@ import { isNull, isUndefined } from "@lindorm/is";
  * ⛔ `""`, `[]` AND `{}` ARE NOT ABSENCE AND MUST NOT BE ADDED HERE. An empty
  * string is a stated empty string, and whether it rides is the registry's
  * `whenEmpty` column (`internal/registry/param-spec.ts`), on the WRITE side
- * only. Folding it in here would delete that column's only consumer and would
+ * only. Folding it in here would delete a consumer of that column and would
  * rewrite a foreign token's empty member into an absence — aegis reporting that
  * an issuer said nothing where the issuer said "empty".
  *

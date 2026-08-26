@@ -161,6 +161,16 @@ const sampleMatchesBespoke = (bespoke: BespokeKind, sample: unknown): boolean =>
   }
 };
 
+/** A member set hangs off an `object` codec, or off an `array`'s ELEMENT codec. */
+const childrenOf = (
+  codec: ClaimCodec,
+): (() => ReadonlyArray<ClaimMemberSpec>) | undefined =>
+  codec.kind === "object"
+    ? codec.children
+    : codec.kind === "array"
+      ? codec.of?.children
+      : undefined;
+
 // The frozen `[domain, jose]` pairs the verify-FLOOR read resolves — the claims
 // carrying a `domainClaim` mark. These literals are the INDEPENDENT side of the
 // guard: not derived from the registry, so a registry edit that changes a name
@@ -484,8 +494,7 @@ describe("CLAIM_REGISTRY", () => {
         "preferredAccessibility",
       ]),
     );
-    // RFC 7519 aud is string-OR-array and is the only wrapping claim. This used
-    // to be a hardcoded `spec.domain === "audience"` branch in the translator.
+    // RFC 7519 aud is string-OR-array and is the only wrapping claim.
     expect(withScalar("wrap")).toEqual(new Set(["audience"]));
 
     // RFC 9396 authorization_details is the only collection of structures.
@@ -546,43 +555,94 @@ describe("CLAIM_REGISTRY", () => {
   });
 
   /**
-   * NO CLAIM MAY `refuse`, and the COMPILER is what says so — `ClaimSpec`
-   * instantiates the shared base at `"keep" | "prune"` while `HeaderSpec` takes
-   * the whole {@link WhenEmpty} vocabulary.
-   *
-   * ⚠ A RUNTIME LOOP OVER THE CELLS COULD NOT GO RED: the column is required and
-   * non-optional over a closed union, so a missing or off-vocabulary cell is
-   * already a compile error and the loop would only restate what the compiler
-   * refuses — the reasoning `header-registry.test.ts` gives for pinning a COUNT
-   * instead of looping a column.
-   *
-   * ⚠⚠ THIS IS A TYPECHECK ASSERTION, AND IT IS INERT UNDER `npm test`. An
-   * UNUSED `@ts-expect-error` is itself a compile error, so DELETING the
-   * narrowing on `ClaimSpec` raises `TS2578` and reddens `npm run typecheck` /
-   * `npm run build` / `npm run verify` — exit 2. Under vitest the body is
-   * `expect(spec.whenEmpty).toBe("refuse")` on a value assigned one line above:
-   * a tautology that passes whatever `ClaimSpec` says, and its only job is to
-   * stop the binding being unused. **A green `npm test` says NOTHING about this
-   * invariant** — verified red-before-green on the typecheck, not on vitest.
-   *
-   * The reason no claim needs it: a claim reaches the emission boundary having
-   * already passed a layer that speaks about it in its own vocabulary — the
-   * profile floor, which refuses an empty value through `isClaimSatisfied`
-   * (`internal/utils/rules/`) and throws with the claim's DOMAIN name. A header
-   * parameter aegis writes at assembly time has no such layer above it. ⚠ The
-   * floor covers only the claims a PROFILE names, so the coverage is a profile
-   * decision, not a registry one — `claim-spec.ts` carries the full reasoning.
+   * The `whenEmpty: "refuse"` set, frozen by name — the twin of the `keep` census
+   * above and of `header-registry.test.ts`'s. `ClaimSpec` takes the whole
+   * {@link WhenEmpty} vocabulary, so the cell is writable and this list is what a
+   * new one has to go through.
    */
-  test("no claim can state the header-only refuse verdict", () => {
-    const spec: ClaimSpec = {
-      ...CLAIM_SPECS[0]!,
-      // @ts-expect-error - "refuse" is a HEADER verdict; ClaimSpec narrows it away
+  test("the claims refused when empty are exactly the stated set", () => {
+    // A `ClaimSpec` may STATE the verdict — no directive, no cast. ⚠ ONLY
+    // `typecheck` sees this line: narrow `ClaimSpec.whenEmpty` back to
+    // `"keep" | "prune"` and `npm test` stays GREEN on a narrowed surface.
+    const refusing: ClaimSpec = { ...CLAIM_SPECS[0]!, whenEmpty: "refuse" };
+
+    const refusedIn = (specs: ReadonlyArray<ClaimSpec>) =>
+      specs.filter((s) => s.whenEmpty === "refuse").map((s) => s.domain);
+
+    const refuse = refusedIn(CLAIM_SPECS);
+
+    // ⚠ EMPTY, and asserted rather than left unsaid — the same reason
+    // `header-registry.test.ts` asserts its empty `keep` set. `refuse` is in the
+    // union for the HEADER parameter that holds it, so nothing forces it to have a
+    // claim user, which makes "no claim refuses" reversible by a one-word diff with
+    // nothing to notice.
+    expect(refuse).toEqual([]);
+
+    // The control: the walk above is empty because no cell says `refuse`, not
+    // because the predicate cannot see one.
+    expect(refusedIn([...CLAIM_SPECS, refusing])).toEqual([refusing.domain]);
+
+    // ⚠ THE COUNT IS THE ASSERTION, and it is here rather than a loop over the
+    // column because a loop CANNOT GO RED: `ParamSpec.whenEmpty` is required over a
+    // closed union, so a missing or off-vocabulary cell is a COMPILE error before
+    // any test runs.
+    //
+    // What the compiler CANNOT see is a claim added with a `whenEmpty` the author
+    // never thought about. The type forces a cell; nothing forces the DECISION. A
+    // count beside the frozen lists is what makes a new claim fail this test until
+    // someone states which side it is on.
+    expect(CLAIM_SPECS.length).toBe(78);
+  });
+
+  test("a member that cannot carry an empty value declares required, not a refuse verdict", () => {
+    // The two columns answer different questions and only one of them is enforced
+    // for a MEMBER: `ClaimMemberSpec` takes `"keep" | "prune"` and
+    // `internal/claims/translate.ts` compares that cell against `"prune"` exactly,
+    // so a member could state no third verdict and nothing would run it. `required`
+    // is the column that refuses — and it refuses in BOTH directions, which is
+    // strictly stronger than a write-side-only verdict.
+    //
+    // ⭐ THE DIRECTIVE IS THE ASSERTION: widen `ClaimMemberSpec` and the
+    // `@ts-expect-error` goes UNUSED, which is itself a compile error. ⚠ ONLY
+    // `typecheck` sees it — `tsconfig.build.json` excludes `**/*.test.ts`, so on a
+    // widened alias `npm run build` AND `npm test` both stay GREEN.
+    // `pruningMember` is the positive line: it compiles, so what the directive
+    // catches is the VERDICT and not a malformed spread.
+    const declared = childrenOf(claimByDomain("act")!.codec)!()[0]!;
+    const pruningMember: ClaimMemberSpec = { ...declared, whenEmpty: "prune" };
+    const refusingMember: ClaimMemberSpec = {
+      ...declared,
+      // @ts-expect-error a member states no `refuse` verdict
       whenEmpty: "refuse",
     };
 
-    // The cast landed the value all the same — the guard is the DIRECTIVE above,
-    // not this assertion, which only stops the binding being unused.
-    expect(spec.whenEmpty).toBe("refuse");
+    // Derived and DESCENDING, cycle-guarded on the `children` thunk, so a pruning
+    // member added at any depth has to answer this.
+    const pruningWithoutRequired: Array<string> = [];
+    const seen = new Set<() => ReadonlyArray<ClaimMemberSpec>>();
+
+    const visit = (codec: ClaimCodec, path: string): void => {
+      const children = childrenOf(codec);
+
+      if (children === undefined) return;
+      if (seen.has(children)) return;
+
+      seen.add(children);
+
+      const here = codec.kind === "array" ? `${path}[]` : path;
+
+      for (const member of children()) {
+        if (member.whenEmpty === "prune" && member.required !== true) {
+          pruningWithoutRequired.push(`${here}.${member.domain}`);
+        }
+
+        visit(member.codec, `${here}.${member.domain}`);
+      }
+    };
+
+    for (const spec of CLAIM_SPECS) visit(spec.codec, spec.domain);
+
+    expect(pruningWithoutRequired).toEqual([]);
   });
 
   test('a temporal mark implies a "date" codec; updatedAt is a date but NOT temporal', () => {
@@ -987,15 +1047,6 @@ describe("CLAIM_REGISTRY", () => {
       address: FROZEN_ADDRESS,
     };
 
-    const childrenOf = (
-      codec: ClaimCodec,
-    ): (() => ReadonlyArray<ClaimMemberSpec>) | undefined =>
-      codec.kind === "object"
-        ? codec.children
-        : codec.kind === "array"
-          ? codec.of?.children
-          : undefined;
-
     const actual = Object.fromEntries(
       CLAIM_SPECS.map((spec) => [spec.domain, childrenOf(spec.codec)] as const)
         .filter(
@@ -1043,12 +1094,7 @@ describe("CLAIM_REGISTRY", () => {
     const seen = new Set<() => ReadonlyArray<ClaimMemberSpec>>();
 
     const visit = (codec: ClaimCodec, path: string): void => {
-      const children =
-        codec.kind === "object"
-          ? codec.children
-          : codec.kind === "array"
-            ? codec.of?.children
-            : undefined;
+      const children = childrenOf(codec);
 
       if (children === undefined) return;
       if (seen.has(children)) return;

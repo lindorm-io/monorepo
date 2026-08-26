@@ -24,7 +24,6 @@ const forged = (): Record<string, unknown> =>
 /**
  * ⛔⛔ AN ISSUER MUST NOT BE ABLE TO SIGN A CLAIM IT NEVER STATED.
  *
- * `normaliseClaims` is `pruneEmptyClaims(omitUndefined(dict))`, and
  * `omitFromObject` PRESERVES an own `__proto__` — it writes with
  * `Object.defineProperty` — so the key reaches the prune live, where a plain
  * `result[key] = value` makes it the result's PROTOTYPE. The COSE claims codec

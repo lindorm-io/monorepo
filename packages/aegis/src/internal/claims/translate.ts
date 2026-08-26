@@ -287,12 +287,22 @@ const eventsMap = (value: unknown, context: WalkContext): Dict | undefined => {
   return undefined;
 };
 
+/**
+ * A spec the structure walker ENTERS: a top-level {@link ClaimSpec} or a declared
+ * {@link ClaimMemberSpec} of one, since one function serves both depths.
+ *
+ * ⚠ IT READS `domain` AND `codec` ONLY. A member's own `whenEmpty` and
+ * `required` are read off `codec.children()`, which stays `ClaimMemberSpec` — so
+ * the verdicts this file implements are the ones a member may declare.
+ */
+type WalkedSpec = ClaimSpec | ClaimMemberSpec;
+
 // Dispatch ONE `bespoke` claim's value to its per-claim JOSE builder, keyed by
 // the registry codec's `bespoke` sub-kind. Every {@link BespokeKind} is
 // enumerated here; an unhandled sub-kind (the `undefined` fall-through of a
 // registry/translator drift) throws loudly (the house exhaustive-switch idiom).
 const encodeBespoke = (
-  spec: ClaimMemberSpec,
+  spec: WalkedSpec,
   bespoke: BespokeKind,
   value: unknown,
   context: WalkContext,
@@ -901,7 +911,7 @@ const walkElements = (
  * alongside, policy enforcement: an ordering change across the whole mint
  * pipeline, filed rather than smuggled in here.
  */
-const claimContext = (spec: ClaimMemberSpec): WalkContext => ({
+const claimContext = (spec: WalkedSpec): WalkContext => ({
   claim: spec.domain,
   path: spec.domain,
   invalid: [],
@@ -922,16 +932,17 @@ const refuseIfInvalid = <T>(context: WalkContext, value: T): T => {
  *
  * The guard it exists for cannot be written any other way: the walker's
  * direction-dependent rules — `whenEmpty` applying on the write side and NOT on
- * the read side — are unobservable through the public doors while every declared
- * member is `whenEmpty: "keep"`, and the registry has no `"prune"` member to lend
- * a test. A synthetic {@link ClaimMemberSpec} handed to the REAL boundary
- * exercises the real path with the one cell the registry does not have.
+ * the read side — are unobservable through the public doors, so a synthetic
+ * {@link ClaimMemberSpec} handed to the REAL boundary is what exercises them.
+ * Which declared members can and cannot observe the rule is stated where the
+ * guard runs: `translate.test.ts`, "walkObject — the structure walker's
+ * direction guard".
  * ⭐ The BOUNDARY is exported rather than the recursion beneath it, so the guard
  * runs the same entry point production does, context creation and refusal
  * included.
  */
 export const encodeClaim = (
-  spec: ClaimMemberSpec,
+  spec: WalkedSpec,
   value: unknown,
   nameOf: NameSelector,
 ): unknown => {
@@ -942,7 +953,7 @@ export const encodeClaim = (
 
 /** Decode ONE claim from its wire form — the read-side twin of {@link encodeClaim}. */
 export const decodeClaim = (
-  spec: ClaimMemberSpec,
+  spec: WalkedSpec,
   value: unknown,
   nameOf: NameSelector,
 ): unknown => {
@@ -982,7 +993,7 @@ export const decodeClaim = (
  * a READ of an existing foreign token reports.
  */
 const encodeIfReadable = (
-  member: ClaimMemberSpec,
+  member: WalkedSpec,
   value: unknown,
   nameOf: NameSelector,
   context: WalkContext,
@@ -1017,7 +1028,7 @@ const encodeIfReadable = (
  * nobody would see in production.
  */
 const encodeValue = (
-  spec: ClaimMemberSpec,
+  spec: WalkedSpec,
   value: unknown,
   nameOf: NameSelector,
   context: WalkContext,
@@ -1120,7 +1131,7 @@ export type WireToDomainResult = {
 // an unhandled sub-kind (a registry/translator drift) throws (the house
 // exhaustive-switch idiom).
 const decodeBespoke = (
-  spec: ClaimMemberSpec,
+  spec: WalkedSpec,
   bespoke: BespokeKind,
   value: unknown,
   context: WalkContext,
@@ -1159,11 +1170,7 @@ const decodeBespoke = (
 // clean and DROP the claim on read. The `never` binding is what makes the
 // compiler bite instead (the house exhaustive-switch idiom, as in
 // `encodeBespoke`/`decodeBespoke`).
-const decodeArray = (
-  spec: ClaimMemberSpec,
-  scalar: ArrayScalar,
-  value: unknown,
-): unknown => {
+const decodeArray = (spec: WalkedSpec, scalar: ArrayScalar, value: unknown): unknown => {
   switch (scalar) {
     case "wrap":
       return toAudience(value); // RFC 7519 §4.1.3
@@ -1193,7 +1200,7 @@ const decodeArray = (
 // selector travels down, so a COSE-keyed structure is read by the COSE spelling of
 // its members and a JOSE-keyed one by the JOSE spelling.
 const decodeValue = (
-  spec: ClaimMemberSpec,
+  spec: WalkedSpec,
   value: unknown,
   nameOf: NameSelector,
   context: WalkContext,

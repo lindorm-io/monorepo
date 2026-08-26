@@ -4,7 +4,7 @@
  * which is why they live here rather than on the base.
  */
 
-import type { MemberSpec, ParamSpec } from "./param-spec.js";
+import type { MemberSpec, ParamSpec, WhenEmpty } from "./param-spec.js";
 
 /**
  * The ONLY input to the aegis confidentiality gate: a `"sensitive"` claim may be
@@ -99,8 +99,7 @@ export type ClaimCodec =
 
 /**
  * A MEMBER of a structured claim: {@link MemberSpec} instantiated at the claim
- * registry's own codec union and its own emptiness verdicts, so a member is
- * described in exactly the vocabulary a claim is.
+ * registry's own codec union.
  *
  * Recursive by construction — a member's `codec` may itself be an
  * {@link ObjectCodec}, which is how a structure nests.
@@ -157,20 +156,7 @@ export type ObjectCodec = {
   open: "closed" | "flip" | "verbatim";
 };
 
-/**
- * ⚠ NARROWED to `"keep" | "prune"`: `refuse` is a HEADER verdict and the third type
- * parameter is what says so, so there is no runtime loop over the column.
- *
- * A header parameter is written by aegis itself at assembly, so the emission
- * boundary is the only place that sees it. A claim arrives from a caller who was
- * ALREADY answered a layer up, with the claim's DOMAIN name in the error — so the
- * emission prune is the later and blinder of two places to speak, not the only one.
- * Which claims that layer speaks about is a PROFILE decision (`claims-registry.ts`).
- *
- * ⚠ The profile floor does NOT cover the gap: it refuses an empty value only for
- * claims some profile names in a `required`/`forbidden`/shape rule.
- */
-export type ClaimSpec<D = unknown> = ParamSpec<D, ClaimCodec, "keep" | "prune"> & {
+export type ClaimSpec<D = unknown> = ParamSpec<D, ClaimCodec, WhenEmpty> & {
   /**
    * VALIDATION-temporal direction — set ONLY on the time claims the verifier
    * range-checks against "now", the single source of truth for the temporal

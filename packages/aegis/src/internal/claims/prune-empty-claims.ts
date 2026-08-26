@@ -4,7 +4,7 @@ import { claimByCoseName, claimByJose } from "./claims-registry.js";
 
 /**
  * Drop the claims whose EMPTY value the registry says carries nothing — the
- * second half of {@link normaliseClaims}, and the payload-side twin of
+ * pruning step of {@link normaliseClaims}, and the payload-side twin of
  * `internal/header/prune-empty-headers.ts`.
  *
  * TWO rules, and the registry decides both:

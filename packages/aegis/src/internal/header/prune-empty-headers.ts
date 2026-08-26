@@ -4,7 +4,7 @@ import { headerByJose } from "./header-registry.js";
 
 /**
  * Drop the header parameters whose EMPTY value the registry says carries nothing
- * — the second half of {@link normaliseHeaders}, and the header-side twin of
+ * — the pruning step of {@link normaliseHeaders}, and the header-side twin of
  * `internal/claims/prune-empty-claims.ts`.
  *
  * ⚠ AN UNREGISTERED KEY IS NEVER PRUNED: there is no cell to read, so it has not

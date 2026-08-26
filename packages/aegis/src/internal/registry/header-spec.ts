@@ -43,9 +43,8 @@ export type HeaderCodec =
 export type HeaderPlacement = "protected" | "unprotected" | "either";
 
 /**
- * ⚠ The whole {@link WhenEmpty} vocabulary, unnarrowed: the header side is the
- * one that owns `refuse`. A header parameter can state a guarantee the RECIPIENT
- * enforces (`x5t#S256`), and an empty one of those has no safe disposal — see
+ * ⚠ A header parameter can state a guarantee the RECIPIENT enforces (`x5t#S256`),
+ * and an empty one of those has no safe disposal — see
  * `internal/header/refuse-empty-headers.ts`.
  */
 export type HeaderSpec<D = unknown> = ParamSpec<D, HeaderCodec, WhenEmpty> & {

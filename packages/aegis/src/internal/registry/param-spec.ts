@@ -19,9 +19,7 @@ export type ValueCodec = { kind: string };
 export type WireCodec<C extends ValueCodec> = C & { per?: Partial<Record<Wire, C>> };
 
 /**
- * The WIDEST verdict any registry may pass on an EMPTY value ({@link
- * ParamSpec.whenEmpty}). A registry narrows it: {@link ClaimSpec} takes
- * `"keep" | "prune"`, so `refuse` is a HEADER verdict and the compiler says so.
+ * The verdict a registry passes on an EMPTY value ({@link ParamSpec.whenEmpty}).
  */
 export type WhenEmpty = "keep" | "prune" | "refuse";
 
@@ -51,7 +49,8 @@ export type ParamSpec<
    *   - `"prune"`  the empty value is indistinguishable from "not stated".
    *   - `"keep"`   the empty value is a STATEMENT; dropping it changes meaning.
    *   - `"refuse"` the empty value cannot be honoured, so the emission boundary
-   *                throws (`internal/header/refuse-empty-headers.ts`).
+   *                throws (`internal/header/refuse-empty-headers.ts`,
+   *                `internal/claims/refuse-empty-claims.ts`).
    *
    * ⚠ TOP-LEVEL and WRITE SIDE ONLY (`internal/utils/normalise-claims.ts`,
    * `internal/header/normalise-headers.ts`). A read reports what a producer WROTE.

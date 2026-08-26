@@ -12,7 +12,7 @@
  *     nonce; that the emission prune would have swept that particular claim up
  *     (`internal/utils/normalise-claims.ts`) is luck of the registry's
  *     `whenEmpty` cell rather than a decision about the rule, and telling the
- *     issuer is the point. The eleven `whenEmpty: "keep"` claims get no such
+ *     issuer is the point. The `whenEmpty: "keep"` claims get no such
  *     luck at all.
  *
  * ⚠ NOT the complement of {@link isClaimSatisfied}, and `=== undefined` rather

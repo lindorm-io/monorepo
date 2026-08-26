@@ -5,7 +5,7 @@ import { headerByJose } from "./header-registry.js";
 
 /**
  * REFUSE the header parameters whose EMPTY value the registry says cannot be
- * disposed of at all — the first half of {@link normaliseHeaders}, and the
+ * disposed of at all — the refusing step of {@link normaliseHeaders}, and the
  * sibling of `prune-empty-headers.ts`. Two functions over ONE column
  * ({@link HeaderSpec.whenEmpty}), read through the same `headerByJose` lookup.
  *
