@@ -1,4 +1,11 @@
-import { describe, expect, test } from "vitest";
+import { Amphora, type IAmphora } from "@lindorm/amphora";
+import type { ILogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import type { Dict } from "@lindorm/types";
+import MockDate from "mockdate";
+import { beforeEach, describe, expect, test } from "vitest";
+import { TEST_EC_KEY_SIG } from "../../__fixtures__/keys.js";
+import { Aegis } from "../../classes/Aegis.js";
 import { AegisDomainError } from "../../errors/index.js";
 import { CLAIM_SPECS, coseName, joseName } from "./claims-registry.js";
 import { refuseEmptyClaims } from "./refuse-empty-claims.js";
@@ -64,5 +71,85 @@ describe("refuseEmptyClaims", () => {
     expect(() =>
       refuseEmptyClaims({ iss: "https://i/", sub: "u1", amr: ["pwd"] }),
     ).not.toThrow();
+  });
+
+  /**
+   * ⭐ THE RAW DOORS, where the cell bites with no profile above it. `aegis.jws.sign`
+   * and `aegis.cws.sign` run the shared normalisation on an object payload
+   * (`internal/utils/raw-sign-jws.ts`, `internal/utils/raw-sign-cose.ts`) — the
+   * twin of `refuse-empty-headers.test.ts`'s untyped-caller row. Both wires: the
+   * normalisation runs upstream of either encoding, and a refusal present on one
+   * wire alone is a verdict the caller picks by encoding.
+   */
+  describe("the raw doors", () => {
+    let logger: ILogger;
+    let amphora: IAmphora;
+    let aegis: Aegis;
+
+    beforeEach(async () => {
+      MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
+
+      logger = createMockLogger();
+      amphora = new Amphora({ internal: { issuer: "https://test.lindorm.io/" }, logger });
+      aegis = new Aegis({ amphora, logger });
+
+      await amphora.setup();
+
+      amphora.add(TEST_EC_KEY_SIG);
+    });
+
+    const REFUSAL = expect.objectContaining({
+      code: "claim_empty_value",
+      data: { claim: "confirmation", whenEmpty: "refuse" },
+    });
+
+    test("an empty confirmation is refused identically on both wires", async () => {
+      await expect(aegis.jws.sign({ cnf: {} })).rejects.toThrow(AegisDomainError);
+      await expect(aegis.jws.sign({ cnf: {} })).rejects.toThrow(REFUSAL);
+
+      await expect(aegis.cws.sign({ cnf: {} })).rejects.toThrow(AegisDomainError);
+      await expect(aegis.cws.sign({ cnf: {} })).rejects.toThrow(REFUSAL);
+    });
+
+    // The control: the same doors still take a payload the cell says nothing about.
+    test("the same doors sign a payload with no refused claim", async () => {
+      await expect(
+        aegis.jws.sign({ cnf: { kid: "key-1" }, scope: [] }),
+      ).resolves.toBeDefined();
+      await expect(
+        aegis.cws.sign({ cnf: { kid: "key-1" }, scope: [] }),
+      ).resolves.toBeDefined();
+    });
+
+    /**
+     * The STRUCTURED raw doors take the same normalisation: `JwtKit.sign`
+     * (`classes/JwtKit.ts`) and `internal/cose/sign-cwt.ts` both call
+     * `normaliseClaims` on the already-wire claims. On COSE it runs BEFORE the
+     * claim codec, so the answer is the emission boundary's `claim_empty_value`
+     * and never `encodeCnf`'s `cose_cnf_unsupported` (`internal/cose/cose-key.ts`).
+     */
+    test("an empty confirmation is refused on jwt.sign by the emission boundary", async () => {
+      await expect(aegis.jwt.sign({ cnf: {} })).rejects.toThrow(AegisDomainError);
+      await expect(aegis.jwt.sign({ cnf: {} })).rejects.toThrow(REFUSAL);
+    });
+
+    test("an empty confirmation is refused on cwt.sign by the emission boundary, ahead of the COSE cnf codec", async () => {
+      await expect(aegis.cwt.sign({ cnf: {} })).rejects.toThrow(AegisDomainError);
+      await expect(aegis.cwt.sign({ cnf: {} })).rejects.toThrow(REFUSAL);
+    });
+
+    /**
+     * The emptiness the door asks about is `isClaimSatisfied`'s
+     * (`internal/utils/rules/is-claim-satisfied.ts`): `[]` names no key exactly
+     * as `{}` does.
+     */
+    test("a confirmation that is an empty array is refused at every raw door", async () => {
+      const cnf: Array<never> = [];
+
+      await expect(aegis.jws.sign({ cnf })).rejects.toThrow(REFUSAL);
+      await expect(aegis.cws.sign({ cnf })).rejects.toThrow(REFUSAL);
+      await expect(aegis.jwt.sign({ cnf } as Dict)).rejects.toThrow(REFUSAL);
+      await expect(aegis.cwt.sign({ cnf } as Dict)).rejects.toThrow(REFUSAL);
+    });
   });
 });

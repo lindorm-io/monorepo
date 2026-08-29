@@ -1838,8 +1838,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       // this shape can only be presented by somebody else's producer.
       {
         step: "token",
-        via: "kit-sign",
-        kit: "structured",
+        via: "foreign",
         claims: {
           iss: ISSUER,
           sub: "user-1",
@@ -1849,7 +1848,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
           jti: "token-1",
           cnf: {},
         },
-        options: { tokenType: "access" },
+        typ: "application/access+jwt",
       },
     ],
     when: [{ step: "verify" }],
@@ -1891,8 +1890,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       // this shape can only be presented by somebody else's producer.
       {
         step: "token",
-        via: "kit-sign",
-        kit: "structured",
+        via: "foreign",
         claims: {
           iss: ISSUER,
           sub: "user-1",
@@ -1902,7 +1900,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
           jti: "token-1",
           cnf: {},
         },
-        options: { tokenType: "access" },
+        typ: "application/access+jwt",
       },
     ],
     when: [{ step: "verify", options: { trustBoundThumbprint: true } }],
@@ -1944,8 +1942,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       // this shape can only be presented by somebody else's producer.
       {
         step: "token",
-        via: "kit-sign",
-        kit: "structured",
+        via: "foreign",
         claims: {
           iss: ISSUER,
           sub: "user-1",
@@ -1955,7 +1952,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
           jti: "token-1",
           cnf: {},
         },
-        options: { tokenType: "access" },
+        typ: "application/access+jwt",
       },
     ],
     when: [
@@ -5572,6 +5569,32 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     then: [
       { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
       { step: "wireClaims", excludes: ["amr"] },
+    ],
+  },
+  {
+    id: "an-empty-claim-the-registry-declares-unsatisfiable-is-refused-at-the-raw-door",
+    title:
+      "an empty claim that states something no recipient can act on is refused at the door with no profile above it",
+    rationale:
+      "The third answer, and the one a profile cannot give. `cnf: {}` is the issuer's declaration that the presenter holds a particular key and that the recipient can confirm it (RFC 7800 §3), and it names no key — so emitting it mints a binding nothing satisfies and dropping it mints the bearer token the caller did not ask for. Neither disposal is what the issuer meant, so the value is refused while it is still in the producer's hands. The raw signing doors are where this has to hold: they run no profile, so the emission boundary is the only layer that can speak, and a refusal present on one wire alone would be a verdict the caller picks by encoding. The error is the same class and the same vocabulary a profile floor uses for the same empty value, because a caller choosing a profile must not thereby choose an error class.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "opaque",
+        claims: { cnf: {}, scope: [] },
+      },
+    ],
+    when: [{ step: "mint" }],
+    // `data.claim` is the DOMAIN name, never the wire key the door was handed:
+    // that is what makes this refusal indistinguishable from the profile floor's.
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        code: "claim_empty_value",
+        data: { claim: "confirmation", whenEmpty: "refuse" },
+      },
     ],
   },
   {

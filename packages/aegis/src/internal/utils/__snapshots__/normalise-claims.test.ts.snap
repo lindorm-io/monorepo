@@ -3,7 +3,7 @@
 exports[`normaliseClaims > the registry-driven empty prune > should keep a registered claim the registry marks keepable 1`] = `
 {
   "aud": [],
-  "cnf": {},
+  "authorization_details": [],
   "events": {},
   "scope": [],
   "sub": "user_1",

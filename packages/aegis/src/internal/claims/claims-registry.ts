@@ -49,14 +49,6 @@
  * action at all). Each cell is a decision; the ones a reader would question carry
  * their reason inline.
  *
- * ⚠ A `"keep"` cell is the ONLY way an empty value reaches the wire, so its empty
- * form must be REFUSABLE BY POLICY — a profile that cannot tolerate it names the
- * claim in a `required` rule (`isClaimSatisfied` treats `[]`/`{}`/`""` as nothing
- * to bite on) or in a `shape` rule. The registry deliberately does not decide
- * that: whether an `aud: []` is acceptable is a fact about the TOKEN, not about
- * the claim. What the registry owes is that the value survives to where the
- * profile can see it, which is what `"keep"` means.
- *
  * --- What this registry does NOT declare ---
  *
  * ⛔ NO `direction`, `matchable` OR `provenance` COLUMN. Each would be constant or
@@ -273,13 +265,13 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     // The sample uses `keyId`.
     sample: { keyId: "key_sample" },
     bucket: "claims",
-    // KEEP: RFC 7800 §3.1 `cnf` IS the proof-of-possession requirement, so pruning
-    // it hands the audience a BEARER token. ⚠ An all-empty confirmation must not
-    // collapse to `undefined` either — that mints the same silent bearer. It is
-    // REFUSED, by the translator on the way out and the verify policy gate on the
-    // way in (`internal/claims/translate.ts`,
-    // `internal/utils/apply-verify-policy.ts`).
-    whenEmpty: "keep",
+    // REFUSE: RFC 7800 §3.1 `cnf` IS the proof-of-possession requirement, so
+    // pruning it hands the audience a BEARER token, and an empty one names no key
+    // to confirm, so keeping it emits a binding nothing can satisfy. Refused at
+    // every door: the translator (`internal/claims/translate.ts`), the emission
+    // boundary (`refuse-empty-claims.ts`) and the verify policy gate
+    // (`internal/utils/apply-verify-policy.ts`).
+    whenEmpty: "refuse",
     domainClaim: true,
   },
   // RFC 8693

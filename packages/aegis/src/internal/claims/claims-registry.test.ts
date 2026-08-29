@@ -530,9 +530,8 @@ describe("CLAIM_REGISTRY", () => {
   test("the claims kept when empty are exactly the stated set", () => {
     const keep = CLAIM_SPECS.filter((s) => s.whenEmpty === "keep").map((s) => s.domain);
 
-    // Registry declaration order. Restrictions (`aud`, RAR), bindings (`cnf`, the
-    // OIDC hashes), delegation (`act`/`may_act`), and the two RFC 8417/9493 claims
-    // a SET IS.
+    // Registry declaration order. Restrictions (`aud`, RAR), the OIDC hashes,
+    // delegation (`act`/`may_act`), and the two RFC 8417/9493 claims a SET IS.
     //
     // ⚠ The four lindorm authority lists — `roles`, `permissions`, `entitlements`,
     // `groups` — are deliberately NOT here: they are our own vocabulary, and the
@@ -541,7 +540,6 @@ describe("CLAIM_REGISTRY", () => {
     // registry entry, and ⛔ do not attach RFC 6749 §3.3 to it.
     expect(keep).toEqual([
       "audience",
-      "confirmation",
       "scope",
       "act",
       "accessTokenHash",
@@ -571,16 +569,17 @@ describe("CLAIM_REGISTRY", () => {
 
     const refuse = refusedIn(CLAIM_SPECS);
 
-    // ⚠ EMPTY, and asserted rather than left unsaid — the same reason
-    // `header-registry.test.ts` asserts its empty `keep` set. `refuse` is in the
-    // union for the HEADER parameter that holds it, so nothing forces it to have a
-    // claim user, which makes "no claim refuses" reversible by a one-word diff with
-    // nothing to notice.
-    expect(refuse).toEqual([]);
+    // `cnf` alone: an empty confirmation names no key, so it can be neither
+    // emitted (a binding nothing satisfies) nor pruned (a bearer token) — see its
+    // registry entry. The set is frozen by name so a cell flipped to `refuse` is a
+    // change to this list, not a one-word diff with nothing to notice.
+    expect(refuse).toEqual(["confirmation"]);
 
-    // The control: the walk above is empty because no cell says `refuse`, not
-    // because the predicate cannot see one.
-    expect(refusedIn([...CLAIM_SPECS, refusing])).toEqual([refusing.domain]);
+    // The control: the predicate sees a cell wherever it is written.
+    expect(refusedIn([...CLAIM_SPECS, refusing])).toEqual([
+      "confirmation",
+      refusing.domain,
+    ]);
 
     // ⚠ THE COUNT IS THE ASSERTION, and it is here rather than a loop over the
     // column because a loop CANNOT GO RED: `ParamSpec.whenEmpty` is required over a

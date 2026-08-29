@@ -42,8 +42,8 @@ describe("normaliseClaims", () => {
       ).toMatchSnapshot();
     });
 
-    // The `whenEmpty: "keep"` cells: a restriction (`aud`), a binding (`cnf`) and
-    // the SET claims are statements.
+    // The `whenEmpty: "keep"` cells: a restriction (`aud`, `authorization_details`)
+    // and the SET claims are statements.
     //
     // ⚠ `scope` is here and `roles` is not, though both are lists of granted
     // authority. AEGIS POLICY, not a citation: RFC 9068 §2.2.3 makes `scope` only
@@ -52,7 +52,13 @@ describe("normaliseClaims", () => {
     // lists have a sole issuer that already emits empty as absence.
     test("should keep a registered claim the registry marks keepable", () => {
       expect(
-        normaliseClaims({ aud: [], scope: [], cnf: {}, events: {}, sub: "user_1" }),
+        normaliseClaims({
+          aud: [],
+          scope: [],
+          authorization_details: [],
+          events: {},
+          sub: "user_1",
+        }),
       ).toMatchSnapshot();
     });
 
