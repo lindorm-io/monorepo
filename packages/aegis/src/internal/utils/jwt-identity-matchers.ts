@@ -83,9 +83,21 @@ export const createIdentityMatchers = (
 
     claimedBy.set(mapped, key);
 
-    if (hashDomain && isString(value)) {
-      predicate[mapped] = { $eq: createHash(algorithm, value) };
-      continue;
+    // A hash-derive key takes ONLY a raw string: an operator bag here would fall
+    // through to the value lift and be applied to the DIGEST claim unhashed.
+    if (hashDomain !== undefined) {
+      if (isString(value)) {
+        predicate[mapped] = { $eq: createHash(algorithm, value) };
+        continue;
+      }
+
+      throw new AegisDomainError(`Unsupported value for key: ${key}`, {
+        code: "jwt_verify_unsupported_value",
+        data: { key },
+        title: "JWT Verify Unsupported Value",
+        details:
+          "A verify option value for a raw hash source must be a string; this key was given an unsupported type.",
+      });
     }
 
     // The VALUE lift is shared with the assert path (`createJwtValidate`) — the

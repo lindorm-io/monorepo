@@ -6258,7 +6258,52 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       { step: "mint" },
       { step: "verify", assert: { accessToken: "a-different-access-token" } },
     ],
-    then: [{ step: "rejects", error: "AegisDomainError" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: { invalid: ["accessToken"] },
+      },
+    ],
+  },
+  {
+    id: "a-raw-source-written-as-a-condition-is-refused-rather-than-compared-to-the-digest",
+    title:
+      "a caller writing a condition operator under a raw hash source key is refused as unsupported",
+    rationale:
+      "The raw source keys name a value aegis HASHES with the hash function the token's `alg` header selects (OIDC Core §3.1.3.6) before comparing it to the digest claim, while a condition operator names a comparison over the claim as it is carried. The two readings cannot both hold for one key: hashing the operator's operand makes it meaningless, and applying the operator to the digest compares an unhashed value to a digest, which fails for the genuine source and reports it as a substituted artifact. A key that means a source to be hashed must therefore refuse any value it cannot hash, and name the key the caller wrote.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "default",
+        content: {
+          subject: "user-1",
+          expires: "1h",
+          tokenType: "test_token",
+          accessToken: AT_SOURCE,
+        },
+      },
+    ],
+    when: [
+      { step: "mint" },
+      {
+        step: "verify",
+        // ⚠ LOCAL cast, deliberate: `DomainHashMatchers` types each source as a
+        // string, which is the TYPE-level half of this same rule. The cast is what
+        // lets the row state the RUNTIME half, for a caller reaching the API from
+        // untyped code.
+        assert: { accessToken: { $eq: AT_SOURCE } } as unknown as VerifyAssert,
+      },
+    ],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        code: "jwt_verify_unsupported_value",
+        data: { key: "accessToken" },
+      },
+    ],
   },
   {
     id: "an-issuer-matcher-written-as-a-condition-is-evaluated-rather-than-compared",

@@ -1111,7 +1111,8 @@ await aegis.verify(
   hashed with the token's signing algorithm, not compared literally, and verify
   is the only surface that resolves that algorithm (from the verifying key).
   `Aegis.assert` matches an already-computed digest under its own claim name
-  instead
+  instead. A raw source takes only a string: a condition operator under one of
+  these keys is refused with `jwt_verify_unsupported_value`, naming the key
 - ⚠ A raw source and its DIGEST claim (`accessToken` / `accessTokenHash`, and the
   other two pairs) resolve to ONE wire name, so stating both is refused —
   `jwt_verify_conflicting_matchers`, naming both keys. Either spelling ALONE is
