@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import { AegisDomainError } from "../../errors/index.js";
 import type { PolicyRule, TokenProfile } from "../../types/index.js";
 import { externalAccessTokenProfile } from "./definitions/external-access-token.js";
+import { idTokenProfile } from "./definitions/id-token.js";
 import { enforcePolicy } from "./enforce-policy.js";
 import { BUILT_IN_PROFILES } from "./registry.js";
 
@@ -43,6 +44,7 @@ const run = (
   claims: Record<string, unknown>,
   direction: "mint" | "verify",
   context = {},
+  unreadable: ReadonlySet<string> = new Set(),
 ): void =>
   enforcePolicy({
     claims,
@@ -50,9 +52,137 @@ const run = (
     direction,
     format: "jwt",
     profile: profileWith(policy),
+    unreadable,
   });
 
 describe("enforcePolicy", () => {
+  // The mint writer leaves off the wire a value its reader would not read back;
+  // a demand rule refuses it there rather than minting the token without it.
+  describe("the unreadable set", () => {
+    const invalidOf = (fn: () => void): unknown => {
+      try {
+        fn();
+      } catch (error) {
+        return (error as AegisDomainError).data.invalid;
+      }
+
+      throw new Error("expected the enforcer to refuse");
+    };
+
+    test("required reports an unreadable claim on mint", () => {
+      const policy: ReadonlyArray<PolicyRule> = [
+        { rule: "required", on: ["mint"], claims: ["subject"] },
+      ];
+
+      expect(
+        invalidOf(() => run(policy, { subject: 42 }, "mint", {}, new Set(["subject"]))),
+      ).toEqual([
+        {
+          key: "subject",
+          message: 'Required claim "subject" is not of its declared type',
+        },
+      ]);
+    });
+
+    test("atLeastOneOf and requiredWhen do not count an unreadable claim", () => {
+      const policy: ReadonlyArray<PolicyRule> = [
+        { rule: "atLeastOneOf", on: ["mint"], claims: ["subject", "sessionId"] },
+        {
+          rule: "requiredWhen",
+          on: ["mint"],
+          needs: ["accessTokenIssued"],
+          claim: "accessTokenHash",
+          when: (_claims, context) => context.accessTokenIssued === true,
+        },
+      ];
+
+      expect(
+        invalidOf(() =>
+          run(
+            policy,
+            { subject: 42, accessTokenHash: 42 },
+            "mint",
+            { accessTokenIssued: true },
+            new Set(["subject", "accessTokenHash"]),
+          ),
+        ),
+      ).toEqual([
+        {
+          key: "subject|sessionId",
+          message: "At least one of [subject, sessionId] is required",
+        },
+        {
+          key: "accessTokenHash",
+          message:
+            'Conditionally required claim "accessTokenHash" is not of its declared type',
+        },
+      ]);
+    });
+
+    test("match and shape read the domain value, not the unreadable set", () => {
+      const policy: ReadonlyArray<PolicyRule> = [
+        // The cast reaches the class a well-typed condition cannot: the value the
+        // writer would leave off the wire is exactly what `match` must still see.
+        {
+          rule: "match",
+          on: ["mint"],
+          condition: { subject: { $eq: 42 as unknown as string } },
+        },
+        { rule: "shape", on: ["mint"], shape: "subjectId" },
+      ];
+      const unreadable = new Set(["subject", "subjectId"]);
+
+      expect(() =>
+        run(
+          policy,
+          { subject: 42, subjectId: { format: "email", email: "a@b" } },
+          "mint",
+          {},
+          unreadable,
+        ),
+      ).not.toThrow();
+      expect(
+        invalidOf(() =>
+          run(policy, { subject: 42, subjectId: "x" }, "mint", {}, unreadable),
+        ),
+      ).toEqual([{ key: "subjectId", message: "subjectId must be an object" }]);
+    });
+
+    test("forbidden reads the vocabulary, so an unreadable claim is still present", () => {
+      const policy: ReadonlyArray<PolicyRule> = [
+        { rule: "forbidden", on: ["mint"], claims: ["nonce"] },
+      ];
+
+      expect(
+        invalidOf(() => run(policy, { nonce: 42 }, "mint", {}, new Set(["nonce"]))),
+      ).toEqual([{ key: "nonce", message: 'Forbidden claim "nonce" is present' }]);
+    });
+
+    test("a key in the set that no demand rule names produces no entry", () => {
+      const policy: ReadonlyArray<PolicyRule> = [
+        { rule: "required", on: ["mint"], claims: ["subject"] },
+        { rule: "atLeastOneOf", on: ["mint"], claims: ["subject", "sessionId"] },
+        {
+          rule: "requiredWhen",
+          on: ["mint"],
+          needs: ["accessTokenIssued"],
+          claim: "accessTokenHash",
+          when: () => true,
+        },
+      ];
+
+      expect(() =>
+        run(
+          policy,
+          { subject: "u", accessTokenHash: "h", region: 42 },
+          "mint",
+          { accessTokenIssued: true },
+          new Set(["region"]),
+        ),
+      ).not.toThrow();
+    });
+  });
+
   // WHICH rules run is decided by the rule, not by the caller: the same call with a
   // different direction runs a different subset, and nothing else changes.
   describe("direction selection", () => {
@@ -316,6 +446,7 @@ describe("enforcePolicy", () => {
         direction: "verify",
         format: "jwt",
         profile,
+        unreadable: new Set(),
       });
 
     // Without this the refusal tests below prove nothing: a bag that fails a
@@ -374,6 +505,44 @@ describe("enforcePolicy", () => {
           }),
         }),
       );
+    });
+
+    describe("id_token with no access token co-issued", () => {
+      const mint = (claims: Dict): void =>
+        enforcePolicy({
+          claims,
+          context: { accessTokenIssued: false },
+          direction: "mint",
+          format: "jwt",
+          profile: idTokenProfile,
+          unreadable: new Set(),
+        });
+
+      test.each([
+        ["empty", ""],
+        ["null", null],
+      ])(
+        "id_token refuses a named-but-%s access token hash even when no access token co-issued",
+        (_label, accessTokenHash) => {
+          expect(() => mint({ ...bagFor(idTokenProfile), accessTokenHash })).toThrow(
+            expect.objectContaining({
+              code: "profile_policy_invalid",
+              data: expect.objectContaining({
+                invalid: [
+                  {
+                    key: "accessTokenHash",
+                    message: 'Conditionally required claim "accessTokenHash" is missing',
+                  },
+                ],
+              }),
+            }),
+          );
+        },
+      );
+
+      test("id_token owes no access token hash when none is named and no access token co-issued", () => {
+        expect(() => mint(bagFor(idTokenProfile))).not.toThrow();
+      });
     });
   });
 });

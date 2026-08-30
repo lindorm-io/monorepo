@@ -196,6 +196,14 @@ export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
   // then run nowhere.
   //
   // Verify passes an EMPTY context and always can: a context-reading rule is
-  // pinned to mint by its own type.
-  enforcePolicy({ claims: payload, context: {}, direction: "verify", format, profile });
+  // pinned to mint by its own type. The `unreadable` set is empty too: the read
+  // has already omitted what it could not decode (`translate.ts`, `wireToDomain`).
+  enforcePolicy({
+    claims: payload,
+    context: {},
+    direction: "verify",
+    format,
+    profile,
+    unreadable: new Set(),
+  });
 };

@@ -31,13 +31,8 @@ export const idTokenProfile = defineProfile({
         // An access token co-issued: the hash is owed, full stop.
         if (context.accessTokenIssued === true) return true;
 
-        // `requiredWhen` only reaches this predicate when `accessTokenHash` is
-        // EMPTY, so a claim the caller OMITTED is the honest "no access token,
-        // therefore no hash" and nothing is owed.
         if (isClaimOmitted(claims.accessTokenHash)) return false;
 
-        // What is left is a caller who NAMED `at_hash` and gave it nothing
-        // (`""`, `null`). Having stated the claim, they owe a real hash.
         return true;
       },
     },

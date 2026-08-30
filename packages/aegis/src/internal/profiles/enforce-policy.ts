@@ -25,6 +25,8 @@ export type EnforcePolicyInput = {
   /** DIAGNOSTIC only — every code raised here is wire-neutral. */
   format: TokenFormatTag;
   profile: TokenProfile;
+  /** The keys the mint writer would leave off the wire; verify passes an empty set. */
+  unreadable: ReadonlySet<string>;
 };
 
 /**
@@ -52,6 +54,7 @@ export const enforcePolicy = ({
   direction,
   format,
   profile,
+  unreadable,
 }: EnforcePolicyInput): void => {
   const invalid: Array<InvalidEntry> = [];
 
@@ -60,7 +63,7 @@ export const enforcePolicy = ({
 
     switch (rule.rule) {
       case "required":
-        invalid.push(...requirePresent(claims, rule.claims));
+        invalid.push(...requirePresent(claims, rule.claims, unreadable));
         break;
 
       case "forbidden":
@@ -68,7 +71,7 @@ export const enforcePolicy = ({
         break;
 
       case "atLeastOneOf":
-        invalid.push(...atLeastOneOf(claims, rule.claims));
+        invalid.push(...atLeastOneOf(claims, rule.claims, unreadable));
         break;
 
       case "match":
@@ -103,7 +106,7 @@ export const enforcePolicy = ({
           });
         }
 
-        invalid.push(...requiredWhen(claims, context, rule));
+        invalid.push(...requiredWhen(claims, context, rule, unreadable));
         break;
       }
 

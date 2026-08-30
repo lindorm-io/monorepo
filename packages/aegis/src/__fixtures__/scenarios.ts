@@ -3559,6 +3559,48 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     ],
   },
   {
+    id: "a-required-claim-whose-value-is-not-of-its-declared-type-is-refused-rather-than-minted-without-it",
+    title: "minting a token whose required claim is not of its declared type is refused",
+    rationale:
+      "A demand for a claim is a demand for a value the token will carry, and a value the writer cannot carry satisfies nothing. Every registered claim declares the kind of value it holds, and the writer leaves off the wire a value its own reader would not read back — so a required claim supplied as the wrong kind would satisfy the demand at the policy gate and then be absent from the token, under a profile whose whole point is that it is there. The one caller who cannot notice is the one who supplied a value. The refusal names the fault as what it is — the value is not of its declared type, not missing — so the caller repairs the value instead of looking for a field they already wrote.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "access_token",
+        // ⚠ THE CAST IS THE POINT. A well-typed caller cannot reach this class at
+        // all, so the row reaches past the type to state the rule for the doors
+        // that have no type behind them: a JavaScript caller, a value read from
+        // a foreign source and handed on.
+        content: {
+          subject: 42 as unknown as string,
+          audience: [CLIENT],
+          clientId: CLIENT,
+        },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      // ⚠ THE CODE, not merely the class: a structure refusal carries an `invalid`
+      // list under the same class, so a row naming only the class would pass
+      // whichever fired.
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        code: "profile_policy_invalid",
+        data: {
+          direction: "mint",
+          invalid: [
+            {
+              key: "subject",
+              message: 'Required claim "subject" is not of its declared type',
+            },
+          ],
+        },
+      },
+    ],
+  },
+  {
     id: "a-demanded-confirmation-must-bind-a-key",
     title:
       "minting a sender-constrained token whose confirmation binds no key is refused",

@@ -105,12 +105,8 @@ type BoundRule<T> = T & {
  *                    only {@link BoundRule}.
  *
  * ⚠ `requiredWhen` SHORT-CIRCUITS: a claim that is already satisfied ends the
- * rule, so `when` is only ever called on an EMPTY value. A predicate written as
- * `when: (claims) => isClaimSatisfied(claims.x)` is therefore always `false` and
- * the rule can never fire — silently, because a predicate that returns `false`
- * is indistinguishable from a condition that did not hold. Write `when` to
- * decide whether the claim is OWED (from the mint context, from a sibling
- * claim), never to re-check the claim's own presence.
+ * rule. Write `when` to decide whether the claim is OWED (from the mint
+ * context, from a sibling claim), never to re-check the claim's own presence.
  *
  * ⚠ "SATISFIED" AND "NAMED" ARE NOT THE SAME QUESTION, and reading all three
  * presence rules as "must be present" is the ambiguity this vocabulary removes.

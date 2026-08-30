@@ -10,13 +10,15 @@ import { isClaimSatisfied } from "./is-claim-satisfied.js";
  *
  * DEMAND presence, the same reading `required` uses — an alternation is a
  * demand with more than one way to satisfy it, so a member that names nothing
- * cannot be the one that satisfies it.
+ * cannot be the one that satisfies it, and neither can a member the mint writer
+ * would leave off the wire (`unreadable`).
  */
 export const atLeastOneOf = (
   claims: Dict,
   keys: ReadonlyArray<string>,
+  unreadable: ReadonlySet<string>,
 ): Array<InvalidEntry> =>
-  keys.some((key) => isClaimSatisfied(claims[key]))
+  keys.some((key) => !unreadable.has(key) && isClaimSatisfied(claims[key]))
     ? []
     : [
         {

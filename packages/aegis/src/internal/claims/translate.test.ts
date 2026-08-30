@@ -5,13 +5,15 @@ import { describe, expect, test } from "vitest";
 import type { AegisDomainError } from "../../errors/index.js";
 import type { TokenProfile } from "../../types/index.js";
 import { assembleCommonClaims } from "../utils/assemble-common-claims.js";
-import { CLAIM_SPECS, coseName, joseName } from "./claims-registry.js";
+import { CLAIM_SPECS, claimByDomain, coseName, joseName } from "./claims-registry.js";
 import type { ClaimMemberSpec } from "../registry/claim-spec.js";
 import { wireName } from "../registry/wire-key.js";
 import {
   decodeClaim,
   domainToJose,
+  domainToWire,
   encodeClaim,
+  unreadableClaims,
   wireToDomain,
   wireToFloorClaims,
 } from "./translate.js";
@@ -1226,5 +1228,69 @@ describe("a CLOSED member set", () => {
     expect(
       encodeClaim(opened, { subject: "service-1", surprise: "x" }, joseName),
     ).toEqual({ sub: "service-1", surprise: "x" });
+  });
+});
+
+describe("unreadableClaims — the top-level claims the mint writer leaves off the wire", () => {
+  test("unreadableClaims names a top-level claim whose value fails its leaf codec", () => {
+    expect(
+      unreadableClaims({
+        subject: 42,
+        authMethods: "pwd",
+        audience: ["a"],
+        clientId: "c",
+      }),
+    ).toEqual(new Set(["subject", "authMethods"]));
+  });
+
+  // An unregistered claim has no declared kind to fail; `null` is an absence; a
+  // non-object for a structure walks to `undefined` AND is refused, and the
+  // refusal is `encodeClaim`'s to report, not a drop.
+  test("unreadableClaims omits an unregistered claim, an unstated value and a refused structure", () => {
+    expect(unreadableClaims({ region: 42, subject: null, act: "service-a" })).toEqual(
+      new Set(),
+    );
+  });
+
+  test("unreadableClaims asks each claim on a fresh context, so a refused structure does not mask a later leaf failure", () => {
+    expect(unreadableClaims({ act: "service-a", subject: 42 })).toEqual(
+      new Set(["subject"]),
+    );
+  });
+
+  test("unreadableClaims agrees with what domainToWire leaves off under both selectors", () => {
+    const common: Dict = {
+      subject: 42,
+      authMethods: "pwd",
+      audience: "a",
+      scope: "a b",
+      tokenId: "t",
+      clientId: "c",
+      region: 42,
+    };
+    const jose = domainToWire(common, joseName);
+    const cose = domainToWire(common, coseName);
+
+    // The registered keys present in `common` and absent from ONE output — built
+    // per wire so that the two can disagree.
+    const leftOffJose = new Set(
+      Object.keys(common).filter((key) => {
+        const spec = claimByDomain(key);
+
+        return spec !== undefined && !Object.hasOwn(jose, joseName(spec));
+      }),
+    );
+    const leftOffCose = new Set(
+      Object.keys(common).filter((key) => {
+        const spec = claimByDomain(key);
+
+        return spec !== undefined && !Object.hasOwn(cose, coseName(spec));
+      }),
+    );
+
+    expect(leftOffJose).toEqual(new Set(["subject", "authMethods"]));
+    expect(leftOffCose).toEqual(leftOffJose);
+    expect(unreadableClaims(common)).toEqual(leftOffJose);
+    expect(unreadableClaims(common)).toEqual(leftOffCose);
   });
 });

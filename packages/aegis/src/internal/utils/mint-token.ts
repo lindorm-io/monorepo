@@ -1,5 +1,6 @@
 import { AegisDomainError } from "../../errors/index.js";
 import type { ProfileMintOptions, SignContent, SignedToken } from "../../types/index.js";
+import { unreadableClaims } from "../claims/translate.js";
 import { enforcePolicy } from "../profiles/enforce-policy.js";
 import { assertWireInput } from "../wire/assert-wire-input.js";
 import type { SignClaimsInput } from "../wire/token-wire.js";
@@ -104,12 +105,15 @@ export const mintToken = async ({
     options.sign ?? {},
   );
 
+  const unreadable = unreadableClaims(common);
+
   enforcePolicy({
     claims: common,
     context: options.context ?? {},
     direction: "mint",
     format,
     profile,
+    unreadable,
   });
 
   const tokenType = mintTypPrefix({

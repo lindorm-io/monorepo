@@ -636,9 +636,11 @@ import { isClaimOmitted, isClaimSatisfied } from "@lindorm/aegis";
 
 A demand is a demand for CONTENT: an `aud: []` addresses nobody and a `cnf: {}` binds the token to no key, so neither satisfies a `required` naming it. A prohibition is a ceiling on the issuer's VOCABULARY: naming a forbidden claim at all is the violation, whatever value it was named with. `0` and `false` are values on both readings.
 
+At mint, a demand is also a demand for a value the token will CARRY. A registered claim whose value is not of its declared kind (`subject: 42`) is left off the wire, so a demand rule naming it refuses the mint — `profile_policy_invalid`, `Required claim "subject" is not of its declared type` — rather than issuing a token without the claim. `match` and `shape` rules still read the value as supplied.
+
 Note `$exists` in a `match` condition is a third question again — it means NOT NULL, not "the key is present".
 
-⚠ **`requiredWhen` short-circuits on a satisfied claim, so its `when` predicate only ever sees an EMPTY value.** Writing `when: (claims) => isClaimSatisfied(claims.x)` gives a rule that can never fire, with no error anywhere — `when` decides whether the claim is _owed_ (from the mint context, from a sibling claim), never whether it is already there.
+⚠ **`requiredWhen` short-circuits on a satisfied claim, so its `when` predicate only ever sees a value that does not satisfy the demand** — an empty one, or at mint one the writer would leave off the wire. Writing `when: (claims) => isClaimSatisfied(claims.x)` gives a rule that fires only on an unreadable value, with no error anywhere — `when` decides whether the claim is _owed_ (from the mint context, from a sibling claim), never whether it is already there.
 
 Any failure raises `profile_policy_invalid` with `data.direction`, `data.format` and `data.invalid` — a list of every `{ key, message }` the token failed, not just the first category. (Distinct from `claims_invalid`, which means the CALLER's `assert` matchers failed.) Both name claims in the DOMAIN vocabulary — `tokenId`, never the wire's `jti` on JOSE and `cti` on COSE. They differ in whose vocabulary that is and in what `debug` adds: `claims_invalid` names the claims as the CALLER stated them and keeps the wire keys and the failing values in `debug.invalid`, while `profile_policy_invalid` names them as the PROFILE does and its `debug.invalid` is the same `{ key, message }` list as `data.invalid`.
 

@@ -14,22 +14,26 @@ export type RequiredWhenRule = {
  * policy rule — the only rule that reads the context, which is why the rule type
  * pins it to mint and makes it declare the context keys it reads.
  *
- * DEMAND presence, as `required`. Note the ordering: a satisfied claim short-
- * circuits, so the author's `when` predicate only ever runs on an EMPTY value.
+ * DEMAND presence, as `required`: a claim the mint writer would leave off the
+ * wire (`unreadable`) is not satisfied either. Note the ordering: a satisfied
+ * claim short-circuits, so the author's `when` predicate only ever runs on a
+ * value that does not satisfy the demand — an empty or an unreadable one.
  */
 export const requiredWhen = (
   claims: Dict,
   context: SignContext,
   rule: RequiredWhenRule,
+  unreadable: ReadonlySet<string>,
 ): Array<InvalidEntry> => {
-  if (isClaimSatisfied(claims[rule.claim])) return [];
+  if (!unreadable.has(rule.claim) && isClaimSatisfied(claims[rule.claim])) return [];
+  if (!rule.when(claims, context)) return [];
 
-  return rule.when(claims, context)
-    ? [
-        {
-          key: rule.claim,
-          message: `Conditionally required claim "${rule.claim}" is missing`,
-        },
-      ]
-    : [];
+  return [
+    {
+      key: rule.claim,
+      message: unreadable.has(rule.claim)
+        ? `Conditionally required claim "${rule.claim}" is not of its declared type`
+        : `Conditionally required claim "${rule.claim}" is missing`,
+    },
+  ];
 };

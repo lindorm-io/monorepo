@@ -1115,6 +1115,42 @@ export const domainToWire = (common: Dict, nameOf: NameSelector): Dict => {
 };
 
 /**
+ * The registered top-level claims {@link domainToWire} would leave off the wire
+ * because their value fails a LEAF codec — asked ahead of the write so a demand
+ * rule in `internal/profiles/enforce-policy.ts` can refuse rather than mint the
+ * token without the claim. Its skip rules are the writer's own, so "supplied"
+ * means what the writer means.
+ *
+ * ⚠ A REFUSED STRUCTURE IS NOT A DROP. A value the walker refuses fills the
+ * context and is reported by {@link encodeClaim} in its turn; only a silent
+ * `undefined` with a clean context is a claim the wire loses. The probe never
+ * throws.
+ *
+ * ⚠ `joseName` is asked, and the answer is wire-independent: the VALUE codec is
+ * shared and only the wire NAME differs.
+ * pinned: translate.test.ts, "unreadableClaims agrees with what domainToWire
+ * leaves off under both selectors".
+ */
+export const unreadableClaims = (common: Dict): ReadonlySet<string> => {
+  const unreadable = new Set<string>();
+
+  for (const [key, value] of Object.entries(common)) {
+    if (value === undefined) continue;
+
+    const spec = claimByDomain(key);
+    if (!spec) continue;
+    if (isNotStated(value)) continue;
+
+    const context = claimContext(spec);
+    const encoded = encodeIfReadable(spec, value, joseName, context);
+
+    if (encoded === undefined && context.invalid.length === 0) unreadable.add(key);
+  }
+
+  return unreadable;
+};
+
+/**
  * Domain-keyed common claims -> JOSE-keyed wire dict. The PUBLIC vocabulary door
  * (`Aegis.toWire`), which speaks JOSE because the domain engine does; every
  * internal write site calls {@link domainToWire} with its own codec's selector.

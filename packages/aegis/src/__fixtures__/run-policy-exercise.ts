@@ -91,7 +91,7 @@ const invalidKeysOf = (input: {
   profile: TokenProfile;
 }): ReadonlyArray<string> => {
   try {
-    enforcePolicy({ ...input, format: "jwt" });
+    enforcePolicy({ ...input, format: "jwt", unreadable: new Set() });
     return [];
   } catch (error) {
     // A context-incomplete throw is NOT a policy verdict — it is the enforcer

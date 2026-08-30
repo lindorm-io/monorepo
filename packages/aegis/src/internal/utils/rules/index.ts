@@ -4,6 +4,7 @@
  * --- FOUR presence notions, and none of them is another ---
  *
  *   demand  "is there something to bite on?"  isClaimSatisfied  aegis
+ *           — and, at mint, not in the writer's `unreadable` set (`translate.ts`)
  *   vocab   "did the author name this key?"   isClaimOmitted    aegis
  *   stated  "was a value stated at all?"      isNotStated       aegis
  *   null    "is the value non-null?"          $exists           @lindorm/match
