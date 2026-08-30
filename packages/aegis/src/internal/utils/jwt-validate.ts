@@ -3,6 +3,7 @@ import type { Dict } from "@lindorm/types";
 import { AegisDomainError } from "../../errors/index.js";
 import type { DomainAssert } from "../../types/index.js";
 import { claimByDomain } from "../claims/claims-registry.js";
+import { buildCondition } from "./build-condition.js";
 import { liftClaimMatcher } from "./lift-claim-matcher.js";
 
 /**
@@ -12,6 +13,12 @@ import { liftClaimMatcher } from "./lift-claim-matcher.js";
  * because it matches a wire payload. Same mechanism, different vocabulary; the
  * per-claim VALUE lift is shared, so the registry stays the only thing that
  * knows which claims are array-valued.
+ *
+ * The argument is a condition TREE (`buildCondition`): the root operators
+ * `$and` / `$or` / `$not` are honoured at the root and nested, and every claim
+ * key inside a branch takes the same value lift as one at the root. What an
+ * operator means — an empty `$or`, a `$not` that is not an object — is
+ * `@lindorm/match`'s to decide when the predicate is evaluated.
  *
  * There is no hash-DERIVE case here and no `algorithm` to pass one: hashing a raw
  * source needs the token's signing algorithm, and this surface is handed a flat
@@ -27,24 +34,16 @@ import { liftClaimMatcher } from "./lift-claim-matcher.js";
  * merged over this one by `createAssertPredicate`.
  */
 export const createJwtValidate = (assert: DomainAssert): Condition<Dict> =>
-  // ⛔ `Object.fromEntries`, NEVER `predicate[key] = operator`. The key is the
-  // CALLER's, and `liftClaimMatcher` answers `{ $eq: value }` for a string under
-  // any key, `__proto__` included. Assigned onto a plain object it hits
-  // `Object.prototype`'s setter and swaps the prototype instead of defining the
-  // key, so the assertion is dropped and the token verifies unasserted. Pinned at
-  // `jwt-validate.test.ts#a __proto__ assertion is CARRIED`.
-  Object.fromEntries(
-    Object.entries(assert).map(([key, value]) => {
-      const operator = liftClaimMatcher(claimByDomain(key), value);
+  buildCondition(assert, () => (key, value) => {
+    const operator = liftClaimMatcher(claimByDomain(key), value);
 
-      if (operator !== undefined) return [key, operator];
+    if (operator !== undefined) return [key, operator];
 
-      throw new AegisDomainError(`Unsupported value: ${value as any} for key: ${key}`, {
-        code: "jwt_validate_unsupported_value",
-        data: { key },
-        title: "JWT Validate Unsupported Value",
-        details:
-          "A claim matcher value must be a string, number, array, or predicate object; this key was given an unsupported type.",
-      });
-    }),
-  ) as Condition<Dict>;
+    throw new AegisDomainError(`Unsupported value: ${value as any} for key: ${key}`, {
+      code: "jwt_validate_unsupported_value",
+      data: { key },
+      title: "JWT Validate Unsupported Value",
+      details:
+        "A claim matcher value must be a string, number, array, or predicate object; this key was given an unsupported type.",
+    });
+  });

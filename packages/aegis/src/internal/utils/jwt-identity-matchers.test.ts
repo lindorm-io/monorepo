@@ -1,4 +1,5 @@
 import { AegisDomainError } from "../../errors/index.js";
+import { createHash } from "./create-hash.js";
 import { HASH_MATCHERS } from "./hash-matchers.js";
 import { createIdentityMatchers } from "./jwt-identity-matchers.js";
 import { joseName } from "../claims/claims-registry.js";
@@ -65,6 +66,48 @@ describe("createIdentityMatchers", () => {
         claim: "at_hash",
         keys: ["accessTokenHash", "accessToken"],
       });
+    });
+  });
+
+  // A collision is two keys resolving to one wire name in ONE condition object:
+  // that is the object whose indexed writes would displace each other. Two
+  // `$or` branches are two objects, each checked on its own.
+  describe("collision scope", () => {
+    test("should build the same wire name stated once in each of two $or branches", () => {
+      expect(
+        createIdentityMatchers(
+          "ES256",
+          { $or: [{ accessToken: "raw" }, { accessTokenHash: "digest" }] },
+          joseName,
+        ),
+      ).toEqual({
+        $or: [{ at_hash: { $eq: expect.any(String) } }, { at_hash: { $eq: "digest" } }],
+      });
+    });
+
+    test("should refuse the same wire name stated twice inside one $or branch", () => {
+      const error = thrownBy({
+        $or: [{ accessToken: "raw", accessTokenHash: "digest" }],
+      });
+
+      expect(error.code).toBe("jwt_verify_conflicting_matchers");
+      expect(error.data).toEqual({
+        claim: "at_hash",
+        keys: ["accessToken", "accessTokenHash"],
+      });
+    });
+
+    test("should refuse an unmapped key inside a branch under its own name", () => {
+      const error = thrownBy({ $and: [{ subject: "s" }, { nope: "x" }] });
+
+      expect(error.code).toBe("jwt_verify_unsupported_key");
+      expect(error.data).toEqual({ key: "nope" });
+    });
+
+    test("should hash a raw source inside a branch", () => {
+      expect(
+        createIdentityMatchers("ES256", { $not: { accessToken: "raw" } }, joseName),
+      ).toEqual({ $not: { at_hash: { $eq: createHash("ES256", "raw") } } });
     });
   });
 });

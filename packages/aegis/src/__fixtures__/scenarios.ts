@@ -6401,6 +6401,320 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
   },
 
   // ---------------------------------------------------------------------------
+  // The ROOT OPERATORS of a claim matcher — `$and` / `$or` / `$not`, at the root
+  // and nested. The vocabulary is `@lindorm/match`'s: aegis compiles each branch
+  // as it compiles the root, and the matcher decides what an operator means.
+  // ---------------------------------------------------------------------------
+  {
+    id: "a-conjunction-of-claim-matchers-accepts-a-token-satisfying-every-member",
+    title:
+      "a caller stating a conjunction of claim matchers is answered by a token satisfying every member",
+    rationale:
+      "A matcher argument is a condition, and a condition composes: a caller whose requirement is stated as a conjunction of two claim matchers writes it as one, because the alternative is two calls that cannot share a verdict. A surface that read a composed condition as a claim name would find no such claim on any token and refuse every caller who composed one, so the accepting direction is what shows the composition was compiled rather than named.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "default",
+        content: {
+          subject: "user-1",
+          expires: "1h",
+          tokenType: "test_token",
+          clientId: CLIENT,
+        },
+      },
+    ],
+    when: [
+      { step: "mint" },
+      {
+        step: "verify",
+        assert: { $and: [{ subject: "user-1" }, { clientId: CLIENT }] },
+      },
+    ],
+    then: [{ step: "accepts" }],
+  },
+  {
+    id: "a-conjunction-of-claim-matchers-is-refused-under-its-own-key-when-one-member-fails",
+    title:
+      "a caller stating a conjunction is refused by a token failing one member, and the refusal names the conjunction",
+    rationale:
+      "A conjunction holds only when every member does, so a token failing one member fails the whole. The refusal names the TOP-LEVEL entries of the matcher argument that did not hold, and a root operator is a top-level entry of its own: the caller wrote `$and`, and `$and` is what did not hold. Naming the member's claim instead would require the diagnosis to descend into a structure whose failing member is not always one claim — a nested disjunction fails as a whole — so the entry the caller wrote is the one reported.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "default",
+        content: {
+          subject: "user-1",
+          expires: "1h",
+          tokenType: "test_token",
+          clientId: CLIENT,
+        },
+      },
+    ],
+    when: [
+      { step: "mint" },
+      {
+        step: "verify",
+        assert: { $and: [{ subject: "user-1" }, { clientId: "someone-else" }] },
+      },
+    ],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: { invalid: ["$and"] },
+      },
+    ],
+  },
+  {
+    id: "a-disjunction-of-claim-matchers-accepts-a-token-satisfying-its-second-member",
+    title:
+      "a caller stating a disjunction is answered by a token satisfying only its second member",
+    rationale:
+      "A disjunction is how a caller states that either of two identities is acceptable — a token for the previous subject or the current one during a migration, a token from either of two deployments. It holds when any member does, and the member that holds must not have to be the first: a surface that evaluated only the first member would refuse every token the caller admitted through the second while accepting through the first, which reads as a working disjunction on every test that names the accepted identity first.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "default",
+        content: { subject: "user-1", expires: "1h", tokenType: "test_token" },
+      },
+    ],
+    when: [
+      { step: "mint" },
+      {
+        step: "verify",
+        assert: { $or: [{ subject: "someone-else" }, { subject: "user-1" }] },
+      },
+    ],
+    then: [{ step: "accepts" }],
+  },
+  {
+    id: "a-negated-claim-matcher-is-refused-under-its-own-key-by-a-token-matching-it",
+    title:
+      "a caller negating a claim matcher is refused by a token matching the negated matcher, and the refusal names the negation",
+    rationale:
+      "A negation is how a caller excludes an identity — a token for a revoked client, a subject that must not reach this resource. It fails exactly when its payload holds, and the refusal names the top-level entry that failed, which is `$not`: the claim inside the negation did not fail, it matched, and naming it as failing would tell the caller the opposite of what happened. The diagnosis that names the failing entries evaluates each against the whole claim set, because a negation has no claim of its own to read.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "default",
+        content: { subject: "user-1", expires: "1h", tokenType: "test_token" },
+      },
+    ],
+    when: [{ step: "mint" }, { step: "verify", assert: { $not: { subject: "user-1" } } }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: { invalid: ["$not"] },
+      },
+    ],
+  },
+  {
+    id: "a-raw-hash-source-inside-a-disjunction-is-derived-and-compared-to-the-digest",
+    title:
+      "a caller stating a raw access token inside a disjunction is answered by the id token issued alongside it",
+    rationale:
+      "The `at_hash` binding (OIDC Core §3.1.3.6) is stated with the RAW access token, and aegis derives the digest with the hash function the token's `alg` selects. A branch of a condition is compiled exactly as the root is, so a raw source inside one is derived there too — a compile that derived only at the root would compare the raw source literally to the digest inside a branch, which matches no genuine pair and reads as a substituted access token. The satisfying member is placed second so that the accept can only come from a branch that was derived.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "default",
+        content: {
+          subject: "user-1",
+          expires: "1h",
+          tokenType: "test_token",
+          accessToken: AT_SOURCE,
+        },
+      },
+    ],
+    when: [
+      { step: "mint" },
+      {
+        step: "verify",
+        // ⚠ LOCAL cast, deliberate: the nested members of a `Condition` are typed
+        // over the domain CLAIMS, and a raw hash source is a matcher, not a claim.
+        // The cast is what lets the row state the runtime rule for a caller
+        // reaching the API from untyped code.
+        assert: {
+          $or: [{ accessToken: "a-different-access-token" }, { accessToken: AT_SOURCE }],
+        } as unknown as VerifyAssert,
+      },
+    ],
+    then: [{ step: "accepts" }],
+  },
+  {
+    id: "a-raw-source-and-its-digest-claim-in-separate-branches-are-not-a-conflict",
+    title:
+      "a caller stating the raw source in one branch and the digest claim in another is answered on content",
+    rationale:
+      "A raw source and its digest claim resolve to ONE wire claim, and stating both in one matcher object is refused because only one of them could be checked. Two branches of a disjunction are two matcher objects, each compiled on its own: the raw source is checked in one and the digest in the other, and nothing is displaced. A refusal that reached across branches would forbid the one construction — accept the digest I hold OR the source I was handed — that a disjunction over a binding exists to state.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "default",
+        content: {
+          subject: "user-1",
+          expires: "1h",
+          tokenType: "test_token",
+          accessToken: AT_SOURCE,
+        },
+      },
+    ],
+    when: [
+      { step: "mint" },
+      {
+        step: "verify",
+        // ⚠ LOCAL cast, deliberate: the nested members of a `Condition` are typed
+        // over the domain CLAIMS, and a raw hash source is a matcher, not a claim.
+        assert: {
+          $or: [{ accessToken: AT_SOURCE }, { accessTokenHash: "a-digest" }],
+        } as unknown as VerifyAssert,
+      },
+    ],
+    then: [{ step: "accepts" }],
+  },
+  {
+    id: "a-matcher-left-undefined-is-never-the-one-a-refusal-names",
+    title:
+      "a caller leaving the raw source undefined beside a wrong digest claim is refused under the digest claim",
+    rationale:
+      'An `undefined` matcher is not stated (`@lindorm/match`: it means "not specified"), so it takes part in nothing — neither the predicate nor the vocabulary a refusal is reported in. The raw source and its digest claim share one wire claim, so a report that read the unstated key would name it for a failure the stated key produced, and the caller would be told a matcher they never wrote is wrong.',
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "default",
+        content: {
+          subject: "user-1",
+          expires: "1h",
+          tokenType: "test_token",
+          accessToken: AT_SOURCE,
+        },
+      },
+    ],
+    when: [
+      { step: "mint" },
+      {
+        step: "verify",
+        assert: { accessTokenHash: "a-wrong-digest", accessToken: undefined },
+      },
+    ],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: { invalid: ["accessTokenHash"] },
+      },
+    ],
+  },
+  {
+    id: "a-raw-source-beside-its-digest-claim-inside-one-branch-is-refused-as-conflicting",
+    title:
+      "a caller stating the raw source beside the digest claim inside one branch is refused as conflicting matchers",
+    rationale:
+      "The refusal of a raw source stated beside its digest claim is about the matcher OBJECT the two share, and a branch is a matcher object: inside it the two resolve to one wire claim and the second would displace the first exactly as at the root. A rule that held at the root and lapsed one level down would let the verdict turn on key order for any caller who composed their matcher.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "default",
+        content: {
+          subject: "user-1",
+          expires: "1h",
+          tokenType: "test_token",
+          accessToken: AT_SOURCE,
+        },
+      },
+    ],
+    when: [
+      { step: "mint" },
+      {
+        step: "verify",
+        // ⚠ LOCAL cast, deliberate: the nested members of a `Condition` are typed
+        // over the domain CLAIMS, and a raw hash source is a matcher, not a claim.
+        assert: {
+          $or: [{ accessToken: AT_SOURCE, accessTokenHash: "a-digest" }],
+        } as unknown as VerifyAssert,
+      },
+    ],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        code: "jwt_verify_conflicting_matchers",
+      },
+    ],
+  },
+  {
+    id: "the-temporal-window-applies-at-the-root-whatever-the-matcher-nests",
+    title:
+      "an expired token is refused even when the caller's matcher is a disjunction the token satisfies",
+    rationale:
+      "The temporal window is a bound the verifier applies, never a matcher the caller composes: `exp` is the instant on or after which the token must not be accepted for processing (RFC 7519 §4.1.4), and that obligation does not enter into any disjunction the caller writes. It is applied beside the caller's matcher at the root, so a composed matcher the token satisfies changes nothing about an expiry it has passed — a window that joined the caller's disjunction as one more member would be satisfied by whichever member the caller made true.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW - 3600,
+          iat: NOW - 7200,
+          jti: "token-1",
+        },
+      },
+    ],
+    when: [{ step: "verify", assert: { $or: [{ subject: "user-1" }] } }],
+    then: [{ step: "rejects", error: "AegisError" }],
+  },
+  {
+    id: "an-empty-disjunction-is-refused-as-a-claims-failure",
+    title: "a caller stating a disjunction with no member is refused",
+    rationale:
+      "A disjunction with no member holds for nothing, and the matcher vocabulary refuses the shape rather than deciding it (`@lindorm/match`: omit the key to place no constraint). Aegis compiles the shape through and the refusal is raised while the claims are matched, so it surfaces as a claims failure — not as an accept, which is the one answer an empty disjunction must never produce, since a caller who wrote it stated that nothing is acceptable.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "default",
+        content: { subject: "user-1", expires: "1h", tokenType: "test_token" },
+      },
+    ],
+    when: [{ step: "mint" }, { step: "verify", assert: { $or: [] } }],
+    then: [{ step: "rejects", error: "AegisDomainError", code: "claims_invalid" }],
+  },
+  {
+    id: "an-empty-negation-is-refused-under-its-own-key",
+    title: "a caller negating an empty condition is refused by every token",
+    rationale:
+      "An empty condition constrains nothing and every claim set satisfies it (`@lindorm/match`), so its negation is satisfied by none. Aegis compiles the shape through and lets the matcher decide it: the negation fails, and the refusal names the entry the caller wrote.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "default",
+        content: { subject: "user-1", expires: "1h", tokenType: "test_token" },
+      },
+    ],
+    when: [{ step: "mint" }, { step: "verify", assert: { $not: {} } }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: { invalid: ["$not"] },
+      },
+    ],
+  },
+
+  // ---------------------------------------------------------------------------
   // The RAW claims-verify door — the same options, threaded by different code.
   // ---------------------------------------------------------------------------
   {
@@ -8438,6 +8752,73 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         step: "rejects",
         error: "AegisDomainError",
         data: { invalid: ["audience", "subject"] },
+      },
+    ],
+  },
+  {
+    id: "the-static-claim-matcher-accepts-a-conjunction-every-member-of-which-holds",
+    title:
+      "a caller stating a conjunction to the static claim matcher is answered by a claim set satisfying every member",
+    rationale:
+      "The static matcher takes the same matcher argument as verify, and a matcher argument is a condition that composes. A surface that read a conjunction as a claim name would find no such claim in any set and refuse every caller who composed one, so the accepting direction shows the composition was compiled rather than named.",
+    given: [{ step: "claims", claims: { subject: "user-1", clientId: CLIENT } }],
+    when: [
+      {
+        step: "static-assert",
+        assert: { $and: [{ subject: "user-1" }, { clientId: CLIENT }] },
+      },
+    ],
+    then: [{ step: "accepts" }],
+  },
+  {
+    id: "the-static-claim-matcher-names-a-conjunction-one-member-of-which-fails",
+    title:
+      "a caller stating a conjunction to the static claim matcher is refused by a claim set failing one member, under the conjunction's own key",
+    rationale:
+      "The refusal names the TOP-LEVEL entries of the matcher argument that did not hold, and a root operator is a top-level entry of its own: the caller wrote `$and`, and `$and` is what did not hold. A conjunction fails as a whole, and its failing member is not always a single claim, so the entry the caller wrote is the one reported.",
+    given: [{ step: "claims", claims: { subject: "user-1", clientId: CLIENT } }],
+    when: [
+      {
+        step: "static-assert",
+        assert: { $and: [{ subject: "user-1" }, { clientId: "someone-else" }] },
+      },
+    ],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: { invalid: ["$and"] },
+      },
+    ],
+  },
+  {
+    id: "the-static-claim-matcher-accepts-a-disjunction-on-its-second-member",
+    title:
+      "a caller stating a disjunction to the static claim matcher is answered by a claim set satisfying only its second member",
+    rationale:
+      "A disjunction holds when any member does, and the member that holds must not have to be the first. A surface evaluating only the first member would refuse every claim set the caller admitted through the second, and would look correct on every check that names the accepted identity first.",
+    given: [{ step: "claims", claims: { subject: "user-1" } }],
+    when: [
+      {
+        step: "static-assert",
+        assert: { $or: [{ subject: "someone-else" }, { subject: "user-1" }] },
+      },
+    ],
+    then: [{ step: "accepts" }],
+  },
+  {
+    id: "the-static-claim-matcher-names-a-negation-whose-payload-matches",
+    title:
+      "a caller negating a claim matcher at the static claim matcher is refused by a claim set matching it, under the negation's own key",
+    rationale:
+      "A negation fails exactly when its payload holds, and the refusal names the entry that failed: `$not`. The claim inside the negation matched, so naming it as failing would tell the caller the opposite of what happened. The diagnosis evaluates each top-level entry against the whole claim set because a negation has no claim of its own to read.",
+    given: [{ step: "claims", claims: { subject: "user-1" } }],
+    when: [{ step: "static-assert", assert: { $not: { subject: "user-1" } } }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        data: { invalid: ["$not"] },
       },
     ],
   },

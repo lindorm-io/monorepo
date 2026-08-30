@@ -98,6 +98,35 @@ describe("Aegis", () => {
     });
   });
 
+  describe("an undefined member of a root operator", () => {
+    const mint = () =>
+      aegis.mint("default", {
+        subject: "user-1",
+        expires: "1h",
+        tokenType: "test_token",
+      });
+
+    test("should place no constraint on verify", async () => {
+      const { token } = await mint();
+
+      await expect(
+        aegis.verify(token, { $or: [undefined, { subject: "user-1" }] } as never),
+      ).resolves.toEqual(
+        expect.objectContaining({
+          claims: expect.objectContaining({ subject: "user-1" }),
+        }),
+      );
+    });
+
+    test("should still enforce the members that are stated", async () => {
+      const { token } = await mint();
+
+      await expect(
+        aegis.verify(token, { $or: [undefined, { subject: "other" }] } as never),
+      ).rejects.toThrow(expect.objectContaining({ code: "claims_invalid" }));
+    });
+  });
+
   // The issuer aegis STAMPS is the service's own — amphora's `internal` scope,
   // which is the one reader of that setting. A verify-only deployment declares
   // none, and stamps none.

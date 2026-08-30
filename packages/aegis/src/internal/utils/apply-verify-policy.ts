@@ -139,15 +139,25 @@ export const applyVerifyPolicy = ({
 
   // ⚠ Built OUTSIDE the try: a matcher the builder REFUSES (an unknown key, a
   // hash source it cannot hash) is a caller mistake with its own message. Folded
-  // into the try it becomes `claims_invalid` with an EMPTY invalid list.
+  // into the try it becomes `claims_invalid` with an EMPTY invalid list. A shape
+  // only the MATCHER refuses (an empty `$and` / `$or`, a `$not` that is not an
+  // object) is raised inside the try and surfaces as `claims_invalid` with no
+  // invalid list. pinned: scenario row
+  // `an-empty-disjunction-is-refused-as-a-claims-failure`.
+  // ⚠ `omitUndefined` HERE, not only inside the recursion: the predicate and
+  // `domainByWire` below must read ONE bag, and an undefined raw source beside
+  // its digest claim would otherwise reach the map and claim the wire name the
+  // digest compiled to. pinned: scenario row
+  // `a-matcher-left-undefined-is-never-the-one-a-refusal-names`.
   const matchers = omitUndefined(assert ?? {});
 
   const predicate = createIdentityMatchers(algorithm, matchers, nameOf);
 
   /**
    * The caller's own vocabulary, keyed by the wire name each matcher compiled to.
-   * Built from the caller's bag rather than the registry, so it needs no
-   * jose/cose branch of its own.
+   * Built from the TOP-LEVEL keys of the caller's bag rather than the registry,
+   * so it needs no jose/cose branch of its own. `validate` names top-level
+   * entries only, so nothing nested is ever looked up here.
    */
   const domainByWire = new Map<string, string>(
     Object.keys(matchers).map((key) => [matcherWireName(key, nameOf) ?? key, key]),
@@ -164,9 +174,10 @@ export const applyVerifyPolicy = ({
       // straight in the response body, and the caller stated `tokenId`, which the
       // wire spells `jti` on JOSE and `cti` on COSE. Pinned by the scenario row
       // `a-domain-refusal-names-the-claims-in-the-vocabulary-the-caller-used`.
-      // The `?? key` is the Map's `| undefined`, not a reachable branch:
-      // `createIdentityMatchers` throws on a key it cannot map, so every key
-      // `validate` reports is already in `domainByWire`.
+      // A root operator (`$and` / `$or` / `$not`) names no claim, so it has no
+      // wire name and maps to itself in `domainByWire`; every claim key
+      // `validate` reports is in the map because `createIdentityMatchers`
+      // throws on one it cannot map. The `?? key` is the Map's `| undefined`.
       data: {
         invalid: invalid?.map((key) => domainByWire.get(key) ?? key),
         format,

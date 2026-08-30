@@ -1,3 +1,4 @@
+import { Aegis } from "../../classes/Aegis.js";
 import type { AegisDomainError } from "../../errors/index.js";
 import { createHash } from "./create-hash.js";
 import { HASH_MATCHERS } from "./hash-matchers.js";
@@ -115,6 +116,151 @@ describe("createJwtValidate", () => {
   test("should throw on an unsupported value shape", () => {
     expect(() => createJwtValidate({ subject: null } as never)).toThrowError(
       /Unsupported value/,
+    );
+  });
+
+  // The root operators are `@lindorm/match`'s, and they nest: each member of
+  // `$and` / `$or` and the payload of `$not` is a condition object of its own,
+  // whose claim keys take the same value lift as the root's.
+  describe("root operators", () => {
+    test("should lift the claim keys inside every $and member", () => {
+      expect(createJwtValidate({ $and: [{ subject: "s" }, { clientId: "c" }] })).toEqual({
+        $and: [{ subject: { $eq: "s" } }, { clientId: { $eq: "c" } }],
+      });
+    });
+
+    test("should lift the claim keys inside every $or member", () => {
+      expect(createJwtValidate({ $or: [{ subject: "s" }, { subject: "t" }] })).toEqual({
+        $or: [{ subject: { $eq: "s" } }, { subject: { $eq: "t" } }],
+      });
+    });
+
+    test("should lift the claim keys inside a $not payload", () => {
+      expect(createJwtValidate({ $not: { subject: "s" } })).toEqual({
+        $not: { subject: { $eq: "s" } },
+      });
+    });
+
+    test("should lift an array-valued claim inside a branch exactly as at the root", () => {
+      expect(createJwtValidate({ $or: [{ scope: "openid" }] } as never)).toEqual({
+        $or: [{ scope: { $all: ["openid"] } }],
+      });
+    });
+
+    test("should recurse through operators nested in operators", () => {
+      expect(
+        createJwtValidate({
+          $and: [
+            { $or: [{ subject: "s" }, { $not: { subject: "t" } }] },
+            { clientId: "c" },
+          ],
+        }),
+      ).toEqual({
+        $and: [
+          { $or: [{ subject: { $eq: "s" } }, { $not: { subject: { $eq: "t" } } }] },
+          { clientId: { $eq: "c" } },
+        ],
+      });
+    });
+
+    test("should refuse an unsupported value inside a branch under its own key", () => {
+      expect(() => createJwtValidate({ $or: [{ subject: null }] } as never)).toThrowError(
+        /Unsupported value: null for key: subject/,
+      );
+    });
+
+    test("should skip an undefined value inside a branch", () => {
+      expect(createJwtValidate({ $or: [{ subject: undefined, clientId: "c" }] })).toEqual(
+        {
+          $or: [{ clientId: { $eq: "c" } }],
+        },
+      );
+    });
+  });
+});
+
+// The static door, end to end: the root operators reach `@lindorm/match`, whose
+// answer is the verdict. Where the matcher refuses the shape (an empty `$and` /
+// `$or`, a `$not` that is not an object), its own `TypeError` is what a caller
+// sees — the boundary is the matcher's, and these pin which side of it each
+// shape falls on.
+describe("Aegis.matches / Aegis.assert root operators", () => {
+  const claims = { subject: "user-1", clientId: "client-1" };
+
+  test("$and over two claims answers true when both hold", () => {
+    expect(
+      Aegis.matches(claims, { $and: [{ subject: "user-1" }, { clientId: "client-1" }] }),
+    ).toBe(true);
+  });
+
+  test("$and is refused under its own key when one member fails", () => {
+    const assert = { $and: [{ subject: "user-1" }, { clientId: "other" }] };
+
+    expect(Aegis.matches(claims, assert)).toBe(false);
+    expect(() => Aegis.assert(claims, assert)).toThrow(
+      expect.objectContaining({ code: "claims_invalid", data: { invalid: ["$and"] } }),
+    );
+  });
+
+  test("$or answers true on its second member", () => {
+    expect(
+      Aegis.matches(claims, { $or: [{ subject: "other" }, { subject: "user-1" }] }),
+    ).toBe(true);
+  });
+
+  test("$not is refused under its own key when its payload matches", () => {
+    const assert = { $not: { subject: "user-1" } };
+
+    expect(Aegis.matches(claims, assert)).toBe(false);
+    expect(() => Aegis.assert(claims, assert)).toThrow(
+      expect.objectContaining({ code: "claims_invalid", data: { invalid: ["$not"] } }),
+    );
+  });
+
+  test("$not answers true when its payload does not match", () => {
+    expect(Aegis.matches(claims, { $not: { subject: "other" } })).toBe(true);
+  });
+
+  test("an empty $or is the matcher's TypeError on both forms", () => {
+    const assert = { $or: [] };
+    const message =
+      "Operator $or requires at least one member — omit the key to place no constraint";
+
+    expect(() => Aegis.matches(claims, assert)).toThrow(new TypeError(message));
+    expect(() => Aegis.assert(claims, assert)).toThrow(new TypeError(message));
+  });
+
+  test("an undefined $or member reaches the matcher on the static door", () => {
+    const assert = { $or: [undefined, { subject: "user-1" }] } as never;
+    const message = "Cannot convert undefined or null to object";
+
+    expect(() => Aegis.matches(claims, assert)).toThrow(new TypeError(message));
+    expect(() => Aegis.assert(claims, assert)).toThrow(new TypeError(message));
+  });
+
+  test("an empty $and is the matcher's TypeError on both forms", () => {
+    const assert = { $and: [] };
+    const message =
+      "Operator $and requires at least one member — omit the key to place no constraint";
+
+    expect(() => Aegis.matches(claims, assert)).toThrow(new TypeError(message));
+    expect(() => Aegis.assert(claims, assert)).toThrow(new TypeError(message));
+  });
+
+  test("a $not that is not an object is the matcher's TypeError on both forms", () => {
+    const assert = { $not: "x" } as never;
+    const message = "Operator $not requires an object payload";
+
+    expect(() => Aegis.matches(claims, assert)).toThrow(new TypeError(message));
+    expect(() => Aegis.assert(claims, assert)).toThrow(new TypeError(message));
+  });
+
+  test("an empty $not rejects every claim set, named under its own key", () => {
+    const assert = { $not: {} };
+
+    expect(Aegis.matches(claims, assert)).toBe(false);
+    expect(() => Aegis.assert(claims, assert)).toThrow(
+      expect.objectContaining({ code: "claims_invalid", data: { invalid: ["$not"] } }),
     );
   });
 });

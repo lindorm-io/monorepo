@@ -56,4 +56,41 @@ describe("validate", () => {
       ),
     ).toThrow(expect.objectContaining({ data: { invalid: ["one", "three"] } }));
   });
+
+  // `invalid` names the TOP-LEVEL entries of the predicate. A root operator has
+  // no claim of its own to read, so the diagnosis evaluates each entry against
+  // the whole dict — a `$not` that fails is named `$not`, and a failing claim
+  // key is named under its own key.
+  test("names a failing root $not under its own key", () => {
+    expect(() =>
+      validate(
+        { one: "a", two: "b" },
+        { $not: { one: { $eq: "a" } }, two: { $eq: "b" } },
+        AegisDomainError,
+        "claims_invalid",
+      ),
+    ).toThrow(expect.objectContaining({ data: { invalid: ["$not"] } }));
+  });
+
+  test("does not name a root $and that holds beside a failing claim key", () => {
+    expect(() =>
+      validate(
+        { one: "a", two: "b" },
+        { $and: [{ one: { $eq: "a" } }, { two: { $eq: "b" } }], two: { $eq: "x" } },
+        AegisDomainError,
+        "claims_invalid",
+      ),
+    ).toThrow(expect.objectContaining({ data: { invalid: ["two"] } }));
+  });
+
+  test("does not name a root $or that a later member satisfies", () => {
+    expect(() =>
+      validate(
+        { one: "a", two: "b" },
+        { $or: [{ one: { $eq: "x" } }, { one: { $eq: "a" } }], two: { $eq: "z" } },
+        AegisDomainError,
+        "claims_invalid",
+      ),
+    ).toThrow(expect.objectContaining({ data: { invalid: ["two"] } }));
+  });
 });

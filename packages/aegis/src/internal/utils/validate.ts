@@ -40,9 +40,15 @@ export const validate = <C extends Dict = Dict>(
 ): void => {
   if (matches(dict, predicate)) return;
 
+  // `invalid` names the TOP-LEVEL entries of the predicate. Each is evaluated
+  // against the WHOLE dict, never against `{ [key]: dict[key] }`: a root
+  // operator (`$and` / `$or` / `$not`) reads the claims its members name, not a
+  // claim under its own key, and a `$not` evaluated over a one-key dict is
+  // satisfied by every claim set. pinned: validate.test.ts, "names a failing
+  // root $not under its own key".
   const invalid: Array<{ key: string; value: any }> = [];
   for (const [key, ops] of Object.entries(predicate)) {
-    if (!matches({ [key]: dict[key] }, { [key]: ops } as any)) {
+    if (!matches(dict, { [key]: ops } as never)) {
       invalid.push({ key, value: dict[key] });
     }
   }
