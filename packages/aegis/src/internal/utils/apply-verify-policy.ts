@@ -139,13 +139,6 @@ export const applyVerifyPolicy = ({
     });
   }
 
-  // ⚠ Built OUTSIDE the try: a matcher the builder REFUSES (an unknown key, a
-  // hash source it cannot hash) is a caller mistake with its own message. Folded
-  // into the try it becomes `claims_invalid` with an EMPTY invalid list. A shape
-  // only the MATCHER refuses (an empty `$and` / `$or`, a `$not` that is not an
-  // object) is raised inside the try and surfaces as `claims_invalid` with no
-  // invalid list. pinned: scenario row
-  // `an-empty-disjunction-is-refused-as-a-claims-failure`.
   // ⚠ `omitUndefined` HERE, not only inside the recursion: the predicate and
   // `domainByWire` below must read ONE bag, and an undefined raw source beside
   // its digest claim would otherwise reach the map and claim the wire name the
@@ -165,6 +158,12 @@ export const applyVerifyPolicy = ({
     Object.keys(matchers).map((key) => [matcherWireName(key, nameOf) ?? key, key]),
   );
 
+  // ⚠ The catch below owns `validate`'s own refusal ALONE: a shape only the
+  // MATCHER refuses (an empty `$and` / `$or`, a `$not` that is not an object)
+  // raises `@lindorm/match`'s `TypeError`, which passes as the caller's error.
+  // pinned: scenario rows
+  // `a-malformed-disjunction-throws-as-the-matchers-own-error` and
+  // `a-malformed-negation-throws-as-the-matchers-own-error`.
   try {
     // ⚠ The spaced lists are lifted from their wire string to the list it
     // spells before the predicate runs ({@link withSpacedArrays}): the caller's
@@ -177,7 +176,9 @@ export const applyVerifyPolicy = ({
       "claims_invalid",
     );
   } catch (err) {
-    const invalid = (err as any).data?.invalid as Array<string> | undefined;
+    if (!(err instanceof AegisDomainError) || err.code !== "claims_invalid") throw err;
+
+    const invalid = err.data?.invalid as Array<string> | undefined;
 
     throw new AegisDomainError("Invalid token", {
       code: "claims_invalid",
@@ -196,7 +197,7 @@ export const applyVerifyPolicy = ({
       // `debug` stays WIRE-spelled and carries the values. A spaced claim's
       // value is the lifted list ({@link withSpacedArrays}), not the token's
       // own string.
-      debug: { invalid: (err as any).debug?.invalid },
+      debug: { invalid: err.debug?.invalid },
       title: "Claims Invalid",
       details:
         "One or more claims (such as a verifier-supplied claim) failed the validation predicate.",

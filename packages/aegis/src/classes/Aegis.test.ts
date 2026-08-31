@@ -127,6 +127,85 @@ describe("Aegis", () => {
     });
   });
 
+  // A shape `@lindorm/match` refuses is the caller's coding error, and verify
+  // reports it as the matcher's own error, exactly as the static door does
+  // (jwt-validate.test.ts). Only a failed EVALUATION is `claims_invalid`.
+  describe("a malformed assert bag on verify", () => {
+    const mint = () =>
+      aegis.mint("default", {
+        subject: "user-1",
+        expires: "1h",
+        tokenType: "test_token",
+      });
+
+    test("should throw an empty $or as the matcher's TypeError", async () => {
+      const { token } = await mint();
+
+      await expect(aegis.verify(token, { $or: [] })).rejects.toThrow(
+        new TypeError(
+          "Operator $or requires at least one member — omit the key to place no constraint",
+        ),
+      );
+    });
+
+    test("should throw a $not that is not an object as the matcher's TypeError", async () => {
+      const { token } = await mint();
+
+      await expect(aegis.verify(token, { $not: "x" } as never)).rejects.toThrow(
+        new TypeError("Operator $not requires an object payload"),
+      );
+    });
+
+    test("should throw an empty $and as the matcher's TypeError", async () => {
+      const { token } = await mint();
+
+      await expect(aegis.verify(token, { $and: [] })).rejects.toThrow(
+        new TypeError(
+          "Operator $and requires at least one member — omit the key to place no constraint",
+        ),
+      );
+    });
+
+    test("should throw a null $and member as the matcher's TypeError", async () => {
+      const { token } = await mint();
+
+      await expect(aegis.verify(token, { $and: [null] } as never)).rejects.toThrow(
+        new TypeError("Cannot convert undefined or null to object"),
+      );
+    });
+
+    test("should throw an empty $or nested under a claim as the matcher's TypeError naming the wire path", async () => {
+      const { token } = await mint();
+
+      await expect(aegis.verify(token, { subject: { $or: [] } })).rejects.toThrow(
+        new TypeError(
+          "Operator $or on [ sub ] requires at least one member — omit the key to place no constraint",
+        ),
+      );
+    });
+
+    test("should throw a non-object $not nested under a claim as the matcher's TypeError naming the wire path", async () => {
+      const { token } = await mint();
+
+      await expect(
+        aegis.verify(token, { subject: { $not: "x" } } as never),
+      ).rejects.toThrow(
+        new TypeError("Operator $not on [ sub ] requires an object payload"),
+      );
+    });
+
+    test("should refuse a well-formed failing bag as claims_invalid naming the key", async () => {
+      const { token } = await mint();
+
+      await expect(aegis.verify(token, { subject: "other" })).rejects.toThrow(
+        expect.objectContaining({
+          code: "claims_invalid",
+          data: expect.objectContaining({ invalid: ["subject"] }),
+        }),
+      );
+    });
+  });
+
   // The issuer aegis STAMPS is the service's own — amphora's `internal` scope,
   // which is the one reader of that setting. A verify-only deployment declares
   // none, and stamps none.

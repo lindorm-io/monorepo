@@ -185,7 +185,9 @@ export type KeyFixture =
  * The aegis error classes, as STRINGS so a row stays Gherkin-convertible. The
  * interpreter maps each to the real class and asserts `instanceof`. Assert the
  * broadest class the contract actually promises: `AegisError` is what a consumer
- * catches, so it is the class the package owes at every door.
+ * catches, so it is the class the package owes at every door. `TypeError` is the
+ * class a malformed matcher bag throws as itself: `@lindorm/match`'s refusal of
+ * the shape, not an aegis verdict about the token.
  */
 export type ErrorClassName =
   | "AegisError"
@@ -200,7 +202,8 @@ export type ErrorClassName =
   | "CweError"
   | "JoseError"
   | "CoseError"
-  | "LindormError";
+  | "LindormError"
+  | "TypeError";
 
 /** The claims-bearing / opaque signing namespaces (`aegis.<kit>.sign`). */
 export type SignKit = "jwt" | "cwt" | "jws" | "cws";
@@ -6891,10 +6894,11 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     then: [{ step: "rejects", error: "AegisError" }],
   },
   {
-    id: "an-empty-disjunction-is-refused-as-a-claims-failure",
-    title: "a caller stating a disjunction with no member is refused",
+    id: "a-malformed-disjunction-throws-as-the-matchers-own-error",
+    title:
+      "a caller stating a disjunction with no member is answered with the matcher's own error",
     rationale:
-      "A disjunction with no member holds for nothing, and the matcher vocabulary refuses the shape rather than deciding it (`@lindorm/match`: omit the key to place no constraint). Aegis compiles the shape through and the refusal is raised while the claims are matched, so it surfaces as a claims failure — not as an accept, which is the one answer an empty disjunction must never produce, since a caller who wrote it stated that nothing is acceptable.",
+      "A disjunction with no member is not a condition a token can satisfy or fail: the matcher vocabulary refuses the shape outright rather than deciding it (`@lindorm/match`: omit the key to place no constraint), so it is the caller's coding error and says nothing about the token. Aegis reports it as itself — the matcher's `TypeError`, on `verify` and on the static door alike — because a coding error dressed as a claims verdict sends an operator to the token when the fault is in the call. Only a failed evaluation is `claims_invalid`.",
     given: [
       {
         step: "token",
@@ -6904,7 +6908,32 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       },
     ],
     when: [{ step: "mint" }, { step: "verify", assert: { $or: [] } }],
-    then: [{ step: "rejects", error: "AegisDomainError", code: "claims_invalid" }],
+    then: [{ step: "rejects", error: "TypeError" }],
+  },
+  {
+    id: "a-malformed-negation-throws-as-the-matchers-own-error",
+    title:
+      "a caller negating a value that is not a condition is answered with the matcher's own error",
+    rationale:
+      "A negation takes a condition, so a `$not` whose payload is not an object states nothing a token can be tested against; `@lindorm/match` refuses the shape rather than answering it, which makes it the caller's coding error and never a verdict about the token. Aegis reports it as itself — the matcher's `TypeError`, on `verify` and on the static door alike. Only a failed evaluation is `claims_invalid`.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "default",
+        content: { subject: "user-1", expires: "1h", tokenType: "test_token" },
+      },
+    ],
+    when: [
+      { step: "mint" },
+      {
+        step: "verify",
+        // ⚠ LOCAL cast, deliberate: the shape is the one the type forbids, and
+        // the row states what the door answers when a caller writes it anyway.
+        assert: { $not: "x" } as unknown as VerifyAssert,
+      },
+    ],
+    then: [{ step: "rejects", error: "TypeError" }],
   },
   {
     id: "an-empty-negation-is-refused-under-its-own-key",

@@ -454,7 +454,7 @@ The JOSE guards decide on the **wire grammar** — segment count plus the header
 
 ⚠ These are **wire-family** guards — they say which kit `verify` would select, not whether the token carries claims. A `jws` / `cws` passes `isJose` / `isCose` and verifies to an EMPTY claims set. To route a credential between local verification and introspection, use [`isClaimsBearingToken`](#isclaimsbearingtoken--verify-locally-or-introspect).
 
-**`assert` is verify's claim checking, without the signature.** It takes the same `DomainAssert` matcher argument as [`aegis.verify`](#verify-assert--options), applied to any flat, domain-keyed claim dict — a set of claims that arrived some other way (an introspection response, a cached credential). `matches` returns the answer, `assert` is the throwing layer over it and names every failing top-level key (`claims_invalid`) — a root `$and` / `$or` / `$not` is named by its own key. Root and nested `$and` / `$or` / `$not` are honoured here as on `verify`, and operator semantics (an empty `$or`, a `$not` that is not an object) are `@lindorm/match`'s. One vocabulary, so a **scalar** against an array-valued claim (`audience`, `scope`, `authMethods`, `roles`, `permissions`, `groups`, `entitlements`) means CONTAINS, not equals:
+**`assert` is verify's claim checking, without the signature.** It takes the same `DomainAssert` matcher argument as [`aegis.verify`](#verify-assert--options), applied to any flat, domain-keyed claim dict — a set of claims that arrived some other way (an introspection response, a cached credential). `matches` returns the answer, `assert` is the throwing layer over it and names every failing top-level key (`claims_invalid`) — a root `$and` / `$or` / `$not` is named by its own key. Root and nested `$and` / `$or` / `$not` are honoured here as on `verify`. A bag the matcher refuses (an empty `$or` / `$and`, a `$not` that is not an object) throws as the matcher's own `TypeError`, on `verify` and the static doors alike; only a failed evaluation is `claims_invalid`. One vocabulary, so a **scalar** against an array-valued claim (`audience`, `scope`, `authMethods`, `roles`, `permissions`, `groups`, `entitlements`) means CONTAINS, not equals:
 
 ```typescript
 Aegis.matches(
@@ -1071,8 +1071,10 @@ how the check runs.**
   `DomainAssert` — the same vocabulary less the hash-derive inputs — drives the
   standalone [`Aegis.matches` / `Aegis.assert`](#static-helpers). The root
   operators `$and` / `$or` / `$not` are honoured at the root and nested, on this
-  door and on the static one alike; what an operator means (an empty `$or`, a
-  `$not` that is not an object) is `@lindorm/match`'s to decide.
+  door and on the static one alike. A bag the matcher refuses (an empty `$or` /
+  `$and`, a `$not` that is not an object) throws as the matcher's own
+  `TypeError`, on `verify` and the static doors alike; only a failed evaluation
+  is `claims_invalid`.
 - **`options`** (`VerifyOptions`) — the verify KNOBS. ⚠ Not yet uniform across the
   two wires: see [wire parity](#wire-parity-of-verifyoptions) below.
 - **`options.critical`** — the header parameters the CALLER takes responsibility

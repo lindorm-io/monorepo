@@ -129,7 +129,7 @@ const KEY_FIXTURES: Record<KeyFixture, IKryptos> = {
   "rsa-enc": TEST_RSA_KEY_ENC,
 };
 
-const ERROR_CLASSES: Record<ErrorClassName, typeof LindormError> = {
+const ERROR_CLASSES: Record<ErrorClassName, typeof LindormError | ErrorConstructor> = {
   AegisError,
   AegisDomainError,
   AegisKeyError,
@@ -143,6 +143,7 @@ const ERROR_CLASSES: Record<ErrorClassName, typeof LindormError> = {
   JoseError,
   CoseError,
   LindormError,
+  TypeError,
 };
 
 export type ScenarioContext = {
