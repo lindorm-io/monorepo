@@ -26,16 +26,12 @@ import {
 MockDate.set(new Date(DEFAULT_CLOCK));
 
 /**
- * The KNOB MATRIX — the second generated matrix of the conformance suite, and
- * the answer to a measured problem rather than a hypothetical one.
+ * The KNOB MATRIX — the second generated matrix of the conformance suite.
  *
  * Every option this package takes is threaded BY HAND into the call that
  * consumes it, once per wire and once per verb. A field left out of one of those
  * forwards is invisible: the compiler sees a well-typed object literal, and the
  * caller sees no error, because a dropped option does not fail — it does nothing.
- * Mutating the COSE verify forward one line at a time showed three knobs
- * (`currentDate`, `maxTokenAge`, `verifyAuthTime`) that could be deleted outright
- * with the entire suite still green.
  *
  * A row here therefore asserts something no conformance row does: that ONE OPTION
  * IS READ. It is proved by DIFFERENCE — the same call is made twice, once with

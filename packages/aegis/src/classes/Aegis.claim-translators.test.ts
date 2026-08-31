@@ -85,6 +85,46 @@ describe("Aegis — the public claim translators", () => {
     );
   });
 
+  // An empty member joins to nothing, so the wire would spell a shorter list —
+  // aegis policy at mint (RFC 6749 §3.3).
+  test("refuses an empty spaced member rather than join it", () => {
+    const write = () => Aegis.toWire({ scope: [""] });
+
+    expect(write).toThrow(AegisDomainError);
+    expect(write).toThrow(
+      expect.objectContaining({
+        code: "claim_structure_invalid",
+        data: {
+          claim: "scope",
+          invalid: [{ key: "scope[0]", message: 'Member "scope[0]" must not be empty' }],
+        },
+      }) as unknown as Error,
+    );
+  });
+
+  // A member outside the `scope-token` production has no spelling on the wire —
+  // aegis policy at mint (RFC 6749 §3.3).
+  test("refuses a spaced member outside the scope-token production rather than join it", () => {
+    const write = () => Aegis.toWire({ scope: ['re"ad'] });
+
+    expect(write).toThrow(AegisDomainError);
+    expect(write).toThrow(
+      expect.objectContaining({
+        code: "claim_structure_invalid",
+        data: {
+          claim: "scope",
+          invalid: [
+            {
+              key: "scope[0]",
+              message:
+                'Member "scope[0]" must contain only scope-token characters (RFC 6749 §3.3)',
+            },
+          ],
+        },
+      }) as unknown as Error,
+    );
+  });
+
   // One refusal carries every faulty member at its own index, in member order.
   test("lists every faulty spaced member at its own index in one refusal", () => {
     const write = () =>

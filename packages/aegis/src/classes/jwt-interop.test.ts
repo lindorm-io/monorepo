@@ -134,7 +134,6 @@ describe("JWT interop: aegis <-> jsonwebtoken", () => {
 
       expect(result.iss).toBe(ISSUER);
       expect(result.sub).toBe(SUBJECT);
-      // token_type is no longer a claim; jsonwebtoken verify doesn't expose header
       expect(jsonwebtoken.decode(token, { complete: true })?.header.typ).toBe(
         "application/at+jwt",
       );

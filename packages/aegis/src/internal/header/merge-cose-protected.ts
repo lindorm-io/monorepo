@@ -29,7 +29,7 @@ import { coseWireKey } from "./header-registry.js";
  * fragment, `crit: ["alg"]` refuses a message whose protected bucket does carry
  * `alg`, while the JOSE twin mints the same header.
  *
- * ⚠ DO NOT READ THE CHECK AS UNREACHABLE AND DELETE IT. `crit: ["alg"]` is now
+ * ⚠ DO NOT READ THE CHECK AS UNREACHABLE AND DELETE IT. `crit: ["alg"]` is
  * refused upstream by the eligibility gate, but what this call catches is the case
  * that gate says nothing about: an ELIGIBLE member whose VALUE the bucket does not
  * carry — `crit: ["oid"]` with `oid` absent or empty. Reachable from every COSE

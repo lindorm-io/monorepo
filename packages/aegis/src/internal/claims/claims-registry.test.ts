@@ -231,7 +231,7 @@ type FrozenDomainClaim = keyof typeof FROZEN_DOMAIN_CLAIM_KEYS;
 /**
  * The REVERSE binding, enforced by the compiler: add a claim to `DomainClaims`
  * without freezing it above and `UnmarkedDomainClaim` stops being `never`, so
- * this assignment no longer accepts `true` and the build fails. Without it the
+ * this assignment refuses `true` and the build fails. Without it the
  * frozen table could only ever catch claims it already knows about — which is
  * how a table ends up asserting itself.
  */

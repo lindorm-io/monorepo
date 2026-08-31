@@ -10,21 +10,6 @@ import { Aegis } from "./Aegis.js";
 /**
  * WHAT AN RFC 7800 `cnf` ACTUALLY SAYS ON EACH WIRE.
  *
- * ⚠⚠ WHAT WAS MEASURED BEFORE THIS FILE, and it is why the file exists. `cnf` was
- * the only one of the six structured claims with NO JOSE byte pin at all:
- *   - COSE had a real one — `classes/cose-claims-encoding.test.ts` reads claim
- *     label 8 and member label 3 out of raw `cbor2` and asserts the JOSE spelling
- *     is gone — but it pins ONE member. Label 1, the embedded COSE_Key, was
- *     unpinned on the wire.
- *   - JOSE had only `classes/JwtKit.test.ts`'s "confirmation claim (wire)" block,
- *     which reads the payload back through `JwtKit.decode` — aegis's OWN decoder —
- *     and snapshots an alphabetically sorted object. That is order-insensitive and
- *     self-consistent by construction, and neither of its two snapshots contains a
- *     `jwk` member at all.
- * So a claim carrying a proof-of-possession binding — the one claim whose whole
- * purpose is that a THIRD party can check it — was held on JOSE by a round trip
- * through the package that wrote it.
- *
  * ⛔ EVERY ASSERTION HERE GOES THROUGH THE INDEPENDENT INSPECTOR
  * (`__fixtures__/inspect-token.ts` — raw `cbor2` and base64url, importing nothing
  * from `src/internal/` or `src/classes/`). Reading the token back through aegis's
@@ -210,12 +195,7 @@ describe("the confirmation claim on the wire", () => {
     // ⛔⛔ THE REGRESSION THIS PINS. `jkt` is what every RFC and every other
     // library calls the thumbprint, so a caller writing it into the DOMAIN bag is
     // the likely mistake, not an exotic one — and `ConfirmationClaim` is
-    // `ConfirmationClaimMembers & Dict`, so it compiles clean. With the
-    // reservation made only by ARRIVING members, `jkt` alone had nothing to
-    // collide with: it fell into the verbatim tail, reached the wire under its own
-    // key with the RFC 7638 32-byte grammar never run (that rule reads the DOMAIN
-    // name), and aegis minted `cnf: { jkt: "" }` — a token its OWN verifier then
-    // refused `confirmation_binds_no_key`.
+    // `ConfirmationClaimMembers & Dict`, so it compiles clean.
     //
     // ⚠ ALONE is the whole point. The declared `thumbprint` is absent here.
     await expect(mint("jwt", { jkt: "abc" })).rejects.toMatchObject({
@@ -264,10 +244,6 @@ describe("the confirmation claim on the wire", () => {
     // name. Carried verbatim it lands on `confirmation.thumbprint`, the exact slot
     // `internal/utils/apply-verify-policy.ts` reads as the bound thumbprint, so a
     // stranger's token would drive the DPoP gate through a name no RFC defines.
-    //
-    // ⭐ What genuinely improved beside it: at HEAD `{ jkt, thumbprint }` let the
-    // look-alike WIN — the old decoder preferred the domain spelling, returning
-    // `thumbprint: "evil"` and DISCARDING the real `jkt`. Both are refused now.
     const signed = await aegis.jwt.sign(
       {
         iss: ISSUER,
@@ -483,7 +459,7 @@ describe("the confirmation claim on the wire", () => {
     });
 
     // The CONTROL: a REAL thumbprint alongside the same key id still fails closed
-    // at the COSE guard, which is the behaviour the null member was slipping past.
+    // at the COSE guard.
     await expect(mint("cwt", { thumbprint: JKT, keyId: KID })).rejects.toMatchObject({
       name: "CoseError",
       code: "cose_cnf_unsupported",

@@ -133,7 +133,9 @@ const contextFor = (profile: TokenProfile, override?: SignContext): SignContext 
     if (rule.rule !== "requiredWhen") continue;
 
     for (const key of rule.needs) {
-      if (key in context) continue;
+      // `Object.hasOwn`, never `in`: `needs` is caller data — see
+      // `src/internal/profiles/enforce-policy.ts#!Object.hasOwn(context, key)`.
+      if (Object.hasOwn(context, key)) continue;
       context[key] = false;
     }
   }

@@ -331,6 +331,106 @@ describe("domainToJose — content -> wire mapping", () => {
     expect(() => domainToJose({ scope: ["a  b"] })).toThrow(refusal);
   });
 
+  // Every member is held to the `scope-token` production at mint — aegis policy
+  // (RFC 6749 §3.3). One entry per member, the space message when SP is present
+  // and the character message otherwise; the boundary tests below pin each edge
+  // of the three ranges by code point.
+  const characterRefusal = expect.objectContaining({
+    code: "claim_structure_invalid",
+    data: {
+      claim: "scope",
+      invalid: [
+        {
+          key: "scope[0]",
+          message:
+            'Member "scope[0]" must contain only scope-token characters (RFC 6749 §3.3)',
+        },
+      ],
+    },
+  }) as unknown as Error;
+
+  const spaceRefusal = expect.objectContaining({
+    code: "claim_structure_invalid",
+    data: {
+      claim: "scope",
+      invalid: [
+        { key: "scope[0]", message: 'Member "scope[0]" must not contain a space' },
+      ],
+    },
+  }) as unknown as Error;
+
+  test("should refuse an empty spaced member", () => {
+    expect(() => domainToJose({ scope: [""] })).toThrow(
+      expect.objectContaining({
+        code: "claim_structure_invalid",
+        data: {
+          claim: "scope",
+          invalid: [{ key: "scope[0]", message: 'Member "scope[0]" must not be empty' }],
+        },
+      }) as unknown as Error,
+    );
+  });
+
+  test("refuses %x20 (SP) — below the first range", () => {
+    expect(() => domainToJose({ scope: ["a\x20b"] })).toThrow(spaceRefusal);
+  });
+
+  test("admits %x21 — first range", () => {
+    expect(domainToJose({ scope: ["\x21"] })).toEqual({ scope: "!" });
+  });
+
+  test("refuses %x22 — the gap between %x21 and %x23", () => {
+    expect(() => domainToJose({ scope: ["a\x22b"] })).toThrow(characterRefusal);
+  });
+
+  test("admits %x23 — second range starts", () => {
+    expect(domainToJose({ scope: ["\x23"] })).toEqual({ scope: "#" });
+  });
+
+  test("admits %x5B — second range ends", () => {
+    expect(domainToJose({ scope: ["\x5B"] })).toEqual({ scope: "[" });
+  });
+
+  test("refuses %x5C — the gap between %x5B and %x5D", () => {
+    expect(() => domainToJose({ scope: ["a\x5Cb"] })).toThrow(characterRefusal);
+  });
+
+  test("admits %x5D — third range starts", () => {
+    expect(domainToJose({ scope: ["\x5D"] })).toEqual({ scope: "]" });
+  });
+
+  test("admits %x7E — third range ends", () => {
+    expect(domainToJose({ scope: ["\x7E"] })).toEqual({ scope: "~" });
+  });
+
+  test("refuses %x7F — above the last range", () => {
+    expect(() => domainToJose({ scope: ["a\x7Fb"] })).toThrow(characterRefusal);
+  });
+
+  test("refuses %x0A (LF) — below the first range", () => {
+    expect(() => domainToJose({ scope: ["read\n"] })).toThrow(characterRefusal);
+  });
+
+  test("refuses %x09 (TAB) — below the first range, not a space", () => {
+    expect(() => domainToJose({ scope: ["read\tall"] })).toThrow(characterRefusal);
+  });
+
+  test("refuses %x0D (CR) — below the first range, not a space", () => {
+    expect(() => domainToJose({ scope: ["read\r"] })).toThrow(characterRefusal);
+  });
+
+  test("refuses an astral code point — outside every range", () => {
+    expect(() => domainToJose({ scope: ["😀"] })).toThrow(characterRefusal);
+  });
+
+  test("should refuse a spaced member carrying a non-ASCII code point", () => {
+    expect(() => domainToJose({ scope: ["läs"] })).toThrow(characterRefusal);
+  });
+
+  test("should report a spaced member carrying both SP and a double quote once, as a space fault", () => {
+    expect(() => domainToJose({ scope: ['a "b'] })).toThrow(spaceRefusal);
+  });
+
   // Entries follow the members' own order whichever kind each fault is, so a
   // caller repairs positions, not a sorted bag.
   test("should list interleaved faults of both kinds in member order", () => {
@@ -348,6 +448,33 @@ describe("domainToJose — content -> wire mapping", () => {
             { key: "scope[2]", message: 'Member "scope[2]" must be a string' },
             { key: "scope[3]", message: 'Member "scope[3]" must not contain a space' },
             { key: "scope[5]", message: 'Member "scope[5]" must be a string' },
+          ],
+        },
+      }) as unknown as Error,
+    );
+  });
+
+  // Each member records the first check it fails and nothing else, so a list
+  // faulting in every way yields one entry per faulty member, at its index.
+  test("should list one entry per faulty spaced member across all four fault kinds in member order", () => {
+    expect(() =>
+      domainToJose({
+        scope: ["", "a b", 'c"', "ok", 7] as unknown as Array<string>,
+      }),
+    ).toThrow(
+      expect.objectContaining({
+        code: "claim_structure_invalid",
+        data: {
+          claim: "scope",
+          invalid: [
+            { key: "scope[0]", message: 'Member "scope[0]" must not be empty' },
+            { key: "scope[1]", message: 'Member "scope[1]" must not contain a space' },
+            {
+              key: "scope[2]",
+              message:
+                'Member "scope[2]" must contain only scope-token characters (RFC 6749 §3.3)',
+            },
+            { key: "scope[4]", message: 'Member "scope[4]" must be a string' },
           ],
         },
       }) as unknown as Error,

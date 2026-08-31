@@ -1012,6 +1012,9 @@ const encodeIfReadable = (
   return decodeValue(member, encoded, nameOf, probe) === undefined ? undefined : encoded;
 };
 
+// RFC 6749 §3.3
+const SCOPE_TOKEN = /^[\x21\x23-\x5B\x5D-\x7E]+$/;
+
 // How an array claim reaches the JOSE-shaped wire, per the codec's own policy —
 // the write twin of {@link decodeArray}, and the ONE place the spaced join
 // happens.
@@ -1023,15 +1026,19 @@ const encodeIfReadable = (
 // to `""`; whether that empty string rides is the registry's `whenEmpty` column
 // at emission (`internal/utils/normalise-claims.ts`), never this arm's to erase.
 //
-// ⚠ A MEMBER CONTAINING A SPACE IS REFUSED, NOT JOINED — aegis policy at mint
-// (RFC 6749 §3.3). Joined, it is bytes identical to two members, so the read
-// side would report a list the caller never stated; a non-string member is
-// refused with it, since `join` would spell it as text the reader takes for a
-// scope-token. Each fault records ONE entry at the member's index and the whole
-// claim returns `undefined`, exactly as {@link walkElements} refuses a
-// collection; {@link encodeClaim}'s `refuseIfInvalid` raises it.
+// ⚠ A MEMBER THAT IS NOT A `scope-token` IS REFUSED, NOT JOINED — aegis policy
+// at mint (RFC 6749 §3.3). Joined, a member containing a space is bytes
+// identical to two members and an empty member to none, so the read side would
+// report a list the caller never stated; a non-string member is refused with
+// them, since `join` would spell it as text the reader takes for a scope-token,
+// and so is any other code point outside {@link SCOPE_TOKEN}. Each fault
+// records ONE entry at the member's index — the first check that fails — and
+// the whole claim returns `undefined`, exactly as {@link walkElements} refuses
+// a collection; {@link encodeClaim}'s `refuseIfInvalid` raises it.
 // pinned: translate.test.ts#should refuse a spaced member containing a space
-// rather than join it into two members.
+// rather than join it into two members, translate.test.ts#should refuse an
+// empty spaced member, translate.test.ts#refuses %x22 — the gap between %x21
+// and %x23.
 //
 // ⚠ A NON-ARRAY VALUE RIDES UNTOUCHED, like every scalar encode arm:
 // `encodeIfReadable`'s probe decides whether the read side would keep it, so an
@@ -1062,12 +1069,30 @@ const encodeArray = (
           return;
         }
 
+        if (member === "") {
+          context.invalid.push({
+            key: at.path,
+            message: `Member "${at.path}" must not be empty`,
+          });
+
+          return;
+        }
+
         if (member.includes(" ")) {
           context.invalid.push({
             key: at.path,
             message: `Member "${at.path}" must not contain a space`,
           });
+
+          return;
         }
+
+        if (SCOPE_TOKEN.test(member)) return;
+
+        context.invalid.push({
+          key: at.path,
+          message: `Member "${at.path}" must contain only scope-token characters (RFC 6749 §3.3)`,
+        });
       });
 
       return context.invalid.length === faults ? value.join(" ") : undefined;

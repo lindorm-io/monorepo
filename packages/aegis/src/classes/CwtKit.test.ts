@@ -122,10 +122,10 @@ describe("CwtKit (COSE_Sign1, asymmetric)", () => {
   });
 
   describe("ML-DSA is official COSE (RFC 9964)", () => {
-    // ML-DSA (post-quantum) is asymmetric — a valid COSE_Sign1 key — and now
+    // ML-DSA (post-quantum) is asymmetric — a valid COSE_Sign1 key — and
     // IANA-registered (RFC 9964, ML-DSA-44 = -48). A plain (non-proprietary) CWT
     // sign is accepted and round-trips; no proprietary flag is required. The gate
-    // runs inside `signCwt`; the enc-side (AES-CBC-HMAC) gate still covers the
+    // runs inside `signCwt`; the enc-side (AES-CBC-HMAC) gate covers the
     // proprietary mechanism.
     const mldsa = KryptosKit.generate.sig.akp({ algorithm: "ML-DSA-44" });
 

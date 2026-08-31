@@ -5,12 +5,11 @@ import type { VerifyOptions } from "../../types/index.js";
  *
  * `default` is ALWAYS a `{ jose, cose }` pair, even where the two agree. The
  * verbosity IS the mechanism: a scalar shorthand would let a new option be added
- * with one value and no thought given to the second wire, which is exactly how
- * the current divergences arrived.
+ * with one value and no thought given to the second wire.
  */
 export type ParityCase<T> =
   | {
-      /** Read on both wires — the target state for every row. */
+      /** Read on both wires. */
       wires: "both";
       default: { jose: T; cose: T };
       /**
@@ -39,8 +38,8 @@ export type VerifyOptionParity = {
  * wires read each verify knob and what it resolves to when the caller says
  * nothing.
  *
- * Why it exists: the option surface is threaded BY HAND at four claims-verify
- * sites, each re-deriving which of the thirteen fields it forwards. A dropped
+ * Why it exists: the option surface is threaded BY HAND at every claims-verify
+ * site, each re-deriving which `VerifyOptions` fields it forwards. A dropped
  * option is accepted and ignored rather than rejected, so the drift is invisible
  * to both the compiler and the caller. This table makes the contract a value:
  * `satisfies VerifyOptionParity` binds it to the type in both directions.
@@ -136,9 +135,7 @@ export const VERIFY_OPTION_PARITY = {
  * exactly `keyof VerifyOptions` and the assertion below is sound.
  *
  * Public because a consumer splitting a flat matcher-and-knob bag has to know
- * which keys are knobs, and a hand-copied list drifts: pylon's copy misrouted
- * `tokenType`/`accessToken`/`authCode`/`authState` after they moved to
- * `DomainAssert`, and misrouted `clockTolerance` the other way.
+ * which keys are knobs, and a hand-copied list drifts.
  */
 export const VERIFY_OPTION_KEYS = Object.keys(VERIFY_OPTION_PARITY) as ReadonlyArray<
   keyof VerifyOptions

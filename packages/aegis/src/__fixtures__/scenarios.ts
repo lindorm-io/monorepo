@@ -102,8 +102,8 @@ import type {
  * naming why; there is no blanket cast in the interpreter.
  *
  * ⚠ An outcome asserts on the error CLASS (plus optional `data`), NEVER on the
- * `code` string. Callers branch with `instanceof`; codes are diagnostic text and
- * the domain-layer ones are being renamed. `data` is the stable discriminator.
+ * `code` string. Callers branch with `instanceof`; codes are diagnostic text.
+ * `data` is the stable discriminator.
  *
  * ⚠ WHEN a row pins `data`: only where the rejection is OBSERVABLE today — i.e.
  * on a GREEN rejecting row, whose `data` was read off the real error. A rejecting
@@ -122,14 +122,8 @@ import type {
  * DOMAIN capability, and a capability of aegis is a capability on every wire
  * aegis speaks unless a specification forbids it — so a row runs on EVERY wire
  * and the only way to run on fewer is to say so in {@link Scenario.unsupported},
- * with the reason.
- *
- * That is the inversion of what this table did first: a row named a concrete kit
- * (`kit: "jwt"`) or a concrete `format`, which pinned it to one wire SILENTLY,
- * and the twin on the other wire existed only if somebody remembered to write
- * it. SIX rows were hand-written `-on-the-cose-wire` copies of another row, and
- * nothing said which of the remaining rows SHOULD have had one. Absence read
- * identically to deliberate omission, which is how a wire loses a rule.
+ * with the reason. Absence reading identically to deliberate omission is how a
+ * wire loses a rule.
  *
  * A row may still name a concrete wire — some capabilities genuinely are
  * one-wire (a raw COSE label assertion, a JOSE-only header parameter). It then
@@ -1702,13 +1696,10 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       },
     ],
     when: [{ step: "verify" }],
-    // ⚠⚠ `member` IS WHAT MAKES THIS ROW ATTRIBUTABLE, and `format` alone was not.
-    // Every refusal this gate throws stamps `data: { format }` — including
-    // `dpop_token_not_bound`, which fires on the SAME token when the verdict is
-    // absent and a proof is supplied. Measured: with the confirmation half of the
-    // predicate deleted, a row pinning `format` alone stayed GREEN on that other
-    // refusal. `member` names WHICH value was named-but-unsatisfied, so the six
-    // rows in this group are told apart from each other and from their neighbour.
+    // `member` attributes the refusal to the confirmation: `format` alone is
+    // stamped on every refusal this gate throws, `dpop_token_not_bound` included,
+    // which fires on the same token when the verdict is absent and a proof is
+    // supplied.
     then: [
       {
         step: "rejects",
@@ -1751,15 +1742,11 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     // (`src/internal/utils/verify-dpop-proof.ts#if (thumbprint !== expectedThumbprint) {`).
     // So `format` is precisely the discriminator between a refusal that judged
     // the CONFIRMATION and one that judged the presenter's PROOF, which is what
-    // this row and the one below it are about — and it is what made both of them
-    // red for as long as the vouch was honoured as the last word on this path.
-    // ⚠⚠ `member` IS WHAT MAKES THIS ROW ATTRIBUTABLE, and `format` alone was not.
-    // Every refusal this gate throws stamps `data: { format }` — including
-    // `dpop_token_not_bound`, which fires on the SAME token when the verdict is
-    // absent and a proof is supplied. Measured: with the confirmation half of the
-    // predicate deleted, a row pinning `format` alone stayed GREEN on that other
-    // refusal. `member` names WHICH value was named-but-unsatisfied, so the six
-    // rows in this group are told apart from each other and from their neighbour.
+    // this row and the one below it are about.
+    // `member` attributes the refusal to the confirmation: `format` alone is
+    // stamped on every refusal this gate throws, `dpop_token_not_bound` included,
+    // which fires on the same token when the verdict is absent and a proof is
+    // supplied.
     then: [
       {
         step: "rejects",
@@ -1807,17 +1794,11 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     ],
     // The `data` pin is what makes this row about the CONFIRMATION rather than
     // about the proof — see the note on the vouch row above for why `format` is
-    // the discriminator and why it is read rather than guessed. It was red on a
-    // refusal that DID fire: with a proof supplied, the empty thumbprint reached
-    // `verifyDpopProof` and failed the comparison as `dpop_thumbprint_mismatch`,
-    // naming the presenter's key as the problem and carrying no `data` at all.
-    // ⚠⚠ `member` IS WHAT MAKES THIS ROW ATTRIBUTABLE, and `format` alone was not.
-    // Every refusal this gate throws stamps `data: { format }` — including
-    // `dpop_token_not_bound`, which fires on the SAME token when the verdict is
-    // absent and a proof is supplied. Measured: with the confirmation half of the
-    // predicate deleted, a row pinning `format` alone stayed GREEN on that other
-    // refusal. `member` names WHICH value was named-but-unsatisfied, so the six
-    // rows in this group are told apart from each other and from their neighbour.
+    // the discriminator and why it is read rather than guessed.
+    // `member` attributes the refusal to the confirmation: `format` alone is
+    // stamped on every refusal this gate throws, `dpop_token_not_bound` included,
+    // which fires on the same token when the verdict is absent and a proof is
+    // supplied.
     then: [
       {
         step: "rejects",
@@ -1836,12 +1817,6 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     rationale:
       "By including a `cnf` claim the issuer declares that the presenter possesses a particular key, and that the recipient can cryptographically confirm it (RFC 7800 §3). A confirmation object with no member declares exactly that and names nothing to confirm, so there is no binding a verifier could check and no honest way to proceed. Reading it as an absent confirmation inverts the security property: the emptiest possible declaration would buy the widest possible acceptance, and an attacker who can strip the members of a confirmation turns a sender-constrained token into one anybody holding a copy may present.",
     given: [
-      // ⚠⚠ `cnf: {}` — THE OTHER VALUE THE VERDICT JUDGES, and the one that had
-      // no row at all. The three sibling rows above all carry `cnf: { jkt: "" }`,
-      // so the `thumbprint` half of the predicate was pinned three times over and
-      // the `confirmation` half not once: deleting it from the check left the whole
-      // suite green while `cnf: {}` verified as a plain bearer token.
-      //
       // A FOREIGN token: `mint` refuses an empty confirmation on the way out, so
       // this shape can only be presented by somebody else's producer.
       {
@@ -1863,13 +1838,10 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     // `data: { format }` like every sibling refusal in this gate — it is what
     // makes the refusal attributable to the CONFIRMATION rather than to anything
     // the presenter did.
-    // ⚠⚠ `member` IS WHAT MAKES THIS ROW ATTRIBUTABLE, and `format` alone was not.
-    // Every refusal this gate throws stamps `data: { format }` — including
-    // `dpop_token_not_bound`, which fires on the SAME token when the verdict is
-    // absent and a proof is supplied. Measured: with the confirmation half of the
-    // predicate deleted, a row pinning `format` alone stayed GREEN on that other
-    // refusal. `member` names WHICH value was named-but-unsatisfied, so the six
-    // rows in this group are told apart from each other and from their neighbour.
+    // `member` attributes the refusal to the confirmation: `format` alone is
+    // stamped on every refusal this gate throws, `dpop_token_not_bound` included,
+    // which fires on the same token when the verdict is absent and a proof is
+    // supplied.
     then: [
       {
         step: "rejects",
@@ -1888,12 +1860,6 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     rationale:
       "Vouching says the proof was checked upstream — a gateway that validated it and forwarded the token — so it substitutes for the PROOF and never for the binding the proof was checked against. A confirmation naming no key gives the upstream checker nothing to have checked, so the vouch attests to something that cannot have happened. This is the path a per-branch version of the verdict leaves open, which is why it is stated as its own row rather than inferred from the bare one.",
     given: [
-      // ⚠⚠ `cnf: {}` — THE OTHER VALUE THE VERDICT JUDGES, and the one that had
-      // no row at all. The three sibling rows above all carry `cnf: { jkt: "" }`,
-      // so the `thumbprint` half of the predicate was pinned three times over and
-      // the `confirmation` half not once: deleting it from the check left the whole
-      // suite green while `cnf: {}` verified as a plain bearer token.
-      //
       // A FOREIGN token: `mint` refuses an empty confirmation on the way out, so
       // this shape can only be presented by somebody else's producer.
       {
@@ -1915,13 +1881,10 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     // `data: { format }` like every sibling refusal in this gate — it is what
     // makes the refusal attributable to the CONFIRMATION rather than to anything
     // the presenter did.
-    // ⚠⚠ `member` IS WHAT MAKES THIS ROW ATTRIBUTABLE, and `format` alone was not.
-    // Every refusal this gate throws stamps `data: { format }` — including
-    // `dpop_token_not_bound`, which fires on the SAME token when the verdict is
-    // absent and a proof is supplied. Measured: with the confirmation half of the
-    // predicate deleted, a row pinning `format` alone stayed GREEN on that other
-    // refusal. `member` names WHICH value was named-but-unsatisfied, so the six
-    // rows in this group are told apart from each other and from their neighbour.
+    // `member` attributes the refusal to the confirmation: `format` alone is
+    // stamped on every refusal this gate throws, `dpop_token_not_bound` included,
+    // which fires on the same token when the verdict is absent and a proof is
+    // supplied.
     then: [
       {
         step: "rejects",
@@ -1940,12 +1903,6 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     rationale:
       "A proof of possession is only meaningful against the key the token names, so a presenter offering a perfectly valid proof for a confirmation that names nothing has demonstrated possession of nothing the token asked about. The refusal must come from the confirmation being unusable rather than from any comparison failing: a verifier that reaches a comparison at all has accepted the binding as something checkable, and would report the presenter's proof as the problem when the token is.",
     given: [
-      // ⚠⚠ `cnf: {}` — THE OTHER VALUE THE VERDICT JUDGES, and the one that had
-      // no row at all. The three sibling rows above all carry `cnf: { jkt: "" }`,
-      // so the `thumbprint` half of the predicate was pinned three times over and
-      // the `confirmation` half not once: deleting it from the check left the whole
-      // suite green while `cnf: {}` verified as a plain bearer token.
-      //
       // A FOREIGN token: `mint` refuses an empty confirmation on the way out, so
       // this shape can only be presented by somebody else's producer.
       {
@@ -1977,13 +1934,10 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     // `data: { format }` like every sibling refusal in this gate — it is what
     // makes the refusal attributable to the CONFIRMATION rather than to anything
     // the presenter did. The proof COMPARISON's own refusal carries no `data` at all, so `format` is precisely the discriminator between a refusal that judged the CONFIRMATION and one that judged the presenter's key.
-    // ⚠⚠ `member` IS WHAT MAKES THIS ROW ATTRIBUTABLE, and `format` alone was not.
-    // Every refusal this gate throws stamps `data: { format }` — including
-    // `dpop_token_not_bound`, which fires on the SAME token when the verdict is
-    // absent and a proof is supplied. Measured: with the confirmation half of the
-    // predicate deleted, a row pinning `format` alone stayed GREEN on that other
-    // refusal. `member` names WHICH value was named-but-unsatisfied, so the six
-    // rows in this group are told apart from each other and from their neighbour.
+    // `member` attributes the refusal to the confirmation: `format` alone is
+    // stamped on every refusal this gate throws, `dpop_token_not_bound` included,
+    // which fires on the same token when the verdict is absent and a proof is
+    // supplied.
     then: [
       {
         step: "rejects",
@@ -4208,7 +4162,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     id: "a-scope-member-containing-a-space-is-refused-at-mint",
     title: "minting a token whose scope list has a member containing a space is refused",
     rationale:
-      "The wire form of `scope` is one space-delimited string, so a domain member containing a space joins to bytes indistinguishable from two members, and every reader of the token — this package's own included — reports a list the caller never stated. Aegis policy at mint (RFC 6749 §3.3): the member is refused, and the refusal names its position so the caller repairs the value rather than the claim. The specification governs verify, so a foreign token's wire string is read as the members it delimits.",
+      "The wire form of `scope` is one space-delimited string, so a domain member containing a space joins to bytes indistinguishable from two members, and every reader of the token — this package's own included — reports a list the caller never stated. Aegis policy at mint (RFC 6749 §3.3): the member is refused, and the refusal names its position so the caller repairs the value rather than the claim.",
     given: [
       {
         step: "token",
@@ -4290,6 +4244,147 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
           ],
         },
       },
+    ],
+  },
+  {
+    id: "an-empty-scope-member-is-refused-at-mint",
+    title: "minting a token whose scope list has an empty member is refused",
+    rationale:
+      "The wire form of `scope` is one space-delimited string, so an empty domain member joins to a separator with nothing on one side of it, and this package's own reader reports a list one member shorter than the caller stated. Aegis policy at mint (RFC 6749 §3.3): the member is refused, and the refusal names its position so the caller repairs the value rather than the claim.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "access_token",
+        content: {
+          subject: "user-1",
+          audience: [RESOURCE],
+          clientId: CLIENT,
+          scope: ["", "read"],
+        },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        code: "claim_structure_invalid",
+        data: {
+          claim: "scope",
+          invalid: [{ key: "scope[0]", message: 'Member "scope[0]" must not be empty' }],
+        },
+      },
+    ],
+  },
+  {
+    id: "a-scope-member-containing-a-double-quote-is-refused-at-mint",
+    title:
+      "minting a token whose scope list has a member containing a double quote is refused",
+    rationale:
+      "A `scope` member is a `scope-token`, and `%x22` sits outside every range the production admits. Aegis policy at mint (RFC 6749 §3.3): a member the production does not spell is refused rather than signed, and the refusal names its position so the caller repairs the value rather than the claim.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "access_token",
+        content: {
+          subject: "user-1",
+          audience: [RESOURCE],
+          clientId: CLIENT,
+          scope: ['re"ad'],
+        },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        code: "claim_structure_invalid",
+        data: {
+          claim: "scope",
+          invalid: [
+            {
+              key: "scope[0]",
+              message:
+                'Member "scope[0]" must contain only scope-token characters (RFC 6749 §3.3)',
+            },
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: "a-scope-member-containing-a-non-ascii-code-point-is-refused-at-mint",
+    title:
+      "minting a token whose scope list has a member containing a non-ASCII code point is refused",
+    rationale:
+      "A `scope` member is a `scope-token`, whose every range ends below `%x7F`, so a code point outside ASCII has no spelling in it. Aegis policy at mint (RFC 6749 §3.3): the member is refused rather than signed, and the refusal names its position so the caller repairs the value rather than the claim.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "access_token",
+        content: {
+          subject: "user-1",
+          audience: [RESOURCE],
+          clientId: CLIENT,
+          scope: ["läs"],
+        },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        code: "claim_structure_invalid",
+        data: {
+          claim: "scope",
+          invalid: [
+            {
+              key: "scope[0]",
+              message:
+                'Member "scope[0]" must contain only scope-token characters (RFC 6749 §3.3)',
+            },
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: "a-scope-list-of-scope-tokens-round-trips-through-the-domain-verify",
+    title:
+      "a minted scope list whose members span the scope-token ranges is read back unchanged",
+    rationale:
+      "Every character the `scope-token` production admits (RFC 6749 §3.3) must ride: a member spelt from the edges of its three ranges is as valid as `read`, and a writer that refused one would deny the deployment a vocabulary the specification grants. Minted, the list joins to one space-delimited string on both wires (RFC 8693 §4.2, RFC 9200 §8.14), and the domain verify reads back the members the caller stated, in order and unaltered.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "access_token",
+        content: {
+          subject: "user-1",
+          audience: [RESOURCE],
+          clientId: CLIENT,
+          scope: ["read", "write:all", "urn:x", "a!#[]~"],
+        },
+      },
+    ],
+    when: [
+      { step: "mint" },
+      { step: "verify", profile: "access_token", options: { audience: RESOURCE } },
+    ],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      {
+        step: "wireClaims",
+        on: "jose",
+        includes: { scope: "read write:all urn:x a!#[]~" },
+      },
+      { step: "wireClaims", on: "cose", includes: { 9: "read write:all urn:x a!#[]~" } },
+      { step: "claims", expected: { scope: ["read", "write:all", "urn:x", "a!#[]~"] } },
     ],
   },
   {
@@ -7810,7 +7905,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a verify refuses an address whose undeclared member flips onto a member the address already states",
     rationale:
-      "The collision rule is a property of an OPEN member set, not of any one claim, and the OIDC Core §5.1.1 address is where it was first measured: an undeclared member takes the house case flip, so `streetAddress` becomes `street_address` and lands on the member OIDC Core §5.1.1 already spells that way. Before the rule, the token's own key order decided which value a relying party read. An address is not an identity assertion, so the stakes are lower than the actor's — which is exactly why it is worth stating separately: a rule that defended only the claim somebody happened to be looking at would be a patch, and the next open structure to arrive would inherit the defect rather than the defence.",
+      "The collision rule is a property of an OPEN member set, not of any one claim: an undeclared member takes the house case flip, so `streetAddress` becomes `street_address` and lands on the member OIDC Core §5.1.1 already spells that way. An address is not an identity assertion, so the stakes are lower than the actor's — which is exactly why it is worth stating separately: a rule that defended only the claim somebody happened to be looking at would be a patch, and the next open structure to arrive would inherit the defect rather than the defence.",
     given: [
       {
         step: "token",

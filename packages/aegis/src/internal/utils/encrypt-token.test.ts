@@ -77,7 +77,7 @@ describe("aegis.encrypt — the cwe envelope declares its own plaintext", () => 
       expect(JSON.stringify([...wire.values()])).not.toContain("claims");
     });
 
-    test("carries the caller's type on typ, which the marker used to displace", async () => {
+    test("carries the caller's type on typ", async () => {
       const { token } = await aegis.encrypt(OBJECT, {
         format: "cwe",
         type: "access_token",
@@ -123,8 +123,6 @@ describe("aegis.encrypt — the cwe envelope declares its own plaintext", () => 
   });
 
   /**
-   * ⚠ THE DISCRIMINANT IS GONE, AND ITS ABSENCE IS THE RULE NOW.
-   *
    * A claim-SHAPED object and any other object declare the SAME thing and are
    * read back the same way, because the envelope makes no claim about meaning. A
    * per-door cty — `application/cbor` for "claims", `application/json` for the

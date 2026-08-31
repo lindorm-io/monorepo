@@ -446,7 +446,7 @@ describe("the act / may_act claims on the wire", () => {
     // `Map { 2 => "audited-service", "sub" => "rogue-service" }` reads back as
     // `{ subject: "rogue-service" }`, replacing the actor the issuer named.
     //
-    // ⭐ THE VERIFYING DOOR IS NOW IN THE SPECIFICATION, as the conformance row
+    // ⭐ THE VERIFYING DOOR IS IN THE SPECIFICATION, as the conformance row
     // `a-cwt-keying-one-member-by-both-its-label-and-its-name-is-refused` — a
     // hand-forged CWT carrying a real signature, so the refusal is proven to come
     // from the claims decoder and not from anything upstream of it.

@@ -8,8 +8,8 @@ import type {
 } from "../../types/index.js";
 
 /**
- * Encrypt a JWE with an already-resolved recipient key (formerly
- * `JoseKit.encryptJwe`), built directly from the resolved key + JOSE config.
+ * Encrypt a JWE with an already-resolved recipient key, built directly from the
+ * resolved key + JOSE config.
  * `defaultEncryption` is the deployment fallback for a recipient key that
  * declares no `encryption` of its own — the key's declaration wins. Returns the
  * BARE compact JWE token (the kit returns bare;

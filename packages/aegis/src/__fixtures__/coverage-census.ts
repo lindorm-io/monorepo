@@ -158,7 +158,7 @@ export const KIT_CELL_CENSUS: {
     reserved: {
       exercised: "reader",
       site: "src/classes/JweKit.ts#reserved: KIT_CAPABILITIES.jwe.reserved",
-      // The widest JOSE row, and now EXACTLY the KitOwned type-level set — the
+      // The widest JOSE row, and EXACTLY the KitOwned type-level set — the
       // runtime backstop and the compile-time Omit stating one set, not two.
     },
   },

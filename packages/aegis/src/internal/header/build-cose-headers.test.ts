@@ -193,14 +193,11 @@ describe("buildCoseHeaders", () => {
      * `mergeCoseProtected`, and the refusal lives at the end of it
      * (`merge-cose-protected.test.ts`).
      *
-     * ⚠ The case that MOTIVATED the split — `crit: ["alg"]`, refused here on the
-     * caller's fragment while the JOSE twin minted the same header — is now
-     * closed one step FURTHER upstream, by the eligibility gate, and can no
-     * longer occur (the row below states that refusal). What survives is these
-     * two rows: an eligible member whose value is empty, or whose value the
-     * caller put in the unprotected bag. Both are answered later, and the split
-     * still earns its place because the reason for it is unchanged — a fragment
-     * cannot answer a question about the message.
+     * ⚠ `crit: ["alg"]` is refused upstream by the eligibility gate (the row
+     * below states that refusal). The two rows here are an eligible member whose
+     * value is empty, or whose value the caller put in the unprotected bag: both
+     * are answered later, because a fragment cannot answer a question about the
+     * message.
      */
     test("a crit the CALLER'S BAG alone cannot answer passes this stage", () => {
       expect(() => build({ header: { crit: ["oid"], oid: "" } })).not.toThrow();

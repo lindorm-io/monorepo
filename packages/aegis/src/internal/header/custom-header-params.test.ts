@@ -277,7 +277,7 @@ describe("custom header parameters", () => {
       },
     );
 
-    test("so a crit naming one can no longer mint a token aegis refuses on read", () => {
+    test("so a crit naming one cannot mint a token aegis refuses on read", () => {
       const kit = new JwtKit({ kryptos: TEST_EC_KEY_SIG, logger });
 
       // The refusal lands at the MINT, which is the only place the caller can

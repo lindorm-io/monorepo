@@ -36,7 +36,7 @@ MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
  * token has to reach the pair being pinned.
  *
  * ⚠ THE HOSTILE `crit` IS INJECTED AFTER THE MINT, and it has to be, because
- * AEGIS CAN NO LONGER PRODUCE ONE. The mint gate
+ * AEGIS CANNOT PRODUCE ONE. The mint gate
  * (`internal/header/assert-crit-eligible.ts`) refuses a `crit` naming anything
  * outside the header registry's eligible set and the custom bag the same call
  * writes, so a doubly-hostile token is by construction something only a FOREIGN
