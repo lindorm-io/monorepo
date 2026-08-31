@@ -3,6 +3,7 @@ import {
   CwmError,
   CwtError,
   CweError,
+  CwsError,
   JweError,
   JwsError,
   JwtError,
@@ -22,6 +23,7 @@ import { assertWireTyp } from "./assert-wire-typ.js";
  * - {@link CWT_PARSE} — the COSE wire's keyless read
  *   (`internal/wire/cose-token-wire.ts`), the same one-word split as `JWT_PARSE`.
  * - {@link CWE} — `CweKit.decrypt` (`classes/CweKit.ts`).
+ * - {@link CWS} — `CwsKit.verify` (`classes/CwsKit.ts`).
  *
  * ⚠ These constants pin the PREDICATE, not the call sites: nothing here reads
  * production, so a config edited in a kit still passes every row below. What the
@@ -112,6 +114,17 @@ const CWE = {
     "Header typ must be application/cwe or a <type>+cwe media type to decrypt as a COSE_Encrypt0.",
 } as const;
 
+const CWS = {
+  accept: ["application/cws"],
+  suffix: "+cws",
+  presence: "optional",
+  error: CwsError,
+  code: "cws_invalid_typ",
+  title: "CWS Invalid Typ",
+  details:
+    "Header typ must be application/cws or a <type>+cws media type to verify as a COSE_Sign1/COSE_Mac0.",
+} as const;
+
 describe("assertWireTyp", () => {
   describe("the exact spellings each family accepts", () => {
     test.each([
@@ -123,6 +136,7 @@ describe("assertWireTyp", () => {
       ["CWT", CWT, "application/cwt"],
       ["CWT (parse)", CWT_PARSE, "application/cwt"],
       ["CWE", CWE, "application/cwe"],
+      ["CWS", CWS, "application/cws"],
     ])("%s accepts %#", (_name, config, typ) => {
       expect(() => assertWireTyp({ ...config, typ })).not.toThrow();
     });
@@ -138,6 +152,7 @@ describe("assertWireTyp", () => {
       [CWT, "at+cwt"],
       [CWT_PARSE, "at+cwt"],
       [CWE, "at+cwe"],
+      [CWS, "at+cws"],
     ])("accepts %#", (config, typ) => {
       expect(() => assertWireTyp({ ...config, typ })).not.toThrow();
     });
@@ -146,7 +161,7 @@ describe("assertWireTyp", () => {
   test("a typ-LESS token is well-formed wherever presence is optional", () => {
     // Presence requiredness is a DOMAIN/profile policy, not a wire-grammar one —
     // RFC 7515 §4.1.9 makes typ optional and an id_token carries none.
-    for (const config of [JWT, JWT_PARSE, JWS, CWT, CWT_PARSE, CWE]) {
+    for (const config of [JWT, JWT_PARSE, JWS, CWT, CWT_PARSE, CWE, CWS]) {
       expect(() => assertWireTyp({ ...config, typ: undefined })).not.toThrow();
     }
   });
@@ -166,6 +181,7 @@ describe("assertWireTyp", () => {
       ["cwt", CWT, "JWT"],
       ["cwt (parse)", CWT_PARSE, "JWT"],
       ["cwe", CWE, "application/at+cwt"],
+      ["cws", CWS, "application/at+cwt"],
     ])("%s", (_name, config, typ) => {
       let thrown: { code?: string; title?: string; details?: string; data?: unknown } =
         {};
@@ -193,6 +209,7 @@ describe("assertWireTyp", () => {
     expect(() => assertWireTyp({ ...JWE, typ: "JWT" })).toThrow(JweError);
     expect(() => assertWireTyp({ ...CWT, typ: "JWT" })).toThrow(CwtError);
     expect(() => assertWireTyp({ ...CWE, typ: "JWT" })).toThrow(CweError);
+    expect(() => assertWireTyp({ ...CWS, typ: "JWT" })).toThrow(CwsError);
   });
 
   test("the code, class and title the caller supplies are the ones raised", () => {

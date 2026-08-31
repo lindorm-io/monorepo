@@ -7074,6 +7074,141 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     then: [{ step: "accepts" }],
   },
   {
+    id: "the-opaque-verify-refuses-a-token-typed-as-a-claims-token",
+    title:
+      "the opaque verify refuses a token whose protected type names the claims-token family",
+    rationale:
+      "Explicit typing exists so that a token of one kind is never processed as another (RFC 8725 §3.11, RFC 9596 §3), and an opaque signature and a claims token are exactly two such kinds over the same structure. A claims token read through the opaque door would come back as bytes nobody validated — no expiry, audience or issuer checked — under a result that says the signature held. The type is the one thing that tells the kinds apart before the payload is read, so a present type of the claims family is refused at this door on both wires, in the door's own vocabulary.",
+    given: [
+      {
+        step: "token",
+        via: "foreign",
+        claims: LIVE_CLAIMS,
+        typ: { jose: "JWT", cose: "application/at+cwt" },
+      },
+    ],
+    when: [{ step: "kit-verify", kit: "opaque" }],
+    then: [
+      {
+        step: "rejects",
+        on: "jose",
+        error: "JwsError",
+        code: "jws_invalid_typ",
+        data: { typ: "JWT" },
+      },
+      {
+        step: "rejects",
+        on: "cose",
+        error: "CwsError",
+        code: "cws_invalid_typ",
+        data: { typ: "application/at+cwt" },
+      },
+    ],
+  },
+  {
+    id: "the-opaque-verify-refuses-a-token-typed-as-the-encrypted-family",
+    title:
+      "the opaque verify refuses a token whose protected type names the encrypted family",
+    rationale:
+      "The same kind-confusion rule from the other side (RFC 8725 §3.11, RFC 9596 §3): a signed structure whose type says it is an encrypted one is claiming a confidentiality it does not have, and a reader that accepted it would hand a caller cleartext under the type of a sealed token. The families are told apart by the type alone, so the opaque door refuses the encrypted spelling as it refuses the claims one.",
+    given: [
+      {
+        step: "token",
+        via: "foreign",
+        claims: LIVE_CLAIMS,
+        typ: { jose: "JWE", cose: "application/cwe" },
+      },
+    ],
+    when: [{ step: "kit-verify", kit: "opaque" }],
+    then: [
+      {
+        step: "rejects",
+        on: "jose",
+        error: "JwsError",
+        code: "jws_invalid_typ",
+        data: { typ: "JWE" },
+      },
+      {
+        step: "rejects",
+        on: "cose",
+        error: "CwsError",
+        code: "cws_invalid_typ",
+        data: { typ: "application/cwe" },
+      },
+    ],
+  },
+  {
+    id: "the-opaque-verify-accepts-a-token-that-declares-no-type",
+    title: "the opaque verify accepts a token that carries no type header",
+    rationale:
+      "`typ` is OPTIONAL on both wires (RFC 7515 §4.1.9, RFC 9596 §2), so a signature that declares no type is conformant, and the opaque door is the raw wire surface rather than an application. What the door refuses is a type of ANOTHER family; whether a type must be present is a policy the layer above states, and a presence rule imposed here would refuse conformant tokens with no way for the caller to say otherwise.",
+    given: [{ step: "token", via: "foreign", claims: LIVE_CLAIMS }],
+    when: [{ step: "kit-verify", kit: "opaque" }],
+    then: [
+      { step: "accepts" },
+      // ⚠ The row's PREMISE, read off the wire. Without it the row accepts an
+      // ordinary typed token and says nothing about typ-lessness at all. The
+      // COSE `typ` is label 16 (RFC 9596 §4.1).
+      { step: "wireProtectedHeader", on: "jose", excludes: ["typ"] },
+      { step: "wireProtectedHeader", on: "cose", excludes: [16] },
+    ],
+  },
+  {
+    id: "the-opaque-verify-reads-the-type-off-the-protected-bucket-alone",
+    title:
+      "the opaque verify does not consult a type carried only in the unprotected bucket",
+    rationale:
+      "No signature covers an unprotected parameter (RFC 9052 §3), and the type is what routes a token, so a type read from the unprotected bucket is a type the presenter chose. RFC 9596 §2 puts `typ` in the protected bucket; a copy anywhere else must answer nothing — neither accepting a token on its strength nor refusing one because of it. The bucket is still reported, so a caller can see what the wire carried and where.",
+    given: [
+      {
+        step: "token",
+        via: "foreign",
+        claims: LIVE_CLAIMS,
+        buckets: { unprotectedHeader: { typ: "application/at+cwt" } },
+      },
+    ],
+    when: [{ step: "kit-verify", kit: "opaque" }],
+    then: [
+      { step: "accepts" },
+      // Both halves of the premise off the raw wire: the foreign type sits at
+      // label 16 in the UNPROTECTED bucket, and the protected one carries none.
+      { step: "wireUnprotectedHeader", includes: { 16: "application/at+cwt" } },
+      { step: "wireProtectedHeader", excludes: [16] },
+    ],
+    unsupported: {
+      jose: "JOSE compact serialisation has ONE header and it is the protected one (RFC 7515 §7.1), so there is no unprotected bucket to carry a second type in — the foreign producer refuses a row that names one rather than sign a token that quietly drops half of it",
+    },
+  },
+  {
+    id: "the-opaque-verify-accepts-the-prefixed-media-type-its-own-mint-writes",
+    title:
+      "an opaque signature stamped with a token-type prefix verifies through its own raw door",
+    rationale:
+      "The opaque mint writes a structured media type for a caller's token-type prefix — `application/<prefix>+jws` on JOSE and `application/<prefix>+cws` on COSE — and the read side of the same door must take every spelling the write side produces, or a caller who typed their handle would be unable to verify it. A door that accepted only the bare spelling would refuse its own structured output (RFC 6838 §4.2.8, RFC 7515 §4.1.9, RFC 9596 §2).",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "opaque",
+        claims: { tid: "at_abc" },
+        options: { tokenType: "at" },
+      },
+    ],
+    when: [{ step: "kit-verify", kit: "opaque" }],
+    then: [
+      { step: "accepts" },
+      // The spelling the door accepted, read off the wire — so the row pins the
+      // structured form and not merely that SOME type verified. Label 16 on COSE
+      // (RFC 9596 §4.1).
+      {
+        step: "wireProtectedHeader",
+        on: "jose",
+        includes: { typ: "application/at+jws" },
+      },
+      { step: "wireProtectedHeader", on: "cose", includes: { 16: "application/at+cws" } },
+    ],
+  },
+  {
     id: "the-raw-claims-verify-accepts-a-token-that-declares-no-type",
     title: "the raw claims verify accepts a token that carries no type header",
     rationale:

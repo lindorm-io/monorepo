@@ -3,7 +3,8 @@ import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { describe, expect, test } from "vitest";
 import { AegisError, CwsError } from "../errors/index.js";
-import { TEST_EC_KEY_SIG } from "../__fixtures__/keys.js";
+import { TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG } from "../__fixtures__/keys.js";
+import { foreignSignedCose } from "../__fixtures__/foreign-signed-cose.js";
 import { Tag, decodeCbor, encodeCbor } from "../internal/cose/cbor.js";
 import { coseByJose } from "../internal/header/header-registry.js";
 import {
@@ -12,6 +13,7 @@ import {
   encodeProtectedHeader,
 } from "../internal/cose/structures.js";
 import { spliceCoseSlot } from "../__fixtures__/splice-cose-slot.js";
+import type { CoseLabel } from "../internal/cose/cose-label.js";
 import { CwsKit } from "./CwsKit.js";
 
 // The sole opaque COSE signer: it produces a COSE_Sign1 (tag 18) for an
@@ -584,5 +586,198 @@ describe("CwsKit — a slot holding something other than a byte string", () => {
     );
 
     expect(CwsKit.decode(bare).protectedHeader).toEqual({});
+  });
+});
+
+// A producer may omit the typ and this door accepts one that does. What it
+// refuses is a PRESENT string typ from another family. RFC 9596 §2, RFC 9596 §3.
+describe("CwsKit — the protected typ", () => {
+  const payload = Buffer.from("the content bytes");
+
+  /**
+   * The protected map of a genuine aegis COSE_Sign1/COSE_Mac0, for a foreign
+   * producer to re-seal with one cell changed. ⚠ Re-sealing rather than splicing
+   * is what lets a token REACH the gate at all — slot 0 is the Sig/MAC structure
+   * input, and the gate runs after the signature cycle.
+   */
+  const foreignProtected = (kit: CwsKit, typ: unknown): Map<CoseLabel, unknown> => {
+    const [protectedBstr] = decodeCbor<Tag>(kit.sign(payload, { tokenType: "at" }))
+      .contents as [Buffer];
+    const map = decodeProtectedHeader(protectedBstr);
+
+    if (typ === undefined) map.delete(coseByJose("typ"));
+    else map.set(coseByJose("typ"), typ);
+
+    return map;
+  };
+
+  // ⚠ THE WORDS, not just the code. `internal/utils/assert-wire-typ.test.ts`
+  // enumerates this configuration, but its constants are COPIES that never read
+  // production — so only driving the real door catches an edit to what THIS call
+  // site passes, which is what a consumer reads.
+  const refusalOf = (
+    door: () => unknown,
+  ): { code?: string; title?: string; details?: string; data?: unknown } => {
+    try {
+      door();
+    } catch (error) {
+      return error as { code?: string; title?: string; details?: string; data?: unknown };
+    }
+    return {};
+  };
+
+  describe.each([
+    ["COSE_Sign1", TEST_EC_KEY_SIG],
+    ["COSE_Mac0", TEST_OCT_KEY_SIG],
+  ])("%s", (_structure, kryptos) => {
+    const kit = new CwsKit({ kryptos, logger: createMockLogger() });
+
+    test("accepts a token that declares no typ at all", () => {
+      const token = foreignSignedCose(kryptos, foreignProtected(kit, undefined), payload);
+
+      expect(kit.verify(token).payload).toEqual(payload);
+      expect(kit.verify(token).protectedHeader.typ).toBeUndefined();
+    });
+
+    test("refuses a token typed as a claims token", () => {
+      const token = foreignSignedCose(
+        kryptos,
+        foreignProtected(kit, "application/at+cwt"),
+        payload,
+      );
+
+      const thrown = refusalOf(() => kit.verify(token));
+
+      expect(thrown).toBeInstanceOf(CwsError);
+      expect({
+        code: thrown.code,
+        title: thrown.title,
+        details: thrown.details,
+        data: thrown.data,
+      }).toEqual({
+        code: "cws_invalid_typ",
+        title: "CWS Invalid Typ",
+        details:
+          "Header typ must be application/cws or a <type>+cws media type to verify as a COSE_Sign1/COSE_Mac0.",
+        data: { typ: "application/at+cwt" },
+      });
+    });
+
+    // The BARE spellings too, not only the structured `+cwt` one above: the
+    // accept list is exact strings, so a bare foreign media type added to it
+    // would slip past a suite that only ever presents a suffixed one.
+    test.each([["application/cwt"], ["application/cwe"]])(
+      "refuses a token typed as the other family's bare media type %s",
+      (typ) => {
+        const token = foreignSignedCose(kryptos, foreignProtected(kit, typ), payload);
+
+        const thrown = refusalOf(() => kit.verify(token));
+
+        expect(thrown).toBeInstanceOf(CwsError);
+        expect({ code: thrown.code, data: thrown.data }).toEqual({
+          code: "cws_invalid_typ",
+          data: { typ },
+        });
+      },
+    );
+
+    test("refuses a token typed with the JOSE claims-token short name JWT", () => {
+      const token = foreignSignedCose(kryptos, foreignProtected(kit, "JWT"), payload);
+
+      const thrown = refusalOf(() => kit.verify(token));
+
+      expect(thrown).toBeInstanceOf(CwsError);
+      expect({ code: thrown.code, data: thrown.data }).toEqual({
+        code: "cws_invalid_typ",
+        data: { typ: "JWT" },
+      });
+    });
+
+    // The read side reports what a producer WROTE (`normalise-headers.ts` is the
+    // write side alone), so an empty text typ reaches the gate as a PRESENT
+    // string of no family and is refused, not pruned to absent.
+    test("refuses a token whose typ is the empty string", () => {
+      const token = foreignSignedCose(kryptos, foreignProtected(kit, ""), payload);
+
+      const thrown = refusalOf(() => kit.verify(token));
+
+      expect(thrown).toBeInstanceOf(CwsError);
+      expect({ code: thrown.code, data: thrown.data }).toEqual({
+        code: "cws_invalid_typ",
+        data: { typ: "" },
+      });
+    });
+
+    // The two spellings the mint itself writes, both accepted — so the gate cannot
+    // refuse aegis's own output. `buildMediaType` produces exactly these.
+    test("accepts both spellings the mint writes", () => {
+      const prefixed = kit.verify(kit.sign(payload, { tokenType: "at" }));
+      expect(prefixed.protectedHeader.typ).toBe("application/at+cws");
+      expect(prefixed.payload).toEqual(payload);
+
+      const bare = kit.verify(kit.sign(payload, {}));
+      expect(bare.protectedHeader.typ).toBe("application/cws");
+      expect(bare.payload).toEqual(payload);
+    });
+  });
+
+  const kit = new CwsKit({ kryptos: TEST_EC_KEY_SIG, logger: createMockLogger() });
+
+  // ⚠ A `uint` typ carries no media-type spelling to compare against a family, so
+  // it reaches the gate as absent — the same answer `decodeCwt` gives the CWT
+  // door for the identical value, which is what keeps the COSE doors agreeing on
+  // what a typ IS. RFC 9596 §2.
+  test("accepts a token whose typ is a CoAP Content-Format uint", () => {
+    const token = foreignSignedCose(TEST_EC_KEY_SIG, foreignProtected(kit, 61), payload);
+
+    // The typ is asserted as the UINT it is, not merely absent: without it the
+    // row would still pass if the passthrough arm ever stopped delivering the
+    // raw value, and it would then be pinning the wrong reason.
+    expect(kit.verify(token).protectedHeader.typ).toBe(61);
+    expect(kit.verify(token).payload).toEqual(payload);
+  });
+
+  // Every other non-text shape takes the uint's road: no spelling to compare, so
+  // the gate sees absent, and the passthrough arm reports the raw value back.
+  test.each([
+    ["bstr", Buffer.from("application/at+cwt", "utf8")],
+    ["nested array", ["application/at+cwt"]],
+    ["nested map", new Map<number, unknown>([[1, "application/at+cwt"]])],
+  ])("accepts a token whose typ is a %s and reports it back unchanged", (_shape, typ) => {
+    const token = foreignSignedCose(TEST_EC_KEY_SIG, foreignProtected(kit, typ), payload);
+
+    const { protectedHeader, payload: out } = kit.verify(token);
+
+    expect(out).toEqual(payload);
+    expect(protectedHeader.typ).toStrictEqual(typ);
+  });
+
+  // The unprotected bucket is covered by nothing, so a typ there answers
+  // nothing: it is reported, and it is not consulted. RFC 9596 §2.
+  test("does not consult a typ carried only in the unprotected bucket", () => {
+    const token = spliceCoseSlot(
+      foreignSignedCose(TEST_EC_KEY_SIG, foreignProtected(kit, undefined), payload),
+      1,
+      new Map<CoseLabel, unknown>([[coseByJose("typ"), "application/at+cwt"]]),
+    );
+
+    const { protectedHeader, unprotectedHeader, payload: out } = kit.verify(token);
+
+    expect(out).toEqual(payload);
+    expect(unprotectedHeader.typ).toBe("application/at+cwt");
+    expect(protectedHeader.typ).toBeUndefined();
+  });
+
+  // The ORDER on THIS door: crit answers before typ, because the typ gate sits
+  // after `verifyCoseStructure`, which runs crit, the algorithm-match and the
+  // signature cycle. `CweKit`, `JwsKit` and the CWT wire answer typ first.
+  test("answers the crit refusal for a token failing typ and crit together", () => {
+    const map = foreignProtected(kit, "application/at+cwt");
+    map.set(coseByJose("crit"), ["oid"]);
+    map.set("oid", "1.2.3");
+
+    expect(() => kit.verify(foreignSignedCose(TEST_EC_KEY_SIG, map, payload))).toThrow(
+      expect.objectContaining({ code: "cws_unsupported_crit_param" }),
+    );
   });
 });

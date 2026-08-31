@@ -741,7 +741,7 @@ Either way the signature itself is plain RFC 9052 — verified in interop tests 
 
 `aegis.cws.sign(payload, options)` is the opaque COSE mirror of `aegis.jws.sign`, and the only door onto an opaque COSE signature — `aegis.sign` is claims-only. It secures **arbitrary content**, not a claims map: a `COSE_Sign1` signs a `bstr`, so the content goes through the shared `cty` codec (Dict → `application/json`, string → `text/plain`, Buffer → octet-stream) and round-trips as the type it was. No claim label is applied and no claim name is translated — a claims-bearing `COSE_Sign1` is `aegis.cwt.sign`.
 
-Because the token is base64url CBOR with no JOSE dot structure, a consumer cannot split it and read it as a JWT: it is an **opaque handle** (e.g. an internal reference `{ tid, sec }` signed with an unpublished key). `typ` derives from the bare `tokenType` PREFIX, and it stamps `application/cws` / `+cws` so the token reads as a CWS and never as a CWT. `verify` auto-detects it like any COSE token.
+Because the token is base64url CBOR with no JOSE dot structure, a consumer cannot split it and read it as a JWT: it is an **opaque handle** (e.g. an internal reference `{ tid, sec }` signed with an unpublished key). `typ` derives from the bare `tokenType` PREFIX, and it stamps `application/cws` / `+cws` so the token reads as a CWS and never as a CWT. `verify` auto-detects it like any COSE token. On the read side a present protected text `typ` must be `application/cws` or `<type>+cws` (`cws_invalid_typ`); a typ-less token is accepted, and a `typ` in the unprotected bucket is not consulted. RFC 9596 §2.
 
 `bindCertificate` is honoured here — see **Certificate binding** below.
 

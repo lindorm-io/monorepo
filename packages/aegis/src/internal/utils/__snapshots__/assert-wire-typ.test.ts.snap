@@ -11,6 +11,17 @@ exports[`assertWireTyp > each wire refuses a foreign typ under its OWN code and 
 }
 `;
 
+exports[`assertWireTyp > each wire refuses a foreign typ under its OWN code and words > cws 1`] = `
+{
+  "code": "cws_invalid_typ",
+  "data": {
+    "typ": "application/at+cwt",
+  },
+  "details": "Header typ must be application/cws or a <type>+cws media type to verify as a COSE_Sign1/COSE_Mac0.",
+  "title": "CWS Invalid Typ",
+}
+`;
+
 exports[`assertWireTyp > each wire refuses a foreign typ under its OWN code and words > cwt (parse) 1`] = `
 {
   "code": "cwt_invalid_typ",

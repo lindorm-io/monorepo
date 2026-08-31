@@ -1,3 +1,4 @@
+import { isString } from "@lindorm/is";
 import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import { CwsError } from "../errors/index.js";
@@ -19,6 +20,7 @@ import { mergeCoseProtected } from "../internal/header/merge-cose-protected.js";
 import { mergeCoseUnprotected } from "../internal/header/merge-cose-unprotected.js";
 import { normaliseHeaders } from "../internal/header/normalise-headers.js";
 import { KIT_CAPABILITIES } from "../internal/registry/kit-capabilities.js";
+import { assertWireTyp } from "../internal/utils/assert-wire-typ.js";
 import { buildMediaType } from "../internal/utils/compute-typ-header.js";
 import { reconstructContent, serialiseContent } from "../internal/utils/content-codec.js";
 import { resolveCertBinding } from "../internal/utils/resolve-cert-binding.js";
@@ -224,6 +226,29 @@ export class CwsKit implements ICwsKit {
         format: "cws",
         payloadDetail: "there is no content to verify",
       });
+
+    // A typ-LESS COSE_Sign1/COSE_Mac0 is accepted here; a PRESENT string typ must
+    // be this family's. A NON-STRING typ reaches the gate as absent — the same
+    // answer `internal/cose/decode-cwt.ts` gives the CWT door for the identical
+    // value. Off the PROTECTED bucket alone: `splitSigned` reports the two
+    // buckets separately, and this is the one the signature/MAC covers.
+    // RFC 9596 §2, RFC 9596 §3.
+    //
+    // ⚠ AFTER `verifyCoseStructure`, so a token failing typ AND crit together
+    // answers the crit refusal on this door where `CweKit`/`JwsKit` answer typ —
+    // AEGIS POLICY, not a specification ordering. pinned: CwsKit.test.ts
+    // "answers the crit refusal for a token failing typ and crit together".
+    assertWireTyp({
+      typ: isString(protectedHeader.typ) ? protectedHeader.typ : undefined,
+      accept: ["application/cws"],
+      suffix: "+cws",
+      presence: "optional",
+      error: CwsError,
+      code: "cws_invalid_typ",
+      title: "CWS Invalid Typ",
+      details:
+        "Header typ must be application/cws or a <type>+cws media type to verify as a COSE_Sign1/COSE_Mac0.",
+    });
 
     // Content tamper check: runs AFTER the signature/MAC has been verified with
     // the configured kryptos, exactly as `JwsKit.verify` does. NOT a key
