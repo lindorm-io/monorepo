@@ -228,6 +228,49 @@ describe("domainToJose — content -> wire mapping", () => {
     expect(joseToDomain({ scope: "a b" }).claims.scope).toEqual(["a", "b"]);
   });
 
+  // The WRITE half of the spaced policy: `spaced` states the WIRE FORM — the
+  // value of the claim on the wire is one space-delimited string (RFC 8693
+  // §4.2) — so the write side JOINS the domain list where the read side splits
+  // it. `[]` joins to `""`, and whether that empty string rides is the
+  // registry's `whenEmpty` column at emission, never this codec's.
+  test("should join a spaced array claim to its space-delimited wire string", () => {
+    expect(domainToJose({ scope: ["read", "write"] })).toEqual({ scope: "read write" });
+    expect(domainToJose({ scope: [] })).toEqual({ scope: "" });
+    expect(joseToDomain(domainToJose({ scope: ["read", "write"] })).claims.scope).toEqual(
+      ["read", "write"],
+    );
+  });
+
+  // The wire form cannot spell a space INSIDE a scope-token — space IS the
+  // delimiter (RFC 6749 §3.3) — so a member containing one joins to bytes
+  // identical to two members, and the read side reports the members those bytes
+  // delimit.
+  test("should re-read a member containing a space as the members it delimits", () => {
+    expect(domainToJose({ scope: ["read write"] })).toEqual({ scope: "read write" });
+    expect(joseToDomain({ scope: "read write" }).claims.scope).toEqual(["read", "write"]);
+    expect(joseToDomain(domainToJose({ scope: ["read write"] })).claims.scope).toEqual([
+      "read",
+      "write",
+    ]);
+  });
+
+  // The lindorm authority lists are STRICT arrays: RFC 9068 §2.2.3.1 provides
+  // `roles` no string form, so a scalar under one of these names is not a
+  // shorter spelling of the list — it reads as unstated, exactly as `amr` does,
+  // and the write side refuses what its own reader would not keep. The array
+  // itself rides untouched.
+  test("should refuse a scalar for the lindorm authority lists on BOTH sides", () => {
+    expect(domainToJose({ roles: "admin editor" as unknown as Array<string> })).toEqual(
+      {},
+    );
+    expect(joseToDomain({ roles: "admin editor" }).claims.roles).toBeUndefined();
+    expect(joseToDomain({ conforms_to: "strict" }).claims.conformsTo).toBeUndefined();
+
+    expect(domainToJose({ roles: ["admin", "editor"] })).toEqual({
+      roles: ["admin", "editor"],
+    });
+  });
+
   // The BOUNDARY row: the same two doors, the same member, a `null` instead — and
   // the same bytes, for a different reason. It is here rather than folded into
   // the row above because the two are separate rules that happen to agree on a
@@ -301,7 +344,7 @@ describe("joseToDomain — the two read modes decode identically", () => {
     jti: "jti-1",
     scope: "read write", // space-delimited string → split
     amr: ["pwd"],
-    roles: "admin editor", // space-delimited string → split
+    roles: ["admin", "editor"],
     groups: ["g1"],
     permissions: ["read"],
     entitlements: ["e1"],
@@ -341,8 +384,8 @@ describe("joseToDomain — the two read modes decode identically", () => {
   //
   // ⚠ It exists because the mode-equality test below CANNOT stand in for it: both
   // sides of that comparison run the same `decodeValue`, so a decoder change moves
-  // them together and it stays green. Flipping `roles` from `array/"spaced"` to
-  // `array/"strict"` — a wire `"admin editor"` silently decoding to `undefined` —
+  // them together and it stays green. Flipping `scope` from `array/"spaced"` to
+  // `array/"strict"` — a wire `"read write"` silently decoding to `undefined` —
   // is exactly that shape, and it is this snapshot that catches it.
   test("the decoded claims match their frozen record", () => {
     expect(joseToDomain(wire).claims).toMatchSnapshot();
@@ -655,13 +698,16 @@ describe("wireToFloorClaims — the verify-floor read mode", () => {
     expect(custom).toEqual({});
   });
 
-  test("accepts the wire conforms_to as an array or a space-delimited string", () => {
+  // `conforms_to` is a STRICT array — lindorm's own claim, so there is no
+  // registered string form for a scalar to spell (its registry `spec` cell is
+  // policy) and a foreign scalar reads as unstated, like `groups`/`entitlements`.
+  test("accepts the wire conforms_to as an array; a scalar reads as unstated", () => {
     expect(
       wireToFloorClaims({ conforms_to: ["a", "b"] }, joseName).claims.conformsTo,
     ).toEqual(["a", "b"]);
-    expect(wireToFloorClaims({ conforms_to: "a b" }, joseName).claims.conformsTo).toEqual(
-      ["a", "b"],
-    );
+    expect(
+      wireToFloorClaims({ conforms_to: "a b" }, joseName).claims.conformsTo,
+    ).toBeUndefined();
   });
 
   test("marks a wrongly-typed claim CONSUMED, so it lands in neither bucket", () => {

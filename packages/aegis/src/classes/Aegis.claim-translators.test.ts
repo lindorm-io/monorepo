@@ -52,4 +52,15 @@ describe("Aegis — the public claim translators", () => {
     expect(custom.customFlag).toBe(true);
     expect(claims).not.toHaveProperty("customFlag");
   });
+
+  // The spaced wire form crosses the public translators through the same codec
+  // every internal write/read site uses: `scope` is one space-delimited string
+  // on the wire (RFC 8693 §4.2) and an Array<string> on the domain surface.
+  test("joins a spaced array claim to its space-delimited wire string", () => {
+    expect(Aegis.toWire({ scope: ["a", "b"] })).toEqual({ scope: "a b" });
+  });
+
+  test("splits a space-delimited wire string to the domain list", () => {
+    expect(Aegis.toDomain({ scope: "a b" }).claims.scope).toEqual(["a", "b"]);
+  });
 });

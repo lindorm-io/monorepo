@@ -4169,22 +4169,111 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     ],
   },
   {
+    id: "the-scope-claim-crosses-both-wires-as-one-space-delimited-string",
+    title:
+      "a minted scope reaches the wire as a single space-delimited string on either encoding",
+    rationale:
+      "The value of the `scope` claim is a JSON string containing a space-separated list of scopes (RFC 8693 §4.2), and the CWT registration carries the same value as a text string under its own claim key (RFC 9200 §8.14) — so the list is the DOMAIN'S vocabulary and the one string is the wire's, on both encodings. A recipient is written against the registered wire form: an array put there instead parses only for readers that tolerate an unregistered spelling, and every token carrying one teaches its consumers to accept a shape no specification defines.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "access_token",
+        content: {
+          subject: "user-1",
+          audience: [RESOURCE],
+          clientId: CLIENT,
+          scope: ["read", "write"],
+        },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      // aegis keys `scope` at COSE integer label 9 (RFC 9200 §8.14), so the two
+      // wires spell the claim differently while carrying the same string.
+      { step: "wireClaims", on: "jose", includes: { scope: "read write" } },
+      { step: "wireClaims", on: "cose", includes: { 9: "read write" } },
+    ],
+  },
+  {
+    id: "a-scope-matcher-is-answered-by-the-list-the-wire-string-spells",
+    title:
+      "a caller asserting one scope is answered by the space-delimited wire claim containing it",
+    rationale:
+      "A single scope named at verify is a containment question about the list the token grants — the same question the static matcher answers over a claim dict. On the wire that list is one space-separated string (RFC 8693 §4.2), so the matcher must be answered against the list the string spells: answered against the string itself, containment fails for every token whose grant should satisfy it, and the deployment's gate refuses every request at the one call site it believes is doing the gating.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "access_token",
+        content: {
+          subject: "user-1",
+          audience: [RESOURCE],
+          clientId: CLIENT,
+          scope: ["read", "write"],
+        },
+      },
+    ],
+    when: [{ step: "mint" }, { step: "verify", assert: { scope: "read" } }],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      { step: "claims", expected: { scope: ["read", "write"] } },
+    ],
+  },
+  {
+    id: "a-lindorm-authority-list-crosses-the-wire-as-the-array-it-is",
+    title:
+      "a minted roles claim reaches the wire as the array of strings it was stated as",
+    rationale:
+      "`roles` is encoded per SCIM guidance — an array of strings — and no string form is provided for it (RFC 9068 §2.2.3.1), so the array IS the registered wire shape. A space-joined spelling here would put a format no specification defines on a signed token, and a reader splitting one would invent list boundaries the issuer never wrote: the space-delimited form belongs to `scope`'s own registration (RFC 8693 §4.2) and to nothing beside it.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "access_token",
+        content: {
+          subject: "user-1",
+          audience: [RESOURCE],
+          clientId: CLIENT,
+          roles: ["role-a", "role-b"],
+        },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      // `roles` has only a lindorm PRIVATE-USE integer label and mint is
+      // interoperable by default, so the claim rides both wires under its
+      // registered string name — one spelling, one unscoped step.
+      { step: "wireClaims", includes: { roles: ["role-a", "role-b"] } },
+    ],
+  },
+  {
     id: "a-verified-result-carries-the-untranslated-wire-claims",
     title: "a verified token carries the claims exactly as they arrived on the wire",
     rationale:
-      "A consumer that forwards, re-emits or logs a token must be able to reproduce what it received, and the domain claim buckets cannot answer that: they are the result of a translation that renames claims, splits them across buckets and decodes their values. The untranslated payload is the only place the exact received statement survives, so a result that omits it forces every such consumer to decode the token a second time — with a second decoder, which is where the two disagree.",
+      "A consumer that forwards, re-emits or logs a token must be able to reproduce what it received, and the domain claim buckets cannot answer that: they are the result of a translation that renames claims, splits them across buckets and decodes their values. The untranslated payload is the only place the exact received statement survives, so a result that omits it forces every such consumer to decode the token a second time — with a second decoder, which is where the two disagree. `scope` is the sharpest case: the wire carries one space-delimited string (RFC 8693 §4.2) while every domain surface speaks the list, so a matcher pass that lifts the string for its own comparison must leave the reported payload carrying the string the issuer signed.",
     given: [
       {
         step: "token",
         via: "mint",
         profile: "default",
-        content: { subject: "user-1", expires: "1h", tokenType: "test_token" },
+        content: {
+          subject: "user-1",
+          expires: "1h",
+          tokenType: "test_token",
+          scope: ["read", "write"],
+        },
       },
     ],
-    when: [{ step: "mint" }, { step: "verify" }],
+    when: [{ step: "mint" }, { step: "verify", assert: { scope: "read" } }],
     then: [
       { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
-      { step: "untranslatedClaims", expected: { sub: "user-1", iss: ISSUER } },
+      {
+        step: "untranslatedClaims",
+        expected: { sub: "user-1", iss: ISSUER, scope: "read write" },
+      },
     ],
   },
 
@@ -5587,6 +5676,33 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     ],
   },
   {
+    id: "an-empty-scope-crosses-as-the-empty-string-and-reads-back-as-the-empty-grant",
+    title:
+      "an explicitly empty scope reaches the wire as the empty string and is read back as the empty list",
+    rationale:
+      "The wire form of `scope` is one space-separated string (RFC 8693 §4.2), so on the wire the empty grant is spelled as the empty string — and it must survive to the wire, because `scope` is only a SHOULD on an access token (RFC 9068 §2.2.3) and the explicit empty value is the one way an issuer can tell a grant of nothing apart from silence. Reading it back as the empty list keeps that one statement one statement in both vocabularies: a reader reporting the token as stating no scope at all would erase the restriction the issuer signed.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "access_token",
+        content: {
+          subject: "user-1",
+          audience: [RESOURCE],
+          clientId: CLIENT,
+          scope: [],
+        },
+      },
+    ],
+    when: [{ step: "mint" }, { step: "verify" }],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      { step: "claims", expected: { scope: [] } },
+      { step: "wireClaims", on: "jose", includes: { scope: "" } },
+      { step: "wireClaims", on: "cose", includes: { 9: "" } },
+    ],
+  },
+  {
     id: "an-empty-claim-the-registry-declares-inert-is-left-off-the-wire",
     title: "an empty claim that asserts nothing anyone can act on is not emitted",
     rationale:
@@ -6040,9 +6156,15 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     ],
     then: [
       { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      // `scope` arrives as the one string its registration defines (RFC 8693
+      // §4.2) and is reported as the list that string spells.
       {
         step: "claims",
-        expected: { subject: "user-1", audience: [RESOURCE, "account"] },
+        expected: {
+          subject: "user-1",
+          audience: [RESOURCE, "account"],
+          scope: ["openid", "profile"],
+        },
       },
     ],
   },

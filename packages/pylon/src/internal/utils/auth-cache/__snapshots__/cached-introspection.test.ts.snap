@@ -14,10 +14,7 @@ exports[`cached introspection payload > should store the claims in wire form 1`]
     "permissions": [
       "users:read",
     ],
-    "scope": [
-      "openid",
-      "profile",
-    ],
+    "scope": "openid profile",
     "sub": "alice",
     "token_type": "Bearer",
     "username": "alice@lindorm.io",

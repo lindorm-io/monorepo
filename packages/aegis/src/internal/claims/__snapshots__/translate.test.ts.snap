@@ -71,10 +71,7 @@ exports[`domainToJose — content -> wire mapping > the full domain vocabulary m
     "admin",
   ],
   "s_hash": "dVhomogT530ZL5uCydDavDSoQtJ2KMnAsb7cS78Obbc",
-  "scope": [
-    "read",
-    "write",
-  ],
+  "scope": "read write",
   "sid": "sid-1",
   "sih": "sih-1",
   "sub": "user-1",

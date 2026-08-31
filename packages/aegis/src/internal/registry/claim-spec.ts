@@ -14,13 +14,17 @@ import type { MemberSpec, ParamSpec, WhenEmpty } from "./param-spec.js";
 export type Sensitivity = "public" | "sensitive";
 
 /**
- * How an array claim tolerates a SCALAR on read. Required on every `array`
- * codec; the three cases are exhaustive and none of them is a default.
- *   - `"spaced"` a space-delimited STRING is accepted and SPLIT (`"a b"` ->
- *                `["a","b"]`), the RFC 6749 §3.3 spelling.
- *   - `"strict"` arrays ONLY; a scalar decodes to `undefined`.
- *   - `"wrap"`   a scalar WRAPS to a single-element array — `aud` alone, which is
- *                string-OR-array on the wire (RFC 7519 §4.1.3).
+ * The wire policy of an `array` codec. Required on every `array` codec; the
+ * three cases are exhaustive and none of them is a default.
+ *   - `"spaced"` the WIRE FORM is one space-delimited STRING, in BOTH
+ *                directions: the write side JOINS (`["a","b"]` -> `"a b"`,
+ *                `[]` -> `""`) and the read side SPLITS — the RFC 6749 §3.3
+ *                spelling. `scope` alone (RFC 8693 §4.2).
+ *   - `"strict"` the wire carries the array itself; a scalar on read decodes
+ *                to `undefined`.
+ *   - `"wrap"`   the wire carries the array; a scalar on read WRAPS to a
+ *                single-element array — `aud` alone, which is string-OR-array
+ *                on the wire (RFC 7519 §4.1.3).
  */
 export type ArrayScalar = "spaced" | "strict" | "wrap";
 

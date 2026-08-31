@@ -482,9 +482,10 @@ describe("CLAIM_REGISTRY", () => {
         ).map((spec) => spec.domain),
       );
 
-    expect(withScalar("spaced")).toEqual(
-      new Set(["scope", "roles", "permissions", "conformsTo"]),
-    );
+    // `spaced` states the WIRE FORM — the write side joins, the read side
+    // splits — so it is scope's alone (RFC 8693 §4.2). The authority lists are
+    // strict: RFC 9068 §2.2.3.1 provides `roles` no string form to split.
+    expect(withScalar("spaced")).toEqual(new Set(["scope"]));
     expect(withScalar("strict")).toEqual(
       new Set([
         "authMethods",
@@ -492,6 +493,9 @@ describe("CLAIM_REGISTRY", () => {
         "entitlements",
         "groups",
         "preferredAccessibility",
+        "roles",
+        "permissions",
+        "conformsTo",
       ]),
     );
     // RFC 7519 aud is string-OR-array and is the only wrapping claim.

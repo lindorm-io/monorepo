@@ -15,6 +15,7 @@ import { createIdentityMatchers } from "./jwt-identity-matchers.js";
 import { matcherWireName } from "./matcher-wire-name.js";
 import { isClaimOmitted } from "./rules/is-claim-omitted.js";
 import { isClaimSatisfied } from "./rules/is-claim-satisfied.js";
+import { withSpacedArrays } from "./spaced-wire-arrays.js";
 import { validate } from "./validate.js";
 import { validateActor } from "./validate-actor.js";
 import type { ActorValidationError } from "./validate-actor.js";
@@ -71,9 +72,10 @@ export const applyVerifyPolicy = ({
   dpopMaxSkew,
 }: {
   /**
-   * The WIRE-keyed claim dict the matchers run against, with temporal claims as
-   * `Date`s. Both wires produce this; only the key spelling differs, which is
-   * what `nameOf` accounts for.
+   * The WIRE-keyed claim dict the matcher pass reads, with temporal claims as
+   * `Date`s; the spaced lists are lifted off it per call
+   * ({@link withSpacedArrays}). Both wires produce this; only the key spelling
+   * differs, which is what `nameOf` accounts for.
    */
   wireClaims: Dict;
   /** The DOMAIN claims — read for the `cnf` thumbprint the DPoP check binds to. */
@@ -164,7 +166,16 @@ export const applyVerifyPolicy = ({
   );
 
   try {
-    validate(wireClaims, predicate as never, AegisDomainError, "claims_invalid");
+    // ⚠ The spaced lists are lifted from their wire string to the list it
+    // spells before the predicate runs ({@link withSpacedArrays}): the caller's
+    // containment matcher compiles to a `$all` (`lift-claim-matcher.ts`), which
+    // no string satisfies.
+    validate(
+      withSpacedArrays(wireClaims, nameOf),
+      predicate as never,
+      AegisDomainError,
+      "claims_invalid",
+    );
   } catch (err) {
     const invalid = (err as any).data?.invalid as Array<string> | undefined;
 
@@ -182,8 +193,9 @@ export const applyVerifyPolicy = ({
         invalid: invalid?.map((key) => domainByWire.get(key) ?? key),
         format,
       },
-      // `debug` stays WIRE-spelled and carries the values: it says what is on the
-      // token, which is what a log reader compares the token itself against.
+      // `debug` stays WIRE-spelled and carries the values. A spaced claim's
+      // value is the lifted list ({@link withSpacedArrays}), not the token's
+      // own string.
       debug: { invalid: (err as any).debug?.invalid },
       title: "Claims Invalid",
       details:

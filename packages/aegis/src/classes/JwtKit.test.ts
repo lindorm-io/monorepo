@@ -301,7 +301,8 @@ describe("JwtKit", () => {
         permissions: ["test_permission"],
         roles: ["test_role"],
         s_hash: "LpadyLdMV2YGBJvsrNsr0CDlm38M7SR_OSWVQsyD6Rc",
-        scope: ["test_scope"],
+        // The wire form of `scope` is one space-delimited string (RFC 8693 §4.2).
+        scope: "test_scope",
         sid: "d5d79807-52c2-5ac1-a3f1-fc5fe8b9e9af",
         sih: "test_session_hint",
         sub: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",

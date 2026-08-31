@@ -43,7 +43,7 @@ describe("encodeCwtClaims", () => {
     expect(map.get(4)).toBe(1700003600); // exp (Date -> unix int)
     expect(map.get(6)).toBe(1700000000); // iat
     expect(Buffer.from(map.get(7) as Uint8Array).toString("utf8")).toBe("the-jti"); // cti bstr
-    expect(map.get(9)).toEqual(["read", "write"]); // scope
+    expect(map.get(9)).toBe("read write"); // scope — one text string (RFC 9200 §8.14)
     expect(map.get(-65537 - 11)).toBe("client-1"); // client_id private-use label
     expect(map.has("client_id")).toBe(false); // not string-keyed on-platform
     expect(map.get("loa")).toBe(3); // loa string-keyed (≤ 4 chars)

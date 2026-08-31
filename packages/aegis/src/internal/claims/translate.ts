@@ -1011,6 +1011,42 @@ const encodeIfReadable = (
   return decodeValue(member, encoded, nameOf, probe) === undefined ? undefined : encoded;
 };
 
+// How an array claim reaches the JOSE-shaped wire, per the codec's own policy —
+// the write twin of {@link decodeArray}, and the ONE place the spaced join
+// happens.
+//
+// ⚠ `"spaced"` states the WIRE FORM, not a read tolerance: the claim's wire
+// value is one space-delimited string (RFC 8693 §4.2), and the CWT wire carries
+// the same text string (RFC 9200 §8.14) — so the join derives from the registry
+// cell here and the split from the same cell in {@link decodeArray}. `[]` joins
+// to `""`; whether that empty string rides is the registry's `whenEmpty` column
+// at emission (`internal/utils/normalise-claims.ts`), never this arm's to erase.
+//
+// ⚠ A NON-ARRAY VALUE RIDES UNTOUCHED, like every scalar encode arm:
+// `encodeIfReadable`'s probe decides whether the read side would keep it, so an
+// already-joined string survives and a shape the decoder refuses is dropped.
+// pinned: translate.test.ts#should carry a scalar for a top-level array claim
+// whose codec tolerates one.
+const encodeArray = (spec: WalkedSpec, scalar: ArrayScalar, value: unknown): unknown => {
+  switch (scalar) {
+    case "spaced":
+      return isArray(value) ? value.join(" ") : value;
+    case "strict":
+    case "wrap":
+      return value;
+    default: {
+      const exhaustive: never = scalar;
+      throw new AegisDomainError("Unhandled array scalar policy", {
+        code: "translate_unhandled_array_scalar",
+        data: { domain: spec.domain, scalar: String(exhaustive) },
+        title: "Unhandled Array Scalar Policy",
+        details:
+          "The claim registry declared an array scalar-tolerance policy the translator has no encoder for.",
+      });
+    }
+  }
+};
+
 // Encode ONE registered claim's value to its JOSE wire form per the registry
 // codec (exhaustive over ClaimCodec; an unknown kind throws).
 //
@@ -1042,7 +1078,7 @@ const encodeValue = (
       return value;
     case "array":
       return codec.of === undefined
-        ? value
+        ? encodeArray(spec, codec.scalar, value)
         : walkElements(codec.of, value, writeDirection(nameOf), context);
     case "date":
       return value instanceof Date ? getUnixTime(value) : undefined;
@@ -1211,9 +1247,9 @@ const decodeArray = (spec: WalkedSpec, scalar: ArrayScalar, value: unknown): unk
     case "wrap":
       return toAudience(value); // RFC 7519 §4.1.3
     case "spaced":
-      return toStringArray(value); // scope, roles, permissions, conformsTo
+      return toStringArray(value); // scope — the wire form (RFC 8693 §4.2)
     case "strict":
-      return isArray(value) ? value : undefined; // amr, entitlements, groups, afc
+      return isArray(value) ? value : undefined; // membership pinned: claims-registry.test.ts
     default: {
       const exhaustive: never = scalar;
       throw new AegisDomainError("Unhandled array scalar policy", {
