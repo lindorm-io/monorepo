@@ -793,13 +793,14 @@ const walkObject = (
  * name can say neither WHICH element of a collection nor WHICH DEPTH of a
  * recursive structure the bad member sits at.
  *
- * ⚠ FIVE FAILURES REACH IT, not one. `details` names all five because a consumer
- * reads it to know what to repair: a MANDATORY MEMBER that is absent or empty,
- * TWO MEMBERS THAT RESOLVE TO ONE KEY, a member the structure's CLOSED member set
- * does not declare, a claim value that is not the COLLECTION its codec declares,
- * and an ELEMENT of that collection that is not a structure. They share one code
- * because they share one repair — the claim's shape — and each entry's own
- * `message` says which of the five it is.
+ * ⚠ SEVERAL FAILURES REACH IT. `details` names them because a consumer reads it
+ * to know what to repair: a MANDATORY MEMBER that is absent or empty, TWO MEMBERS
+ * THAT RESOLVE TO ONE KEY, a member the structure's CLOSED member set does not
+ * declare, a claim value that is not the COLLECTION its codec declares, an
+ * ELEMENT of that collection that is not a structure, and a MEMBER of a
+ * space-delimited list that is not a string or contains a space. They share one
+ * code because they share one repair — the claim's shape — and each entry's own
+ * `message` says which it is.
  */
 const refuseInvalidStructure = (claim: string, invalid: Array<InvalidEntry>): never => {
   throw new AegisDomainError("Invalid claim structure", {
@@ -808,7 +809,7 @@ const refuseInvalidStructure = (claim: string, invalid: Array<InvalidEntry>): ne
     debug: { claim, invalid },
     title: "Invalid Claim Structure",
     details:
-      "A claim does not have the structure the registry declares for it: a member its specification makes mandatory is absent or empty, two members resolve to the same key so neither can be honoured, a member is not one the claim's closed member set declares, the value is not the collection the claim is defined as, or an element of that collection is not a structure. Each entry in `invalid` names the offending position and what is wrong with it.",
+      "A claim does not have the structure the registry declares for it: a member its specification makes mandatory is absent or empty, two members resolve to the same key so neither can be honoured, a member is not one the claim's closed member set declares, the value is not the collection the claim is defined as, an element of that collection is not a structure, or a member of a space-delimited list is not a string or contains a space. Each entry in `invalid` names the offending position and what is wrong with it.",
   });
 };
 
@@ -1022,15 +1023,55 @@ const encodeIfReadable = (
 // to `""`; whether that empty string rides is the registry's `whenEmpty` column
 // at emission (`internal/utils/normalise-claims.ts`), never this arm's to erase.
 //
+// ⚠ A MEMBER CONTAINING A SPACE IS REFUSED, NOT JOINED — aegis policy at mint
+// (RFC 6749 §3.3). Joined, it is bytes identical to two members, so the read
+// side would report a list the caller never stated; a non-string member is
+// refused with it, since `join` would spell it as text the reader takes for a
+// scope-token. Each fault records ONE entry at the member's index and the whole
+// claim returns `undefined`, exactly as {@link walkElements} refuses a
+// collection; {@link encodeClaim}'s `refuseIfInvalid` raises it.
+// pinned: translate.test.ts#should refuse a spaced member containing a space
+// rather than join it into two members.
+//
 // ⚠ A NON-ARRAY VALUE RIDES UNTOUCHED, like every scalar encode arm:
 // `encodeIfReadable`'s probe decides whether the read side would keep it, so an
 // already-joined string survives and a shape the decoder refuses is dropped.
 // pinned: translate.test.ts#should carry a scalar for a top-level array claim
 // whose codec tolerates one.
-const encodeArray = (spec: WalkedSpec, scalar: ArrayScalar, value: unknown): unknown => {
+const encodeArray = (
+  spec: WalkedSpec,
+  scalar: ArrayScalar,
+  value: unknown,
+  context: WalkContext,
+): unknown => {
   switch (scalar) {
-    case "spaced":
-      return isArray(value) ? value.join(" ") : value;
+    case "spaced": {
+      if (!isArray(value)) return value;
+
+      const faults = context.invalid.length;
+
+      value.forEach((member, index) => {
+        const at = elementPath(context, index);
+
+        if (!isString(member)) {
+          context.invalid.push({
+            key: at.path,
+            message: `Member "${at.path}" must be a string`,
+          });
+
+          return;
+        }
+
+        if (member.includes(" ")) {
+          context.invalid.push({
+            key: at.path,
+            message: `Member "${at.path}" must not contain a space`,
+          });
+        }
+      });
+
+      return context.invalid.length === faults ? value.join(" ") : undefined;
+    }
     case "strict":
     case "wrap":
       return value;
@@ -1078,7 +1119,7 @@ const encodeValue = (
       return value;
     case "array":
       return codec.of === undefined
-        ? encodeArray(spec, codec.scalar, value)
+        ? encodeArray(spec, codec.scalar, value, context)
         : walkElements(codec.of, value, writeDirection(nameOf), context);
     case "date":
       return value instanceof Date ? getUnixTime(value) : undefined;
@@ -1157,7 +1198,7 @@ export const domainToWire = (common: Dict, nameOf: NameSelector): Dict => {
  * token without the claim. Its skip rules are the writer's own, so "supplied"
  * means what the writer means.
  *
- * ⚠ A REFUSED STRUCTURE IS NOT A DROP. A value the walker refuses fills the
+ * ⚠ A REFUSED STRUCTURE IS NOT A DROP. A value the write side refuses fills the
  * context and is reported by {@link encodeClaim} in its turn; only a silent
  * `undefined` with a clean context is a claim the wire loses. The probe never
  * throws.

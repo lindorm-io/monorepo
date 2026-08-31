@@ -241,17 +241,117 @@ describe("domainToJose — content -> wire mapping", () => {
     );
   });
 
-  // The wire form cannot spell a space INSIDE a scope-token — space IS the
-  // delimiter (RFC 6749 §3.3) — so a member containing one joins to bytes
-  // identical to two members, and the read side reports the members those bytes
-  // delimit.
-  test("should re-read a member containing a space as the members it delimits", () => {
-    expect(domainToJose({ scope: ["read write"] })).toEqual({ scope: "read write" });
+  // A member containing a space joins to bytes identical to two members, so the
+  // write side REFUSES it rather than sign a list its own reader reports
+  // differently — aegis policy at mint (RFC 6749 §3.3). The read side splits: a
+  // foreign wire string is read as the members it delimits.
+  test("should refuse a spaced member containing a space rather than join it into two members", () => {
+    expect(() => domainToJose({ scope: ["read write"] })).toThrow(
+      expect.objectContaining({
+        code: "claim_structure_invalid",
+        data: {
+          claim: "scope",
+          invalid: [
+            { key: "scope[0]", message: 'Member "scope[0]" must not contain a space' },
+          ],
+        },
+      }) as unknown as Error,
+    );
+
     expect(joseToDomain({ scope: "read write" }).claims.scope).toEqual(["read", "write"]);
-    expect(joseToDomain(domainToJose({ scope: ["read write"] })).claims.scope).toEqual([
-      "read",
-      "write",
-    ]);
+    expect(domainToJose({ scope: ["a", "b"] })).toEqual({ scope: "a b" });
+  });
+
+  // `join` would spell a non-string member as text the reader takes for a
+  // scope-token, so it is refused under the same code at the same position.
+  test("should refuse a spaced member that is not a string", () => {
+    expect(() => domainToJose({ scope: [42] as unknown as Array<string> })).toThrow(
+      expect.objectContaining({
+        code: "claim_structure_invalid",
+        data: {
+          claim: "scope",
+          invalid: [{ key: "scope[0]", message: 'Member "scope[0]" must be a string' }],
+        },
+      }) as unknown as Error,
+    );
+  });
+
+  // One entry per faulty member, each at its own index — the refusal reports
+  // everything wrong with the claim, as every structure refusal does.
+  test("should report every faulty spaced member in one refusal", () => {
+    expect(() => domainToJose({ scope: ["a b", 7] as unknown as Array<string> })).toThrow(
+      expect.objectContaining({
+        code: "claim_structure_invalid",
+        data: {
+          claim: "scope",
+          invalid: [
+            { key: "scope[0]", message: 'Member "scope[0]" must not contain a space' },
+            { key: "scope[1]", message: 'Member "scope[1]" must be a string' },
+          ],
+        },
+      }) as unknown as Error,
+    );
+  });
+
+  // The refusal names the faulty member and no other, and the same positions
+  // without a space join.
+  test("should refuse only the faulty spaced member at its own index among valid members", () => {
+    expect(() => domainToJose({ scope: ["read", "wr ite", "admin"] })).toThrow(
+      expect.objectContaining({
+        code: "claim_structure_invalid",
+        data: {
+          claim: "scope",
+          invalid: [
+            { key: "scope[1]", message: 'Member "scope[1]" must not contain a space' },
+          ],
+        },
+      }) as unknown as Error,
+    );
+
+    expect(domainToJose({ scope: ["read", "write", "admin"] })).toEqual({
+      scope: "read write admin",
+    });
+  });
+
+  // SP at any position of the member — leading, trailing or doubled — is a
+  // boundary the wire would read as one (RFC 6749 §3.3).
+  test("should refuse a spaced member with a leading, trailing or doubled space", () => {
+    const refusal = expect.objectContaining({
+      code: "claim_structure_invalid",
+      data: {
+        claim: "scope",
+        invalid: [
+          { key: "scope[0]", message: 'Member "scope[0]" must not contain a space' },
+        ],
+      },
+    }) as unknown as Error;
+
+    expect(() => domainToJose({ scope: [" read"] })).toThrow(refusal);
+    expect(() => domainToJose({ scope: ["write "] })).toThrow(refusal);
+    expect(() => domainToJose({ scope: ["a  b"] })).toThrow(refusal);
+  });
+
+  // Entries follow the members' own order whichever kind each fault is, so a
+  // caller repairs positions, not a sorted bag.
+  test("should list interleaved faults of both kinds in member order", () => {
+    expect(() =>
+      domainToJose({
+        scope: ["a b", "read", 7, "c d", "write", false] as unknown as Array<string>,
+      }),
+    ).toThrow(
+      expect.objectContaining({
+        code: "claim_structure_invalid",
+        data: {
+          claim: "scope",
+          invalid: [
+            { key: "scope[0]", message: 'Member "scope[0]" must not contain a space' },
+            { key: "scope[2]", message: 'Member "scope[2]" must be a string' },
+            { key: "scope[3]", message: 'Member "scope[3]" must not contain a space' },
+            { key: "scope[5]", message: 'Member "scope[5]" must be a string' },
+          ],
+        },
+      }) as unknown as Error,
+    );
   });
 
   // The lindorm authority lists are STRICT arrays: RFC 9068 §2.2.3.1 provides
@@ -1300,6 +1400,15 @@ describe("unreadableClaims — the top-level claims the mint writer leaves off t
 
   test("unreadableClaims asks each claim on a fresh context, so a refused structure does not mask a later leaf failure", () => {
     expect(unreadableClaims({ act: "service-a", subject: 42 })).toEqual(
+      new Set(["subject"]),
+    );
+  });
+
+  // A refused spaced member fills the context exactly as a refused structure
+  // does, so a `required` rule over `scope` does not report the claim as "not of
+  // its declared type" ahead of the structure refusal that names the member.
+  test("unreadableClaims omits a spaced claim refused for a member containing a space", () => {
+    expect(unreadableClaims({ scope: ["read write"], subject: 42 })).toEqual(
       new Set(["subject"]),
     );
   });

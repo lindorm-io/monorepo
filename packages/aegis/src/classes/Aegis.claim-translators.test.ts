@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { AegisDomainError } from "../errors/index.js";
 import { Aegis } from "./Aegis.js";
 
 /**
@@ -62,5 +63,45 @@ describe("Aegis — the public claim translators", () => {
 
   test("splits a space-delimited wire string to the domain list", () => {
     expect(Aegis.toDomain({ scope: "a b" }).claims.scope).toEqual(["a", "b"]);
+  });
+
+  // The public translator reaches the same refusal the mint pipeline does: a
+  // member containing the delimiter has no spelling on the wire — aegis policy
+  // at mint (RFC 6749 §3.3).
+  test("refuses a spaced member containing a space rather than join it", () => {
+    const write = () => Aegis.toWire({ scope: ["a b"] });
+
+    expect(write).toThrow(AegisDomainError);
+    expect(write).toThrow(
+      expect.objectContaining({
+        code: "claim_structure_invalid",
+        data: {
+          claim: "scope",
+          invalid: [
+            { key: "scope[0]", message: 'Member "scope[0]" must not contain a space' },
+          ],
+        },
+      }) as unknown as Error,
+    );
+  });
+
+  // One refusal carries every faulty member at its own index, in member order.
+  test("lists every faulty spaced member at its own index in one refusal", () => {
+    const write = () =>
+      Aegis.toWire({ scope: ["a b", "read", 7, "c d"] as unknown as Array<string> });
+
+    expect(write).toThrow(
+      expect.objectContaining({
+        code: "claim_structure_invalid",
+        data: {
+          claim: "scope",
+          invalid: [
+            { key: "scope[0]", message: 'Member "scope[0]" must not contain a space' },
+            { key: "scope[2]", message: 'Member "scope[2]" must be a string' },
+            { key: "scope[3]", message: 'Member "scope[3]" must not contain a space' },
+          ],
+        },
+      }) as unknown as Error,
+    );
   });
 });

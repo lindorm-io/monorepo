@@ -320,11 +320,16 @@ export type DeploymentGivenStep = {
  * `sender_constrained` is the smallest profile that DEMANDS a proof-of-
  * possession binding. No built-in requires `confirmation`, so the capability that
  * a demanded binding must actually bind cannot be stated against one.
+ *
+ * `scoped_access` is the smallest profile that DEMANDS a `scope`. No built-in
+ * requires one, so which refusal a demanded scope with a malformed member meets
+ * cannot be stated against one.
  */
 type RegisteredProfileContent = {
   sender_constrained: Required<
     Pick<SignContent, "subject" | "audience" | "confirmation">
   >;
+  scoped_access: Required<Pick<SignContent, "subject" | "audience" | "scope">>;
 };
 
 /**
@@ -4194,6 +4199,94 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       // wires spell the claim differently while carrying the same string.
       { step: "wireClaims", on: "jose", includes: { scope: "read write" } },
       { step: "wireClaims", on: "cose", includes: { 9: "read write" } },
+    ],
+  },
+  {
+    id: "a-scope-member-containing-a-space-is-refused-at-mint",
+    title: "minting a token whose scope list has a member containing a space is refused",
+    rationale:
+      "The wire form of `scope` is one space-delimited string, so a domain member containing a space joins to bytes indistinguishable from two members, and every reader of the token — this package's own included — reports a list the caller never stated. Aegis policy at mint (RFC 6749 §3.3): the member is refused, and the refusal names its position so the caller repairs the value rather than the claim. The specification governs verify, so a foreign token's wire string is read as the members it delimits.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "access_token",
+        content: {
+          subject: "user-1",
+          audience: [RESOURCE],
+          clientId: CLIENT,
+          scope: ["read write"],
+        },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      // ⚠ THE CODE, not merely the class: a policy refusal carries an `invalid`
+      // list under the same class, so a row naming only the class would pass
+      // whichever fired.
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        code: "claim_structure_invalid",
+        data: {
+          claim: "scope",
+          invalid: [
+            { key: "scope[0]", message: 'Member "scope[0]" must not contain a space' },
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: "a-demanded-scope-member-containing-a-space-is-refused-as-malformed-not-as-missing",
+    title:
+      "minting under a profile that demands a scope refuses a member containing a space for its shape, not its presence",
+    rationale:
+      "A profile demanding `scope` is satisfied by the caller who supplied one, so the fault in a member containing a space is the member's shape and nothing else — aegis policy at mint (RFC 6749 §3.3). The refusal must say so: a caller told the claim is missing, or not of its declared type, looks for a field they already wrote, while one told which member is malformed repairs it. The presence gate therefore reports nothing for a list whose one fault is a member, and the structure refusal naming the position is the one the caller sees.",
+    given: [
+      // No BUILT-IN profile requires `scope`, so the capability is stated against
+      // a profile the row registers through the public `registerProfile` door.
+      {
+        step: "profile",
+        profile: {
+          name: "scoped_access",
+          typ: { presence: "none" },
+          policy: [
+            {
+              rule: "required",
+              on: ["mint", "verify"],
+              claims: ["subject", "audience", "scope"],
+            },
+          ],
+          autoInject: ["issuedAt", "tokenId", "issuer"],
+          issuer: "platform",
+          lifetime: "5m",
+          encryptable: false,
+        },
+      },
+      {
+        step: "token",
+        via: "mint",
+        profile: "scoped_access",
+        content: { subject: "user-1", audience: [RESOURCE], scope: ["read write"] },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      // ⚠ THE CODE is the capability: `profile_policy_invalid` carries an `invalid`
+      // list under the same class, and it is the refusal this row states does NOT
+      // fire.
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        code: "claim_structure_invalid",
+        data: {
+          claim: "scope",
+          invalid: [
+            { key: "scope[0]", message: 'Member "scope[0]" must not contain a space' },
+          ],
+        },
+      },
     ],
   },
   {
@@ -9384,6 +9477,34 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         step: "wireProtectedHeader",
         on: "cose",
         includes: { 16: "application/custom+cwt" },
+      },
+    ],
+  },
+  {
+    id: "a-scope-member-containing-a-space-is-refused-by-the-profile-less-sign-verb",
+    title:
+      "signing a payload without a profile refuses a scope list whose member contains a space",
+    rationale:
+      "The wire spelling of `scope` — one space-delimited string — belongs to the token wire, not to a profile, so a member containing a space has no spelling whichever verb writes the token. The profile-less sign verb refuses it at the same position and under the same code as the profiled mint — aegis policy at mint (RFC 6749 §3.3) — because a verb that applies no profile is still an issuer, and its reader, like every other, would report a list the caller never stated.",
+    given: [
+      {
+        step: "token",
+        via: "domain-sign",
+        claims: { subject: "user-1", scope: ["read write"] },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        code: "claim_structure_invalid",
+        data: {
+          claim: "scope",
+          invalid: [
+            { key: "scope[0]", message: 'Member "scope[0]" must not contain a space' },
+          ],
+        },
       },
     ],
   },
