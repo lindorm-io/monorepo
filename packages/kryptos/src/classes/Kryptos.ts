@@ -7,7 +7,7 @@ import {
   isExpired as isDateExpired,
   isLive,
 } from "@lindorm/date";
-import { isBuffer, isInteger } from "@lindorm/is";
+import { isBuffer, isInteger, isString } from "@lindorm/is";
 import { lindormId } from "@lindorm/random";
 import { omitEmpty, omitUndefined } from "@lindorm/utils";
 import { KryptosError } from "../errors/index.js";
@@ -156,8 +156,7 @@ export class Kryptos implements IKryptos {
 
     const hasCertChainInput =
       options.certificateChain != null &&
-      (typeof options.certificateChain === "string" ||
-        options.certificateChain.length > 0);
+      (isString(options.certificateChain) || options.certificateChain.length > 0);
 
     if (hasCertChainInput) {
       if (!this._publicKey || this._publicKey.length === 0) {

@@ -5,7 +5,7 @@ import { join } from "path";
 import { pathToFileURL } from "url";
 import { confirm, input, select } from "@inquirer/prompts";
 import { expiresAt, isReadableTime } from "@lindorm/date";
-import { isBoolean } from "@lindorm/is";
+import { isBoolean, isString } from "@lindorm/is";
 import { AES_ENCRYPTION_ALGORITHMS, type Environment } from "@lindorm/types";
 import { program } from "commander";
 import { KryptosKit } from "./classes/index.js";
@@ -526,7 +526,7 @@ const printKeyResult = (
   write: string | boolean | undefined,
 ): void => {
   if (write !== undefined) {
-    const dir = typeof write === "string" && write.length > 0 ? write : process.cwd();
+    const dir = isString(write) && write.length > 0 ? write : process.cwd();
     const filePath = writeKeyFile(dir, kryptos.id, result);
     console.log(`\nWrote key to:\n\n${filePath}\n\n${inspectSummary(kryptos)}\n`);
     return;
@@ -768,9 +768,7 @@ export const exportKey = async (
   const pem = key.export("pem");
 
   const dir =
-    typeof options.write === "string" && options.write.length > 0
-      ? options.write
-      : process.cwd();
+    isString(options.write) && options.write.length > 0 ? options.write : process.cwd();
 
   const written: Array<string> = [];
   const writePem = (suffix: string, contents: string, mode: number): void => {

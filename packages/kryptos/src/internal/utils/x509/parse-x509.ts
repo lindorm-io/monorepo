@@ -1,3 +1,4 @@
+import { isString } from "@lindorm/is";
 import { KryptosError } from "../../../errors/index.js";
 
 const PEM_BLOCK_REGEX =
@@ -55,7 +56,7 @@ export const parseX509 = (input: string | Array<string>): Array<Buffer> => {
 
   const ders: Array<Buffer> = [];
   for (const item of inputs) {
-    if (typeof item !== "string" || item.length === 0) {
+    if (!isString(item) || item.length === 0) {
       throw new KryptosError("certificateChain entries must be non-empty strings", {
         code: "invalid_certificate_input",
         title: "Invalid Certificate Input",

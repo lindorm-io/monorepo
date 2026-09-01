@@ -61,7 +61,7 @@ import {
   TEST_X509_ROOT_PEM,
 } from "./x509.js";
 
-type NonKey = null | undefined | string | number;
+type NonKey = null | undefined | string | number | Array<never>;
 
 type GenerateOptions = Pick<
   KryptosLike,
@@ -1455,7 +1455,7 @@ export class KryptosKitSteps extends KryptosStepsBase {
     return raw === "key" ? "kryptos" : "other";
   }
 
-  @ParameterType("nonKey", /null|undefined|a string|a number/)
+  @ParameterType("nonKey", /null|undefined|a string|a number|an array/)
   static nonKey(raw: string): NonKey {
     switch (raw) {
       case "null":
@@ -1469,6 +1469,9 @@ export class KryptosKitSteps extends KryptosStepsBase {
 
       case "a number":
         return 42;
+
+      case "an array":
+        return [];
 
       default:
         throw new Error(`unknown non-key value "${raw}"`);

@@ -520,6 +520,7 @@ Feature: Kryptos key facade
         | undefined |
         | a string  |
         | a number  |
+        | an array  |
 
     Example: a key branded by a foreign copy of the library is recognised
       Then a key branded by a foreign copy of the library is recognised as a Kryptos key

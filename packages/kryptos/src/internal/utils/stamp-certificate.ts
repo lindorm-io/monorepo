@@ -1,4 +1,5 @@
 import { isAfter, isBefore } from "@lindorm/date";
+import { isString } from "@lindorm/is";
 import type { Environment } from "@lindorm/types";
 import { KryptosError } from "../../errors/index.js";
 import type { IKryptos } from "../../interfaces/index.js";
@@ -79,8 +80,7 @@ const resolveChildEnvironment = (
 
 const normalizeSan = (
   entry: string | X509SubjectAltNameInput,
-): X509SubjectAltNameInput =>
-  typeof entry === "string" ? { type: "uri", value: entry } : entry;
+): X509SubjectAltNameInput => (isString(entry) ? { type: "uri", value: entry } : entry);
 
 // RFC 5280 §4.2.1.6: SAN is OPTIONAL when the subject DN is non-empty (ours
 // always carries a CN) and required (critical) only when the DN is empty.

@@ -1,5 +1,6 @@
 import { createPublicKey, verify } from "crypto";
 import { isAfterOrEqual, isBeforeOrEqual } from "@lindorm/date";
+import { isString } from "@lindorm/is";
 import { KryptosError } from "../../../errors/index.js";
 import type { ParsedX509Certificate } from "../../../types/index.js";
 import {
@@ -82,10 +83,9 @@ const verifySignature = (child: ParsedX509Certificate, issuerSpki: Buffer): bool
 const toDerArray = (
   trustAnchors: string | Array<string> | ReadonlyArray<Buffer>,
 ): Array<Buffer> => {
-  if (typeof trustAnchors === "string") return parseX509(trustAnchors);
+  if (isString(trustAnchors)) return parseX509(trustAnchors);
   if (trustAnchors.length === 0) return [];
-  if (typeof trustAnchors[0] === "string")
-    return parseX509(trustAnchors as Array<string>);
+  if (isString(trustAnchors[0])) return parseX509(trustAnchors as Array<string>);
   return [...(trustAnchors as ReadonlyArray<Buffer>)];
 };
 

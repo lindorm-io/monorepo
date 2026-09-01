@@ -1,4 +1,5 @@
 import { B64 } from "@lindorm/b64";
+import { isString } from "@lindorm/is";
 import type { IKryptos } from "../../interfaces/index.js";
 import {
   describeCertificate,
@@ -91,7 +92,7 @@ export const inspectJson = (key: IKryptos): string => {
   const redacted: Record<string, unknown> = {};
   for (const [member, value] of Object.entries(jwk)) {
     redacted[member] =
-      isSecretMember(member) && typeof value === "string"
+      isSecretMember(member) && isString(value)
         ? `<${B64.toBuffer(value, "b64u").length} bytes>`
         : value;
   }

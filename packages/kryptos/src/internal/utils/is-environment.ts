@@ -1,3 +1,4 @@
+import { isString } from "@lindorm/is";
 import type { Environment } from "@lindorm/types";
 
 // The sanctioned deployment environments (the `Environment` union from
@@ -11,4 +12,4 @@ export const ENVIRONMENTS: ReadonlyArray<Environment> = [
 ];
 
 export const isEnvironment = (value: unknown): value is Environment =>
-  typeof value === "string" && (ENVIRONMENTS as ReadonlyArray<string>).includes(value);
+  isString(value) && (ENVIRONMENTS as ReadonlyArray<string>).includes(value);

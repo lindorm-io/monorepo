@@ -1042,6 +1042,20 @@ describe("kryptos export CLI", () => {
     );
   });
 
+  test("defaults the directory to cwd when --write has no value", async () => {
+    const key = KryptosKit.generate.auto({ algorithm: "ES256" });
+    kid = key.id;
+
+    const spy = vi.spyOn(process, "cwd").mockReturnValue(dir);
+    try {
+      await exportKey(KryptosKit.env.export(key), { write: true });
+    } finally {
+      spy.mockRestore();
+    }
+
+    expect(readdirSync(dir).sort()).toEqual([`${kid}.privkey.pem`, `${kid}.pubkey.pem`]);
+  });
+
   test("accepts a .kryptos file path as input", async () => {
     const key = KryptosKit.generate.auto({ algorithm: "ES256" });
     kid = key.id;
