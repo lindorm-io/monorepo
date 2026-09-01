@@ -415,6 +415,14 @@ export class KryptosSteps extends KryptosStepsBase {
     }
   }
 
+  @Then("the key reports no private key and no public key")
+  theKeyReportsNoPrivateKeyAndNoPublicKey(): void {
+    expect({
+      hasPrivateKey: this.ctx.kryptos.hasPrivateKey,
+      hasPublicKey: this.ctx.kryptos.hasPublicKey,
+    }).toEqual({ hasPrivateKey: false, hasPublicKey: false });
+  }
+
   @Then("reading the key's thumbprint is refused as {string}")
   readingTheKeysThumbprintIsRefused(code: string): void {
     this.refused(code, () => this.ctx.kryptos.thumbprint);

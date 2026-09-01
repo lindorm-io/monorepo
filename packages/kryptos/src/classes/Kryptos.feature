@@ -374,6 +374,11 @@ Feature: Kryptos key
       And the key's id is a 16-character key id
       And the key prints as "Kryptos<EC:ES256:" followed by its id
 
+    Example: a disposed key reports no private key and no public key
+      Given a generated "ES256" key
+      When I dispose of the key
+      Then the key reports no private key and no public key
+
   Rule: a key carries and verifies its certificate chain
 
     Example: every certificate format states the same chain and digests, leaf first

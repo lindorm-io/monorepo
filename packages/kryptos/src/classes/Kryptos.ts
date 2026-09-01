@@ -287,10 +287,12 @@ export class Kryptos implements IKryptos {
   }
 
   get hasPrivateKey(): boolean {
+    if (this._disposed) return false;
     return isBuffer(this._privateKey) && this._privateKey.length > 0;
   }
 
   get hasPublicKey(): boolean {
+    if (this._disposed) return false;
     return isBuffer(this._publicKey) && this._publicKey.length > 0;
   }
 
