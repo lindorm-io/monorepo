@@ -29,8 +29,7 @@ export type LindormJwkMetadata = {
   owner_id?: string;
   // Operational flag, emitted only in private JWKs (never in the published,
   // public JWKS — a published key is publishable by definition). It round-trips
-  // with the key material, so an internal key stays internal. Absent on import
-  // ⇒ `true` (see `parseJwkOptions`).
+  // with the key material, so an internal key stays internal.
   publish?: boolean;
   purpose?: string;
 };

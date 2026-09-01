@@ -118,10 +118,6 @@ export class Kryptos implements IKryptos {
     // outward-facing act you opt INTO. The flag is never inferred either —
     // `purpose` is a free-form string owned by the consumer, so kryptos does not
     // guess publication policy from it.
-    //
-    // ⚠ The ONE exception is the JWK import path: `parseJwkOptions` defaults it to
-    // TRUE, because a JWK is the interchange format of a PUBLISHED key and carries
-    // no `publish` member. Do not "harmonise" the two — see that file.
     this._publish = options.publish ?? false;
     this._purpose = options.purpose || null;
     this._type = options.type;
@@ -731,10 +727,8 @@ export class Kryptos implements IKryptos {
       owner_id: this.ownerId ?? undefined,
       // Emitted only in private JWKs (env strings, DB round-trips); a public JWK
       // feeds the published JWKS, where the flag is a tautology. Always an
-      // explicit boolean — `false` survives omitEmpty, `undefined` is stripped
-      // — including when `true`: the import default (`publish ?? true`) is the
-      // safety net for a foreign JWK, not the encoding of our own key. Two bytes
-      // of CBOR buys an env string that states its own policy.
+      // explicit boolean — `false` survives omitEmpty, `undefined` is stripped.
+      // Two bytes of CBOR buys an env string that states its own policy.
       publish: mode === "private" ? this.publish : undefined,
       purpose: this.purpose ?? undefined,
       x5c: certificate?.x5c,

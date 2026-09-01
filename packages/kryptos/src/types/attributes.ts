@@ -32,8 +32,7 @@ export type KryptosAttributes = {
   // should have stayed internal (KEK, CA, cookie/session) is a SILENT exposure;
   // failing to publish one that should be public is a LOUD, instant failure —
   // relying parties cannot verify and you know within seconds. So publication is
-  // opted INTO. The one exception is `from.jwk`, which defaults TRUE: a JWK is
-  // the interchange format of an already-published key.
+  // opted INTO.
   publish: boolean;
   purpose: string | null;
   type: KryptosType;
