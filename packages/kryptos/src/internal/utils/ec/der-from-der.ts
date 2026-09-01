@@ -56,7 +56,11 @@ export const createEcDerFromDer = (options: Options): Result => {
   }
 
   if (!result.publicKey.length && options.publicKey?.length) {
-    const publicObject = createPublicKey({ key: options.publicKey, format: "der" });
+    const publicObject = createPublicKey({
+      key: options.publicKey,
+      format: "der",
+      type: "spki",
+    });
     const publicKey = publicObject.export({ format: "der", type: "spki" });
 
     if (!isBuffer(publicKey)) {

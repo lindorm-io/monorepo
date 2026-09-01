@@ -403,6 +403,28 @@ export class KryptosKitSteps extends KryptosStepsBase {
     }
   }
 
+  @When("I import its public half with from.der")
+  iImportItsPublicHalfWithFromDer(): void {
+    const der: KryptosFromBuffer = {
+      ...derFixture(this.fixture.b64),
+      privateKey: undefined,
+    };
+
+    this.input = der;
+    this.ctx.kryptos = KryptosKit.from.der(der);
+  }
+
+  @When("I import its private half with from.der")
+  iImportItsPrivateHalfWithFromDer(): void {
+    const der: KryptosFromBuffer = {
+      ...derFixture(this.fixture.b64),
+      publicKey: undefined,
+    };
+
+    this.input = der;
+    this.ctx.kryptos = KryptosKit.from.der(der);
+  }
+
   @When("I import it again by detection")
   iImportItAgainByDetection(): void {
     this.ctx.other = KryptosKit.from.auto(this.input);
@@ -1006,6 +1028,14 @@ export class KryptosKitSteps extends KryptosStepsBase {
     }).toEqual({ hasPrivateKey: true, hasPublicKey: false });
   }
 
+  @Then("the key carries only a public half")
+  theKeyCarriesOnlyAPublicHalf(): void {
+    expect({
+      hasPrivateKey: this.ctx.kryptos.hasPrivateKey,
+      hasPublicKey: this.ctx.kryptos.hasPublicKey,
+    }).toEqual({ hasPrivateKey: false, hasPublicKey: true });
+  }
+
   @Then('the key type resolved for "{algorithm}" is {string}')
   theKeyTypeResolvedForIs(algorithm: KryptosAlgorithm, type: string): void {
     expect(KryptosKit.getTypeForAlgorithm(algorithm)).toBe(type);
@@ -1086,6 +1116,11 @@ export class KryptosKitSteps extends KryptosStepsBase {
   @Then("both keys export the same private JWK")
   bothKeysExportTheSamePrivateJwk(): void {
     expect(this.ctx.other.export("jwk")).toEqual(this.ctx.kryptos.export("jwk"));
+  }
+
+  @Then("both keys export the same public JWK")
+  bothKeysExportTheSamePublicJwk(): void {
+    expect(this.ctx.other.toJWK("public")).toEqual(this.ctx.kryptos.toJWK("public"));
   }
 
   @Then("both keys have identical private material")
