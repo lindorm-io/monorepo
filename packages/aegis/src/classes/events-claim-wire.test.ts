@@ -406,7 +406,8 @@ describe("the events claim on the wire", () => {
     );
 
     // ⚠ AND `null` IS STILL OMITTED, on the same door — the boundary the shared
-    // guard is not allowed to blur.
-    expect(Aegis.toWire({ events: null } as Dict).events).toBeUndefined();
+    // guard is not allowed to blur. `Object.hasOwn`: an absent key is the
+    // claim, a present key holding `undefined` is not.
+    expect(Object.hasOwn(Aegis.toWire({ events: null } as Dict), "events")).toBe(false);
   });
 });

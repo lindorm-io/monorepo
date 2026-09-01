@@ -1668,12 +1668,16 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       // at the READ, which is a different capability — a member whose value
       // contradicts its declared shape — and it has its own row
       // (`a-confirmation-this-package-cannot-read-is-refused-not-reported-as-
-      // absent`). ⚠ `null` is in that family and STAYS in it: a confirmation
-      // member is the one position in the package where a null is a contradiction
-      // rather than an absence: a `jkt` is a thumbprint or the member is not one
-      // (RFC 9449 §6.1), and an erased one mints an unbound token. This row stays
-      // on the empty string because that is the form that is perfectly READABLE
-      // and still binds nothing.
+      // absent`). ⚠ A null MEMBER is in that family: a confirmation member is
+      // the one member position where a null read off a token is a
+      // contradiction rather than an absence — a `jkt` is a thumbprint or the
+      // member is not one (RFC 9449 §6.1), and an erased one mints an unbound
+      // token. At the CLAIM level, `confirmation: null` is a confirmation nobody
+      // stated: the emission boundary strips it as absence and the mint issues
+      // a bearer token
+      // (`a-null-confirmation-states-no-binding-and-mints-a-bearer-token`).
+      // This row stays on the empty string because that is the form that is
+      // perfectly READABLE and still binds nothing.
       //
       // A FOREIGN token: minting cannot produce this shape, because the
       // `confirmation` shape rule refuses a thumbprint that is not 32 base64url
@@ -4869,6 +4873,10 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
 
   // ---------------------------------------------------------------------------
   // The confidentiality verb.
+  //
+  // ⚠ Owed at the gherkin migration: rows for cwe_encryption_mismatch and
+  // cwe_invalid_typ — this table cannot state a deployment defaultEncryption or
+  // a foreign COSE_Encrypt0. Pinned: CweKit.test.ts.
   // ---------------------------------------------------------------------------
   {
     id: "the-confidentiality-verb-returns-an-object-under-the-writers-own-keys",
@@ -5894,6 +5902,31 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     ],
   },
   {
+    id: "an-empty-audience-reaches-the-wire-as-the-empty-list",
+    title:
+      "an explicitly empty audience reaches the wire as the empty list on both wires",
+    rationale:
+      "`aud: []` names NOBODY where an absent `aud` restricts nothing (RFC 7519 §4.1.3), so the empty list is the narrowest statement an issuer can make and pruning it would issue the widest. A kept claim is kept VERBATIM: unlike `scope`, whose wire form collapses the empty grant to the empty string (RFC 8693 §4.2), `aud` has no scalar collapse, so the container itself must survive the domain door — every rewrite of an empty form is a statement on a signed wire that the issuer did not make. Both encodings carry an empty array natively, and RFC 8392 §3.1.3 keys `aud` at integer label 3.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "default",
+        content: {
+          subject: "user-1",
+          expires: "1h",
+          audience: [],
+        },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      { step: "wireClaims", on: "jose", includes: { aud: [] } },
+      { step: "wireClaims", on: "cose", includes: { 3: [] } },
+    ],
+  },
+  {
     id: "an-empty-claim-the-registry-declares-inert-is-left-off-the-wire",
     title: "an empty claim that asserts nothing anyone can act on is not emitted",
     rationale:
@@ -6029,6 +6062,291 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       // `address` rows take. The COSE value is pinned against the raw bytes in
       // `classes/events-claim-wire.test.ts`, which reads the map as a map.
       { step: "wireClaims", on: "cose", present: ["events"] },
+    ],
+  },
+
+  // The `null` spelling. `null` and `undefined` are ABSENCE, never a value: the
+  // ONE emission boundary every sign door runs strips both from every claim
+  // before the registry is consulted
+  // (`src/internal/utils/normalise-claims.ts#export const normaliseClaims`),
+  // and the domain translator drops them at the claim level for the same
+  // reason. The per-claim cell judges only the empty values a wire can spell —
+  // `""`, `[]`, `{}` — in the rows above; here every cell gives the same
+  // answer, absent, because it is never asked.
+  //
+  // ⚠ Owed at the gherkin migration: the `undefined` spelling of the same
+  // absence — a pure-data row cannot hold one. Pinned:
+  // `classes/confirmation-claim-wire.test.ts`, "an undefined confirmation is
+  // not stated either, and the domain door mints a bearer token on both wires";
+  // `internal/claims/refuse-empty-claims.test.ts`, "an absent confirmation
+  // spelled $absence is left off the wire at every raw door".
+  {
+    id: "a-null-confirmation-states-no-binding-and-mints-a-bearer-token",
+    title:
+      "a confirmation supplied as null through the domain door states no binding, and the token is minted without one",
+    rationale:
+      "`null` and `undefined` are absence, never a value: the emission boundary every signing door runs strips both from every claim before the registry is consulted, so a null confirmation is a confirmation the caller did not state. By including a `cnf` claim the issuer declares that the presenter holds a particular key and that the recipient can confirm it (RFC 7800 §3); a caller who states none has declared nothing, and the token is the bearer token a `cnf`-less mint always is. That is aegis policy at mint, and it is the opposite of the EMPTY confirmation: `confirmation: {}` is a stated declaration naming no key, and the registry's cell refuses it. A nullable column is the ordinary shape of an optional binding, and a caller minting from one hands the null straight in.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "default",
+        content: {
+          subject: "user-1",
+          expires: "1h",
+          // ⚠ THE CAST IS THE POINT. aegis's own types do not admit a null
+          // confirmation, and the capability is about the value an untyped
+          // caller — a JSON body, a nullable database column — actually hands
+          // in.
+          confirmation: null as unknown as SignContent["confirmation"],
+        },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      { step: "wireClaims", on: "jose", excludes: ["cnf"] },
+      // RFC 8747 §7.1.1
+      { step: "wireClaims", on: "cose", excludes: [8] },
+    ],
+  },
+  {
+    id: "a-null-confirmation-states-no-binding-at-the-raw-door",
+    title:
+      "a confirmation supplied as null through a raw door states no binding, and the token is signed without one",
+    rationale:
+      "The raw doors run no profile and no translation: the caller's own wire-named bag reaches the emission boundary as written. The answer is the same as at the domain door because it is the same boundary: `null` is absence and is stripped from every claim before the registry is consulted, on both wires. A null `cnf` therefore states no binding and the token is signed as the bearer token a `cnf`-less payload always is — where `cnf: {}` through the same door is a stated confirmation naming no key (RFC 7800 §3), and is refused. A verdict that differed by door would let a caller pick between a bound token and a bearer one by choosing which door to knock on.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          exp: NOW + 3600,
+          iat: NOW,
+          jti: "token-1",
+          // ⚠ THE CAST IS THE POINT — see the bearer-token row above: the wire
+          // claims type does not admit a null confirmation, and the capability
+          // is about the value an untyped caller actually hands the raw door.
+          cnf: null as unknown as JwtClaimsWire["cnf"],
+        },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      { step: "wireClaims", on: "jose", excludes: ["cnf"] },
+      // RFC 8747 §7.1.1
+      { step: "wireClaims", on: "cose", excludes: [8] },
+    ],
+  },
+  {
+    id: "a-null-claim-is-absent-from-the-wire-on-both-wires",
+    title:
+      "a claim supplied as null is absent from the wire on both wires, whatever the registry says of its empty value",
+    rationale:
+      '`null` and `undefined` are absence, never a value. The emission boundary every signing door runs strips both from every claim before the registry is consulted, so no aegis door writes a wire null at a claim key and the registry\'s emptiness cell is never asked about one — the cell judges the empty values a wire can spell: `""`, `[]`, `{}`. `aud` is a cell that KEEPS its empty value, because `aud: []` names nobody where an absent `aud` restricts nothing (RFC 7519 §4.1.3), so it is the claim on which an absence and an empty value are most visibly two different things: the empty list reaches the wire as the empty list, and the null reaches it not at all. A nullable source column is the ordinary shape of an optional fact, and a caller minting from one hands the null straight in rather than stripping it first; JSON and CBOR agree on what an absent claim looks like, so the two wires cannot disagree.',
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "default",
+        content: {
+          subject: "user-1",
+          expires: "1h",
+          // ⚠ THE CAST IS THE POINT — see the bearer-token row above. `aud` is
+          // the kept cell this capability is observable on.
+          audience: null as unknown as SignContent["audience"],
+        },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      { step: "wireClaims", on: "jose", excludes: ["aud"] },
+      // RFC 8392 §3.1.3
+      { step: "wireClaims", on: "cose", excludes: [3] },
+    ],
+  },
+  {
+    id: "a-null-claim-at-a-raw-door-is-absent-from-the-wire",
+    title:
+      "a registered claim supplied as null through a raw door is absent from the wire on both wires",
+    rationale:
+      "A raw door runs no translation: the caller's own wire-named bag reaches the emission boundary as written. `aud` is a cell that KEEPS its empty value — `aud: []` names nobody where an absent `aud` restricts nothing (RFC 7519 §4.1.3) — and a keep cell judges an empty VALUE; `null` is absence, never a value, so it never reaches the cell and the claim is simply not stated. The answer is the same as at the domain door because it is the same boundary, on both wires: a caller cannot spell absence onto a signed token by choosing the door with no translator in front of it.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          // ⚠ THE CAST IS THE POINT: the wire claims type does not admit a null
+          // audience, and the capability is about the value an untyped caller
+          // actually hands the raw door.
+          aud: null as unknown as JwtClaimsWire["aud"],
+          exp: NOW + 3600,
+          iat: NOW,
+          jti: "token-1",
+        },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      { step: "wireClaims", on: "jose", excludes: ["aud"] },
+      // RFC 8392 §3.1.3
+      { step: "wireClaims", on: "cose", excludes: [3] },
+    ],
+  },
+  {
+    id: "a-wire-null-audience-is-no-audience-to-the-audience-floor",
+    title:
+      "a foreign token whose aud is the wire null is read as naming no audience, and fails a verify that asserts one",
+    rationale:
+      "No aegis door writes a wire null at a claim key — absence is stripped there at the emission boundary — so an `aud` of null can only arrive on a token somebody else produced, and the read side is what answers for it. A verifier asserting an audience asks whether the token names it. A wire-null `aud` names nothing: the read side reports the claim as one the token does not state — and the only safe answer to an audience assertion over nothing is refusal, because reading the null as a wildcard would let a producer's empty optional widen a token to every audience. It is the refusal the floor gives a token that omits `aud`, and it is aegis policy at verify: the claim is optional and the specification scopes its mandated rejection to a token that carries it (RFC 7519 §4.1.3).",
+    given: [
+      {
+        step: "token",
+        via: "foreign",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          // ⚠ THE CAST IS THE POINT: the wire claims type does not admit a null
+          // audience, and a foreign producer is not bound by aegis's types.
+          aud: null as unknown as JwtClaimsWire["aud"],
+          exp: NOW + 3600,
+          iat: NOW,
+          jti: "token-1",
+        },
+      },
+    ],
+    // The audience assertion is the PROFILED verify's own identity knob
+    // (`ProfileVerifyOptions.audience`); the `default` floor demands nothing the
+    // token lacks, so the refusal is attributable to the audience alone.
+    when: [{ step: "verify", profile: "default", options: { audience: RESOURCE } }],
+    then: [{ step: "rejects", error: "AegisDomainError", code: "audience_mismatch" }],
+    // ⚠ Owed at the gherkin migration: the COSE leg. The read of a wire null is
+    // pinned by unit test on both selectors (`internal/claims/translate.test.ts`,
+    // "reads a null sub_id as a claim the token does not state").
+    unsupported: {
+      cose: "this table's foreign COSE producer encodes its claims through aegis's own CWT codec (`run-scenario.ts#signForeignCose`), whose map encoder writes present values only, so it cannot put a CBOR null (RFC 8949 §3.3) under label 3 for the read side to meet",
+    },
+  },
+  {
+    id: "a-null-claim-the-registry-declares-inert-is-left-off-the-wire",
+    title:
+      "a claim whose empty value asserts nothing is not emitted when supplied as null",
+    rationale:
+      "A nullable source column is the ordinary shape of an optional fact, so a caller minting from one hands the null straight in rather than running a stripping pass first. `null` is absence, never a value: the emission boundary strips it from every claim before the registry is consulted, so the claim is simply not stated and its emptiness cell is never asked. That cell judges the empty values a wire can spell — for this claim the empty string is the form it drops — and it never has to answer for a null, which is what makes the answer to a null the same for every claim, whatever the cell says: absent.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "default",
+        content: {
+          subject: "user-1",
+          expires: "1h",
+          claims: { email: null },
+        },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      // `email` has a private-use COSE label, so the default interoperable
+      // encoding keys it by its string name on BOTH wires — one exclusion
+      // covers both.
+      { step: "wireClaims", excludes: ["email"] },
+    ],
+  },
+  {
+    id: "a-null-custom-claim-is-absent-from-the-wire-at-the-domain-door",
+    title:
+      "an unregistered claim supplied as null through the domain door is not emitted",
+    rationale:
+      "An unregistered claim has no registry cell, and it needs none: `null` is absence, never a value, and the emission boundary strips it from EVERY claim before the registry is consulted — registered or not. A null is how a caller's data spells the absence of a value, and a token states the claims the caller has; writing the null would put a member on a signed wire that asserts nothing and whose spelling the caller never chose. The kit doors give the same answer for the same key, so no door lets a producer spell absence onto the wire.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "default",
+        content: {
+          subject: "user-1",
+          expires: "1h",
+          unregisteredClaims: { clearance: null },
+        },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      // `clearance` is its own snake_case, so the exclusion names the key the
+      // domain door would have written it under.
+      { step: "wireClaims", excludes: ["clearance"] },
+    ],
+  },
+  {
+    id: "a-null-custom-claim-is-absent-from-the-wire-at-a-kit-door",
+    title: "an unregistered claim supplied as null through a kit door is not emitted",
+    rationale:
+      "A kit door takes an already-wire claims dict and neither renames nor reshapes what aegis has not declared — but `null` is not a shape, it is absence, and the emission boundary strips it from every claim before the registry is consulted, at this door as at every other. A producer holding a null holds no value to write, and a member on a signed wire that asserts nothing is not the caller's statement. The domain door gives the same answer for the same key, so a null custom claim is absent at every door, on both wires.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          exp: NOW + 3600,
+          iat: NOW,
+          jti: "token-1",
+          clearance: null,
+        },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      { step: "wireClaims", excludes: ["clearance"] },
+    ],
+  },
+  {
+    id: "a-null-claim-at-the-profile-less-domain-door-is-absent-from-the-wire",
+    title:
+      "a claim supplied as null through the profile-less domain door is absent from the wire on both wires, whatever the registry says of its empty value",
+    rationale:
+      "The profile-less domain verb applies no floor, so nothing but the caller's own bag decides what the token states — and `null` is absence, never a value. The domain translator drops a null claim before any codec runs and the emission boundary every signing door runs strips it again, so the registry's emptiness cell is never asked about one, whatever it says: `aud` KEEPS its empty value because `aud: []` names nobody where an absent `aud` restricts nothing (RFC 7519 §4.1.3), and `cnf` REFUSES its empty value because a stated confirmation naming no key can be neither honoured nor dropped (RFC 7800 §3). Both are absent here for one reason: nothing was stated. The subject alone reaches the wire, under `sub` on JOSE and integer label 2 on COSE (RFC 7519 §4.1.2, RFC 8392 §3.1.2), and the token is the bearer token a `cnf`-less signature always is. A caller with no profile to apply, minting from a nullable column, hands the null straight in and gets the answer the profiled door and the raw doors give.",
+    given: [
+      { step: "keys", keys: ["ec-sig"] },
+      {
+        step: "token",
+        via: "domain-sign",
+        claims: {
+          subject: "user-1",
+          // ⚠ THE CAST IS THE POINT — see the bearer-token row above: the domain
+          // claims type does not admit a null, and the capability is about the
+          // value an untyped caller actually hands the verb.
+          audience: null as unknown as DomainClaims["audience"],
+          confirmation: null as unknown as DomainClaims["confirmation"],
+        },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      {
+        step: "wireClaims",
+        on: "jose",
+        includes: { sub: "user-1" },
+        excludes: ["aud", "cnf"],
+      },
+      // RFC 8392 §3.1.3 keys `aud` at label 3; RFC 8747 §7.1.1 keys `cnf` at 8.
+      { step: "wireClaims", on: "cose", includes: { 2: "user-1" }, excludes: [3, 8] },
     ],
   },
 

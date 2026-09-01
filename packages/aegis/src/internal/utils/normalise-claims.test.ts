@@ -2,6 +2,7 @@ import { Amphora, type IAmphora } from "@lindorm/amphora";
 import { B64 } from "@lindorm/b64";
 import type { ILogger } from "@lindorm/logger";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import type { Dict } from "@lindorm/types";
 import MockDate from "mockdate";
 import { beforeEach, describe, expect, test } from "vitest";
 import { TEST_EC_KEY_SIG } from "../../__fixtures__/keys.js";
@@ -11,13 +12,25 @@ import { normaliseClaims } from "./normalise-claims.js";
 MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
 
 describe("normaliseClaims", () => {
-  // Strip 1: `undefined` is the absent property of a bag assembled from optional
-  // fields. Every other value was written by someone, and only the registry says
-  // which of those writings carry nothing.
-  describe("the undefined strip", () => {
-    test("should strip undefined and keep every other value of an unregistered key", () => {
+  // Strip 1: absence. `null` and `undefined` at a claim KEY are the absent
+  // property of a bag assembled from optional fields, a nullable column
+  // included; `undefined` is stripped at every depth besides, because neither
+  // wire may carry it. A NESTED null is a member, and members are the walker's
+  // (`internal/claims/translate.ts`) — at a raw door, which has no walker, it
+  // rides as written. Every other value was written by someone, and only the
+  // registry says which of those writings carry nothing.
+  describe("the absence strip", () => {
+    test("should strip null and undefined at the claim key, undefined at every depth, and keep everything else", () => {
       expect(
-        normaliseClaims({ a: 1, b: null, c: "", d: undefined, e: [], f: {} }),
+        normaliseClaims({
+          a: 1,
+          b: null,
+          c: "",
+          d: undefined,
+          e: [],
+          f: {},
+          g: { h: null, i: undefined, j: "" },
+        }),
       ).toMatchSnapshot();
     });
 
@@ -124,6 +137,23 @@ describe("normaliseClaims — emission regressions", () => {
    * `""` is not `undefined` and none of these keys is registered, so the
    * normalisation reaches none of it even though it now always runs.
    */
+  /**
+   * `undefined` is stripped at EVERY depth, not only at the claim key: cbor2
+   * writes a nested `undefined` as CBOR simple value 23 (RFC 8949 §3.3), so a raw
+   * CWT door handed a custom claim assembled from optionals would otherwise put a
+   * present member holding nothing on a signed wire, where JSON writes no member
+   * at all. `Object.hasOwn`, because a decoded simple 23 is a PRESENT key holding
+   * `undefined`, which `toEqual` cannot tell from an absent one.
+   */
+  test("should strip a nested undefined from a custom claim at the raw CWT door", async () => {
+    const { token } = await aegis.cwt.sign({ x: { y: undefined, z: 1 } } as Dict);
+
+    const parsed = await aegis.cwt.verify(token);
+
+    expect(parsed.payload.x).toEqual({ z: 1 });
+    expect(Object.hasOwn(parsed.payload.x as Dict, "y")).toBe(false);
+  });
+
   test("should not shred a nested opaque payload", async () => {
     const { token } = await aegis.jws.sign({ a: { b: { c: "" } }, keep: 1 });
 

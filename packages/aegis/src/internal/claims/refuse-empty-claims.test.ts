@@ -4,6 +4,7 @@ import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { Dict } from "@lindorm/types";
 import MockDate from "mockdate";
 import { beforeEach, describe, expect, test } from "vitest";
+import { inspectToken } from "../../__fixtures__/inspect-token.js";
 import { TEST_EC_KEY_SIG } from "../../__fixtures__/keys.js";
 import { Aegis } from "../../classes/Aegis.js";
 import { AegisDomainError } from "../../errors/index.js";
@@ -151,5 +152,45 @@ describe("refuseEmptyClaims", () => {
       await expect(aegis.jwt.sign({ cnf } as Dict)).rejects.toThrow(REFUSAL);
       await expect(aegis.cwt.sign({ cnf } as Dict)).rejects.toThrow(REFUSAL);
     });
+
+    /**
+     * `null` and `undefined` are ABSENCE, not an empty value: `normaliseClaims`
+     * strips both from every claim before this cell is consulted
+     * (`internal/utils/normalise-claims.ts`), so a raw door handed `cnf: null`
+     * or `cnf: undefined` signs a token that states no confirmation — a bearer
+     * token — on both wires, where the same door refuses `cnf: {}` above. The structured doors
+     * are read off the raw wire by the independent inspector; the opaque doors
+     * serialise an object payload as JSON, which that inspector does not read as
+     * a claims map, so their payload is read back through the door's own
+     * verify — which translates nothing, so a carried `cnf: null` would come
+     * back as a present key.
+     */
+    test.each([
+      { absence: "null", cnf: null },
+      { absence: "undefined", cnf: undefined },
+    ])(
+      "an absent confirmation spelled $absence is left off the wire at every raw door",
+      async ({ cnf }) => {
+        const jwt = inspectToken((await aegis.jwt.sign({ cnf } as Dict)).token);
+        if (jwt.wire !== "jose") throw new Error("expected a JOSE token");
+        if (!jwt.payload.readable) throw new Error(jwt.payload.reason);
+
+        expect(Object.hasOwn(jwt.payload.value, "cnf")).toBe(false);
+
+        const cwt = inspectToken((await aegis.cwt.sign({ cnf } as Dict)).token);
+        if (cwt.wire !== "cose") throw new Error("expected a COSE token");
+        if (!cwt.payload.readable) throw new Error(cwt.payload.reason);
+
+        // RFC 8747 §7.1.1 keys `cnf` at integer label 8.
+        expect(cwt.payload.value.has(8)).toBe(false);
+        expect(cwt.payload.value.has("cnf")).toBe(false);
+
+        const jws = await aegis.jws.verify((await aegis.jws.sign({ cnf })).token);
+        const cws = await aegis.cws.verify((await aegis.cws.sign({ cnf })).token);
+
+        expect(Object.hasOwn(jws.payload as Dict, "cnf")).toBe(false);
+        expect(Object.hasOwn(cws.payload as Dict, "cnf")).toBe(false);
+      },
+    );
   });
 });

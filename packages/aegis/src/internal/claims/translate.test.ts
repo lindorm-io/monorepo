@@ -6,6 +6,7 @@ import type { AegisDomainError } from "../../errors/index.js";
 import type { TokenProfile } from "../../types/index.js";
 import { assembleCommonClaims } from "../utils/assemble-common-claims.js";
 import { CLAIM_SPECS, claimByDomain, coseName, joseName } from "./claims-registry.js";
+import { isNotStated } from "./is-not-stated.js";
 import type { ClaimMemberSpec } from "../registry/claim-spec.js";
 import { wireName } from "../registry/wire-key.js";
 import {
@@ -524,6 +525,20 @@ describe("domainToJose — content -> wire mapping", () => {
       locality: "Stockholm",
     });
     expect(joseToDomain(domainToJose({ address })).claims.address).toEqual(address);
+  });
+
+  // The CLAIM level: `null` is absence at the claim key on every door
+  // (`internal/claims/omit-not-stated.ts`), so the translator drops it ahead of
+  // any codec — registered or not, and whatever the registered claim's
+  // `whenEmpty` cell says. One `keep` cell (`audience`), one `prune` cell
+  // (`email`) and one unregistered key (`clearance`), so the test cannot be read
+  // as "null is dropped because the cell prunes it". `toEqual` over the whole
+  // dict: an absent key is the claim, a present key holding `undefined` is not.
+  test("should omit a top-level null, registered or not, on both selectors", () => {
+    const common = { audience: null, email: null, clearance: null, tenant: "acme" };
+
+    expect(domainToWire(common, joseName)).toEqual({ tenant: "acme" });
+    expect(domainToWire(common, coseName)).toEqual({ tenant: "acme" });
   });
 
   // The OPEN half: a declared member set is not an allowlist. The undeclared
@@ -1549,21 +1564,32 @@ describe("unreadableClaims — the top-level claims the mint writer leaves off t
       tokenId: "t",
       clientId: "c",
       region: 42,
+      // A null is NOT SUPPLIED: the writer drops it as absence, and a claim the
+      // caller never stated is not a claim the wire loses — so it must be in
+      // NEITHER set. It is filtered out of the supplied keys below, and its
+      // absence from the wire is asserted on its own.
+      email: null,
     };
     const jose = domainToWire(common, joseName);
     const cose = domainToWire(common, coseName);
 
-    // The registered keys present in `common` and absent from ONE output — built
+    expect(Object.hasOwn(jose, "email")).toBe(false);
+    expect(Object.hasOwn(cose, "email")).toBe(false);
+
+    // The registered keys SUPPLIED in `common` and absent from ONE output — built
     // per wire so that the two can disagree.
+    const supplied = Object.entries(common)
+      .filter(([, value]) => !isNotStated(value))
+      .map(([key]) => key);
     const leftOffJose = new Set(
-      Object.keys(common).filter((key) => {
+      supplied.filter((key) => {
         const spec = claimByDomain(key);
 
         return spec !== undefined && !Object.hasOwn(jose, joseName(spec));
       }),
     );
     const leftOffCose = new Set(
-      Object.keys(common).filter((key) => {
+      supplied.filter((key) => {
         const spec = claimByDomain(key);
 
         return spec !== undefined && !Object.hasOwn(cose, coseName(spec));

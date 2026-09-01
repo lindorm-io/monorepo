@@ -28,7 +28,7 @@
  * MEMBERSHIP test on a caller-supplied KEY, this is a VALUE test. The two states
  * `Object.hasOwn` would separate cannot differ, and what establishes that is
  * `assemble-common-claims.ts` on mint and `internal/claims/translate.ts` on
- * verify — ⛔ NOT `normalise-claims.ts`, whose `omitUndefined` runs at
+ * verify — ⛔ NOT `normalise-claims.ts`, whose absence strip runs at
  * serialisation, after `mint-token.ts` has already enforced the policy.
  *
  * ⚠ EVERY DEPTH, not just the top level: a format's REQUIRED member is a demand

@@ -312,9 +312,10 @@ describe("the address claim on the wire", () => {
     // same claim carrying `null` is not refused, it is not stated. BOTH
     // DIRECTIONS — the write side is where a caller minting from a database row
     // whose whole address column is null arrives, and refusing it there is the
-    // exact cost the null ruling exists to remove.
+    // exact cost the null ruling exists to remove. `Object.hasOwn` on the write:
+    // an absent key is the claim, a present key holding `undefined` is not.
     expect(Aegis.toDomain({ address: null } as Dict).profile).toBeUndefined();
-    expect(Aegis.toWire({ address: null } as Dict).address).toBeUndefined();
+    expect(Object.hasOwn(Aegis.toWire({ address: null } as Dict), "address")).toBe(false);
   });
 
   test("a member the registry does not declare still rides, under a snake key", async () => {

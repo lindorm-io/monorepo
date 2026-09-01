@@ -2,7 +2,13 @@ import { isNull, isUndefined } from "@lindorm/is";
 
 /**
  * The codec's absence boundary: a position holding one of these was not stated,
- * so it is omitted in both directions rather than refused.
+ * so it is omitted rather than refused — at the claim key on every door, and at
+ * a member by the walker. A top-level CLAIM is dropped by the translator and by
+ * the emission boundary every sign door runs, through one helper
+ * (`omit-not-stated.ts`; `domainToWire` in `internal/claims/translate.ts`,
+ * `internal/utils/normalise-claims.ts`); a wire `null` under a registered name
+ * is read as a claim the token does not state (`wireToDomain`); a structure
+ * MEMBER is omitted by the walker under the member's own cell.
  *
  * ⚠ `null` IS ABSENCE. `AegisProfileAddress` declares every member
  * `string | null` (`types/claims/domain/aegis-profile.ts`), so a caller handing

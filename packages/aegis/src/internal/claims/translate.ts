@@ -22,6 +22,7 @@ import {
   type NameSelector,
 } from "./claims-registry.js";
 import { isNotStated } from "./is-not-stated.js";
+import { omitNotStated } from "./omit-not-stated.js";
 
 /**
  * The ONE claim translator: TWO parameterized cores (`domainToWire` /
@@ -1184,23 +1185,12 @@ const encodeValue = (
 export const domainToWire = (common: Dict, nameOf: NameSelector): Dict => {
   const wire: Dict = {};
 
-  for (const [key, value] of Object.entries(common)) {
-    if (value === undefined) continue;
-
+  // A codec cannot be handed a null, so absence is stripped here exactly as the
+  // emission boundary strips it (`internal/utils/normalise-claims.ts`) — the
+  // translator decides nothing.
+  for (const [key, value] of Object.entries(omitNotStated(common))) {
     const spec = claimByDomain(key);
     if (spec) {
-      // ⚠⚠ `null` IS NOT STATED AT THE CLAIM LEVEL TOO. Without this line the
-      // structure refusal below turns `address: null` — the ordinary shape of a
-      // nullable column, and the exact case the member-level ruling exists for —
-      // into a THROWN error one level up from where it is omitted. Whatever the
-      // answer is, it cannot be "absent inside a structure and refused at the top
-      // of one".
-      // ⚠ It is asked for a REGISTERED claim ONLY. An unregistered custom claim has
-      // no declared shape for a value to contradict, so it is carried exactly as
-      // written — the same rule `internal/claims/prune-empty-claims.ts` keeps at
-      // the emission boundary.
-      if (isNotStated(value)) continue;
-
       const encoded = encodeClaim(spec, value, nameOf);
       if (encoded !== undefined) wire[nameOf(spec)] = encoded;
     } else {
@@ -1236,12 +1226,9 @@ export const domainToWire = (common: Dict, nameOf: NameSelector): Dict => {
 export const unreadableClaims = (common: Dict): ReadonlySet<string> => {
   const unreadable = new Set<string>();
 
-  for (const [key, value] of Object.entries(common)) {
-    if (value === undefined) continue;
-
+  for (const [key, value] of Object.entries(omitNotStated(common))) {
     const spec = claimByDomain(key);
     if (!spec) continue;
-    if (isNotStated(value)) continue;
 
     const context = claimContext(spec);
     const encoded = encodeIfReadable(spec, value, joseName, context);

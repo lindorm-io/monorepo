@@ -487,4 +487,36 @@ describe("the confirmation claim on the wire", () => {
 
     expect(Aegis.toDomain({ cnf: null } as Dict).claims.confirmation).toBeUndefined();
   });
+
+  test("a null confirmation is not stated on the write side either", () => {
+    // The WRITE side of the claim-level null: `null` is absence at the claim key
+    // on every door (`internal/claims/omit-not-stated.ts`), so the translator
+    // drops it before any codec runs — exactly as the emission boundary does for
+    // the sign doors — and no `cnf` key exists on the wire. `Object.hasOwn`,
+    // not `toBeUndefined`: an absent key is the claim, a present key holding
+    // `undefined` is not.
+    expect(Object.hasOwn(Aegis.toWire({ confirmation: null } as Dict), "cnf")).toBe(
+      false,
+    );
+  });
+
+  test("an undefined confirmation is not stated either, and the domain door mints a bearer token on both wires", async () => {
+    // The other spelling of absence at the claim key, at the door a profiled
+    // mint goes through: a caller assembling content from optionals hands
+    // `confirmation: undefined` in, and the token is the bearer token
+    // a `cnf`-less mint always is — where `confirmation: {}` is refused. Read
+    // off the bytes by the independent inspector; `Object.hasOwn` / `has`, so a
+    // present key holding nothing cannot pass for an absent claim.
+    const jwt = inspectToken(await mint("jwt", undefined as unknown as Dict));
+    if (jwt.wire !== "jose") throw new Error("expected a JOSE token");
+    if (!jwt.payload.readable) throw new Error(jwt.payload.reason);
+
+    expect(Object.hasOwn(jwt.payload.value, "cnf")).toBe(false);
+
+    const cwt = inspectToken(await mint("cwt", undefined as unknown as Dict));
+    if (cwt.wire !== "cose") throw new Error("expected a COSE token");
+    if (!cwt.payload.readable) throw new Error(cwt.payload.reason);
+
+    expect(cwt.payload.value.has(CNF_COSE_CLAIM_LABEL)).toBe(false);
+  });
 });

@@ -1,5 +1,6 @@
 import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
+import { omitNotStated } from "../claims/omit-not-stated.js";
 import { pruneEmptyClaims } from "../claims/prune-empty-claims.js";
 import { refuseEmptyClaims } from "../claims/refuse-empty-claims.js";
 
@@ -8,19 +9,30 @@ import { refuseEmptyClaims } from "../claims/refuse-empty-claims.js";
  * — shared by JOSE and COSE so both wires behave identically. THREE steps, none
  * of them a choice:
  *
- *   1. `undefined`, recursively. It is the one value with no semantic ambiguity:
- *      the absent property of a bag assembled from optional fields, on every
- *      wire, for every caller. Nobody writes `undefined` to mean something.
+ *   1. ABSENCE, before the registry is consulted. `undefined` at every depth:
+ *      neither wire may carry it, and cbor2 writes a nested one as CBOR simple
+ *      value 23 (RFC 8949 §3.3) where `JSON.stringify` writes an array element's
+ *      as `null` — pinned in `normalise-claims.test.ts`, "should strip a nested
+ *      undefined from a custom claim at the raw CWT door". `null` at the claim
+ *      KEY, registered or not ({@link omitNotStated}): a nullable column is the
+ *      absent property of the bag, so no aegis door writes a top-level null. A
+ *      NESTED null is a member, and members are the walker's
+ *      (`internal/claims/translate.ts`); a raw door has no walker and carries it
+ *      as written.
  *   2. The empty value of a claim whose registry entry says that empty value can
  *      be neither emitted nor dropped ({@link refuseEmptyClaims}).
  *   3. The empty value of a claim whose registry entry says that empty value
  *      carries nothing ({@link pruneEmptyClaims}). Per CLAIM, top level only, and
  *      a key the registry does not know is never touched.
  *
- * ⚠ `omitUndefined` MUST STAY FIRST. `isClaimSatisfied(undefined)` is `false`, so a
- * refusal reached before the strip would answer a bag that merely OMITS the claim
- * — and `raw-sign-jws.ts` / `raw-sign-cose.ts` hand this function the caller's own
- * un-translated bag, in which `{ amr: undefined }` genuinely arrives.
+ * "Empty" to steps 2 and 3 is what a wire can spell — `""`, `[]`, `{}`, an empty
+ * `Map`/`Set` — as `isClaimSatisfied` judges it; a `keep` cell writes it as given.
+ *
+ * ⚠ THE ABSENCE STRIP MUST STAY FIRST. `isClaimSatisfied` is `false` of `null`
+ * and of `undefined`, so a refusal reached before it would answer a bag that
+ * merely OMITS the claim — and `raw-sign-jws.ts` / `raw-sign-cose.ts` hand this
+ * function the caller's own un-translated bag, in which `{ amr: undefined }` and
+ * `{ cnf: null }` genuinely arrive.
  * ⚠ THE REFUSAL AND THE PRUNE ARE INTERCHANGEABLE: they read the same `whenEmpty`
  * cell for DIFFERENT answers, so no claim is reached by both.
  * ⛔ Widen either from its exact answer to "anything but keep" and that
@@ -38,7 +50,7 @@ import { refuseEmptyClaims } from "../claims/refuse-empty-claims.js";
  * `claims-registry.test.ts`.
  */
 export const normaliseClaims = <T extends Dict = Dict>(dict: T): T => {
-  const stripped = omitUndefined(dict);
+  const stripped = omitNotStated(omitUndefined(dict));
 
   refuseEmptyClaims(stripped);
 
