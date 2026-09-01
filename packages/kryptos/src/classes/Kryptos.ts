@@ -102,10 +102,9 @@ export class Kryptos implements IKryptos {
     // Provenance only goes FALSE for key material someone handed us — in practice
     // a remote JWKS, which `from.jwk` marks by defaulting the flag to FALSE.
     //
-    // ⚠ It is never read off a payload. `parseJwkOptions` hardcodes it rather than
-    // trusting the JWK, so a remote JWKS cannot plant `internal: true` and pass
-    // itself off as one of our keys. Provenance is a property of HOW the key got
-    // here, and only the import path knows that.
+    // ⚠ It is never read off a payload, so a remote JWKS cannot plant `internal: true`
+    // and pass itself off as one of our keys. Provenance is a property of HOW the key
+    // got here, and only the import path knows that.
     this._internal = options.internal ?? true;
     this._issuer = options.issuer || null;
     this._jwksUri = options.jwksUri || null;
@@ -221,7 +220,7 @@ export class Kryptos implements IKryptos {
   /**
    * Is this OUR key material? True for anything we minted, derived or loaded from
    * our own env; false only for key material a third party handed us (a remote
-   * JWKS). Decided by the import path, never by the payload — see `parseJwkOptions`.
+   * JWKS). Decided by the import path, never by the payload.
    */
   get internal(): boolean {
     return this._internal;

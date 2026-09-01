@@ -19,8 +19,8 @@ export type KryptosAttributes = {
   // only for key material someone handed us — in practice a remote JWKS.
   //
   // ⚠ Provenance is decided by the IMPORT PATH, never by the payload. `from.jwk`
-  // defaults it to FALSE and `parseJwkOptions` refuses to read it off the JWK, so
-  // a remote JWKS cannot plant `internal: true` and masquerade as one of our keys.
+  // defaults it to FALSE, so a remote JWKS cannot plant `internal: true` and
+  // masquerade as one of our keys.
   internal: boolean;
   issuer: string | null;
   jwksUri: string | null;

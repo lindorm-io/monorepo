@@ -333,13 +333,6 @@ export class KryptosKit {
         details: "An algorithm could not be resolved from the provided key options.",
       });
     }
-    if (!options.type) {
-      throw new KryptosError("Type is required", {
-        code: "missing_key_type",
-        title: "Missing Key Type",
-        details: "A key type could not be resolved from the provided key options.",
-      });
-    }
     if (!options.use) {
       throw new KryptosError("Use is required", {
         code: "missing_key_use",

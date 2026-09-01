@@ -45,17 +45,6 @@ export const parseJwkOptions = (
     // explicitly (`toJWK("private")` emits it), so this default never applies to
     // them — a `publish: false` KEK reloads `publish: false`.
     publish: jwk.publish ?? false,
-    // ⚠ FALSE here, deliberately — the INVERSE of the Kryptos constructor default
-    // (`true`, because a key we mint is ours). Do NOT harmonise the two: the JWK
-    // path is where FOREIGN key material arrives, so its defaults describe a
-    // foreign key, not a minted one.
-    //
-    // ⚠⚠ And it is HARDCODED, never `jwk.internal ?? …` — the payload does not get
-    // a vote. A remote JWKS could otherwise plant `internal: true` and pass its key
-    // off as one of ours. Provenance is a property of HOW the key arrived, so only
-    // the import path may decide it — see KryptosKit.fromJwk, which overrides this
-    // default to `true` for the own-key paths (env.import).
-    internal: false,
     issuer: jwk.iss,
     jwksUri: jwk.jku,
     notBefore: jwk.nbf ? new Date(jwk.nbf * 1000) : undefined,
