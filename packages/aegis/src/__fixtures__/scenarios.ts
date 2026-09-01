@@ -5980,6 +5980,260 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     ],
   },
   {
+    id: "an-actor-that-identifies-nobody-is-refused-before-it-is-signed",
+    title:
+      "an actor claim carrying no member is refused at the mint rather than written or dropped",
+    rationale:
+      "`act` is the claim that says a delegation occurred and names the party acting (RFC 8693 §4.1), so a verifier reading one does something a verifier reading none does not: it holds the actor to its own policy. An actor object with no member gives that policy nobody to hold, and neither disposal of it is a token anyone asked for — written, it states a delegation by nobody, and dropped, it hands the audience a token that reads as the subject acting directly when the issuer said otherwise. Aegis policy at mint refuses it while it is still in the producer's hands, on both wires, in the same class and vocabulary the profile floor uses for the same value, so a caller cannot pick a verdict by choosing an encoding or a door.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "default",
+        content: { subject: "user-1", expires: "1h", act: {} },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        code: "claim_empty_value",
+        data: { claim: "act", whenEmpty: "refuse" },
+      },
+    ],
+  },
+  {
+    id: "an-authorized-actor-that-identifies-nobody-is-refused-before-it-is-signed",
+    title:
+      "an authorized-actor claim carrying no member is refused at the mint rather than written or dropped",
+    rationale:
+      "`may_act` is the claim a delegation authorisation is written into (RFC 8693 §4.4): a token endpoint reading one lets the party it names become the actor, where a token without one authorises nobody. An object with no member names no party for the endpoint to admit, so writing it puts an authorisation on the wire that nothing can exercise and dropping it turns a stated authorisation into silence. Aegis policy at mint refuses it on both wires, as it refuses the empty `act` the claim mirrors — one records a delegation that happened, the other permits one that has not, and an empty form of either states nothing a verifier can act on.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "default",
+        content: { subject: "user-1", expires: "1h", mayAct: {} },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        code: "claim_empty_value",
+        data: { claim: "mayAct", whenEmpty: "refuse" },
+      },
+    ],
+  },
+  {
+    id: "an-events-map-that-names-no-event-is-refused-before-it-is-signed",
+    title:
+      "an events claim naming no event type is refused at the mint rather than written or dropped",
+    rationale:
+      "`events` is the claim that makes a token a Security Event Token, and its members are the event-type URIs a recipient dispatches on (RFC 8417 §2.2) — a recipient reading one acts on the events it names, where a token without one is no SET at all. A map naming no event type gives the recipient nothing to dispatch, so writing it mints a SET announcing no event and dropping it turns the token into something the recipient reads as a different kind of token. Aegis policy at mint refuses it on both wires. A member's PAYLOAD is a different question: an event's payload belongs to whoever defined the event type and rides verbatim, empty object included, so an events map naming one type with an empty payload is a stated event and is written.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "default",
+        content: { subject: "user-1", expires: "1h", events: {} },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        code: "claim_empty_value",
+        data: { claim: "events", whenEmpty: "refuse" },
+      },
+    ],
+  },
+  {
+    id: "an-empty-access-token-hash-is-refused-before-it-is-signed",
+    title:
+      "an access token hash supplied as the empty string is refused at the mint rather than written or dropped",
+    rationale:
+      "`at_hash` binds an ID Token to the access token issued beside it (OIDC Core §3.1.3.6): a client reading one compares it against the access token it holds, where a client reading none has no binding to check. An empty digest is a binding no access token can ever match, so writing it mints an ID Token that fails beside every access token, and dropping it hands the client an unbound ID Token where the issuer stated a binding — the substitution surface the claim exists to close. Aegis policy at mint refuses it on both wires. The value crosses the mint as the caller's own digest; the mint derives one itself only from an `accessToken` it is handed, and a derived digest is never empty.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "default",
+        content: { subject: "user-1", expires: "1h" },
+        options: { sign: { accessTokenHash: "" } },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        code: "claim_empty_value",
+        data: { claim: "accessTokenHash", whenEmpty: "refuse" },
+      },
+    ],
+  },
+  {
+    id: "an-empty-code-hash-is-refused-before-it-is-signed",
+    title:
+      "an authorization code hash supplied as the empty string is refused at the mint rather than written or dropped",
+    rationale:
+      "`c_hash` binds an ID Token to the authorization code issued beside it (OIDC Core §3.3.2.11): a client reading one compares it against the code it received, where a client reading none has no binding to check. An empty digest is a binding no code can ever match, so writing it mints an ID Token that fails beside every code, and dropping it hands the client an unbound ID Token where the issuer stated a binding. Aegis policy at mint refuses it on both wires, for the same reason it refuses the empty `at_hash`: the two are one binding argument applied to two artifacts.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "default",
+        content: { subject: "user-1", expires: "1h" },
+        options: { sign: { codeHash: "" } },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        code: "claim_empty_value",
+        data: { claim: "codeHash", whenEmpty: "refuse" },
+      },
+    ],
+  },
+  {
+    id: "an-empty-state-hash-is-refused-before-it-is-signed",
+    title:
+      "a state hash supplied as the empty string is refused at the mint rather than written or dropped",
+    rationale:
+      "`s_hash` binds an ID Token to the `state` value of the authorization request it answers (FAPI 1.0 Part 2 §5.1.1): a client reading one compares it against the `state` it sent, where a client reading none has no binding to check. An empty digest is a binding no `state` can ever match, so writing it mints an ID Token that fails beside every request, and dropping it hands the client an unbound ID Token where the issuer stated a binding. Aegis policy at mint refuses it on both wires, as it refuses the empty `at_hash` and `c_hash` — one binding argument, three artifacts.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "default",
+        content: { subject: "user-1", expires: "1h" },
+        options: { sign: { stateHash: "" } },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        code: "claim_empty_value",
+        data: { claim: "stateHash", whenEmpty: "refuse" },
+      },
+    ],
+  },
+  {
+    id: "a-subject-identifier-that-identifies-nobody-is-refused-before-it-is-signed",
+    title:
+      "a subject identifier carrying no member is refused at the raw door rather than written or dropped",
+    rationale:
+      "`sub_id` identifies who a token is about (RFC 9493 §4.1): a recipient reading one acts on the subject it names, where a recipient reading none has no subject to act on. An identifier with no member names nobody, so writing it mints a token about no one and dropping it turns a token the issuer stated a subject for into one that states none. Aegis policy refuses it. The domain doors never reach this verdict for the empty object, because a Subject Identifier's `format` is a mandatory member and the structure rule refuses the shape first; the raw doors run no structure walk, so the emission boundary is the only layer that can speak there, and it must speak on both wires — a refusal present on one wire alone would be a verdict the caller picks by encoding.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          exp: NOW + 3600,
+          // ⚠ THE CAST IS THE POINT: the wire claims type makes `format` mandatory,
+          // and the capability is about the value an untyped caller — a JSON body
+          // — actually hands the raw door.
+          sub_id: {} as unknown as JwtClaimsWire["sub_id"],
+        },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        code: "claim_empty_value",
+        data: { claim: "subjectId", whenEmpty: "refuse" },
+      },
+    ],
+  },
+  {
+    id: "an-empty-access-token-hash-is-refused-at-the-raw-door",
+    title:
+      "an access token hash supplied as the empty string is refused at the door with no profile above it",
+    rationale:
+      "`at_hash` binds an ID Token to the access token issued beside it (OIDC Core §3.1.3.6), and an empty digest is a binding no access token can ever match — written, it mints a token that fails beside every access token; dropped, it hands the client an unbound token where the issuer stated a binding. The raw signing doors are where the refusal has to hold on its own: they run no profile and no translation, so the emission boundary is the only layer that can speak, and it speaks the same class and vocabulary the profile floor uses for the same value. Aegis policy at mint, on both wires: the empty string is the one empty form a text-valued claim can take, and a refusal present on one wire alone would be a verdict the caller picks by encoding.",
+    given: [
+      {
+        step: "token",
+        via: "kit-sign",
+        kit: "opaque",
+        claims: { at_hash: "" },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        code: "claim_empty_value",
+        data: { claim: "accessTokenHash", whenEmpty: "refuse" },
+      },
+    ],
+  },
+  {
+    id: "an-events-map-that-names-no-event-is-refused-by-the-profile-floor-where-the-profile-demands-one",
+    title:
+      "a logout token whose events map names no event type is refused by the profile floor, with the floor's own code and every failure named",
+    rationale:
+      "A logout token's `events` is required and names the back-channel-logout event (OpenID Connect Back-Channel Logout 1.0 §2.4), so a map naming no event type fails the profile twice over: the demand for the claim, which an empty value does not satisfy, and the shape the claim must have (RFC 8417 §2.2). The profile floor runs before the emission boundary at every domain door, so under a profile that names the claim it is the floor that answers — with its own code and the whole list of what the token failed, not the first failure alone — where under a profile that names nothing the registry's cell refuses the same value as an empty claim. Aegis policy at mint, on both wires: which layer answers depends on the profile the caller chose, but the class and the domain vocabulary do not, so a caller can branch on one refusal shape whichever profile it minted under.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "logout_token",
+        content: { subject: "user-1", audience: [CLIENT], events: {} },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        code: "profile_policy_invalid",
+        data: {
+          direction: "mint",
+          invalid: [
+            { key: "events", message: 'Required claim "events" is missing' },
+            { key: "events", message: "events must contain at least one event type" },
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: "an-empty-authorization-details-list-reaches-the-wire-as-the-empty-list",
+    title:
+      "an explicitly empty authorization details list reaches the wire as the empty list on both wires",
+    rationale:
+      "`authorization_details` is the claim a JWT access token carries its rich authorization in (RFC 9396 §9.1), and each element it lists is a grant of the actions and locations that element names (RFC 9396 §2). An empty list therefore authorises nothing, where a token carrying no such claim is not restricted by authorization details at all — so the empty list is the narrower statement, and pruning it would issue the wider one. Aegis policy at mint keeps it verbatim on both wires, as it keeps the empty `aud`: a restriction the issuer wrote has to survive to the wire, and both encodings carry an empty array natively under the claim's own name.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "default",
+        content: { subject: "user-1", expires: "1h", authorizationDetails: [] },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      { step: "wireClaims", on: "jose", includes: { authorization_details: [] } },
+      { step: "wireClaims", on: "cose", includes: { authorization_details: [] } },
+    ],
+  },
+  {
     id: "a-claim-the-issuer-alone-defines-survives-the-empty-claim-prune",
     title: "a claim aegis has not declared reaches the wire with its empty value intact",
     rationale:
@@ -6140,6 +6394,36 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       { step: "wireClaims", on: "jose", excludes: ["cnf"] },
       // RFC 8747 §7.1.1
       { step: "wireClaims", on: "cose", excludes: [8] },
+    ],
+  },
+  {
+    id: "a-null-events-claim-is-absent-where-an-empty-one-is-refused",
+    title:
+      "an events claim supplied as null states no event and is left off the wire, where the empty map is refused",
+    rationale:
+      "`null` and `undefined` are absence, never a value: the emission boundary every signing door runs strips both from every claim before the registry is consulted, so a null `events` is an events claim the caller did not state and the token is minted without one, on both wires. That is the opposite of the EMPTY map: `events: {}` is a stated claim naming no event type (RFC 8417 §2.2), and the registry's cell refuses it. The two spellings have to part here, because they are the two things a caller assembling a token from optional sources actually hands in — a nullable column is the ordinary shape of an event the row does not carry, while an empty map is a container the caller built and left unfilled — and a boundary that treated them alike would either refuse every nullable source or write a SET announcing no event.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "default",
+        content: {
+          subject: "user-1",
+          expires: "1h",
+          // ⚠ THE CAST IS THE POINT — see the bearer-token row above: aegis's own
+          // types do not admit a null events claim, and the capability is about
+          // the value an untyped caller actually hands in.
+          events: null as unknown as SignContent["events"],
+        },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      { step: "wireClaims", on: "jose", excludes: ["events"] },
+      // aegis keys `events` at private-use label -65550 on-platform and under
+      // its name off-platform; a null reaches neither spelling.
+      { step: "wireClaims", on: "cose", excludes: [-65550, "events"] },
     ],
   },
   {
@@ -8441,12 +8725,13 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "an actor object carrying no member the token states is reported back as an empty actor, not as no actor",
     rationale:
-      "An issuer and a reader of the same token must agree about what it says, and a library that writes a value it will not read back has broken that on its own output. `act` is the claim that says a delegation occurred (RFC 8693 §4.1), so an actor object with no members is a strange thing to write — but it is a thing an issuer CAN write, and once written the honest read of it is the object that is there. Reporting the claim as ABSENT instead would say the token names no actor when it names an empty one, which is a different statement and one the wire does not support. ⚠ The consequence a consumer must know is that the reported object is TRUTHY: a delegation is stated and the acting party is not identified, so a check that cares WHO is acting has to read a member rather than the container.",
+      "An issuer and a reader of the same token must agree about what it says. `act` is the claim that says a delegation occurred (RFC 8693 §4.1), so an actor object with no members is a strange thing to write, but it is a thing a foreign issuer CAN write, and once written the honest read of it is the object that is there. Reporting the claim as ABSENT instead would say the token names no actor when it names an empty one, which is a different statement and one the wire does not support. ⚠ The consequence a consumer must know is that the reported object is TRUTHY: a delegation is stated and the acting party is not identified, so a check that cares WHO is acting has to read a member rather than the container.",
     given: [
+      // A FOREIGN token: every aegis signing door refuses an empty actor on the
+      // way out, so this shape can only be presented by somebody else's producer.
       {
         step: "token",
-        via: "kit-sign",
-        kit: "structured",
+        via: "foreign",
         claims: {
           iss: ISSUER,
           sub: "user-1",
@@ -8456,6 +8741,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
           jti: "token-1",
           act: {},
         },
+        typ: { jose: "JWT", cose: "application/cwt" },
       },
     ],
     when: [{ step: "verify" }],

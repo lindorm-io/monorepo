@@ -56,7 +56,7 @@ describe("normaliseClaims", () => {
     });
 
     // The `whenEmpty: "keep"` cells: a restriction (`aud`, `authorization_details`)
-    // and the SET claims are statements.
+    // is a statement.
     //
     // ⚠ `scope` is here and `roles` is not, though both are lists of granted
     // authority. AEGIS POLICY, not a citation: RFC 9068 §2.2.3 makes `scope` only
@@ -69,7 +69,6 @@ describe("normaliseClaims", () => {
           aud: [],
           scope: [],
           authorization_details: [],
-          events: {},
           sub: "user_1",
         }),
       ).toMatchSnapshot();

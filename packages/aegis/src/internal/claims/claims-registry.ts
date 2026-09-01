@@ -410,9 +410,11 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: ACT_SAMPLE,
     bucket: "claims",
-    // KEEP: RFC 8693 §4.1 — pruned, the delegation is invisible and the token
-    // reads as the subject acting directly.
-    whenEmpty: "keep",
+    // REFUSE: `act` (RFC 8693 §4.1) makes the token a delegated one, and an actor
+    // object with no member names nobody a verifier could hold to that
+    // delegation — pinned by `scenarios.ts`
+    // "an-actor-that-identifies-nobody-is-refused-before-it-is-signed".
+    whenEmpty: "refuse",
     domainClaim: true,
   },
   {
@@ -598,12 +600,10 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "hAsHhAsHhAsHhAsHhAsHhA",
     bucket: "claims",
-    // KEEP: the OIDC Core §3.1.3.6 / OIDC Core §3.3.2.11 hashes BIND the id_token
-    // to another artifact, so pruning leaves it unbound — the substitution
-    // surface; an empty digest matches nothing and is refused. ⚠ Aegis's own mint
-    // cannot reach the cell (`assemble-common-claims.ts` derives the digest or
-    // omits the claim), so it states the direction a CALLER-supplied one fails in.
-    whenEmpty: "keep",
+    // REFUSE: `at_hash` (OIDC Core §3.1.3.6) binds the ID Token to an access
+    // token, and an empty digest is a binding no access token can match — pinned
+    // by `scenarios.ts` "an-empty-access-token-hash-is-refused-before-it-is-signed".
+    whenEmpty: "refuse",
     domainClaim: true,
   },
   {
@@ -620,8 +620,10 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "hAsHhAsHhAsHhAsHhAsHhA",
     bucket: "claims",
-    // KEEP: the `at_hash` binding argument, for the authorization code.
-    whenEmpty: "keep",
+    // REFUSE: `c_hash` (OIDC Core §3.3.2.11) binds the ID Token to an
+    // authorization code, and an empty digest is a binding no code can match —
+    // pinned by `scenarios.ts` "an-empty-code-hash-is-refused-before-it-is-signed".
+    whenEmpty: "refuse",
     domainClaim: true,
   },
   {
@@ -638,8 +640,10 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: "hAsHhAsHhAsHhAsHhAsHhA",
     bucket: "claims",
-    // KEEP: the `at_hash` binding argument, for the `state` value.
-    whenEmpty: "keep",
+    // REFUSE: `s_hash` (FAPI 1.0 Part 2 §5.1.1) binds the ID Token to the `state`
+    // value, and an empty digest is a binding no `state` can match — pinned by
+    // `scenarios.ts` "an-empty-state-hash-is-refused-before-it-is-signed".
+    whenEmpty: "refuse",
     domainClaim: true,
   },
   {
@@ -724,9 +728,11 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: ACT_SAMPLE,
     bucket: "claims",
-    // KEEP: RFC 8693 §4.4 names who may BECOME the actor — symmetric with `act`,
-    // and stated by the same issuer.
-    whenEmpty: "keep",
+    // REFUSE: `may_act` (RFC 8693 §4.4) authorises a party to become the actor,
+    // and an object with no member authorises nobody a token endpoint could
+    // recognise — pinned by `scenarios.ts`
+    // "an-authorized-actor-that-identifies-nobody-is-refused-before-it-is-signed".
+    whenEmpty: "refuse",
     domainClaim: true,
   },
   {
@@ -840,9 +846,11 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: SUB_ID_SAMPLE,
     bucket: "claims",
-    // KEEP: RFC 9493 §4.1 identifies WHO an event is about — a SET whose `sub_id`
-    // was pruned names no subject to act on.
-    whenEmpty: "keep",
+    // REFUSE: `sub_id` (RFC 9493 §4.1) identifies who the token is about, and an
+    // identifier with no member identifies nobody a recipient could act on —
+    // pinned by `scenarios.ts`
+    // "a-subject-identifier-that-identifies-nobody-is-refused-before-it-is-signed".
+    whenEmpty: "refuse",
     domainClaim: true,
   },
   // RFC 8417 SET events
@@ -859,10 +867,10 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: { "https://schemas.lindorm.test/event/sample": {} },
     bucket: "claims",
-    // KEEP: a member's PRESENCE is the statement (RFC 8417 §2.2), and the empty
-    // object is the normal payload (OIDC Back-Channel Logout §2.4), so pruning
-    // deletes the event itself from a token whose profile REQUIRES it.
-    whenEmpty: "keep",
+    // REFUSE: `events` (RFC 8417 §2.2) is what makes the token a SET, and a map
+    // naming no event type states no event a recipient could act on — pinned by
+    // `scenarios.ts` "an-events-map-that-names-no-event-is-refused-before-it-is-signed".
+    whenEmpty: "refuse",
   },
 
   {

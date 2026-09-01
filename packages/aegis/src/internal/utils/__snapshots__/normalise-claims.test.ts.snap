@@ -39,7 +39,6 @@ exports[`normaliseClaims > the registry-driven empty prune > should keep a regis
 {
   "aud": [],
   "authorization_details": [],
-  "events": {},
   "scope": [],
   "sub": "user_1",
 }

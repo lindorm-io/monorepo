@@ -534,26 +534,15 @@ describe("CLAIM_REGISTRY", () => {
   test("the claims kept when empty are exactly the stated set", () => {
     const keep = CLAIM_SPECS.filter((s) => s.whenEmpty === "keep").map((s) => s.domain);
 
-    // Registry declaration order. Restrictions (`aud`, RAR), the OIDC hashes,
-    // delegation (`act`/`may_act`), and the two RFC 8417/9493 claims a SET IS.
+    // Registry declaration order. The restrictions: an empty one narrows what
+    // the token grants where an absent one restricts nothing.
     //
     // ⚠ The four lindorm authority lists — `roles`, `permissions`, `entitlements`,
     // `groups` — are deliberately NOT here: they are our own vocabulary, and the
     // only issuer that mints them (tyr's access-token mint) emits an empty list as
     // absence. `scope` IS here and splits from them as AEGIS POLICY — see its
     // registry entry, and ⛔ do not attach RFC 6749 §3.3 to it.
-    expect(keep).toEqual([
-      "audience",
-      "scope",
-      "act",
-      "accessTokenHash",
-      "codeHash",
-      "stateHash",
-      "authorizationDetails",
-      "mayAct",
-      "subjectId",
-      "events",
-    ]);
+    expect(keep).toEqual(["audience", "scope", "authorizationDetails"]);
   });
 
   /**
@@ -573,17 +562,27 @@ describe("CLAIM_REGISTRY", () => {
 
     const refuse = refusedIn(CLAIM_SPECS);
 
-    // `cnf` alone: an empty confirmation names no key, so it can be neither
-    // emitted (a binding nothing satisfies) nor pruned (a bearer token) — see its
-    // registry entry. The set is frozen by name so a cell flipped to `refuse` is a
-    // change to this list, not a one-word diff with nothing to notice.
-    expect(refuse).toEqual(["confirmation"]);
+    // Registry declaration order. Each states something a verifier acts on —
+    // a key binding, a delegation, a hash binding, a subject, an event — whose
+    // empty form gives it nothing: emitted, the token asserts what the issuer
+    // cannot have meant; pruned, the statement vanishes. See each registry
+    // entry. The set is frozen by name so a cell flipped to `refuse` is a change
+    // to this list, not a one-word diff with nothing to notice.
+    const refused = [
+      "confirmation",
+      "act",
+      "accessTokenHash",
+      "codeHash",
+      "stateHash",
+      "mayAct",
+      "subjectId",
+      "events",
+    ];
+
+    expect(refuse).toEqual(refused);
 
     // The control: the predicate sees a cell wherever it is written.
-    expect(refusedIn([...CLAIM_SPECS, refusing])).toEqual([
-      "confirmation",
-      refusing.domain,
-    ]);
+    expect(refusedIn([...CLAIM_SPECS, refusing])).toEqual([...refused, refusing.domain]);
 
     // ⚠ THE COUNT IS THE ASSERTION, and it is here rather than a loop over the
     // column because a loop CANNOT GO RED: `ParamSpec.whenEmpty` is required over a

@@ -154,6 +154,44 @@ describe("refuseEmptyClaims", () => {
     });
 
     /**
+     * ⭐ EVERY REFUSE CELL AT EVERY RAW DOOR, derived from the registry like the
+     * structural walk above — a cell flipped to `refuse` joins this table with no
+     * edit here. All three
+     * empty spellings a wire can carry: the cell's question is
+     * `isClaimSatisfied`'s, to which `""`, `[]` and `{}` are one answer, so a
+     * text-valued claim handed a container and an object-valued one handed the
+     * empty string are refused at these doors exactly as their own empty form is
+     * — no structure walk runs here to say otherwise. Each door is handed the
+     * spelling of its own wire.
+     */
+    const EMPTY_VALUES: ReadonlyArray<unknown> = ["", [], {}];
+
+    test.each(CLAIM_SPECS.filter((spec) => spec.whenEmpty === "refuse"))(
+      "$domain's refuse cell answers every empty spelling at every raw door, by domain name",
+      async (spec) => {
+        const refusal = expect.objectContaining({
+          code: "claim_empty_value",
+          data: { claim: spec.domain, whenEmpty: "refuse" },
+        });
+
+        const refusedAt = async (sign: () => Promise<unknown>): Promise<void> => {
+          await expect(sign()).rejects.toThrow(AegisDomainError);
+          await expect(sign()).rejects.toThrow(refusal);
+        };
+
+        for (const value of EMPTY_VALUES) {
+          const jose: Dict = { [joseName(spec)]: value };
+          const cose: Dict = { [coseName(spec)]: value };
+
+          await refusedAt(() => aegis.jws.sign(jose));
+          await refusedAt(() => aegis.cws.sign(cose));
+          await refusedAt(() => aegis.jwt.sign(jose));
+          await refusedAt(() => aegis.cwt.sign(cose));
+        }
+      },
+    );
+
+    /**
      * `null` and `undefined` are ABSENCE, not an empty value: `normaliseClaims`
      * strips both from every claim before this cell is consulted
      * (`internal/utils/normalise-claims.ts`), so a raw door handed `cnf: null`

@@ -26,9 +26,8 @@ import { isClaimOmitted } from "./is-claim-omitted.js";
  * The walker's disposal for a value it cannot describe is a DROP, not a refusal:
  * a non-object actor walks to `undefined` and the claim is left off, and a member
  * whose value fails its own codec is skipped by `encodeIfReadable`'s probe read. So
- * `act: "service-1"` and `act: { subject: 1 }` would both mint a token — the
- * second carrying `act: {}`, an actor that identifies nobody — where here they
- * are refused with the position named.
+ * `act: "service-1"` would mint a token, where here it is refused with the
+ * position named.
  *
  * ⚠ THE DEPTH BOUND IS NOT PART OF THIS RULE. `maxChainDepth` is a VERIFIER's
  * option (`internal/utils/validate-actor.ts`), not a shape fact.
