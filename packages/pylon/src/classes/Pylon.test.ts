@@ -371,12 +371,12 @@ describe("Pylon", () => {
     expect(response.body).toEqual({
       fresh: false,
       header: {
-        accept_encoding: "gzip, deflate",
+        "accept-encoding": "gzip, deflate",
         connection: "close",
         host: expect.stringMatching(/127\.0\.0\.1:\d+/),
       },
       headers: {
-        accept_encoding: "gzip, deflate",
+        "accept-encoding": "gzip, deflate",
         connection: "close",
         host: expect.stringMatching(/127\.0\.0\.1:\d+/),
       },

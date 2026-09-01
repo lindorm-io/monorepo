@@ -526,6 +526,8 @@ router.get(
 );
 ```
 
+Response bodies are converted to `snake_case` on the way out; a key holding a character outside letters, digits and underscore — such as `x5t#S256` or `https://claims.lindorm.io/tenant` — is kept verbatim together with its value (`isVerbatimKey` from `@lindorm/case`).
+
 ## Socket.IO integration
 
 Enable the gateway with `socket: { enabled: true }`. Listeners accept either `PylonListener` instances or a directory string for file-based scanning.

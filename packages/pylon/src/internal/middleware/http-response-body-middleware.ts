@@ -1,4 +1,4 @@
-import { changeKeys } from "@lindorm/case";
+import { changeKeys, isVerbatimKey } from "@lindorm/case";
 import { isArray, isObject } from "@lindorm/is";
 import { Stream } from "stream";
 import type { PylonHttpMiddleware } from "../../types/index.js";
@@ -9,7 +9,7 @@ export const httpResponseBodyMiddleware: PylonHttpMiddleware = async (ctx, next)
   } finally {
     try {
       if ((isObject(ctx.body) && !(ctx.body instanceof Stream)) || isArray(ctx.body)) {
-        ctx.body = changeKeys(ctx.body, "snake");
+        ctx.body = changeKeys(ctx.body, "snake", { exempt: isVerbatimKey });
       }
     } catch (err: any) {
       ctx.logger?.error(err);

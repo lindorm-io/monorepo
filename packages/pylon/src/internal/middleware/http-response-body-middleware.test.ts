@@ -73,4 +73,73 @@ describe("httpResponseBodyMiddleware", () => {
 
     expect(ctx.body).toEqual("string");
   });
+
+  test("x5t#S256 survives the response body", async () => {
+    ctx.body = { keys: [{ kid: "k", "x5t#S256": "thumb", x5c: ["MII"] }] };
+
+    await expect(httpResponseBodyMiddleware(ctx, vi.fn())).resolves.toBeUndefined();
+
+    expect(ctx.body).toEqual({ keys: [{ kid: "k", "x5t#S256": "thumb", x5c: ["MII"] }] });
+  });
+
+  test("a namespaced claim key survives", async () => {
+    ctx.body = { sub: "s", "https://claims.lindorm.io/tenant": "acme" };
+
+    await expect(httpResponseBodyMiddleware(ctx, vi.fn())).resolves.toBeUndefined();
+
+    expect(ctx.body).toEqual({ sub: "s", "https://claims.lindorm.io/tenant": "acme" });
+  });
+
+  test("a camelCase key still snake-cases", async () => {
+    ctx.body = { tenantId: "t" };
+
+    await expect(httpResponseBodyMiddleware(ctx, vi.fn())).resolves.toBeUndefined();
+
+    expect(ctx.body).toEqual({ tenant_id: "t" });
+  });
+
+  test("a key with punctuation and an upper-case letter survives", async () => {
+    ctx.body = { "X-Request-Id": "r" };
+
+    await expect(httpResponseBodyMiddleware(ctx, vi.fn())).resolves.toBeUndefined();
+
+    expect(ctx.body).toEqual({ "X-Request-Id": "r" });
+  });
+
+  test("an underscore alone does not exempt a key", async () => {
+    ctx.body = { mixed_camelCase: 1 };
+
+    await expect(httpResponseBodyMiddleware(ctx, vi.fn())).resolves.toBeUndefined();
+
+    expect(ctx.body).toEqual({ mixed_camel_case: 1 });
+  });
+
+  test("the exemption holds at every depth", async () => {
+    ctx.body = {
+      tokenClaims: { "https://claims.lindorm.io/tenant": { tenantId: 1 }, issuedAt: 1 },
+    };
+
+    await expect(httpResponseBodyMiddleware(ctx, vi.fn())).resolves.toBeUndefined();
+
+    expect(ctx.body).toEqual({
+      token_claims: { "https://claims.lindorm.io/tenant": { tenantId: 1 }, issued_at: 1 },
+    });
+  });
+
+  test("an exempt key's value is kept by reference", async () => {
+    const tenant = { tenantId: 1 };
+    ctx.body = { tokenClaims: { "https://claims.lindorm.io/tenant": tenant } };
+
+    await expect(httpResponseBodyMiddleware(ctx, vi.fn())).resolves.toBeUndefined();
+
+    expect(ctx.body.token_claims["https://claims.lindorm.io/tenant"]).toBe(tenant);
+  });
+
+  test("an array of objects is walked", async () => {
+    ctx.body = [{ "x5t#S256": "a", keyId: "k" }, { keyId: "j" }];
+
+    await expect(httpResponseBodyMiddleware(ctx, vi.fn())).resolves.toBeUndefined();
+
+    expect(ctx.body).toEqual([{ "x5t#S256": "a", key_id: "k" }, { key_id: "j" }]);
+  });
 });
