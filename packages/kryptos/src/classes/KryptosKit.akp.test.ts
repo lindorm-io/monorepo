@@ -74,38 +74,6 @@ describe("KryptosKit (AKP)", () => {
     });
   });
 
-  describe("is", () => {
-    test("isAkp", () => {
-      const kryptos = KryptosKit.from.b64(TEST_AKP_KEY_B64);
-
-      expect(KryptosKit.isAkp(kryptos)).toBe(true);
-    });
-
-    test("isEc", () => {
-      const kryptos = KryptosKit.from.b64(TEST_AKP_KEY_B64);
-
-      expect(KryptosKit.isEc(kryptos)).toBe(false);
-    });
-
-    test("isOct", () => {
-      const kryptos = KryptosKit.from.b64(TEST_AKP_KEY_B64);
-
-      expect(KryptosKit.isOct(kryptos)).toBe(false);
-    });
-
-    test("isOkp", () => {
-      const kryptos = KryptosKit.from.b64(TEST_AKP_KEY_B64);
-
-      expect(KryptosKit.isOkp(kryptos)).toBe(false);
-    });
-
-    test("isRsa", () => {
-      const kryptos = KryptosKit.from.b64(TEST_AKP_KEY_B64);
-
-      expect(KryptosKit.isRsa(kryptos)).toBe(false);
-    });
-  });
-
   describe("generate", () => {
     test("auto", () => {
       const kryptos = KryptosKit.generate.auto({
@@ -181,18 +149,6 @@ describe("KryptosKit (AKP)", () => {
         type: "AKP",
         use: "sig",
       });
-    });
-  });
-
-  describe("generateAsync", () => {
-    test("sig", async () => {
-      const kryptos = await KryptosKit.generateAsync.sig.akp({
-        algorithm: "ML-DSA-65",
-      });
-
-      expect(kryptos.algorithm).toEqual("ML-DSA-65");
-      expect(kryptos.type).toEqual("AKP");
-      expect(kryptos.use).toEqual("sig");
     });
   });
 });

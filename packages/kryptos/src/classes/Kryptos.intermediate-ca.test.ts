@@ -88,30 +88,6 @@ describe("intermediate-CA certificates", () => {
   });
 
   describe("mint-time path-length guards (RFC 5280 §4.2.1.9)", () => {
-    test("refuses an intermediate under a pathLen=0 issuer", () => {
-      const root = rootCa(1);
-      const intermediate = KryptosKit.generate.auto({
-        algorithm: "ES256",
-        notBefore: NB,
-        expiresAt: INT_EXP,
-        certificate: {
-          mode: "intermediate-ca",
-          ca: root,
-          subject: "Int",
-          pathLengthConstraint: 0,
-        },
-      });
-
-      expect(() =>
-        KryptosKit.generate.auto({
-          algorithm: "ES256",
-          notBefore: NB,
-          expiresAt: LEAF_EXP,
-          certificate: { mode: "intermediate-ca", ca: intermediate, subject: "Sub" },
-        }),
-      ).toThrow(/only issue end-entity|pathLenConstraint=0/i);
-    });
-
     test("refuses a child pathLen >= the issuer's pathLen", () => {
       const root = rootCa(1);
 

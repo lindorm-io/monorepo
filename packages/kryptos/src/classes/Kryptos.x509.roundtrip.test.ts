@@ -164,33 +164,5 @@ describe("Kryptos (X.509 round-trip)", () => {
 
       expect(() => KryptosKit.from.db(tampered as any)).toThrow(KryptosError);
     });
-
-    test("fromJwk with mismatched x5c throws", () => {
-      const otherKryptos = new Kryptos({
-        ...baseEcOptions,
-        privateKey: Buffer.from(TEST_X509_OTHER_PRIVATE_KEY_B64, "base64url"),
-        publicKey: Buffer.from(TEST_X509_OTHER_PUBLIC_KEY_B64, "base64url"),
-      });
-      const jwk = otherKryptos.toJWK("public");
-      const tampered = {
-        ...jwk,
-        x5c: [Buffer.from(TEST_X509_LEAF_B64_DER, "base64").toString("base64")],
-      };
-
-      expect(() => KryptosKit.from.jwk(tampered)).toThrow(KryptosError);
-    });
-
-    test("fromJwk with tampered x5t#S256 throws", () => {
-      const kryptos = buildKryptosWithChain();
-      const jwk = kryptos.toJWK("public");
-      const tampered = {
-        ...jwk,
-        "x5t#S256": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-      };
-
-      expect(() => KryptosKit.from.jwk(tampered)).toThrow(
-        /x5t#S256 thumbprint does not match/,
-      );
-    });
   });
 });

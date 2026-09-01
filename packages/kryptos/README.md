@@ -693,6 +693,8 @@ import {
 
 These subpaths are intended for test code and are not re-exported from the package root.
 
+Kryptos's behaviour is specified in `src/classes/*.feature` files, run by `@lindorm/gherkin` as vitest tests. `npm test` runs them together with the unit suite; `npm test -- Kryptos.feature` scopes the run to one file.
+
 ## License
 
 AGPL-3.0-or-later

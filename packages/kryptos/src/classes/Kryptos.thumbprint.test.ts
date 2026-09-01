@@ -3,7 +3,6 @@ import { TEST_EC_KEY_B64 } from "../__fixtures__/ec-keys.js";
 import { TEST_OCT_KEY_B64 } from "../__fixtures__/oct-keys.js";
 import { TEST_OKP_KEY_B64 } from "../__fixtures__/okp-keys.js";
 import { TEST_RSA_KEY_B64 } from "../__fixtures__/rsa-keys.js";
-import { KryptosError } from "../errors/index.js";
 import { KryptosKit } from "./KryptosKit.js";
 import { describe, expect, test } from "vitest";
 
@@ -36,11 +35,5 @@ describe("Kryptos.thumbprint", () => {
   test("should be stable across multiple reads", () => {
     const kryptos = KryptosKit.from.b64(TEST_EC_KEY_B64);
     expect(kryptos.thumbprint).toEqual(kryptos.thumbprint);
-  });
-
-  test("should throw when the key has been disposed", () => {
-    const kryptos = KryptosKit.from.b64(TEST_EC_KEY_B64);
-    kryptos.dispose();
-    expect(() => kryptos.thumbprint).toThrow(KryptosError);
   });
 });

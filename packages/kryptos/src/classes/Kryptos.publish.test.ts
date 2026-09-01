@@ -2,22 +2,6 @@ import { describe, expect, test } from "vitest";
 import { KryptosKit } from "./index.js";
 
 describe("Kryptos publish attribute", () => {
-  // A key we MINT is unpublished until we say otherwise: publishing a key that
-  // should have stayed internal is a silent exposure, while withholding one that
-  // should be public fails loudly and immediately. Fail closed on the dangerous
-  // side.
-  test("should default to publish:false when the flag is not given", () => {
-    const key = KryptosKit.generate.auto({ algorithm: "ES256" });
-
-    expect(key.publish).toBe(false);
-  });
-
-  test("should honour an explicit publish:true", () => {
-    const key = KryptosKit.generate.auto({ algorithm: "ES256", publish: true });
-
-    expect(key.publish).toBe(true);
-  });
-
   test.each(["cbor", "json"] as const)(
     "should round-trip publish:true through the %s env string",
     (format) => {
@@ -59,48 +43,6 @@ describe("Kryptos publish attribute", () => {
     },
   );
 
-  // ⚠ THE TRIPWIRE. The JWK import default is the INVERSE of the constructor
-  // default, and must stay that way. We emit `publish` only in PRIVATE JWKs, so a
-  // key fetched from a remote JWKS arrives without the member. Amphora filters
-  // `publish: true` by default — so if an imported key defaulted to `false`, every
-  // EXTERNAL verification key would become invisible to `find()` and foreign-issuer
-  // verification would silently break. A JWK is the interchange format of a
-  // PUBLISHED key; importing one means importing something already published.
-  describe("JWK import defaults to unpublished", () => {
-    // Publishing is opt-in and explicit everywhere, the import path included. An
-    // external key is not hidden by this: amphora's filter gates only INTERNAL
-    // unpublished keys, so a `from.jwk` key (internal: false) stays findable.
-    test("should default publish:false when a JWK carries no publish member", () => {
-      const key = KryptosKit.generate.auto({ algorithm: "ES256", publish: false });
-
-      const foreign = key.toJWK("private");
-      delete (foreign as { publish?: boolean }).publish;
-
-      const imported = KryptosKit.from.jwk(foreign);
-
-      expect(imported.publish).toBe(false);
-    });
-
-    // The realistic shape: a public JWK off a remote JWKS. It never carries the
-    // member, so it imports unpublished — and stays findable via the filter,
-    // because it is external.
-    test("should default publish:false for a public JWK off a remote JWKS", () => {
-      const key = KryptosKit.generate.auto({ algorithm: "ES256", publish: false });
-
-      const published = key.toJWK("public");
-
-      expect("publish" in published).toBe(false);
-      expect(KryptosKit.from.jwk(published).publish).toBe(false);
-    });
-
-    // ...but an explicit member in the payload still wins.
-    test("should honour an explicit publish:false in a JWK payload", () => {
-      const key = KryptosKit.generate.auto({ algorithm: "ES256", publish: false });
-
-      expect(KryptosKit.from.jwk(key.toJWK("private")).publish).toBe(false);
-    });
-  });
-
   test("should keep an internal oct key unpublished across the env round trip", () => {
     const key = KryptosKit.generate.auto({ algorithm: "A256KW", publish: false });
 
@@ -109,21 +51,6 @@ describe("Kryptos publish attribute", () => {
     expect(restored.publish).toBe(false);
     // The flag survives in the PRIVATE JWK, which is what the env string carries.
     expect(key.toJWK("private").publish).toBe(false);
-  });
-
-  // An oct key cannot leak the flag into a public JWK for a stronger reason than
-  // "the member is omitted": it has no public JWK at all. Its material is the
-  // secret, so `toJWK("public")` is refused outright — the key never reaches a
-  // JWKS, with or without the flag.
-  test("should refuse a public JWK for an oct key entirely", () => {
-    const key = KryptosKit.generate.auto({ algorithm: "A256KW", publish: true });
-
-    expect(() => key.toJWK("public")).toThrow(
-      expect.objectContaining({
-        name: "KryptosError",
-        code: "no_public_jwk",
-      }),
-    );
   });
 
   test("should carry publish through toDB and toJSON", () => {
@@ -166,8 +93,6 @@ describe("Kryptos publish attribute", () => {
     );
   });
 
-  // A key you hand-construct is internal until you say otherwise. The JWK path is
-  // the deliberate exception (see the tripwire above).
   describe("construction paths", () => {
     test("should default publish:false on the derive path", () => {
       const seed = KryptosKit.generate.auto({ algorithm: "A256KW" });

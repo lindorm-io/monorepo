@@ -45,7 +45,7 @@ describe("certificate environment (subject OU)", () => {
     expect(ou(key)).toBeUndefined();
   });
 
-  describe("inheritance and cross-environment refusal", () => {
+  describe("inheritance", () => {
     test("a ca-signed child inherits the CA's environment OU", () => {
       const root = devRoot();
       const child = KryptosKit.generate.auto({
@@ -90,24 +90,6 @@ describe("certificate environment (subject OU)", () => {
       });
 
       expect(ou(child)).toBe("development");
-    });
-
-    test("a differing declared environment is refused (dev/prod never mix)", () => {
-      const root = devRoot();
-
-      expect(() =>
-        KryptosKit.generate.auto({
-          algorithm: "ES256",
-          notBefore: NB,
-          expiresAt: LEAF_EXP,
-          certificate: {
-            mode: "ca-signed",
-            ca: root,
-            subject: "child",
-            environment: "production",
-          },
-        }),
-      ).toThrow(/cross-environment/i);
     });
 
     test("a CA without an environment OU imposes no constraint", () => {

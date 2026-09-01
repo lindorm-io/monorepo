@@ -11,17 +11,6 @@ const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate.toISOString());
 
 describe("KryptosKit (EC)", () => {
-  describe("clone", () => {
-    test("should clone", () => {
-      const kryptos = KryptosKit.from.auto(TEST_EC_KEY_B64);
-      const cloned = KryptosKit.clone(kryptos);
-
-      expect(cloned.toJSON()).toEqual(kryptos.toJSON());
-      expect(cloned.toJWK()).toEqual(kryptos.toJWK());
-      expect(cloned.export("b64")).toEqual(kryptos.export("b64"));
-    });
-  });
-
   describe("env", () => {
     test("import", () => {
       const kryptos = KryptosKit.env.import(
@@ -118,32 +107,6 @@ describe("KryptosKit (EC)", () => {
       expect(kryptos.toJSON()).toMatchSnapshot();
       expect(kryptos.toJWK()).toMatchSnapshot();
       expect(kryptos.export("pem")).toMatchSnapshot();
-    });
-  });
-
-  describe("is", () => {
-    test("isEc", () => {
-      const kryptos = KryptosKit.from.b64(TEST_EC_KEY_B64);
-
-      expect(KryptosKit.isEc(kryptos)).toBe(true);
-    });
-
-    test("isOct", () => {
-      const kryptos = KryptosKit.from.b64(TEST_EC_KEY_B64);
-
-      expect(KryptosKit.isOct(kryptos)).toBe(false);
-    });
-
-    test("isOkp", () => {
-      const kryptos = KryptosKit.from.b64(TEST_EC_KEY_B64);
-
-      expect(KryptosKit.isOkp(kryptos)).toBe(false);
-    });
-
-    test("isRsa", () => {
-      const kryptos = KryptosKit.from.b64(TEST_EC_KEY_B64);
-
-      expect(KryptosKit.isRsa(kryptos)).toBe(false);
     });
   });
 

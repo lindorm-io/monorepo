@@ -81,28 +81,6 @@ describe("Kryptos env-string format", () => {
     });
   });
 
-  describe("auto-detect", () => {
-    test("imports a JSON env string (0x7b first byte)", () => {
-      const key = ec();
-      const json = key.toEnvString("json");
-
-      expect(KryptosKit.env.import(json).id).toBe(key.id);
-    });
-
-    test("imports a CBOR env string (map header first byte)", () => {
-      const key = ec();
-      const cbor = key.toEnvString("cbor");
-
-      expect(KryptosKit.env.import(cbor).id).toBe(key.id);
-    });
-
-    test("rejects a payload that is neither JSON nor a CBOR map", () => {
-      const garbage = "kryptos:" + Buffer.from([0x01, 0x02, 0x03]).toString("base64url");
-
-      expect(() => KryptosKit.env.import(garbage)).toThrow(/env payload|kryptos/i);
-    });
-  });
-
   // The two env formats do NOT carry the same members for a key with a chain.
   // JSON is the private JWK verbatim, so it carries whatever `toJWK` emits —
   // including both digests. CBOR carries only what `CBOR_ENV_SPEC.fields`

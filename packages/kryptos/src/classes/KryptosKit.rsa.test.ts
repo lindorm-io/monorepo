@@ -91,32 +91,6 @@ describe("KryptosKit (RSA)", () => {
     });
   });
 
-  describe("is", () => {
-    test("isEc", () => {
-      const kryptos = KryptosKit.from.b64(TEST_RSA_KEY_B64);
-
-      expect(KryptosKit.isEc(kryptos)).toBe(false);
-    });
-
-    test("isOct", () => {
-      const kryptos = KryptosKit.from.b64(TEST_RSA_KEY_B64);
-
-      expect(KryptosKit.isOct(kryptos)).toBe(false);
-    });
-
-    test("isOkp", () => {
-      const kryptos = KryptosKit.from.b64(TEST_RSA_KEY_B64);
-
-      expect(KryptosKit.isOkp(kryptos)).toBe(false);
-    });
-
-    test("isRsa", () => {
-      const kryptos = KryptosKit.from.b64(TEST_RSA_KEY_B64);
-
-      expect(KryptosKit.isRsa(kryptos)).toBe(true);
-    });
-  });
-
   describe("generate", () => {
     test("auto", () => {
       const kryptos = KryptosKit.generate.auto({

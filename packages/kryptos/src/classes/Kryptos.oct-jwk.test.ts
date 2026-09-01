@@ -1,46 +1,7 @@
 import { describe, expect, test } from "vitest";
-import { KryptosError } from "../errors/index.js";
 import type { KryptosAlgorithm, KryptosJwk, KryptosType } from "../types/index.js";
 import { KryptosKit } from "./KryptosKit.js";
 
-describe("Kryptos.toJWK — a symmetric key has no public JWK", () => {
-  const oct = () => KryptosKit.generate.auto({ algorithm: "HS256" });
-
-  // A `{ kty: "oct" }` with no `k` is malformed per RFC 7518 §6.4.1, and jose
-  // rejects it outright. The only alternative would be to emit `k`, which
-  // publishes the secret. Neither is an answer, so the question is refused.
-  test("throws rather than emitting a keyless — or secret-bearing — JWK", () => {
-    expect(() => oct().toJWK("public")).toThrow(KryptosError);
-    expect(() => oct().toJWK("public")).toThrow(/no public JWK/i);
-  });
-
-  test("throws on the default mode too, which is public", () => {
-    expect(() => oct().toJWK()).toThrow(KryptosError);
-  });
-
-  test("the private JWK is unaffected — `k` belongs there", () => {
-    expect(oct().toJWK("private").k).toBeTypeOf("string");
-  });
-
-  test('export("jwk") is unaffected — it always exports the private JWK', () => {
-    expect(oct().export("jwk").k).toBeTypeOf("string");
-  });
-
-  test("an asymmetric key still exports a public JWK, without its private half", () => {
-    const ec = KryptosKit.generate.auto({ algorithm: "ES256" });
-
-    expect(ec.toJWK("public").x).toBeTypeOf("string");
-    expect(ec.toJWK("public").d).toBeUndefined();
-  });
-});
-
-// THE OTHER HALF OF THE GUARD: that it is not OVER-BROAD. The refusal is scoped to
-// `kty: "oct"` and nothing else — an asymmetric key must still export the public
-// JWK we publish, with its public parameters intact and its private half stripped.
-// A guard that quietly took the asymmetric keys with it would empty the JWKS and
-// leave every RP unable to verify a token, which is the LOUDER failure of the two
-// and exactly the kind this suite exists to catch.
-//
 // The table covers EVERY asymmetric member of `KryptosType`, so a sixth type cannot
 // be added without a decision being made here.
 const ASYMMETRIC: Array<{

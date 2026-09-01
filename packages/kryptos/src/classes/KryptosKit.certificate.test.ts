@@ -559,23 +559,6 @@ describe("KryptosKit certificate generation", () => {
       ).toThrow(KryptosError);
     });
 
-    test("guard: CA without certificateChain throws", () => {
-      const caNoChain = KryptosKit.generate.sig.ec({
-        algorithm: "ES256",
-        notBefore: NOT_BEFORE,
-        expiresAt: EXPIRES_AT,
-      });
-
-      expect(() =>
-        KryptosKit.generate.sig.ec({
-          algorithm: "ES256",
-          notBefore: NOT_BEFORE,
-          expiresAt: EXPIRES_AT,
-          certificate: { mode: "ca-signed", ca: caNoChain },
-        }),
-      ).toThrow(KryptosError);
-    });
-
     test("guard: CA that is a self-signed leaf (cA=false) throws", () => {
       const leaf = KryptosKit.generate.sig.ec({
         algorithm: "ES256",
@@ -593,22 +576,6 @@ describe("KryptosKit certificate generation", () => {
           certificate: { mode: "ca-signed", ca: leaf },
         }),
       ).toThrow("basicConstraints cA=true");
-    });
-
-    test("guard: child validity window exceeding CA's throws", () => {
-      const ca = buildCa({
-        notBefore: new Date("2024-01-01T00:00:00.000Z"),
-        expiresAt: new Date("2024-12-31T23:59:59.000Z"),
-      });
-
-      expect(() =>
-        KryptosKit.generate.sig.ec({
-          algorithm: "ES256",
-          notBefore: NOT_BEFORE,
-          expiresAt: new Date("2026-01-01T00:00:00.000Z"),
-          certificate: { mode: "ca-signed", ca },
-        }),
-      ).toThrow("validity window must fit within");
     });
 
     test("default child validity window inherits the CA's window", () => {

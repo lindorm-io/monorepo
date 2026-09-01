@@ -4,18 +4,13 @@ import {
   TEST_X509_LEAF_PEM,
   TEST_X509_LEAF_PRIVATE_KEY_B64,
   TEST_X509_LEAF_PUBLIC_KEY_B64,
-  TEST_X509_OTHER_PRIVATE_KEY_B64,
-  TEST_X509_OTHER_PUBLIC_KEY_B64,
   TEST_X509_ROOT_PEM,
   TEST_X509_RSA_LEAF_PEM,
   TEST_X509_RSA_LEAF_PRIVATE_KEY_B64,
   TEST_X509_RSA_LEAF_PUBLIC_KEY_B64,
 } from "../__fixtures__/x509.js";
 import { B64 } from "@lindorm/b64";
-import { KryptosError } from "../errors/index.js";
 import { certDerToPem } from "../internal/utils/x509/der-to-pem.js";
-import { parseX509 } from "../internal/utils/x509/parse-x509.js";
-import { x5tS1, x5tS256 } from "../internal/utils/x509/x509-thumbprints.js";
 import { Kryptos } from "./Kryptos.js";
 import { describe, expect, test } from "vitest";
 
@@ -56,30 +51,6 @@ describe("Kryptos (X.509)", () => {
       expect(kryptos.parseCertificate()).not.toBeNull();
     });
 
-    test("the b64 thumbprintSha1 is the base64url SHA-1 of the leaf DER", () => {
-      const kryptos = new Kryptos({
-        ...baseEcOptions,
-        certificateChain: [
-          TEST_X509_LEAF_PEM,
-          TEST_X509_INTERMEDIATE_PEM,
-          TEST_X509_ROOT_PEM,
-        ],
-      });
-
-      const [leaf] = parseX509(TEST_X509_LEAF_PEM);
-
-      expect(kryptos.certificate("b64")?.thumbprintSha1).toBe(x5tS1(leaf));
-    });
-
-    test("every certificate format is null on a chain-less kryptos", () => {
-      const kryptos = new Kryptos(baseEcOptions);
-
-      expect(kryptos.certificate("b64")).toBeNull();
-      expect(kryptos.certificate("der")).toBeNull();
-      expect(kryptos.certificate("jwk")).toBeNull();
-      expect(kryptos.certificate("pem")).toBeNull();
-    });
-
     test("accepts a chain in base64-DER form (no PEM wrapper)", () => {
       const kryptos = new Kryptos({
         ...baseEcOptions,
@@ -88,18 +59,6 @@ describe("Kryptos (X.509)", () => {
 
       expect(kryptos.certificate("b64")?.chain).toHaveLength(1);
       expect(kryptos.certificate("b64")?.thumbprint).toMatchSnapshot();
-    });
-
-    test("throws when leaf cert public key does not match kryptos public key", () => {
-      expect(
-        () =>
-          new Kryptos({
-            ...baseEcOptions,
-            privateKey: Buffer.from(TEST_X509_OTHER_PRIVATE_KEY_B64, "base64url"),
-            publicKey: Buffer.from(TEST_X509_OTHER_PUBLIC_KEY_B64, "base64url"),
-            certificateChain: [TEST_X509_LEAF_PEM],
-          }),
-      ).toThrow(KryptosError);
     });
   });
 
@@ -119,54 +78,6 @@ describe("Kryptos (X.509)", () => {
       expect(jwk.x5c).toHaveLength(3);
       expect(jwk).toMatchSnapshot();
     });
-
-    test("emits no x5c / x5t / x5t#S256 when no chain is set", () => {
-      const kryptos = new Kryptos(baseEcOptions);
-      const jwk = kryptos.toJWK("public");
-
-      expect(jwk.x5c).toBeUndefined();
-      expect(jwk.x5t).toBeUndefined();
-      expect(jwk["x5t#S256"]).toBeUndefined();
-    });
-
-    // A published JWK states the binding TWICE so a relying party that only knows
-    // `x5t` (RFC 7517 §4.8, SHA-1) can still tie the key to its certificate.
-    // BESIDE, never INSTEAD: `x5t#S256` is the digest we verify against, and a
-    // JWK carrying only the SHA-1 one would push a relying party onto a broken
-    // hash for the binding.
-    test("publishes the SHA-1 x5t beside x5t#S256, never instead of it", () => {
-      const kryptos = new Kryptos({
-        ...baseEcOptions,
-        certificateChain: [TEST_X509_LEAF_PEM],
-      });
-
-      const jwk = kryptos.toJWK("public");
-      const [leaf] = parseX509(TEST_X509_LEAF_PEM);
-
-      expect(jwk["x5t#S256"]).toBe(x5tS256(leaf));
-      expect(jwk.x5t).toBe(x5tS1(leaf));
-    });
-  });
-
-  describe("verifyCertificate", () => {
-    test("succeeds against a correct trust anchor", () => {
-      const kryptos = new Kryptos({
-        ...baseEcOptions,
-        certificateChain: [TEST_X509_LEAF_PEM, TEST_X509_INTERMEDIATE_PEM],
-      });
-
-      expect(() =>
-        kryptos.verifyCertificate({ trustAnchors: TEST_X509_ROOT_PEM }),
-      ).not.toThrow();
-    });
-
-    test("throws when no chain is set", () => {
-      const kryptos = new Kryptos(baseEcOptions);
-
-      expect(() =>
-        kryptos.verifyCertificate({ trustAnchors: TEST_X509_ROOT_PEM }),
-      ).toThrow("Kryptos has no certificate to verify");
-    });
   });
 
   describe("hasCertificate / parseCertificate", () => {
@@ -179,13 +90,6 @@ describe("Kryptos (X.509)", () => {
           TEST_X509_ROOT_PEM,
         ],
       });
-
-    test("hasCertificate false and parseCertificate null when no chain", () => {
-      const kryptos = new Kryptos(baseEcOptions);
-
-      expect(kryptos.hasCertificate).toBe(false);
-      expect(kryptos.parseCertificate()).toBeNull();
-    });
 
     test("each index is lazily parsed and memoized across accesses", () => {
       const kryptos = chained();
@@ -202,22 +106,6 @@ describe("Kryptos (X.509)", () => {
       expect(firstRoot).not.toBeNull();
       expect(firstRoot).toBe(secondRoot);
       expect(firstRoot).not.toBe(first);
-    });
-
-    test("defaults to the leaf (index 0)", () => {
-      const kryptos = chained();
-
-      expect(kryptos.parseCertificate()?.subject.commonName).toBe("lindorm-test-leaf");
-      expect(kryptos.parseCertificate(0)).toBe(kryptos.parseCertificate());
-    });
-
-    test("walks the chain by index", () => {
-      const kryptos = chained();
-
-      expect(kryptos.parseCertificate(1)?.subject.commonName).toBe(
-        "lindorm-test-intermediate",
-      );
-      expect(kryptos.parseCertificate(2)?.subject.commonName).toBe("lindorm-test-root");
     });
 
     test("returns null for any index that is not a position in the chain", () => {
@@ -258,20 +146,6 @@ describe("Kryptos (X.509)", () => {
       expect(B64.isBase64Url(b64.thumbprintSha1)).toBe(true);
     });
 
-    test("der chain is the raw DER the b64 chain encodes", () => {
-      const kryptos = chained();
-
-      expect(kryptos.certificate("b64")?.chain).toHaveLength(3);
-      const b64 = kryptos.certificate("b64")!;
-      const der = kryptos.certificate("der")!;
-
-      expect(der.chain.map((entry) => entry.toString("base64"))).toEqual(b64.chain);
-      expect(der.thumbprint.toString("base64url")).toBe(b64.thumbprint);
-      expect(der.thumbprintSha1.toString("base64url")).toBe(b64.thumbprintSha1);
-      expect(der.thumbprint).toHaveLength(32);
-      expect(der.thumbprintSha1).toHaveLength(20);
-    });
-
     test("der hands out copies, never the instance's own buffers", () => {
       const kryptos = chained();
 
@@ -281,18 +155,6 @@ describe("Kryptos (X.509)", () => {
       first.fill(0);
 
       expect(kryptos.certificate("der")!.chain[0].equals(first)).toBe(false);
-    });
-
-    test("jwk spells the same three facts with RFC 7517 member names", () => {
-      const kryptos = chained();
-
-      expect(kryptos.certificate("b64")?.chain).toHaveLength(3);
-      const b64 = kryptos.certificate("b64")!;
-      const jwk = kryptos.certificate("jwk")!;
-
-      expect(jwk.x5c).toEqual(b64.chain);
-      expect(jwk["x5t#S256"]).toBe(b64.thumbprint);
-      expect(jwk.x5t).toBe(b64.thumbprintSha1);
     });
 
     test("pem wraps every b64 chain entry in a CERTIFICATE block", () => {
@@ -344,13 +206,6 @@ describe("Kryptos (X.509)", () => {
 
       expect(kryptos.certificate("pem")!.chain).not.toBe(
         kryptos.certificate("pem")!.chain,
-      );
-    });
-
-    test("throws on an unsupported format, chain or no chain", () => {
-      expect(() => chained().certificate("x509" as "b64")).toThrow(KryptosError);
-      expect(() => new Kryptos(baseEcOptions).certificate("x509" as "b64")).toThrow(
-        KryptosError,
       );
     });
   });
