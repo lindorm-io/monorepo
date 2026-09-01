@@ -33,4 +33,14 @@ export type KeysOptions = {
    * already spells that as mode `"none"`.
    */
   depth?: number;
+  /**
+   * Keys to keep verbatim. A key for which this returns `true` is kept as it is,
+   * together with its VALUE, by reference — exactly like a subtree beyond
+   * `depth`. It is checked before descent and spends no depth, at every level
+   * and inside arrays.
+   *
+   * Omitted means every key is converted. `isVerbatimKey` exempts a key
+   * holding a character outside letters, digits and `_`.
+   */
+  exempt?: (key: string) => boolean;
 };

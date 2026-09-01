@@ -13,7 +13,7 @@ This package is **ESM-only**. Import it with `import` syntax from a project that
 ## Features
 
 - Convert strings between 11 case conventions: camel, capital, constant, dot, header, kebab, lower, pascal, path, sentence, snake.
-- Convert the keys of an object (or an array of objects) recursively, preserving values — with an optional `depth` limit.
+- Convert the keys of an object (or an array of objects) recursively, preserving values — with an optional `depth` limit and an optional `exempt` predicate for keys to keep verbatim.
 - Convert an array of strings element-by-element; non-string entries pass through untouched.
 - Generic `changeCase` and `changeKeys` dispatchers that pick a conversion at runtime via a string mode.
 
@@ -115,6 +115,30 @@ Semantics:
 
 `changeKeys` takes the same options as a third argument: `changeKeys(input, "snake", { depth: 1 })`. With mode `"none"` the input is returned as-is and the options are not inspected.
 
+### Exempt keys
+
+Pass `exempt` to keep a key and its value verbatim, by reference — the same as a subtree beyond `depth`. The predicate is checked before descent, at every level and inside arrays, and an exempt key spends no depth. `isVerbatimKey` is the shipped predicate: `true` for a key holding a character that is neither a letter, a digit nor `_` (`x5t#S256`, `https://claims.lindorm.io/tenant`, `X-Request-Id`). `_` stays caseable, so `snake_case` still converts.
+
+```typescript
+import { isVerbatimKey, snakeKeys } from "@lindorm/case";
+
+const body = snakeKeys(
+  {
+    tokenClaims: {
+      "https://claims.lindorm.io/tenant": { tenantId: "acme" },
+      issuedAt: 1,
+    },
+  },
+  { exempt: isVerbatimKey },
+);
+// {
+//   token_claims: {
+//     "https://claims.lindorm.io/tenant": { tenantId: "acme" },
+//     issued_at: 1,
+//   },
+// }
+```
+
 ### Convert an array of strings
 
 `xxxArray` transforms string entries; any non-string entry is appended to the result unchanged.
@@ -160,6 +184,12 @@ So for example: `camelCase`, `camelKeys`, `camelArray`; `snakeCase`, `snakeKeys`
 | `changeCase` | `(input: string, mode?: ChangeCase) => string`                                   | Apply the named case to a string. Defaults to `"none"`. Throws on an unknown mode.                                  |
 | `changeKeys` | `<T extends KeysInput>(input: T, mode?: ChangeCase, options?: KeysOptions) => T` | Apply the named case to the keys of an object or array of objects. Defaults to `"none"`. Throws on an unknown mode. |
 
+### Predicates
+
+| Function        | Signature                  | Description                                                                                          |
+| --------------- | -------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `isVerbatimKey` | `(key: string) => boolean` | `true` for a key holding a character that is neither a letter, a digit nor `_`. Pass it as `exempt`. |
+
 ### Types
 
 | Type           | Definition                                                                                                                               | Description                                           |
@@ -167,7 +197,7 @@ So for example: `camelCase`, `camelKeys`, `camelArray`; `snakeCase`, `snakeKeys`
 | `ChangeCase`   | `"camel" \| "capital" \| "constant" \| "dot" \| "header" \| "kebab" \| "lower" \| "pascal" \| "path" \| "sentence" \| "snake" \| "none"` | Mode accepted by `changeCase` and `changeKeys`.       |
 | `CaseCallback` | `(input: string) => string`                                                                                                              | Signature shared by all per-mode `xxxCase` functions. |
 | `KeysInput`    | `Dict \| Array<Dict>` (where `Dict` is `Record<string, any>`)                                                                            | Input shape accepted by `xxxKeys` and `changeKeys`.   |
-| `KeysOptions`  | `{ depth?: number }`                                                                                                                     | Per-call options for `xxxKeys` and `changeKeys`.      |
+| `KeysOptions`  | `{ depth?: number; exempt?: (key: string) => boolean }`                                                                                  | Per-call options for `xxxKeys` and `changeKeys`.      |
 
 ## Error handling
 
