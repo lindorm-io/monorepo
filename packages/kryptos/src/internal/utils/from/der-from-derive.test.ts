@@ -305,8 +305,6 @@ describe("createDerFromDerive", () => {
     expect(result.id).toBe("key_explicit");
   });
 
-  // Legacy (no path, no id) keeps a fresh random id — unchanged behaviour — while
-  // the key bytes still match the pre-change derivation.
   test("should keep a random id and legacy key bytes when no path is given", () => {
     const derive = () =>
       createDerFromDerive({

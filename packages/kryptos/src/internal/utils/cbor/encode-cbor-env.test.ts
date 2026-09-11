@@ -49,7 +49,7 @@ describe("encodeCborEnv", () => {
 
   // `operations` is derived from the key material, so key_ops has nothing to
   // carry — it is never encoded, whatever the JWK claims. `key_ops` has no
-  // label at all, hence the bare 7 (the integer it used to occupy).
+  // label at all, hence the bare 7.
   const RETIRED_KEY_OPS_LABEL = 7;
 
   test.each([

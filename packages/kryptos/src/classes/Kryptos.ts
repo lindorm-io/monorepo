@@ -243,9 +243,7 @@ export class Kryptos implements IKryptos {
 
   /**
    * Does this key belong in the published JWKS? Consumers (amphora) filter on it
-   * for BOTH publication and selection, so it means what it says — unlike the
-   * `hidden` flag it replaces, which was only ever consulted when building the
-   * JWKS while the key stayed selectable for any operation.
+   * for BOTH publication and selection.
    */
   get publish(): boolean {
     return this._publish;

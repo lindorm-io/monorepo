@@ -14,15 +14,12 @@ import {
 } from "./cbor-table.js";
 
 // The kryptos CBOR env format expressed as a declarative `CborSpec` for
-// `@lindorm/cbor`. It replaces the hand-rolled encode/decode engine while keeping
-// the wire BYTE-IDENTICAL: the labels are the exact `CBOR_LABEL` integers, the
-// enums are the exact value-tables, and the codec encodes with cbor2 `{ cde: true }`
-// (deterministic key order) — the same engine the old code used.
+// `@lindorm/cbor`: the labels are the exact `CBOR_LABEL` integers, the enums
+// are the exact value-tables, and the codec encodes with cbor2 `{ cde: true }`
+// (deterministic key order).
 //
-// Present-only encoding, byte strings for material (b64u) and DER certs (base64),
-// and integer scalars for the timestamps all match the previous behaviour
-// field-for-field. Label 7 (the retired `key_ops`) has no field: it is never
-// encoded, and the decoder rejects it as an unknown label (see decode-cbor-env).
+// Label 7 (the retired `key_ops`) has no field: it is never encoded, and the
+// decoder rejects it as an unknown label (see decode-cbor-env).
 // Typed to `EnvLabelKey` rather than left as `CborField`, whose `key` is a plain
 // string: the label table alone closes the VOCABULARY, and this closes the
 // ENCODER. Without it a field naming a derivable type-checks and reaches the wire.

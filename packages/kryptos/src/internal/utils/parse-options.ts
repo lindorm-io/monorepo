@@ -41,7 +41,7 @@ export const parseJwkOptions = (
     // arrives with the member absent → `false`. That does NOT hide it: amphora's
     // selection filter gates only INTERNAL unpublished keys, so an EXTERNAL key
     // (`internal: false`) is findable regardless of `publish` (see
-    // `Amphora.filteredKeys`). Our own env strings always carry the member
+    // `AmphoraState.filteredKeys`). Our own env strings always carry the member
     // explicitly (`toJWK("private")` emits it), so this default never applies to
     // them — a `publish: false` KEK reloads `publish: false`.
     publish: jwk.publish ?? false,
