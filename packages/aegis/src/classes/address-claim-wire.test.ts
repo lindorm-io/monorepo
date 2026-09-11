@@ -202,14 +202,13 @@ describe("the address claim on the wire", () => {
     ]);
   });
 
-  test("a member value that is not of its declared kind never reaches the wire", async () => {
-    // ⚠ THE SYMMETRY THE WIRE IS THE ONLY WITNESS TO. A member declares a value
-    // shape and the READ side enforces it, so a writer that emitted a value
-    // failing that shape would sign a token asserting `region` while this
-    // package's own reader reported that member as never stated. Whole-value
-    // equality, and on the RAW wire, because a round trip cannot see the
-    // difference between a member that was never written and one the reader
-    // discarded.
+  test("a member value that is not of its declared kind is refused at mint", async () => {
+    // A member declares a value shape and the READ side enforces it, so a
+    // writer that emitted `region: 42` would sign a token asserting a member
+    // this package's own reader reports as never stated — and one that dropped
+    // it would sign a token silently saying less than the caller stated. The
+    // write door is aegis's own caller, so the member is refused, named alone;
+    // the conforming sibling is not the fault.
     //
     // ⚠⚠ `null` DOES NOT STATE THIS RULE — it is an ABSENCE, not a value of the
     // wrong kind, and it has its own two tests below. That is why this one needs
@@ -217,14 +216,20 @@ describe("the address claim on the wire", () => {
     // value that fails the member's own codec, so the fault can only arrive from
     // a door with no type behind it.
     for (const format of ["jwt", "cwt"] as const) {
-      const token = await mint(format, {
-        streetAddress: "Sample 1",
-        region: 42 as unknown as string,
-      });
-
-      expect({ format, address: wireAddressOf(token, "address") }).toEqual({
+      await expect(
+        mint(format, { streetAddress: "Sample 1", region: 42 as unknown as string }),
         format,
-        address: { street_address: "Sample 1" },
+      ).rejects.toMatchObject({
+        code: "claim_structure_invalid",
+        data: {
+          claim: "address",
+          invalid: [
+            {
+              key: "address.region",
+              message: 'Member "region" must be the shape it declares',
+            },
+          ],
+        },
       });
     }
   });
@@ -235,12 +240,10 @@ describe("the address claim on the wire", () => {
     // not have to strip its nulls first. `null` therefore means the member was
     // not stated, and an unstated member is simply not on the wire.
     //
-    // ⚠ It is NOT the same statement as the test above, though the two produce
-    // the same bytes here: that one says a value CONTRADICTING the declaration is
-    // not written, this one says a null is not a contradiction at all. Where the
-    // two come apart is the mint's verdict — see the tail test below, and the
-    // structure-member row in the scenario table, both of which a build that
-    // treated `null` as a codec failure would fail.
+    // ⚠ It is the OPPOSITE statement from the wrong-kind test above, and the
+    // mint's verdict is where the two come apart: a value CONTRADICTING the
+    // declaration is refused, while a null is not a contradiction at all — the
+    // mint succeeds and the member is simply not on the wire.
     for (const format of ["jwt", "cwt"] as const) {
       const token = await mint(format, {
         streetAddress: "Sample 1",

@@ -175,34 +175,97 @@ describe("domainToJose — content -> wire mapping", () => {
     expect(joseToDomain(wire).claims.address).toEqual({ locality: "Stockholm" });
   });
 
-  // ⚠⚠ SYMMETRY: A MEMBER AEGIS WRITES IS A MEMBER AEGIS CAN READ BACK.
-  //
-  // A member declares a value shape and the read side enforces it, so the write
-  // side must enforce the same one — otherwise aegis signs a token asserting a
-  // member its own reader reports as never stated.
+  // ⚠⚠ A WRONGLY-TYPED MEMBER SPLITS BY DIRECTION, and each side's disposal is
+  // the other's safety argument. The WRITE side REFUSES a member its own reader
+  // would not read back — written, it is bytes the reader reports as never
+  // stated; dropped, the signed token silently says less than the caller
+  // stated — and the write door is aegis's own caller, so strictness costs no
+  // interoperability. The READ side DROPS: a foreign token is not bound by
+  // aegis's declarations, so a member the read cannot decode is reported as one
+  // the token does not state, scoped to the member alone.
   //
   // ⚠ IT TAKES A WRONGLY-TYPED VALUE, NOT A `null`. A `null` member is an ABSENCE
   // ({@link isNotStated}), so it is omitted on both sides for a different reason
-  // and states nothing about codec symmetry — see the boundary row below. Reaching
-  // a wrong TYPE needs a cast past `AegisProfileAddress`, which is the honest
-  // shape of this class: the declared type admits no value its own codec rejects.
-  test("should refuse a wrongly-typed address member on BOTH sides, not just on the read", () => {
+  // and states nothing about codec conformance — see the boundary row below.
+  // Reaching a wrong TYPE needs a cast past `AegisProfileAddress`, which is the
+  // honest shape of this class: the declared type admits no value its own codec
+  // rejects.
+  test("refuses a wrongly-typed address member on the write side, naming it alone", () => {
     const address = { region: 42 as unknown as string, locality: "Stockholm" };
 
-    // The write side. This is the half that closes the disagreement.
-    expect(domainToJose({ address }).address).toEqual({ locality: "Stockholm" });
+    let refusal: unknown = "no refusal";
+    try {
+      domainToJose({ address });
+    } catch (error) {
+      refusal = (error as AegisDomainError).data;
+    }
 
-    // The read side, for a token some other issuer wrote that way anyway.
-    expect(joseToDomain({ address }).claims.address).toEqual({
-      locality: "Stockholm",
+    expect(refusal).toEqual({
+      claim: "address",
+      invalid: [
+        {
+          key: "address.region",
+          message: 'Member "region" must be the shape it declares',
+        },
+      ],
     });
   });
 
-  // ⚠⚠ THE SAME SYMMETRY, ONE LEVEL OUT. The row above states it for a MEMBER of
-  // a structure; a top-level claim declares a value shape in the same registry and
-  // is read back through the same decoder, so depth cannot be what decides whether
-  // aegis signs a claim its own reader reports as never stated.
-  test("should refuse a wrongly-typed top-level claim on BOTH sides, exactly as it does one level in", () => {
+  test("drops a wrongly-typed address member on the read side, keeping the members beside it", () => {
+    expect(
+      joseToDomain({ address: { region: 42, locality: "Stockholm" } }).claims.address,
+    ).toEqual({ locality: "Stockholm" });
+  });
+
+  // The actor twin, because `act` is where the two directions' split is
+  // security-relevant: WHO a token says acted must never be decided by a silent
+  // write-side drop, while a stranger's chain stays readable minus the member
+  // the read cannot decode.
+  test("refuses a wrongly-typed actor member on the write side at its own path", () => {
+    let refusal: unknown = "no refusal";
+    try {
+      domainToJose({ act: { subject: 42, clientId: "service-1" } });
+    } catch (error) {
+      refusal = (error as AegisDomainError).data;
+    }
+
+    expect(refusal).toEqual({
+      claim: "act",
+      invalid: [
+        {
+          key: "act.subject",
+          message: 'Member "subject" must be the shape it declares',
+        },
+      ],
+    });
+  });
+
+  test("drops a foreign actor's wrongly-typed member on the read side, keeping the members beside it", () => {
+    expect(joseToDomain({ act: { sub: 42, client_id: "service-1" } }).claims.act).toEqual(
+      { clientId: "service-1" },
+    );
+  });
+
+  // `toEqual`, because the conformance row
+  // `a-foreign-nested-actor-member-that-is-not-of-its-declared-kind-is-read-as-unstated`
+  // asserts through `toMatchObject` and cannot state that the inner `subject`
+  // is ABSENT rather than unasserted.
+  test("drops a foreign actor's wrongly-typed member at depth, keeping the chain and the members beside it", () => {
+    expect(
+      joseToDomain({
+        act: { sub: "outer-service", act: { sub: 42, client_id: "service-2" } },
+      }).claims.act,
+    ).toEqual({ subject: "outer-service", act: { clientId: "service-2" } });
+  });
+
+  // ⚠⚠ ONE LEVEL OUT THE WRITE DISPOSAL DIFFERS, and the difference is owned by
+  // another layer: a wrongly-typed TOP-LEVEL claim is left off the wire by both
+  // directions, and the refusal of a DEMANDED one belongs to the profile's
+  // presence rules — {@link unreadableClaims} is what carries the fact there,
+  // and `enforce-policy.test.ts` pins the `profile_policy_invalid` it becomes.
+  // A member has no presence rule to answer for it, which is why the walker
+  // refuses it itself.
+  test("leaves a wrongly-typed top-level claim off the wire on both sides", () => {
     expect(domainToJose({ subject: 42 as unknown as string })).toEqual({});
     expect(joseToDomain({ sub: 42 }).claims).toEqual({});
   });

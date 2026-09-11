@@ -440,6 +440,20 @@ type WalkDirection = {
    * single shared walk would otherwise apply it to both sides for free.
    */
   prunesEmpty: boolean;
+  /**
+   * What becomes of a member whose value fails a LEAF codec on this side —
+   * `"refuse"` on the write side ALONE; the branch in {@link walkObject} is the
+   * one consumer.
+   *
+   * ⚠ THE SPLIT IS THE RULE, NOT AN ACCIDENT OF THE WALK. The write door is
+   * aegis's own caller, so a member the codec cannot carry is refused by name
+   * rather than signed away in silence — dropped, the token says less than the
+   * caller stated and the caller is the one party who cannot notice. A READ
+   * reports a stranger's token, which aegis's declarations do not bind: a
+   * member the read cannot decode stays a member the token is read as not
+   * stating, scoped to that member alone.
+   */
+  leafFailure: "refuse" | "drop";
 };
 
 /**
@@ -697,29 +711,50 @@ const walkObject = (
     // "contradicts", and absence is not a contradiction. See {@link isNotStated}.
     if (isNotStated(inner)) continue;
 
+    const faults = context.invalid.length;
     const translated = direction.translate(
       member,
       inner,
       childPath(context, member.domain),
     );
     /**
-     * ⚠⚠ A MEMBER WHOSE VALUE FAILS A **LEAF** CODEC IS STILL DROPPED HERE, AND
-     * SILENTLY — the RESIDUE of the refusal ruling, stated rather than implied.
-     * A member whose codec is `{ kind: "object" }` or `{ kind: "array", of }`
-     * reaches {@link walkObject} or {@link walkElements}, each pushing its own
-     * entry before returning `undefined`, so `act: { act: 42 }` is REFUSED at
-     * every depth. A LEAF codec — `text`, `int`, `date`, `bool`, `bstr`, an array
-     * of strings — has no walker to speak for it, so
-     * `Aegis.toWire({ act: { subject: 42 } })` yields `{ act: {} }`.
+     * ⚠⚠ A MEMBER WHOSE VALUE FAILS A **LEAF** CODEC IS REFUSED ON WRITE AND
+     * DROPPED ON READ — {@link WalkDirection.leafFailure} names the side and
+     * carries the argument. A member whose codec is `{ kind: "object" }` or
+     * `{ kind: "array", of }` reaches {@link walkObject} or
+     * {@link walkElements}, each pushing its own entry before returning
+     * `undefined`, so `act: { act: 42 }` is refused at every depth in both
+     * directions — the `faults` guard is what keeps this branch from reporting
+     * those a second time. A LEAF codec — `text`, `int`, `date`, `bstr`, an
+     * array of strings — has no walker to speak for it, so its verdict is taken
+     * here. (`bool` cannot fail: its decode arm accepts any value — see
+     * {@link encodeIfReadable}.)
+     *
+     * ⚠ A REQUIRED member's write-side failure is reported by the mandatory
+     * check below instead, through `codecRejected` — ONE entry, naming the
+     * fault as a shape one.
+     * pinned: classes/authorization-details-claim-wire.test.ts#a required
+     * member written with the WRONG SHAPE says so, not that it is empty.
      *
      * ⚠ `null` NEVER REACHES THIS LINE — classified as absence above, so neither
      * dropped-as-malformed nor refused. See {@link isNotStated}.
      *
-     * ⚠ THE DROP IS RECORDED even though it is not refused, so the
-     * mandatory-member check below can tell "you wrote a value of the wrong shape"
-     * from "you wrote nothing". Nothing else reads it.
+     * ⚠ THE READ-SIDE DROP IS RECORDED so the mandatory-member check below can
+     * tell "you wrote a value of the wrong shape" from "you wrote nothing".
      */
     if (translated === undefined) {
+      if (
+        direction.leafFailure === "refuse" &&
+        member.required === undefined &&
+        context.invalid.length === faults
+      ) {
+        context.invalid.push({
+          key: `${context.path}.${member.domain}`,
+          message: `Member "${member.domain}" must be the shape it declares`,
+        });
+        continue;
+      }
+
       codecRejected.add(member.domain);
       continue;
     }
@@ -761,10 +796,11 @@ const walkObject = (
     // caller who wrote `authorizationDetails: [{ type: 42 }]` looking for a field
     // they already wrote.
     //
-    // ⚠ THE DISCRIMINATOR IS RECORDED AT THE DROP, not reconstructed here — see
-    // `codecRejected` above for why `out` cannot tell the three apart. The first
-    // two share their wording deliberately: several scenario rows pin the string,
-    // and "must not be empty" is the right instruction for both.
+    // ⚠ THE DISCRIMINATOR IS RECORDED WHERE THE CODEC FAILS, not reconstructed
+    // here — see `codecRejected` above for why `out` cannot tell the three
+    // apart. The first two share their wording deliberately: several scenario
+    // rows pin the string, and "must not be empty" is the right instruction for
+    // both.
     context.invalid.push({
       key: `${context.path}.${member.domain}`,
       message: codecRejected.has(member.domain)
@@ -829,6 +865,7 @@ const writeDirection = (nameOf: NameSelector): WalkDirection => ({
   translate: (member, inner, context) => encodeIfReadable(member, inner, nameOf, context),
   flip: snakeKeys,
   prunesEmpty: true,
+  leafFailure: "refuse",
 });
 
 /** The READ side's walk rules — the mirror, keyed by wire name. */
@@ -837,8 +874,9 @@ const readDirection = (nameOf: NameSelector): WalkDirection => ({
   outKeyOf: (member) => member.domain,
   translate: (member, inner, context) => decodeValue(member, inner, nameOf, context),
   flip: camelKeys,
-  // A read reports what the PRODUCER wrote — see `WalkDirection`.
+  // A read reports what the PRODUCER wrote — see `WalkDirection`, both cells.
   prunesEmpty: false,
+  leafFailure: "drop",
 });
 
 /**
@@ -1043,7 +1081,9 @@ const SCOPE_TOKEN = /^[\x21\x23-\x5B\x5D-\x7E]+$/;
 //
 // ⚠ A NON-ARRAY VALUE RIDES UNTOUCHED, like every scalar encode arm:
 // `encodeIfReadable`'s probe decides whether the read side would keep it, so an
-// already-joined string survives and a shape the decoder refuses is dropped.
+// already-joined string survives and a shape the decoder refuses walks to
+// `undefined` — the caller's own disposal for that ({@link walkObject},
+// {@link unreadableClaims}) is what differs by depth.
 // pinned: translate.test.ts#should carry a scalar for a top-level array claim
 // whose codec tolerates one.
 const encodeArray = (

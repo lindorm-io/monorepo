@@ -5483,11 +5483,10 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     ],
   },
   {
-    id: "a-claim-member-that-is-not-of-its-declared-kind-is-neither-written-nor-reported",
-    title:
-      "a claim member that is not of its declared kind is neither written nor reported",
+    id: "a-claim-member-that-is-not-of-its-declared-kind-is-refused-at-mint",
+    title: "minting a token whose claim member is not of its declared kind is refused",
     rationale:
-      "A signature binds an issuer to what a token SAYS, so the one disagreement a token must never contain is one between its writer and its reader. A structured claim's members each have a declared value shape, and the shape is checked on the way in — so if it is not also checked on the way out, the package can sign a token asserting a member and then report that same member as never stated when it reads its own output. That is worse than either behaviour alone: a caller who supplied the value sees it accepted, a recipient of the token sees it present, and a verifier reports it absent, with nothing anywhere raising a question. The check has to be the SAME check in both directions, and the emptiness verdict is a separate question from it — an empty string is a string, and whether an empty member rides is what the registry's emptiness column decides.",
+      "A signature binds an issuer to what a token SAYS, and a member whose value contradicts its declared shape is a statement this package cannot stand behind on either disposal that is not a refusal. Written, it is bytes aegis's own reader reports as never stated. Dropped, the signed token silently says less than the caller asked it to sign, and the one party who cannot notice is the caller who supplied the value. The write door is aegis's own caller — no foreign producer is held to this — so strictness here costs no interoperability, and the refusal names the member's position so the caller repairs the value instead of discovering a member missing from a signed token. The emptiness verdict stays a separate question: an empty string is a value a text member may hold, and whether it rides is what the registry's emptiness column decides. A conforming sibling changes nothing about the report: the refusal names the member that failed, alone.",
     given: [
       {
         step: "token",
@@ -5500,51 +5499,10 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
           // an ABSENCE, with its own row above. What is left in this class cannot
           // be reached from a well-typed caller at all, so the row reaches past
           // the type to state the rule for the doors that have no type behind
-          // them: a foreign token, an introspection response, a JavaScript caller.
-          profile: { address: { region: 42 as unknown as string } },
-        },
-        options: { context: { accessTokenIssued: false } },
-      },
-    ],
-    when: [
-      { step: "mint" },
-      { step: "verify", profile: "id_token", options: { audience: CLIENT } },
-    ],
-    then: [
-      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
-      // The member is the address's only content, so dropping it leaves an empty
-      // address, which the claim's own emptiness verdict then prunes — and the
-      // claim's ABSENCE is a top-level fact both wires can state EXACTLY.
-      //
-      // ⚠ It therefore says nothing about whether the disposal is SCOPED to the
-      // failing member — a walker that discarded the whole structure produces
-      // this same absence. That is a separate rule and it has its own row below;
-      // neither row can stand in for the other.
-      { step: "wireClaims", excludes: ["address"] },
-      // `absent`, not an empty bucket: an empty bucket is TRUTHY.
-      { step: "bucket", bucket: "profile", absent: true },
-    ],
-  },
-  {
-    id: "refusing-one-claim-member-does-not-discard-the-members-beside-it",
-    title: "refusing one claim member does not discard the members beside it",
-    rationale:
-      "The members of a structured claim are independently meaningful (OIDC Core §5.1.1) — a country is a fact about the end-user whether or not a postal code was available. A refusal must therefore be scoped to the value that failed: discarding the whole structure because one member was malformed destroys information the issuer had and the recipient could have used, and it does so silently, since a structure that arrives with fewer members is indistinguishable from one an issuer chose to send that way. It is also the failure a per-member check invites, because the cheapest way to reject a bad member is to abandon the walk.",
-    given: [
-      {
-        step: "token",
-        via: "mint",
-        profile: "id_token",
-        content: {
-          subject: "user-1",
-          audience: [CLIENT],
-          // The refused member has a SURVIVING SIBLING, which is the only shape
-          // in which this rule is observable at all.
+          // them: an introspection response, a JavaScript caller.
           //
-          // ⚠ The bad member must be a value that genuinely contradicts the
-          // declared kind, which past `AegisProfileAddress` means a cast — see
-          // the sibling row above for why that is the honest shape of this class
-          // rather than a weakness in the row.
+          // The conforming sibling is what makes the refusal's SCOPE observable:
+          // one entry, naming the member, not the structure.
           profile: {
             address: { streetAddress: "Sample 1", region: 42 as unknown as string },
           },
@@ -5552,27 +5510,211 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         options: { context: { accessTokenIssued: false } },
       },
     ],
-    when: [
-      { step: "mint" },
-      { step: "verify", profile: "id_token", options: { audience: CLIENT } },
+    when: [{ step: "mint" }],
+    then: [
+      // ⚠ THE CODE, not merely the class: a policy refusal carries an `invalid`
+      // list under the same class, so a row naming only the class would pass
+      // whichever fired.
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        code: "claim_structure_invalid",
+        data: {
+          claim: "address",
+          invalid: [
+            {
+              key: "address.region",
+              message: 'Member "region" must be the shape it declares',
+            },
+          ],
+        },
+      },
     ],
+  },
+  {
+    id: "a-claim-member-a-read-cannot-decode-does-not-discard-the-members-beside-it",
+    title:
+      "a claim member a read cannot decode is dropped without discarding the members beside it",
+    rationale:
+      "The members of a structured claim are independently meaningful (OIDC Core §5.1.1) — a street address is a fact about the end-user whether or not the region beside it arrived in a shape this reader can hold. A foreign token is not bound by aegis's declarations, so a member value the reader cannot decode into the member's declared type is reported as a member the token does not state, at the specification-faithful read door. What that disposal must never do is spread: discarding the whole structure because one member was unreadable destroys information the issuer signed and the recipient could have used, and it does so silently, since a structure with fewer members is indistinguishable from one the issuer sent that way. It is also the failure a per-member walk invites, because the cheapest way to handle a bad member is to abandon the walk. The disposal is therefore scoped to the member that failed, and the members beside it are read exactly as written.",
+    given: [
+      {
+        step: "token",
+        via: "foreign",
+        typ: { jose: "JWT", cose: "application/cwt" },
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          exp: NOW + 3600,
+          // The unreadable member has a SURVIVING SIBLING, which is the only
+          // shape in which the scoping is observable at all. The value sits past
+          // what aegis's own declarations admit — a stranger's token is not
+          // bound by them, which is exactly why the rule needs stating.
+          address: { street_address: "Sample 1", region: 42 },
+        },
+      },
+    ],
+    when: [{ step: "verify" }],
     then: [
       { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
-      // The claim ARRIVES, carrying the member that passed. On COSE the value is
-      // a CBOR map rather than a JSON object, so the nested reading is stated in
-      // each wire's own vocabulary; the member-by-member byte assertions on both
-      // wires live in `classes/address-claim-wire.test.ts`.
-      {
-        step: "wireClaims",
-        on: "jose",
-        includes: { address: { street_address: "Sample 1" } },
-      },
-      { step: "wireClaims", on: "cose", present: ["address"] },
+      // The claim ARRIVES, carrying the member that passed; the member the read
+      // could not decode is not part of the reading. That `region` is ABSENT —
+      // rather than merely unasserted here — is pinned by
+      // `internal/claims/translate.test.ts`.
       {
         step: "bucket",
         bucket: "profile",
         expected: { address: { streetAddress: "Sample 1" } },
       },
+    ],
+  },
+  {
+    id: "an-actor-member-that-is-not-of-its-declared-kind-is-refused-at-mint",
+    title: "minting a token whose actor names a subject that is not a string is refused",
+    rationale:
+      "An actor's members identify the acting party (RFC 8693 §4.1), so a member whose value contradicts its declared shape changes WHO a signed token says acted if it is disposed of in silence: written, it is bytes aegis's own reader reports as never stated; dropped, the token names an actor by fewer facts than the caller stated, and the caller who supplied the value is the one party who cannot notice. The write door is aegis's own caller — no foreign producer is held to this — so the member is refused at mint, and the refusal names its position at its depth so the caller repairs the value. The members beside it are not the fault and are not named.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "default",
+        content: {
+          subject: "user-1",
+          expires: "1h",
+          // This profile declares no actor shape rule, so the refusal below is
+          // the structure walker's own — the one every mint door runs.
+          act: { subject: 42 as unknown as string, clientId: "service-1" },
+        },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        code: "claim_structure_invalid",
+        data: {
+          claim: "act",
+          invalid: [
+            {
+              key: "act.subject",
+              message: 'Member "subject" must be the shape it declares',
+            },
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: "a-foreign-actor-member-that-is-not-of-its-declared-kind-is-read-as-unstated",
+    title:
+      "a foreign token whose actor subject is not a string is read as an actor that does not state one",
+    rationale:
+      "A foreign token is not bound by aegis's declarations, and an actor member whose value the reader cannot decode into the member's declared type is a fact the reader cannot report in that type — reporting the raw value instead would hand a consumer a runtime type error in code the type checker passed. The actor's structure conforms, so the disposal stays scoped to the member: the claim is read as an actor that does not state it, the members beside it identify the acting party exactly as written, and the token stays the delegated one its issuer signed. Refusing the whole token over one member the reader can simply decline to report would make aegis's own member declarations a conformance bar for every producer, at the door where aegis is faithful to the specification in what it accepts.",
+    given: [
+      {
+        step: "token",
+        via: "foreign",
+        typ: { jose: "JWT", cose: "application/cwt" },
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          exp: NOW + 3600,
+          // A stranger's token is not bound by aegis's declarations, which is
+          // why the value reaches past `ActClaimWire`.
+          act: { sub: 42, client_id: "service-1" } as unknown as ActClaimWire,
+        },
+      },
+    ],
+    when: [{ step: "verify" }],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      // The actor arrives WITHOUT the unreadable member. That `subject` is
+      // ABSENT — rather than merely unasserted here — is pinned by
+      // `internal/claims/translate.test.ts`.
+      { step: "claims", expected: { act: { clientId: "service-1" } } },
+      { step: "bucket", bucket: "delegation", expected: { isDelegated: true } },
+    ],
+  },
+  {
+    id: "a-nested-actor-member-that-is-not-of-its-declared-kind-is-refused-at-mint",
+    title:
+      "minting a token whose nested actor names a subject that is not a string is refused at its depth",
+    rationale:
+      "A delegation chain nests one actor inside another (RFC 8693 §4.1), putting the same member set at every depth, so the rule that a member whose value contradicts its declared shape is refused at mint must hold one hop back exactly as it holds at the surface: written, it is bytes aegis's own reader reports as never stated; dropped, the chain records WHO acted for whom by fewer facts than the caller stated, and an inner actor whose only member fails in silence vanishes from the chain entirely. The write door is aegis's own caller, so the member is refused at whatever depth it sits, and the entry's key carries the full path from the claim down to the member — a bare claim name cannot say which actor in a chain of identical member sets is malformed. The outer actor and the conforming member beside the fault are not named.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "default",
+        content: {
+          subject: "user-1",
+          expires: "1h",
+          // The OUTER actor conforms; the fault sits one hop back, beside a
+          // conforming member, so the entry below shows both the DEPTH the key
+          // reaches and the SCOPE the refusal keeps.
+          act: {
+            subject: "outer-actor",
+            act: { subject: 42 as unknown as string, clientId: "service-2" },
+          },
+        },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        code: "claim_structure_invalid",
+        data: {
+          claim: "act",
+          invalid: [
+            {
+              key: "act.act.subject",
+              message: 'Member "subject" must be the shape it declares',
+            },
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: "a-foreign-nested-actor-member-that-is-not-of-its-declared-kind-is-read-as-unstated",
+    title:
+      "a foreign token whose nested actor subject is not a string is read as a chain whose inner actor does not state one",
+    rationale:
+      "A delegation chain nests one actor inside another (RFC 8693 §4.1), and a foreign token is not bound by aegis's declarations at any depth — so an inner actor's member the reader cannot decode into its declared type is a fact the reader declines to report, and nothing more. The disposal must not widen with distance from the surface: discarding the inner actor would erase a party from a chain whose whole purpose is recording who acted for whom, and refusing the token would make aegis's member declarations a conformance bar for every producer at the door where aegis is faithful to the specification in what it accepts. So the outer chain is read as written, the inner actor keeps the members beside the fault, and only the member the reader cannot hold goes unreported.",
+    given: [
+      {
+        step: "token",
+        via: "foreign",
+        typ: { jose: "JWT", cose: "application/cwt" },
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          exp: NOW + 3600,
+          // A stranger's token is not bound by aegis's declarations, which is
+          // why the value reaches past `ActClaimWire`.
+          act: {
+            sub: "outer-service",
+            act: { sub: 42, client_id: "service-2" },
+          } as unknown as ActClaimWire,
+        },
+      },
+    ],
+    when: [{ step: "verify" }],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      // The chain arrives WITHOUT the unreadable inner member. That the inner
+      // `subject` is ABSENT — rather than merely unasserted here — is pinned by
+      // `internal/claims/translate.test.ts`.
+      {
+        step: "claims",
+        expected: {
+          act: { subject: "outer-service", act: { clientId: "service-2" } },
+        },
+      },
+      { step: "bucket", bucket: "delegation", expected: { isDelegated: true } },
     ],
   },
   {
@@ -8594,6 +8736,49 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
             {
               key: "subjectId.identifiers[0].identifiers",
               message: 'Claim "subjectId" must be an array',
+            },
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: "a-collection-element-member-that-is-not-of-its-declared-kind-is-refused-at-mint",
+    title:
+      "minting a token whose collection element carries a member that is not of its declared kind is refused at its index",
+    rationale:
+      "A Subject Identifier of format `aliases` carries a LIST of identifiers (RFC 9493 §3.2.8), and each element declares the same member set as an identifier standing alone — so the rule that a member whose value contradicts its declared shape is refused at mint must hold inside an element exactly as it holds at the surface: written, it is bytes aegis's own reader reports as never stated; dropped, the signed token lists an alias identified by fewer facts than the caller stated, and the caller who supplied the value is the one party who cannot notice. The write door is aegis's own caller, so the member is refused wherever it sits, and the entry's key names the collection, the position in it, and the member inside that position — a refusal that stopped at the claim or at the index leaves the caller searching an unbounded list. The conforming member beside the fault is not named.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "default",
+        content: {
+          subject: "user-1",
+          expires: "1h",
+          // The element's `format` conforms; `issuer` is the fault, so the entry
+          // below shows both the INDEX the key reaches and the SCOPE the refusal
+          // keeps. The structure walker enforces this under EVERY profile — no
+          // `subjectId` profile shape rule is bound here.
+          subjectId: {
+            format: "aliases",
+            identifiers: [{ format: "iss_sub", issuer: 42 }],
+          } as never,
+        },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        code: "claim_structure_invalid",
+        data: {
+          claim: "subjectId",
+          invalid: [
+            {
+              key: "subjectId.identifiers[0].issuer",
+              message: 'Member "issuer" must be the shape it declares',
             },
           ],
         },

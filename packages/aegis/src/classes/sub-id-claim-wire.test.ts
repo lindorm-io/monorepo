@@ -734,20 +734,27 @@ describe("the sub_id claim on the wire", () => {
     });
   });
 
-  test("a member value that is not of its declared kind never reaches the wire", async () => {
-    // The symmetry the wire is the only witness to: a writer that emitted
-    // `email: 42` would sign a token asserting it while this package's own reader
-    // reported that member as never stated. Whole-value equality on the RAW wire,
-    // because a round trip cannot see the difference between a member that was
-    // never written and one the reader discarded.
+  test("a member value that is not of its declared kind is refused at mint", async () => {
+    // The write door is aegis's own caller: a writer that emitted `email: 42`
+    // would sign a token asserting a member this package's own reader reports
+    // as never stated, and one that dropped it would sign a Subject Identifier
+    // saying less than the caller stated. The refusal names the member that
+    // failed, alone; the conforming members beside it are not the fault.
     for (const format of ["jwt", "cwt"] as const) {
-      const token = await mint(format, {
-        subjectId: { format: "opaque", id: "s-1", email: 42 },
-      });
-
-      expect({ format, subId: plain(wireClaimOf(token, "sub_id")) }).toEqual({
+      await expect(
+        mint(format, { subjectId: { format: "opaque", id: "s-1", email: 42 } }),
         format,
-        subId: { format: "opaque", id: "s-1" },
+      ).rejects.toMatchObject({
+        code: "claim_structure_invalid",
+        data: {
+          claim: "subjectId",
+          invalid: [
+            {
+              key: "subjectId.email",
+              message: 'Member "email" must be the shape it declares',
+            },
+          ],
+        },
       });
     }
   });

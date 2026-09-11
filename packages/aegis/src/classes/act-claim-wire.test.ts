@@ -335,12 +335,14 @@ describe("the act / may_act claims on the wire", () => {
   });
 
   test("a member spelled twice is refused even when the DECLARED one is unusable", async () => {
-    // ⛔⛔ THE ATTACK THE FIRST VERSION OF THE COLLISION GUARD LEFT OPEN. That
-    // version registered the key inside the write — after translation and after
-    // the emptiness prune — so a declared member whose value FAILED ITS OWN CODEC
-    // vacated its slot in silence and the look-alike walked into it. Measured on
-    // that version: `{ subject: 42, sub: "shadow" }` minted `act: {"sub":"shadow"}`
-    // with no refusal, on both wires and in both COSE modes.
+    // ⛔⛔ THE ATTACK A LATE RESERVATION LEAVES OPEN: a collision guard that
+    // registers the outgoing key inside the write — after translation and after
+    // the emptiness prune — lets a declared member whose value FAILS ITS OWN
+    // CODEC vacate its slot in silence, and the look-alike walks into it. The
+    // reservation is therefore taken from the DECLARATION before the walk
+    // begins (`internal/claims/translate.ts`, `declaredOutKeys`), and the
+    // refusal reports BOTH faults: the value that fails its codec AND the pair
+    // meeting on one key.
     for (const format of ["jwt", "cwt"] as const) {
       await expect(
         mint(format, { act: { subject: 42, sub: "shadow-actor" } }),
@@ -350,6 +352,10 @@ describe("the act / may_act claims on the wire", () => {
         data: {
           claim: "act",
           invalid: [
+            {
+              key: "act.subject",
+              message: 'Member "subject" must be the shape it declares',
+            },
             {
               key: "act.sub",
               message: 'Members "sub" and "subject" both resolve to "sub" in "act"',
@@ -420,20 +426,28 @@ describe("the act / may_act claims on the wire", () => {
     }
   });
 
-  test("an actor member value that is not of its declared kind never reaches the wire", async () => {
-    // The symmetry the wire is the only witness to: a writer that emitted
-    // `sub: 42` would sign a token asserting it while this package's own reader
-    // reported that member as never stated. Whole-value equality on the RAW wire,
-    // because a round trip cannot see the difference between a member that was
-    // never written and one the reader discarded.
+  test("an actor member value that is not of its declared kind is refused at mint", async () => {
+    // The write door is aegis's own caller: a writer that emitted `iss: 42`
+    // would sign a token asserting a member this package's own reader reports
+    // as never stated, and one that dropped it would sign an actor identified
+    // by fewer facts than the caller stated — WHO acted must not be decided by
+    // a silent disposal. The refusal names the member that failed, alone; the
+    // conforming sibling is not the fault.
     for (const format of ["jwt", "cwt"] as const) {
-      const token = await mint(format, {
-        act: { subject: "service-1", issuer: 42 },
-      });
-
-      expect({ format, act: plain(wireClaimOf(token, "act")) }).toEqual({
+      await expect(
+        mint(format, { act: { subject: "service-1", issuer: 42 } }),
         format,
-        act: { sub: "service-1" },
+      ).rejects.toMatchObject({
+        code: "claim_structure_invalid",
+        data: {
+          claim: "act",
+          invalid: [
+            {
+              key: "act.issuer",
+              message: 'Member "issuer" must be the shape it declares',
+            },
+          ],
+        },
       });
     }
   });

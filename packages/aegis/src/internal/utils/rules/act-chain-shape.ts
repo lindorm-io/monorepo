@@ -4,14 +4,15 @@ import type { InvalidEntry } from "../../../types/index.js";
 import { isClaimOmitted } from "./is-claim-omitted.js";
 
 /**
- * The VALUE-SHAPE remainder of the RFC 8693 actor-chain rule.
+ * The VALUE-SHAPE half of the RFC 8693 actor-chain rule, run at the POLICY gate
+ * of the profiles that declare it.
  *
  * The claim registry declares `act`/`may_act` as a recursive member set
  * (`internal/claims/act-members.ts`), so the generic walker in
  * `internal/claims/translate.ts` carries the NESTING on its own, in both
  * directions and under every profile. ⚠ `validateActor` below still descends by
- * hand and must: the rules it carries are not in the walker, so there is nothing
- * there to carry them down.
+ * hand and must: the policy gate hands this rule a plain claims dict, where no
+ * walker runs to carry a check down.
  *
  * ⛔⛔ THERE IS NO MEMBER ALLOWLIST, AND NOTHING REPLACES IT. The registry
  * declares the actor set OPEN (`open: "verbatim"`) — RFC 8693 §4.1, RFC 8693 §4.4
@@ -22,12 +23,20 @@ import { isClaimOmitted } from "./is-claim-omitted.js";
  * members resolving to the SAME key, so a look-alike cannot displace a declared
  * one.
  *
- * ⛔ THE VALUE-SHAPE RULES ARE NOT SUBSUMED, AND THAT IS WHY THIS FILE EXISTS.
- * The walker's disposal for a value it cannot describe is a DROP, not a refusal:
- * a non-object actor walks to `undefined` and the claim is left off, and a member
- * whose value fails its own codec is skipped by `encodeIfReadable`'s probe read. So
- * `act: "service-1"` would mint a token, where here it is refused with the
- * position named.
+ * ⚠ WHAT THIS RULE HOLDS THAT THE WALKER DOES NOT: the ELEMENTS of an actor's
+ * `audience`. That member's codec WRAPS a scalar and never looks inside an
+ * array (`act-members.ts`), so `act: { audience: [1] }` walks onto the wire at
+ * any door this rule does not guard, and survives a read the same way — this
+ * rule is its only gate, at mint and at verify alike. The walker itself refuses
+ * a non-object actor in both directions and, on the WRITE side, a member whose
+ * value fails its leaf codec; on the profiles that carry this rule the policy
+ * gate runs BEFORE wire assembly, so at mint this rule answers first for those
+ * too, with every fault in one report.
+ *
+ * ⚠ AT VERIFY THE RULE READS WHAT THE TOKEN READ PRODUCED, not the wire: a
+ * non-object actor is refused by the read itself, and a member the read cannot
+ * decode arrives here already dropped — so the `audience`-element check is the
+ * one a foreign token can still trip.
  *
  * ⚠ THE DEPTH BOUND IS NOT PART OF THIS RULE. `maxChainDepth` is a VERIFIER's
  * option (`internal/utils/validate-actor.ts`), not a shape fact.
