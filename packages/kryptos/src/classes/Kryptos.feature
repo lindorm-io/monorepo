@@ -430,6 +430,10 @@ Feature: Kryptos key
       Given the fixture leaf key with its full certificate chain
       Then verifying the certificate against the alternative fixture root is refused as "trust_anchor_mismatch"
 
+    Example: a chain is refused when no trust anchor is supplied
+      Given the fixture leaf key with its full certificate chain
+      Then verifying the certificate against an empty trust anchor set is refused as "trust_anchor_required"
+
     Example: a key without a certificate has nothing to verify
       Given a generated "ES256" key
       Then verifying the certificate against the fixture root is refused as "missing_certificate"

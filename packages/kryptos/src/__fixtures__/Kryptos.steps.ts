@@ -531,6 +531,13 @@ export class KryptosSteps extends KryptosStepsBase {
   }
 
   @Then(
+    "verifying the certificate against an empty trust anchor set is refused as {string}",
+  )
+  verifyingTheCertificateAgainstAnEmptyTrustAnchorSetIsRefused(code: string): void {
+    this.refused(code, () => this.ctx.kryptos.verifyCertificate({ trustAnchors: [] }));
+  }
+
+  @Then(
     "importing its PEM export carrying the fixture leaf certificate is refused as {string}",
   )
   importingItsPemExportCarryingTheFixtureLeafCertificateIsRefused(code: string): void {

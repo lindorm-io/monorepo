@@ -1,3 +1,4 @@
+import { isString } from "@lindorm/is";
 import { describe, expect, test } from "vitest";
 import { KryptosKit } from "../../classes/index.js";
 import {
@@ -31,7 +32,7 @@ const secretStrings = (key: IKryptos): Array<string> => {
   const jwk = key.toJWK("private") as unknown as Record<string, string | undefined>;
   return ["d", "k", "priv", "p", "q", "dp", "dq", "qi"]
     .map((member) => jwk[member])
-    .filter((value): value is string => typeof value === "string" && value.length > 0);
+    .filter((value): value is string => isString(value) && value.length > 0);
 };
 
 describe("inspectSummary / inspectJson", () => {
@@ -58,7 +59,7 @@ describe("inspectSummary / inspectJson", () => {
     expect(json.d).toMatch(/^<\d+ bytes>$/);
     expect(json.p).toMatch(/^<\d+ bytes>$/);
     // public material is not redacted
-    expect(typeof json.n).toBe("string");
+    expect(isString(json.n)).toBe(true);
     expect(json.n).not.toMatch(/bytes>/);
   });
 

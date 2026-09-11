@@ -1,6 +1,6 @@
 import { createPublicKey, verify } from "crypto";
 import { isAfterOrEqual, isBeforeOrEqual } from "@lindorm/date";
-import { isString } from "@lindorm/is";
+import { isArray } from "@lindorm/is";
 import { KryptosError } from "../../../errors/index.js";
 import type { ParsedX509Certificate } from "../../../types/index.js";
 import {
@@ -80,18 +80,9 @@ const verifySignature = (child: ParsedX509Certificate, issuerSpki: Buffer): bool
   return verify(hashName, child.tbsBytes, publicKey, child.signatureBytes);
 };
 
-const toDerArray = (
-  trustAnchors: string | Array<string> | ReadonlyArray<Buffer>,
-): Array<Buffer> => {
-  if (isString(trustAnchors)) return parseX509(trustAnchors);
-  if (trustAnchors.length === 0) return [];
-  if (isString(trustAnchors[0])) return parseX509(trustAnchors as Array<string>);
-  return [...(trustAnchors as ReadonlyArray<Buffer>)];
-};
-
 export const verifyX509Chain = (
   chain: ReadonlyArray<Buffer>,
-  trustAnchors: string | Array<string> | ReadonlyArray<Buffer>,
+  trustAnchors: string | Array<string>,
 ): void => {
   // Chain validation: signature walk, validity window, basicConstraints cA=true
   // + keyCertSign on every non-leaf, RFC 5280 §6.1.4 pathLenConstraint tracking,
@@ -109,9 +100,7 @@ export const verifyX509Chain = (
 
   const parsedChain = chain.map(parseEntry);
 
-  const anchorDers = toDerArray(trustAnchors);
-
-  if (anchorDers.length === 0) {
+  if (isArray(trustAnchors) && trustAnchors.length === 0) {
     throw new KryptosError("At least one trust anchor is required", {
       code: "trust_anchor_required",
       title: "Trust Anchor Required",
@@ -120,7 +109,7 @@ export const verifyX509Chain = (
     });
   }
 
-  const anchors = anchorDers.map(parseEntry);
+  const anchors = parseX509(trustAnchors).map(parseEntry);
 
   const now = new Date();
 
