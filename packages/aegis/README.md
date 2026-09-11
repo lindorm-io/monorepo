@@ -974,20 +974,26 @@ decides which other members it must carry (RFC 9493 §3):
 ```typescript
 await aegis.mint("security_event", {
   audience: ["https://receiver.example.com"],
-  subjectId: { format: "iss_sub", iss: "https://idp.example.com", sub: "user-123" },
+  subjectId: {
+    format: "iss_sub",
+    issuer: "https://idp.example.com",
+    subject: "user-123",
+  },
   events: { "https://schemas.openid.net/secevent/caep/event-type/session-revoked": {} },
 });
 ```
 
 Nine members, spelled in the domain vocabulary and translated to RFC 9493's on the
-wire: `format`, `iss`, `sub`, `email`, **`phoneNumber` → `phone_number`**, `uri`,
-`url`, `id`, and `identifiers`.
+wire: `format`, **`issuer` → `iss`**, **`subject` → `sub`**, `email`,
+**`phoneNumber` → `phone_number`**, `uri`, `url`, `id`, and `identifiers`.
 
 ⚠ **The domain member is `phoneNumber`, and a domain bag carrying `phone_number` is
 REFUSED.** `phoneNumber` resolves through the declared member to RFC 9493's own
 `phone_number` on the wire, a read returns `phoneNumber`, and the per-format
 requirement check resolves the domain name alone. `phone_number` in the domain bag
-lands on the declared member's own key: that is a collision and is refused.
+lands on the declared member's own key: that is a collision and is refused. `iss`
+and `sub` in the domain bag are refused the same way — the members are `issuer` and
+`subject`.
 
 `format` is **required** on every Subject Identifier, and on every element of an
 `identifiers` array (RFC 9493 §3). A missing or empty one is refused in both
@@ -1009,8 +1015,8 @@ On COSE the members carry integer labels under `proprietary: true` — `iss` 1 a
 unallocated: it is the CWT `aud` label (RFC 8392 §4), and `aud` is not a Subject
 Identifier member. An interoperable token keeps the RFC 9493 string names.
 
-The per-format requirements (RFC 9493 §3.2 — `email` for the Email format, `iss`
-**and** `sub` for `iss_sub`, and so on, each required and non-empty)
+The per-format requirements (RFC 9493 §3.2 — `email` for the Email format,
+`issuer` **and** `subject` for `iss_sub`, and so on, each required and non-empty)
 are a profile `shape` rule (`subjectId`), because they are conditional on the
 format rather than unconditional the way `format` itself is. `security_event`
 declares it.

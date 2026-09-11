@@ -24,12 +24,6 @@ import { SUBJECT_IDENTIFIER_REQUIRED_MEMBERS } from "./sub-id.js";
  * as `phone_number`, an undeclared `given_name` as `given_name`. ⇒ A caller who
  * writes the WIRE spelling of a DECLARED member is REFUSED for the collision
  * rather than resolved by key order (`internal/claims/translate.ts`).
- *
- * ⚠ `iss` AND `sub` KEEP THEIR WIRE NAMES AS DOMAIN NAMES (RFC 9493 §3.2.3),
- * where the ACTOR members are renamed (`act-members.ts` declares `iss` as
- * `issuer`); they carry no case to flip. The residual divergence — `act.issuer`
- * vs `subjectId.iss` for one wire name — is recorded rather than resolved:
- * renaming is consumer-visible and moves no bytes.
  */
 
 /**
@@ -94,7 +88,7 @@ export const SUB_ID_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
   },
   {
     // RFC 9493 §3.2.3 — the `iss_sub` format's issuer.
-    domain: "iss",
+    domain: "issuer",
     spec: {
       kind: "rfc",
       rfc: "RFC 9493",
@@ -108,7 +102,7 @@ export const SUB_ID_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
   },
   {
     // RFC 9493 §3.2.3 — the `iss_sub` format's subject.
-    domain: "sub",
+    domain: "subject",
     spec: {
       kind: "rfc",
       rfc: "RFC 9493",

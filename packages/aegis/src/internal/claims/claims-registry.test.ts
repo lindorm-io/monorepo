@@ -972,14 +972,14 @@ describe("CLAIM_REGISTRY", () => {
         required: true,
         codec: "text",
       },
-      iss: {
+      issuer: {
         jose: "iss",
         cose: "iss",
         whenEmpty: "keep",
         required: false,
         codec: "text",
       },
-      sub: {
+      subject: {
         jose: "sub",
         cose: "sub",
         whenEmpty: "keep",

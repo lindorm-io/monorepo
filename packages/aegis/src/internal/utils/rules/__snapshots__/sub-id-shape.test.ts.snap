@@ -21,8 +21,8 @@ exports[`subIdShape > fails when a required member is null 1`] = `
 exports[`subIdShape > fails when a required member of the format is missing 1`] = `
 [
   {
-    "key": "subjectId.sub",
-    "message": "subjectId of format "iss_sub" requires member "sub"",
+    "key": "subjectId.subject",
+    "message": "subjectId of format "iss_sub" requires member "subject"",
   },
 ]
 `;
@@ -84,8 +84,8 @@ exports[`subIdShape > fails when the email format's required member is empty 1`]
 exports[`subIdShape > fails when the iss_sub format's required member is empty 1`] = `
 [
   {
-    "key": "subjectId.sub",
-    "message": "subjectId of format "iss_sub" requires member "sub"",
+    "key": "subjectId.subject",
+    "message": "subjectId of format "iss_sub" requires member "subject"",
   },
 ]
 `;

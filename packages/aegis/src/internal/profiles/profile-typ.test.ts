@@ -121,7 +121,7 @@ const PROFILE_TYP: { [P in keyof BuiltInProfiles]-?: Expectation<P> } = {
     typ: "application/secevent+jwt",
     content: {
       audience: ["https://receiver.lindorm.io/"],
-      subjectId: { format: "iss_sub", iss: ISSUER, sub: "user-1" },
+      subjectId: { format: "iss_sub", issuer: ISSUER, subject: "user-1" },
       events: EVENTS,
     },
   },

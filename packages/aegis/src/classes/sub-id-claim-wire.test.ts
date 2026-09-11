@@ -151,8 +151,8 @@ const plain = (value: unknown): unknown =>
  */
 const EVERY_MEMBER = {
   format: "iss_sub",
-  iss: "https://idp.lindorm.test",
-  sub: "subject-1",
+  issuer: "https://idp.lindorm.test",
+  subject: "subject-1",
   email: "subject.1@lindorm.test",
   phoneNumber: "+46700000000",
   uri: "acct:subject-1@lindorm.test",
@@ -188,7 +188,7 @@ const EVERY_MEMBER_WIRE: Dict = {
 const ALIASES = {
   format: "aliases",
   identifiers: [
-    { format: "iss_sub", iss: "https://idp.lindorm.test", sub: "subject-1" },
+    { format: "iss_sub", issuer: "https://idp.lindorm.test", subject: "subject-1" },
     { format: "email", email: "subject.1@lindorm.test" },
     { format: "phone_number", phoneNumber: "+46700000000" },
     { format: "opaque", id: "opaque-subject-1" },
@@ -197,7 +197,7 @@ const ALIASES = {
   ],
 };
 
-/** The same, in the WIRE vocabulary. `phoneNumber` is the one member that moves. */
+/** The same, in the WIRE vocabulary: `issuer`, `subject` and `phoneNumber` move. */
 const ALIASES_WIRE: Dict = {
   format: "aliases",
   identifiers: [
@@ -251,8 +251,8 @@ describe("the sub_id claim on the wire", () => {
 
     // Whole-value equality, not a subset: a subset match passes over a member the
     // token dropped, and dropping a member is the failure a declared member set
-    // exists to prevent. `phone_number` is the one that would show a lost
-    // translation — every other declared member is spelled the same on both sides.
+    // exists to prevent. `iss`, `sub` and `phone_number` are the members that
+    // would show a lost translation — the rest are spelled the same on both sides.
     expect(wireClaimOf(token, "sub_id")).toEqual(EVERY_MEMBER_WIRE);
   });
 
@@ -522,6 +522,46 @@ describe("the sub_id claim on the wire", () => {
         },
       });
     }
+  });
+
+  test("a foreign token spelling the pair in the DOMAIN vocabulary is refused, not read as the pair", () => {
+    // The read direction of the look-alike rule. On the wire the `iss_sub` pair
+    // is `iss` and `sub` (RFC 9493 §3.2.3), so a wire `issuer` or `subject` is an
+    // undeclared member — and the verbatim tail would carry each onto the very
+    // key the declared member's read resolves to, making a token no RFC 9493
+    // receiver reads as naming a subject read as naming one here. The look-alike
+    // arrives ALONE: with nothing to collide against, a refusal built from the
+    // members that arrived would let it take the declared slot uncontested.
+    // Refused at `parse`, the unauthenticated door a stranger's payload reaches.
+    const header = Buffer.from(
+      JSON.stringify({ alg: "ES512", typ: "JWT" }),
+      "utf8",
+    ).toString("base64url");
+    const payload = Buffer.from(
+      '{"iss":"https://test.lindorm.io/","sub":"u","exp":9999999999,"sub_id":{"format":"iss_sub","issuer":"https://rogue.example/","subject":"rogue-subject"}}',
+      "utf8",
+    ).toString("base64url");
+
+    expect(() => aegis.parse(`${header}.${payload}.AAAA`)).toThrow(
+      expect.objectContaining({
+        code: "claim_structure_invalid",
+        data: {
+          claim: "subjectId",
+          invalid: [
+            {
+              key: "subjectId.issuer",
+              message:
+                'Members "iss" and "issuer" both resolve to "issuer" in "subjectId"',
+            },
+            {
+              key: "subjectId.subject",
+              message:
+                'Members "sub" and "subject" both resolve to "subject" in "subjectId"',
+            },
+          ],
+        },
+      }) as unknown as Error,
+    );
   });
 
   // ---------------------------------------------------------------------------

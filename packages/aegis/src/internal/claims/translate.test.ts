@@ -91,7 +91,7 @@ describe("domainToJose — content -> wire mapping", () => {
         act: { subject: "root-actor" },
       },
       mayAct: { subject: "may-actor" },
-      subjectId: { format: "iss_sub", iss: "https://i/", sub: "u" },
+      subjectId: { format: "iss_sub", issuer: "https://i/", subject: "u" },
       events: { "urn:lindorm:event:rtbf": {} },
       authorizationDetails: [{ type: "payment", amount: 10 }],
       // hash inputs (both mappers derive the hash from these)
@@ -561,6 +561,36 @@ describe("domainToJose — content -> wire mapping", () => {
   // ⚠ The reason `events` cannot share the address arm: a SET events map is
   // keyed by event-type URIs (RFC 8417 §2.2). Those are identifiers, and
   // case-converting one rewrites the URI.
+  test("should write a Subject Identifier's issuer and subject as RFC 9493's iss and sub", () => {
+    const wire = domainToJose({
+      subjectId: { format: "iss_sub", issuer: "https://i/", subject: "u" },
+    });
+
+    expect(wire.sub_id).toEqual({ format: "iss_sub", iss: "https://i/", sub: "u" });
+  });
+
+  // ⚠ `iss` IS THE WIRE SPELLING, and in the domain bag it is undeclared: the
+  // `open: "verbatim"` tail carries it onto the key the declared `issuer` owns,
+  // which is the collision — whether or not `issuer` is present.
+  test("should refuse a Subject Identifier whose issuer is written in the wire spelling", () => {
+    expect(() =>
+      domainToJose({ subjectId: { format: "iss_sub", iss: "https://i/" } }),
+    ).toThrow(
+      expect.objectContaining({
+        code: "claim_structure_invalid",
+        data: {
+          claim: "subjectId",
+          invalid: [
+            {
+              key: "subjectId.iss",
+              message: 'Members "iss" and "issuer" both resolve to "iss" in "subjectId"',
+            },
+          ],
+        },
+      }) as unknown as Error,
+    );
+  });
+
   test("should NOT case-convert the keys of a SET events map", () => {
     const events = {
       "https://schemas.openid.net/secevent/risc/event-type/account-disabled": {
@@ -686,6 +716,18 @@ describe("joseToDomain — the two read modes decode identically", () => {
     const { claims } = wireToDomain(camel, joseName, "dict");
 
     expect(claims).toEqual(camel);
+  });
+
+  test("reads a Subject Identifier's iss and sub back as issuer and subject", () => {
+    const { claims } = joseToDomain({
+      sub_id: { format: "iss_sub", iss: "https://i/", sub: "u" },
+    });
+
+    expect(claims.subjectId).toEqual({
+      format: "iss_sub",
+      issuer: "https://i/",
+      subject: "u",
+    });
   });
 
   test("unregistered claims go to custom, camelCased, value untouched", () => {
@@ -851,7 +893,7 @@ describe("wireToFloorClaims — the verify-floor read mode", () => {
 
     expect(claims).toMatchObject({
       issuer: ISSUER,
-      subjectId: { format: "iss_sub", iss: ISSUER, sub: "user-1" },
+      subjectId: { format: "iss_sub", issuer: ISSUER, subject: "user-1" },
     });
     expect(custom).toEqual({});
   });

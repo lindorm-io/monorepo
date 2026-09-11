@@ -27,13 +27,12 @@ export type SubjectIdentifierFormat =
  * would evaporate that binding silently.
  *
  * ⚠ THE SPELLINGS ARE THE HOUSE VOCABULARY: `phoneNumber`, not the wire's
- * `phone_number`. `iss` and `sub` are their own domain names — see
- * `internal/claims/sub-id-members.ts` for why they are not `issuer`/`subject`.
+ * `phone_number`; `issuer` and `subject`, not the wire's `iss` and `sub`.
  */
 export type SubjectIdentifierMembers = {
   format: SubjectIdentifierFormat;
-  iss?: string;
-  sub?: string;
+  issuer?: string;
+  subject?: string;
   email?: string;
   phoneNumber?: string;
   uri?: string;
@@ -79,7 +78,7 @@ export const SUBJECT_IDENTIFIER_REQUIRED_MEMBERS: ReadonlyMap<
 > = new Map([
   ["account", ["uri"]],
   ["email", ["email"]],
-  ["iss_sub", ["iss", "sub"]],
+  ["iss_sub", ["issuer", "subject"]],
   ["opaque", ["id"]],
   ["phone_number", ["phoneNumber"]],
   ["did", ["url"]],

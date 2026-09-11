@@ -90,7 +90,7 @@ describe("enforceVerifyFloor", () => {
           audience: [RESOURCE],
           issuedAt: new Date(1704096000 * 1000),
           tokenId: "token-1",
-          subjectId: { format: "iss_sub", iss: ISSUER, sub: "user-1" },
+          subjectId: { format: "iss_sub", issuer: ISSUER, subject: "user-1" },
           events: { "urn:example:event": {} },
         },
       }),

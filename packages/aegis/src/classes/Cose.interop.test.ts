@@ -210,7 +210,7 @@ const fullCommon = {
   tenantId: "tenant-7", // private-use label P(14) = -65551
   accessTokenHash: AT_HASH, // bstr, private-use label P(0) = -65537
   act: { subject: "actor", issuer: "https://delegator/", clientId: "c-2" }, // compact map
-  subjectId: { format: "iss_sub", iss: "https://i/", sub: "u" }, // compact map
+  subjectId: { format: "iss_sub", issuer: "https://i/", subject: "u" }, // compact map
   authorizationDetails: [{ type: "payment" }], // string-keyed passthrough
   confirmation: { keyId: "proof-key-1" }, // cnf (RFC 8747)
   token_introspection: { active: true }, // unknown custom claim
@@ -225,7 +225,7 @@ const fullCommonDecoded = {
   tenantId: "tenant-7",
   accessTokenHash: AT_HASH,
   act: { subject: "actor", issuer: "https://delegator/", clientId: "c-2" },
-  subjectId: { format: "iss_sub", iss: "https://i/", sub: "u" },
+  subjectId: { format: "iss_sub", issuer: "https://i/", subject: "u" },
   authorizationDetails: [{ type: "payment" }],
   confirmation: { keyId: "proof-key-1" },
   tokenIntrospection: { active: true },
@@ -312,13 +312,12 @@ describe("COSE interop — custom logic does not break the token", () => {
       iss: "https://delegator/",
       client_id: "c-2",
     });
-    // `sub_id` too. ⚠ It is TRANSLATED, not passed through: RFC 9493 declares a
-    // member set, and the `iss_sub` format's `iss`/`sub` merely happen to be
-    // spelled the same on both sides. A member whose spellings diverge —
-    // `phoneNumber` -> `phone_number` — is pinned on the raw wire by
-    // `classes/sub-id-claim-wire.test.ts`, where the equality cannot be satisfied
-    // by a passthrough.
-    expect(map.get("sub_id")).toEqual(fullCommon.subjectId);
+    // `sub_id` too. ⚠ It is TRANSLATED, not passed through: the domain `issuer`
+    // and `subject` reach the wire as RFC 9493 §3.2.3's `iss` and `sub`, so the
+    // equality is against the wire literal and a passthrough of
+    // `fullCommon.subjectId` cannot satisfy it. The labelled compact form is
+    // pinned by `classes/sub-id-claim-wire.test.ts`.
+    expect(map.get("sub_id")).toEqual({ format: "iss_sub", iss: "https://i/", sub: "u" });
   });
 });
 

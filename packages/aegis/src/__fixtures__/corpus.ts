@@ -269,8 +269,8 @@ const STRUCTURED_CONTENT: SignContent = {
   mayAct: { subject: "corpus_may_actor_0001", clientId: "corpus_may_client_0001" },
   subjectId: {
     format: "iss_sub",
-    iss: "https://idp.corpus.lindorm.test",
-    sub: "corpus_sub_id_0001",
+    issuer: "https://idp.corpus.lindorm.test",
+    subject: "corpus_sub_id_0001",
   },
   events: {
     "urn:lindorm:event:rtbf": { subject: "corpus_event_subject_0001" },

@@ -161,8 +161,8 @@ exports[`joseToDomain — the two read modes decode identically > the decoded cl
   "subjectHint": "suh-1",
   "subjectId": {
     "format": "iss_sub",
-    "iss": "https://i/",
-    "sub": "u",
+    "issuer": "https://i/",
+    "subject": "u",
   },
   "tenantId": "tenant-1",
   "tokenId": "jti-1",

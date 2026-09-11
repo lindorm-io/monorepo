@@ -9175,7 +9175,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "minting a security event token whose subject identifier holds an empty member is refused",
     rationale:
-      "A format's required members must not be null or empty — for `iss_sub`, both `iss` and `sub` (RFC 9493 §3.2.3). An identifier whose required member is an empty string therefore is not one, however well-formed it looks. It matters most on a security event token, whose whole purpose is to say that something happened to a specific subject: the `security_event` profile additionally FORBIDS a plain `sub` (an aegis policy, for SSF conformance and SET/ID-token anti-confusion — `sub` is OPTIONAL in RFC 8417 §2.2), which leaves the subject identifier as the entire statement of who the event is about. One that names nobody makes the event unattributable to the receiver acting on it. A demand for a member is a demand for the value, at whatever depth the member sits. The refusal names the position in the DOMAIN vocabulary the caller wrote the claim in — the caller stated `subjectId` and never saw `sub_id`, and the same `invalid` field carries the policy floor's own domain-named entries, so a wire-spelled position would make one field mean two things.",
+      "A format's required members must not be null or empty — for `iss_sub`, both `iss` and `sub` (RFC 9493 §3.2.3), which the domain surface spells `issuer` and `subject`. An identifier whose required member is an empty string therefore is not one, however well-formed it looks. It matters most on a security event token, whose whole purpose is to say that something happened to a specific subject: the `security_event` profile additionally FORBIDS a plain `sub` (an aegis policy, for SSF conformance and SET/ID-token anti-confusion — `sub` is OPTIONAL in RFC 8417 §2.2), which leaves the subject identifier as the entire statement of who the event is about. One that names nobody makes the event unattributable to the receiver acting on it. A demand for a member is a demand for the value, at whatever depth the member sits. The refusal names the position in the DOMAIN vocabulary the caller wrote the claim in — the caller stated `subjectId` and never saw `sub_id`, and the same `invalid` field carries the policy floor's own domain-named entries, so a wire-spelled position would make one field mean two things.",
     given: [
       {
         step: "token",
@@ -9183,7 +9183,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         profile: "security_event",
         content: {
           audience: ["https://receiver.lindorm.io/"],
-          subjectId: { format: "iss_sub", iss: ISSUER, sub: "" },
+          subjectId: { format: "iss_sub", issuer: ISSUER, subject: "" },
           events: { "urn:lindorm:event:test": {} },
         },
       },
@@ -9197,8 +9197,8 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
           direction: "mint",
           invalid: [
             {
-              key: "subjectId.sub",
-              message: 'subjectId of format "iss_sub" requires member "sub"',
+              key: "subjectId.subject",
+              message: 'subjectId of format "iss_sub" requires member "subject"',
             },
           ],
         },
@@ -9250,6 +9250,173 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         step: "wireClaims",
         on: "jose",
         includes: { sub_id: { format: "phone_number", phone_number: "+46700000000" } },
+      },
+    ],
+  },
+  {
+    id: "an-issuer-subject-identifier-is-stated-in-the-vocabulary-the-caller-speaks",
+    title:
+      "a subject identifier's issuer and subject are written and read back as `issuer` and `subject` while the wire keeps `iss` and `sub`",
+    rationale:
+      "The `iss_sub` format identifies a subject by the issuer that knows it and the subject it is known to that issuer as, carried as `iss` and `sub` (RFC 9493 §3.2.3). The domain surface spells the pair `issuer` and `subject` — the words it uses for the actor claim's own `iss` and `sub` (RFC 8693 §4.1) and for the top-level claims — so a caller states the issuer and the subject in one vocabulary wherever they appear and this structure is no exception. The wire keeps the RFC's spelling because a receiver of a security event token is not a lindorm consumer. The two halves are stated together: a package that copied the caller's keys onto the signed token would satisfy the domain half alone and emit an identifier no RFC 9493 receiver recognises. The per-format requirement table is keyed by the domain name, so the profile's own shape rule has to resolve `issuer` and `subject` for the mint to succeed at all.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "security_event",
+        content: {
+          audience: ["https://receiver.lindorm.io/"],
+          subjectId: { format: "iss_sub", issuer: ISSUER, subject: "user-1" },
+          events: { "urn:lindorm:event:test": {} },
+        },
+      },
+    ],
+    when: [
+      { step: "mint" },
+      {
+        step: "verify",
+        profile: "security_event",
+        options: { audience: "https://receiver.lindorm.io/" },
+      },
+    ],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      {
+        step: "claims",
+        expected: {
+          subjectId: { format: "iss_sub", issuer: ISSUER, subject: "user-1" },
+        },
+      },
+      // ⚠ The COSE wire is not stated here. Under the default proprietary
+      // encoding `sub_id` is a nested label map, which a row's raw-claims record
+      // cannot express; `classes/sub-id-claim-wire.test.ts` pins labels 1 and 2,
+      // and the table owes it as a feature at the migration.
+      {
+        step: "wireClaims",
+        on: "jose",
+        includes: { sub_id: { format: "iss_sub", iss: ISSUER, sub: "user-1" } },
+      },
+    ],
+  },
+  {
+    id: "a-foreign-subject-identifier-is-read-in-the-vocabulary-the-caller-speaks",
+    title:
+      "a security event token another producer wrote is read back with its subject identifier's `iss` and `sub` as `issuer` and `subject`",
+    rationale:
+      "A subject identifier reaches a verifier in RFC 9493's own spelling — `iss` and `sub` for the `iss_sub` format (RFC 9493 §3.2.3) — whoever wrote the token, and the read surface answers in the domain vocabulary regardless of the producer. A translation applied only to tokens this package minted would hand a consumer two spellings of one member depending on where a token came from, and a consumer reading `subjectId.subject` would find nothing on the token that matters most: the one written by someone else.",
+    given: [
+      {
+        step: "token",
+        via: "foreign",
+        typ: { jose: "application/secevent+jwt", cose: "application/secevent+cwt" },
+        claims: {
+          iss: ISSUER,
+          aud: ["https://receiver.lindorm.io/"],
+          iat: NOW,
+          jti: "set-2",
+          sub_id: { format: "iss_sub", iss: ISSUER, sub: "user-1" },
+          events: { "urn:lindorm:event:test": {} },
+        },
+      },
+    ],
+    when: [
+      {
+        step: "verify",
+        profile: "security_event",
+        options: { audience: "https://receiver.lindorm.io/" },
+      },
+    ],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      {
+        step: "claims",
+        expected: {
+          subjectId: { format: "iss_sub", issuer: ISSUER, subject: "user-1" },
+        },
+      },
+    ],
+  },
+  {
+    id: "a-subject-identifier-member-written-in-the-wire-spelling-is-refused",
+    title:
+      "minting a security event token whose subject identifier spells its issuer and subject as `iss` and `sub` is refused",
+    rationale:
+      "The domain surface spells the `iss_sub` pair `issuer` and `subject`; `iss` and `sub` are the wire's names (RFC 9493 §3.2.3), and inside a domain bag they are undeclared members. The member set is open (RFC 9493 §3), so an undeclared member is carried under its own spelling rather than dropped — and these two land on the keys the declared members own, which is the collision aegis refuses in every open structure. Resolving it instead would let two spellings of one member both mean it, settled by key order. On `security_event` the profile's shape rule reads the bag before any wire is assembled and answers first: the format's required members are absent under the names the surface declares, and the refusal names them in the vocabulary the caller writes in.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "security_event",
+        content: {
+          audience: ["https://receiver.lindorm.io/"],
+          subjectId: { format: "iss_sub", iss: ISSUER, sub: "user-1" },
+          events: { "urn:lindorm:event:test": {} },
+        },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        code: "profile_policy_invalid",
+        data: {
+          direction: "mint",
+          invalid: [
+            {
+              key: "subjectId.issuer",
+              message: 'subjectId of format "iss_sub" requires member "issuer"',
+            },
+            {
+              key: "subjectId.subject",
+              message: 'subjectId of format "iss_sub" requires member "subject"',
+            },
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: "a-subject-identifier-member-written-in-the-wire-spelling-collides-with-the-declared-member",
+    title:
+      "minting a token whose subject identifier spells its issuer and subject as `iss` and `sub` is refused under a profile that states no shape rule",
+    rationale:
+      "The subject identifier's member set is open (RFC 9493 §3), so a member aegis does not declare is carried under the producer's own spelling rather than dropped. `iss` and `sub` are the wire spellings of the declared `issuer` and `subject` (RFC 9493 §3.2.3): in a domain bag they are undeclared, and their outgoing keys are the ones the declared members own. Two members meeting on one key are refused in every open structure rather than settled by key order, and the refusal names the pair at its position. The rule is the structure's own and holds under every profile, which is why this row states it under one that declares no shape rule for the claim — a per-format demand the profile makes would answer first and say nothing about the walker.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "default",
+        content: {
+          subject: "user-1",
+          expires: "1h",
+          subjectId: { format: "iss_sub", iss: ISSUER, sub: "user-1" },
+        },
+      },
+    ],
+    // The READ direction of the same rule — a foreign token whose `sub_id`
+    // spells the pair as `issuer`/`subject` — is pinned by a unit test
+    // (`classes/sub-id-claim-wire.test.ts`) and owed as a feature at the
+    // migration.
+    when: [{ step: "mint" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        code: "claim_structure_invalid",
+        data: {
+          claim: "subjectId",
+          invalid: [
+            {
+              key: "subjectId.iss",
+              message: 'Members "iss" and "issuer" both resolve to "iss" in "subjectId"',
+            },
+            {
+              key: "subjectId.sub",
+              message: 'Members "sub" and "subject" both resolve to "sub" in "subjectId"',
+            },
+          ],
+        },
       },
     ],
   },
@@ -9522,7 +9689,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         profile: "security_event",
         content: {
           audience: ["https://receiver.lindorm.io/"],
-          subjectId: { format: "iss_sub", iss: ISSUER, sub: "user-1" },
+          subjectId: { format: "iss_sub", issuer: ISSUER, subject: "user-1" },
           events: { "urn:lindorm:event:test": {} },
         },
       },
@@ -9549,7 +9716,9 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       // about `events` is `an-event-payload-survives-the-empty-claim-prune`.
       {
         step: "claims",
-        expected: { subjectId: { format: "iss_sub", iss: ISSUER, sub: "user-1" } },
+        expected: {
+          subjectId: { format: "iss_sub", issuer: ISSUER, subject: "user-1" },
+        },
       },
       // ⚠ The row's PREMISE, read off the wire. The verify this row runs sets
       // `expPresence: "optional"`, so a token that DID carry an expiry would

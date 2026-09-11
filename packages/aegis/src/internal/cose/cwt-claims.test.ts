@@ -137,7 +137,7 @@ describe("proprietary encoding", () => {
   });
 
   test("sub_id is compact integer-keyed under a private-use label by default, JOSE string-keyed object when proprietary:false", () => {
-    const subjectId = { format: "iss_sub", iss: "https://i/", sub: "u" };
+    const subjectId = { format: "iss_sub", issuer: "https://i/", subject: "u" };
 
     // On-platform: keyed by the private-use label, value the compact map.
     const map = encode({ subjectId }, { proprietary: true });
@@ -151,7 +151,7 @@ describe("proprietary encoding", () => {
     // Off-platform: keyed by the JOSE string name, value the plain object.
     const off = encode({ subjectId }, { proprietary: false });
     expect(off.has(-65537 - 12)).toBe(false);
-    expect(off.get("sub_id")).toEqual(subjectId);
+    expect(off.get("sub_id")).toEqual({ format: "iss_sub", iss: "https://i/", sub: "u" });
   });
 
   test("compact act round-trips through CBOR", () => {

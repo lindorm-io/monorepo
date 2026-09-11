@@ -8,17 +8,17 @@ describe("subIdShape", () => {
 
   test("passes for a valid iss_sub format", () => {
     expect(
-      subIdShape({ subjectId: { format: "iss_sub", iss: "https://x", sub: "s" } }),
+      subIdShape({ subjectId: { format: "iss_sub", issuer: "https://x", subject: "s" } }),
     ).toEqual([]);
   });
 
   /**
-   * ⭐ THE CONTROL FOR THE ONE MEMBER THAT WAS RE-KEYED. The per-format table is
-   * keyed by the member's DOMAIN name, and `phone_number` -> `phoneNumber` is the
-   * only entry the camelisation moved. Without this row the failing row below
-   * cannot tell "the member is empty" from "the table looks up a key the domain
-   * bag never has" — both produce the same entry, and the second would mean the
-   * Phone Number format's REQUIRED member (RFC 9493 §3.2.5) is unenforceable.
+   * The per-format table is keyed by the member's DOMAIN name, which diverges
+   * from the wire spelling for `issuer`, `subject` and `phoneNumber`.
+   * Without this row the failing row below cannot tell "the member is empty"
+   * from "the table looks up a key the domain bag never has" — both produce the
+   * same entry, and the second would mean the Phone Number format's REQUIRED
+   * member (RFC 9493 §3.2.5) is unenforceable.
    */
   test("passes for the phone_number format spelled in the domain vocabulary", () => {
     expect(
@@ -52,11 +52,13 @@ describe("subIdShape", () => {
   });
 
   test("fails when format is missing", () => {
-    expect(subIdShape({ subjectId: { iss: "x" } })).toMatchSnapshot();
+    expect(subIdShape({ subjectId: { issuer: "x" } })).toMatchSnapshot();
   });
 
   test("fails when a required member of the format is missing", () => {
-    expect(subIdShape({ subjectId: { format: "iss_sub", iss: "x" } })).toMatchSnapshot();
+    expect(
+      subIdShape({ subjectId: { format: "iss_sub", issuer: "x" } }),
+    ).toMatchSnapshot();
   });
 
   /**
@@ -99,7 +101,7 @@ describe("subIdShape", () => {
     ["aliases", { format: "aliases", identifiers: [] }],
     ["did", { format: "did", url: "" }],
     ["email", { format: "email", email: "" }],
-    ["iss_sub", { format: "iss_sub", iss: "https://x", sub: "" }],
+    ["iss_sub", { format: "iss_sub", issuer: "https://x", subject: "" }],
     ["opaque", { format: "opaque", id: "" }],
     ["phone_number", { format: "phone_number", phoneNumber: "" }],
     ["uri", { format: "uri", uri: "" }],
