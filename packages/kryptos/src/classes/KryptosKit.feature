@@ -227,7 +227,7 @@ Feature: Kryptos key facade
       When I import it with from.<format>
       And I import it again by detection
       Then the key has type "<type>"
-      And both keys have the same id
+      And both keys carry the id of the input
       And both keys export the same private JWK
       And importing the key's own JWK export reproduces it
 
@@ -255,12 +255,12 @@ Feature: Kryptos key facade
         | RSA  | pem    |
 
     Scenario Outline: a public-only <type> key imports from DER explicitly and by detection alike
-      Given the <type> fixture key
+      Given the <type> fixture key without its id
       When I import its public half with from.der
       And I import it again by detection
       Then the key has type "<type>"
       And the key carries only a public half
-      And both keys have the same id
+      And both keys derive the same key id
       And both keys export the same public JWK
       And importing the key's own JWK export reproduces it
 
@@ -272,12 +272,12 @@ Feature: Kryptos key facade
         | RSA  |
 
     Scenario Outline: a private-only <type> key imports from DER and derives its public half
-      Given the <type> fixture key
+      Given the <type> fixture key without its id
       When I import its private half with from.der
       And I import it again by detection
       Then the key has type "<type>"
       And the key carries both a private and a public half
-      And both keys have the same id
+      And both keys derive the same key id
       And both keys export the same public JWK
       And importing the key's own JWK export reproduces it
 

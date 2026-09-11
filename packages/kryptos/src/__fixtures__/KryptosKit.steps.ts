@@ -1,5 +1,6 @@
 import { B64 } from "@lindorm/b64";
 import { Binding, DataTable, Given, ParameterType, Then, When } from "@lindorm/gherkin";
+import { isString } from "@lindorm/is";
 import { AES_ENCRYPTION_ALGORITHMS, type Environment } from "@lindorm/types";
 import { decode, encode } from "cbor2";
 import { X509Certificate } from "crypto";
@@ -118,6 +119,23 @@ const derFixture = (b64: KryptosFromString): KryptosFromBuffer => ({
   privateKey: b64.privateKey ? B64.toBuffer(b64.privateKey, "b64u") : undefined,
   publicKey: b64.publicKey ? B64.toBuffer(b64.publicKey, "b64u") : undefined,
 });
+
+const withoutId = ({ id: _id, ...rest }: KryptosFromString): KryptosFromString => rest;
+
+const inputKeyId = (input: KryptosFrom): string => {
+  if (isString(input)) {
+    throw new Error("a raw string input carries no explicit key id");
+  }
+
+  const identified: { id?: string; kid?: string } = input;
+  const id = identified.kid ?? identified.id;
+
+  if (!isString(id)) {
+    throw new Error("the input carries no explicit key id");
+  }
+
+  return id;
+};
 
 const readOptions = (table: DataTable): GenerateOptions => {
   const rows = table.rowsHash();
@@ -368,6 +386,13 @@ export class KryptosKitSteps extends KryptosStepsBase {
   @Given("the {keyType} fixture key")
   theFixtureKey(type: KryptosType): void {
     this.fixture = FIXTURES[type];
+  }
+
+  @Given("the {keyType} fixture key without its id")
+  theFixtureKeyWithoutItsId(type: KryptosType): void {
+    const fixture = FIXTURES[type];
+
+    this.fixture = { ...fixture, b64: withoutId(fixture.b64) };
   }
 
   @When("I import it with from.{format}")
@@ -1105,6 +1130,21 @@ export class KryptosKitSteps extends KryptosStepsBase {
 
   @Then("both keys have the same id")
   bothKeysHaveTheSameId(): void {
+    expect(this.ctx.other.id).toBe(this.ctx.kryptos.id);
+  }
+
+  @Then("both keys carry the id of the input")
+  bothKeysCarryTheIdOfTheInput(): void {
+    const id = inputKeyId(this.input);
+
+    expect(this.ctx.kryptos.id).toBe(id);
+    expect(this.ctx.other.id).toBe(id);
+  }
+
+  @Then("both keys derive the same key id")
+  bothKeysDeriveTheSameKeyId(): void {
+    expect(this.ctx.kryptos.id).toMatch(KEY_ID);
+    expect(this.ctx.other.id).toMatch(KEY_ID);
     expect(this.ctx.other.id).toBe(this.ctx.kryptos.id);
   }
 
