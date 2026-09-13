@@ -67,6 +67,10 @@ export type VerifyOptions = {
    * ⚠ DOMAIN names, like every other domain surface — `["objectId"]`, never
    * `["oid"]`, which is refused. An unregistered custom parameter is spelled
    * identically at both tiers.
+   *
+   * The same declaration governs the {@link dpopProof}'s header: a proof marking
+   * an extension critical is refused (`dpop_unsupported_crit_param`) until it is
+   * named here.
    */
   critical?: Array<string>;
   /**

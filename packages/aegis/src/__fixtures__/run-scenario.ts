@@ -1398,6 +1398,12 @@ const DPOP_OTHER_ACCESS_TOKEN = "an-access-token-this-proof-was-not-presented-wi
  * The PUBLIC half of the key rides in the header as `jwk`, which is what the
  * verifier thumbprints against the token's `cnf.jkt`; the private half never
  * leaves this function.
+ *
+ * A row's own header parameters ride beside the three RFC 9449 §4.2 requires,
+ * under the rules {@link signForeignJose} applies to a token's `crit`: the
+ * foreign library's producer-side declaration is derived from the row's `crit`,
+ * and a member the header does not carry — the one shape that library will not
+ * write — is signed by hand instead.
  */
 const signDpopProof = async (
   given: DpopProofGiven,
@@ -1415,24 +1421,42 @@ const signDpopProof = async (
   // base64url SHA-256 of its ASCII form. RFC 9449 §4.2.
   const committedToken = given.ath === "other" ? DPOP_OTHER_ACCESS_TOKEN : presentedToken;
 
-  return new CompactSign(
-    Buffer.from(
-      JSON.stringify({
-        jti: given.tokenId,
-        htm: given.httpMethod,
-        htu: given.httpUri,
-        iat: Math.floor(Date.now() / 1000),
-        ath: createHash("sha256").update(committedToken, "ascii").digest("base64url"),
-      }),
-      "utf8",
-    ),
-  )
-    .setProtectedHeader({
-      alg: kryptos.algorithm,
-      typ: "dpop+jwt",
-      jwk: kryptos.toJWK("public") as never,
-    })
-    .sign(key);
+  const payload = Buffer.from(
+    JSON.stringify({
+      jti: given.tokenId,
+      htm: given.httpMethod,
+      htu: given.httpUri,
+      iat: Math.floor(Date.now() / 1000),
+      ath: createHash("sha256").update(committedToken, "ascii").digest("base64url"),
+    }),
+    "utf8",
+  );
+
+  const header: Dict & { alg: string } = {
+    alg: kryptos.algorithm,
+    typ: "dpop+jwt",
+    jwk: kryptos.toJWK("public") as never,
+    // ⚠ LAST, so a row can restate a derived parameter deliberately.
+    ...given.header,
+  };
+
+  const declared = header.crit;
+  const crit = isArray(declared)
+    ? Object.fromEntries(declared.map((member) => [String(member), true]))
+    : undefined;
+
+  // ⚠ `Object.hasOwn`, never `in`: the members come off the row and `header` is
+  // a plain object.
+  if (
+    isArray(declared) &&
+    declared.some((member) => !Object.hasOwn(header, String(member)))
+  ) {
+    return signCompactByHand(header, payload, kryptos, key);
+  }
+
+  return new CompactSign(payload)
+    .setProtectedHeader(header)
+    .sign(key, crit === undefined ? undefined : { crit });
 };
 
 const materialise = async (

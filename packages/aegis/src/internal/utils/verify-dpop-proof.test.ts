@@ -1,12 +1,18 @@
+import { Amphora } from "@lindorm/amphora";
 import { B64 } from "@lindorm/b64";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { ShaKit } from "@lindorm/sha";
 import MockDate from "mockdate";
-import { TEST_AKP_KEY_SIG, TEST_RSA_KEY_SIG } from "../../__fixtures__/keys.js";
+import {
+  TEST_AKP_KEY_SIG,
+  TEST_EC_KEY_SIG,
+  TEST_RSA_KEY_SIG,
+} from "../../__fixtures__/keys.js";
 import { Aegis } from "../../classes/Aegis.js";
 import { AegisDomainError } from "../../errors/index.js";
 import { createJoseSignature } from "./jose-signature.js";
 import { verifyDpopProof } from "./verify-dpop-proof.js";
-import { afterEach, describe, expect, test } from "vitest";
+import { afterEach, beforeAll, describe, expect, test } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
@@ -57,6 +63,7 @@ describe("verifyDpopProof", () => {
         accessToken,
         expectedThumbprint,
         dpopMaxSkew: 60,
+        declared: undefined,
       }),
     ).toMatchSnapshot();
   });
@@ -68,6 +75,7 @@ describe("verifyDpopProof", () => {
         accessToken,
         expectedThumbprint,
         dpopMaxSkew: 60,
+        declared: undefined,
       }),
     ).toThrow(AegisDomainError);
   });
@@ -81,6 +89,7 @@ describe("verifyDpopProof", () => {
         accessToken,
         expectedThumbprint,
         dpopMaxSkew: 60,
+        declared: undefined,
       }),
     ).toThrow(/typ must be dpop\+jwt/);
   });
@@ -94,6 +103,7 @@ describe("verifyDpopProof", () => {
         accessToken,
         expectedThumbprint,
         dpopMaxSkew: 60,
+        declared: undefined,
       }),
     ).toThrow(/header jwk is required/);
   });
@@ -107,6 +117,7 @@ describe("verifyDpopProof", () => {
         accessToken,
         expectedThumbprint: "wrong-thumbprint",
         dpopMaxSkew: 60,
+        declared: undefined,
       }),
     ).toThrow(/thumbprint does not match cnf\.jkt/);
   });
@@ -120,6 +131,7 @@ describe("verifyDpopProof", () => {
         accessToken,
         expectedThumbprint,
         dpopMaxSkew: 60,
+        declared: undefined,
       }),
     ).toThrow(/ath does not match/);
   });
@@ -135,6 +147,7 @@ describe("verifyDpopProof", () => {
         accessToken,
         expectedThumbprint,
         dpopMaxSkew: 60,
+        declared: undefined,
       }),
     ).toThrow(/iat is outside/);
   });
@@ -155,7 +168,13 @@ describe("verifyDpopProof", () => {
       const proof = signProof({ [claim]: "" });
 
       expect(() =>
-        verifyDpopProof({ proof, accessToken, expectedThumbprint, dpopMaxSkew: 60 }),
+        verifyDpopProof({
+          proof,
+          accessToken,
+          expectedThumbprint,
+          dpopMaxSkew: 60,
+          declared: undefined,
+        }),
       ).toThrow(
         expect.objectContaining({
           code: "dpop_claim_required",
@@ -181,7 +200,13 @@ describe("verifyDpopProof", () => {
     const proof = signProof({ iat });
 
     expect(() =>
-      verifyDpopProof({ proof, accessToken, expectedThumbprint, dpopMaxSkew: 60 }),
+      verifyDpopProof({
+        proof,
+        accessToken,
+        expectedThumbprint,
+        dpopMaxSkew: 60,
+        declared: undefined,
+      }),
     ).toThrow(expect.objectContaining({ code: "dpop_iat_required" }));
   });
 
@@ -202,7 +227,13 @@ describe("verifyDpopProof", () => {
     const proof = signProof({ nonce });
 
     expect(
-      verifyDpopProof({ proof, accessToken, expectedThumbprint, dpopMaxSkew: 60 }).nonce,
+      verifyDpopProof({
+        proof,
+        accessToken,
+        expectedThumbprint,
+        dpopMaxSkew: 60,
+        declared: undefined,
+      }).nonce,
     ).toBeUndefined();
   });
 
@@ -210,7 +241,13 @@ describe("verifyDpopProof", () => {
     const proof = signProof({ nonce: "server-nonce-1" });
 
     expect(
-      verifyDpopProof({ proof, accessToken, expectedThumbprint, dpopMaxSkew: 60 }).nonce,
+      verifyDpopProof({
+        proof,
+        accessToken,
+        expectedThumbprint,
+        dpopMaxSkew: 60,
+        declared: undefined,
+      }).nonce,
     ).toBe("server-nonce-1");
   });
 
@@ -223,6 +260,7 @@ describe("verifyDpopProof", () => {
         accessToken,
         expectedThumbprint,
         dpopMaxSkew: 60,
+        declared: undefined,
       }),
     ).toThrow(/"htm" claim is required/);
   });
@@ -261,6 +299,7 @@ describe("verifyDpopProof", () => {
         accessToken,
         expectedThumbprint: TEST_AKP_KEY_SIG.thumbprint,
         dpopMaxSkew: 60,
+        declared: undefined,
       }),
     ).toMatchSnapshot();
   });
@@ -287,6 +326,7 @@ describe("verifyDpopProof", () => {
         accessToken,
         expectedThumbprint,
         dpopMaxSkew: 60,
+        declared: undefined,
       }),
     ).toThrow(/signature verification failed/);
   });
@@ -298,9 +338,11 @@ describe("verifyDpopProof", () => {
    * has the resource server validate it locally. It is a static because the
    * proof carries its own key, so there is no vault to resolve against.
    *
-   * Everything it does BEYOND this file's subject is supply the skew window, so
-   * that is all it is exercised on here: the rest of the proof check is the body
-   * above, reached through the same call. The window matters on its own because
+   * Everything it does BEYOND this file's subject is supply the skew window and
+   * translate the caller's `critical` declaration to wire names — the window is
+   * exercised here, the declaration in the crit-gate describe below; the rest of
+   * the proof check is the body above, reached through the same call. The window
+   * matters on its own because
    * the freshness bound is the only thing that stops a captured proof being
    * replayed, and a wrapper that dropped the caller's value would silently
    * substitute its own.
@@ -332,6 +374,169 @@ describe("verifyDpopProof", () => {
           dpopMaxSkew: 600,
         }),
       ).not.toThrow();
+    });
+  });
+
+  /**
+   * The proof is a compact JWS, so its header answers to `crit` exactly as a
+   * JWT's does: a listed extension the recipient does not understand invalidates
+   * it (RFC 7515 §4.1.11), and aegis is never the final recipient, so it refuses
+   * until the caller declares the parameter — the gate every JOSE verify door
+   * runs, under this door's own code family. The MALFORMED half is pinned here at
+   * the public door; the scenario table states the declared/undeclared pair and
+   * owes these shapes a cell at the Gherkin migration.
+   */
+  describe("Aegis.verifyDpopProof — the crit gate", () => {
+    test("should refuse a proof marking a carried extension critical when nothing is declared", () => {
+      const proof = signProof({}, { crit: ["x-ext"], "x-ext": "carried" });
+
+      expect(() =>
+        Aegis.verifyDpopProof({ proof, accessToken, expectedThumbprint }),
+      ).toThrow(AegisDomainError);
+      expect(() =>
+        Aegis.verifyDpopProof({ proof, accessToken, expectedThumbprint }),
+      ).toThrow(
+        expect.objectContaining({
+          code: "dpop_unsupported_crit_param",
+          title: "JWT DPoP Unsupported Crit Param",
+          data: { param: "x-ext" },
+          details: expect.stringContaining("critical option of verifyDpopProof"),
+        }),
+      );
+    });
+
+    test.each([
+      ["is not an array", { crit: "x-ext", "x-ext": "carried" }],
+      ["is empty", { crit: [] }],
+      ["names a parameter the header does not carry", { crit: ["x-ext"] }],
+      ["names a specification-defined parameter", { crit: ["typ"] }],
+    ])("should refuse a proof whose crit %s as malformed", (_label, headerOverrides) => {
+      const proof = signProof({}, headerOverrides);
+
+      expect(() =>
+        Aegis.verifyDpopProof({ proof, accessToken, expectedThumbprint }),
+      ).toThrow(
+        expect.objectContaining({
+          code: "dpop_invalid_crit",
+          title: "JWT DPoP Invalid Crit",
+        }),
+      );
+    });
+
+    test("should verify a proof marking a carried extension critical when the caller declares it", () => {
+      const proof = signProof({}, { crit: ["x-ext"], "x-ext": "carried" });
+
+      expect(
+        Aegis.verifyDpopProof({
+          proof,
+          accessToken,
+          expectedThumbprint,
+          critical: ["x-ext"],
+        }),
+      ).toMatchSnapshot();
+    });
+
+    /**
+     * The declaration is DOMAIN-named, like every other domain surface, and is
+     * translated once at this door: `objectId` reaches the gate as the `oid` the
+     * proof carries, and a wire spelling here is refused, never quietly accepted.
+     */
+    test("should translate a domain-named declaration to the wire name the proof carries", () => {
+      const proof = signProof({}, { crit: ["oid"], oid: "1.2.3.4" });
+
+      expect(
+        Aegis.verifyDpopProof({
+          proof,
+          accessToken,
+          expectedThumbprint,
+          critical: ["objectId"],
+        }),
+      ).toMatchSnapshot();
+    });
+
+    test("should refuse a declaration spelled in the wire vocabulary", () => {
+      const proof = signProof({}, { crit: ["oid"], oid: "1.2.3.4" });
+
+      expect(() =>
+        Aegis.verifyDpopProof({
+          proof,
+          accessToken,
+          expectedThumbprint,
+          critical: ["oid"],
+        }),
+      ).toThrow(expect.objectContaining({ code: "crit_declaration_not_domain_named" }));
+    });
+
+    test("should verify a proof carrying no crit whatever the caller declares", () => {
+      const proof = signProof();
+
+      expect(
+        Aegis.verifyDpopProof({
+          proof,
+          accessToken,
+          expectedThumbprint,
+          critical: ["x-ext"],
+        }),
+      ).toMatchSnapshot();
+    });
+  });
+
+  /**
+   * The SECOND door onto the same gate: `aegis.verify` handed a `dpopProof` runs
+   * this file's subject on the proof, and the call's ONE `critical` declaration
+   * governs the token's header and the proof's alike — a caller that has taken an
+   * extension on has taken it on for the whole presentation.
+   */
+  describe("aegis.verify — the declaration governs the proof too", () => {
+    const logger = createMockLogger();
+    let aegis: Aegis;
+    let token: string;
+
+    beforeAll(async () => {
+      const amphora = new Amphora({
+        internal: { issuer: "https://test.lindorm.io/" },
+        logger,
+      });
+      await amphora.setup();
+      amphora.add(TEST_EC_KEY_SIG);
+      aegis = new Aegis({ amphora, logger });
+
+      // Bound to the key whose public half every proof below carries in `jwk`.
+      const minted = await aegis.mint("default", {
+        subject: "user-1",
+        expires: "1h",
+        confirmation: { thumbprint: expectedThumbprint },
+      });
+      token = minted.token;
+    });
+
+    // A proof for THIS token — `ath` commits to the token it is presented with
+    // (RFC 9449 §4.2) — marking a carried extension critical.
+    const proofFor = (presented: string): string =>
+      signProof({ ath: ShaKit.S256(presented) }, { crit: ["x-ext"], "x-ext": "carried" });
+
+    test("should verify a bound token with a proof marking a declared extension critical", async () => {
+      await expect(
+        aegis.verify(token, undefined, {
+          dpopProof: proofFor(token),
+          critical: ["x-ext"],
+        }),
+      ).resolves.toEqual(
+        expect.objectContaining({
+          dpop: expect.objectContaining({ tokenId: "proof-jti" }),
+        }),
+      );
+    });
+
+    test("should refuse the same presentation when the call declares nothing", async () => {
+      await expect(
+        aegis.verify(token, undefined, { dpopProof: proofFor(token) }),
+      ).rejects.toThrow(
+        expect.objectContaining({
+          code: "dpop_unsupported_crit_param",
+          data: { param: "x-ext" },
+        }),
+      );
     });
   });
 });

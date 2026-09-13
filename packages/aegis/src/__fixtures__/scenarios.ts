@@ -848,6 +848,13 @@ export type DpopProofGiven = {
   tokenId: string;
   httpMethod: string;
   httpUri: string;
+  /**
+   * Header parameters the PRESENTER writes beside the three RFC 9449 §4.2
+   * requires, spelled as the wire carries them — a `crit` and the extension it
+   * names, the shape the verifier's crit gate judges (RFC 7515 §4.1.11). Merged
+   * last, so a row can restate a derived parameter deliberately.
+   */
+  header?: Dict;
 };
 
 /**
@@ -2325,6 +2332,115 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       },
     ],
     then: [{ step: "rejects", error: "AegisDomainError" }],
+    unsupported: {
+      cose: NO_JKT_ON_COSE,
+    },
+  },
+  // ⚠ The MALFORMED shapes of a proof's `crit` — not an array, empty, naming a
+  // parameter the header does not carry, naming a specification-defined one — are
+  // pinned at the public door by `internal/utils/verify-dpop-proof.test.ts`, and
+  // owed a cell at the Gherkin migration.
+  {
+    id: "a-proof-marking-a-declared-extension-critical-verifies",
+    title:
+      "a bound token verifies against a proof that marks an extension critical when the verifier declares it",
+    rationale:
+      "A DPoP proof is a JWS (RFC 9449 §4.2), so its header answers to `crit` as any JWS header does: a listed extension the recipient does not understand invalidates it (RFC 7515 §4.1.11), and a proof may carry header parameters an extension or a deployment defines (RFC 9449 §4.2). The duty to understand one is the RECIPIENT's, and a verification library is never the final recipient, so the presentation stands only when the caller states that it takes the parameter on — and it states that ONCE, for the token and the proof alike, because the application behind the verify is one application, and one that has taken an extension on for the token it reads has taken it on for the proof presented with it. A declaration honoured on the token and dropped on the proof would refuse a presentation the caller has accepted responsibility for, and would leave the proof's own `crit` unreachable from the verify door.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "access_token",
+        content: {
+          subject: "user-1",
+          audience: [RESOURCE],
+          clientId: CLIENT,
+          confirmation: {
+            thumbprint: { thumbprintOf: "okp-sig" } as unknown as string,
+          },
+        },
+      },
+    ],
+    when: [
+      {
+        step: "verify",
+        profile: "access_token",
+        // ONE declaration on the call; nothing names the proof specifically.
+        options: { audience: RESOURCE, critical: ["x-lindorm-hint"] },
+        dpopProof: {
+          key: "okp-sig",
+          ath: "presented",
+          tokenId: "dpop-proof-1",
+          httpMethod: "GET",
+          httpUri: "https://rs.lindorm.io/resource",
+          // The extension is CARRIED beside the `crit` naming it, so the only
+          // question left for the verifier is whether the caller claimed it.
+          header: { crit: ["x-lindorm-hint"], "x-lindorm-hint": "carried" },
+        },
+      },
+    ],
+    then: [
+      { step: "accepts", format: "jwt" },
+      {
+        step: "dpop",
+        expected: {
+          tokenId: "dpop-proof-1",
+          httpMethod: "GET",
+          httpUri: "https://rs.lindorm.io/resource",
+        },
+      },
+    ],
+    unsupported: {
+      cose: NO_JKT_ON_COSE,
+    },
+  },
+  {
+    id: "a-proof-marking-an-undeclared-extension-critical-is-refused",
+    title:
+      "a bound token is refused when its proof marks an extension critical that the verifier has not declared",
+    rationale:
+      "A listed extension header parameter the recipient does not understand invalidates a JWS (RFC 7515 §4.1.11), and a DPoP proof is a JWS (RFC 9449 §4.2). The proof is the presenter's own artifact — signed by a key the verifier has never seen, carrying whatever header the presenter chose — so a verifier that read past a `crit` it cannot honour would act on the one artifact in the exchange it has the least reason to trust, under a reading its producer has called insufficient. Refusing until the parameter is claimed fails closed: a verifier that says nothing gets the strict answer, and the refusal names the member so the presenter learns which parameter was not honoured.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "access_token",
+        content: {
+          subject: "user-1",
+          audience: [RESOURCE],
+          clientId: CLIENT,
+          confirmation: {
+            thumbprint: { thumbprintOf: "okp-sig" } as unknown as string,
+          },
+        },
+      },
+    ],
+    when: [
+      {
+        step: "verify",
+        profile: "access_token",
+        // No `critical`: the verifier declares nothing.
+        options: { audience: RESOURCE },
+        // The SAME proof the accepting row presents, so the refusal is
+        // attributable to the declaration alone.
+        dpopProof: {
+          key: "okp-sig",
+          ath: "presented",
+          tokenId: "dpop-proof-1",
+          httpMethod: "GET",
+          httpUri: "https://rs.lindorm.io/resource",
+          header: { crit: ["x-lindorm-hint"], "x-lindorm-hint": "carried" },
+        },
+      },
+    ],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        code: "dpop_unsupported_crit_param",
+        data: { param: "x-lindorm-hint" },
+      },
+    ],
     unsupported: {
       cose: NO_JKT_ON_COSE,
     },

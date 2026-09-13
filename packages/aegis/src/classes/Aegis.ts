@@ -40,6 +40,7 @@ import {
   isCws as isCwsBytes,
   isCwt as isCwtBytes,
 } from "../internal/cose/is-cose-format.js";
+import { declaredCritToWire } from "../internal/header/declared-crit-to-wire.js";
 import type { BuiltInProfiles } from "../internal/profiles/built-in-profiles.js";
 import {
   createProfileRegistry,
@@ -424,12 +425,13 @@ export class Aegis implements IAegis {
   }
 
   /**
-   * Verify an RFC 9449 DPoP proof STANDALONE — signature over the embedded `jwk`,
-   * `typ: dpop+jwt`, the RFC 7638 thumbprint against the token's bound `cnf.jkt`,
-   * the `ath` hash of the presented access token (RFC 9449 §7), and `iat`
-   * freshness. The
-   * same body `aegis.verify` runs for its `dpopProof` option, exposed as a static
-   * because it needs no key resolution: the proof carries its own key.
+   * Verify an RFC 9449 DPoP proof STANDALONE — `typ: dpop+jwt`, the `crit` gate
+   * every JOSE verify door runs (RFC 7515 §4.1.11) under the call's `critical`
+   * declaration, the RFC 7638 thumbprint of the embedded `jwk` against the
+   * token's bound `cnf.jkt`, the signature over that `jwk`, `iat` freshness, and
+   * the `ath` hash of the presented access token (RFC 9449 §7). The same body
+   * `aegis.verify` runs for its `dpopProof` option, exposed as a static because
+   * it needs no key resolution: the proof carries its own key.
    *
    * A resource server needs this when the access token is NOT locally verifiable:
    * the binding then arrives as `cnf.jkt` in an introspection response
@@ -446,6 +448,9 @@ export class Aegis implements IAegis {
       accessToken: options.accessToken,
       expectedThumbprint: options.expectedThumbprint,
       dpopMaxSkew: options.dpopMaxSkew ?? DEFAULT_DPOP_MAX_SKEW,
+      // The DOMAIN declaration, resolved ONCE to the wire names the gate compares
+      // against — the same crossing `verify-token.ts` makes for a token's header.
+      declared: declaredCritToWire(options.critical),
     });
   }
 

@@ -6,6 +6,13 @@ import { writtenHeader } from "../header/written-header.js";
 import { validateCrit } from "./validate-crit.js";
 
 /**
+ * The formats this gate namespaces its refusals by: every {@link TokenFormatTag},
+ * plus the DPoP proof — a JOSE door of its own with no `VerifiedToken.format`,
+ * since the proof is never the token a verify returns.
+ */
+type CritFormatTag = TokenFormatTag | "dpop";
+
+/**
  * The `crit` enforcement, for BOTH wires. RFC 7515 §4.1.11, RFC 9052 §3.1.
  *
  * ⭐ ONE GROUND, AND IT IS THE CALLER'S DECLARATION. The duty to understand a
@@ -66,6 +73,8 @@ export const rejectUnknownCritical = ({
   custom,
   declared,
   format,
+  name = format.toUpperCase(),
+  remedy = "Name the parameter in the verify or decrypt crit option to accept it.",
   error,
 }: {
   header: { crit?: unknown } & Dict;
@@ -78,11 +87,13 @@ export const rejectUnknownCritical = ({
    */
   declared: ReadonlyArray<string> | undefined;
   /** The wire format tag, which namespaces the two error codes. */
-  format: TokenFormatTag;
+  format: CritFormatTag;
+  /** The family the two titles spell; the tag upper-cased when omitted. */
+  name?: string;
+  /** The sentence telling the caller where to declare the parameter. */
+  remedy?: string;
   error: typeof AegisError;
 }): void => {
-  const name = format.toUpperCase();
-
   // The header as the producer wrote it — see `written-header.ts` for why the two
   // bags have to be rejoined before either rule below can ask about presence.
   const written = writtenHeader(header, custom);
@@ -129,7 +140,7 @@ export const rejectUnknownCritical = ({
       code: `${format}_unsupported_crit_param`,
       data: { param: member },
       title: `${name} Unsupported Crit Param`,
-      details: `The crit header marks an extension parameter as critical and the caller has not declared it, so nothing in this call has taken responsibility for understanding it and the ${name} must be rejected. Name the parameter in the verify or decrypt crit option to accept it.`,
+      details: `The crit header marks an extension parameter as critical and the caller has not declared it, so nothing in this call has taken responsibility for understanding it and the ${name} must be rejected. ${remedy}`,
     });
   }
 };

@@ -43,4 +43,19 @@ export type VerifyDpopProofOptions = {
   expectedThumbprint: string;
   /** Allowed `iat` skew in seconds. Defaults to the Aegis default (60). */
   dpopMaxSkew?: number;
+  /**
+   * Custom header parameters the CALLER takes responsibility for — it will act on
+   * them after aegis returns: aegis is never the final recipient, it verifies on
+   * the application's behalf. RFC 7515 §4.1.11.
+   *
+   * A `crit` member is accepted only when it is named here AND carried by the
+   * proof. Absent means nothing is declared, so EVERY critical parameter is
+   * refused (`dpop_unsupported_crit_param`). Fail closed.
+   *
+   * ⚠ DOMAIN names, like every other domain surface — `["objectId"]`, never
+   * `["oid"]`, which is refused. An unregistered custom parameter is spelled
+   * identically at both tiers. `aegis.verify` handed a `dpopProof` applies its
+   * own `critical` to the proof, so one declaration governs token and proof.
+   */
+  critical?: Array<string>;
 };

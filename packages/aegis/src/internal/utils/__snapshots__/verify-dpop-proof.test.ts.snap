@@ -1,5 +1,41 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`verifyDpopProof > Aegis.verifyDpopProof — the crit gate > should translate a domain-named declaration to the wire name the proof carries 1`] = `
+{
+  "accessTokenHash": "WXSA1LYsphIZPxnnP-TMOtF_C_nPwWp8v0tQZBMcSAU",
+  "httpMethod": "POST",
+  "httpUri": "https://api.example.com/resource",
+  "issuedAt": 2024-01-01T08:00:00.000Z,
+  "nonce": undefined,
+  "thumbprint": "LxMMTLzLftdEwQqk_iSStmYgEsJoz9_wwm3aogsV7MQ",
+  "tokenId": "proof-jti",
+}
+`;
+
+exports[`verifyDpopProof > Aegis.verifyDpopProof — the crit gate > should verify a proof carrying no crit whatever the caller declares 1`] = `
+{
+  "accessTokenHash": "WXSA1LYsphIZPxnnP-TMOtF_C_nPwWp8v0tQZBMcSAU",
+  "httpMethod": "POST",
+  "httpUri": "https://api.example.com/resource",
+  "issuedAt": 2024-01-01T08:00:00.000Z,
+  "nonce": undefined,
+  "thumbprint": "LxMMTLzLftdEwQqk_iSStmYgEsJoz9_wwm3aogsV7MQ",
+  "tokenId": "proof-jti",
+}
+`;
+
+exports[`verifyDpopProof > Aegis.verifyDpopProof — the crit gate > should verify a proof marking a carried extension critical when the caller declares it 1`] = `
+{
+  "accessTokenHash": "WXSA1LYsphIZPxnnP-TMOtF_C_nPwWp8v0tQZBMcSAU",
+  "httpMethod": "POST",
+  "httpUri": "https://api.example.com/resource",
+  "issuedAt": 2024-01-01T08:00:00.000Z,
+  "nonce": undefined,
+  "thumbprint": "LxMMTLzLftdEwQqk_iSStmYgEsJoz9_wwm3aogsV7MQ",
+  "tokenId": "proof-jti",
+}
+`;
+
 exports[`verifyDpopProof > should return a parsed proof for a valid DPoP proof 1`] = `
 {
   "accessTokenHash": "WXSA1LYsphIZPxnnP-TMOtF_C_nPwWp8v0tQZBMcSAU",

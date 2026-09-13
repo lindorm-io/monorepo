@@ -321,6 +321,7 @@ export const verifyToken = async <C extends Dict = Dict>({
     defaultTypPresence: wire.defaultTypPresence,
     token,
     dpopMaxSkew: deps.dpopMaxSkew,
+    crit,
   });
 
   if (floor) {

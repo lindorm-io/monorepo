@@ -287,6 +287,59 @@ describe("rejectUnknownCritical", () => {
     }
   });
 
+  /**
+   * The two refusals spell a FAMILY in their title and end on the sentence that
+   * tells the caller where to declare the parameter. Both default to what every
+   * kit emits, so a caller that says nothing changes nothing.
+   */
+  test("the title prefix and the remedy default to the kit spelling", () => {
+    expect(reject({ crit: ["ext"] }, { ext: "x" })).toThrow(
+      expect.objectContaining({
+        title: "JWT Unsupported Crit Param",
+        details: expect.stringContaining(
+          "Name the parameter in the verify or decrypt crit option to accept it.",
+        ),
+      }),
+    );
+    expect(reject({ crit: "ext" })).toThrow(
+      expect.objectContaining({ title: "JWT Invalid Crit" }),
+    );
+  });
+
+  /**
+   * A door outside the kits — the DPoP proof — refuses under its own code family
+   * and its own title spelling, and its caller declares the parameter through an
+   * option the kits do not have, so both are the caller's to state.
+   */
+  test("DIRECT CALL: a door outside the kits spells its own family and remedy", () => {
+    const call =
+      (extra: Record<string, unknown>, custom: Record<string, unknown> = {}) =>
+      (): void =>
+        rejectUnknownCritical({
+          header: header(extra),
+          custom,
+          declared: undefined,
+          format: "dpop",
+          name: "JWT DPoP",
+          remedy: "Name it in the option this door takes.",
+          error: JwtError,
+        });
+
+    expect(call({ crit: ["ext"] }, { ext: "x" })).toThrow(
+      expect.objectContaining({
+        code: "dpop_unsupported_crit_param",
+        title: "JWT DPoP Unsupported Crit Param",
+        details: expect.stringContaining("Name it in the option this door takes."),
+      }),
+    );
+    expect(call({ crit: "ext" })).toThrow(
+      expect.objectContaining({
+        code: "dpop_invalid_crit",
+        title: "JWT DPoP Invalid Crit",
+      }),
+    );
+  });
+
   test("DIRECT CALL, unreachable state: both codes are namespaced by the FORMAT", () => {
     // The same implementation serves both wires; only the format tag and the
     // error class differ. That is the whole point — a hostile token cannot be

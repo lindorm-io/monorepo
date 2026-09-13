@@ -7,6 +7,7 @@ import { computeJwkThumbprint } from "./compute-jwk-thumbprint.js";
 import { decodeJoseHeader } from "./jose-header.js";
 import { verifyJoseSignature } from "./jose-signature.js";
 import { decodeJwtPayload } from "./jwt-payload.js";
+import { rejectUnknownCritical } from "./reject-unknown-critical.js";
 import { isClaimSatisfied } from "./rules/is-claim-satisfied.js";
 
 type Options = {
@@ -14,6 +15,14 @@ type Options = {
   accessToken: string;
   expectedThumbprint: string;
   dpopMaxSkew: number;
+  /**
+   * The custom header parameters the caller takes responsibility for, WIRE-named:
+   * the domain door has already translated its `critical` declaration
+   * (`internal/header/declared-crit-to-wire.ts`). `undefined` declares nothing.
+   * ⚠ REQUIRED, not optional, for the reason `apply-verify-policy.ts` gives on
+   * its `crit`.
+   */
+  declared: ReadonlyArray<string> | undefined;
 };
 
 type DpopProofPayload = {
@@ -42,7 +51,7 @@ const assertString = (value: unknown, claim: string): string => {
 };
 
 export const verifyDpopProof = (options: Options): ParsedDpopProof => {
-  const { proof, accessToken, expectedThumbprint, dpopMaxSkew } = options;
+  const { proof, accessToken, expectedThumbprint, dpopMaxSkew, declared } = options;
 
   const parts = proof.split(".");
   if (parts.length !== 3) {
@@ -55,7 +64,7 @@ export const verifyDpopProof = (options: Options): ParsedDpopProof => {
   }
   const [headerB64, payloadB64] = parts;
 
-  const { header } = decodeJoseHeader(headerB64);
+  const { header, custom } = decodeJoseHeader(headerB64);
 
   if (header.typ !== "dpop+jwt") {
     throw new AegisDomainError("Invalid DPoP proof: header typ must be dpop+jwt", {
@@ -65,6 +74,23 @@ export const verifyDpopProof = (options: Options): ParsedDpopProof => {
       details: "The DPoP proof header typ must be exactly dpop+jwt. RFC 9449 §4.2.",
     });
   }
+
+  // The `crit` gate every JOSE verify door runs — after `typ`, as the kits do,
+  // and ahead of the key material and the signature (RFC 7515 §4.1.11). Called
+  // directly rather than through `assertProtectedHeaderGates`: the proof carries
+  // its own key, so there is no configured algorithm to match. BOTH bags go in —
+  // a crit-listed extension lands in `custom`, and judged on `header` alone it
+  // reads as a parameter the proof does not carry.
+  rejectUnknownCritical({
+    header,
+    custom,
+    declared,
+    format: "dpop",
+    name: "JWT DPoP",
+    remedy:
+      "Name the parameter in the critical option of verifyDpopProof, or of the verify call carrying the proof, to accept it.",
+    error: AegisDomainError,
+  });
 
   if (!header.jwk) {
     throw new AegisDomainError("Invalid DPoP proof: header jwk is required", {

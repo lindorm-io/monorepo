@@ -70,6 +70,7 @@ export const applyVerifyPolicy = ({
   defaultTypPresence,
   token,
   dpopMaxSkew,
+  crit,
 }: {
   /**
    * The WIRE-keyed claim dict the matcher pass reads, with temporal claims as
@@ -108,6 +109,14 @@ export const applyVerifyPolicy = ({
   defaultTypPresence: "required" | "optional";
   token: string;
   dpopMaxSkew: number;
+  /**
+   * The caller's `critical` declaration, ALREADY translated to wire names — the
+   * proof's header answers to it exactly as the token's did. ⚠ REQUIRED, not
+   * optional, for the same reason `delegation` is: an optional field lets a
+   * caller omit it, and the proof is then refused for an extension the caller
+   * has declared.
+   */
+  crit: ReadonlyArray<string> | undefined;
 }): { dpop: ParsedDpopProof | undefined } => {
   const typPresence = options.typPresence ?? defaultTypPresence;
 
@@ -316,6 +325,7 @@ export const applyVerifyPolicy = ({
         accessToken: token,
         expectedThumbprint: boundThumbprint,
         dpopMaxSkew,
+        declared: crit,
       }),
     };
   }
