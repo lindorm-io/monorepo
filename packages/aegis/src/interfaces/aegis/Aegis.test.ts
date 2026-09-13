@@ -8,6 +8,7 @@ import type {
   SignContent,
   JoseVerifiedStructuredToken,
 } from "../../types/index.js";
+import type { SecurityEvents } from "../../internal/claims/events.js";
 import type { IAegis } from "./Aegis.js";
 
 /**
@@ -185,6 +186,12 @@ describe("IAegis — the compile-time contract", () => {
       expectTypeOf<AccessTokenResult["claims"]["tokenId"]>().toEqualTypeOf<string>();
       expectTypeOf<AccessTokenResult["claims"]["expiresAt"]>().toEqualTypeOf<Date>();
       expectTypeOf<AccessTokenResult["claims"]["issuedAt"]>().toEqualTypeOf<Date>();
+    });
+
+    test("should make a security event's required events map non-optional", () => {
+      expectTypeOf<
+        SecurityEventResult["claims"]["events"]
+      >().toEqualTypeOf<SecurityEvents>();
     });
 
     // `security_event` states no lifetime and forbids `sub`, so neither claim is

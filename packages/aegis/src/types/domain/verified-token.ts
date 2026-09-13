@@ -1,7 +1,7 @@
 import type { Dict } from "@lindorm/types";
 import type { EncryptedToken } from "./encrypted-token.js";
 import type { TokenFormat } from "./token-format.js";
-import type { DomainClaims } from "../claims/domain/domain-claims.js";
+import type { TokenClaims } from "../claims/domain/domain-claims.js";
 import type { AegisProfile } from "../claims/domain/aegis-profile.js";
 import type { AegisSensitive } from "../claims/domain/aegis-sensitive.js";
 import type { DomainTokenHeader } from "../header/domain-header.js";
@@ -83,7 +83,7 @@ export type VerifiedToken<C extends Dict = Dict> = {
    */
   header: DomainTokenHeader;
   /** Domain-keyed registered claims; `{}` for jws/cws (opaque). */
-  claims: DomainClaims;
+  claims: TokenClaims;
   /** Non-domain (custom) claim bucket; `{}` for jws/cws. */
   custom: C;
   profile?: AegisProfile;
@@ -122,10 +122,10 @@ export type StructuredVerifiedToken<C extends Dict = Dict> = VerifiedToken<C> & 
 };
 
 /**
- * The domain claims a profile's policy GUARANTEES on a verified token — the
- * `required` rules that name the VERIFY direction, intersected with the actual
- * claim keys, so entries that are not domain claims (e.g. `events`,
- * `token_introspection`) are simply skipped, never over-narrowed.
+ * The claims a profile's policy GUARANTEES on a verified token — the `required`
+ * rules that name the VERIFY direction, intersected with the result's own claim
+ * keys, so a rule naming something the result does not carry (`token_introspection`)
+ * is simply skipped, never over-narrowed.
  *
  * ⚠ The direction filter is load-bearing: a requirement a profile declares for
  * mint alone says nothing about the token that arrived, so narrowing off it
@@ -133,7 +133,7 @@ export type StructuredVerifiedToken<C extends Dict = Dict> = VerifiedToken<C> & 
  */
 type GuaranteedClaimKeys<P extends TokenProfile> = Extract<
   VerifyGuaranteedClaims<P["policy"][number]>,
-  keyof DomainClaims
+  keyof TokenClaims
 >;
 
 /**
@@ -141,16 +141,16 @@ type GuaranteedClaimKeys<P extends TokenProfile> = Extract<
  * explicit `| undefined`, so `enforceVerifyFloor`'s runtime guarantee is
  * reflected in the type and callers stop writing `claims.subject!`.
  */
-type PresentClaims<K extends keyof DomainClaims> = {
-  [Key in K]-?: Exclude<DomainClaims[Key], undefined>;
+type PresentClaims<K extends keyof TokenClaims> = {
+  [Key in K]-?: Exclude<TokenClaims[Key], undefined>;
 };
 
 /**
- * {@link DomainClaims} with a profile's `required` claims made non-optional —
+ * {@link TokenClaims} with a profile's `required` claims made non-optional —
  * the claim-level narrowing the profile verify FLOOR proves at runtime.
  */
 export type NarrowedClaims<P extends TokenProfile> = Omit<
-  DomainClaims,
+  TokenClaims,
   GuaranteedClaimKeys<P>
 > &
   PresentClaims<GuaranteedClaimKeys<P>>;

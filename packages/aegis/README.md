@@ -1039,6 +1039,10 @@ The profiles that require the claim (`logout_token`, `erasure_token`,
 `security_event`) check the URI keys and the payload shapes through their `events`
 shape rule.
 
+`verify` and `parse` report the map on `result.claims.events`, and the SET
+transaction identifier on `result.claims.transactionId` (RFC 8417 §2.2) — both are
+registered claims, so a read resolves them to their domain names like any other.
+
 ### `__proto__` in a claim key is carried, and forges nothing
 
 ⚠ **A top-level claim key literally named `__proto__` is carried, not dropped, and forges nothing.** No bag aegis rebuilds on the way to or from the wire lets the name become its prototype, and there are three dispositions rather than one: the claim bags and the assert matcher DEFINE each key (`Object.fromEntries` at the top level, `Object.defineProperty` in the structure walker that rebuilds `act` and `sub_id`), the read-side header bags assign onto a `null`-prototype target, and the DOMAIN WRITE bag (`domainToWire`'s custom half) is a plain assignment made safe by its key transform — `snakeCase` strips leading underscores, so it cannot return `__proto__` (`__proto__`, `__PROTO__` and `--proto--` all yield `proto`). That third one is the only conversion-based disposal, and it is why the domain doors report the claim as `proto` while the WIRE doors (`jwt.sign`, `cwt.sign`) convert nothing and rely on how their bags are built.

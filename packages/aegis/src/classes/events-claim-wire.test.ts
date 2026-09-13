@@ -147,21 +147,6 @@ const plain = (value: unknown): unknown =>
     ? Object.fromEntries([...value].map(([key, inner]) => [key, plain(inner)]))
     : value;
 
-/**
- * The `events` claim a read reports, reached through a cast.
- *
- * ⚠ THE CAST IS A FINDING, NOT A CONVENIENCE. `events` is `bucket: "claims"` and
- * the TOKEN read resolves every registered claim, so `claims.events` is populated
- * at runtime — but the claim carries no `domainClaim` mark, so `DomainClaims` does
- * not declare the name and a consumer cannot reach the value without a cast of
- * their own. The mark is correctly ABSENT (it would pull `events` into the verify
- * FLOOR read, where `internal/claims/translate.ts`'s `wireToFloorClaims` needs it
- * to stay in `custom` verbatim for the profiles that require it), so the divergence
- * is between the type and the token read rather than a wrong cell. Recorded rather
- * than papered over.
- */
-const eventsOf = (parsed: { claims: Dict }): unknown => parsed.claims.events;
-
 /** A JOSE token nobody signed, carrying a hand-written payload. */
 const forgeJose = (payload: string): string => {
   const header = Buffer.from(
@@ -305,7 +290,7 @@ describe("the events claim on the wire", () => {
     for (const token of forged) {
       const parsed = aegis.parse(token);
 
-      expect(eventsOf(parsed)).toEqual({
+      expect(parsed.claims.events).toEqual({
         "https://schemas.lindorm.test/event/accountRecovery": {
           initiatingParty: "helpdesk",
         },
@@ -363,17 +348,15 @@ describe("the events claim on the wire", () => {
   // writing `events: null` states no events, and that is reported rather than
   // refused.
   test("a null `events` is a token stating none, on either wire", () => {
-    expect(eventsOf(Aegis.toDomain({ events: null } as Dict))).toBeUndefined();
+    expect(Aegis.toDomain({ events: null } as Dict).claims.events).toBeUndefined();
 
     expect(
-      eventsOf(
-        aegis.parse(
-          forgeJose(`{"iss":"${ISSUER}","sub":"u","exp":9999999999,"events":null}`),
-        ),
-      ),
+      aegis.parse(
+        forgeJose(`{"iss":"${ISSUER}","sub":"u","exp":9999999999,"events":null}`),
+      ).claims.events,
     ).toBeUndefined();
 
-    expect(eventsOf(aegis.parse(forgeCose(coseFloor(null))))).toBeUndefined();
+    expect(aegis.parse(forgeCose(coseFloor(null))).claims.events).toBeUndefined();
   });
 
   // ⚠ CORRECTED FROM "aegis will not WRITE a non-object `events` either", which

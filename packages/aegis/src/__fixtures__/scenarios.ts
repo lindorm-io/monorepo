@@ -1,7 +1,7 @@
 import type { Dict } from "@lindorm/types";
 import type { AegisProfile } from "../types/claims/domain/aegis-profile.js";
 import type { AegisSensitive } from "../types/claims/domain/aegis-sensitive.js";
-import type { DomainClaims } from "../types/claims/domain/domain-claims.js";
+import type { DomainClaims, TokenClaims } from "../types/claims/domain/domain-claims.js";
 import type { BuiltInProfiles } from "../internal/profiles/built-in-profiles.js";
 import type {
   ActClaimWire,
@@ -1092,14 +1092,15 @@ export type DpopProofExpectation = Pick<
 
 type ObservationStep =
   /**
-   * The expected DOMAIN claims, typed against the real `DomainClaims` — so a
-   * misspelled EXPECTATION (`confirmaton`) is a COMPILE error, not a silent red
-   * indistinguishable from the shortfall the row states. The same typo guard the
-   * GIVEN side already has, now on the THEN side.
+   * The expected DOMAIN claims, typed against the real `TokenClaims` — the claim
+   * bucket a read result actually carries — so a misspelled EXPECTATION
+   * (`confirmaton`) is a COMPILE error, not a silent red indistinguishable from
+   * the shortfall the row states. The same typo guard the GIVEN side already has,
+   * now on the THEN side.
    */
   | {
       step: "claims";
-      expected: Partial<DomainClaims>;
+      expected: Partial<TokenClaims>;
       /**
        * The claims that must NOT have reached this bucket. Typed against the
        * WHOLE registered vocabulary rather than `DomainClaims` alone, because
@@ -5162,14 +5163,22 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         step: "token",
         via: "mint",
         profile: "default",
-        content: { subject: "user-1", expires: "1h", tokenType: "test_token" },
+        content: {
+          subject: "user-1",
+          expires: "1h",
+          tokenType: "test_token",
+          transactionId: "txn_abc",
+        },
       },
     ],
     when: [{ step: "mint" }, { step: "parse" }],
     then: [
       { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
       { step: "header", expected: { algorithm: "ES512" } },
-      { step: "claims", expected: { subject: "user-1", issuer: ISSUER } },
+      {
+        step: "claims",
+        expected: { subject: "user-1", issuer: ISSUER, transactionId: "txn_abc" },
+      },
     ],
   },
   {
@@ -9940,20 +9949,17 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     ],
     then: [
       { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
-      // The subject identifier is read back under its DOMAIN name, which is what
-      // shows the profile is usable and not merely acceptable: `sub_id` is a
-      // structured Subject Identifier (RFC 9493 §3), and it is the whole statement
-      // of who a security event happened to.
-      //
-      // ⚠ Its neighbour `events` is NOT stated here: `DomainClaims` does not
-      // carry the name — the type comment says `events` keeps its wire key and
-      // is not part of the set — so the expectation would not compile even
-      // though the claim reaches the bucket at runtime. The wire-side statement
-      // about `events` is `an-event-payload-survives-the-empty-claim-prune`.
+      // Both statements a security event makes are read back under their DOMAIN
+      // names, which is what shows the profile is usable and not merely
+      // acceptable: `sub_id` is a structured Subject Identifier (RFC 9493 §3) —
+      // the whole statement of who the event happened to — and `events` is the
+      // event itself (RFC 8417 §2.2). The wire-side statement about `events` is
+      // `an-event-payload-survives-the-empty-claim-prune`.
       {
         step: "claims",
         expected: {
           subjectId: { format: "iss_sub", issuer: ISSUER, subject: "user-1" },
+          events: { "urn:lindorm:event:test": {} },
         },
       },
       // ⚠ The row's PREMISE, read off the wire. The verify this row runs sets

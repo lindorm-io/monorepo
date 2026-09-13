@@ -14,6 +14,7 @@ import type {
   AegisProfileAddress,
   AegisSensitive,
   DomainClaims,
+  TokenClaims,
 } from "../../types/index.js";
 import type {
   BespokeKind,
@@ -23,6 +24,7 @@ import type {
   ObjectCodec,
 } from "../registry/claim-spec.js";
 import { codecFor } from "../registry/param-spec.js";
+import { SENSITIVE_DOMAINS } from "../utils/extract-sensitive-claims.js";
 import type { SubjectIdentifierMembers } from "./sub-id.js";
 import { type Wire, WIRE_TAGS } from "../registry/wire.js";
 import {
@@ -239,6 +241,16 @@ type UnmarkedDomainClaim = Exclude<keyof DomainClaims, FrozenDomainClaim>;
 const EVERY_DOMAIN_CLAIM_IS_FROZEN: UnmarkedDomainClaim extends never
   ? true
   : UnmarkedDomainClaim = true;
+
+// The `bucket: "claims"` residue the sensitive extraction leaves behind that
+// `DomainClaims` does not carry — `TokenClaims` less `DomainClaims`. `satisfies`
+// binds BOTH directions against the type: a name the type stops carrying is an
+// excess key here, one it starts carrying is a missing one. The census below then
+// holds the pair against the registry.
+const FROZEN_TOKEN_ONLY_CLAIM_KEYS = {
+  events: true,
+  transactionId: true,
+} satisfies Record<Exclude<keyof TokenClaims, keyof DomainClaims>, true>;
 
 describe("CLAIM_REGISTRY", () => {
   // --- shared ParamSpec base ------------------------------------------------
@@ -1215,7 +1227,7 @@ describe("CLAIM_REGISTRY", () => {
     });
   });
 
-  // --- DomainClaims-membership drift guards --------------------------------
+  // --- claim-set membership drift guards -----------------------------------
 
   test("the domain-claim mark derives to its frozen membership", () => {
     // The frozen table lives at module scope so the compile-time reverse binding
@@ -1253,5 +1265,26 @@ describe("CLAIM_REGISTRY", () => {
       ),
     );
     expect(marked).toEqual(new Set(Object.keys(FROZEN_KEYS)));
+  });
+
+  test("every claims-bucket claim the token read delivers is a key of TokenClaims", () => {
+    // The token read resolves EVERY registered claim (`ClaimReadMode`), and the
+    // read then lifts the profile bucket and the sensitive claims into their own
+    // typed bags — so what reaches `VerifiedToken.claims` / `ParsedToken.claims`
+    // is the `bucket: "claims"` set less the sensitive names. Derived from the
+    // registry and from the extraction's OWN list, never restated here.
+    const delivered = CLAIM_SPECS.filter(
+      (spec) => spec.bucket === "claims" && !SENSITIVE_DOMAINS.includes(spec.domain),
+    ).map((spec) => spec.domain);
+
+    // The two frozen tables ARE `keyof TokenClaims`, each bound to its half of the
+    // type by `satisfies`; this is the half the compiler cannot check — a registry
+    // entry the type does not name reaches a caller as an unreachable value.
+    const declared = [
+      ...Object.keys(FROZEN_DOMAIN_CLAIM_KEYS),
+      ...Object.keys(FROZEN_TOKEN_ONLY_CLAIM_KEYS),
+    ];
+
+    expect(new Set(delivered)).toEqual(new Set(declared));
   });
 });

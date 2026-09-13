@@ -1,5 +1,5 @@
 import type { Dict } from "@lindorm/types";
-import type { DomainClaims } from "../claims/domain/domain-claims.js";
+import type { TokenClaims } from "../claims/domain/domain-claims.js";
 import type { AegisProfile } from "../claims/domain/aegis-profile.js";
 import type { AegisSensitive } from "../claims/domain/aegis-sensitive.js";
 import type { DomainTokenHeader } from "../header/domain-header.js";
@@ -35,7 +35,7 @@ export type ParsedToken<C extends Dict = Dict> = {
    */
   header: DomainTokenHeader;
   /** Domain-keyed registered claims — always present for a structured token. */
-  claims: DomainClaims;
+  claims: TokenClaims;
   /** Non-domain (custom) claim bucket — always present for a structured token. */
   custom: C;
   profile?: AegisProfile;

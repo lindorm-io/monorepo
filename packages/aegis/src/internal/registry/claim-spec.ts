@@ -177,6 +177,8 @@ export type ClaimSpec<D = unknown> = ParamSpec<D, ClaimCodec, WhenEmpty> & {
    * A claim NOT in the registry buckets to `custom`, so `custom` is the ABSENCE of
    * an entry and never a bucket value. SENSITIVITY is a SEPARATE column
    * ({@link ClaimSpec.sensitivity}) so the two facts compose.
+   *
+   * pinned: claims-registry.test.ts#every claims-bucket claim the token read delivers is a key of TokenClaims
    */
   bucket: "claims" | "profile";
   /** See {@link Sensitivity}. */

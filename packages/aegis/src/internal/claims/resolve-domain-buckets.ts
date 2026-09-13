@@ -1,6 +1,6 @@
 import type { Dict } from "@lindorm/types";
 import type { AegisProfile, AegisSensitive } from "../../types/index.js";
-import type { DomainClaims } from "../../types/claims/domain/domain-claims.js";
+import type { TokenClaims } from "../../types/claims/domain/domain-claims.js";
 import { extractAegisProfile } from "../utils/extract-aegis-profile.js";
 import { extractSensitiveClaims } from "../utils/extract-sensitive-claims.js";
 import { joseName, type NameSelector } from "./claims-registry.js";
@@ -13,7 +13,7 @@ import { wireToDomain } from "./translate.js";
  * and the `sensitive` bag (surfaced only when the outer token was encrypted).
  */
 export type DomainBuckets<C extends Dict = Dict> = {
-  claims: DomainClaims;
+  claims: TokenClaims;
   custom: C;
   profile: AegisProfile | undefined;
   sensitive: AegisSensitive | undefined;
@@ -28,7 +28,7 @@ const toBuckets = <C extends Dict = Dict>(
   const { profile, rest: afterProfile } = extractAegisProfile(domainAll);
   const { sensitive, rest: claims } = extractSensitiveClaims(afterProfile);
 
-  return { claims: claims as DomainClaims, custom: custom as C, profile, sensitive };
+  return { claims, custom: custom as C, profile, sensitive };
 };
 
 /**

@@ -448,7 +448,8 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     whenEmpty: "prune",
     domainClaim: true,
   },
-  // RFC 8417 txn — emitted but NOT extracted into DomainClaims (no domainClaim).
+  // RFC 8417 txn — no `domainClaim` mark, so the TOKEN read resolves it (it is a
+  // `TokenClaims` key) and the floor leaves it in `custom` under `txn`.
   {
     domain: "transactionId",
     spec: {
@@ -825,9 +826,9 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     domainClaim: true,
   },
 
-  // --- SET claims (RFC 8417 / RFC 9493). `subjectId` (RFC 9493) IS extracted
-  //     (`domainClaim`); `events` is SET-token-specific and NOT extracted, so it
-  //     carries no mark.
+  // --- SET claims (RFC 8417 / RFC 9493). `subjectId` (RFC 9493) IS extracted by
+  //     the floor (`domainClaim`); `events` is SET-token-specific and carries no
+  //     mark, so the TOKEN read alone resolves it (a `TokenClaims` key).
   // RFC 9493
   {
     domain: "subjectId",

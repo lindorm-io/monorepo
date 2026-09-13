@@ -22,8 +22,8 @@ export { isClaimOmitted, isClaimSatisfied } from "./internal/utils/rules/index.j
 
 export type { TokenType } from "./constants/token-type.js";
 
-// `DomainClaims` — the unified domain claim set carried by `VerifiedToken.claims`
-// / `ParsedToken.claims` — is exported with the rest of the domain claim types
-// (`types/claims/domain/`), which is where it now lives. Public because consumers
-// hold claims apart from the result that produced them — pylon's resolved access
-// state types its `claims` with it.
+// `TokenClaims` — the claim set `VerifiedToken.claims` / `ParsedToken.claims`
+// carry — and `DomainClaims`, the verify-floor subset it is built on, are exported
+// with the rest of the domain claim types (`types/claims/domain/`). Public because
+// consumers hold claims apart from the result that produced them — pylon's
+// resolved access state types its `claims` with one.

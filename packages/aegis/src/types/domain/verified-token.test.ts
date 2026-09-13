@@ -39,7 +39,16 @@ describe("VerifiedToken (type witness)", () => {
     const verified: VerifiedToken = {
       format: "jwt",
       header,
-      claims: { subject: "user_1", issuer: "https://idp.lindorm.io/" },
+      // The literal is the compile check, and the last two names are the whole
+      // reason `claims` is `TokenClaims` rather than the floor's set: the token
+      // read resolves every registered claim, so a SET's `events` and `txn` reach
+      // this bucket and a consumer must be able to read them without a cast.
+      claims: {
+        subject: "user_1",
+        issuer: "https://idp.lindorm.io/",
+        events: { "urn:lindorm:event:test": {} },
+        transactionId: "txn_abc",
+      },
       custom: { acmeFlag: true },
       token: "eyJ.body.sig",
     };

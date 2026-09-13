@@ -45,14 +45,18 @@ export type InvalidEntry = {
 };
 
 /**
- * The DOMAIN claim keys a profile rule may name. It is `keyof DomainClaims` (so
- * a renamed or misspelled domain claim is a compile error in every profile that
- * names it) plus the two claims that live on the enforced common layer but are
- * NOT members of the parsed `DomainClaims` type: `events` (a SET claim carried
- * under its wire key, RFC 8417/9493) and `token_introspection` (the RFC 9701
- * introspection-response wrapper, a custom claim with no domain alias). Both are
- * still domain vocabulary at mint — only their parse path differs — so listing
- * them here keeps the policy strongly typed without a bare `string` escape hatch.
+ * The claim keys a profile rule may name: `keyof DomainClaims`, the set the
+ * verify FLOOR read resolves to its domain spelling, plus `events`
+ * (RFC 8417 §2.2) and `token_introspection` (RFC 9701 §5) — two names the floor
+ * payload carries under exactly this spelling, so a rule states them here rather
+ * than escaping to `string`.
+ *
+ * ⚠ Widening this to `keyof TokenClaims` would admit `transactionId`, which the
+ * floor payload spells `txn`: `wireToFloorClaims` keys an unresolved claim by its
+ * wire name (translate.ts:1501-1505) and `requirePresent` looks the rule's own
+ * key up in that payload, so a `required` rule naming it would report a present
+ * claim missing.
+ * pinned: translate.test.ts#the domain mode extracts txn/events that the floor mode leaves in custom
  */
 export type ProfileClaimName = keyof DomainClaims | "events" | "token_introspection";
 
