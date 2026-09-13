@@ -259,6 +259,77 @@ describe("CweKit (COSE_Encrypt0)", () => {
       );
     });
   });
+
+  /**
+   * `crit`'s members are LABELS, and the integer `7` is not the text label `"7"`
+   * (RFC 9052 §1.5, RFC 9052 §3.1). The decrypt door judges them on the protected
+   * map as CBOR keyed it, which is the only place they are still apart
+   * (`internal/header/assert-cose-crit-carried.ts`).
+   *
+   * ⚠ RE-SEALED, not spliced: the protected bucket is the AEAD's AAD, so the
+   * ACCEPTING rows are sayable only on a token whose header and ciphertext were
+   * sealed together.
+   */
+  describe("a protected crit member is matched by LABEL", () => {
+    const kit = new CweKit({ kryptos, logger: createMockLogger() });
+    const payload = Buffer.from("the cwt claims bytes");
+
+    const sealed = (entries: Array<[number | string, unknown]>): Buffer => {
+      const map = decodeProtectedHeader(
+        splitEncrypt0(kit.encrypt(payload, { tokenType: "at" })).protectedBstr,
+      );
+
+      for (const [label, value] of entries) map.set(label, value);
+
+      return foreignEncrypt0(kryptos, map, payload);
+    };
+
+    test("refuses an integer crit member whose only twin is the text label", () => {
+      expect(() =>
+        kit.decrypt(
+          sealed([
+            [coseByJose("crit"), [7]],
+            ["7", "v"],
+          ]),
+          { crit: ["7"] },
+        ),
+      ).toThrow(
+        expect.objectContaining({
+          code: "cwe_invalid_crit",
+          data: { crit: [7], parameter: 7 },
+        }),
+      );
+    });
+
+    test("refuses a text crit member whose only twin is the integer label", () => {
+      expect(() =>
+        kit.decrypt(
+          sealed([
+            [coseByJose("crit"), ["7"]],
+            [7, "v"],
+          ]),
+          { crit: ["7"] },
+        ),
+      ).toThrow(
+        expect.objectContaining({
+          code: "cwe_invalid_crit",
+          data: { crit: ["7"], parameter: "7" },
+        }),
+      );
+    });
+
+    test("accepts a crit member the SAME label form carries", () => {
+      expect(
+        kit.decrypt(
+          sealed([
+            [coseByJose("crit"), [7]],
+            [7, "v"],
+          ]),
+          { crit: ["7"] },
+        ).payload,
+      ).toEqual(payload);
+    });
+  });
 });
 
 describe("CweKit — caller-controlled protected / unprotected header bags", () => {

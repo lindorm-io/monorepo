@@ -11,7 +11,15 @@ exports[`COSE_TOKEN_WIRE keyless read gates > both refusals reach an aegis.parse
 exports[`COSE_TOKEN_WIRE keyless read gates > both refusals reach an aegis.parse caller unchanged 2`] = `
 {
   "code": "cwt_invalid_crit",
-  "details": "The crit header is malformed; it must be a non-empty array of strings naming extension parameters present in the header.",
+  "details": "A crit member names a COSE header label, and the protected header must carry a parameter under that exact label. An integer label and the text label of the same numeral are different labels.",
+  "title": "CWT Invalid Crit",
+}
+`;
+
+exports[`COSE_TOKEN_WIRE keyless read gates > the keyless wire read refuses a crit member carried under the OTHER label form 1`] = `
+{
+  "code": "cwt_invalid_crit",
+  "details": "A crit member names a COSE header label, and the protected header must carry a parameter under that exact label. An integer label and the text label of the same numeral are different labels.",
   "title": "CWT Invalid Crit",
 }
 `;
@@ -27,7 +35,7 @@ exports[`COSE_TOKEN_WIRE keyless read gates > the keyless wire read refuses a fo
 exports[`COSE_TOKEN_WIRE keyless read gates > the keyless wire read refuses an unresolvable crit 1`] = `
 {
   "code": "cwt_invalid_crit",
-  "details": "The crit header is malformed; it must be a non-empty array of strings naming extension parameters present in the header.",
+  "details": "A crit member names a COSE header label, and the protected header must carry a parameter under that exact label. An integer label and the text label of the same numeral are different labels.",
   "title": "CWT Invalid Crit",
 }
 `;
@@ -43,7 +51,7 @@ exports[`COSE_TOKEN_WIRE keyless read gates > the same gates, under the COSE_Mac
 exports[`COSE_TOKEN_WIRE keyless read gates > the same gates, under the COSE_Mac0 tag > an unresolvable crit on a COSE_Mac0 is refused as a CWM 1`] = `
 {
   "code": "cwm_invalid_crit",
-  "details": "The crit header is malformed; it must be a non-empty array of strings naming extension parameters present in the header.",
+  "details": "A crit member names a COSE header label, and the protected header must carry a parameter under that exact label. An integer label and the text label of the same numeral are different labels.",
   "title": "CWM Invalid Crit",
 }
 `;

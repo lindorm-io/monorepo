@@ -2689,6 +2689,56 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       jose: "a JOSE header is a JSON object with ONE name-space, so a parameter cannot be spelled twice — the collision this row is about exists only where two label FORMS name one parameter (RFC 9052 §1.5)",
     },
   },
+  // ⚠ ONE DIRECTION ONLY, and the table cannot say the other. The converse shape —
+  // a TEXT crit member beside the INTEGER label of the same numeral — needs a
+  // protected entry written at an arbitrary integer label, and the only cells that
+  // reach the COSE protected bucket resolve a registered name to ITS label or fall
+  // back to the text one ({@link ForeignHeadersGiven}). It is pinned at each door by
+  // `internal/header/custom-header-params.read.test.ts`,
+  // `internal/wire/cose-token-wire.test.ts` and `classes/CweKit.test.ts`, and it is
+  // owed a cell — an integer-labelled protected bag — at the Gherkin migration.
+  {
+    id: "a-crit-label-is-not-satisfied-by-the-other-label-form",
+    title:
+      "a crit member naming an integer label is not satisfied by the text label of the same numeral",
+    rationale:
+      'A COSE `crit` lists LABELS, and an integer label and a text label are different kinds of map key that CBOR never conflates (RFC 9052 §1.5) — so a header carrying the text `"-5885"` carries nothing at the integer label `-5885`, and a `crit` naming that integer names a parameter the protected bucket does not have, which is fatal (RFC 9052 §3.1). A reader that compares the two by their printed form asks the question in a vocabulary the wire does not have: the members and the bucket\'s keys both collapse to strings, the missing parameter appears present, and the token is accepted on a parameter the issuer never marked critical. And the keyless read checks no signature at all, so a text-labelled twin appended by a holder who cannot re-sign the token would repair its `crit` there.',
+    given: [
+      {
+        step: "token",
+        via: "foreign",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          jti: "token-1",
+        },
+        // The `crit` rides the registered integer label 2 and names the INTEGER
+        // label -5885; the only parameter beside it is the TEXT label spelled the
+        // same way. Read by label, the header carries nothing the crit names.
+        buckets: {
+          protectedHeader: { crit: [-5885] },
+          textLabelledProtected: { "-5885": "carried" },
+        },
+      },
+    ],
+    when: [{ step: "verify" }],
+    // The refusal names the MEMBER as its own label space spells it, which is the
+    // only thing that tells a consumer why a parameter it can see does not count.
+    then: [
+      {
+        step: "rejects",
+        error: "CwtError",
+        code: "cwt_invalid_crit",
+        data: { crit: [-5885], parameter: -5885 },
+      },
+    ],
+    unsupported: {
+      jose: "a JOSE header is a JSON object with ONE kind of member name (RFC 7515 §4), so there is no second label space for a parameter to hide in",
+    },
+  },
   {
     id: "a-critical-refusal-reports-the-crit-the-verdict-was-decided-on",
     title:
@@ -2709,8 +2759,9 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         },
         // The TEXT label alone, with no integer label 2 anywhere: the reader files
         // it under the unregistered bag, so the typed bag's `crit` is absent while
-        // the merged header's is what decides the verdict. The member names a
-        // parameter the header does not carry, which is what makes it refusable.
+        // the label gate judges this list on the raw protected map and reports the
+        // list it judged. The member names a parameter the header does not carry,
+        // which is what makes it refusable.
         buckets: { textLabelledProtected: { crit: ["x-shadow"] } },
       },
     ],
@@ -2722,7 +2773,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         step: "rejects",
         error: "CwtError",
         code: "cwt_invalid_crit",
-        data: { crit: ["x-shadow"] },
+        data: { crit: ["x-shadow"], parameter: "x-shadow" },
       },
     ],
     unsupported: {

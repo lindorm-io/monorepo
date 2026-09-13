@@ -4,8 +4,16 @@ import { describe, expect, test } from "vitest";
 import { TEST_EC_KEY_SIG } from "../../__fixtures__/keys.js";
 import { CwtKit } from "../../classes/CwtKit.js";
 import { JwtKit } from "../../classes/JwtKit.js";
+import { SignatureKit } from "../../classes/SignatureKit.js";
+import { algToCoseLabel } from "../cose/alg-labels.js";
 import { Tag, decodeCbor, encodeCbor } from "../cose/cbor.js";
-import { validateCrit } from "../utils/validate-crit.js";
+import { signedCoseStructureTag } from "../cose/signed-cose-structure-tag.js";
+import {
+  COSE_TAG,
+  buildSecuredStructure,
+  decodeProtectedHeader,
+} from "../cose/structures.js";
+import { coseByJose } from "./header-registry.js";
 import { writtenHeader } from "./written-header.js";
 
 MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
@@ -33,6 +41,55 @@ const injectProtected = (token: Buffer, entries: Array<[unknown, unknown]>): Buf
 
   for (const [label, entry] of entries) bucket.set(label, entry);
   structure[0] = encodeCbor(bucket);
+
+  let wrapped: unknown = structure;
+  for (const tag of tags.reverse()) wrapped = new Tag(tag, wrapped);
+
+  return Buffer.from(encodeCbor(wrapped));
+};
+
+/**
+ * The same rewrite, RE-SIGNED under the test key — a foreign producer's token that
+ * is valid for every reason except the one under test. `injectProtected` leaves the
+ * signature stale, which a verify door answers before it says anything about the
+ * header it was handed.
+ */
+const reprotected = (token: Buffer, entries: Array<[unknown, unknown]>): Buffer => {
+  let value: unknown = decodeCbor(injectProtected(token, entries));
+  const tags: Array<number> = [];
+
+  while (value instanceof Tag) {
+    tags.push(Number(value.tag));
+    value = value.contents;
+  }
+
+  const structure = [...(value as Array<unknown>)];
+  const protectedHeader = Buffer.from(structure[0] as Uint8Array);
+
+  // The signature follows the KEY, and `verifyCoseStructure` matches label 1
+  // against it before the gate under test runs. Entries that rewrite label 1 would
+  // reach the kit as an algorithm-match refusal — the verdict the row was written
+  // for, lost. Said as a refusal rather than a warning, because a warning does not
+  // fire (`__fixtures__/foreign-signed-cose.ts` guards the same hazard).
+  const declared = decodeProtectedHeader(protectedHeader).get(coseByJose("alg"));
+  const sealed = algToCoseLabel(TEST_EC_KEY_SIG.algorithm);
+
+  if (declared !== sealed) {
+    throw new Error(
+      `reprotected: header declares alg ${String(declared)}, key signs with ${sealed} — pass entries whose algorithm label is ${sealed}`,
+    );
+  }
+
+  // The STRUCTURE follows the key too (RFC 9052 §4.4, RFC 9052 §6.3), and a raw
+  // signature is the COSE_Sign1 half of that choice.
+  const tag = signedCoseStructureTag(TEST_EC_KEY_SIG);
+
+  structure[3] = new SignatureKit({
+    kryptos: TEST_EC_KEY_SIG,
+    raw: tag === COSE_TAG.sign1,
+  }).sign(
+    buildSecuredStructure(tag, protectedHeader, Buffer.from(structure[2] as Uint8Array)),
+  );
 
   let wrapped: unknown = structure;
   for (const tag of tags.reverse()) wrapped = new Tag(tag, wrapped);
@@ -211,8 +268,11 @@ describe("custom header parameters, on read", () => {
    *
    * Representing both faithfully means typing {@link CoseHeaderBuckets.custom}
    * `Map<CoseLabel, unknown>` — a change to a PUBLIC read surface, which is why it
-   * is not made here. ⚠ It takes a token no aegis writer produces and no sane issuer
-   * emits, which is why it is a limitation rather than a defect worth that change.
+   * is not made here. ⚠ PRESENCE DOES NOT RIDE ON THE COLLAPSE: a `crit` member is
+   * matched on the raw label map (`assert-cose-crit-carried.ts`). The VALUE that
+   * member is judged on does — `validate-crit.ts` reads the collapsed key, so a text
+   * twin carrying a value answers the empty-value check for its integer namesake,
+   * on a token no aegis writer produces and no sane issuer emits.
    */
   test("both label FORMS of one numeral collapse to a single custom key", () => {
     const kit = new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger });
@@ -276,42 +336,116 @@ describe("custom header parameters, on read", () => {
   });
 
   /**
-   * ⛔ THE COLLISION'S NAMED CONSEQUENCE, pinned so the limitation cannot silently
-   * widen. The crit here names the INTEGER label 7 while only the TSTR `"7"` is
-   * present — different labels — but both reduce to the string `"7"` in the merged
-   * view, so the presence test passes and RFC 9052 §3.1's fatal condition goes
-   * unraised.
+   * ⛔ THE COLLAPSE ABOVE DECIDES NO PRESENCE VERDICT. `crit`'s members are
+   * LABELS (RFC 9052 §1.5), and the merged view spells an integer member and its
+   * tstr twin the same way — so the presence rule is asked of the raw label map
+   * instead, at every COSE door that judges a `crit` (`assert-cose-crit-carried.ts`).
    *
-   * ⚠ THE ROW ASSERTS THE LIMITATION, NOT A DESIRED BEHAVIOUR. It goes red the day
-   * the bag is typed `Map<CoseLabel, unknown>` and the two labels stop colliding —
-   * which is the fix, and the point of the row is that the fix must be a deliberate
-   * change rather than a silent one.
+   * ⚠ RE-SIGNED, not spliced: measured at `CwtKit.verify`, so the ACCEPTING rows
+   * are sayable only on a token whose header and signature were sealed together.
    */
-  test("an INTEGER crit member is satisfied by a TSTR parameter of the same numeral", () => {
+  describe("a COSE crit member is matched by LABEL, not by its spelling", () => {
     const kit = new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger });
 
-    const decoded = CwtKit.decode(
-      injectProtected(kit.sign(WIRE_CLAIMS), [
+    const refusalOf = (fn: () => unknown): unknown => {
+      try {
+        fn();
+      } catch (error) {
+        const { code, data } = error as {
+          code?: string;
+          data?: { parameter?: unknown };
+        };
+        return { code, parameter: data?.parameter };
+      }
+
+      throw new Error("expected a refusal");
+    };
+
+    test("an INTEGER crit member is not satisfied by a TSTR parameter of the same numeral", () => {
+      const token = reprotected(kit.sign(WIRE_CLAIMS), [
         [2, [7]],
         ["7", "v"],
-      ]),
-    );
+      ]);
 
-    // The two labels reduce to one string on the way out…
-    expect(decoded.protectedHeader.crit).toEqual(["7"]);
-    expect(decoded.custom.protected["7"]).toBe("v");
+      // The wire view reports one name for two labels — which is exactly why the
+      // verdict cannot be taken from it.
+      expect(CwtKit.decode(token).protectedHeader.crit).toEqual(["7"]);
+      expect(CwtKit.decode(token).custom.protected["7"]).toBe("v");
 
-    // …so the header AS WRITTEN carries a `"7"` the crit can name, and the
-    // malformed-crit gate finds nothing to refuse. Were the labels kept apart,
-    // `validateCrit` would report the missing parameter.
-    expect(
-      validateCrit(
-        writtenHeader(
-          decoded.protectedHeader as unknown as Record<string, unknown>,
-          decoded.custom.protected,
-        ),
-      ),
-    ).toBeNull();
+      expect(refusalOf(() => kit.verify(token, undefined, { crit: ["7"] }))).toEqual({
+        code: "cwt_invalid_crit",
+        parameter: 7,
+      });
+    });
+
+    test("a TSTR crit member is not satisfied by an INTEGER parameter of the same numeral", () => {
+      const token = reprotected(kit.sign(WIRE_CLAIMS), [
+        [2, ["7"]],
+        [7, "v"],
+      ]);
+
+      expect(refusalOf(() => kit.verify(token, undefined, { crit: ["7"] }))).toEqual({
+        code: "cwt_invalid_crit",
+        parameter: "7",
+      });
+    });
+
+    test("an INTEGER crit member is satisfied by the INTEGER-labelled parameter", () => {
+      const token = reprotected(kit.sign(WIRE_CLAIMS), [
+        [2, [7]],
+        [7, "v"],
+      ]);
+
+      expect(kit.verify(token, undefined, { crit: ["7"] }).payload.iss).toBe(
+        WIRE_CLAIMS.iss,
+      );
+    });
+
+    test("a TSTR crit member is satisfied by the TSTR-labelled parameter", () => {
+      const token = reprotected(kit.sign(WIRE_CLAIMS), [
+        [2, ["7"]],
+        ["7", "v"],
+      ]);
+
+      expect(kit.verify(token, undefined, { crit: ["7"] }).payload.iss).toBe(
+        WIRE_CLAIMS.iss,
+      );
+    });
+
+    // A crit list can arrive at the TEXT label too — the read side has always
+    // judged one (`written-header.ts` rejoins it into the merged view), so it is
+    // judged by the same label rule as the one at integer label 2.
+    test("a crit list at the TEXT label is judged by label, so an INTEGER parameter does not satisfy its TSTR member", () => {
+      const token = reprotected(kit.sign(WIRE_CLAIMS), [
+        ["crit", ["7"]],
+        [7, "v"],
+      ]);
+
+      expect(refusalOf(() => kit.verify(token, undefined, { crit: ["7"] }))).toEqual({
+        code: "cwt_invalid_crit",
+        parameter: "7",
+      });
+    });
+
+    test("a crit list at the TEXT label is satisfied by the TSTR-labelled parameter", () => {
+      const token = reprotected(kit.sign(WIRE_CLAIMS), [
+        ["crit", ["7"]],
+        ["7", "v"],
+      ]);
+
+      expect(kit.verify(token, undefined, { crit: ["7"] }).payload.iss).toBe(
+        WIRE_CLAIMS.iss,
+      );
+    });
+
+    test("a crit member that is neither label form is refused as the member it is", () => {
+      const token = reprotected(kit.sign(WIRE_CLAIMS), [[2, [true]]]);
+
+      expect(refusalOf(() => kit.verify(token, undefined, { crit: ["true"] }))).toEqual({
+        code: "cwt_invalid_crit",
+        parameter: true,
+      });
+    });
   });
 
   /**

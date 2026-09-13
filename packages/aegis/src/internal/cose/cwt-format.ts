@@ -1,4 +1,5 @@
 import type { CwtClaimsWire } from "../../types/index.js";
+import type { CoseLabel } from "./cose-label.js";
 import type { SignedCoseFormat } from "./error-by-format.js";
 
 /**
@@ -29,6 +30,13 @@ export type CwtFormat = Extract<SignedCoseFormat, "cwt" | "cwm">;
 export type CwtDecoded = {
   /** The COSE structure inside the CWT (a COSE_Sign1 or COSE_Mac0 Tag). */
   cose: unknown;
+  /**
+   * The PROTECTED bucket as its RAW COSE label map — the vocabulary the two label
+   * forms of one numeral are still distinct in (RFC 9052 §1.5), which is what the
+   * crit label rule needs (`internal/header/assert-cose-crit-carried.ts`). The
+   * translated JOSE-named twin is `coseWireHeader`'s, and it is lossy on purpose.
+   */
+  protectedMap: Map<CoseLabel, unknown>;
   kid: string | undefined;
   algorithm: string | undefined;
   typ: string | undefined;

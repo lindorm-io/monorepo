@@ -62,18 +62,19 @@ export const decodeCwt = (token: Buffer): CwtDecoded => {
     details: "The CWT protected header slot is not a byte string.",
   });
   const [, unprotected, payloadBstr] = contents;
-  const protectedHeader = decodeProtectedHeader(protectedBstr);
+  const protectedMap = decodeProtectedHeader(protectedBstr);
 
   // ⚠ NARROWED, NOT CAST — the same narrowing `splitSigned` and `CweKit` apply to
   // this slot. An unindexable bucket carries no kid hint, and this door hands back
   // a best-effort view rather than a verdict, so it reads as absent.
   const kidValue =
     unprotected instanceof Map ? unprotected.get(coseByJose("kid")) : undefined;
-  const algLabel = protectedHeader.get(coseByJose("alg"));
-  const typ = protectedHeader.get(coseByJose("typ"));
+  const algLabel = protectedMap.get(coseByJose("alg"));
+  const typ = protectedMap.get(coseByJose("typ"));
 
   return {
     cose,
+    protectedMap,
     kid:
       kidValue instanceof Uint8Array ? Buffer.from(kidValue).toString("utf8") : undefined,
     algorithm: isNumber(algLabel) ? coseLabelToAlg(algLabel) : undefined,

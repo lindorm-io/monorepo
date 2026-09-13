@@ -20,6 +20,7 @@ import {
 } from "../internal/cose/structures.js";
 import { requireBstr } from "../internal/cose/require-bstr.js";
 import { splitEncrypt0 } from "../internal/cose/split-encrypt0.js";
+import { assertCoseCritCarried } from "../internal/header/assert-cose-crit-carried.js";
 import { buildCoseHeaders } from "../internal/header/build-cose-headers.js";
 import { coseWireHeader } from "../internal/header/cose-wire-header.js";
 import { mergeCoseProtected } from "../internal/header/merge-cose-protected.js";
@@ -285,6 +286,15 @@ export class CweKit implements ICweKit {
       title: "CWE Invalid Typ",
       details:
         "Header typ must be application/cwe or a <type>+cwe media type to decrypt as a COSE_Encrypt0.",
+    });
+
+    // The crit rule's LABEL half, on the bucket as CBOR keyed it — the gate below
+    // reads the JOSE wire vocabulary, where the two label forms of one numeral
+    // have already become one name (`assert-cose-crit-carried.ts`).
+    assertCoseCritCarried({
+      bucket: decodedProtected,
+      format: "cwe",
+      error: CweError,
     });
 
     // `crit` (RFC 9052 §3.1) off the PROTECTED bucket — which for a COSE_Encrypt0

@@ -89,6 +89,45 @@ describe("COSE_TOKEN_WIRE keyless read gates", () => {
     ).toMatchSnapshot();
   });
 
+  // `crit`'s members are LABELS, and the integer 7 is not the text label "7"
+  // (RFC 9052 §1.5, RFC 9052 §3.1) — the keyless read judges them on the raw map,
+  // where the two are still apart (`internal/header/assert-cose-crit-carried.ts`).
+  test("the keyless wire read refuses a crit member carried under the OTHER label form", () => {
+    expect(
+      refusalOf(() =>
+        COSE_TOKEN_WIRE.decodeClaims(
+          rewritten((header) => {
+            header.set(2, [7]);
+            header.set("7", "v");
+          }),
+        ),
+      ),
+    ).toMatchSnapshot();
+  });
+
+  // The converse direction, so the rule is not "an integer member is special".
+  test("the keyless wire read refuses a TEXT crit member carried at the integer label", () => {
+    expect(
+      refusalOf(() =>
+        COSE_TOKEN_WIRE.decodeClaims(
+          rewritten((header) => {
+            header.set(2, ["7"]);
+            header.set(7, "v");
+          }),
+        ),
+      ),
+    ).toMatchObject({ code: "cwt_invalid_crit" });
+  });
+
+  test("the keyless wire read accepts a crit member the SAME label form carries", () => {
+    const token = rewritten((header) => {
+      header.set(2, [7]);
+      header.set(7, "v");
+    });
+
+    expect(COSE_TOKEN_WIRE.decodeClaims(token).protectedHeader.crit).toEqual(["7"]);
+  });
+
   test("both refusals reach an aegis.parse caller unchanged", () => {
     // `parseToken` IS `aegis.parse`; the wire is the only thing that answers it.
     expect(refusalOf(() => parseToken(evilTyp()))).toMatchSnapshot();

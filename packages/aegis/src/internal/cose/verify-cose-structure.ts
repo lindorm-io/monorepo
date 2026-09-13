@@ -3,6 +3,7 @@ import { SignatureKit } from "../../classes/SignatureKit.js";
 import { CwsError } from "../../errors/index.js";
 import type { WireTokenHeader } from "../../types/index.js";
 import type { CoseLabel } from "./cose-label.js";
+import { assertCoseCritCarried } from "../header/assert-cose-crit-carried.js";
 import { assertProtectedHeaderGates } from "../utils/assert-protected-header-gates.js";
 import { ERROR_BY_FORMAT, type SignedCoseFormat } from "./error-by-format.js";
 import { requireBstr } from "./require-bstr.js";
@@ -82,6 +83,15 @@ export const verifyCoseStructure = ({
     title: `Malformed ${label}`,
     arityDetails: `A ${label} must be a 4-element array [protected, unprotected, payload, signature/tag].`,
     protectedDetails: `The ${label} protected header slot is not a byte string, so its parameters cannot be read.`,
+  });
+
+  // ⛔ The crit rule's LABEL half, ahead of the shared gates below, because those
+  // read the header in the JOSE wire vocabulary where the two label forms of one
+  // numeral have already become one name (`assert-cose-crit-carried.ts`).
+  assertCoseCritCarried({
+    bucket: protectedMap,
+    format,
+    error: ERROR_BY_FORMAT[format],
   });
 
   // ⛔ Both PROTECTED-header gates — `crit`, then the algorithm-match — run ahead

@@ -20,6 +20,7 @@ import { decodeCwtWire } from "../cose/decode-cwt-wire.js";
 import { ERROR_BY_FORMAT } from "../cose/error-by-format.js";
 import { assertWireTyp } from "../utils/assert-wire-typ.js";
 import { validateCrit } from "../utils/validate-crit.js";
+import { assertCoseCritCarried } from "../header/assert-cose-crit-carried.js";
 import { writtenHeader } from "../header/written-header.js";
 import { rawSignCose } from "../utils/raw-sign-cose.js";
 import { rawVerifyCws } from "../utils/raw-verify-cws.js";
@@ -139,6 +140,15 @@ export const COSE_TOKEN_WIRE: TokenWire = {
       title: `${format.toUpperCase()} Invalid Typ`,
       details:
         "Header typ is present but is not CWT or a <type>+cwt media type, so the token cannot be parsed as a CWT.",
+    });
+
+    // The crit rule's LABEL half, on the bucket as CBOR keyed it — the gate below
+    // reads the header AS WRITTEN, where the two label forms of one numeral have
+    // already become one name (`assert-cose-crit-carried.ts`).
+    assertCoseCritCarried({
+      bucket: decoded.protectedMap,
+      format,
+      error: ERROR_BY_FORMAT[format],
     });
 
     // `crit` off the PROTECTED bucket alone — the only one a signature covers

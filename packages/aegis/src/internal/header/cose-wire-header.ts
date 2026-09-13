@@ -35,14 +35,12 @@ const ALG_LABEL = coseByJose("alg");
  *
  * ⛔ AN UNRESOLVED MEMBER STRINGIFIES, so an integer member and its tstr twin come
  * back as the same wire name — the same collision {@link coseWireHeader}'s `custom`
- * bag has, from the same cause. THE NAMED CONSEQUENCE: an integer `crit` `[7]`
- * beside a tstr parameter `"7"` reads back as `crit: ["7"]` against a custom bag
- * keyed `"7"`, so `validateCrit`'s presence test passes and RFC 9052 §3.1's
- * fatal-error condition goes unraised. Reachable at EVERY read door, since the crit
- * gate runs ahead of the signature cycle. Both this and the bag collision are
- * answered by one change: typing the bag `Map<CoseLabel, unknown>`.
- * pinned: `custom-header-params.read.test.ts#an INTEGER crit member is satisfied
- * by a TSTR parameter of the same numeral`.
+ * bag has, from the same cause. SO THE PRESENCE RULE CANNOT BE ASKED OF THIS
+ * OUTPUT: every COSE door judges its `crit` on the raw label map first
+ * (`assert-cose-crit-carried.ts`), where an integer `crit` `[7]` beside a tstr
+ * parameter `"7"` is two labels and is refused (RFC 9052 §1.5, RFC 9052 §3.1).
+ * pinned: `custom-header-params.read.test.ts#an INTEGER crit member is not
+ * satisfied by a TSTR parameter of the same numeral`.
  */
 const coseCritToWire = (value: unknown): unknown => {
   if (!Array.isArray(value)) return value;
