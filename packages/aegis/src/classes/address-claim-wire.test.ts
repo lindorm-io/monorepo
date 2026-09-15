@@ -49,6 +49,11 @@ const ADDRESS = {
   careOf: "Sample Recipient",
 };
 
+/** The same seven domain members, each handed the empty string. */
+const EMPTY_ADDRESS: Dict = Object.fromEntries(
+  Object.keys(ADDRESS).map((member) => [member, ""]),
+);
+
 /** The same seven, in the WIRE vocabulary. Written out — see the file docstring. */
 const WIRE_ADDRESS: Dict = {
   formatted: "Sample 1\n00100 Stockholm\nSweden",
@@ -71,6 +76,13 @@ const WIRE_ADDRESS: Dict = {
  * and are text-keyed in both modes.
  */
 const ADDRESS_COSE_LABEL = -65557;
+
+/**
+ * The registered CWT label for `sub` (RFC 8392 §4), written out — see the file
+ * docstring. It anchors the absence rows: an empty claims map must not read as a
+ * claim the mint pruned.
+ */
+const SUBJECT_COSE_LABEL = 2;
 
 const logger = createMockLogger();
 
@@ -363,19 +375,71 @@ describe("the address claim on the wire", () => {
     expect(wireAddressOf(token, ADDRESS_COSE_LABEL)).toEqual(WIRE_ADDRESS);
   });
 
-  test("an empty member is carried rather than pruned, on both wires", async () => {
-    // The members declare `whenEmpty: "keep"`, which is the verdict that carries
-    // an empty value onto the wire. Asserted on the RAW wire because that is the
-    // only place the difference is visible: a pruned member and a member the
-    // caller never wrote are indistinguishable once the token is read back.
-    for (const format of ["jwt", "cwt"] as const) {
-      const token = await mint(format, { streetAddress: "Sample 1", postalCode: "" });
+  test("an empty member is omitted from a JOSE token — aegis mint policy", async () => {
+    // ⭐ AEGIS POLICY AT THE MINT DOOR, not an OIDC Core §5.1.1 requirement. A
+    // profile member is pushed through from a database row, and `""` states
+    // nothing a relying party can act on, so the mint drops it exactly as it
+    // drops a null.
+    //
+    // ⚠ Asserted on the RAW wire because that is the only place the difference is
+    // visible: a pruned member and a member the caller never wrote are
+    // indistinguishable once the token is read back.
+    const token = await mint("jwt", { streetAddress: "Sample 1", region: "" });
 
-      expect({ format, address: wireAddressOf(token, "address") }).toEqual({
-        format,
-        address: { street_address: "Sample 1", postal_code: "" },
-      });
+    expect(wireAddressOf(token, "address")).toEqual({ street_address: "Sample 1" });
+  });
+
+  test("an empty member is omitted from a COSE token — aegis mint policy", async () => {
+    // The same mint-door policy, stated as its own assertion rather than inferred
+    // from the JOSE row: the two wires reach the member map through different
+    // code, and a CWT carrying the empty member while the JWT dropped it would
+    // make ONE claim say two things.
+    const token = await mint("cwt", { streetAddress: "Sample 1", region: "" });
+
+    expect(wireAddressOf(token, "address")).toEqual({ street_address: "Sample 1" });
+  });
+
+  test("an address whose every declared member is empty leaves NO address claim on a JOSE token — aegis mint policy", async () => {
+    // ⭐ THE TWO PRUNES COMPOSING — the members prune, and the CLAIM's own
+    // `whenEmpty` then prunes the empty structure they leave behind (the
+    // `address` entry in `internal/claims/claims-registry.ts`).
+    //
+    // ⚠ AEGIS POLICY AT THE MINT DOOR, not an OIDC Core §5.1.1 requirement.
+    //
+    // ⚠ `Object.hasOwn`, not `wireAddressOf` — that helper THROWS on an absent
+    // claim, and `address: {}` is a different statement from no address at all.
+    // `sub` alongside it, so an empty claims set cannot pass for a pruned claim.
+    //
+    // ⛔ DECLARED MEMBERS ONLY. An undeclared one rides the open tail — pinned
+    // by "a member the registry does not declare still rides, under a snake
+    // key" — and would leave the structure non-empty.
+    const inspection = inspectToken(await mint("jwt", EMPTY_ADDRESS));
+
+    if (inspection.wire !== "jose" || inspection.payload.readable === false) {
+      throw new Error("the mint did not produce a readable JOSE payload");
     }
+
+    expect(Object.hasOwn(inspection.payload.value, "sub")).toBe(true);
+    expect(Object.hasOwn(inspection.payload.value, "address")).toBe(false);
+  });
+
+  test("an address whose every declared member is empty leaves NO address claim on a COSE token — aegis mint policy", async () => {
+    // The same mint-door policy, stated as its own assertion rather than
+    // inferred from the JOSE row: the two wires reach the member map through
+    // different code.
+    //
+    // ⚠ BOTH COSE KEYS, because the claim has two of them — the interoperable
+    // string and the private-use label — and absence under one alone is
+    // satisfied by a claim that merely moved to the other.
+    const inspection = inspectToken(await mint("cwt", EMPTY_ADDRESS));
+
+    if (inspection.wire !== "cose" || inspection.payload.readable === false) {
+      throw new Error("the mint did not produce a readable COSE payload");
+    }
+
+    expect(inspection.payload.value.has(SUBJECT_COSE_LABEL)).toBe(true);
+    expect(inspection.payload.value.has("address")).toBe(false);
+    expect(inspection.payload.value.has(ADDRESS_COSE_LABEL)).toBe(false);
   });
 
   test("two UNDECLARED members that flip onto one key are refused, not merged", async () => {

@@ -5545,6 +5545,12 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         },
       },
       { step: "wireClaims", on: "cose", present: ["address"] },
+      // ⚠ THE EMPTY-MEMBER RULE IS NOT STATEABLE HERE. An `address` member handed
+      // `""` is left off the token (aegis policy at the mint door), and
+      // `wireClaims` matches a nested member set PARTIALLY — so no row can assert
+      // that a member is absent from an address. Pinned on the raw wire in
+      // `classes/address-claim-wire.test.ts`; owed as a feature at the migration.
+      //
       // The READ half. Either alone passes over the failure: a write that
       // misspelled a member and a read that expected the misspelling agree.
       {

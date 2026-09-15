@@ -7,7 +7,7 @@ import {
   isObject,
   isString,
 } from "@lindorm/is";
-import { describe, expect, test } from "vitest";
+import { describe, expect, expectTypeOf, test } from "vitest";
 import type {
   ActClaimMembers,
   AegisProfile,
@@ -608,7 +608,7 @@ describe("CLAIM_REGISTRY", () => {
     expect(CLAIM_SPECS.length).toBe(78);
   });
 
-  test("a member that cannot carry an empty value declares required, not a refuse verdict", () => {
+  test('a member\'s empty verdict is "keep" or "prune"; "refuse" is claim-level only', () => {
     // The two columns answer different questions and only one of them is enforced
     // for a MEMBER: `ClaimMemberSpec` takes `"keep" | "prune"` and
     // `internal/claims/translate.ts` compares that cell against `"prune"` exactly,
@@ -616,12 +616,15 @@ describe("CLAIM_REGISTRY", () => {
     // is the column that refuses — and it refuses in BOTH directions, which is
     // strictly stronger than a write-side-only verdict.
     //
-    // ⭐ THE DIRECTIVE IS THE ASSERTION: widen `ClaimMemberSpec` and the
-    // `@ts-expect-error` goes UNUSED, which is itself a compile error. ⚠ ONLY
-    // `typecheck` sees it — `tsconfig.build.json` excludes `**/*.test.ts`, so on a
-    // widened alias `npm run build` AND `npm test` both stay GREEN.
-    // `pruningMember` is the positive line: it compiles, so what the directive
-    // catches is the VERDICT and not a malformed spread.
+    // ⛔ WRITTEN OUT, NOT DERIVED. The `@ts-expect-error` states the same rule from
+    // the other side: widen `ClaimMemberSpec` and the directive goes UNUSED, which
+    // is itself a compile error. ⚠ ONLY `typecheck` sees EITHER —
+    // `tsconfig.build.json` excludes `**/*.test.ts`, so on a widened alias
+    // `npm run build` AND `npm test` both stay GREEN. `pruningMember` is the
+    // positive line: it compiles, so what the directive catches is the VERDICT and
+    // not a malformed spread.
+    expectTypeOf<ClaimMemberSpec["whenEmpty"]>().toEqualTypeOf<"keep" | "prune">();
+
     const declared = childrenOf(claimByDomain("act")!.codec)!()[0]!;
     const pruningMember: ClaimMemberSpec = { ...declared, whenEmpty: "prune" };
     const refusingMember: ClaimMemberSpec = {
@@ -629,10 +632,20 @@ describe("CLAIM_REGISTRY", () => {
       // @ts-expect-error a member states no `refuse` verdict
       whenEmpty: "refuse",
     };
+  });
 
-    // Derived and DESCENDING, cycle-guarded on the `children` thunk, so a pruning
-    // member added at any depth has to answer this.
-    const pruningWithoutRequired: Array<string> = [];
+  /**
+   * The MEMBER twin of the claim-level `keep` and `refuse` censuses above, and it
+   * exists for the same reason: the cell has no default, so a new member cannot
+   * dodge the decision — but an existing one is a one-word diff, and a member's
+   * verdict is unobservable on a round trip, since a pruned member and a member
+   * the caller never wrote read back identically.
+   *
+   * ⚠⚠ IT DESCENDS, cycle-guarded on the `children` thunk, so a pruning member
+   * added at ANY depth has to arrive in this list.
+   */
+  test("the members pruned when empty are exactly the stated set", () => {
+    const pruning: Array<string> = [];
     const seen = new Set<() => ReadonlyArray<ClaimMemberSpec>>();
 
     const visit = (codec: ClaimCodec, path: string): void => {
@@ -646,9 +659,7 @@ describe("CLAIM_REGISTRY", () => {
       const here = codec.kind === "array" ? `${path}[]` : path;
 
       for (const member of children()) {
-        if (member.whenEmpty === "prune" && member.required !== true) {
-          pruningWithoutRequired.push(`${here}.${member.domain}`);
-        }
+        if (member.whenEmpty === "prune") pruning.push(`${here}.${member.domain}`);
 
         visit(member.codec, `${here}.${member.domain}`);
       }
@@ -656,7 +667,29 @@ describe("CLAIM_REGISTRY", () => {
 
     for (const spec of CLAIM_SPECS) visit(spec.codec, spec.domain);
 
-    expect(pruningWithoutRequired).toEqual([]);
+    // Registry declaration order. `whenEmpty` is INERT while `required` holds, so
+    // the first three decide nothing: the prune runs and the mandatory check
+    // refuses the member anyway. The third is the second, reached again through the
+    // alias element (RFC 9493 §3.2.8), exactly as the mandatory census below
+    // reports it.
+    //
+    // The seven address members are the LIVE ones, and they are AEGIS POLICY AT
+    // THE MINT DOOR rather than an OIDC Core §5.1.1 requirement — a profile value
+    // arrives from a stored row and `""` states nothing a relying party can act
+    // on. See `address-members.ts`; the wire is pinned in
+    // `classes/address-claim-wire.test.ts`.
+    expect(pruning).toEqual([
+      "authorizationDetails[].type",
+      "subjectId.format",
+      "subjectId.identifiers[].format",
+      "address.formatted",
+      "address.streetAddress",
+      "address.locality",
+      "address.region",
+      "address.postalCode",
+      "address.country",
+      "address.careOf",
+    ]);
   });
 
   test('a temporal mark implies a "date" codec; updatedAt is a date but NOT temporal', () => {
@@ -795,45 +828,21 @@ describe("CLAIM_REGISTRY", () => {
   });
 
   test("every declared member is frozen in EVERY cell it carries", () => {
-    // The group `address` and `authorizationDetails` moved INTO when they stopped
-    // being bespoke, pinned the same way and for the same reason: a claim that
-    // leaves one drift guard has to arrive in another, or the migration removed
-    // coverage.
+    // ⚠ `childrenOf` COLLECTS BOTH DECLARED FORMS: a claim declaring an ARRAY of
+    // structures (`authorizationDetails`, `claims-registry.ts`) declares its
+    // member set on the ELEMENT, so a collector reading `kind === "object"` alone
+    // lets the next such claim arrive with no frozen row.
     //
-    // ⚠⚠ IT FREEZES THE WHOLE MEMBER, NOT ITS SPELLING. Pinning `domain -> per-wire
-    // name` alone leaves four of the five columns a declaration carries unwatched:
-    // flipping `country.whenEmpty` from `keep` to `prune` then leaves the ENTIRE
-    // SUITE GREEN while a signed token silently drops a member its issuer wrote.
-    // Only `postalCode` has a behavioural pin that happens to mint an empty member
-    // (`classes/address-claim-wire.test.ts`), and one pin cannot stand in for
-    // seven declarations.
+    // ⭐ DERIVED ON ONE SIDE, HAND-WRITTEN ON THE OTHER: `actual` is read from
+    // `CLAIM_SPECS` and `FROZEN_MEMBERS` is written out, because an expectation
+    // built from the registry asserts the table against itself.
     //
-    // ⚠ BOTH DECLARED FORMS ARE COLLECTED. A claim declaring an ARRAY of
-    // structures declares its member set on the ELEMENT, so a collector reading
-    // `kind === "object"` alone silently stops covering it.
+    // ⚠ A BESPOKE CLAIM IS OUT OF ITS REACH: `cnf` declares its members in
+    // `internal/claims/cnf-members.ts` rather than on its codec, so `childrenOf`
+    // never sees them and `cnf-members.test.ts` carries their literal pin.
     //
-    // ⭐ DERIVED ON ONE SIDE, HAND-WRITTEN ON THE OTHER. The registry supplies the
-    // actual values; the expectation below is written out. Building the
-    // expectation FROM the registry asserts the table against itself.
-    //
-    // ⭐ A NEW STRUCTURE MUST EXTEND THIS TABLE. The comparison is whole-object
-    // equality over every claim that declares children, so `act`, `subjectId`
-    // and `events` cannot arrive with a member that states no frozen cell.
-    //
-    // ⭐⭐ AND THE `address` HALF IS BOUND TO THE PUBLIC TYPE, which is what stops
-    // this one table from being a single point of failure. Deleting a member's
-    // DECLARATION is invisible on the wire — `open: "flip"` plus
-    // `snakeCase("careOf") === "care_of"` means the bytes are identical whether a
-    // member is declared or carried by the open tail, so the corpus, every round
-    // trip and every conformance scenario stay green — and the runtime row below
-    // is therefore the only thing that reddens. That would leave one obvious
-    // repair: delete the row too. `Record<keyof AegisProfileAddress, …>` closes
-    // it — the row cannot go while the PUBLIC type still declares the member, so
-    // the two edits that would together hide the deletion cannot both be made.
-    // ⚠ Only `address` can be bound this way. The RFC 9396 element's public type
-    // (`AuthorizationDetail`) is deliberately OPEN (`& Dict`; RFC 9396 §2 makes
-    // the `type` determine the rest), so `keyof` it is `string` and binds
-    // nothing — which is a fact about that claim, not a gap here.
+    // ⭐⭐ `FROZEN_ADDRESS` IS `Record<keyof AegisProfileAddress, …>`, so its row
+    // cannot go while the PUBLIC type still declares the member.
     type FrozenMember = {
       jose: string;
       cose: string;
@@ -847,46 +856,47 @@ describe("CLAIM_REGISTRY", () => {
      * declares and the registry does not is a compile error here.
      */
     const FROZEN_ADDRESS: Record<keyof AegisProfileAddress, FrozenMember> = {
-      // OIDC Core §5.1.1's own six, all `keep` — see `address-members.ts`.
+      // OIDC Core §5.1.1's own six. Every member prunes when empty, which is
+      // AEGIS POLICY AT THE MINT DOOR — see `address-members.ts`.
       formatted: {
         jose: "formatted",
         cose: "formatted",
-        whenEmpty: "keep",
+        whenEmpty: "prune",
         required: false,
         codec: "text",
       },
       streetAddress: {
         jose: "street_address",
         cose: "street_address",
-        whenEmpty: "keep",
+        whenEmpty: "prune",
         required: false,
         codec: "text",
       },
       locality: {
         jose: "locality",
         cose: "locality",
-        whenEmpty: "keep",
+        whenEmpty: "prune",
         required: false,
         codec: "text",
       },
       region: {
         jose: "region",
         cose: "region",
-        whenEmpty: "keep",
+        whenEmpty: "prune",
         required: false,
         codec: "text",
       },
       postalCode: {
         jose: "postal_code",
         cose: "postal_code",
-        whenEmpty: "keep",
+        whenEmpty: "prune",
         required: false,
         codec: "text",
       },
       country: {
         jose: "country",
         cose: "country",
-        whenEmpty: "keep",
+        whenEmpty: "prune",
         required: false,
         codec: "text",
       },
@@ -895,7 +905,7 @@ describe("CLAIM_REGISTRY", () => {
       careOf: {
         jose: "care_of",
         cose: "care_of",
-        whenEmpty: "keep",
+        whenEmpty: "prune",
         required: false,
         codec: "text",
       },
@@ -910,8 +920,9 @@ describe("CLAIM_REGISTRY", () => {
      * ⚠⚠ IT IS `ActClaimMembers` AND NOT `ActClaim`, AND THE SPLIT EXISTS FOR THIS
      * BINDING. `ActClaim` is `ActClaimMembers & Dict` — the RFC 8693 §4.1 member
      * set is OPEN — and `keyof (X & Dict)` widens to `string`, which makes this
-     * `Record` accept anything and evaporates the guard silently. That is what
-     * `AuthorizationDetail` already does, per its own note below.
+     * `Record` accept anything and evaporates the guard silently.
+     * `AuthorizationDetail` (`@lindorm/openid`) is `& Dict`, which is why
+     * `authorizationDetails` below carries no such binding.
      *
      * ⚠ THE COSE COLUMN IS THE STRING FALLBACK, NOT THE LABEL. Every actor member
      * is keyed by an INTEGER on COSE (RFC 8392 §4 for 1/2/3; `client_id` 4 and the

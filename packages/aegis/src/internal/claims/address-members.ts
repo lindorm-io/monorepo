@@ -33,13 +33,16 @@ const sameOnBothWires = (name: string): Record<Wire, WireKey> => ({
 });
 
 /**
- * Every member is `whenEmpty: "keep"` — an empty member rides.
+ * Every member is `whenEmpty: "prune"` — an empty member is left off the token.
  *
- * ⚠ OIDC Core §5.1.1 is an argument for `"prune"` instead. That is a
- * public-surface semantic change applying to every structured claim rather than
- * to this one, and it is filed as an open question rather than taken here.
+ * ⚠ AEGIS POLICY AT THE MINT DOOR, not an OIDC Core §5.1.1 requirement. A profile
+ * value is pushed through from a stored row, and `""` states nothing a relying
+ * party can act on. The READ door is unaffected: a foreign token's empty member
+ * is reported as its producer wrote it.
+ *
+ * pinned: classes/address-claim-wire.test.ts
  */
-const KEEP = "keep" as const;
+const PRUNE = "prune" as const;
 
 export const ADDRESS_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
   {
@@ -52,7 +55,7 @@ export const ADDRESS_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
     },
     wire: sameOnBothWires("formatted"),
     codec: { kind: "text" },
-    whenEmpty: KEEP,
+    whenEmpty: PRUNE,
     sample: "Sample 1\n00100 Stockholm\nSweden",
   },
   {
@@ -65,7 +68,7 @@ export const ADDRESS_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
     },
     wire: sameOnBothWires("street_address"),
     codec: { kind: "text" },
-    whenEmpty: KEEP,
+    whenEmpty: PRUNE,
     sample: "Sample 1",
   },
   {
@@ -78,7 +81,7 @@ export const ADDRESS_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
     },
     wire: sameOnBothWires("locality"),
     codec: { kind: "text" },
-    whenEmpty: KEEP,
+    whenEmpty: PRUNE,
     sample: "Stockholm",
   },
   {
@@ -91,7 +94,7 @@ export const ADDRESS_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
     },
     wire: sameOnBothWires("region"),
     codec: { kind: "text" },
-    whenEmpty: KEEP,
+    whenEmpty: PRUNE,
     sample: "Stockholm",
   },
   {
@@ -104,7 +107,7 @@ export const ADDRESS_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
     },
     wire: sameOnBothWires("postal_code"),
     codec: { kind: "text" },
-    whenEmpty: KEEP,
+    whenEmpty: PRUNE,
     sample: "00100",
   },
   {
@@ -117,7 +120,7 @@ export const ADDRESS_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
     },
     wire: sameOnBothWires("country"),
     codec: { kind: "text" },
-    whenEmpty: KEEP,
+    whenEmpty: PRUNE,
     sample: "SE",
   },
   // --- lindorm extension, NOT an OIDC Core §5.1.1 member ---------------------
@@ -129,7 +132,7 @@ export const ADDRESS_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
     },
     wire: sameOnBothWires("care_of"),
     codec: { kind: "text" },
-    whenEmpty: KEEP,
+    whenEmpty: PRUNE,
     sample: "Sample Recipient",
   },
 ];

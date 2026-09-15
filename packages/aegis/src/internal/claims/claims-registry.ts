@@ -993,8 +993,8 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sample: ADDRESS_SAMPLE,
     bucket: "profile",
     // PRUNE: OIDC Core §5.1.1 defines `address` entirely by its members, and the
-    // MEMBERS answer this question for themselves — differently. See
-    // `ParamSpec.whenEmpty` for why the two levels diverge.
+    // MEMBERS answer this question for themselves. See `ParamSpec.whenEmpty` for
+    // why the two levels ask about different values.
     whenEmpty: "prune",
   },
   {

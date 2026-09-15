@@ -576,18 +576,21 @@ describe("domainToJose — content -> wire mapping", () => {
     });
   });
 
-  // The contrast that keeps the rule above from being read as "empty members are
-  // dropped": `""` IS a text value, so the codec accepts it and the member's own
-  // `whenEmpty: "keep"` is what decides — which is the division of labour that
-  // column's docstring claims.
-  test("should carry an EMPTY-STRING address member, which the codec accepts", () => {
-    const address = { postalCode: "", locality: "Stockholm" };
+  // The contrast that keeps the rule above from being read as one rule: a `null`
+  // is unstated on BOTH sides, while `""` IS a text value the codec accepts and
+  // the member's own `whenEmpty: "prune"` cell is what drops it — on the WRITE
+  // side alone, which is the division of labour that column's docstring claims.
+  // The read is fed the WIRE form directly, because the write produces no
+  // address carrying the member.
+  test("should drop an EMPTY-STRING address member on the WRITE side and report it on the READ side", () => {
+    expect(
+      domainToJose({ address: { postalCode: "", locality: "Stockholm" } }).address,
+    ).toEqual({ locality: "Stockholm" });
 
-    expect(domainToJose({ address }).address).toEqual({
-      postal_code: "",
-      locality: "Stockholm",
-    });
-    expect(joseToDomain(domainToJose({ address })).claims.address).toEqual(address);
+    expect(
+      joseToDomain({ address: { postal_code: "", locality: "Stockholm" } }).claims
+        .address,
+    ).toEqual({ postalCode: "", locality: "Stockholm" });
   });
 
   // The CLAIM level: `null` is absence at the claim key on every door
