@@ -11,7 +11,6 @@ const walkActChain = (act: ActClaimWire | undefined): Array<ActClaim> => {
       omitUndefined({
         subject: current.sub,
         issuer: current.iss,
-        audience: current.aud,
         clientId: current.client_id,
       }),
     );

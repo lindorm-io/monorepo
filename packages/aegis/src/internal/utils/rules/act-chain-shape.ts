@@ -1,4 +1,4 @@
-import { isObject, isArray, isString } from "@lindorm/is";
+import { isObject, isString } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import type { InvalidEntry } from "../../../types/index.js";
 import { isClaimOmitted } from "./is-claim-omitted.js";
@@ -23,20 +23,19 @@ import { isClaimOmitted } from "./is-claim-omitted.js";
  * members resolving to the SAME key, so a look-alike cannot displace a declared
  * one.
  *
- * ⚠ WHAT THIS RULE HOLDS THAT THE WALKER DOES NOT: the ELEMENTS of an actor's
- * `audience`. That member's codec WRAPS a scalar and never looks inside an
- * array (`act-members.ts`), so `act: { audience: [1] }` walks onto the wire at
- * any door this rule does not guard, and survives a read the same way — this
- * rule is its only gate, at mint and at verify alike. The walker itself refuses
- * a non-object actor in both directions and, on the WRITE side, a member whose
- * value fails its leaf codec; on the profiles that carry this rule the policy
- * gate runs BEFORE wire assembly, so at mint this rule answers first for those
- * too, with every fault in one report.
+ * ⚠ IT ANSWERS FIRST AT MINT. Every member in `STRING_MEMBERS` carries a `text`
+ * codec and the nested actor an object one, and the walker refuses a value failing
+ * either on the WRITE side by itself; on the profiles that carry this rule the
+ * policy gate runs BEFORE wire assembly, so at mint this rule answers first for
+ * those, with every fault in one report.
  *
- * ⚠ AT VERIFY THE RULE READS WHAT THE TOKEN READ PRODUCED, not the wire: a
- * non-object actor is refused by the read itself, and a member the read cannot
- * decode arrives here already dropped — so the `audience`-element check is the
- * one a foreign token can still trip.
+ * ⛔ AT VERIFY IT REPORTS NOTHING. It reads what the token read produced, and
+ * `internal/claims/translate.ts` has already disposed of every fault it names: a
+ * non-object actor is refused at any depth, a `text` member the read cannot decode
+ * is dropped rather than carried, and a tail key resolving to a declared member's
+ * key is refused. An actor member aegis does not declare is not measured here at
+ * all — it rides the open tail, `aud` included. ⇒ Nothing may be moved out of the
+ * read on the grounds that this rule would catch it at verify.
  *
  * ⚠ THE DEPTH BOUND IS NOT PART OF THIS RULE. `maxChainDepth` is a VERIFIER's
  * option (`internal/utils/validate-actor.ts`), not a shape fact.
@@ -46,31 +45,9 @@ import { isClaimOmitted } from "./is-claim-omitted.js";
 // both or neither.
 const CHAIN_CLAIMS = ["act", "mayAct"] as const;
 
-// The actor members that must be a string when the actor names them. `audience`
-// is not among them (RFC 7519 §4.1.3) and `act` is the recursive one.
+// The actor members that must be a string when the actor names them — every
+// DECLARED member but `act`, which is the recursive one.
 const STRING_MEMBERS = ["subject", "issuer", "clientId"] as const;
-
-/**
- * `aud` inside an actor, validated only when the actor NAMES it. RFC 7519 §4.1.3.
- *
- * ⚠ IT CHECKS THE ELEMENTS: `isArray` alone admits `audience: [1, 2]` while the
- * message beside it promises an array of strings, and a predicate that admits
- * what its own message forbids is worse than no predicate.
- */
-const validateAudience = (
-  audience: unknown,
-  path: string,
-  invalid: Array<InvalidEntry>,
-): void => {
-  if (isClaimOmitted(audience)) return;
-  if (isString(audience)) return;
-  if (isArray(audience) && audience.every(isString)) return;
-
-  invalid.push({
-    key: `${path}.audience`,
-    message: `"${path}.audience" must be a string or array of strings`,
-  });
-};
 
 const validateActor = (
   actor: unknown,
@@ -91,8 +68,6 @@ const validateActor = (
       message: `"${path}.${member}" must be a string`,
     });
   }
-
-  validateAudience(actor.audience, path, invalid);
 
   if (isClaimOmitted(actor.act)) return;
 

@@ -932,8 +932,8 @@ await aegis.mint("access_token", {
 structure, and aegis imposes no depth limit on the nesting: `act.act` is the
 prior actor, `act.act.act` the one before that.
 
-Five members, and only five: `subject` → `sub`, `issuer` → `iss`, `audience` →
-`aud`, `clientId` → `client_id`, and the nested `act`.
+Four members, and only four: `subject` → `sub`, `issuer` → `iss`, `clientId` →
+`client_id`, and the nested `act`.
 
 The member set is **open** — an actor is identified by whatever claims the issuer
 chose, not by a fixed list — so a member aegis does not declare **rides
@@ -949,21 +949,26 @@ naming both members. This applies to every open structure, `address` included.
 
 Only the **wire** spelling is honoured on read.
 
-On COSE the actor members carry integer labels — `iss` 1, `sub` 2, `aud` 3
+On COSE the actor members carry integer labels — `iss` 1, `sub` 2
 (RFC 8392 §4), plus lindorm's `client_id` 4 and nested `act` 5 — at every depth,
 under `proprietary: true`. An interoperable token keeps the RFC 8693 string names.
 A member with no label rides under **its own string key in the same map**
-(RFC 9052 §1.5), so the compact encoding is a size decision
-and never a content one.
+(RFC 9052 §1.5), so the two encodings carry the same content while writer and
+reader hold the same registry: a compact read drops an integer label its own
+registry does not name, where an interoperable one carries every member under
+its own key.
 
 ⚠ An empty actor object is reported as an empty actor, not as no actor: a foreign
 token's `act: {}` comes back as `{}`, which is truthy. Read a member, not the
 container, to decide who is acting. Aegis's own signing doors refuse to write one:
 an actor naming nobody is a delegation no verifier can hold anyone to.
 
-`aud` inside an actor is emitted where the caller supplies it — a deliberate
-divergence from RFC 8693 §4.1. The member is kept for now because removing it
-changes what a signed token says.
+⚠ **An actor claim declares no audience member, and aegis emits none** —
+**aegis policy at the mint door**, RFC 8693 §4.1. `ActClaim.audience` is typed
+`never`, at every depth, so the compiler refuses the call; a caller reaching past
+the type writes an undeclared member, which rides the open tail like any other. On
+read nothing changes: a foreign token's `act.aud` is reported in the actor's tail
+under its own name, neither refused nor translated.
 
 ### Subject identifiers (RFC 9493)
 

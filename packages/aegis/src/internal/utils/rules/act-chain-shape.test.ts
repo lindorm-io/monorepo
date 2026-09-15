@@ -45,26 +45,15 @@ describe("actChainShape", () => {
     expect(actChainShape({ act: { subject: "a", surprise: true } })).toEqual([]);
   });
 
-  // ⚠⚠ THESE THREE ROWS ARE THE AUDIENCE RULE'S ONLY COVERAGE: without them,
-  // deleting its call site leaves the whole package suite green.
-  test("accepts an actor audience in either form RFC 7519 §4.1.3 permits", () => {
-    // BOTH forms are conformant (RFC 7519 §4.1.3), so a rule refusing either
-    // would refuse tokens the specification allows.
+  test("says nothing about an actor audience, whatever shape it arrives in", () => {
+    // ⚠ AEGIS DECLARES NO AUDIENCE MEMBER INSIDE AN ACTOR
+    // (`internal/claims/act-members.ts`, RFC 8693 §4.1), so this rule has none to
+    // measure. A caller reaching past `ActClaim`'s `audience?: never` writes an
+    // undeclared member, and a check here would refuse at VERIFY what the read
+    // carried — the whole point of the silence one row up.
     expect(actChainShape({ act: { audience: "https://rs.test" } })).toEqual([]);
-    expect(
-      actChainShape({ act: { audience: ["https://rs.test", "https://b.test"] } }),
-    ).toEqual([]);
-  });
-
-  test("fails on an actor audience that is neither a string nor an array", () => {
-    expect(actChainShape({ act: { audience: 42 } })).toMatchSnapshot();
-  });
-
-  test("fails on an actor audience array holding something that is not a string", () => {
-    // The half `isArray` alone could not see: the message promises "array of
-    // strings", and an array of numbers satisfied the predicate while
-    // contradicting the message.
-    expect(actChainShape({ act: { audience: [1, 2] } })).toMatchSnapshot();
+    expect(actChainShape({ act: { audience: 42 } })).toEqual([]);
+    expect(actChainShape({ act: { audience: [1, 2] } })).toEqual([]);
   });
 
   test("fails on a malformed nested act", () => {

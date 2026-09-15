@@ -8539,7 +8539,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "a mint carries an actor member RFC 8693 permits and aegis does not declare, at every depth",
     rationale:
-      "The actor's member set is OPEN TO FURTHER IDENTITY CLAIMS, and so is `may_act`'s — both sections close it to non-identity ones (RFC 8693 §4.1, RFC 8693 §4.4). ⚠ aegis DECLARES one of the excluded members anyway, `audience`, so a consumer can validate what an issuer wrote: a public-surface departure with its own decision to make, not a reading of RFC 8693 §4.1 (`src/internal/claims/act-members.ts#IS DECLARED THOUGH RFC 8693 §4.1 EXCLUDES IT`). So the set of claims that may identify an actor belongs to the deployment and to the other specifications it composes with, not to this library: an issuer that needs one more identifier must be able to write it, and a reader must report it rather than pretend the issuer said less. The member travels UNTOUCHED because its name was given by whoever registered it — a case flip would not translate it but rewrite it into a field nobody reads. ⚠ The nesting is part of the rule and not a bonus: a nested `act` is the same kind of object as the outer one (RFC 8693 §4.1), so a member set that opened at the top and closed one level down would be a rule about nothing.",
+      "The actor's member set is OPEN TO FURTHER IDENTITY CLAIMS, and so is `may_act`'s — both sections close it to non-identity ones (RFC 8693 §4.1, RFC 8693 §4.4). The set of claims that may identify an actor belongs to the deployment and to the other specifications it composes with, not to this library: an issuer that needs one more identifier must be able to write it, and a reader must report it rather than pretend the issuer said less. The member travels UNTOUCHED because its name was given by whoever registered it — a case flip would not translate it but rewrite it into a field nobody reads. ⚠ The nesting is part of the rule and not a bonus: a nested `act` is the same kind of object as the outer one (RFC 8693 §4.1), so a member set that opened at the top and closed one level down would be a rule about nothing.",
     given: [
       {
         step: "token",
@@ -8623,6 +8623,101 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
         step: "claims",
         expected: {
           act: { subject: "service-1", email: "service-1@example.test" },
+        },
+      },
+    ],
+  },
+  {
+    id: "an-actor-audience-is-carried-as-the-undeclared-member-it-is",
+    title:
+      "a mint carries a caller's actor audience under the name the caller wrote, never as the actor's `aud`",
+    rationale:
+      "aegis declares no audience member inside an actor claim and emits none — AEGIS POLICY AT THE MINT DOOR, RFC 8693 §4.1 — and the policy lives in the TYPE: `src/types/claims/domain/act-claim.ts#audience?: never`, so a typed call site does not compile. A caller who casts past it has written a member the registry has never heard of, and the open member set decides the rest: it rides untouched, under the name the caller gave it. Both alternatives are worse. Spelling it `aud` would put a member on a signed wire that aegis neither declares nor validates, under the name a recipient reads as one this library stands behind. Dropping it would sign a token saying less than the caller asked for, with nothing downstream able to notice the loss. Carrying it verbatim is what every undeclared member gets, so one rule answers the case instead of a second rule for one name.",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "access_token",
+        content: {
+          subject: "user-1",
+          audience: [RESOURCE],
+          clientId: CLIENT,
+          // Cast the MEMBER, never the actor: `ActClaim.audience` is typed
+          // `never`, which IS the mint policy, and this row states what a caller
+          // reaching past it gets. A cast on the whole actor would take `subject`
+          // out of the type system with it.
+          act: { subject: "service-1", audience: [RESOURCE] as never },
+        },
+      },
+    ],
+    when: [
+      { step: "mint" },
+      { step: "verify", profile: "access_token", options: { audience: RESOURCE } },
+    ],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      // The RAW wire, and it is the raw assertion that carries this row: the
+      // domain round trip below reads back `audience` whichever name the wire
+      // used, so a cell asserting only that cannot tell a carried tail member
+      // from one mapped to `aud`.
+      //
+      // ⚠ TWO HALVES OF THE RULE ARE NOT STATEABLE HERE, and both are pinned on
+      // the raw wire in `classes/act-claim-wire.test.ts`; owed as a feature at the
+      // migration. That the actor carries NO `aud` beside the member needs
+      // whole-value equality, and `wireClaims` matches a nested member set
+      // PARTIALLY. And the COSE half needs a `Map` expectation, which a row may
+      // not hold — rows are JSON-serialisable data — so the cose cell of this row
+      // asserts the mint and the round trip alone.
+      {
+        step: "wireClaims",
+        on: "jose",
+        includes: { act: { sub: "service-1", audience: [RESOURCE] } },
+      },
+      // …and back under the domain vocabulary, so the member survives the round
+      // trip rather than merely reaching the wire.
+      {
+        step: "claims",
+        // Cast the MEMBER, for the SAME reason the given step does: `audience` is
+        // `never` on `ActClaim`, and the type is shared by the write door and the
+        // read result. What a read REPORTS is a runtime fact the type does not
+        // reach.
+        expected: { act: { subject: "service-1", audience: [RESOURCE] as never } },
+      },
+    ],
+  },
+  {
+    id: "a-foreign-actors-audience-is-reported-in-the-tail-untranslated",
+    title:
+      "a verify reports a foreign token's actor `aud` under the name its issuer wrote",
+    rationale:
+      "A read reports what a PRODUCER wrote. An issuer that put an `aud` inside an actor wrote a member aegis does not declare (RFC 8693 §4.1), and the open member set already settles what becomes of one: it is reported, under its own name. Refusing would reject a token whose only fault is a member this library holds no opinion about. Translating it into the domain `audience` would state that aegis recognised and validated it — an assertion about a stranger's token that nothing in this package backs, and one the domain type refuses to make in the first place (`src/types/claims/domain/act-claim.ts#audience?: never`). The asymmetry with the mint door is the capability, not an oversight: what aegis EMITS is its own policy, and what aegis REPORTS is the issuer's, so neither door may be read off the other.",
+    given: [
+      {
+        // A FOREIGN token, written through the raw kit door — which performs no
+        // translation, so the wire says exactly what this row means it to say. The
+        // actor's audience differs from the token's own, so a read that confused
+        // the two cannot pass.
+        step: "token",
+        via: "kit-sign",
+        kit: "structured",
+        claims: {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          exp: NOW + 3600,
+          iat: NOW,
+          jti: "token-1",
+          act: { sub: "service-1", aud: ["https://other-rs.lindorm.test"] },
+        },
+      },
+    ],
+    when: [{ step: "verify" }],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      {
+        step: "claims",
+        expected: {
+          act: { subject: "service-1", aud: ["https://other-rs.lindorm.test"] },
         },
       },
     ],

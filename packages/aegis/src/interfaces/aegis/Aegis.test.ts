@@ -79,6 +79,46 @@ export const _mintContentGuards = (): void => {
     totallyUnknownMember: "x",
   });
 
+  // An actor claim declares no audience member, so `ActClaim.audience` is typed
+  // `never` — AEGIS POLICY AT THE MINT DOOR, RFC 8693 §4.1. It is the ONE actor
+  // rule the compiler carries, and it reaches every depth because the declared
+  // `act` member names the same type. A caller casting past it writes an
+  // undeclared member, which rides the open tail:
+  // `__fixtures__/scenarios.ts#an-actor-audience-is-carried-as-the-undeclared-member-it-is`.
+  void aegis.mint("access_token", {
+    subject: "user-1",
+    audience: [RESOURCE],
+    clientId: "client-1",
+    act: {
+      subject: "service-1",
+      // @ts-expect-error - an actor claim declares no audience member
+      audience: [RESOURCE],
+    },
+  });
+
+  void aegis.mint("access_token", {
+    subject: "user-1",
+    audience: [RESOURCE],
+    clientId: "client-1",
+    act: {
+      subject: "service-1",
+      act: {
+        subject: "service-2",
+        // @ts-expect-error - the rule does not change with depth
+        audience: [RESOURCE],
+      },
+    },
+  });
+
+  // The tail itself stays open: the RFC 8693 wire spelling a foreign issuer uses
+  // is an undeclared member here too, and nothing refuses one.
+  void aegis.mint("access_token", {
+    subject: "user-1",
+    audience: [RESOURCE],
+    clientId: "client-1",
+    act: { subject: "service-1", aud: [RESOURCE] },
+  });
+
   // Required members are still required.
   // @ts-expect-error - AccessTokenContent requires clientId
   void aegis.mint("access_token", { subject: "user-1", audience: [RESOURCE] });

@@ -7,7 +7,7 @@ import type { Dict } from "@lindorm/types";
 //
 // ⚠⚠ THE MEMBER SET IS OPEN: a conformant issuer may write a member aegis does
 // not declare (RFC 8693 §4.1, RFC 8693 §4.4), and refusing such a token is the
-// worse fault. The claim registry declares the five below and carries anything
+// worse fault. The claim registry declares the four below and carries anything
 // else VERBATIM
 // (`internal/claims/act-members.ts`) — verbatim rather than case-flipped, because
 // a tail member is another specification's JWT claim name and a flip would
@@ -20,7 +20,7 @@ import type { Dict } from "@lindorm/types";
 // `internal/claims/translate.ts`.
 
 /**
- * The five members aegis DECLARES, split out from the open type on purpose.
+ * The four members aegis DECLARES, split out from the open type on purpose.
  *
  * ⭐ IT IS WHAT KEEPS THE DELETION PATH CLOSED. `internal/claims/claims-registry.test.ts`
  * freezes every declared member's cells in a `Record<keyof ActClaimMembers, …>`,
@@ -32,10 +32,20 @@ import type { Dict } from "@lindorm/types";
 export type ActClaimMembers = {
   subject?: string;
   issuer?: string;
-  audience?: Array<string>;
   clientId?: string;
   act?: ActClaim;
 };
 
+/**
+ * ⛔ `audience` IS TYPED `never`, AT EVERY DEPTH: aegis declares no audience
+ * member inside an actor claim and emits none — AEGIS POLICY AT THE MINT DOOR,
+ * RFC 8693 §4.1. The nesting follows from `ActClaimMembers.act` naming this type,
+ * so the rule does not change with depth.
+ *
+ * ⚠ IT BINDS THE WRITE DOOR ALONE. A caller reaching past the type rides the open
+ * tail like any undeclared member, and a foreign actor's own `aud` is reported in
+ * that tail untranslated at VERIFY — neither refused nor renamed.
+ * pinned: `interfaces/aegis/Aegis.test.ts`, `__fixtures__/scenarios.ts`.
+ */
 // https://datatracker.ietf.org/doc/html/rfc8693#section-4.1
-export type ActClaim = ActClaimMembers & Dict;
+export type ActClaim = ActClaimMembers & Dict & { audience?: never };

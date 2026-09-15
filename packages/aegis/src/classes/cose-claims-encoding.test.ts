@@ -455,8 +455,8 @@ describe("the COSE claims Message is one encoding across the claims wires", () =
       const interoperable = (await rawClaimsMap(claims, false)).get("act");
       const compact = (await rawClaimsMap(claims, true)).get("act");
 
-      // The actor members are `sub`/`iss`/`aud`/`client_id` (RFC 8693 §4.1); an
-      // interoperable token keys them by those strings.
+      // The actor members are `sub`/`iss`/`client_id` (RFC 8693 §4.1, RFC 8693
+      // §4.3); an interoperable token keys them by those strings.
       expect(interoperable).toBeInstanceOf(Map);
       expect((interoperable as Map<unknown, unknown>).get("sub")).toBe("actor-1");
       expect((interoperable as Map<unknown, unknown>).has(2)).toBe(false);

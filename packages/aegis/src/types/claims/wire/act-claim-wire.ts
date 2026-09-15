@@ -12,7 +12,6 @@ import type { Dict } from "@lindorm/types";
 export type ActClaimWireMembers = {
   sub?: string;
   iss?: string;
-  aud?: Array<string>;
   client_id?: string;
   act?: ActClaimWire;
 };

@@ -37,7 +37,6 @@ const ISSUER = "https://test.lindorm.io/";
 const ACTOR_CHAIN = {
   subject: "service-1",
   issuer: "https://issuer-1.lindorm.test",
-  audience: ["https://rs-1.lindorm.test"],
   clientId: "client-1",
   act: {
     subject: "service-2",
@@ -50,7 +49,6 @@ const ACTOR_CHAIN = {
 const WIRE_ACTOR_CHAIN: Dict = {
   sub: "service-1",
   iss: "https://issuer-1.lindorm.test",
-  aud: ["https://rs-1.lindorm.test"],
   client_id: "client-1",
   act: {
     sub: "service-2",
@@ -62,15 +60,15 @@ const WIRE_ACTOR_CHAIN: Dict = {
 /**
  * The COSE labels the actor MEMBERS carry, written out rather than derived.
  *
- * The first three are CLAIM labels — `iss` 1, `sub` 2, `aud` 3 (RFC 8392 §4) —
- * and the actor map reuses them, so a compact actor speaks the CWT vocabulary.
- * `client_id` (4) and the nested `act` (5) have no COSE registration anywhere and
- * are LINDORM's own, which is exactly why the compact form is
- * on-platform only.
+ * The first two are CLAIM labels — `iss` 1, `sub` 2 (RFC 8392 §4) — and the actor
+ * map reuses them, so a compact actor speaks the CWT vocabulary. `client_id` (4)
+ * and the nested `act` (5) have no COSE registration anywhere and are LINDORM's
+ * own, which is exactly why the compact form is on-platform only. 3 is RFC 8392
+ * §4's `aud` and is absent from this table because an actor declares no audience
+ * member (`internal/claims/act-members.ts`).
  */
 const ISS = 1;
 const SUB = 2;
-const AUD = 3;
 const CLIENT_ID = 4;
 const ACT = 5;
 
@@ -238,7 +236,6 @@ describe("the act / may_act claims on the wire", () => {
       new Map<number, unknown>([
         [SUB, "service-1"],
         [ISS, "https://issuer-1.lindorm.test"],
-        [AUD, ["https://rs-1.lindorm.test"]],
         [CLIENT_ID, "client-1"],
         [
           ACT,
@@ -263,7 +260,6 @@ describe("the act / may_act claims on the wire", () => {
       new Map<number, unknown>([
         [SUB, "service-1"],
         [ISS, "https://issuer-1.lindorm.test"],
-        [AUD, ["https://rs-1.lindorm.test"]],
         [CLIENT_ID, "client-1"],
         [
           ACT,
@@ -305,6 +301,57 @@ describe("the act / may_act claims on the wire", () => {
         },
       });
     }
+  });
+
+  test("an actor `audience` a caller forces past the type reaches the wire under its own name", async () => {
+    // ⛔ THE MEMBER AEGIS DECLARES NOWHERE. `ActClaim.audience` is typed `never`
+    // — AEGIS POLICY AT THE MINT DOOR, RFC 8693 §4.1 — so a caller who writes one
+    // has cast past the compiler and written a member the registry has never
+    // heard of. It therefore rides the open tail like any other, and WHOLE-VALUE
+    // equality is the assertion: a subset match would pass over a translator that
+    // also emitted `aud`, which is the spelling a recipient reads as a claim this
+    // library stands behind.
+    //
+    // ⚠ BOTH DEPTHS AND BOTH WIRES, because the tail policy sits on the codec and
+    // the nested `act` declares its own.
+    const chain = {
+      subject: "service-1",
+      audience: ["https://rs-1.lindorm.test"],
+      act: { subject: "service-2", audience: ["https://rs-2.lindorm.test"] },
+    };
+
+    for (const format of ["jwt", "cwt"] as const) {
+      const token = await mint(format, { act: chain });
+
+      expect({ format, act: plain(wireClaimOf(token, "act")) }).toEqual({
+        format,
+        act: {
+          sub: "service-1",
+          audience: ["https://rs-1.lindorm.test"],
+          act: { sub: "service-2", audience: ["https://rs-2.lindorm.test"] },
+        },
+      });
+    }
+  });
+
+  test("the compact COSE encoding gives an actor `audience` no label, least of all 3", async () => {
+    // ⛔ LABEL 3 IS RFC 8392 §4's `aud`, AND NOTHING IN THE ACTOR MAP CLAIMS IT.
+    // The compact encoder walks the member declarations, so an undeclared member
+    // has no label to take and rides under its own string key (RFC 9052 §1.5) —
+    // `Map` against `Map`, so an integer key cannot compare equal to its text
+    // spelling, and whole-value equality so a 3 appearing beside it fails.
+    const token = await mint(
+      "cwt",
+      { act: { subject: "service-1", audience: ["https://rs-1.lindorm.test"] } },
+      true,
+    );
+
+    expect(wireClaimOf(token, "act")).toEqual(
+      new Map<number | string, unknown>([
+        [SUB, "service-1"],
+        ["audience", ["https://rs-1.lindorm.test"]],
+      ]),
+    );
   });
 
   test("the compact COSE encoding keeps an undeclared member instead of dropping it", async () => {

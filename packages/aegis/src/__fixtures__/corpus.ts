@@ -263,7 +263,6 @@ const STRUCTURED_CONTENT: SignContent = {
     subject: "corpus_actor_0001",
     issuer: "https://actor.corpus.lindorm.test",
     clientId: "corpus_actor_client_0001",
-    audience: ["https://rs.corpus.lindorm.test"],
     act: { subject: "corpus_actor_0002" },
   },
   mayAct: { subject: "corpus_may_actor_0001", clientId: "corpus_may_client_0001" },

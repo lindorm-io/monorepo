@@ -14,7 +14,7 @@ import { type WireKey, wireLabel, wireName } from "../registry/wire-key.js";
  * which is stable where the array it returns is not.
  *
  * ⚠⚠ AEGIS CARRIES A MEMBER IT DOES NOT DECLARE rather than refusing it — the
- * `open: "verbatim"` cell below — so the five declared here are not an allowlist
+ * `open: "verbatim"` cell below — so the four declared here are not an allowlist
  * and a foreign token naming the actor some other way stays readable.
  * RFC 8693 §4.1, RFC 8693 §4.4.
  *
@@ -29,10 +29,10 @@ import { type WireKey, wireLabel, wireName } from "../registry/wire-key.js";
  * is looking for. RFC 9396 authorization-details elements carry a verbatim tail
  * for the same reason.
  *
- * ⚠ `audience` IS DECLARED THOUGH RFC 8693 §4.1 EXCLUDES IT — because it is what
- * aegis emits: the public `ActClaim.audience` maps to `aud` and the COSE compact
- * form gives it label 3. Removing it is a public-surface change with its own
- * decision to make.
+ * ⛔ NO AUDIENCE MEMBER IS DECLARED, so nothing here maps one and aegis emits
+ * none — AEGIS POLICY AT THE MINT DOOR, RFC 8693 §4.1, stated in the type as
+ * `ActClaim`'s `audience?: never`. A foreign actor's `aud` rides the open tail
+ * untranslated, exactly as any other undeclared member does.
  */
 
 /**
@@ -41,10 +41,11 @@ import { type WireKey, wireLabel, wireName } from "../registry/wire-key.js";
  * — so the compact and interoperable COSE forms are two renderings of ONE
  * declaration rather than two tables that can disagree.
  *
- * ⚠ THE LABELS ARE ONLY PARTLY REGISTERED. 1/2/3 are RFC 8392 §4's, reused so the
- * compact actor map speaks the CWT vocabulary; `client_id` (4) and the nested
+ * ⚠ THE LABELS ARE ONLY PARTLY REGISTERED. 1 and 2 are RFC 8392 §4's, reused so
+ * the compact actor map speaks the CWT vocabulary; `client_id` (4) and the nested
  * `act` (5) are LINDORM's own, meaningful only to a verifier holding this
- * registry, which is why they ride in the proprietary encoding alone.
+ * registry, which is why they ride in the proprietary encoding alone. 3 is left
+ * unallocated: it is RFC 8392 §4's `aud`, and an actor declares no audience.
  */
 const actorMember = (name: string, label: number): Record<Wire, WireKey> => ({
   jose: wireName(name),
@@ -86,20 +87,6 @@ export const ACT_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
     codec: { kind: "text" },
     whenEmpty: KEEP,
     sample: "actor_sample",
-  },
-  {
-    // RFC 7519 §4.1.3 — a scalar WRAPS rather than being refused, the same
-    // tolerance the top-level `audience` claim declares, stated by the same cell
-    // instead of by a second rule.
-    domain: "audience",
-    spec: {
-      kind: "policy",
-      why: "aegis carries `aud` inside `act` for public-surface compatibility with the top-level audience claim, and the codec wraps a scalar rather than refusing it. RFC 8693 §4.1.",
-    },
-    wire: actorMember("aud", 3),
-    codec: { kind: "array", scalar: "wrap" },
-    whenEmpty: KEEP,
-    sample: ["https://rs.lindorm.test"],
   },
   {
     domain: "clientId",

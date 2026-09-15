@@ -1366,8 +1366,8 @@ describe("walkObject — the structure walker's direction guard", () => {
    * ⭐ EXACTLY ONE TEST STOPS `WalkContext.claim` BEING AN EQUIVALENT MUTANT.
    * `claim` is read at the claim boundary and in ONE place a CHILD context can
    * reach — {@link walkElements}'s non-array message, which needs a MEMBER whose
-   * codec is `array` WITH `of`. `act`'s `audience` is an array with NO `of`, so
-   * `sub_id.identifiers` (RFC 9493 §3.2.8) is the only member of that shape, and
+   * codec is `array` WITH `of`. `sub_id.identifiers` (RFC 9493 §3.2.8) is the only
+   * member of any claim whose codec is an array at all, and
    * `classes/sub-id-claim-wire.test.ts`'s "a non-array `identifiers` is refused as
    * a violation of the CLAIM, not of the member" is the only row that reddens when
    * `childPath` is rewritten to `claim: step`.

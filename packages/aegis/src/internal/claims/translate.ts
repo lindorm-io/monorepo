@@ -377,11 +377,12 @@ const flipOneKey = (
  *
  * ⭐ `claim` IS READ BELOW DEPTH 1, AND EXACTLY ONE MEMBER MAKES IT SO: the
  * non-array message in {@link walkElements}, which needs a MEMBER whose codec is
- * `array` WITH `of`. `sub_id.identifiers` (RFC 9493 §3.2.8) is that member, so
+ * `array` WITH `of`. `sub_id.identifiers` (RFC 9493 §3.2.8) is that member — the
+ * only member of ANY claim whose codec is an array at all — so
  * `subjectId: { format: "aliases", identifiers: "not-an-array" }` reports
  * `Claim "subjectId" must be an array` at key `subjectId.identifiers`. ⚠ Without
  * it a `childPath` overwriting `claim` with the member's own domain would be an
- * EQUIVALENT MUTANT — `act`'s `audience` is an array with NO `of`.
+ * EQUIVALENT MUTANT.
  * pinned: `classes/sub-id-claim-wire.test.ts`.
  */
 type WalkContext = {

@@ -925,8 +925,8 @@ describe("CLAIM_REGISTRY", () => {
      * `authorizationDetails` below carries no such binding.
      *
      * ⚠ THE COSE COLUMN IS THE STRING FALLBACK, NOT THE LABEL. Every actor member
-     * is keyed by an INTEGER on COSE (RFC 8392 §4 for 1/2/3; `client_id` 4 and the
-     * nested `act` 5 are lindorm's own), and `coseName` reports the interoperable
+     * is keyed by an INTEGER on COSE (RFC 8392 §4 for 1 and 2; `client_id` 4 and
+     * the nested `act` 5 are lindorm's own), and `coseName` reports the interoperable
      * string a token degrades to. The labels are pinned on the WIRE, by
      * `classes/act-claim-wire.test.ts`, where a wrong one is a wrong token.
      */
@@ -944,15 +944,6 @@ describe("CLAIM_REGISTRY", () => {
         whenEmpty: "keep",
         required: false,
         codec: "text",
-      },
-      // RFC 7519 §4.1.3 makes `aud` string-OR-array, so the member is an array
-      // with the `wrap` tolerance rather than a text scalar.
-      audience: {
-        jose: "aud",
-        cose: "aud",
-        whenEmpty: "keep",
-        required: false,
-        codec: "array",
       },
       clientId: {
         jose: "client_id",
