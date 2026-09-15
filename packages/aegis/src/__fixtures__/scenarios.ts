@@ -8982,19 +8982,20 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       {
         step: "token",
         via: "mint",
-        profile: "security_event",
+        profile: "default",
         content: {
-          audience: ["https://receiver.lindorm.io/"],
-          events: { "urn:lindorm:event:test": {} },
-          // ⚠ THE ELEMENT IS ITSELF AN `aliases` IDENTIFIER — nesting one
-          // inside another is not permitted (RFC 9493 §3.2.8) — harmless here
-          // precisely because the row is a REFUSAL and nothing is ever emitted.
-          // What it buys is a member BELOW a collection element: an element of
-          // `identifiers` declares the same member set as the identifier holding
-          // it, so it carries an `identifiers` of its own — and a path that
-          // stopped growing at the index is unobservable at any shallower shape.
-          // The fault itself is the ordinary one: `identifiers` is declared an
-          // array and holds a string.
+          subject: "user-1",
+          expires: "1h",
+          // ⚠ THE ELEMENT IS ITSELF AN `aliases` IDENTIFIER — nesting one inside
+          // another is not permitted (RFC 9493 §3.2.8), which is why the row runs
+          // under a profile stating no `subjectId` shape rule: the profile that
+          // states one refuses the nesting before any wire is assembled, so the
+          // walker would never be reached. What the nesting buys is a member
+          // BELOW a collection element: an element of `identifiers` declares the
+          // same member set as the identifier holding it, so it carries an
+          // `identifiers` of its own — and a path that stopped growing at the
+          // index is unobservable at any shallower shape. The fault itself is the
+          // ordinary one: `identifiers` is declared an array and holds a string.
           subjectId: {
             format: "aliases",
             identifiers: [{ format: "aliases", identifiers: "not-an-array" }],
@@ -9803,7 +9804,7 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
     title:
       "minting a security event token whose subject identifier spells its issuer and subject as `iss` and `sub` is refused",
     rationale:
-      "The domain surface spells the `iss_sub` pair `issuer` and `subject`; `iss` and `sub` are the wire's names (RFC 9493 §3.2.3), and inside a domain bag they are undeclared members. The member set is open (RFC 9493 §3), so an undeclared member is carried under its own spelling rather than dropped — and these two land on the keys the declared members own, which is the collision aegis refuses in every open structure. Resolving it instead would let two spellings of one member both mean it, settled by key order. On `security_event` the profile's shape rule reads the bag before any wire is assembled and answers first: the format's required members are absent under the names the surface declares, and the refusal names them in the vocabulary the caller writes in.",
+      "The domain surface spells the `iss_sub` pair `issuer` and `subject`; `iss` and `sub` are the wire's names (RFC 9493 §3.2.3), and inside a domain bag they are undeclared members. The member set is open (RFC 9493 §3), so an undeclared member is carried under its own spelling rather than dropped — and these two land on the keys the declared members own, which is the collision aegis refuses in every open structure. Resolving it instead would let two spellings of one member both mean it, settled by key order. On `security_event` the profile's shape rule reads the bag before any wire is assembled and answers first: the format's required members are absent under the names the surface declares, and the refusal names them in the vocabulary the caller writes in. It answers with both halves of RFC 9493 §3's sentence at once, because the identifier breaks both: the members the format requires are absent, and the two it carries instead are members that format does not describe.",
     given: [
       {
         step: "token",
@@ -9832,6 +9833,14 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
             {
               key: "subjectId.subject",
               message: 'subjectId of format "iss_sub" requires member "subject"',
+            },
+            {
+              key: "subjectId.iss",
+              message: 'subjectId of format "iss_sub" does not describe member "iss"',
+            },
+            {
+              key: "subjectId.sub",
+              message: 'subjectId of format "iss_sub" does not describe member "sub"',
             },
           ],
         },
@@ -9916,6 +9925,225 @@ export const SCENARIOS: ReadonlyArray<Scenario> = [
       {
         step: "claims",
         expected: { subjectId: { format: "constructor", id: "subject-1" } },
+      },
+    ],
+  },
+  {
+    id: "a-subject-identifier-carrying-a-member-its-format-does-not-describe-is-refused",
+    title:
+      "a security event token whose subject identifier carries a member its format does not describe is refused",
+    rationale:
+      "A Subject Identifier must not contain any member prohibited or not described by its Identifier Format (RFC 9493 §3), and the Email Identifier Format describes `email` alone (RFC 9493 §3.2.2). An identifier carrying a `uri` beside it names the subject twice under a format that defines one way of naming it: two receivers reading the same signed token resolve two subjects, and neither has misread the format — the identifier is what is wrong. The ceiling is the SPECIFICATION'S and holds at the verify door for that reason, not as an appetite of this package: the member is one aegis declares and the structure walker carries it happily at every depth, so nothing else refuses it. The door is the verifying one because aegis refuses such an identifier at mint before any wire is assembled, which leaves a token written elsewhere as the only one that can reach the floor carrying it. The entry names the position in the domain vocabulary the read answers in.",
+    given: [
+      {
+        step: "token",
+        via: "foreign",
+        typ: { jose: "application/secevent+jwt", cose: "application/secevent+cwt" },
+        claims: {
+          iss: ISSUER,
+          aud: ["https://receiver.lindorm.io/"],
+          iat: NOW,
+          jti: "set-3",
+          sub_id: {
+            format: "email",
+            email: "user@example.com",
+            uri: "https://user.example.com/",
+          },
+          events: { "urn:lindorm:event:test": {} },
+        },
+      },
+    ],
+    when: [
+      {
+        step: "verify",
+        profile: "security_event",
+        options: { audience: "https://receiver.lindorm.io/" },
+      },
+    ],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        code: "profile_policy_invalid",
+        data: {
+          direction: "verify",
+          invalid: [
+            {
+              key: "subjectId.uri",
+              message: 'subjectId of format "email" does not describe member "uri"',
+            },
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: "an-aliases-subject-identifier-nesting-another-is-refused-at-its-position",
+    title:
+      "minting a security event token whose alias list holds an aliases identifier is refused at the position that holds it",
+    rationale:
+      '"aliases" Subject Identifiers must not be nested: the `identifiers` member of an aliases Subject Identifier must not contain a Subject Identifier in the Aliases Identifier Format (RFC 9493 §3.2.8). An alias list states alternate names for ONE entity so that a receiver can act on whichever it recognises, and a list holding a list is no longer that statement — the same token reads as one set of names or as several, depending on how deep the receiver looks. The lead clause is unqualified, so it is the identifier at the position that is refused rather than the claim: an alias list is unbounded, and a refusal stopping at `subjectId` leaves the caller searching it for the one element that has to change.',
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "security_event",
+        content: {
+          audience: ["https://receiver.lindorm.io/"],
+          subjectId: {
+            format: "aliases",
+            identifiers: [
+              { format: "email", email: "user@example.com" },
+              {
+                format: "aliases",
+                identifiers: [{ format: "opaque", id: "11112222333344445555" }],
+              },
+            ],
+          },
+          events: { "urn:lindorm:event:test": {} },
+        },
+      },
+    ],
+    when: [{ step: "mint" }],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        code: "profile_policy_invalid",
+        data: {
+          direction: "mint",
+          invalid: [
+            {
+              key: "subjectId.identifiers[1]",
+              message:
+                'subjectId.identifiers[1] must not be an identifier of format "aliases"',
+            },
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: "a-foreign-token-whose-alias-list-nests-another-is-refused-at-verify",
+    title:
+      "verifying a security event token another producer wrote whose alias list holds an aliases identifier is refused",
+    rationale:
+      "The nesting ban is the specification's (RFC 9493 §3.2.8) and a verifier is reading someone else's token, so the door that matters is the reading one: a transmitter that emits a nested alias list is exactly the party this deployment cannot correct, and a receiver that accepted it would resolve a subject from a structure the format does not define. Nothing upstream of the profile gate refuses it — the claim registry declares the alias element as the same open member set at every depth, so the read translates the nested identifier faithfully and hands it on. The entry names the position, in the domain vocabulary the read answers in.",
+    given: [
+      {
+        step: "token",
+        via: "foreign",
+        typ: { jose: "application/secevent+jwt", cose: "application/secevent+cwt" },
+        claims: {
+          iss: ISSUER,
+          aud: ["https://receiver.lindorm.io/"],
+          iat: NOW,
+          jti: "set-4",
+          sub_id: {
+            format: "aliases",
+            identifiers: [
+              { format: "email", email: "user@example.com" },
+              {
+                format: "aliases",
+                identifiers: [{ format: "opaque", id: "11112222333344445555" }],
+              },
+            ],
+          },
+          events: { "urn:lindorm:event:test": {} },
+        },
+      },
+    ],
+    when: [
+      {
+        step: "verify",
+        profile: "security_event",
+        options: { audience: "https://receiver.lindorm.io/" },
+      },
+    ],
+    then: [
+      {
+        step: "rejects",
+        error: "AegisDomainError",
+        code: "profile_policy_invalid",
+        data: {
+          direction: "verify",
+          invalid: [
+            {
+              key: "subjectId.identifiers[1]",
+              message:
+                'subjectId.identifiers[1] must not be an identifier of format "aliases"',
+            },
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: "an-alias-list-of-conformant-identifiers-is-minted-and-verified",
+    title:
+      "a security event token whose subject identifier aliases several formats is minted and read back at every depth",
+    rationale:
+      "The Aliases Identifier Format identifies one entity by a list of Subject Identifiers, for a receiver that may recognise only some of them (RFC 9493 §3.2.8). Each element is a Subject Identifier in its own right: it names its own format, carries that format's members, and is translated at its own depth — `phoneNumber` reaches the wire as RFC 9493 §3.2.5's `phone_number` inside an element exactly as it does at the surface. A list whose every element is conformant is minted and read back with each element intact, which is the accepting half of the member rule (RFC 9493 §3).",
+    given: [
+      {
+        step: "token",
+        via: "mint",
+        profile: "security_event",
+        content: {
+          audience: ["https://receiver.lindorm.io/"],
+          subjectId: {
+            format: "aliases",
+            identifiers: [
+              { format: "email", email: "user@example.com" },
+              { format: "phone_number", phoneNumber: "+12065550100" },
+              { format: "opaque", id: "11112222333344445555" },
+            ],
+          },
+          events: { "urn:lindorm:event:test": {} },
+        },
+      },
+    ],
+    when: [
+      { step: "mint" },
+      {
+        step: "verify",
+        profile: "security_event",
+        options: { audience: "https://receiver.lindorm.io/" },
+      },
+    ],
+    then: [
+      { step: "accepts", format: { jose: "jwt", cose: "cwt" } },
+      {
+        step: "claims",
+        expected: {
+          subjectId: {
+            format: "aliases",
+            identifiers: [
+              { format: "email", email: "user@example.com" },
+              { format: "phone_number", phoneNumber: "+12065550100" },
+              { format: "opaque", id: "11112222333344445555" },
+            ],
+          },
+        },
+      },
+      // The WIRE half, read off the raw bytes: the element keeps RFC 9493's own
+      // spelling at depth, which is what a receiver of a security event token
+      // reads. ⚠ The COSE wire is not stated here — under the default
+      // proprietary encoding `sub_id` is a nested label map, which a row's
+      // raw-claims record cannot express.
+      {
+        step: "wireClaims",
+        on: "jose",
+        includes: {
+          sub_id: {
+            format: "aliases",
+            identifiers: [
+              { format: "email", email: "user@example.com" },
+              { format: "phone_number", phone_number: "+12065550100" },
+              { format: "opaque", id: "11112222333344445555" },
+            ],
+          },
+        },
       },
     ],
   },

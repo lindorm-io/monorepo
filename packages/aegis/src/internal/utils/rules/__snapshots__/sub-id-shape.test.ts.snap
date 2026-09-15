@@ -1,10 +1,104 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`subIdShape > fails for the account format carrying a member it does not describe 1`] = `
+[
+  {
+    "key": "subjectId.email",
+    "message": "subjectId of format "account" does not describe member "email"",
+  },
+]
+`;
+
+exports[`subIdShape > fails for the aliases format carrying a member it does not describe 1`] = `
+[
+  {
+    "key": "subjectId.uri",
+    "message": "subjectId of format "aliases" does not describe member "uri"",
+  },
+]
+`;
+
+exports[`subIdShape > fails for the did format carrying a member it does not describe 1`] = `
+[
+  {
+    "key": "subjectId.uri",
+    "message": "subjectId of format "did" does not describe member "uri"",
+  },
+]
+`;
+
+exports[`subIdShape > fails for the email format carrying a member it does not describe 1`] = `
+[
+  {
+    "key": "subjectId.uri",
+    "message": "subjectId of format "email" does not describe member "uri"",
+  },
+]
+`;
+
+exports[`subIdShape > fails for the iss_sub format carrying a member it does not describe 1`] = `
+[
+  {
+    "key": "subjectId.uri",
+    "message": "subjectId of format "iss_sub" does not describe member "uri"",
+  },
+]
+`;
+
+exports[`subIdShape > fails for the opaque format carrying a member it does not describe 1`] = `
+[
+  {
+    "key": "subjectId.uri",
+    "message": "subjectId of format "opaque" does not describe member "uri"",
+  },
+]
+`;
+
+exports[`subIdShape > fails for the phone_number format carrying a member it does not describe 1`] = `
+[
+  {
+    "key": "subjectId.uri",
+    "message": "subjectId of format "phone_number" does not describe member "uri"",
+  },
+]
+`;
+
 exports[`subIdShape > fails for the phone_number format spelled in the wire vocabulary 1`] = `
 [
   {
     "key": "subjectId.phoneNumber",
     "message": "subjectId of format "phone_number" requires member "phoneNumber"",
+  },
+  {
+    "key": "subjectId.phone_number",
+    "message": "subjectId of format "phone_number" does not describe member "phone_number"",
+  },
+]
+`;
+
+exports[`subIdShape > fails for the uri format carrying a member it does not describe 1`] = `
+[
+  {
+    "key": "subjectId.email",
+    "message": "subjectId of format "uri" does not describe member "email"",
+  },
+]
+`;
+
+exports[`subIdShape > fails once for an aliases identifier that holds itself 1`] = `
+[
+  {
+    "key": "subjectId.identifiers[0]",
+    "message": "subjectId.identifiers[0] must not be an identifier of format "aliases"",
+  },
+]
+`;
+
+exports[`subIdShape > fails when a modelled format carries a member aegis does not declare 1`] = `
+[
+  {
+    "key": "subjectId.given_name",
+    "message": "subjectId of format "email" does not describe member "given_name"",
   },
 ]
 `;
@@ -23,6 +117,51 @@ exports[`subIdShape > fails when a required member of the format is missing 1`] 
   {
     "key": "subjectId.subject",
     "message": "subjectId of format "iss_sub" requires member "subject"",
+  },
+]
+`;
+
+exports[`subIdShape > fails when an aliases identifier holds an aliases identifier 1`] = `
+[
+  {
+    "key": "subjectId.identifiers[1]",
+    "message": "subjectId.identifiers[1] must not be an identifier of format "aliases"",
+  },
+]
+`;
+
+exports[`subIdShape > fails when an element of identifiers carries a member its own format does not describe 1`] = `
+[
+  {
+    "key": "subjectId.identifiers[0].email",
+    "message": "subjectId.identifiers[0] of format "opaque" does not describe member "email"",
+  },
+]
+`;
+
+exports[`subIdShape > fails when an element of identifiers is not an object 1`] = `
+[
+  {
+    "key": "subjectId.identifiers[0]",
+    "message": "subjectId.identifiers[0] must be an object",
+  },
+]
+`;
+
+exports[`subIdShape > fails when an element of identifiers lacks the member its own format requires 1`] = `
+[
+  {
+    "key": "subjectId.identifiers[0].email",
+    "message": "subjectId.identifiers[0] of format "email" requires member "email"",
+  },
+]
+`;
+
+exports[`subIdShape > fails when an element of identifiers names no format 1`] = `
+[
+  {
+    "key": "subjectId.identifiers[0].format",
+    "message": "subjectId.identifiers[0].format must be a string",
   },
 ]
 `;
@@ -113,6 +252,15 @@ exports[`subIdShape > fails when the uri format's required member is empty 1`] =
   {
     "key": "subjectId.uri",
     "message": "subjectId of format "uri" requires member "uri"",
+  },
+]
+`;
+
+exports[`subIdShape > refuses a member beyond the format's required ones, no RFC 9493 §3.2 format describing an optional member 1`] = `
+[
+  {
+    "key": "subjectId.url",
+    "message": "subjectId of format "opaque" does not describe member "url"",
   },
 ]
 `;

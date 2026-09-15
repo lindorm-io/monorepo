@@ -53,10 +53,17 @@ export type SubjectIdentifier = SubjectIdentifierMembers & Dict;
  * The members each known `format` requires beyond `format` itself (RFC 9493 §3.2).
  * A format absent from this map is accepted with no extra required members.
  *
+ * ⭐ IT IS THE PERMITTED SET TOO (RFC 9493 §3): `internal/utils/rules/sub-id-shape.ts`
+ * derives the format's ceiling from this row instead of a second table, so a member
+ * added here is demanded and permitted by the one edit.
+ * pinned: `internal/utils/rules/sub-id-shape.test.ts#refuses a member beyond the
+ * format's required ones, no RFC 9493 §3.2 format describing an optional member`
+ *
  * ⚠⚠ KEYED BY THE MEMBER'S **DOMAIN** NAME — `phoneNumber`, not `phone_number`.
- * Its only reader is `internal/utils/rules/sub-id-shape.ts`, which reads
- * `claims.subjectId`: a DOMAIN-keyed bag. A wire spelling here looks up a key that
- * bag does not have, and the format's REQUIRED member goes silently unenforced.
+ * `internal/utils/rules/sub-id-shape.ts` reads `claims.subjectId`: a DOMAIN-keyed
+ * bag. A wire spelling here looks up a key that bag does not have, so the format's
+ * REQUIRED member goes silently unenforced and the spelling the bag does carry is
+ * refused as a member the format does not describe.
  *
  * ⚠ IT IS A CONDITIONAL AND STAYS OUT OF THE MEMBER SET.
  * {@link ClaimMemberSpec.required} is UNCONDITIONAL by design — the walker asks it

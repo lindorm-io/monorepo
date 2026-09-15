@@ -142,12 +142,13 @@ const plain = (value: unknown): unknown =>
  *
  * ⚠⚠ IT IS NOT A CONFORMANT SUBJECT IDENTIFIER AND IT IS NOT MEANT TO BE
  * (RFC 9493 §3) — no Identifier Format describes `email` and `id` and `url`
- * together. Aegis enforces the per-format REQUIREMENT (through the
- * `subjectId` profile shape rule) and not the per-format PROHIBITION — nothing
- * can, without holding every registered format's member list — so this bag is a
- * structural probe that puts every member's spelling and label on one wire in one
- * whole-value equality. The conformant, per-format shapes are pinned at depth
- * below, where the `aliases` format makes them a single legal claim.
+ * together. The per-format REQUIREMENT and the per-format PROHIBITION are both
+ * the `subjectId` profile shape rule, and every mint below runs under `default`,
+ * which states no shape rule at all
+ * (`internal/profiles/definitions/default.ts`) — so the bag reaches the wire and
+ * serves as a structural probe that puts every member's spelling and label on one
+ * wire in one whole-value equality. The conformant, per-format shapes are pinned
+ * at depth below, where the `aliases` format makes them a single legal claim.
  */
 const EVERY_MEMBER = {
   format: "iss_sub",

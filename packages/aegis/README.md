@@ -1005,14 +1005,16 @@ and `sub` in the domain bag are refused the same way — the members are `issuer
 directions and under every profile.
 
 The `aliases` format nests: `identifiers` is an array of Subject Identifiers
-(RFC 9493 §3.2.8), each translated and compacted at its own depth.
-⚠ aegis does not refuse an `aliases` identifier nested inside one
-(RFC 9493 §3.2.8).
+(RFC 9493 §3.2.8), each translated and compacted at its own depth. An `aliases`
+identifier inside one is refused where the profile states the `subjectId` shape
+rule, at the position that holds it — `subjectId.identifiers[1]` (RFC 9493
+§3.2.8).
 
 The member set is **open**, verbatim: an Identifier Format needs no registration
 (RFC 9493 §3), so a conformant identifier can carry members aegis cannot
-enumerate. They ride under the producer's own spelling, and a member colliding
-with a declared one is refused exactly as inside an actor.
+enumerate. In a format aegis does not model they ride under the producer's own
+spelling — in one it models, the ceiling below refuses them — and a member
+colliding with a declared one is refused exactly as inside an actor.
 
 On COSE the members carry integer labels under `proprietary: true` — `iss` 1 and
 `sub` 2 (RFC 8392 §4), plus lindorm's `format` 0, `email` 4, `phone_number` 5,
@@ -1025,6 +1027,15 @@ The per-format requirements (RFC 9493 §3.2 — `email` for the Email format,
 are a profile `shape` rule (`subjectId`), because they are conditional on the
 format rather than unconditional the way `format` itself is. `security_event`
 declares it.
+
+The same rule is the member **ceiling**: a Subject Identifier carries no member
+its Identifier Format does not describe (RFC 9493 §3), so an `email` identifier
+carrying a `uri` beside it is refused at `subjectId.uri` — the specification's
+rule at **both** doors, mint and verify, and the one thing that refuses a member
+the walker otherwise carries. A format's permitted members are the ones it
+requires. A format aegis does not model demands nothing and forbids nothing, so
+an identifier in an unmodelled format travels intact. Every check runs at each
+depth of an alias list and names its position.
 
 ### Security events (RFC 8417)
 
