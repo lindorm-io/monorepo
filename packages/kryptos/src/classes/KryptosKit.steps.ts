@@ -1,11 +1,12 @@
 import { B64 } from "@lindorm/b64";
-import { Binding, DataTable, Given, ParameterType, Then, When } from "@lindorm/gherkin";
+import type { DataTable } from "@lindorm/gherkin";
+import { Binding, Given, ParameterType, Then, When } from "@lindorm/gherkin";
 import { isString } from "@lindorm/is";
 import { AES_ENCRYPTION_ALGORITHMS, type Environment } from "@lindorm/types";
 import { decode, encode } from "cbor2";
 import { X509Certificate } from "crypto";
 import { expect } from "vitest";
-import { KryptosKit } from "../classes/KryptosKit.js";
+import { KryptosKit } from "./KryptosKit.js";
 import type { IKryptos } from "../interfaces/index.js";
 import {
   AKP_SIG_ALGORITHMS,
@@ -41,18 +42,34 @@ import type {
   KryptosType,
   KryptosUse,
 } from "../types/index.js";
-import { TEST_AKP_KEY_B64, TEST_AKP_KEY_JWK, TEST_AKP_KEY_PEM } from "./akp-keys.js";
-import { TEST_EC_KEY_B64, TEST_EC_KEY_JWK, TEST_EC_KEY_PEM } from "./ec-keys.js";
-import type { KeyFormat, Subject } from "./kryptos-steps-base.js";
-import { KryptosStepsBase } from "./kryptos-steps-base.js";
+import {
+  TEST_AKP_KEY_B64,
+  TEST_AKP_KEY_JWK,
+  TEST_AKP_KEY_PEM,
+} from "../__fixtures__/akp-keys.js";
+import {
+  TEST_EC_KEY_B64,
+  TEST_EC_KEY_JWK,
+  TEST_EC_KEY_PEM,
+} from "../__fixtures__/ec-keys.js";
+import type { KeyFormat, Subject } from "../__fixtures__/kryptos-steps-base.js";
+import { KryptosStepsBase } from "../__fixtures__/kryptos-steps-base.js";
 import {
   TEST_OCT_KEY_B64,
   TEST_OCT_KEY_JWK,
   TEST_OCT_KEY_PEM,
   TEST_OCT_KEY_UTF,
-} from "./oct-keys.js";
-import { TEST_OKP_KEY_B64, TEST_OKP_KEY_JWK, TEST_OKP_KEY_PEM } from "./okp-keys.js";
-import { TEST_RSA_KEY_B64, TEST_RSA_KEY_JWK, TEST_RSA_KEY_PEM } from "./rsa-keys.js";
+} from "../__fixtures__/oct-keys.js";
+import {
+  TEST_OKP_KEY_B64,
+  TEST_OKP_KEY_JWK,
+  TEST_OKP_KEY_PEM,
+} from "../__fixtures__/okp-keys.js";
+import {
+  TEST_RSA_KEY_B64,
+  TEST_RSA_KEY_JWK,
+  TEST_RSA_KEY_PEM,
+} from "../__fixtures__/rsa-keys.js";
 import {
   TEST_X509_EXPIRED_PEM,
   TEST_X509_INTERMEDIATE_PEM,
@@ -60,7 +77,7 @@ import {
   TEST_X509_LEAF_PRIVATE_KEY_B64,
   TEST_X509_LEAF_PUBLIC_KEY_B64,
   TEST_X509_ROOT_PEM,
-} from "./x509.js";
+} from "../__fixtures__/x509.js";
 
 type NonKey = null | undefined | string | number | Array<never>;
 

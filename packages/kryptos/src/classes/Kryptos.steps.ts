@@ -1,7 +1,7 @@
+import type { DataTable } from "@lindorm/gherkin";
 import {
   AfterScenario,
   Binding,
-  DataTable,
   Given,
   ParameterType,
   Then,
@@ -10,20 +10,20 @@ import {
 import { isArray, isString } from "@lindorm/is";
 import { createHash } from "crypto";
 import { expect, vi } from "vitest";
-import { Kryptos, KryptosKit } from "../classes/index.js";
+import { Kryptos, KryptosKit } from "./index.js";
 import type {
   KryptosEnvFormat,
   KryptosExportMode,
   KryptosJwk,
   LindormJwk,
 } from "../types/index.js";
-import type { KeyFormat, Subject } from "./kryptos-steps-base.js";
-import { KryptosStepsBase } from "./kryptos-steps-base.js";
+import type { KeyFormat, Subject } from "../__fixtures__/kryptos-steps-base.js";
+import { KryptosStepsBase } from "../__fixtures__/kryptos-steps-base.js";
 import {
   TEST_X509_ALT_ROOT_PEM,
   TEST_X509_LEAF_PEM,
   TEST_X509_ROOT_PEM,
-} from "./x509.js";
+} from "../__fixtures__/x509.js";
 
 type LifetimeState = "pending" | "active" | "expired";
 
