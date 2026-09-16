@@ -170,17 +170,19 @@ describe("Aegis — conformance", () => {
   // average the two away.
   //
   // ⚠ The DECLARATION is resolved per wire too (`knownDefectOn`). This check is
-  // per CELL, so a field speaking only for the whole row would report a row green
-  // on JOSE and red on COSE as `"[jose] — PASSES but still carries a
-  // knownDefect"` — and both ways out are dishonest: `unsupported` is reserved
-  // for a SPECIFICATION reason and would be a lie about a wire that works, and
-  // splitting into two wire-pinned rows owes the working wire the same lie.
-  test("should carry a knownDefect on exactly the scenario cells that currently fail", async () => {
-    const mismatched: Array<string> = [];
-
-    expect(MATRIX.length).toBeGreaterThan(0);
-
-    for (const [label, scenario, wire] of MATRIX) {
+  // per CELL, so a field speaking only for the whole row cannot state a
+  // capability that holds on one wire and fails on the other — and both ways out
+  // are dishonest: `unsupported` is reserved for a SPECIFICATION reason and would
+  // be a lie about a wire that works, and splitting into two wire-pinned rows owes
+  // the working wire the same lie.
+  //
+  // ⚠ ONE `test.each` ROW PER CELL: reducing these rows into one test puts every
+  // cell under a single 5000ms budget, which a cold transform pipeline starves
+  // regardless of any cell's verdict. A row per cell gives each its own budget and
+  // names the cell that flips.
+  test.each(MATRIX)(
+    "%s carries a knownDefect only when it currently fails",
+    async (_label, scenario, wire) => {
       MockDate.set(new Date(DEFAULT_CLOCK));
 
       const failed = await runScenario(
@@ -192,17 +194,9 @@ describe("Aegis — conformance", () => {
         () => true,
       );
 
-      if (failed === (knownDefectOn(scenario, wire) === undefined)) {
-        mismatched.push(
-          failed
-            ? `${label} — FAILS but names no knownDefect`
-            : `${label} — PASSES but still carries a knownDefect`,
-        );
-      }
-    }
-
-    expect(mismatched).toEqual([]);
-  });
+      expect(knownDefectOn(scenario, wire) !== undefined).toBe(failed);
+    },
+  );
 
   // A per-wire declaration must name a wire the row RUNS ON. An entry for a wire
   // the row never reaches describes a cell that does not exist, so it can never
