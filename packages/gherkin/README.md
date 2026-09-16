@@ -33,7 +33,7 @@ import { createVitestConfig } from "../../vitest.config.base.mjs";
 
 const config = await createVitestConfig({
   decorators: true,
-  gherkin: { features: ["src/**/*.feature"], steps: ["src/__fixtures__/**/*.steps.ts"] },
+  gherkin: {},
 });
 
 // Extend test.include by SPREADING — overwriting drops the feature globs.
@@ -44,8 +44,8 @@ export default config;
 
 `createVitestConfig` adds the plugin, the decorator transform and the feature globs, and `.feature`
 files follow the same cadence lanes as tests via the `*.integration.feature` / `*.weekly.feature`
-suffixes. `@lindorm/aes` is the worked example: one `AesKit.feature` beside the class, steps in
-`src/__fixtures__`.
+suffixes. `@lindorm/aes` is the worked example: `AesKit.feature` and `AesKit.steps.ts` beside the
+class.
 
 Outside the monorepo, the same wiring by hand:
 
