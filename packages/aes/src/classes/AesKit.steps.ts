@@ -9,7 +9,7 @@ import {
 } from "@lindorm/kryptos";
 import { AES_ENCRYPTION_ALGORITHMS } from "@lindorm/types";
 import { expect } from "vitest";
-import { AesKit } from "../classes/AesKit.js";
+import { AesKit } from "./AesKit.js";
 import { AesError } from "../errors/index.js";
 import { AES_CBOR_KIT } from "../internal/constants/cbor-spec.js";
 import type { AesContentEncryption } from "../interfaces/index.js";
@@ -19,7 +19,7 @@ import type {
   AesEncryptionRecord,
   SerialisedAesEncryption,
 } from "../types/index.js";
-import { TEST_EC_KEY, TEST_OKP_KEY } from "./keys.js";
+import { TEST_EC_KEY, TEST_OKP_KEY } from "../__fixtures__/keys.js";
 
 @Binding()
 export class AesKitSteps {
