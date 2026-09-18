@@ -161,6 +161,32 @@ Feature: Signing and sealing without a profile
       When I sign the claims without a profile on the cose wire
       Then the raw protected header carries label 16 "application/cwt"
 
+  Rule: an explicitly stated type header replaces the one derived from the token type, on both wires
+
+    An issuer with no profile to obey is the only authority on what its token
+    is for, and an explicit type is what lets a recipient refuse a token issued
+    for something else (RFC 8725 §3.11). Honouring the statement on one wire
+    and dropping it on the other would hand the caller a typed or an untyped
+    token depending on a format choice made for unrelated reasons. The value is
+    stated in the JOSE spelling on either wire, and each kit re-wraps the bare
+    prefix in its own format — aegis policy, as the profiled mint's rewrite
+    from `+jwt` to `+cwt` is.
+
+    Background:
+      Given the claims to sign
+        | subject | user-1 |
+      And the token type "access_token"
+      And the type header "custom+jwt"
+
+    Scenario Outline: <wire>: the stated type header is written in place of the one the token type derives
+      When I sign the claims without a profile on the <wire> wire
+      Then the raw protected header carries <type key> "<media type>"
+
+      Examples:
+        | wire | type key | media type             |
+        | jose | "typ"    | application/custom+jwt |
+        | cose | label 16 | application/custom+cwt |
+
   Rule: signing a payload without a profile refuses a scope list whose member contains a space
 
     The wire spelling of `scope` is one space-delimited string, so a member
@@ -200,6 +226,54 @@ Feature: Signing and sealing without a profile
       When I encrypt the data on the cose wire with the party producer "cHJvZHVjZXI"
       Then encryption is refused as a domain error
       And the refusal reports format "cwe", operation "encryptContent" and option "partyProducer"
+
+  Rule: a signed token wrapped in an encrypting envelope reports its own kind, with the envelope beside it
+
+    A caller asking what a token is must get one answer whether or not the
+    issuer chose to encrypt it: an encrypted id_token is an id_token, and
+    encryption is how it travelled. Reporting the envelope as the kind forces
+    every consumer routing on the kind to special-case encryption, and the ones
+    that forget silently drop a whole class of valid credential — the claims
+    are fully populated and only the tag says otherwise.
+
+    Background:
+      Given the vault also holds a dir encryption key
+      And the content to mint
+        | subject | user-1 |
+      And an audience list whose only member is "client-1"
+      And no access token is co-issued
+      And the mint is asked to seal the token
+
+    Scenario Outline: <wire>: the verified result reports the signed token's kind, not the envelope's
+      When I mint the content under the "id_token" profile on the <wire> wire
+      And I verify the token under the "id_token" profile as the audience "client-1"
+      Then the verified token is a "<format>"
+
+      Examples:
+        | wire | format |
+        | jose | jwt    |
+        | cose | cwt    |
+
+    Scenario Outline: <wire>: the verified result reports the envelope beside the kind
+      When I mint the content under the "id_token" profile on the <wire> wire
+      And I verify the token under the "id_token" profile as the audience "client-1"
+      Then the verified token reports the wrapper "<wrapper>"
+
+      Examples:
+        | wire | wrapper |
+        | jose | jwe     |
+        | cose | cwe     |
+
+    Scenario Outline: <wire>: the claims are the inner token's, fully populated
+      When I mint the content under the "id_token" profile on the <wire> wire
+      And I verify the token under the "id_token" profile as the audience "client-1"
+      Then the verified claims include
+        | subject | user-1 |
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
 
   Rule: a token that seals content rather than a token reports itself, with no wrapper
 

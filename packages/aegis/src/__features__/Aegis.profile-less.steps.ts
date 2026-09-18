@@ -7,7 +7,6 @@ import MockDate from "mockdate";
 import { expect } from "vitest";
 import { Aegis } from "../classes/Aegis.js";
 import type { TokenType } from "../constants/token-type.js";
-import { AegisDomainError } from "../errors/index.js";
 import { AegisStepsBase } from "../__fixtures__/aegis-steps-base.js";
 import { alternationOf } from "../__fixtures__/alternation-of.js";
 import {
@@ -16,6 +15,7 @@ import {
   TEST_OCT_KEY_ENC,
 } from "../__fixtures__/keys.js";
 import type { Wire, WireKey } from "../__fixtures__/raw-bucket.js";
+import { SEALED_FORMAT, SIGNED_FORMAT } from "../__fixtures__/wire-formats.js";
 
 const VAULT_KEYS = {
   "ES512 signing": TEST_EC_KEY_SIG,
@@ -25,9 +25,10 @@ const VAULT_KEYS = {
 
 type VaultKey = keyof typeof VAULT_KEYS;
 
-/** The claims format `sign` writes on each wire, and the sealed format `encrypt` writes. */
-const SIGNED_FORMAT = { jose: "jwt", cose: "cwt" } as const;
-const SEALED_FORMAT = { jose: "jwe", cose: "cwe" } as const;
+/** The claims the domain states as a list, and a sentence may name. */
+const LIST_CLAIMS = ["audience", "scope", "roles"] as const;
+
+type ListClaim = (typeof LIST_CLAIMS)[number];
 
 /** `"name"` for a JOSE member; `claim key N` for a CWT claim; `label N` for a COSE header. */
 const WIRE_KEY = /"[^"]*"|claim key -?\d+|label -?\d+/;
@@ -83,14 +84,19 @@ export class AegisProfileLessSteps extends AegisStepsBase {
     this.ctx.claims.expiresAt = new Date(instant);
   }
 
-  @Given("a scope list whose only member is {string}")
-  aScopeListWhoseOnlyMemberIs(member: string): void {
-    this.ctx.claims.scope = [member];
+  @Given("a(n) {listClaim} list whose only member is {string}")
+  aListWhoseOnlyMemberIs(claim: ListClaim, member: string): void {
+    this.ctx.claims[claim] = [member];
   }
 
   @Given("the token type {string}")
   theTokenType(tokenType: TokenType): void {
     this.ctx.tokenType = tokenType;
+  }
+
+  @Given("the type header {string}")
+  theTypeHeader(typ: string): void {
+    this.ctx.typ = typ;
   }
 
   // the acts
@@ -104,6 +110,7 @@ export class AegisProfileLessSteps extends AegisStepsBase {
         format,
         payload: this.ctx.claims,
         tokenType: this.ctx.tokenType,
+        typ: this.ctx.typ,
       }),
     );
 
@@ -200,6 +207,11 @@ export class AegisProfileLessSteps extends AegisStepsBase {
     expect(this.verified().format).toBe(format);
   }
 
+  @Then("the verified token reports the wrapper {string}")
+  theVerifiedTokenReportsTheWrapper(wrapper: string): void {
+    expect(this.verified().wrapper).toBe(wrapper);
+  }
+
   @Then("the verified claims include")
   theVerifiedClaimsInclude(table: DataTable): void {
     expect(this.verified().claims).toMatchObject(table.rowsHash());
@@ -251,6 +263,11 @@ export class AegisProfileLessSteps extends AegisStepsBase {
     return raw as VaultKey;
   }
 
+  @ParameterType("listClaim", alternationOf(LIST_CLAIMS))
+  static listClaim(raw: string): ListClaim {
+    return raw as ListClaim;
+  }
+
   @ParameterType("wireKey", WIRE_KEY)
   static wireKey(raw: string): WireKey {
     return toWireKey(raw);
@@ -267,7 +284,11 @@ export class AegisProfileLessSteps extends AegisStepsBase {
     const format = SEALED_FORMAT[wire];
 
     const encrypted = await this.attempt(() =>
-      this.ctx.aegis.encrypt(this.ctx.claims, { format, partyProducer }),
+      this.ctx.aegis.encrypt(this.ctx.claims, {
+        format,
+        partyProducer,
+        type: this.ctx.tokenType,
+      }),
     );
 
     if (encrypted === undefined) return;
@@ -276,15 +297,5 @@ export class AegisProfileLessSteps extends AegisStepsBase {
 
     this.ctx.encrypted = encrypted;
     this.ctx.token = encrypted.token;
-  }
-
-  private refusedAsADomainError(code: string | undefined): void {
-    const refusal = this.refusal();
-
-    expect(refusal).toBeInstanceOf(AegisDomainError);
-
-    if (code === undefined) return;
-
-    expect(refusal).toMatchObject({ code });
   }
 }
