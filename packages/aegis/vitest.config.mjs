@@ -1,6 +1,7 @@
 import { createVitestConfig } from "../../vitest.config.base.mjs";
 
-const config = createVitestConfig();
-config.test.include = ["src/**/*.test.ts"];
-
-export default config;
+// decorators: the gherkin step classes use stage-3 decorators; aegis source does not.
+export default await createVitestConfig({
+  decorators: true,
+  gherkin: {},
+});

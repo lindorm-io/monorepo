@@ -9,6 +9,7 @@
     "sourceMap": true
   },
   "exclude": [
+    "**/__features__/**/*",
     "**/__fixtures__/**/*",
     "**/__mocks__/**/*",
     "**/__snapshots__/**/*",

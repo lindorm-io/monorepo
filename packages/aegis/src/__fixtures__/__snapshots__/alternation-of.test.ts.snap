@@ -1,0 +1,12 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`alternationOf > should bind each name verbatim and nothing a metacharacter would admit 1`] = `
+{
+  "a.b": true,
+  "aXb": false,
+  "id_token": true,
+  "x": false,
+  "x|y": true,
+  "y": false,
+}
+`;
