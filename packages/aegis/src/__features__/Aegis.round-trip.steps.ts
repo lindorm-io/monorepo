@@ -95,7 +95,7 @@ export class AegisRoundTripSteps extends AegisStepsBase {
     const token = this.token();
 
     this.ctx.verified = await this.attempt(() =>
-      this.ctx.aegis.verify(profile, token, undefined, {
+      this.ctx.aegis.verify(profile, token, this.ctx.assert, {
         ...this.ctx.verifyOptions,
         audience,
       }),

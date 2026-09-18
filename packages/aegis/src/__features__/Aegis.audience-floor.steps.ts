@@ -3,6 +3,7 @@ import { Binding, Given, Then, When } from "@lindorm/gherkin";
 import type { Dict } from "@lindorm/types";
 import { expect } from "vitest";
 import { AegisStepsBase } from "../__fixtures__/aegis-steps-base.js";
+import { jsonCells } from "../__fixtures__/json-cells.js";
 import type { Wire } from "../__fixtures__/raw-bucket.js";
 import { SIGNED_FORMAT } from "../__fixtures__/wire-formats.js";
 
@@ -12,18 +13,6 @@ const CWT_NAME: Readonly<Record<string, string>> = { jti: "cti" };
 const respellForCwt = (claims: Dict): Dict =>
   Object.fromEntries(
     Object.entries(claims).map(([name, value]) => [CWT_NAME[name] ?? name, value]),
-  );
-
-/** Every value cell is JSON, so a table states a list, a number, an object or the empty string unambiguously. */
-const jsonCells = (table: DataTable): Dict =>
-  Object.fromEntries(
-    Object.entries(table.rowsHash()).map(([key, cell]) => {
-      try {
-        return [key, JSON.parse(cell)];
-      } catch {
-        throw new Error(`the cell for "${key}" is not JSON: ${cell}`);
-      }
-    }),
   );
 
 /** A NumericDate (RFC 7519 §2): seconds since the epoch. */

@@ -128,7 +128,7 @@ export class AegisProfileLessSteps extends AegisStepsBase {
     const token = this.token();
 
     this.ctx.verified = await this.attempt(() =>
-      this.ctx.aegis.verify(token, undefined, this.ctx.verifyOptions),
+      this.ctx.aegis.verify(token, this.ctx.assert, this.ctx.verifyOptions),
     );
   }
 

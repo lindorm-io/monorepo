@@ -12,6 +12,7 @@ import type {
   ProfileVerifyOptions,
   SignedToken,
   VerifiedToken,
+  VerifyAssert,
 } from "../types/index.js";
 
 @Context()
@@ -34,6 +35,10 @@ export class AegisContext {
   mintOptions: ProfileMintOptions = {};
   /** What a verify is asked beyond the profile, the token and the audience. */
   verifyOptions: Omit<ProfileVerifyOptions, "audience"> = {};
+  /** What the verifier asserts about the claims — the matcher bag the signed and the static door share. */
+  assert?: VerifyAssert;
+  /** The boolean door's answer, when the claims were checked without a signature. */
+  matched?: boolean;
 
   /** The last act's artifact, whichever verb produced it. */
   token?: string;
