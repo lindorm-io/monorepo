@@ -54,8 +54,8 @@ export class AegisConfidentialitySteps extends AegisStepsBase {
 
     const signed = await this.attempt(() =>
       format === "cws"
-        ? this.ctx.aegis.cws.sign(this.ctx.claims)
-        : this.ctx.aegis.jws.sign(this.ctx.claims),
+        ? this.ctx.aegis.cws.sign(this.ctx.claims, this.coseEnvelope())
+        : this.ctx.aegis.jws.sign(this.ctx.claims, this.joseEnvelope()),
     );
 
     if (signed === undefined) return;
@@ -70,7 +70,9 @@ export class AegisConfidentialitySteps extends AegisStepsBase {
   async iDecryptTheToken(): Promise<void> {
     const token = this.token();
 
-    this.ctx.decrypted = await this.attempt(() => this.ctx.aegis.decrypt(token));
+    this.ctx.decrypted = await this.attempt(() =>
+      this.ctx.aegis.decrypt(token, { critical: this.ctx.verifyOptions.critical }),
+    );
   }
 
   // the domain result

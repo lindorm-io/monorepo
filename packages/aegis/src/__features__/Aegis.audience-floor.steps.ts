@@ -48,12 +48,11 @@ export class AegisAudienceFloorSteps extends AegisStepsBase {
   @When("I sign the wire claims as a claims token on the {wire} wire")
   async iSignTheWireClaimsAsAClaimsToken(wire: Wire): Promise<void> {
     const format = SIGNED_FORMAT[wire];
-    const options = { tokenType: this.ctx.typPrefix };
 
     const signed = await this.attempt(() =>
       format === "cwt"
-        ? this.ctx.aegis.cwt.sign(respellForCwt(this.ctx.wireClaims), options)
-        : this.ctx.aegis.jwt.sign(this.ctx.wireClaims, options),
+        ? this.ctx.aegis.cwt.sign(respellForCwt(this.ctx.wireClaims), this.coseEnvelope())
+        : this.ctx.aegis.jwt.sign(this.ctx.wireClaims, this.joseEnvelope()),
     );
 
     if (signed === undefined) return;

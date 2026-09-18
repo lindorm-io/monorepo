@@ -78,7 +78,11 @@ export class AegisRoundTripSteps extends AegisStepsBase {
     const format = SIGNED_FORMAT[wire];
 
     const minted = await this.attempt(() =>
-      this.ctx.aegis.mint(profile, this.content(), { ...this.ctx.mintOptions, format }),
+      this.ctx.aegis.mint(profile, this.content(), {
+        ...this.ctx.mintOptions,
+        format,
+        sign: { ...this.ctx.mintOptions.sign, ...this.domainEnvelope() },
+      }),
     );
 
     if (minted === undefined) return;

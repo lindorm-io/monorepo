@@ -2,8 +2,13 @@ import { AbstractSteps, Inject } from "@lindorm/gherkin";
 import { expect } from "vitest";
 import { AegisDomainError } from "../errors/index.js";
 import type {
+  CoseHeaderBuckets,
+  CoseWireTokenEnvelope,
   DecryptedToken,
+  DomainProtectedHeader,
   EncryptedToken,
+  JoseHeaderBuckets,
+  JoseWireTokenEnvelope,
   ParsedToken,
   SignedToken,
   VerifiedToken,
@@ -61,6 +66,51 @@ export abstract class AegisStepsBase {
 
   protected parsed(): ParsedToken {
     return this.produced(this.ctx.parsed, "parsed");
+  }
+
+  protected rawVerified(): JoseHeaderBuckets | CoseHeaderBuckets {
+    return this.produced(this.ctx.rawVerified, "verified at the raw door");
+  }
+
+  /** The caller's statements every domain writer forwards: its protected header, when one was stated. */
+  protected domainEnvelope(): { header?: DomainProtectedHeader } {
+    return this.ctx.domainHeader === undefined ? {} : { header: this.ctx.domainHeader };
+  }
+
+  /**
+   * The caller's envelope for a JOSE kit door. The compact serialisation has one
+   * header and it is protected, so an unprotected custom bag is refused rather
+   * than dropped: a token signed without half the statement tests nothing.
+   */
+  protected joseEnvelope(): JoseWireTokenEnvelope {
+    const { wireHeader, customHeader, typPrefix } = this.ctx;
+
+    if (customHeader.unprotected !== undefined) {
+      throw new Error(
+        "the scenario states an unprotected custom header, but a JOSE compact serialisation has only one header",
+      );
+    }
+
+    return {
+      header: wireHeader,
+      tokenType: typPrefix,
+      custom:
+        customHeader.header === undefined ? undefined : { header: customHeader.header },
+    };
+  }
+
+  /** The caller's envelope for a COSE kit door: the same statements, in the wire's own bucket spelling. */
+  protected coseEnvelope(): CoseWireTokenEnvelope {
+    const { wireHeader, customHeader, typPrefix } = this.ctx;
+
+    return {
+      header: wireHeader,
+      tokenType: typPrefix,
+      custom:
+        customHeader.header === undefined && customHeader.unprotected === undefined
+          ? undefined
+          : { protected: customHeader.header, unprotected: customHeader.unprotected },
+    };
   }
 
   /** The last artifact, whichever verb produced it. */

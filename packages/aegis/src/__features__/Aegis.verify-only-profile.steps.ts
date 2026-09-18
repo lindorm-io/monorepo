@@ -1,15 +1,21 @@
 import { Binding, Given, ParameterType, Then, When } from "@lindorm/gherkin";
 import { expect } from "vitest";
-import { CoseError, JoseError } from "../errors/index.js";
+import { CoseError, CwtError, JoseError, JwtError } from "../errors/index.js";
 import { AegisStepsBase } from "../__fixtures__/aegis-steps-base.js";
+import { alternationOf } from "../__fixtures__/alternation-of.js";
 import { TEST_EC_KEY_SIG } from "../__fixtures__/keys.js";
 import type { Wire, WireKey } from "../__fixtures__/raw-bucket.js";
 import { signAsThirdParty } from "../__fixtures__/third-party-producer.js";
 
-/** The error family a wire's own reader refuses under, before any profile is reached. */
-const ERROR_FAMILY = { JOSE: JoseError, COSE: CoseError } as const;
+/** The wire error a reader refuses under: a family root, or the claims format's own leaf. */
+const WIRE_ERROR = {
+  JOSE: JoseError,
+  COSE: CoseError,
+  JWT: JwtError,
+  CWT: CwtError,
+} as const;
 
-type ErrorFamily = keyof typeof ERROR_FAMILY;
+type WireError = keyof typeof WIRE_ERROR;
 
 @Binding()
 export class AegisVerifyOnlyProfileSteps extends AegisStepsBase {
@@ -47,6 +53,7 @@ export class AegisVerifyOnlyProfileSteps extends AegisStepsBase {
       this.ctx.wireClaims,
       undefined,
       TEST_EC_KEY_SIG,
+      this.ctx.foreignHeaders,
     );
   }
 
@@ -57,6 +64,7 @@ export class AegisVerifyOnlyProfileSteps extends AegisStepsBase {
       this.ctx.wireClaims,
       typ,
       TEST_EC_KEY_SIG,
+      this.ctx.foreignHeaders,
     );
   }
 
@@ -80,9 +88,9 @@ export class AegisVerifyOnlyProfileSteps extends AegisStepsBase {
 
   // the refusals
 
-  @Then("verification is refused as a {errorFamily} error")
-  verificationIsRefusedAsAWireError(family: ErrorFamily): void {
-    expect(this.refusal()).toBeInstanceOf(ERROR_FAMILY[family]);
+  @Then("verification is refused as a {wireError} error")
+  verificationIsRefusedAsAWireError(error: WireError): void {
+    expect(this.refusal()).toBeInstanceOf(WIRE_ERROR[error]);
   }
 
   @Then("the refusal reports the type header it read {string}")
@@ -110,8 +118,8 @@ export class AegisVerifyOnlyProfileSteps extends AegisStepsBase {
 
   // parameter types
 
-  @ParameterType("errorFamily", /JOSE|COSE/)
-  static errorFamily(raw: string): ErrorFamily {
-    return raw as ErrorFamily;
+  @ParameterType("wireError", alternationOf(Object.keys(WIRE_ERROR)))
+  static wireError(raw: string): WireError {
+    return raw as WireError;
   }
 }

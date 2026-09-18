@@ -111,6 +111,7 @@ export class AegisProfileLessSteps extends AegisStepsBase {
         payload: this.ctx.claims,
         tokenType: this.ctx.tokenType,
         typ: this.ctx.typ,
+        ...this.domainEnvelope(),
       }),
     );
 
@@ -290,6 +291,7 @@ export class AegisProfileLessSteps extends AegisStepsBase {
         format,
         partyProducer,
         type: this.ctx.tokenType,
+        ...this.domainEnvelope(),
       }),
     );
 

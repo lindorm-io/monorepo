@@ -5,8 +5,11 @@ import MockDate from "mockdate";
 import type { Aegis } from "../classes/Aegis.js";
 import type { TokenType } from "../constants/token-type.js";
 import type {
+  CoseHeaderBuckets,
   DecryptedToken,
+  DomainProtectedHeader,
   EncryptedToken,
+  JoseHeaderBuckets,
   ParsedToken,
   ProfileMintOptions,
   ProfileVerifyOptions,
@@ -14,6 +17,7 @@ import type {
   VerifiedToken,
   VerifyAssert,
 } from "../types/index.js";
+import type { ForeignHeaders } from "./third-party-producer.js";
 
 @Context()
 export class AegisContext {
@@ -31,6 +35,18 @@ export class AegisContext {
   tokenType?: TokenType;
   /** An explicit type header, stated over the token type. */
   typ?: string;
+  /** The caller's REGISTERED header bag for a raw kit door, in the wire vocabulary. */
+  wireHeader?: Dict;
+  /**
+   * The caller's UNREGISTERED header bags for a raw kit door: `header` is the
+   * bucket every wire has — JOSE's one header, COSE's protected bucket — and
+   * `unprotected` is COSE's second.
+   */
+  customHeader: { header?: Dict; unprotected?: Dict } = {};
+  /** The caller's protected header statements for a domain door, in the domain vocabulary. */
+  domainHeader?: DomainProtectedHeader;
+  /** What a third party writes beside the `alg` and `kid` it derives from its key. */
+  foreignHeaders: ForeignHeaders = {};
   /** What a mint is asked beyond its content and its wire. */
   mintOptions: ProfileMintOptions = {};
   /** What a verify is asked beyond the profile, the token and the audience. */
@@ -47,6 +63,8 @@ export class AegisContext {
   verified?: VerifiedToken;
   decrypted?: DecryptedToken;
   parsed?: ParsedToken;
+  /** A raw door's result: the header buckets as the kit reports them. */
+  rawVerified?: JoseHeaderBuckets | CoseHeaderBuckets;
 
   /** What the last act threw, when it threw. */
   refusal?: unknown;
