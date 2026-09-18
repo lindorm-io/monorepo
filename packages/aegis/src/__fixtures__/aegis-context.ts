@@ -7,7 +7,9 @@ import type { TokenType } from "../constants/token-type.js";
 import type {
   DecryptedToken,
   EncryptedToken,
+  ParsedToken,
   ProfileMintOptions,
+  ProfileVerifyOptions,
   SignedToken,
   VerifiedToken,
 } from "../types/index.js";
@@ -19,6 +21,10 @@ export class AegisContext {
 
   /** The caller's statements — the claims to sign, the content to mint, or the data to encrypt. */
   claims: Dict = {};
+  /** The claims in the wire vocabulary, for a raw kit or a third party to sign verbatim. */
+  wireClaims: Dict = {};
+  /** The bare type prefix a raw kit re-wraps as the wire's own media type. */
+  typPrefix?: string;
   /** The caller's text, when what is sealed is a string rather than an object. */
   text?: string;
   tokenType?: TokenType;
@@ -26,6 +32,8 @@ export class AegisContext {
   typ?: string;
   /** What a mint is asked beyond its content and its wire. */
   mintOptions: ProfileMintOptions = {};
+  /** What a verify is asked beyond the profile, the token and the audience. */
+  verifyOptions: Omit<ProfileVerifyOptions, "audience"> = {};
 
   /** The last act's artifact, whichever verb produced it. */
   token?: string;
@@ -33,6 +41,7 @@ export class AegisContext {
   encrypted?: EncryptedToken;
   verified?: VerifiedToken;
   decrypted?: DecryptedToken;
+  parsed?: ParsedToken;
 
   /** What the last act threw, when it threw. */
   refusal?: unknown;

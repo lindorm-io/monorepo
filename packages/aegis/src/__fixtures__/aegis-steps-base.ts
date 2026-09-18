@@ -4,6 +4,7 @@ import { AegisDomainError } from "../errors/index.js";
 import type {
   DecryptedToken,
   EncryptedToken,
+  ParsedToken,
   SignedToken,
   VerifiedToken,
 } from "../types/index.js";
@@ -56,6 +57,10 @@ export abstract class AegisStepsBase {
 
   protected decrypted(): DecryptedToken {
     return this.produced(this.ctx.decrypted, "decrypted");
+  }
+
+  protected parsed(): ParsedToken {
+    return this.produced(this.ctx.parsed, "parsed");
   }
 
   /** The last artifact, whichever verb produced it. */

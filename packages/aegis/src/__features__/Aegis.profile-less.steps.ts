@@ -125,7 +125,7 @@ export class AegisProfileLessSteps extends AegisStepsBase {
 
   @When("I verify the token")
   async iVerifyTheToken(): Promise<void> {
-    const token = this.signed().token;
+    const token = this.token();
 
     this.ctx.verified = await this.attempt(() => this.ctx.aegis.verify(token));
   }

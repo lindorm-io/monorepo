@@ -92,16 +92,19 @@ export class AegisRoundTripSteps extends AegisStepsBase {
 
   @When("I verify the token under the {string} profile as the audience {string}")
   async iVerifyTheTokenUnderTheProfile(profile: string, audience: string): Promise<void> {
-    const token = this.signed().token;
+    const token = this.token();
 
     this.ctx.verified = await this.attempt(() =>
-      this.ctx.aegis.verify(profile, token, undefined, { audience }),
+      this.ctx.aegis.verify(profile, token, undefined, {
+        ...this.ctx.verifyOptions,
+        audience,
+      }),
     );
   }
 
   @When("I verify the token asserting the scope {string}")
   async iVerifyTheTokenAssertingTheScope(scope: string): Promise<void> {
-    const token = this.signed().token;
+    const token = this.token();
 
     this.ctx.verified = await this.attempt(() => this.ctx.aegis.verify(token, { scope }));
   }
