@@ -1,29 +1,10 @@
 import type { DataTable, DocString } from "@lindorm/gherkin";
 import { Binding, Given, Then, When } from "@lindorm/gherkin";
-import { isArray, isString } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import { expect } from "vitest";
 import { AegisStepsBase } from "../__fixtures__/aegis-steps-base.js";
+import { asObject } from "../__fixtures__/as-object.js";
 import type { WireKey } from "../__fixtures__/raw-bucket.js";
-
-/**
- * A raw value as the object it spells: a JOSE value is one already, an
- * interoperable COSE value is a text-keyed map at every depth. A map keyed by a
- * label is not an object and is refused rather than stringified into one.
- */
-const asObject = (value: unknown): unknown => {
-  if (value instanceof Map) {
-    return Object.fromEntries(
-      [...value].map(([key, inner]) => {
-        if (isString(key)) return [key, asObject(inner)];
-
-        throw new Error(`a map keyed by the label ${String(key)} is not an object`);
-      }),
-    );
-  }
-
-  return isArray(value) ? value.map(asObject) : value;
-};
 
 @Binding()
 export class AegisProfileFloorSteps extends AegisStepsBase {

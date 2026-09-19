@@ -17,6 +17,7 @@ import type {
   VerifiedToken,
   VerifyAssert,
 } from "../types/index.js";
+import type { DpopProofStatement } from "./dpop-presenter.js";
 import type { ForeignHeaders } from "./third-party-producer.js";
 
 @Context()
@@ -51,6 +52,10 @@ export class AegisContext {
   mintOptions: ProfileMintOptions = {};
   /** What a verify is asked beyond the profile, the token and the audience. */
   verifyOptions: Omit<ProfileVerifyOptions, "audience"> = {};
+  /** What the presenter signs into a proof of possession, before the token it commits to exists. */
+  proofStatement?: DpopProofStatement;
+  /** What the presenter writes in the proof's header beside the parameters it derives. */
+  proofHeader?: Dict;
   /** What the verifier asserts about the claims — the matcher bag the signed and the static door share. */
   assert?: VerifyAssert;
   /** The boolean door's answer, when the claims were checked without a signature. */
