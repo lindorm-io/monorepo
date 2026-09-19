@@ -2,7 +2,7 @@ import type { DataTable } from "@lindorm/gherkin";
 import { Binding, Given, ParameterType, Then, When } from "@lindorm/gherkin";
 import { expect } from "vitest";
 import { AegisKeyError } from "../errors/index.js";
-import type { ProfileClaimName, SignContent } from "../types/index.js";
+import type { ProfileClaimName } from "../types/index.js";
 import { AegisStepsBase } from "../__fixtures__/aegis-steps-base.js";
 import type { Wire, WireKey } from "../__fixtures__/raw-bucket.js";
 import { SIGNED_FORMAT } from "../__fixtures__/wire-formats.js";
@@ -78,7 +78,7 @@ export class AegisRoundTripSteps extends AegisStepsBase {
     const format = SIGNED_FORMAT[wire];
 
     const minted = await this.attempt(() =>
-      this.ctx.aegis.mint(profile, this.content(), {
+      this.ctx.aegis.mint(profile, this.mintContent(), {
         ...this.ctx.mintOptions,
         format,
         sign: { ...this.ctx.mintOptions.sign, ...this.domainEnvelope() },
@@ -196,14 +196,5 @@ export class AegisRoundTripSteps extends AegisStepsBase {
   @ParameterType("intList", INT_LIST)
   static intList(raw: string): Array<number> {
     return raw.split(", ").map(Number);
-  }
-
-  // helpers
-
-  /** The caller's statements, with the token type they named among them. */
-  private content(): SignContent {
-    const { claims, tokenType } = this.ctx;
-
-    return tokenType === undefined ? claims : { ...claims, tokenType };
   }
 }

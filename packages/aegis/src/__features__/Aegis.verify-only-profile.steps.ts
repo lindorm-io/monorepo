@@ -1,21 +1,11 @@
 import { Binding, Given, ParameterType, Then, When } from "@lindorm/gherkin";
 import { expect } from "vitest";
-import { CoseError, CwtError, JoseError, JwtError } from "../errors/index.js";
 import { AegisStepsBase } from "../__fixtures__/aegis-steps-base.js";
 import { alternationOf } from "../__fixtures__/alternation-of.js";
 import { TEST_EC_KEY_SIG } from "../__fixtures__/keys.js";
 import type { Wire, WireKey } from "../__fixtures__/raw-bucket.js";
 import { signAsThirdParty } from "../__fixtures__/third-party-producer.js";
-
-/** The wire error a reader refuses under: a family root, or the claims format's own leaf. */
-const WIRE_ERROR = {
-  JOSE: JoseError,
-  COSE: CoseError,
-  JWT: JwtError,
-  CWT: CwtError,
-} as const;
-
-type WireError = keyof typeof WIRE_ERROR;
+import { WIRE_ERROR, type WireError } from "../__fixtures__/wire-errors.js";
 
 @Binding()
 export class AegisVerifyOnlyProfileSteps extends AegisStepsBase {

@@ -1,19 +1,22 @@
 import { AbstractSteps, Inject } from "@lindorm/gherkin";
+import { omitUndefined } from "@lindorm/utils";
 import { expect } from "vitest";
 import { AegisDomainError } from "../errors/index.js";
 import type {
-  CoseHeaderBuckets,
+  AegisVerifyKey,
   CoseWireTokenEnvelope,
   DecryptedToken,
   DomainProtectedHeader,
   EncryptedToken,
-  JoseHeaderBuckets,
   JoseWireTokenEnvelope,
   ParsedToken,
+  SignContent,
   SignedToken,
   VerifiedToken,
+  VerifyStructuredTokenOptions,
+  VerifyUnstructuredTokenOptions,
 } from "../types/index.js";
-import { AegisContext } from "./aegis-context.js";
+import { AegisContext, type RawDoorResult } from "./aegis-context.js";
 import { inspectToken, type TokenInspection } from "./inspect-token.js";
 import { rawBucketOf, type RawBucket, type RawPart } from "./raw-bucket.js";
 
@@ -68,13 +71,62 @@ export abstract class AegisStepsBase {
     return this.produced(this.ctx.parsed, "parsed");
   }
 
-  protected rawVerified(): JoseHeaderBuckets | CoseHeaderBuckets {
+  protected rawVerified(): RawDoorResult {
     return this.produced(this.ctx.rawVerified, "verified at the raw door");
+  }
+
+  /**
+   * The caller's knobs a raw claims door takes: the members its option bag
+   * shares with the domain one, and the critical-parameter declaration under the
+   * wire's own name. A knob the scenario did not state is not forwarded.
+   */
+  protected rawClaimsDoorOptions(): VerifyStructuredTokenOptions & {
+    key?: AegisVerifyKey;
+  } {
+    const {
+      clockTolerance,
+      critical,
+      currentDate,
+      key,
+      maxTokenAge,
+      verifyAuthTime,
+      verifyExpiration,
+      verifyIssuedAt,
+      verifyNotBefore,
+    } = this.ctx.verifyOptions;
+
+    return omitUndefined({
+      clockTolerance,
+      crit: critical,
+      currentDate,
+      key,
+      maxTokenAge,
+      verifyAuthTime,
+      verifyExpiration,
+      verifyIssuedAt,
+      verifyNotBefore,
+    });
+  }
+
+  /** The caller's knobs a raw opaque door takes: the declaration and the key policy. */
+  protected rawOpaqueDoorOptions(): VerifyUnstructuredTokenOptions & {
+    key?: AegisVerifyKey;
+  } {
+    const { critical, key } = this.ctx.verifyOptions;
+
+    return omitUndefined({ crit: critical, key });
   }
 
   /** The caller's statements every domain writer forwards: its protected header, when one was stated. */
   protected domainEnvelope(): { header?: DomainProtectedHeader } {
     return this.ctx.domainHeader === undefined ? {} : { header: this.ctx.domainHeader };
+  }
+
+  /** The caller's statements for a profiled mint, with the token type they named among them. */
+  protected mintContent(): SignContent {
+    const { claims, tokenType } = this.ctx;
+
+    return tokenType === undefined ? claims : { ...claims, tokenType };
   }
 
   /**

@@ -2,22 +2,13 @@ import type { DataTable } from "@lindorm/gherkin";
 import { Binding, Given, ParameterType, Then, When } from "@lindorm/gherkin";
 import type { Dict } from "@lindorm/types";
 import { expect } from "vitest";
-import { CoseError, CwtError, JoseError, JwtError } from "../errors/index.js";
 import type { CoseHeaderBuckets, JoseHeaderBuckets } from "../types/index.js";
+import type { RawDoorResult } from "../__fixtures__/aegis-context.js";
 import { AegisStepsBase } from "../__fixtures__/aegis-steps-base.js";
 import { jsonCells } from "../__fixtures__/json-cells.js";
 import type { Wire, WireKey } from "../__fixtures__/raw-bucket.js";
+import { WIRE_ERROR, type WireError } from "../__fixtures__/wire-errors.js";
 import { SEALED_FORMAT } from "../__fixtures__/wire-formats.js";
-
-/** The wire error a door refuses under, by the same names `{wireError}` binds. */
-const WIRE_ERROR = {
-  JOSE: JoseError,
-  COSE: CoseError,
-  JWT: JwtError,
-  CWT: CwtError,
-} as const;
-
-type WireError = keyof typeof WIRE_ERROR;
 
 /** A JSON string, integer or flat array — the shapes a refusal's `data` spells a crit member or list in. */
 const JSON_VALUE = /"(?:[^"\\]|\\.)*"|-?\d+|\[[^\]]*\]/;
@@ -86,31 +77,29 @@ export class AegisCriticalHeaderSteps extends AegisStepsBase {
   @When("I verify the token as a claims token on the {wire} wire")
   async iVerifyTheTokenAsAClaimsToken(wire: Wire): Promise<void> {
     const token = this.token();
-    const options = { crit: this.ctx.verifyOptions.critical };
+    const options = this.rawClaimsDoorOptions();
 
     // The sentence names the wire; the token must be that wire's.
     expect(this.inspected().wire).toBe(wire);
 
-    this.ctx.rawVerified = await this.attempt<JoseHeaderBuckets | CoseHeaderBuckets>(
-      () =>
-        wire === "cose"
-          ? this.ctx.aegis.cwt.verify(token, undefined, options)
-          : this.ctx.aegis.jwt.verify(token, undefined, options),
+    this.ctx.rawVerified = await this.attempt<RawDoorResult>(() =>
+      wire === "cose"
+        ? this.ctx.aegis.cwt.verify(token, undefined, options)
+        : this.ctx.aegis.jwt.verify(token, undefined, options),
     );
   }
 
   @When("I verify the token as opaque content on the {wire} wire")
   async iVerifyTheTokenAsOpaqueContent(wire: Wire): Promise<void> {
     const token = this.token();
-    const options = { crit: this.ctx.verifyOptions.critical };
+    const options = this.rawOpaqueDoorOptions();
 
     expect(this.inspected().wire).toBe(wire);
 
-    this.ctx.rawVerified = await this.attempt<JoseHeaderBuckets | CoseHeaderBuckets>(
-      () =>
-        wire === "cose"
-          ? this.ctx.aegis.cws.verify(token, options)
-          : this.ctx.aegis.jws.verify(token, options),
+    this.ctx.rawVerified = await this.attempt<RawDoorResult>(() =>
+      wire === "cose"
+        ? this.ctx.aegis.cws.verify(token, options)
+        : this.ctx.aegis.jws.verify(token, options),
     );
   }
 

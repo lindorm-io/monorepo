@@ -20,6 +20,15 @@ import type {
 import type { DpopProofStatement } from "./dpop-presenter.js";
 import type { ForeignHeaders } from "./third-party-producer.js";
 
+/**
+ * What a raw door reports: the header buckets as the kit spells them, and the
+ * payload it verified — wire claims at a claims door, the reconstructed content
+ * at an opaque one.
+ */
+export type RawDoorResult = (JoseHeaderBuckets | CoseHeaderBuckets) & {
+  payload?: unknown;
+};
+
 @Context()
 export class AegisContext {
   aegis!: Aegis;
@@ -68,8 +77,8 @@ export class AegisContext {
   verified?: VerifiedToken;
   decrypted?: DecryptedToken;
   parsed?: ParsedToken;
-  /** A raw door's result: the header buckets as the kit reports them. */
-  rawVerified?: JoseHeaderBuckets | CoseHeaderBuckets;
+  /** A raw door's result: the header buckets and the payload as the kit reports them. */
+  rawVerified?: RawDoorResult;
 
   /** What the last act threw, when it threw. */
   refusal?: unknown;

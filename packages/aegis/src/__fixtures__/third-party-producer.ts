@@ -1,6 +1,8 @@
 import {
   Algorithms,
   COSEKey,
+  Mac0,
+  MacAlgorithms,
   ProtectedHeaders,
   Sign1,
   UnprotectedHeaders,
@@ -19,6 +21,10 @@ import type { Wire } from "./raw-bucket.js";
  * signature is real and what aegis does with the envelope is the only thing
  * under test. The claims are written verbatim in the wire vocabulary: a third
  * party knows no domain name, prunes nothing and stamps no type unless told to.
+ *
+ * A shared secret authenticates the token rather than signing it: a JWS
+ * carrying an HMAC `alg` on JOSE (RFC 7515 §1), a COSE_Mac0 on COSE
+ * (RFC 9052 §6.2) — the structure the key admits, never the signature one.
  *
  * A producer may also write header parameters beside the `alg` and `kid` it
  * derives from its key ({@link ForeignHeaders}) — the shapes aegis's own writers
@@ -72,8 +78,8 @@ const COSE_HEADER_LABEL: ReadonlyMap<string, number> = new Map([
   ["x5u", 35],
 ]);
 
-/** RFC 8392 §6 for the CWT tag; RFC 9052 §2 for the COSE_Sign1 tag. */
-const CBOR_TAG = { cwt: 61, sign1: 18 } as const;
+/** RFC 8392 §6 for the CWT tag; RFC 9052 §2 for the COSE_Sign1 and COSE_Mac0 tags. */
+const CBOR_TAG = { cwt: 61, sign1: 18, mac0: 17 } as const;
 
 /**
  * Header parameters a third party writes beside its own `alg` and `kid`, stated
@@ -98,6 +104,9 @@ const coseAlgorithmOf = (kryptos: IKryptos): number => {
     // RFC 9053 §2.1: ES512 is COSE algorithm -36.
     case "ES512":
       return Algorithms.ES512;
+    // RFC 9053 §3.1: HMAC 256/256 is COSE algorithm 5.
+    case "HS256":
+      return MacAlgorithms.HS256;
     default:
       throw new Error(
         `the third-party COSE producer has no algorithm mapping for "${kryptos.algorithm}" — add one`,
@@ -242,7 +251,7 @@ const signCose = async (
   kryptos: IKryptos,
   headers: ForeignHeaders,
 ): Promise<string> => {
-  const { kty, crv, x, y, d } = kryptos.export("jwk") as Dict;
+  const { kty, crv, x, y, d, k } = kryptos.export("jwk") as Dict;
 
   const protectedEntries: Array<[CoseLabel, unknown]> = [
     [coseLabelOf("alg"), coseAlgorithmOf(kryptos)],
@@ -261,10 +270,28 @@ const signCose = async (
     ...coseEntriesOf(headers.unprotectedHeader),
   ];
 
+  const payload = Buffer.from(encode(cwtClaimsOf(claims)));
+
+  // A shared secret has two holders, so it authenticates a COSE_Mac0 and never
+  // signs a COSE_Sign1 (RFC 9052 §6.2, RFC 9052 §4.2): the producer emits the
+  // structure the key admits.
+  if (kryptos.type === "oct") {
+    const mac0 = await Mac0.create(
+      new ProtectedHeaders(protectedEntries as never) as never,
+      new UnprotectedHeaders(unprotectedEntries as never),
+      payload,
+      await COSEKey.fromJWK({ kty, k } as never).toKeyLike(),
+    );
+
+    return Buffer.from(
+      encode(new Tag(CBOR_TAG.cwt, new Tag(CBOR_TAG.mac0, mac0.getContentForEncoding()))),
+    ).toString("base64url");
+  }
+
   const sign1 = await Sign1.sign(
     new ProtectedHeaders(protectedEntries as never),
     new UnprotectedHeaders(unprotectedEntries as never),
-    Buffer.from(encode(cwtClaimsOf(claims))),
+    payload,
     await COSEKey.fromJWK({ kty, crv, x, y, d } as never).toKeyLike(),
   );
 

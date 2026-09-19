@@ -4,7 +4,6 @@ import { isObject } from "@lindorm/is";
 import type { IKryptos } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
 import { expect } from "vitest";
-import { CoseError, CwtError, JoseError, JwtError } from "../errors/index.js";
 import type { ParsedDpopProof } from "../types/index.js";
 import { AegisStepsBase } from "../__fixtures__/aegis-steps-base.js";
 import { alternationOf } from "../__fixtures__/alternation-of.js";
@@ -20,6 +19,7 @@ import {
   TEST_OKP_KEY_SIG,
   TEST_RSA_KEY_SIG,
 } from "../__fixtures__/keys.js";
+import { WIRE_ERROR, type WireError } from "../__fixtures__/wire-errors.js";
 
 /**
  * The keys a presenter may hold, named by algorithm. Only the ES512 one is a
@@ -33,16 +33,6 @@ const PRESENTER_KEYS = {
 } satisfies Record<string, IKryptos>;
 
 type PresenterKey = keyof typeof PRESENTER_KEYS;
-
-/** The wire error a mint refuses under, by the same names `{wireError}` binds elsewhere. */
-const WIRE_ERROR = {
-  JOSE: JoseError,
-  COSE: CoseError,
-  JWT: JwtError,
-  CWT: CwtError,
-} as const;
-
-type WireError = keyof typeof WIRE_ERROR;
 
 /** An access token this proof was never presented with — the replay a committed `ath` exists to stop. */
 const ANOTHER_ACCESS_TOKEN = "an-access-token-this-proof-was-not-presented-with";

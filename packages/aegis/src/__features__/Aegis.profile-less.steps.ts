@@ -12,13 +12,17 @@ import { alternationOf } from "../__fixtures__/alternation-of.js";
 import {
   TEST_EC_KEY_ENC,
   TEST_EC_KEY_SIG,
+  TEST_EC_KEY_SIG_CERT,
   TEST_OCT_KEY_ENC,
+  TEST_OCT_KEY_SIG,
 } from "../__fixtures__/keys.js";
 import type { Wire, WireKey } from "../__fixtures__/raw-bucket.js";
 import { SEALED_FORMAT, SIGNED_FORMAT } from "../__fixtures__/wire-formats.js";
 
 const VAULT_KEYS = {
   "ES512 signing": TEST_EC_KEY_SIG,
+  "HS256 signing": TEST_OCT_KEY_SIG,
+  "certificate-bearing ES256 signing": TEST_EC_KEY_SIG_CERT,
   "ECDH-ES encryption": TEST_EC_KEY_ENC,
   "dir encryption": TEST_OCT_KEY_ENC,
 } satisfies Record<string, IKryptos>;
