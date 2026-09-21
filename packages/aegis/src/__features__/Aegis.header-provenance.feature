@@ -232,6 +232,20 @@ Feature: Header provenance, empty header parameters and the asserted token type
       Then the raw unprotected header carries "oid" "1.2.3.4"
       And the verified header carries no "objectId"
 
+    Scenario: cose: an unprotected object identifier at its private-use integer label is on the wire and is not believed
+      Given the foreign unprotected header carries
+        | typ | "application/at+cwt"                      |
+        | cty | "application/json"                        |
+        | x5u | "https://attacker.lindorm.test/certs.pem" |
+        | x5c | ["MIIBforged"]                            |
+      And the foreign unprotected header carries, at the integer labels
+        | -70000 | "1.2.3.4" |
+      When a third party signs the wire claims on the cose wire
+      And I verify the token
+      Then the raw unprotected header carries label -70000 "1.2.3.4"
+      And the raw unprotected header carries no "oid"
+      And the verified header carries no "objectId"
+
     Scenario: cose: an unprotected certificate URL is on the wire and is not believed
       When a third party signs the wire claims on the cose wire
       And I verify the token

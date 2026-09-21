@@ -81,6 +81,9 @@ const COSE_HEADER_LABEL: ReadonlyMap<string, number> = new Map([
 /** RFC 8392 §6 for the CWT tag; RFC 9052 §2 for the COSE_Sign1 and COSE_Mac0 tags. */
 const CBOR_TAG = { cwt: 61, sign1: 18, mac0: 17 } as const;
 
+/** Entries the caller keys itself, so the label is the map key rather than a name to resolve. */
+export type IntegerLabelledEntries = ReadonlyMap<number, unknown>;
+
 /**
  * Header parameters a third party writes beside its own `alg` and `kid`, stated
  * in the JOSE vocabulary on either wire. A COSE producer keys each at the label
@@ -97,6 +100,14 @@ export type ForeignHeaders = {
    * (RFC 9052 §1.5), and only a producer can put both in one bucket.
    */
   textLabelledProtected?: Dict;
+  /**
+   * COSE only: unprotected entries at the INTEGER label the CALLER names, in the
+   * bucket the signature does not cover (RFC 9052 §3). The producer resolves
+   * nothing — a private-use label (RFC 8152 §16.2) is registered to no
+   * parameter, so there is no specification for this fixture to read it out of
+   * and no registry it is allowed to ask.
+   */
+  integerLabelledUnprotected?: IntegerLabelledEntries;
 };
 
 const coseAlgorithmOf = (kryptos: IKryptos): number => {
@@ -215,7 +226,10 @@ const signJose = async (
   kryptos: IKryptos,
   headers: ForeignHeaders,
 ): Promise<string> => {
-  if (headers.unprotectedHeader !== undefined) {
+  if (
+    headers.unprotectedHeader !== undefined ||
+    headers.integerLabelledUnprotected !== undefined
+  ) {
     throw new Error(
       "a JOSE compact serialisation carries one header and it is protected (RFC 7515 §7.1): there is no unprotected bucket for a producer to write",
     );
@@ -268,6 +282,7 @@ const signCose = async (
   const unprotectedEntries: Array<[CoseLabel, unknown]> = [
     [coseLabelOf("kid"), Buffer.from(kryptos.id, "utf8")],
     ...coseEntriesOf(headers.unprotectedHeader),
+    ...(headers.integerLabelledUnprotected ?? []),
   ];
 
   const payload = Buffer.from(encode(cwtClaimsOf(claims)));

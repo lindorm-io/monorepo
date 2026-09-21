@@ -1,5 +1,6 @@
 import type { DataTable } from "@lindorm/gherkin";
 import { Binding, Given, ParameterType, Then, When } from "@lindorm/gherkin";
+import { isInteger } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import { expect } from "vitest";
 import type { CoseHeaderBuckets, JoseHeaderBuckets } from "../types/index.js";
@@ -21,6 +22,21 @@ const JSON_VALUE = /"(?:[^"\\]|\\.)*"|-?\d+|\[[^\]]*\]/;
 const isJoseBuckets = (
   buckets: JoseHeaderBuckets | CoseHeaderBuckets,
 ): buckets is JoseHeaderBuckets => "header" in buckets;
+
+/**
+ * A table whose key cell is a COSE INTEGER label rather than a parameter name
+ * (RFC 9052 §1.5), so the scenario states the label and nothing resolves one.
+ */
+const integerLabelCells = (table: DataTable): Map<number, unknown> =>
+  new Map(
+    Object.entries(jsonCells(table)).map(([label, value]): [number, unknown] => {
+      const key = Number(label);
+
+      if (!isInteger(key)) throw new Error(`the label "${label}" is not an integer`);
+
+      return [key, value];
+    }),
+  );
 
 @Binding()
 export class AegisCriticalHeaderSteps extends AegisStepsBase {
@@ -63,6 +79,11 @@ export class AegisCriticalHeaderSteps extends AegisStepsBase {
   @Given("the foreign protected header carries, under text labels")
   theForeignProtectedHeaderCarriesUnderTextLabels(table: DataTable): void {
     this.ctx.foreignHeaders.textLabelledProtected = jsonCells(table);
+  }
+
+  @Given("the foreign unprotected header carries, at the integer labels")
+  theForeignUnprotectedHeaderCarriesAtTheIntegerLabels(table: DataTable): void {
+    this.ctx.foreignHeaders.integerLabelledUnprotected = integerLabelCells(table);
   }
 
   // the recipient's declaration, forwarded by every reading door
