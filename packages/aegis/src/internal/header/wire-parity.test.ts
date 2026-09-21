@@ -33,7 +33,7 @@ const logger = createMockLogger();
  * the parity assertion stays green, and only the frozen verdict notices that the
  * answer changed at all. Regenerate the snapshot and the wrong cell is accepted
  * here, because the two wires still agree about it. Whether a cell is RIGHT is
- * `normalise-headers.test.ts` plus the scenario rows; what this file owns is that
+ * `normalise-headers.test.ts` plus the feature files; what this file owns is that
  * the two encodings answer the SAME call the same way.
  *
  * ⚠ THE PARTICIPANTS ARE DERIVED, NEVER LISTED. Two exclusions, each read off data

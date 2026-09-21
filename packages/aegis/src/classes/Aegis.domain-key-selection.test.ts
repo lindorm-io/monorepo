@@ -22,14 +22,14 @@ const CLIENT = "client-1";
  * The DOMAIN verbs' key selection — `aegis.verify` and `aegis.mint`/`aegis.sign`
  * choosing which key answers.
  *
- * ⚠ NOT expressible as conformance rows, and that is the whole reason this file
- * exists. A row is pure JSON and the thing under test here is an `IKryptos`
- * INSTANCE: the caller supplying a key the vault never held, and a deployment
- * stating a vault QUERY that an injected key must not be measured against. The
- * knob matrix reaches the same bags but only through their `condition` member,
- * which is the half a row can spell — so the `kryptos` half of both selectors,
- * and the interaction between the deployment's query and a per-call injection,
- * have no other home.
+ * ⚠ Beside the class rather than in the feature files, and that is the whole
+ * reason this file exists: the thing under test is an `IKryptos` INSTANCE — the
+ * caller supplying a key the vault never held, and a deployment stating a vault
+ * QUERY that an injected key must not be measured against. The knob matrix
+ * reaches the same bags but only through their `condition` member, which is the
+ * half a JSON probe can spell — so the `kryptos` half of both selectors, and the
+ * interaction between the deployment's query and a per-call injection, have no
+ * other home.
  *
  * Both halves are one seam apiece and both fail SILENTLY when dropped:
  *

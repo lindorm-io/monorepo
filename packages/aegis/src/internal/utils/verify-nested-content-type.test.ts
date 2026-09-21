@@ -17,10 +17,9 @@ MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
  * to an EMPTY domain, which a caller routing on the declaration reads as an
  * authenticated credential that happens to assert nothing.
  *
- * ⚠ Not conformance rows, and structurally so: stating this needs TWO artifacts —
- * a signed token, then an encryption AROUND that token with a hand-chosen `cty`.
- * A scenario row builds exactly one artifact (the `Given` tuple enforces it), so
- * there is no way to express "seal this previously-produced token" there.
+ * ⚠ Beside the function rather than in the feature files: stating this needs TWO
+ * artifacts — a signed token, then an encryption AROUND that token with a
+ * hand-chosen `cty`.
  *
  * The COSE half of the same lie is refused structurally rather than by this
  * check, so both cases here are JOSE.

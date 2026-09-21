@@ -181,8 +181,8 @@ export const TEST_RSA_KEY_ENC = KryptosKit.from.b64({
  *
  * The chain's own validity window (2026-04-13 .. 2126-03-20) is deliberately NOT
  * matched by the clock: `resolveCertBinding` derives the thumbprints from the
- * leaf and never range-checks it, so these keys are usable at the table's default
- * clock like every other fixture.
+ * leaf and never range-checks it, so these keys are usable at `DEFAULT_CLOCK`
+ * like every other fixture.
  */
 const X509_LEAF: KryptosFromString = {
   ...defaults,

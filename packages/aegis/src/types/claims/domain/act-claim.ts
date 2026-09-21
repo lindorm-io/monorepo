@@ -45,7 +45,7 @@ export type ActClaimMembers = {
  * ⚠ IT BINDS THE WRITE DOOR ALONE. A caller reaching past the type rides the open
  * tail like any undeclared member, and a foreign actor's own `aud` is reported in
  * that tail untranslated at VERIFY — neither refused nor renamed.
- * pinned: `interfaces/aegis/Aegis.test.ts`, `__fixtures__/scenarios.ts`.
+ * pinned: `interfaces/aegis/Aegis.test.ts`, `__features__/Aegis.delegation.feature`.
  */
 // https://datatracker.ietf.org/doc/html/rfc8693#section-4.1
 export type ActClaim = ActClaimMembers & Dict & { audience?: never };

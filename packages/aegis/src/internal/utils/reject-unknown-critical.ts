@@ -30,9 +30,11 @@ type CritFormatTag = TokenFormatTag | "dpop";
  *  b. THE CALLER'S DECLARATION IS NECESSARY, NEVER SUFFICIENT. A declared member
  *     is still refused when it is not carried, is empty, is spec-defined, or
  *     rides the COSE bucket the signature does not cover:
- *     `scenarios.ts#a-crit-declaration-does-not-substitute-for-the-parameter-being-carried`,
- *     `#a-crit-declaration-does-not-admit-a-specification-defined-parameter`,
- *     `#a-crit-declaration-does-not-reach-the-unprotected-bucket`.
+ *     `Aegis.critical-header.feature` "declaring a critical parameter does not
+ *     make a token that omits it verifiable", "a verifier cannot take
+ *     responsibility for a critical parameter the specification itself defines",
+ *     "declaring a critical parameter does not admit one that rides the unsigned
+ *     COSE bucket".
  *  c. `critEligible` IS THE WRITE SIDE'S COLUMN ALONE —
  *     `internal/header/is-crit-eligible.ts` is its one reader, serving the mint
  *     gate `internal/header/assert-crit-eligible.ts`. Two different questions: may

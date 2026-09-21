@@ -1,39 +1,34 @@
 import type { Dict } from "@lindorm/types";
-import { TEST_X509_CHAIN_B64 } from "./x509.js";
+import type { Wire } from "../internal/registry/wire.js";
 import type {
+  EncryptData,
   EncryptOptions,
+  JoseSignStructuredTokenOptions,
+  ProfileContent,
   ProfileMintOptions,
   SignContext,
   SignTokenOptions,
+  TokenFormatTag,
   VerifyOptions,
 } from "../types/index.js";
 import type { MintEncryptOptions } from "../types/profile/profile.js";
-import type { AegisEncKey } from "../types/keys/key-selectors.js";
 import {
-  CERT_ENC_KEY_ID,
-  CERT_SIG_KEY_ID,
-  CLIENT,
-  EC_ENC_KEY_ID,
-  ISSUER,
-  JKT,
-  NOW,
-  OCT_ENC_CBC_KEY_ID,
-  OCT_ENC_KEY_ID,
-  OCT_ENC_GCM128_KEY_ID,
-  OKP_SIG_KEY_ID,
-  RESOURCE,
-  SIG_KEY_ID,
-  type AcceptsThenStep,
-  type DateCell,
-  type Given,
-  type ObservationThenStep,
-  type Wire,
-} from "./scenarios.js";
+  TEST_EC_KEY_ENC_CERT,
+  TEST_EC_KEY_SIG,
+  TEST_EC_KEY_SIG_CERT,
+  TEST_OCT_KEY_ENC,
+  TEST_OCT_KEY_ENC_CBC,
+  TEST_OCT_KEY_ENC_GCM128,
+  TEST_OKP_KEY_SIG,
+} from "./keys.js";
+import type { WireKey } from "./raw-bucket.js";
+import { CLIENT, ISSUER, NOW, RESOURCE } from "./test-deployment.js";
+import { TEST_X509_CHAIN_B64 } from "./x509.js";
 
 /**
  * The KNOB PROBES — pure DATA, no behaviour, one table per option bag.
  *
- * A conformance row states a CAPABILITY. A probe states something narrower and
+ * A feature scenario states a CAPABILITY. A probe states something narrower and
  * differently motivated: that ONE OPTION IS READ. It exists because an option
  * this package accepts and drops fails silently in both directions — the
  * compiler cannot see a named field left out of a hand-written forward, and the
@@ -65,9 +60,8 @@ import {
  *   code. Transient, and a real finding: it names the `file:line` that fails to
  *   read it, and it is deleted when the forward is repaired.
  *
- * ⚠ Every value here is JSON-serialisable, for the same reason a scenario row is
- * (a table test enforces it): these tables are meant to be readable by something
- * that is not TypeScript. A `Date` therefore appears as a {@link DateCell}, the
+ * ⚠ Every value here is JSON-serialisable (a table test enforces it): these
+ * tables are meant to be readable by something that is not TypeScript. A `Date` therefore appears as a {@link DateCell}, the
  * one value shape the interpreter revives — every option bag bottoms out in
  * `Dict`, so a live `Date` would compile and then be silently stringified.
  */
@@ -77,6 +71,112 @@ export type Verdict = "accepts" | "rejects";
 
 /** The probe-side spelling of an option's own type — `Date` becomes a {@link DateCell}. */
 export type ProbeValue<T> = T extends Date ? DateCell : T;
+
+/**
+ * A `Date`, as DATA — the one value the option and claim bags carry that JSON
+ * has no literal for. Revived recursively over the whole probe, so a cell is
+ * written wherever a `Date` belongs. Narrow on purpose: a lone `date` member
+ * holding a string.
+ */
+export type DateCell = { readonly date: string };
+
+/** The vault residents a probe may stock beyond the signing key every deployment holds. */
+export type KeyFixture =
+  | "ec-enc"
+  | "ec-enc-cert"
+  | "ec-sig-cert"
+  | "oct-enc"
+  | "oct-enc-cbc"
+  | "oct-enc-gcm128"
+  | "oct-sig"
+  | "okp-sig";
+
+export type KeysGivenStep = { step: "keys"; keys: ReadonlyArray<KeyFixture> };
+
+/**
+ * The claims-bearing raw door on the run's wire — `aegis.jwt.sign` on JOSE,
+ * `aegis.cwt.sign` on COSE — over claims and an envelope stated in the JOSE
+ * vocabulary; the interpreter re-spells both for COSE.
+ */
+export type KitSignGivenStep = {
+  step: "token";
+  via: "kit-sign";
+  kit: "structured";
+  claims: Dict;
+  options?: JoseSignStructuredTokenOptions;
+};
+
+/** A claims token a third party signs over the deployment's signing key, stamping no type header. */
+export type ForeignGivenStep = { step: "token"; via: "foreign"; claims: Dict };
+
+/**
+ * `aegis.mint(profile, content, options)`, one member per built-in profile so
+ * `profile` and `content` are correlated. A `format` the probe states pins the
+ * artifact; otherwise the run's wire picks `jwt` or `cwt`.
+ */
+export type MintGivenStep = {
+  [P in keyof ProfileContent]: {
+    step: "token";
+    via: "mint";
+    profile: P;
+    content: ProfileContent[P];
+    options?: ProfileMintOptions;
+  };
+}[keyof ProfileContent];
+
+/** `aegis.encrypt(data, options)`; the run's wire picks `jwe` or `cwe` unless the probe states a `format`. */
+export type DomainEncryptGivenStep = {
+  step: "token";
+  via: "domain-encrypt";
+  data: EncryptData;
+  options?: EncryptOptions;
+};
+
+export type ArtifactGivenStep =
+  | KitSignGivenStep
+  | ForeignGivenStep
+  | MintGivenStep
+  | DomainEncryptGivenStep;
+
+/** Any number of vault steps, then the artifact — the tuple makes exactly one artifact, last. */
+export type Given = readonly [...ReadonlyArray<KeysGivenStep>, ArtifactGivenStep];
+
+/**
+ * What a probe asserts about one raw wire bucket, read off the bytes by the
+ * independent inspector. `includes` compares VALUES against the raw decoded ones
+ * — a byte-string parameter never equals the text it spells, so assert its
+ * `present` instead; `present` and `excludes` ask about keys alone. At least
+ * one of the three, so a step cannot name a bucket and check nothing.
+ */
+export type WireAssertion =
+  | {
+      includes: Dict;
+      present?: ReadonlyArray<WireKey>;
+      excludes?: ReadonlyArray<WireKey>;
+    }
+  | {
+      includes?: Dict;
+      present: ReadonlyArray<WireKey>;
+      excludes?: ReadonlyArray<WireKey>;
+    }
+  | {
+      includes?: Dict;
+      present?: ReadonlyArray<WireKey>;
+      excludes: ReadonlyArray<WireKey>;
+    };
+
+/**
+ * One observation over the artifact's protected header or its claims. `on`
+ * scopes it to the wire whose SPELLING it states; absent, it holds on every wire
+ * the probe runs on.
+ */
+export type ObservationStep = WireAssertion & {
+  step: "wireProtectedHeader" | "wireClaims";
+  on?: Wire;
+};
+
+/** A format tag, bare when it holds on every wire the probe runs on, else stated per wire. */
+export type FormatTag = TokenFormatTag | Partial<Record<Wire, TokenFormatTag>>;
 
 /**
  * A defect: the option reaches the call and is then not read.
@@ -94,9 +194,6 @@ export type KnobDefect = {
   wires?: ReadonlyArray<Wire>;
 };
 
-/** The act performed on the artifact before an observation is made. */
-export type ProbeAct = { step: "parse" } | { step: "decrypt" };
-
 type VerdictBody = {
   baseline: Verdict;
   flipped: Verdict;
@@ -109,7 +206,7 @@ type ArtifactBody = {
   baseline?: never;
   flipped?: never;
   /** The artifact FORMAT the knob produces, when the format is what it changes. */
-  format?: AcceptsThenStep["format"];
+  format?: FormatTag;
   /**
    * The artifact WRAPPER the knob produces, when the ENVELOPE is what it changes.
    *
@@ -117,9 +214,9 @@ type ArtifactBody = {
    * keeps its own kind inside an envelope, so `encrypt` is observable here and
    * not above.
    */
-  wrapper?: AcceptsThenStep["wrapper"];
+  wrapper?: FormatTag;
   /** Everything else the knob changes about the artifact. */
-  observed: ReadonlyArray<ObservationThenStep>;
+  observed: ReadonlyArray<ObservationStep>;
 };
 
 type ProbeBody<T> = { value: ProbeValue<T> } & (VerdictBody | ArtifactBody);
@@ -132,9 +229,8 @@ type KnobProbeCore<T> = {
    * repair of a {@link defect}.
    */
   rationale: string;
+  /** The vault residents to stock, then the artifact the knob is probed on. */
   given: Given;
-  /** Only where the knob's effect is invisible without a further read. */
-  act?: ProbeAct;
   /**
    * The wires the flip cannot be stated on, and WHY — a SPECIFICATION or
    * SERIALISATION fact, cited to the primary text and permanent. Never "no probe
@@ -164,7 +260,7 @@ export type KnobProbes<B> = { [K in keyof B]-?: KnobProbe<NonNullable<B[K]>> };
 // Shared literals
 // ---------------------------------------------------------------------------
 
-/** A claims set that verifies cleanly at the table's default clock. */
+/** A claims set that verifies cleanly at `NOW`. */
 const LIVE_CLAIMS: Dict = {
   iss: ISSUER,
   sub: "user-1",
@@ -181,6 +277,9 @@ const LIVE_CLAIMS: Dict = {
  * encoder rather than the forward.
  */
 const HASH = "3q2-7w";
+
+/** A real 32-byte base64url thumbprint (`Buffer.alloc(32, 7)`) — the COSE encoder refuses a short one. */
+const JKT = "BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc";
 
 /** The id_token content every mint probe starts from. */
 const ID_TOKEN_CONTENT = { subject: "user-1", audience: [CLIENT] };
@@ -694,7 +793,7 @@ export const MINT_SIGN_KNOB_PROBES = {
         content: ID_TOKEN_CONTENT,
         options: {
           context: { accessTokenIssued: false },
-          sign: { key: { condition: { id: CERT_SIG_KEY_ID } } },
+          sign: { key: { condition: { id: TEST_EC_KEY_SIG_CERT.id } } },
         },
       },
     ],
@@ -748,7 +847,7 @@ export const MINT_SIGN_KNOB_PROBES = {
   key: {
     rationale:
       "Which key signs the token decides who can verify it and what the signature proves. A deployment pinning a key — a per-client algorithm, a specific `kid` — has made a statement its recipients depend on, and a dropped selector silently signs with whatever the vault returns first instead.",
-    value: { condition: { id: OKP_SIG_KEY_ID } },
+    value: { condition: { id: TEST_OKP_KEY_SIG.id } },
     given: [
       { step: "keys", keys: ["okp-sig"] },
       {
@@ -761,7 +860,7 @@ export const MINT_SIGN_KNOB_PROBES = {
           // The baseline PINS its own key. With two signing residents in the
           // vault an unpinned baseline resolves whichever the query returns
           // first, which is a coin toss the probe would then measure.
-          sign: { key: { condition: { id: SIG_KEY_ID } } },
+          sign: { key: { condition: { id: TEST_EC_KEY_SIG.id } } },
         },
       },
     ],
@@ -856,7 +955,7 @@ export const MINT_ENCRYPT_KNOB_PROBES = {
         content: ID_TOKEN_CONTENT,
         options: {
           context: { accessTokenIssued: false },
-          encrypt: { key: { condition: { id: CERT_ENC_KEY_ID } } },
+          encrypt: { key: { condition: { id: TEST_EC_KEY_ENC_CERT.id } } },
         },
       },
     ],
@@ -879,7 +978,7 @@ export const MINT_ENCRYPT_KNOB_PROBES = {
         content: ID_TOKEN_CONTENT,
         options: {
           context: { accessTokenIssued: false },
-          encrypt: { key: { condition: { id: OCT_ENC_CBC_KEY_ID } } },
+          encrypt: { key: { condition: { id: TEST_OCT_KEY_ENC_CBC.id } } },
         },
       },
     ],
@@ -933,7 +1032,7 @@ export const MINT_ENCRYPT_KNOB_PROBES = {
   key: {
     rationale:
       "The recipient key IS the addressee: it decides who can open the token. A dropped selector seals the token to whatever the vault returns first, which is the one mistake in this family that cannot be detected by the intended recipient — they simply cannot decrypt, and the token looks well-formed to everyone else.",
-    value: { condition: { id: OCT_ENC_GCM128_KEY_ID } },
+    value: { condition: { id: TEST_OCT_KEY_ENC_GCM128.id } },
     given: [
       { step: "keys", keys: ["oct-enc", "oct-enc-gcm128"] },
       {
@@ -943,7 +1042,7 @@ export const MINT_ENCRYPT_KNOB_PROBES = {
         content: ID_TOKEN_CONTENT,
         options: {
           context: { accessTokenIssued: false },
-          encrypt: { key: { condition: { id: OCT_ENC_KEY_ID } } },
+          encrypt: { key: { condition: { id: TEST_OCT_KEY_ENC.id } } },
         },
       },
     ],
@@ -997,7 +1096,7 @@ export const ENCRYPT_KNOB_PROBES = {
         step: "token",
         via: "domain-encrypt",
         data: { subject: "user-1" },
-        options: { key: { condition: { id: CERT_ENC_KEY_ID } } },
+        options: { key: { condition: { id: TEST_EC_KEY_ENC_CERT.id } } },
       },
     ],
     observed: [{ step: "wireProtectedHeader", on: "jose", present: ["x5c"] }],
@@ -1033,14 +1132,14 @@ export const ENCRYPT_KNOB_PROBES = {
   key: {
     rationale:
       "The recipient key IS the addressee. A dropped selector seals the content to whatever the vault returns first, and the failure is invisible to everyone except the intended recipient — who simply cannot open it.",
-    value: { condition: { id: OCT_ENC_GCM128_KEY_ID } },
+    value: { condition: { id: TEST_OCT_KEY_ENC_GCM128.id } },
     given: [
       { step: "keys", keys: ["oct-enc", "oct-enc-gcm128"] },
       {
         step: "token",
         via: "domain-encrypt",
         data: { subject: "user-1" },
-        options: { key: { condition: { id: OCT_ENC_KEY_ID } } },
+        options: { key: { condition: { id: TEST_OCT_KEY_ENC.id } } },
       },
     ],
     // See the mint twin: the content encryption is the resolved key's only
@@ -1126,7 +1225,7 @@ export const ENCRYPT_KNOB_PROBES = {
         step: "token",
         via: "domain-encrypt",
         data: "opaque-payload",
-        options: { key: { condition: { id: OCT_ENC_CBC_KEY_ID } } },
+        options: { key: { condition: { id: TEST_OCT_KEY_ENC_CBC.id } } },
       },
     ],
     baseline: "rejects",

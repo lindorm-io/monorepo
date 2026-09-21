@@ -17,7 +17,7 @@ const PLAINTEXT = "cookie-session-payload";
 /**
  * The AES namespace's WRITE side (`aegis.aes.encrypt`).
  *
- * ⚠ Not a conformance row and it cannot be: an AES record is neither a JOSE nor
+ * ⚠ Not a feature scenario and it cannot be: an AES record is neither a JOSE nor
  * a COSE token — it has no header the wire inspector can read and no wire to
  * state a capability on — so it lives beside the function under test.
  *

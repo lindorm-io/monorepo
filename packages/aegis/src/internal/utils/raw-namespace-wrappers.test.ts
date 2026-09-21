@@ -34,8 +34,8 @@ const ISSUER = "https://test.lindorm.io/";
  * and a dropped option does not raise, it just does nothing. The fix in each was
  * to forward STRUCTURALLY (`const { key, ...rest }`), and these are what hold it.
  *
- * ⚠ NOT conformance rows, and they cannot be. A row asserts a CAPABILITY of the
- * domain surface; this is a statement about one internal seam, and the option it
+ * ⚠ NOT feature scenarios, and they cannot be. A scenario asserts a CAPABILITY of
+ * the domain surface; this is a statement about one internal seam, and the option it
  * carries is deliberately arbitrary — the point is that WHATEVER the caller
  * states arrives, not that a particular parameter is honoured. The knob matrix
  * makes the equivalent statement for the DOMAIN bags (`VerifyOptions`,

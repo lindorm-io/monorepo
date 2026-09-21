@@ -246,9 +246,9 @@ const runMintCase = async (kase: MintCase, ctx: CorpusContext): Promise<ActResul
   const encKryptos =
     kase.encryptKey === undefined ? undefined : ENC_KEYS[kase.encryptKey];
 
-  // The ONE cast, and the same one `run-scenario.ts` makes: `mint<P>` resolves
-  // the content type from the profile NAME, and a table holds the whole union of
-  // names, which TypeScript cannot correlate with a per-row content literal.
+  // The ONE cast: `mint<P>` resolves the content type from the profile NAME, and
+  // a table holds the whole union of names, which TypeScript cannot correlate
+  // with a per-row content literal.
   const signed = await ctx.aegis.mint(
     kase.profile,
     kase.content as never,

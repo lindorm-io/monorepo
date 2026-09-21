@@ -148,7 +148,8 @@ describe("rawSignOpaque — certificate binding across the two wires", () => {
    * `certificateThumbprintSha1`).
    *
    * ⚠ The two are dropped TOGETHER rather than one at a time —
-   * pinned: scenarios.ts#a-mint-told-not-to-bind-a-certificate-emits-none.
+   * pinned: `Aegis.certificate-binding.feature` "a token signed by a
+   * certificate-bearing key carries no binding when the issuer asks for none".
    */
   test("a cert-bearing key names its certificate with both JOSE digests", async () => {
     const { token } = await aegis.jws.sign("payload");

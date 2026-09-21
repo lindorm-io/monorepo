@@ -18,13 +18,12 @@ const RESOURCE = "https://rs.lindorm.io/";
  * A profile states `use` once instead of marking every policy field with the
  * direction it applies in. `"both"` is the default and is what every existing
  * profile keeps; only a deliberate narrowing changes anything. The verify-only
- * half of the rule — a profile that refuses to MINT — is stated in the
- * conformance table against `external_access_token`, a real built-in.
+ * half of the rule — a profile that refuses to MINT — is stated in the feature
+ * files against `external_access_token`, a real built-in.
  *
- * ⚠ THIS half cannot be a row: no built-in profile is mint-only, so stating it
- * needs `registerProfile`, and the scenario table has no step for registering a
- * profile — the deployments it describes are built from settings and a vault.
- * Beside `verify-token.ts`, which raises the refusal, is where it belongs.
+ * ⚠ THIS half is stated here: no built-in profile is mint-only, so stating it
+ * needs a registered profile, and beside `verify-token.ts`, which raises the
+ * refusal, is where it belongs.
  */
 const MINT_ONLY: TokenProfileInput = {
   name: "mint_only_test_profile",

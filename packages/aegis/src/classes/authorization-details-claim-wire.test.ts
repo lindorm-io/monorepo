@@ -260,7 +260,7 @@ describe("the authorization_details claim on the wire", () => {
     // an ABSENT member, a PRUNED empty one and a value that failed its own codec,
     // and only the third is a shape problem — a caller who wrote `type: 42` must
     // not be told the member "must not be empty" and sent looking for a field they
-    // already wrote. The sibling scenario rows pin the empty-`type` wording, so
+    // already wrote. The sibling feature scenarios pin the empty-`type` refusal, so
     // the two messages are pinned apart rather than one replacing the other.
     await expect(
       aegis.mint(

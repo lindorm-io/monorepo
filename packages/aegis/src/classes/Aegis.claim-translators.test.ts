@@ -15,7 +15,7 @@ import { Aegis } from "./Aegis.js";
  * check against its own import states no consequence, and a caller that got a
  * different-but-identically-shaped translator would be equally broken.
  *
- * ⚠ Not a conformance row: there is no token and no act. These operate on a flat
+ * ⚠ Not a feature scenario: there is no token and no act. These operate on a flat
  * claim dict of unknown provenance, which is a different door from the token
  * read path — `toDomain` answers to either spelling, where a token read resolves
  * the wire name and nothing else.

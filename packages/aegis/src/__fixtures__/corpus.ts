@@ -53,13 +53,12 @@ import type {
 /**
  * The instant every corpus row is emitted at.
  *
- * It is the same instant `run-scenario.ts` pins its own `DEFAULT_CLOCK` to, and
- * it is RESTATED rather than imported: importing that module would drag the whole
- * scenario interpreter — `@auth0/cose`, `jose`, and vitest's `expect` — into a
- * file that must also run as a standalone script under `tsx`. Nothing reads both
- * constants, so the two cannot disagree about anything; they merely happen to
- * name the same moment, which makes a corpus token and a scenario token directly
- * comparable.
+ * It is the same instant `test-deployment.ts` pins its `DEFAULT_CLOCK` to, and it
+ * is RESTATED rather than imported: that module builds the deployment with
+ * vitest's mock logger, and this file must also run as a standalone script under
+ * `tsx`. Nothing reads both constants, so the two cannot disagree about anything;
+ * they merely happen to name the same moment, which makes a corpus token and a
+ * fixture-driven token directly comparable.
  */
 export const CORPUS_CLOCK = "2024-01-01T08:00:00.000Z";
 

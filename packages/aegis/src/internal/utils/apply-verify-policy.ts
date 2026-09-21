@@ -26,9 +26,10 @@ import { verifyDpopProof } from "./verify-dpop-proof.js";
  * share a code: `actor_not_allowed` is a fact about the TOKEN, while
  * `actor_policy_invalid` is a fact about the OPTION the caller passed, and an
  * operator handed the first for the second reads a delegation chain that is
- * fine. Pinned by the `code` on the scenario rows
- * `an-actor-allowlist-that-constrains-nothing-is-refused` and
- * `an-actor-allowlist-stated-as-a-denial-refuses-a-token-that-names-no-actor`.
+ * fine. Pinned by the `code` under `Aegis.delegation.feature` "a verifier stating
+ * an actor allowlist with no condition in it has the call refused rather than
+ * obeyed" and "a verifier whose actor allowlist names the parties it refuses
+ * still refuses a token presented by its own subject".
  */
 const ACTOR_REFUSALS: Record<
   ActorValidationError["code"],
@@ -151,8 +152,9 @@ export const applyVerifyPolicy = ({
   // ⚠ `omitUndefined` HERE, not only inside the recursion: the predicate and
   // `domainByWire` below must read ONE bag, and an undefined raw source beside
   // its digest claim would otherwise reach the map and claim the wire name the
-  // digest compiled to. pinned: scenario row
-  // `a-matcher-left-undefined-is-never-the-one-a-refusal-names`.
+  // digest compiled to. pinned: `Aegis.claim-matcher.feature` "a caller leaving
+  // the raw source undefined beside a wrong digest claim is refused under the
+  // digest claim".
   const matchers = omitUndefined(assert ?? {});
 
   const predicate = createIdentityMatchers(algorithm, matchers, nameOf);
@@ -170,9 +172,9 @@ export const applyVerifyPolicy = ({
   // ⚠ The catch below owns `validate`'s own refusal ALONE: a shape only the
   // MATCHER refuses (an empty `$and` / `$or`, a `$not` that is not an object)
   // raises `@lindorm/match`'s `TypeError`, which passes as the caller's error.
-  // pinned: scenario rows
-  // `a-malformed-disjunction-throws-as-the-matchers-own-error` and
-  // `a-malformed-negation-throws-as-the-matchers-own-error`.
+  // pinned: `Aegis.claim-matcher.feature` "a caller stating a disjunction with no
+  // member is answered with the matcher's own error" and "a caller negating a
+  // value that is not a condition is answered with the matcher's own error".
   try {
     // ⚠ The spaced lists are lifted from their wire string to the list it
     // spells before the predicate runs ({@link withSpacedArrays}): the caller's
@@ -193,8 +195,9 @@ export const applyVerifyPolicy = ({
       code: "claims_invalid",
       // `data` speaks the CALLER's vocabulary — pylon's HTTP error handler puts it
       // straight in the response body, and the caller stated `tokenId`, which the
-      // wire spells `jti` on JOSE and `cti` on COSE. Pinned by the scenario row
-      // `a-domain-refusal-names-the-claims-in-the-vocabulary-the-caller-used`.
+      // wire spells `jti` on JOSE and `cti` on COSE. Pinned by
+      // `Aegis.claim-matcher.feature` "a refused claim matcher is reported under
+      // the domain claim name the caller stated it with".
       // A root operator (`$and` / `$or` / `$not`) names no claim, so it has no
       // wire name and maps to itself in `domainByWire`; every claim key
       // `validate` reports is in the map because `createIdentityMatchers`
@@ -284,7 +287,7 @@ export const applyVerifyPolicy = ({
    *
    * ⚠⚠ IT IS IN `data` because `format` alone cannot discriminate this refusal
    * from `dpop_token_not_bound`, which fires on the SAME token when a proof is
-   * supplied and stamps an identical `data: { format }`. A scenario row pinning
+   * supplied and stamps an identical `data: { format }`. A scenario pinning
    * `format` alone goes green against the wrong refusal.
    */
   const unsatisfied = namedButUnsatisfied(claims.confirmation)

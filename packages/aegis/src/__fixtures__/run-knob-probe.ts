@@ -1,26 +1,46 @@
-import { isArray, isObject, isString } from "@lindorm/is";
+import { isArray, isObject, isString, isUndefined } from "@lindorm/is";
+import type { IKryptos } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
-import { WIRE_TAGS } from "../internal/registry/wire.js";
-import type { KnobProbe, Verdict } from "./knob-probes.js";
-import { runScenario, type ScenarioContext } from "./run-scenario.js";
+import { expect } from "vitest";
+import { CLAIM_SPECS, coseName, joseName } from "../internal/claims/claims-registry.js";
+import { WIRE_TAGS, type Wire } from "../internal/registry/wire.js";
+import type {
+  CoseSignStructuredTokenOptions,
+  JoseSignStructuredTokenOptions,
+  VerifyOptions,
+} from "../types/index.js";
+import { inspectToken, type TokenInspection, type WirePart } from "./inspect-token.js";
+import {
+  TEST_EC_KEY_ENC,
+  TEST_EC_KEY_ENC_CERT,
+  TEST_EC_KEY_SIG,
+  TEST_EC_KEY_SIG_CERT,
+  TEST_OCT_KEY_ENC,
+  TEST_OCT_KEY_ENC_CBC,
+  TEST_OCT_KEY_ENC_GCM128,
+  TEST_OCT_KEY_SIG,
+  TEST_OKP_KEY_SIG,
+} from "./keys.js";
 import type {
   ArtifactGivenStep,
   DateCell,
+  FormatTag,
   Given,
-  Scenario,
-  Then,
-  When,
-  Wire,
-} from "./scenarios.js";
+  KeyFixture,
+  KnobProbe,
+  ObservationStep,
+  Verdict,
+  WireAssertion,
+} from "./knob-probes.js";
+import type { WireKey } from "./raw-bucket.js";
+import type { TestDeployment } from "./test-deployment.js";
+import { signAsThirdParty } from "./third-party-producer.js";
 
 /**
  * The knob-probe INTERPRETER — all the code, so a probe stays a literal.
  *
- * It builds two SCENARIOS out of one probe and hands both to `runScenario`: the
- * baseline, with the knob absent, and the flipped one, with the knob set to the
- * probe's value. Reusing the scenario interpreter rather than reimplementing the
- * acts is deliberate — a probe would otherwise have its own idea of what "verify"
- * means, and the two would drift.
+ * It drives aegis twice per probe: the baseline, with the knob absent, and the
+ * flipped run, with the knob set to the probe's value.
  *
  * ⚠ THE ASSERTION IS THE DIFFERENCE, never the flipped run alone. A knob that is
  * accepted and dropped produces two IDENTICAL runs, which is the only signal
@@ -42,6 +62,51 @@ export const KNOB_PATHS = {
   encrypt: [],
 } as const satisfies Record<string, KnobPath>;
 
+const KEY_FIXTURES: Record<KeyFixture, IKryptos> = {
+  "ec-enc": TEST_EC_KEY_ENC,
+  "ec-enc-cert": TEST_EC_KEY_ENC_CERT,
+  "ec-sig-cert": TEST_EC_KEY_SIG_CERT,
+  "oct-enc": TEST_OCT_KEY_ENC,
+  "oct-enc-cbc": TEST_OCT_KEY_ENC_CBC,
+  "oct-enc-gcm128": TEST_OCT_KEY_ENC_GCM128,
+  "oct-sig": TEST_OCT_KEY_SIG,
+  "okp-sig": TEST_OKP_KEY_SIG,
+};
+
+/** The format a wire-agnostic mint resolves to, and the one a domain encrypt does. */
+const MINT_FORMAT = { jose: "jwt", cose: "cwt" } as const satisfies Record<Wire, string>;
+const ENCRYPT_FORMAT = { jose: "jwe", cose: "cwe" } as const satisfies Record<
+  Wire,
+  string
+>;
+
+/**
+ * The JOSE→COSE claim-name divergences, DERIVED from the claim registry. A claim
+ * left under its JOSE name on the COSE wire raises nothing — it becomes an
+ * unregistered custom claim — so a hand-kept list would go on passing while
+ * probing a look-alike.
+ */
+const COSE_CLAIM_SPELLING: ReadonlyMap<string, string> = new Map(
+  CLAIM_SPECS.filter((spec) => coseName(spec) !== joseName(spec)).map((spec) => [
+    joseName(spec),
+    coseName(spec),
+  ]),
+);
+
+const respellForCose = (claims: Dict): Dict =>
+  Object.fromEntries(
+    Object.entries(claims).map(([key, value]) => [
+      COSE_CLAIM_SPELLING.get(key) ?? key,
+      value,
+    ]),
+  );
+
+/** A probe's custom bag re-spelled for COSE: the one JOSE header is COSE's protected bucket. */
+const coseCustomOf = (
+  custom: JoseSignStructuredTokenOptions["custom"],
+): CoseSignStructuredTokenOptions["custom"] =>
+  isUndefined(custom) ? undefined : { protected: custom.header };
+
 /**
  * A {@link DateCell} is the ONE value shape a table cannot spell as JSON, so it is
  * the one the interpreter revives — a lone `date` member holding a string.
@@ -57,8 +122,8 @@ const isDateCell = (value: unknown): value is DateCell =>
 /**
  * Deep-clone a probe's data, reviving every {@link DateCell} on the way.
  *
- * The CLONE is what keeps the two runs independent: both scenarios are built from
- * the same module-level literal, so writing the knob into the flipped one would
+ * The CLONE is what keeps the two runs independent: both are built from the
+ * same module-level literal, so writing the knob into the flipped one would
  * otherwise mutate the baseline's — and the table is shared by every wire in the
  * matrix, so the leak would cross rows as well.
  */
@@ -76,15 +141,23 @@ const materialise = <T>(value: T): T =>
           ) as T)
         : value;
 
-/**
- * The artifact step is the LAST GIVEN step — the same rule `runScenario` states,
- * restated here because this is the step the knob is written into.
- */
-const artifactOptionsOf = (given: Given): Dict => {
-  const artifact = given[given.length - 1] as ArtifactGivenStep;
+/** The artifact step is the LAST GIVEN step — the tuple type says so; this says it once at runtime. */
+const artifactOf = (given: Given): ArtifactGivenStep => {
+  const last = given[given.length - 1];
 
-  if (artifact.step === "claims") {
-    throw new Error("a write probe's GIVEN must build a token, not a claim dict");
+  if (last.step === "token") return last;
+
+  throw new Error(`the last GIVEN step must build the artifact, received "${last.step}"`);
+};
+
+/** The option bag a write probe's knob is written into, created when the probe states none. */
+const artifactOptionsOf = (given: Given): Dict => {
+  const artifact = artifactOf(given);
+
+  if (artifact.via === "foreign") {
+    throw new Error(
+      "a write probe's GIVEN must build the token through aegis, not a third party",
+    );
   }
 
   const withOptions = artifact as { options?: Dict };
@@ -130,8 +203,6 @@ export const probeWiresOf = <T>(probe: KnobProbe<T>): ReadonlyArray<Wire> =>
       probe.unobservable?.[wire] === undefined &&
       !(probe.defect !== undefined && (probe.defect.wires ?? WIRE_TAGS).includes(wire)),
   );
-
-const VERDICT_ACCEPTS: Then = [{ step: "accepts" }];
 
 /**
  * WHY a probe failed, as a stable tag rather than as prose.
@@ -186,26 +257,212 @@ export const KNOB_PROBE_DEFECT_TAGS: ReadonlyArray<KnobProbeFailure> = [
   KNOB_PROBE_FAILURE.verdictAgrees,
 ];
 
+/** What a run leaves behind: the token, and the kind aegis reported it as. A third party reports none. */
+type Artifact = { token: string; format?: string; wrapper?: string };
+
+/** The act under test: the construction itself, or a plain domain verify over it. */
+type Act = { step: "mint" } | { step: "verify"; options?: VerifyOptions };
+
+/** Stock the vault, then build the artifact on the run's wire. */
+const build = async (
+  given: Given,
+  ctx: TestDeployment,
+  wire: Wire,
+): Promise<Artifact> => {
+  for (const step of given) {
+    if (step.step !== "keys") continue;
+
+    for (const fixture of step.keys) {
+      ctx.amphora.add(KEY_FIXTURES[fixture]);
+    }
+  }
+
+  const artifact = artifactOf(given);
+
+  switch (artifact.via) {
+    case "kit-sign": {
+      const signed =
+        wire === "cose"
+          ? await ctx.aegis.cwt.sign(respellForCose(artifact.claims), {
+              ...artifact.options,
+              custom: coseCustomOf(artifact.options?.custom),
+            })
+          : await ctx.aegis.jwt.sign(artifact.claims, artifact.options);
+
+      return { token: signed.token, format: signed.format, wrapper: signed.wrapper };
+    }
+
+    case "foreign":
+      return {
+        token: await signAsThirdParty(wire, artifact.claims, undefined, TEST_EC_KEY_SIG),
+      };
+
+    case "mint": {
+      // `mint<P>` resolves the content type from the profile NAME, and here the
+      // artifact is the whole union of members, which TypeScript cannot correlate
+      // with a per-member content — the probe itself is checked against its own.
+      const signed = await ctx.aegis.mint(artifact.profile, artifact.content as never, {
+        format: MINT_FORMAT[wire],
+        ...artifact.options,
+      });
+
+      return { token: signed.token, format: signed.format, wrapper: signed.wrapper };
+    }
+
+    case "domain-encrypt": {
+      const encrypted = await ctx.aegis.encrypt(artifact.data, {
+        format: ENCRYPT_FORMAT[wire],
+        ...artifact.options,
+      });
+
+      return { token: encrypted.token, format: encrypted.format };
+    }
+
+    default: {
+      const exhaustive: never = artifact;
+      throw new Error(`unhandled artifact ${JSON.stringify(exhaustive)}`);
+    }
+  }
+};
+
+/** Build the artifact and perform the act on it; whatever throws is the rejection. */
+const perform = async (
+  given: Given,
+  act: Act,
+  ctx: TestDeployment,
+  wire: Wire,
+): Promise<Artifact> => {
+  const built = await build(given, ctx, wire);
+
+  if (act.step === "mint") return built;
+
+  const verified = await ctx.aegis.verify(built.token, undefined, act.options);
+
+  return { token: verified.token, format: verified.format, wrapper: verified.wrapper };
+};
+
+/** The raw part an observation names, as the inspector reports it. */
+const PART_OF = {
+  wireProtectedHeader: "protectedHeader",
+  wireClaims: "payload",
+} as const satisfies Record<ObservationStep["step"], "protectedHeader" | "payload">;
+
+type WireBucket = { has: (key: WireKey) => boolean; record: Dict };
+
+const readable = <T>(payload: WirePart<T>): T => {
+  if (payload.readable) return payload.value;
+
+  throw new Error(`the probe observes the raw wire claims, but ${payload.reason}`);
+};
+
 /**
- * Run one scenario and report only WHETHER it was accepted.
- *
- * Everything the row could assert is deliberately left out: a verdict probe's
- * whole content is which of the two answers came back, and an observation folded
- * in here would make a red probe ambiguous between "the knob was dropped" and
- * "something else about the token changed".
+ * One raw bucket in the form the assertions consume. `has` takes the wire's OWN
+ * key — a lookup that stringified it would merge the integer label `4` with the
+ * text label `"4"` (RFC 9052 §1.5). The RECORD is stringified because that is
+ * what an object literal in a probe already is, and it serves value comparison
+ * alone. An unreadable payload THROWS rather than reading as empty: every
+ * inclusion and exclusion passes over an empty container.
  */
-const verdictOf = async (
-  scenario: Scenario,
-  ctx: ScenarioContext,
+const bucketOf = (
+  inspection: TokenInspection,
+  part: "protectedHeader" | "payload",
+): WireBucket => {
+  if (inspection.wire === "jose") {
+    const source =
+      part === "payload" ? readable(inspection.payload) : inspection.protectedHeader;
+
+    return { has: (key) => Object.hasOwn(source, String(key)), record: source };
+  }
+
+  const source =
+    part === "payload" ? readable(inspection.payload) : inspection.protectedHeader;
+
+  return {
+    has: (key) => source.has(key),
+    record: Object.fromEntries(
+      [...source].map(([label, value]) => [String(label), value]),
+    ),
+  };
+};
+
+/** Apply one probe's `includes`/`present`/`excludes` to a raw bucket. */
+const assertWireBucket = (assertion: WireAssertion, bucket: WireBucket): void => {
+  if (assertion.includes) {
+    expect(bucket.record).toMatchObject(assertion.includes);
+  }
+  for (const key of assertion.present ?? []) {
+    expect(bucket.has(key), `expected the raw wire bucket to carry ${String(key)}`).toBe(
+      true,
+    );
+  }
+  for (const key of assertion.excludes ?? []) {
+    expect(
+      bucket.has(key),
+      `expected the raw wire bucket NOT to carry ${String(key)}`,
+    ).toBe(false);
+  }
+};
+
+/** A format tag on the artifact, bare or per wire; absent means the probe says nothing about it. */
+const assertTag = (
+  stated: FormatTag | undefined,
+  actual: string | undefined,
+  wire: Wire,
+  field: "format" | "wrapper",
+): void => {
+  if (isUndefined(stated)) return;
+
+  const expected = isString(stated) ? stated : stated[wire];
+
+  expect(
+    expected,
+    `the probe states a per-wire ${field} but names none for the ${wire} wire`,
+  ).toBeDefined();
+  expect(actual, `the artifact's ${field}`).toBe(expected);
+};
+
+/** What an artifact probe observes about the artifact it built. */
+type Observations = {
+  format?: FormatTag;
+  wrapper?: FormatTag;
+  observed: ReadonlyArray<ObservationStep>;
+};
+
+const NOTHING: Observations = { observed: [] };
+
+/** Every observation stated for this wire, in the order written; the rest are another wire's spelling. */
+const observe = (artifact: Artifact, observations: Observations, wire: Wire): void => {
+  assertTag(observations.wrapper, artifact.wrapper, wire, "wrapper");
+  assertTag(observations.format, artifact.format, wire, "format");
+
+  for (const step of observations.observed) {
+    if (step.on !== undefined && step.on !== wire) continue;
+
+    assertWireBucket(step, bucketOf(inspectToken(artifact.token), PART_OF[step.step]));
+  }
+};
+
+/**
+ * Run once and report only WHETHER the act was accepted.
+ *
+ * Everything else is deliberately left out: a verdict probe's whole content is
+ * which of the two answers came back, and an observation folded in here would
+ * make a red probe ambiguous between "the knob was dropped" and "something else
+ * about the token changed".
+ */
+const verdictOf = (
+  given: Given,
+  act: Act,
+  ctx: TestDeployment,
   wire: Wire,
 ): Promise<Verdict> =>
-  runScenario(scenario, ctx, wire).then(
+  perform(given, act, ctx, wire).then(
     () => "accepts" as const,
     () => "rejects" as const,
   );
 
 /**
- * Did this scenario's OBSERVATIONS hold, and if not, WHY?
+ * Did this run's OBSERVATIONS hold, and if not, WHY?
  *
  * The reason is carried rather than discarded: a probe that fails because its own
  * setup is broken and one that fails because the knob was dropped are the same
@@ -213,43 +470,26 @@ const verdictOf = async (
  * slowest part of writing every row here.
  */
 const observationHeld = async (
-  scenario: Scenario,
-  ctx: ScenarioContext,
+  given: Given,
+  act: Act,
+  observations: Observations,
+  ctx: TestDeployment,
   wire: Wire,
-): Promise<{ held: boolean; because?: string }> =>
-  runScenario(scenario, ctx, wire).then(
-    () => ({ held: true }),
-    (err: unknown) => ({ held: false, because: (err as Error).message }),
-  );
-
-const scenarioFor = (id: string, given: Given, when: When, then: Then): Scenario => ({
-  id,
-  title: id,
-  rationale: "knob probe",
-  given,
-  when,
-  then,
-});
-
-/**
- * The acts a probe's artifact goes through. A verify probe's knob rides the
- * VERIFY call, so its given is built untouched and the act carries the options; a
- * write probe's knob rides the CONSTRUCTION, which `runScenario` treats as the
- * first act when `mint` leads.
- */
-const whenFor = <T>(
-  bag: keyof typeof KNOB_PATHS,
-  probe: KnobProbe<T>,
-  options: Dict | undefined,
-): When =>
-  bag === "verify"
-    ? [{ step: "verify", options }]
-    : probe.act === undefined
-      ? [{ step: "mint" }]
-      : [{ step: "mint" }, probe.act];
+): Promise<{ held: boolean; because?: string }> => {
+  try {
+    observe(await perform(given, act, ctx, wire), observations, wire);
+    return { held: true };
+  } catch (error) {
+    return { held: false, because: (error as Error).message };
+  }
+};
 
 /**
  * Run one probe on one wire.
+ *
+ * A verify probe's knob rides the VERIFY call, so its GIVEN is built untouched
+ * and the act carries the options; a write probe's knob rides the CONSTRUCTION,
+ * which is then the act.
  *
  * A VERDICT probe is two runs: the two must reach the stated (and differing)
  * verdicts.
@@ -270,7 +510,7 @@ export const runKnobProbe = async <T>({
   bag: keyof typeof KNOB_PATHS;
   key: string;
   probe: KnobProbe<T>;
-  ctx: () => Promise<ScenarioContext>;
+  ctx: () => Promise<TestDeployment>;
   wire: Wire;
 }): Promise<void> => {
   const body = bodyFor(probe, wire);
@@ -280,26 +520,19 @@ export const runKnobProbe = async <T>({
   const baselineGiven = materialise(probe.given);
   const flippedGiven = materialise(probe.given);
 
-  const verifyOptions = bag === "verify" ? ({ [key]: value } as Dict) : undefined;
+  const baselineAct: Act = bag === "verify" ? { step: "verify" } : { step: "mint" };
+  const flippedAct: Act =
+    bag === "verify"
+      ? { step: "verify", options: { [key]: value } as VerifyOptions }
+      : { step: "mint" };
 
   if (bag !== "verify") {
     setAtPath(artifactOptionsOf(flippedGiven), path, key, value);
   }
 
-  const baselineWhen = whenFor(bag, probe, undefined);
-  const flippedWhen = whenFor(bag, probe, verifyOptions);
-
   if (body.baseline !== undefined) {
-    const baseline = await verdictOf(
-      scenarioFor(`${key} [baseline]`, baselineGiven, baselineWhen, VERDICT_ACCEPTS),
-      await ctx(),
-      wire,
-    );
-    const flipped = await verdictOf(
-      scenarioFor(`${key} [flipped]`, flippedGiven, flippedWhen, VERDICT_ACCEPTS),
-      await ctx(),
-      wire,
-    );
+    const baseline = await verdictOf(baselineGiven, baselineAct, await ctx(), wire);
+    const flipped = await verdictOf(flippedGiven, flippedAct, await ctx(), wire);
 
     // ⚠ BASELINE FIRST, and it throws — which is what lets the flipped check
     // below mean "the two runs agree" rather than merely "one of them missed its
@@ -309,22 +542,16 @@ export const runKnobProbe = async <T>({
     return;
   }
 
-  const observed: Then = [
-    {
-      step: "accepts",
-      ...(body.format === undefined ? {} : { format: body.format }),
-      ...(body.wrapper === undefined ? {} : { wrapper: body.wrapper }),
-    },
-    ...(body.observed ?? []),
-  ];
+  const observations: Observations = {
+    format: body.format,
+    wrapper: body.wrapper,
+    observed: body.observed ?? [],
+  };
 
   const builds = await observationHeld(
-    scenarioFor(
-      `${key} [baseline builds]`,
-      materialise(probe.given),
-      baselineWhen,
-      VERDICT_ACCEPTS,
-    ),
+    materialise(probe.given),
+    baselineAct,
+    NOTHING,
     await ctx(),
     wire,
   );
@@ -336,7 +563,9 @@ export const runKnobProbe = async <T>({
   }
 
   const baseline = await observationHeld(
-    scenarioFor(`${key} [baseline]`, baselineGiven, baselineWhen, observed),
+    baselineGiven,
+    baselineAct,
+    observations,
     await ctx(),
     wire,
   );
@@ -348,7 +577,9 @@ export const runKnobProbe = async <T>({
   }
 
   const flipped = await observationHeld(
-    scenarioFor(`${key} [flipped]`, flippedGiven, flippedWhen, observed),
+    flippedGiven,
+    flippedAct,
+    observations,
     await ctx(),
     wire,
   );
@@ -383,9 +614,9 @@ const expectVerdict = (
  * that disagrees is the verdict form of `GIVEN_DOES_NOT_BUILD`: the probe's
  * premise has rotted — its artifact no longer builds what it built, or the
  * default it was written against has moved — and that is a statement about the
- * probe, never about the knob. It shared `VERDICT_AGREES` with the flipped run,
- * which the self-verifying defect test accepts as proof the declared shortfall
- * still manifests, so a dead verdict probe could keep its wire skipped forever
+ * probe, never about the knob. Sharing `VERDICT_AGREES` with the flipped run
+ * would let the self-verifying defect test accept a dead verdict probe as proof
+ * the declared shortfall still manifests, so a wire could stay skipped forever
  * with nothing behind the skip. The artifact form guards its own setup twice
  * (`builds`, then `baseline`); this is the verdict form's single guard.
  */

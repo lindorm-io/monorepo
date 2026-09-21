@@ -11,7 +11,7 @@ import { isNotStated } from "./is-not-stated.js";
  * table makes — that none of them is another — is what these rows check.
  *
  * The behaviour is exercised end to end by the walkers that ask it
- * (`translate.test.ts`, `classes/address-claim-wire.test.ts`, the scenario table);
+ * (`translate.test.ts`, `classes/address-claim-wire.test.ts`, the feature files);
  * this file exists so the BOUNDARY has somewhere to be stated once.
  */
 describe("isNotStated — the codec's absence boundary", () => {

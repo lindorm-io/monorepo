@@ -19,10 +19,9 @@ MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
  * adds one thing: a dotted token bails before any base64url or CBOR work, which is
  * what keeps a JOSE token from being decoded as garbage CBOR and answered about.
  *
- * ⚠ These cannot be conformance rows. A row states a capability by BUILDING an
- * artifact and ACTING on it; a guard is a total predicate over an arbitrary
- * string, and its most important answers are about strings no artifact step could
- * produce.
+ * ⚠ These cannot be feature scenarios. A scenario states a capability by BUILDING
+ * an artifact and ACTING on it; a guard is a total predicate over an arbitrary
+ * string, and its most important answers are about strings no scenario builds.
  */
 describe("COSE format guards", () => {
   let amphora: IAmphora;

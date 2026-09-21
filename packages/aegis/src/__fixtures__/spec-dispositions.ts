@@ -1,4 +1,4 @@
-import type { Wire } from "./scenarios.js";
+import type { Wire } from "../internal/registry/wire.js";
 
 /**
  * THE PER-SPEC DISPOSITION TABLES — the consumer `ParamSpec.sample` never had.
@@ -47,7 +47,7 @@ import type { Wire } from "./scenarios.js";
 /**
  * The named public doors. Each is implemented ONCE in
  * `run-spec-disposition.ts`; a table entry names one and carries no behaviour,
- * exactly as a scenario row does.
+ * exactly as a knob probe does.
  */
 export type SpecDoor =
   /** `mint("default", { subject, expires, [domain]: sample })` -> `verify().claims`. */

@@ -16,7 +16,8 @@ import type { Dict } from "@lindorm/types";
  * used, so any reader asking a presence question about the header comes through
  * here.
  * pinned: `custom-header-params.test.ts`, `custom-header-params.read.test.ts`,
- * and the scenario row `the-keyless-read-accepts-every-token-the-mint-produces`.
+ * and `Aegis.critical-header.feature` "a token this library signs can be read
+ * back by its own keyless reader".
  *
  * ⛔⛔ THE REGISTERED BAG SPREADS LAST, AND THE ORDER IS A SECURITY PROPERTY. The
  * two bags are NOT disjoint: on COSE the custom bag is keyed by `String(label)`

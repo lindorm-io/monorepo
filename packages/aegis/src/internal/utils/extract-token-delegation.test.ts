@@ -20,7 +20,8 @@ describe("extractTokenDelegation", () => {
     // to fill and a foreign `act.aud` is not translated into one here. Untouched,
     // it is reported in the ACTOR'S OWN TAIL — `VerifiedToken.claims.act`, not
     // this derived summary:
-    // `__fixtures__/scenarios.ts#a-foreign-actors-audience-is-reported-in-the-tail-untranslated`.
+    // `Aegis.delegation.feature` "a verify reports a foreign token's actor `aud`
+    // under the name its issuer wrote".
     //
     // ⚠ Asserted inline rather than by snapshot: the point is which members the
     // summary carries and no others, and a snapshot written under a walk that had

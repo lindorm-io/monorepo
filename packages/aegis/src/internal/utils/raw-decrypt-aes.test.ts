@@ -24,7 +24,7 @@ const PLAINTEXT = "cookie-session-payload";
  * every other option here exists to make the failure modes LOUD, because
  * silently decrypting with a different key would be worse than not decrypting.
  *
- * ⚠ Beside the function rather than in the conformance table: an AES record is
+ * ⚠ Beside the function rather than in the feature files: an AES record is
  * neither a JOSE nor a COSE token, so there is no wire to state it on.
  */
 

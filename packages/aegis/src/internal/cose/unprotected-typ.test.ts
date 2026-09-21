@@ -30,7 +30,7 @@ const TYP = coseByJose("typ");
  * token", and what the profile floor compares against — so honouring an
  * unprotected copy lets the PRESENTER answer the verifier's question.
  *
- * STANDALONE rather than conformance rows: the input cannot come through the
+ * STANDALONE rather than feature scenarios: the input cannot come through the
  * public mint. `buildCoseHeaders` refuses a caller `typ` in either bag
  * (`cose_reserved_header`) and the protected map wins on merge, so the rule bites
  * only on a CWT whose protected header omits `typ` — which only a foreign or

@@ -17,8 +17,9 @@ const CLIENT = "client-1";
 
 /**
  * THE MEDIA TYPE EACH BUILT-IN PROFILE STAMPS (RFC 8725 §3.11).
- * `a-profile-refuses-a-token-typed-as-another-kind` in the conformance table
- * states that the type is CHECKED; this states WHAT each type is. A check against
+ * `Aegis.profile-floor.feature` "a token of one kind is refused when verified
+ * under the profile of another" states that the type is CHECKED; this states
+ * WHAT each type is. A check against
  * a value nothing pins keeps working after the value silently changes, while every
  * deployed relying party matching the old string starts refusing our tokens.
  *
@@ -28,7 +29,7 @@ const CLIENT = "client-1";
  * ⚠ TOTAL over `keyof BuiltInProfiles`, so a new profile is a compile error rather
  * than a profile whose type nothing states.
  *
- * ⚠ Not a conformance row: that table states ONE capability per row, and this is
+ * ⚠ Not a feature scenario: a scenario states ONE capability, and this is
  * many values of the same one, bound to a collection by its own type.
  */
 type Expectation<P extends keyof BuiltInProfiles> =
@@ -78,7 +79,7 @@ const PROFILE_TYP: { [P in keyof BuiltInProfiles]-?: Expectation<P> } = {
   external_access_token: {
     mints: false,
     reason:
-      'The profile declares `use: "verify"` — it exists to check a third party\'s token, so there is no token of ours to stamp. Its refusal to mint is stated in the conformance table.',
+      'The profile declares `use: "verify"` — it exists to check a third party\'s token, so there is no token of ours to stamp. Its refusal to mint is stated in the feature files.',
   },
 
   // OIDC Core §2 adds no media type of its own, so the bare conventional `JWT` is

@@ -20,9 +20,9 @@ MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
  * resolved key's issuer to the token's `iss`.
  *
  * ⚠ It lives beside `resolve-key.ts` because that is the code under test, and it
- * cannot be a conformance row: the collision only exists once TWO issuers have
- * been registered and their JWKS fetched over HTTP, and the scenario table's
- * world is one vault with one issuer. The unit-level scope behaviour — matching,
+ * is not a feature scenario: the collision only exists once TWO issuers have
+ * been registered and their JWKS fetched over HTTP, and a fixture deployment is
+ * one vault with one issuer. The unit-level scope behaviour — matching,
  * non-matching, non-URI, URN, expired, injected — is in `resolve-key.test.ts`;
  * what is here is the END-TO-END consequence, through the public doors, with the
  * keys arriving the way a deployment's really do.

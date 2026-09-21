@@ -18,13 +18,11 @@ const direct: TokenDelegation = {
 /**
  * The EMPTINESS boundary of `allowedActor`.
  *
- * ⚠ The scenario table cannot state the undefined-valued half: its rows are pure
- * data written to survive a JSON conversion, and `JSON.stringify` erases
- * `{ subject: undefined }` to `{}`, so a converted row would be a second copy of
- * the `{}` one. The serialisability check in `Aegis.conformance.test.ts` does not
- * stand in for the row either — `toEqual` reads an undefined-valued key as
- * absent, so such a row round-trips "equal". The `{}` half IS stated at the
- * public door, by `an-actor-allowlist-that-constrains-nothing-is-refused`.
+ * ⚠ The undefined-valued half is stated here: a feature step's data is text, and
+ * no text spells `{ subject: undefined }` apart from `{}`. The `{}` half IS
+ * stated at the public door, by `Aegis.delegation.feature` "a verifier stating an
+ * actor allowlist with no condition in it has the call refused rather than
+ * obeyed".
  */
 describe("validateActor — an allowedActor that constrains nothing", () => {
   test("refuses a condition naming no field", () => {

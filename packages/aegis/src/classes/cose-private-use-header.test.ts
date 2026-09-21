@@ -217,8 +217,9 @@ describe("a private-use COSE header label degrades to its interoperable spelling
    * token. `oid` is the header registry's one `critEligible` parameter, so
    * aegis's own reader ACCEPTS this token in both interop modes — pinned in
    * `CwtKit.test.ts#verify accepts the crit extension aegis implements` and in
-   * the conformance table's
-   * `a-producer-may-mark-an-implemented-extension-parameter-critical`. What is
+   * `Aegis.critical-header.feature` "a token marking a header parameter the
+   * library implements critical is minted, and verified by a caller that
+   * declares it". What is
    * stated HERE is the thing a round trip cannot state: aegis reading back its
    * own bytes proves the writer and the reader agree, not that either is right,
    * and the label/name confusion this file exists for round-trips perfectly while

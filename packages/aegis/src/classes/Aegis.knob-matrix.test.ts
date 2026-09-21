@@ -15,9 +15,8 @@ import {
   probeWiresOf,
   runKnobProbe,
 } from "../__fixtures__/run-knob-probe.js";
-import { createScenarioContext, DEFAULT_CLOCK } from "../__fixtures__/run-scenario.js";
-import type { Wire } from "../__fixtures__/scenarios.js";
-import { WIRE_TAGS } from "../internal/registry/wire.js";
+import { createTestDeployment, DEFAULT_CLOCK } from "../__fixtures__/test-deployment.js";
+import { WIRE_TAGS, type Wire } from "../internal/registry/wire.js";
 import {
   VERIFY_OPTION_KEYS,
   VERIFY_OPTION_PARITY,
@@ -26,14 +25,15 @@ import {
 MockDate.set(new Date(DEFAULT_CLOCK));
 
 /**
- * The KNOB MATRIX — the second generated matrix of the conformance suite.
+ * The KNOB MATRIX — a generated matrix: every option this package takes, on
+ * every wire it can be stated on.
  *
  * Every option this package takes is threaded BY HAND into the call that
  * consumes it, once per wire and once per verb. A field left out of one of those
  * forwards is invisible: the compiler sees a well-typed object literal, and the
  * caller sees no error, because a dropped option does not fail — it does nothing.
  *
- * A row here therefore asserts something no conformance row does: that ONE OPTION
+ * A row here therefore asserts something no feature scenario does: that ONE OPTION
  * IS READ. It is proved by DIFFERENCE — the same call is made twice, once with
  * the knob and once without — because a dropped knob is defined by the two being
  * the same.
@@ -187,10 +187,9 @@ describe("Aegis — knob matrix", () => {
     expect(empty).toEqual([]);
   });
 
-  // The same serialisability rule the scenario table carries, and for the same
-  // reason: every option bag bottoms out in `Dict`, so a lambda or a live `Date`
-  // compiles wherever a literal does and would then be silently rewritten by any
-  // machine conversion. `DateCell` exists precisely so a date can survive this.
+  // Every probe is JSON: every option bag bottoms out in `Dict`, so a lambda or a
+  // live `Date` compiles wherever a literal does and would then be silently
+  // rewritten by any machine conversion. `DateCell` exists precisely so a date can survive this.
   test("should carry only JSON-serialisable values in every probe", () => {
     expect(PROBES.length).toBeGreaterThan(0);
     expect(JSON.parse(JSON.stringify(TABLES))).toEqual(TABLES);
@@ -241,9 +240,7 @@ describe("Aegis — knob matrix", () => {
   // named wire for want of an observation rather than for the shortfall — a
   // skipped wire with nothing behind it — and that failure arrives through the
   // same `OPTION_DROPPED` door a real drop does, so no runtime tag can separate
-  // them. This is the invariant that was violated three times in one round, and
-  // it mirrors the two `knownDefect` table tests `Aegis.conformance.test.ts`
-  // carries for the scenario table.
+  // them.
   //
   // A VERDICT probe satisfies it by construction: its proof is which of the two
   // answers came back, which is a statement about every wire it runs on. So is a
@@ -322,7 +319,7 @@ describe("Aegis — knob matrix", () => {
       probe,
       ctx: async () => {
         MockDate.set(new Date(DEFAULT_CLOCK));
-        return createScenarioContext();
+        return createTestDeployment();
       },
       wire,
     }).then(
@@ -363,7 +360,7 @@ describe("Aegis — knob matrix", () => {
       // a probe's two runs must not be able to see each other's residue.
       ctx: async () => {
         MockDate.set(new Date(DEFAULT_CLOCK));
-        return createScenarioContext();
+        return createTestDeployment();
       },
       wire,
     });

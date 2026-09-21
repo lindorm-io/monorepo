@@ -13,10 +13,10 @@ const ISSUER = "https://test.lindorm.io/";
 /**
  * `parseToken` — the keyless, unverified claims read, beside this file.
  *
- * What it does with each token KIND is stated as conformance rows (a claims token
- * is read; an opaque one and an encrypted one are refused, each naming the format
- * it refused). Two things about it cannot be: both take an input no artifact step
- * can build, which is exactly why they are the two worth holding here.
+ * What it does with each token KIND is stated in the feature files (a claims
+ * token is read; an opaque one and an encrypted one are refused, each naming the
+ * format it refused). Two things about it are stated here: both take an input no
+ * scenario builds, which is exactly why they are the two worth holding.
  */
 describe("parseToken", () => {
   let aegis: Aegis;
@@ -31,10 +31,8 @@ describe("parseToken", () => {
 
   const content = { expires: "1h", subject: "user-1", tokenType: "test_token" } as const;
 
-  // A string nobody signed. Every artifact step in the scenario table produces a
-  // real token by construction, so this input is unreachable from a row — and it
-  // is the input a caller is likeliest to arrive with, since it is whatever the
-  // request actually carried.
+  // A string nobody signed — the input a caller is likeliest to arrive with,
+  // since it is whatever the request actually carried.
   test("refuses a value that is not a token at all", () => {
     expect(() => aegis.parse("not-a-token")).toThrow(
       expect.objectContaining({ code: "unsupported_token_type" }),

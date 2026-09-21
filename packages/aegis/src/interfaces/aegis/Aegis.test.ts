@@ -17,7 +17,7 @@ import type { IAegis } from "./Aegis.js";
  * file performs a cryptographic operation, and nothing needs to.
  *
  * ⚠ It sits beside `IAegis` because that is the declaration it constrains, and
- * it is NOT a conformance row: a row states what a token does on a wire, and
+ * it is NOT a feature scenario: a scenario states what a token does on a wire, and
  * these failures happen before a token exists. They are also silent at runtime —
  * a content type that stops constraining anything mints exactly the same token —
  * which is why they need a test at all.
@@ -84,7 +84,8 @@ export const _mintContentGuards = (): void => {
   // rule the compiler carries, and it reaches every depth because the declared
   // `act` member names the same type. A caller casting past it writes an
   // undeclared member, which rides the open tail:
-  // `__fixtures__/scenarios.ts#an-actor-audience-is-carried-as-the-undeclared-member-it-is`.
+  // `Aegis.delegation.feature` "a mint carries a caller's actor audience under the
+  // name the caller wrote, never as the actor's `aud`".
   void aegis.mint("access_token", {
     subject: "user-1",
     audience: [RESOURCE],

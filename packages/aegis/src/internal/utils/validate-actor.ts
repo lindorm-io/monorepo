@@ -55,8 +55,8 @@ export const validateActor = (
     // An ABSENT actor is refused here rather than left to the condition:
     // `Matcher` negates two-valuedly, so a condition stated as a denial
     // (`$not`, `$exists: false`) is SATISFIED by an actor that is not there.
-    // Pinned by the scenario row
-    // `an-actor-allowlist-stated-as-a-denial-refuses-a-token-that-names-no-actor`.
+    // Pinned by `Aegis.delegation.feature` "a verifier whose actor allowlist names
+    // the parties it refuses still refuses a token presented by its own subject".
     if (!current || !Matcher.match(current, options.allowedActor)) {
       return {
         code: "actor_not_allowed",

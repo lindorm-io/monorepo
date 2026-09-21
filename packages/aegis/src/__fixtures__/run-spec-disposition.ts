@@ -1,17 +1,15 @@
 import { isDate, isUndefined } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import { expect } from "vitest";
-import { WIRE_TAGS } from "../internal/registry/wire.js";
+import { WIRE_TAGS, type Wire } from "../internal/registry/wire.js";
 import type { TokenFormatTag } from "../types/index.js";
 import { TEST_EC_KEY_ENC, TEST_EC_KEY_SIG_CERT, TEST_OCT_KEY_ENC } from "./keys.js";
-import type { ScenarioContext } from "./run-scenario.js";
 import type { SpecDisposition, SpecDoor, SpecObservation } from "./spec-dispositions.js";
-import { CLIENT, ISSUER, RESOURCE, type Wire } from "./scenarios.js";
+import { CLIENT, ISSUER, RESOURCE, type TestDeployment } from "./test-deployment.js";
 
 /**
- * The PER-SPEC interpreter — the code half of the disposition tables, exactly as
- * `run-scenario.ts` is the code half of the scenario table. A table entry names a
- * door; every door is implemented here once.
+ * The PER-SPEC interpreter — the code half of the disposition tables. A table
+ * entry names a door; every door is implemented here once.
  */
 
 /**
@@ -131,7 +129,7 @@ const bothBuckets = (protectedHeader: unknown, unprotectedHeader: unknown): Dict
 });
 
 type DoorInput = {
-  ctx: ScenarioContext;
+  ctx: TestDeployment;
   domain: string;
   sample: unknown;
   wire: Wire;
@@ -291,7 +289,7 @@ const openDoor = async (door: SpecDoor, input: DoorInput): Promise<unknown> => {
  */
 const observeHeader = async (
   observation: Exclude<SpecObservation, "none">,
-  ctx: ScenarioContext,
+  ctx: TestDeployment,
   wire: Wire,
 ): Promise<{ bucket: Dict; vocabulary: "domain" | "wire" }> => {
   switch (observation) {
@@ -388,7 +386,7 @@ const observeHeader = async (
  * carry a reason, so the silence is stated rather than reached.
  */
 export const runSpecDisposition = async (input: {
-  ctx: ScenarioContext;
+  ctx: TestDeployment;
   disposition: SpecDisposition;
   domain: string;
   sample: unknown;

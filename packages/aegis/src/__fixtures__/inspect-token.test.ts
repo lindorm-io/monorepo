@@ -10,15 +10,18 @@ import {
   type JoseInspection,
 } from "./inspect-token.js";
 import {
-  createScenarioContext,
+  createTestDeployment,
   DEFAULT_CLOCK,
-  type ScenarioContext,
-} from "./run-scenario.js";
-import { ISSUER, NOW, RESOURCE } from "./scenarios.js";
+  ISSUER,
+  NOW,
+  RESOURCE,
+  type TestDeployment,
+} from "./test-deployment.js";
 
 /**
  * The inspector's own proof. A guard nothing exercises is a promise nobody has
- * read, and this one guards every wire-level row in the conformance table.
+ * read, and this one guards every raw-wire assertion the feature steps and the
+ * knob probes make.
  *
  * Two halves, and both are needed:
  *
@@ -81,13 +84,13 @@ const jose = (inspection: ReturnType<typeof inspectToken>): JoseInspection => {
 };
 
 describe("inspectToken", () => {
-  let ctx: ScenarioContext;
+  let ctx: TestDeployment;
 
   beforeAll(async () => {
     // The key fixtures expire in 2024; the whole package runs at a fixed clock.
     MockDate.set(new Date(DEFAULT_CLOCK));
 
-    ctx = await createScenarioContext();
+    ctx = await createTestDeployment();
     ctx.amphora.add(TEST_EC_KEY_ENC);
     // A COSE_Encrypt0 has a single recipient and no key management layer
     // (RFC 9052 §5.2), so the CWE half needs a `dir` key in the vault.

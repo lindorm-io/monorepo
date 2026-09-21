@@ -507,8 +507,9 @@ describe("the act / may_act claims on the wire", () => {
     // `Map { 2 => "audited-service", "sub" => "rogue-service" }` reads back as
     // `{ subject: "rogue-service" }`, replacing the actor the issuer named.
     //
-    // ⭐ THE VERIFYING DOOR IS IN THE SPECIFICATION, as the conformance row
-    // `a-cwt-keying-one-member-by-both-its-label-and-its-name-is-refused` — a
+    // ⭐ THE VERIFYING DOOR IS IN THE SPECIFICATION, as `Aegis.delegation.feature`
+    // "a verify refuses a CWT whose member map carries one member at both its
+    // integer label and its text name" states — a
     // hand-forged CWT carrying a real signature, so the refusal is proven to come
     // from the claims decoder and not from anything upstream of it.
     //

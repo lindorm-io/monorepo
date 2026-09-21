@@ -246,10 +246,8 @@ describe("domainToJose — content -> wire mapping", () => {
     );
   });
 
-  // `toEqual`, because the conformance row
-  // `a-foreign-nested-actor-member-that-is-not-of-its-declared-kind-is-read-as-unstated`
-  // asserts through `toMatchObject` and cannot state that the inner `subject`
-  // is ABSENT rather than unasserted.
+  // `toEqual`, so the inner `subject` is stated ABSENT rather than merely
+  // unasserted.
   test("drops a foreign actor's wrongly-typed member at depth, keeping the chain and the members beside it", () => {
     expect(
       joseToDomain({
@@ -1358,10 +1356,11 @@ describe("walkObject — the structure walker's direction guard", () => {
    * WHERE A REFUSAL SAYS THE BAD MEMBER IS.
    *
    * ⚠ THE REGISTRY REACHES DEPTH: `act-members.ts` names `ACT_MEMBERS` inside
-   * itself, so `act` and `mayAct` nest without limit and the conformance rows
-   * `a-caller-cannot-write-two-spellings-of-one-structured-member` and
-   * `an-actor-carries-an-identity-claim-the-registry-does-not-declare` drive real
-   * paths like `act.act.<member>` through the public mint door.
+   * itself, so `act` and `mayAct` nest without limit and the
+   * `Aegis.delegation.feature` Rules "a mint refuses a structured claim whose
+   * caller wrote both spellings of one member" and "a mint carries an actor member
+   * RFC 8693 permits and aegis does not declare, at every depth" drive real paths
+   * like `act.act.<member>` through the public mint door.
    *
    * ⭐ EXACTLY ONE TEST STOPS `WalkContext.claim` BEING AN EQUIVALENT MUTANT.
    * `claim` is read at the claim boundary and in ONE place a CHILD context can

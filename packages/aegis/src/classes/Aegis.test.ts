@@ -473,14 +473,14 @@ describe("Aegis", () => {
    * so they are exercised on hand-built segments: an aegis-minted token could
    * never carry the shapes below, and a third party's routinely does.
    *
-   * ⚠ Not conformance rows: a row states a capability of a token as it travels a
-   * wire, and these are static predicates over a string that need not be a token
-   * at all. The scenario table has no artifact for "the empty string".
+   * ⚠ Not feature scenarios: a scenario states a capability of a token as it
+   * travels a wire, and these are static predicates over a string that need not
+   * be a token at all.
    */
   describe("the JOSE format guards", () => {
     // The `typ` header is a HINT (RFC 7519 §5.1) — a media type for the JWT
-    // APPLICATION to read, pinned by the scenario row
-    // `an-asserted-token-type-is-compared-as-a-whole-media-type`. Routing on it
+    // APPLICATION to read, pinned by `Aegis.header-provenance.feature` "a token of
+    // another type is refused when the caller asserts an id token". Routing on it
     // as the discriminant would reject every third-party token that spells it
     // differently, or omits it.
     describe("a typ header is a hint, never the discriminant", () => {
@@ -589,7 +589,7 @@ describe("Aegis", () => {
    * The merge lives on this class (its `resolveSignKey` / `resolveVerifyKey`
    * closures), which is why it is asserted here: `resolve-key.ts` receives ONE
    * already-merged selector and cannot see which half of it came from where, and
-   * a conformance row states what a token does on a wire rather than which vault
+   * a feature scenario states what a token does on a wire rather than which vault
    * resident produced it. What is under test is that a deployment's standing
    * policy and a caller's per-call one compose the way an operator would read
    * them: the caller narrows, the deployment supplies everything the caller did

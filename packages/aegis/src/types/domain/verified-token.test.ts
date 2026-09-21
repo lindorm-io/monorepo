@@ -124,11 +124,7 @@ describe("DecryptedToken (type witness)", () => {
     //
     // The absence is proved against a REAL product result by
     // `classes/token-wrapper.test.ts` ("a bare jwe/cwe reports its own format"),
-    // which asserts over what `aegis.encrypt` actually returns. ⚠ NOT by the
-    // scenario row of the same name: that row asserts over `ScenarioResult`,
-    // which the interpreter transcribes field by field, so it holds the FIXTURE
-    // honest — it catches an interpreter that fabricates a wrapper — and cannot
-    // see one the product emits.
+    // which asserts over what `aegis.encrypt` actually returns.
     expect(decrypted.format).toBe("jwe");
   });
 

@@ -375,7 +375,7 @@ describe("CwtKit — the COSE_Sign1 it builds and the header rules it enforces",
     // (RFC 9052 §1.5 — the interoperable default writes `oid`'s private-use label
     // as its text spelling) and comes back as the JOSE wire name, beside the
     // parameter it names. The DOMAIN spelling of the same round trip is the
-    // conformance table's business, not the kit's.
+    // feature files' business, not the kit's.
     expect(verified.protectedHeader.crit).toEqual(["oid"]);
     expect(verified.protectedHeader.oid).toBe("1.2.3.4");
   });

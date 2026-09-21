@@ -412,8 +412,8 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     bucket: "claims",
     // REFUSE: `act` (RFC 8693 §4.1) makes the token a delegated one, and an actor
     // object with no member names nobody a verifier could hold to that
-    // delegation — pinned by `scenarios.ts`
-    // "an-actor-that-identifies-nobody-is-refused-before-it-is-signed".
+    // delegation — pinned by `Aegis.empty-claim-prune.feature` "an actor claim
+    // carrying no member is refused at the mint rather than written or dropped".
     whenEmpty: "refuse",
     domainClaim: true,
   },
@@ -603,7 +603,8 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     bucket: "claims",
     // REFUSE: `at_hash` (OIDC Core §3.1.3.6) binds the ID Token to an access
     // token, and an empty digest is a binding no access token can match — pinned
-    // by `scenarios.ts` "an-empty-access-token-hash-is-refused-before-it-is-signed".
+    // by `Aegis.empty-claim-prune.feature` "an access token hash supplied as the
+    // empty string is refused at the mint rather than written or dropped".
     whenEmpty: "refuse",
     domainClaim: true,
   },
@@ -623,7 +624,9 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     bucket: "claims",
     // REFUSE: `c_hash` (OIDC Core §3.3.2.11) binds the ID Token to an
     // authorization code, and an empty digest is a binding no code can match —
-    // pinned by `scenarios.ts` "an-empty-code-hash-is-refused-before-it-is-signed".
+    // pinned by `Aegis.empty-claim-prune.feature` "an authorization code hash
+    // supplied as the empty string is refused at the mint rather than written or
+    // dropped".
     whenEmpty: "refuse",
     domainClaim: true,
   },
@@ -643,7 +646,8 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     bucket: "claims",
     // REFUSE: `s_hash` (FAPI 1.0 Part 2 §5.1.1) binds the ID Token to the `state`
     // value, and an empty digest is a binding no `state` can match — pinned by
-    // `scenarios.ts` "an-empty-state-hash-is-refused-before-it-is-signed".
+    // `Aegis.empty-claim-prune.feature` "a state hash supplied as the empty string
+    // is refused at the mint rather than written or dropped".
     whenEmpty: "refuse",
     domainClaim: true,
   },
@@ -731,8 +735,9 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     bucket: "claims",
     // REFUSE: `may_act` (RFC 8693 §4.4) authorises a party to become the actor,
     // and an object with no member authorises nobody a token endpoint could
-    // recognise — pinned by `scenarios.ts`
-    // "an-authorized-actor-that-identifies-nobody-is-refused-before-it-is-signed".
+    // recognise — pinned by `Aegis.empty-claim-prune.feature` "an authorized-actor
+    // claim carrying no member is refused at the mint rather than written or
+    // dropped".
     whenEmpty: "refuse",
     domainClaim: true,
   },
@@ -849,8 +854,8 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     bucket: "claims",
     // REFUSE: `sub_id` (RFC 9493 §4.1) identifies who the token is about, and an
     // identifier with no member identifies nobody a recipient could act on —
-    // pinned by `scenarios.ts`
-    // "a-subject-identifier-that-identifies-nobody-is-refused-before-it-is-signed".
+    // pinned by `Aegis.empty-claim-prune.feature` "a subject identifier carrying
+    // no member is refused at the raw door rather than written or dropped".
     whenEmpty: "refuse",
     domainClaim: true,
   },
@@ -870,7 +875,8 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     bucket: "claims",
     // REFUSE: `events` (RFC 8417 §2.2) is what makes the token a SET, and a map
     // naming no event type states no event a recipient could act on — pinned by
-    // `scenarios.ts` "an-events-map-that-names-no-event-is-refused-before-it-is-signed".
+    // `Aegis.empty-claim-prune.feature` "an events claim naming no event type is
+    // refused at the mint rather than written or dropped".
     whenEmpty: "refuse",
   },
 

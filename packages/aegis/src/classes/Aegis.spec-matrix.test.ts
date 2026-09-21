@@ -1,32 +1,31 @@
 import MockDate from "mockdate";
 import { beforeEach, describe, expect, test } from "vitest";
 import {
-  createScenarioContext,
-  DEFAULT_CLOCK,
-  type ScenarioContext,
-} from "../__fixtures__/run-scenario.js";
-import {
   dispositionOn,
   runSpecDisposition,
   specLabel,
   specWiresOf,
   SPEC_DISPOSITION_DEFECT_TAGS,
 } from "../__fixtures__/run-spec-disposition.js";
-import type { Wire } from "../__fixtures__/scenarios.js";
 import {
   CLAIM_DISPOSITIONS,
   HEADER_DISPOSITIONS,
   type SpecDisposition,
 } from "../__fixtures__/spec-dispositions.js";
+import {
+  createTestDeployment,
+  DEFAULT_CLOCK,
+  type TestDeployment,
+} from "../__fixtures__/test-deployment.js";
 import { CLAIM_SPECS, joseName } from "../internal/claims/claims-registry.js";
 import { HEADER_SPECS, headerJoseName } from "../internal/header/header-registry.js";
-import { WIRE_TAGS } from "../internal/registry/wire.js";
+import { WIRE_TAGS, type Wire } from "../internal/registry/wire.js";
 
 MockDate.set(new Date(DEFAULT_CLOCK));
 
 /**
- * The PER-SPEC MATRIX — the third generated matrix of the conformance suite, and
- * the consumer `ParamSpec.sample` was written for and never had.
+ * The PER-SPEC MATRIX — a generated matrix over the claim and header registries,
+ * and the consumer `ParamSpec.sample` was written for and never had.
  *
  * `sample` is REQUIRED on all 99 registry entries. Its own docstring says why:
  * "so a new parameter cannot be added without giving the generated conformance
@@ -91,12 +90,12 @@ const MATRIX: ReadonlyArray<[string, string, SpecDisposition, unknown, string, W
   );
 
 describe("Aegis — per-spec matrix", () => {
-  let ctx: ScenarioContext;
+  let ctx: TestDeployment;
 
   beforeEach(async () => {
     MockDate.set(new Date(DEFAULT_CLOCK));
 
-    ctx = await createScenarioContext();
+    ctx = await createTestDeployment();
   });
 
   // ⚠ THE BINDING. Two independently authored artifacts, compared key set to key
@@ -217,7 +216,7 @@ describe("Aegis — per-spec matrix", () => {
     MockDate.set(new Date(DEFAULT_CLOCK));
 
     const outcome = await runSpecDisposition({
-      ctx: await createScenarioContext(),
+      ctx: await createTestDeployment(),
       disposition,
       domain,
       sample,

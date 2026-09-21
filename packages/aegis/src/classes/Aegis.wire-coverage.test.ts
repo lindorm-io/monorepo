@@ -15,9 +15,8 @@ import { WIRE_TAGS, type Wire } from "../internal/registry/wire.js";
  * naming no wire is not counted. Most Rules run on both wires, and the share is
  * pinned so that drift is visible in review rather than discovered later.
  *
- * Reads the feature files alone: `@lindorm/gherkin` drops descriptions before
- * its runtime model exists, so a reason is readable only off the text, and
- * nothing here depends on the scenario table.
+ * Reads the feature files as text: `@lindorm/gherkin` drops descriptions before
+ * its runtime model exists, so a reason is readable only off the text.
  */
 
 type FeatureRule = {
