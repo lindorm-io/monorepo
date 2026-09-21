@@ -76,9 +76,9 @@ Feature: The profile floor, applied to a token that arrived
     a floor that demanded it anyway would refuse conformant tokens from every
     partner while reporting a policy violation the partner cannot act on. The
     profile decides, not the floor. The cose scenario carries no tag: the rule
-    is the JWT specification's, a CWT is not a JWT, and RFC 8392 §3.1.6 gives
-    its own issue-instant claim the same meaning and processing rules by
-    reference — a document this row does not cite.
+    is the JWT specification's, and RFC 8392 §3.1.6 gives the CWT
+    issue-instant claim the same meaning and processing rules by reference to
+    it.
 
     Background:
       Given the wire claims
@@ -147,10 +147,9 @@ Feature: The profile floor, applied to a token that arrived
     issuer has to travel from the mint content to the wire claim and back — a
     mint that stamped the deployment's identity instead would produce a token
     the receiving party rejects for naming the wrong issuer, silently, because
-    the token is otherwise well-formed. The cose wire scenario carries no tag:
-    the claim name is the JWT specification's, a CWT is not a JWT, and
-    RFC 8392 §3.1.1 gives claim key 1 the same meaning and processing rules by
-    reference — a document this row does not cite.
+    the token is otherwise well-formed. The cose scenario carries no tag: the
+    claim name is the JWT specification's, and RFC 8392 §3.1.1 gives the CWT
+    issuer claim the same meaning and processing rules by reference to it.
 
     Background:
       Given the content to mint

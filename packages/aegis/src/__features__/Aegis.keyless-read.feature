@@ -220,10 +220,11 @@ Feature: The keyless claims read
     form is forced to verify first and inspect afterwards, which is exactly
     backwards: verification needs the very facts the read would have
     supplied. The vault also holds the baseline ES512 key, so the selector
-    is what puts the shared secret in front of the mint. JOSE has no
-    separate MAC structure to read: one structure carries both digital
-    signatures and MACs (RFC 7515 §1), so a MAC-authenticated JOSE claims
-    token is a JWT and is already covered by the ordinary keyless read.
+    is what puts the shared secret in front of the mint. The jose wire has no
+    scenario: JOSE has no separate MAC structure to read — one structure
+    carries both digital signatures and MACs (RFC 7515 §1), so a
+    MAC-authenticated JOSE claims token is a JWT and is already covered by the
+    ordinary keyless read.
 
     Background:
       Given the vault also holds an HS256 signing key

@@ -20,11 +20,10 @@ Feature: A signed token sealed in an encrypting envelope
     recovers a byte string it has no reason to treat as a credential, and the
     inner signature — the only thing that says who issued the claims — is
     never checked. The declaration is read off the envelope's raw protected
-    header by the independent inspector. The COSE value is the CWT media
-    type, whose registration is a document this row does not cite. The
-    minted result reports the signed token's own kind, with the envelope
-    beside it, so a caller asking what the token is gets one answer whether
-    or not it was sealed.
+    header by the independent inspector. The COSE value is the CWT media type,
+    `application/cwt`, registered by RFC 8392 §9.2. The minted result reports
+    the signed token's own kind, with the envelope beside it, so a caller
+    asking what the token is gets one answer whether or not it was sealed.
 
     Background:
       Given the vault also holds an ECDH-ES encryption key

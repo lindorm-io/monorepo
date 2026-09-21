@@ -571,9 +571,9 @@ Feature: The claim matcher a verify is asked beyond the floor
     disjunction as one more member would be satisfied by whichever member the
     caller made true. The refusal is the wire reader's own and names `exp`,
     which is what shows the window fired and not the matcher. The cose
-    scenario carries no tag: the rule is the JWT specification's, a CWT is
-    not a JWT, and RFC 8392 §3.1.4 gives its own expiry claim the same meaning
-    and processing rules by reference — a document this row does not cite.
+    scenario carries no tag: the rule is the JWT specification's, and
+    RFC 8392 §3.1.4 gives the CWT expiry claim the same meaning and processing
+    rules by reference to it.
 
     Background:
       Given the wire claims

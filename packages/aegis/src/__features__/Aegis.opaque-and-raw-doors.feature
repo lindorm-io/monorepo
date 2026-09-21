@@ -124,8 +124,9 @@ Feature: The opaque signed artifact and the raw wire doors
     surface to reach it from: the claims reader refuses an opaque artifact by
     design rather than returning an empty claim set. The payload is compared
     whole, so a door that accepted the signature and returned something else
-    would not pass. The cose scenario carries no tag: the row cites the JWS
-    document alone.
+    would not pass. The cose scenario carries no tag: that a signature covers
+    arbitrary octets is stated here from the JWS document, and a COSE_Sign1
+    payload is likewise a byte string (RFC 9052 §4.2).
 
     Background:
       Given the payload to sign
@@ -259,9 +260,10 @@ Feature: The opaque signed artifact and the raw wire doors
     a copy anywhere else must answer nothing — neither accepting a token on
     its strength nor refusing one because of it. The claims type that would
     be refused from the protected bucket rides the unprotected one alone, and
-    both halves of that premise are read off the raw wire. The JOSE compact
-    serialisation has one header and it is protected (RFC 7515 §7.1), so
-    there is no unprotected bucket to carry a second type in on that wire.
+    both halves of that premise are read off the raw wire. The jose wire has
+    no scenario: the JOSE compact serialisation has one header and it is
+    protected (RFC 7515 §7.1), so there is no unprotected bucket to carry a
+    second type in.
 
     Background:
       Given the wire claims
@@ -387,9 +389,9 @@ Feature: The opaque signed artifact and the raw wire doors
     the option that shows the whole bag reaches the raw door and not merely
     the booleans a hand-written forward is most likely to remember: a token
     ten seconds past its expiry verifies under a sixty-second allowance and
-    fails without one. The cose scenario carries no tag: the leeway is the
-    JWT document's, and the CWT document that gives its own expiry claim the
-    same processing rules by reference is one this row does not cite.
+    fails without one. The cose scenario carries no tag: the leeway is the JWT
+    document's, and RFC 8392 §3.1.4 gives the CWT expiry claim the same
+    processing rules by reference to it.
 
     Background:
       Given the wire claims

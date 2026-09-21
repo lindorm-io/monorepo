@@ -135,9 +135,8 @@ Feature: A verify-only profile's structural policy
     foreign server is under no obligation to follow. The token is written by a
     third party on purpose: one built by the code under test would prove
     nothing about what a profile admits. The cose scenario carries no tag: the
-    rule is the JWT specification's, a CWT is not a JWT, and RFC 8392 §3.1.3
-    gives its own audience claim the same meaning and processing rules by
-    reference — a document this row does not cite.
+    rule is the JWT specification's, and RFC 8392 §3.1.3 gives the CWT
+    audience claim the same meaning and processing rules by reference to it.
 
     Background:
       Given the wire claims

@@ -6,10 +6,14 @@ Feature: Proof-of-possession bindings
   and the presenter proves it with a DPoP proof signed at run time over the
   token it presents (RFC 9449 §4.2). What a verifier may refuse, what it may
   accept on a caller's word, and what it reports back are the rules here.
-  Every rule is stated on the JOSE wire alone: a JWK thumbprint confirmation
-  has no CWT counterpart (RFC 9679 §5.5) — the COSE thumbprint, `ckt`
-  (RFC 9679 §5.6), digests a different canonicalisation of the same key — so
-  a bound token cannot be built on that wire to present in the first place.
+  Every rule that turns on the thumbprint or on a proof is stated on the JOSE
+  wire alone: a JWK thumbprint confirmation has no CWT counterpart
+  (RFC 9679 §5.5) — the COSE thumbprint, `ckt` (RFC 9679 §5.6), digests a
+  different canonicalisation of the same key — so a bound token cannot be
+  built on that wire to present in the first place. The mint's refusal of
+  that thumbprint is the one rule stated on the COSE wire alone; the two
+  rules on a confirmation's members at mint run on both wires; and a rule on
+  a confirmation with no member states its own reason for the COSE leg.
 
   Background:
     Given the clock reads "2024-01-01T08:00:00.000Z"
@@ -25,7 +29,11 @@ Feature: Proof-of-possession bindings
     asking for a proof — so the mint fails closed rather than dropping the
     member on the way out. Failing closed is aegis policy; the refusal names
     the member it could not carry, and `keyId` is representable and absent
-    from that list, which is what makes it a per-member refusal.
+    from that list, which is what makes it a per-member refusal. The jose wire
+    has no scenario: it can carry this confirmation — `cnf.jkt` is the
+    base64url-encoded JWK SHA-256 thumbprint of the key the token is bound to
+    (RFC 9449 §6.1, RFC 7638 §3) — so there is no refusal to state, and a mint
+    that refused it would refuse the conformant shape.
 
     Background:
       Given the content to mint
@@ -50,7 +58,10 @@ Feature: Proof-of-possession bindings
     quietly falling back to bearer semantics. The refusal is aegis policy at
     verify: the row cites the claim's meaning, not the resource server's duty
     to demand a proof. The same token verifies when the caller vouches for the
-    binding, which is what attributes this refusal to the missing proof.
+    binding, which is what attributes this refusal to the missing proof. The
+    cose wire has no scenario: a JWK thumbprint confirmation has no CWT
+    counterpart (RFC 9679 §5.5), so no bound token can be built on that wire
+    to present.
 
     Background:
       Given the content to mint
@@ -79,7 +90,9 @@ Feature: Proof-of-possession bindings
     the raw claims door: a mint refuses a thumbprint that is not 32 base64url
     bytes, and the profile-less verify runs no shape rule behind the binding
     check either. The refusal names the member, because `format` alone is
-    stamped on every refusal this gate throws.
+    stamped on every refusal this gate throws. The cose wire has no scenario:
+    a JWK thumbprint confirmation has no CWT counterpart (RFC 9679 §5.5), so
+    no bound token can be built on that wire to present.
 
     Background:
       Given the wire claims
@@ -105,7 +118,9 @@ Feature: Proof-of-possession bindings
     the binding the proof was checked against. A confirmation whose thumbprint
     names nothing gives the upstream checker nothing to have checked, so the
     vouch attests to something that cannot have happened. Aegis policy at
-    verify, on every path that reaches the confirmation.
+    verify, on every path that reaches the confirmation. The cose wire has no
+    scenario: a JWK thumbprint confirmation has no CWT counterpart
+    (RFC 9679 §5.5), so no bound token can be built on that wire to present.
 
     Background:
       Given the wire claims
@@ -135,7 +150,9 @@ Feature: Proof-of-possession bindings
     the binding as checkable, and would blame the presenter's proof when the
     token is at fault. Aegis policy at verify; the member in the refusal is
     what tells the two apart, since the comparison's own refusal carries no
-    such member.
+    such member. The cose wire has no scenario: a JWK thumbprint confirmation
+    has no CWT counterpart (RFC 9679 §5.5), so no bound token can be built on
+    that wire to present.
 
     Background:
       Given the wire claims
@@ -164,7 +181,12 @@ Feature: Proof-of-possession bindings
     and no honest way to proceed: reading it as absent would let the emptiest
     declaration buy the widest acceptance. Aegis policy at verify. A third
     party writes the token, because the mint refuses an empty confirmation on
-    the way out.
+    the way out. The cose wire has no scenario: `encodeCnf`
+    (`src/internal/cose/cose-key.ts`) refuses a confirmation map that comes
+    out with no member, so no aegis producer, the raw CWT sign door included,
+    can put an empty `cnf` on that wire; a COSE `cnf` is a map of
+    RFC 8747 §3.1 members, and one a third party writes empty is a leg this
+    suite leaves unwritten.
 
     Background:
       Given the wire claims
@@ -188,7 +210,12 @@ Feature: Proof-of-possession bindings
     was checked against; a confirmation naming no key gives the upstream
     checker nothing to have checked. This is the path a per-branch version of
     the verdict leaves open, which is why it is its own rule rather than
-    inferred from the bare one. Aegis policy at verify.
+    inferred from the bare one. Aegis policy at verify. The cose wire has no
+    scenario: `encodeCnf` (`src/internal/cose/cose-key.ts`) refuses a
+    confirmation map that comes out with no member, so no aegis producer, the
+    raw CWT sign door included, can put an empty `cnf` on that wire; a COSE
+    `cnf` is a map of RFC 8747 §3.1 members, and one a third party writes
+    empty is a leg this suite leaves unwritten.
 
     Background:
       Given the wire claims
@@ -213,7 +240,12 @@ Feature: Proof-of-possession bindings
     possession of nothing the token asked about, and the refusal must come
     from the confirmation being unusable rather than from any comparison
     failing. Aegis policy at verify; the member in the refusal is the
-    discriminator, since the comparison's own refusal carries none.
+    discriminator, since the comparison's own refusal carries none. The cose
+    wire has no scenario: `encodeCnf` (`src/internal/cose/cose-key.ts`)
+    refuses a confirmation map that comes out with no member, so no aegis
+    producer, the raw CWT sign door included, can put an empty `cnf` on that
+    wire; a COSE `cnf` is a map of RFC 8747 §3.1 members, and one a third
+    party writes empty is a leg this suite leaves unwritten.
 
     Background:
       Given the wire claims
@@ -242,7 +274,9 @@ Feature: Proof-of-possession bindings
     Aegis policy at verify. A number where a base64url string belongs is the
     representative of the family; the refusal comes from the claim translator,
     naming the member's position, which is what says the token was refused
-    for being unreadable rather than for binding nothing.
+    for being unreadable rather than for binding nothing. The cose wire has no
+    scenario: a JWK thumbprint confirmation has no CWT counterpart
+    (RFC 9679 §5.5), so no bound token can be built on that wire to present.
 
     Background:
       Given the wire claims
@@ -334,7 +368,10 @@ Feature: Proof-of-possession bindings
     checked ahead of it — a gateway that validated the proof and forwarded
     the token — is how a deployment behind such a gateway keeps RFC 7800
     binding usable; a floor that refused even then would have deployments
-    drop the confirmation instead. The vouch is aegis's own verify option.
+    drop the confirmation instead. The vouch is aegis's own verify option. The
+    cose wire has no scenario: a JWK thumbprint confirmation has no CWT
+    counterpart (RFC 9679 §5.5), so no bound token can be built on that wire
+    to present.
 
     Background:
       Given the content to mint
@@ -360,7 +397,10 @@ Feature: Proof-of-possession bindings
     presentation would claim proof-of-possession semantics for a bearer
     token, which is the confusion the confirmation claim exists to prevent.
     The refusal is aegis policy at verify: the presenter is told the token is
-    unbound rather than having the proof quietly ignored.
+    unbound rather than having the proof quietly ignored. The cose wire has no
+    scenario: a proof of possession is checked against a JWK thumbprint
+    confirmation (RFC 9449 §6.1), which has no CWT counterpart
+    (RFC 9679 §5.5), so there is no presentation to refuse on that wire.
 
     Background:
       Given the content to mint
@@ -383,7 +423,9 @@ Feature: Proof-of-possession bindings
     A proof made by a key the token did not name is exactly what a thief
     presents — the stolen token plus a key they do hold. The proof is
     otherwise conformant and correctly signed, so the refusal is attributable
-    to the key alone.
+    to the key alone. The cose wire has no scenario: a JWK thumbprint
+    confirmation has no CWT counterpart (RFC 9679 §5.5), so no bound token can
+    be built on that wire to present.
 
     Background:
       Given the content to mint
@@ -411,7 +453,9 @@ Feature: Proof-of-possession bindings
     the resource server is what acts on them: `jti`, `htm` and `htu`
     (RFC 9449 §4.2) are what a single-use check and a request-binding check
     run on. Reporting them is aegis's read surface, so that scenario carries
-    no tag; the access token hash is the formula RFC 9449 §4.2 fixes.
+    no tag; the access token hash is the formula RFC 9449 §4.2 fixes. The cose
+    wire has no scenario: a JWK thumbprint confirmation has no CWT counterpart
+    (RFC 9679 §5.5), so no bound token can be built on that wire to present.
 
     Background:
       Given the content to mint
@@ -449,7 +493,9 @@ Feature: Proof-of-possession bindings
     RFC 9449 §4.3). Without it a proof observed against one token would
     authorise every other token the observer holds. The proof is made by the
     very key the token names, so the only thing wrong with it is which token
-    it commits to.
+    it commits to. The cose wire has no scenario: a JWK thumbprint
+    confirmation has no CWT counterpart (RFC 9679 §5.5), so no bound token can
+    be built on that wire to present.
 
     Background:
       Given the content to mint
@@ -473,7 +519,9 @@ Feature: Proof-of-possession bindings
     key in its header, so a verifier that checked only that the proof was
     internally consistent would accept one that any holder of the token could
     mint for themselves. The proof is conformant in every respect except the
-    key it was made with.
+    key it was made with. The cose wire has no scenario: a JWK thumbprint
+    confirmation has no CWT counterpart (RFC 9679 §5.5), so no bound token can
+    be built on that wire to present.
 
     Background:
       Given the content to mint
@@ -501,7 +549,9 @@ Feature: Proof-of-possession bindings
     alike, because the application behind the verify is one application.
     That one declaration governing both is aegis policy, so the scenario
     carries no tag. The extension is carried beside the `crit` naming it, so
-    the only question left is whether the caller claimed it.
+    the only question left is whether the caller claimed it. The cose wire has
+    no scenario: a JWK thumbprint confirmation has no CWT counterpart
+    (RFC 9679 §5.5), so no bound token can be built on that wire to present.
 
     Background:
       Given the content to mint
@@ -533,7 +583,10 @@ Feature: Proof-of-possession bindings
     documents converge here: neither alone says what a verifier does with a
     proof's `crit`. The refusal names the member so the presenter learns which
     parameter was not honoured; the proof is the same one the accepting rule
-    presents, so the refusal is attributable to the declaration alone.
+    presents, so the refusal is attributable to the declaration alone. The
+    cose wire has no scenario: a JWK thumbprint confirmation has no CWT
+    counterpart (RFC 9679 §5.5), so no bound token can be built on that wire
+    to present.
 
     Background:
       Given the content to mint

@@ -51,9 +51,10 @@ Feature: The empty-claim prune
     must survive to the wire, because `scope` is only a SHOULD on an access
     token (RFC 9068 §2.2.3) and the explicit empty value is the one way an
     issuer can tell a grant of nothing apart from silence. The string form is
-    the JWT document's, so the jose scenario carries the tag; the cose twin
-    does not, since no document this row cites gives the CWT claim its form.
-    Reading it back as the empty list is aegis's read surface.
+    the JWT document's, so the jose scenario carries the tag; claim key 9
+    takes the same form from RFC 9200 §8.14, which registers `scope` there as
+    a byte string or text string by reference to RFC 8693 §4.2. Reading it
+    back as the empty list is aegis's read surface.
 
     Background:
       Given the content to mint
@@ -685,9 +686,10 @@ Feature: The empty-claim prune
     that omits `aud`. Aegis policy at verify: the claim is optional and the
     specification scopes its mandated rejection to a token that carries it
     (RFC 7519 §4.1.3). The first scenario reads the null off the wire, so
-    the second judges the read. The jose wire alone, matching the table's
-    cells; the third-party producer here can write a CBOR null under claim
-    key 3 too, and aegis refuses that leg the same way.
+    the second judges the read. The cose wire has no scenario: no
+    specification excuses it — CBOR has a null of its own (RFC 8949 §3.3), and
+    a third party can write one under claim key 3 — so that leg is a gap this
+    suite leaves visible, not a fact about the wire.
 
     Background:
       Given the wire claims

@@ -60,9 +60,9 @@ Feature: What a signature proves
     the id_token_hint flow, whose whole purpose is to accept an expired token
     on the strength of its signature, into a flow that accepts anything. The
     token is expired, so the waiver is the only reason the lifetime does not
-    refuse it first. The cose scenario carries no tag: the row cites the JWS
-    and JWT documents alone, and the COSE verification process is in a
-    document it does not cite.
+    refuse it first. The cose scenario carries no tag: the validation rule is
+    stated here for a JWS, and the COSE signing and verification process is
+    RFC 9052 §4.4's.
 
     Background:
       Given the wire claims
@@ -205,8 +205,9 @@ Feature: What a signature proves
     most — the deployment holds the same secret it would be relying on to
     prove the third party issued the token, so it could equally have written
     it itself. The restriction is the verifier's to state and the library's
-    to enforce (RFC 8725 §3.1). The cose scenario carries no tag: the row
-    cites the JWS and JWT documents alone.
+    to enforce (RFC 8725 §3.1). The cose scenario carries no tag:
+    RFC 8725 §3.1 is the JWT best-practice document's rule, and applying its
+    algorithm floor to a COSE_Mac0 (RFC 9052 §6.2) is aegis policy.
 
     Background:
       Given the vault also holds an HS256 signing key
@@ -243,8 +244,9 @@ Feature: What a signature proves
     client's own registered key lets the platform say who designated whom.
     The restriction belongs where it can be enforced — with the verifier
     (RFC 8725 §3.1). The issuer is the client's identifier and not a URI,
-    which is what a designation's issuer is. The cose scenario carries no
-    tag: the row cites the JWS and JWT documents alone.
+    which is what a designation's issuer is. The cose scenario carries no tag:
+    RFC 8725 §3.1 is the JWT best-practice document's rule, and applying its
+    algorithm floor to a COSE_Mac0 (RFC 9052 §6.2) is aegis policy.
 
     Background:
       Given the vault also holds an HS256 signing key
@@ -331,8 +333,10 @@ Feature: What a signature proves
     the reported format is aegis's own decision about the same bytes. The
     vault also holds the baseline ES512 key, and a COSE_Mac0 refuses an
     asymmetric one, so the selector is what puts the shared secret in front
-    of the mint. JOSE has one structure for signatures and MACs alike
-    (RFC 7515 §1), so there is no second form to report on that wire.
+    of the mint. The jose wire has no scenario: JOSE has one structure for
+    signatures and MACs alike (RFC 7515 §1), so a MAC-authenticated claims
+    token is a JWS with an HMAC `alg`, reported as a `jwt`, and there is no
+    second form to report.
 
     Background:
       Given the vault also holds an HS256 signing key
@@ -375,10 +379,10 @@ Feature: What a signature proves
     separate structures exist to prevent. The refusal has to happen at issue:
     a token cannot be un-issued. The id_token profile declares no
     algorithm-class floor, so the selector is what puts the shared secret in
-    front of the signature structure. JOSE draws no such line to enforce: one
-    structure carries both digital signatures and MACs (RFC 7515 §1), so an
-    HMAC `alg` is a conformant JWS and a mint that refused it would refuse
-    the conformant shape.
+    front of the signature structure. The jose wire has no scenario: JOSE
+    draws no such line to enforce — one structure carries both digital
+    signatures and MACs (RFC 7515 §1), so an HMAC `alg` is a conformant JWS
+    and a mint that refused it would refuse the conformant shape.
 
     Background:
       Given the vault also holds an HS256 signing key

@@ -21,8 +21,9 @@ Feature: The temporal policy a verify applies
     producer hand out a token with no enforceable lifetime, which the verifier
     then honours indefinitely. The refusal is the presence gate's own code, so
     the look-alike is shown to have answered for nothing. No scenario carries
-    a tag: the cited sections define the claim, and the requirement that an
-    access token carry one is a document this row does not cite.
+    a tag: the cited sections define the claim, the floor's demand for it on
+    an access token is RFC 9068 §2.2's for a JWT, and that a look-alike cannot
+    answer for the registered claim is aegis policy.
 
     Background:
       Given the wire claims
@@ -206,8 +207,8 @@ Feature: The temporal policy a verify applies
     whether the caller named a profile. The token sits on the boundary rather
     than comfortably inside it, so the allowance is stated as an inclusive
     width. The cose scenario carries no tag: the leeway is the JWT document's,
-    and the CWT document that gives its own expiry claim the same processing
-    rules by reference is one this row does not cite.
+    and RFC 8392 §3.1.4 gives the CWT expiry claim the same processing rules
+    by reference to it.
 
     Background:
       Given the wire claims
@@ -240,7 +241,9 @@ Feature: The temporal policy a verify applies
     accepting twin sit one second apart around the same stated tolerance, so
     the window has exactly the width the caller asked for. The refusal is the
     wire kit's temporal predicate, so it carries that wire's leaf class. The
-    cose scenario carries no tag, for the reason the accepting twin gives.
+    cose scenario carries no tag: the leeway is the JWT document's, and
+    RFC 8392 §3.1.4 gives the CWT expiry claim the same processing rules by
+    reference to it.
 
     Background:
       Given the wire claims

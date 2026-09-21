@@ -158,8 +158,9 @@ Feature: Critical header parameters
     which the header does not carry, so the token is fatally malformed
     (RFC 9052 §3.1); the impostor names a parameter that is present. Resolving
     the other way would let a holder who cannot re-sign the token repair its
-    `crit` by appending two text labels. A JOSE header has one name-space, so
-    the collision cannot arise on that wire.
+    `crit` by appending two text labels. The jose wire has no scenario: a JOSE
+    header is one JSON object with one name-space (RFC 7515 §4), so a
+    parameter cannot be spelled twice and the collision cannot arise there.
 
     Background:
       Given the wire claims
@@ -191,8 +192,9 @@ Feature: Critical header parameters
     bucket does not have, which is fatal (RFC 9052 §3.1). A reader comparing
     the two by their printed form would accept the token on a parameter the
     issuer never marked critical. The refusal names the member as its own
-    label space spells it. A JOSE header has one kind of member name, so
-    there is no second label space on that wire.
+    label space spells it. The jose wire has no scenario: a JOSE header is a
+    JSON object with one kind of member name (RFC 7515 §4), so there is no
+    second label space for a parameter to hide in.
 
     Background:
       Given the wire claims
@@ -226,7 +228,9 @@ Feature: Critical header parameters
     bag would hand the caller no crit at all for a token refused because of
     its `crit`. The keyless door is the one that reads a header without a key,
     and it judges a `crit` exactly as verify does. Judging a text-labelled
-    list as a crit at all is aegis policy.
+    list as a crit at all is aegis policy. The jose wire has no scenario: a
+    JOSE header has one JSON name-space (RFC 7515 §4), so `crit` always
+    resolves to the typed bag and the two spellings cannot come apart.
 
     Background:
       Given the wire claims
@@ -292,8 +296,8 @@ Feature: Critical header parameters
     halves are asserted on the wire: without the `crit` half, the round trip
     would stay green if the mint dropped the member entirely. The parameter
     rides under its own key on both encodings; `crit` is a registered
-    parameter, so COSE keys it by its integer label 2 — a rule this table
-    does not cite, so the cose scenario carries no tag.
+    parameter, so COSE keys it by its integer label 2 and places it in the
+    protected bucket (RFC 9052 §3.1).
 
     Background:
       Given the wire claims
@@ -448,9 +452,10 @@ Feature: Critical header parameters
     parameter makes that worse rather than better: it is now committed to
     honouring a value an intermediary chose. So the bucket rule is prior to the
     declaration, and the reader consults the protected bucket alone when
-    deciding whether the header carries what its `crit` names. The JOSE
-    compact serialisation has one header and it is protected
-    (RFC 7515 §7.1), so there is no unsigned bucket on that wire.
+    deciding whether the header carries what its `crit` names. The jose wire
+    has no scenario: the JOSE compact serialisation has one header and it is
+    protected (RFC 7515 §7.1), so there is no unsigned bucket for a parameter
+    to ride.
 
     Background:
       Given the wire claims

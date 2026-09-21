@@ -27,7 +27,9 @@ Feature: Header provenance, empty header parameters and the asserted token type
     domain assertion cannot be satisfied by a kit that moved `kid` into the
     protected bucket. Where the algorithm rides is the specification's rule;
     where the key identifier and the type header ride is aegis's choice within
-    what the specifications permit.
+    what the specifications permit. The jose wire has no scenario: the JOSE
+    compact serialisation has no unprotected bucket at all (RFC 7515 §7.1), so
+    no parameter can arrive from one and there is nothing to merge.
 
     Background:
       Given the wire claims
@@ -77,7 +79,9 @@ Feature: Header provenance, empty header parameters and the asserted token type
     assertion would not say what a caller is actually handed. The inspector
     reports no unprotected bucket for a compact token; that is its own
     statement about the wire, not a check aegis can fail, so the three-part
-    count carries the serialisation half.
+    count carries the serialisation half. The cose wire has no scenario: a
+    COSE structure always carries an unprotected bucket (RFC 9052 §3), so the
+    serialisation-level absence asserted here cannot arise on that wire.
 
     Background:
       Given the wire claims
@@ -114,8 +118,12 @@ Feature: Header provenance, empty header parameters and the asserted token type
     The rule is the name and not the bucket; this is the unprotected half,
     which is the bucket a caller is likeliest to reach for. `cty` is
     caller-settable and not kit-derived, so the refusal can only be the
-    registered-in-custom rule. The JOSE compact serialisation has no
-    unprotected bucket for a parameter to be written into (RFC 7515 §7.1).
+    registered-in-custom rule. The jose wire has no scenario: the JOSE compact
+    serialisation has no unprotected bucket for a parameter to be written into
+    (RFC 7515 §7.1), so the JOSE envelope declares no such bag and a JOSE door
+    refuses the shape at compile time; the name rule itself holds on both
+    wires, and `internal/header/custom-header-params.test.ts` pins it for
+    JOSE.
 
     Background:
       Given the wire claims
@@ -141,7 +149,10 @@ Feature: Header provenance, empty header parameters and the asserted token type
     since no aegis writer emits this shape. It verifies, which is what makes
     this about the merge and not about key resolution: `kid` is a routing hint
     (RFC 9052 §3.1), so aegis finds the key by the unprotected one and the
-    signature then proves it. What the result reports is the signed value.
+    signature then proves it. What the result reports is the signed value. The
+    jose wire has no scenario: the JOSE compact serialisation has one header
+    and no second bucket to restate a parameter from (RFC 7515 §7.1), so the
+    collision cannot be constructed on that wire.
 
     Background:
       Given the wire claims
@@ -181,6 +192,10 @@ Feature: Header provenance, empty header parameters and the asserted token type
     domain header is built. Every parameter is hand-placed by a foreign
     producer at the label aegis reads, and each scenario reads its label back
     off the raw bytes before asserting the domain header does not believe it.
+    The jose wire has no scenario: the JOSE compact serialisation has no
+    unprotected bucket (RFC 7515 §7.1), so no parameter can arrive
+    unauthenticated on that wire and there is nothing for a placement rule to
+    ignore.
 
     Background:
       Given the wire claims

@@ -214,7 +214,10 @@ Feature: Signing and sealing without a profile
     An option a writer cannot act on has two honest dispositions: do it, or
     say so. A COSE_Encrypt0 carries no recipients and runs no recipient
     algorithm, so there is no key agreement to derive party info from. The
-    jose wire honours the option, so there is no refusal to state on it.
+    jose wire has no scenario: it honours the option — `apu` and `apv` are the
+    ECDH-ES key-agreement parameters (RFC 7518 §4.6.1) and the JWE kit writes
+    them — so there is no refusal to state; that they arrive at the kit is
+    held by `internal/wire/wire-input-disposition.test.ts`.
 
     Background:
       Given the vault also holds an ECDH-ES encryption key
