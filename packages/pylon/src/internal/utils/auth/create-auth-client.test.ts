@@ -2,7 +2,10 @@ import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { IntrospectionEndpointFailed } from "../../../errors/IntrospectionEndpointFailed.js";
 import { UserinfoEndpointFailed } from "../../../errors/UserinfoEndpointFailed.js";
-import { createTestAppConfig } from "../../../__fixtures__/app-config.js";
+import {
+  createTestAppConfig,
+  createTestAuthConfig,
+} from "../../../__fixtures__/app-config.js";
 import type { IPylonAuthDriver } from "../../../interfaces/index.js";
 import type {
   PylonAuthConfig,
@@ -98,6 +101,41 @@ describe("createAuthClient", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     driver = createDriver();
+  });
+
+  // BOTH explicit-token fast paths — introspect's and userinfo's — verify
+  // through the same ctx.aegis door, so one declaration serves both.
+  test("forwards the deployment critical declaration to aegis", async () => {
+    const verify = vi.fn().mockResolvedValue({
+      format: "jwt",
+      claims: { subject: "user-123" },
+      custom: {},
+      profile: { name: "Alice" },
+    });
+    const ctx = createCtx({
+      aegis: { verify },
+      state: {
+        app: {
+          config: createTestAppConfig({
+            auth: createTestAuthConfig({ critical: ["objectId"] }),
+          }),
+          environment: "test",
+        },
+      },
+    });
+
+    const client = createAuthClient(ctx as any, createConfig(driver));
+
+    await client.introspect("token-x");
+    await client.userinfo("token-x");
+
+    expect(verify).toHaveBeenCalledTimes(2);
+    expect(verify).toHaveBeenNthCalledWith(1, "token-x", undefined, {
+      critical: ["objectId"],
+    });
+    expect(verify).toHaveBeenNthCalledWith(2, "token-x", undefined, {
+      critical: ["objectId"],
+    });
   });
 
   // ⚠ VERBS ONLY. `capabilities` and the client identity are NOUNS and moved to

@@ -8,6 +8,7 @@ import type { IPylonSession } from "../../../interfaces/index.js";
 type Data = TokenResponse | AuthorizeResponseQuery;
 
 type ParseTokenDataOptions = {
+  critical: Array<string> | undefined;
   resolveSubject?: (accessToken: string) => Promise<string | null>;
   defaultTokenExpiry?: ReadableTime;
   session?: Partial<IPylonSession>;
@@ -16,7 +17,7 @@ type ParseTokenDataOptions = {
 export const parseTokenData = async (
   aegis: IAegis,
   data: Data,
-  options?: ParseTokenDataOptions,
+  options: ParseTokenDataOptions,
 ): Promise<IPylonSession> => {
   const tdata = data as TokenResponse;
   const now = new Date();
@@ -36,7 +37,9 @@ export const parseTokenData = async (
     session.accessToken = data.accessToken;
 
     try {
-      const verified = await aegis.verify(data.accessToken);
+      const verified = await aegis.verify(data.accessToken, undefined, {
+        critical: options.critical,
+      });
 
       // `claims` is DOMAIN-keyed and uniform across JOSE and COSE, so this reads
       // a CWT identically to a JWT. Gate on claims-bearing, not on the wire.
@@ -79,7 +82,9 @@ export const parseTokenData = async (
     session.idToken = data.idToken;
 
     try {
-      const verified = await aegis.verify(data.idToken);
+      const verified = await aegis.verify(data.idToken, undefined, {
+        critical: options.critical,
+      });
 
       // Same as the access-token arm: domain-keyed claims, so a CWT id token
       // reads identically to a JWT one.

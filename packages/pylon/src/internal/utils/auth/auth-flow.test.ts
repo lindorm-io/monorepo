@@ -10,6 +10,10 @@ import type { OpenIdConfiguration } from "@lindorm/openid";
 import axios from "axios";
 import nock from "nock";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import {
+  createTestAppConfig,
+  createTestAuthConfig,
+} from "../../../__fixtures__/app-config.js";
 import { Auth0Driver } from "../../../drivers/auth/Auth0Driver.js";
 import { OpenIdDriver } from "../../../drivers/auth/OpenIdDriver.js";
 import type { IPylonAuthDriver } from "../../../interfaces/index.js";
@@ -66,7 +70,10 @@ describe("auth flow", () => {
       del: vi.fn(),
     },
     state: {
-      app: { environment: "test" },
+      app: {
+        config: createTestAppConfig({ auth: createTestAuthConfig() }),
+        environment: "test",
+      },
       metadata: { correlationId: "test-correlation" },
       origin: ORIGIN,
       session: null,

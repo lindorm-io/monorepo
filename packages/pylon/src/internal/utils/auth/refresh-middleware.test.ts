@@ -2,6 +2,10 @@ import { AegisError } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import MockDate from "mockdate";
+import {
+  createTestAppConfig,
+  createTestAuthConfig,
+} from "../../../__fixtures__/app-config.js";
 import { parseTokenData as _parseTokenData } from "./parse-token-data.js";
 import { createRefreshMiddleware } from "./refresh-middleware.js";
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
@@ -50,7 +54,10 @@ describe("createRefreshMiddleware", async () => {
         del: vi.fn(),
       },
       state: {
-        app: { environment: "test" },
+        app: {
+          config: createTestAppConfig({ auth: createTestAuthConfig() }),
+          environment: "test",
+        },
         metadata: { correlationId: "test-correlation" },
         sessionRefreshed: false,
         // The parse of the session's tokens, as the session middleware left it.

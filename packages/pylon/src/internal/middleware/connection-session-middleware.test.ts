@@ -8,6 +8,10 @@ import {
 } from "@lindorm/proteus/mocks/vitest";
 import type { Next } from "@lindorm/middleware";
 import { beforeAll, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
+import {
+  createTestAppConfig,
+  createTestAuthConfig,
+} from "../../__fixtures__/app-config.js";
 import type { IPylonSession, PylonSessionHandle } from "../../interfaces/index.js";
 import type { PylonEncKey, PylonSessionSettings } from "../../types/index.js";
 import { encryptCookie } from "../utils/cookies/encrypt-cookie.js";
@@ -91,6 +95,7 @@ const buildCtx = (cookieHeader: string | undefined, kv?: any): any => {
     logger: createMockLogger(),
     kv,
     amphora,
+    state: { app: { config: createTestAppConfig({ auth: createTestAuthConfig() }) } },
     aegis: {
       // REAL aes — the cookie is sealed, so the read path's decrypt is part of
       // what the handshake is being tested on. `verify` stays mocked: the
@@ -190,6 +195,46 @@ describe("createConnectionSessionMiddleware", () => {
     expect(ctx.io.socket.data.session).toBeUndefined();
     expect(mockRepo.findOne).not.toHaveBeenCalled();
     expect(next).toHaveBeenCalled();
+  });
+
+  test("forwards the deployment critical declaration to aegis", async () => {
+    const ctx = buildCtx(await cookieFor(HANDLE), mockProteus);
+    ctx.state = {
+      app: {
+        config: createTestAppConfig({
+          auth: createTestAuthConfig({ critical: ["objectId"] }),
+        }),
+      },
+    };
+
+    await createConnectionSessionMiddleware(mockProteus, options)(ctx, next);
+
+    expect(ctx.aegis.verify).toHaveBeenCalledWith("access_token", undefined, {
+      critical: ["objectId"],
+    });
+  });
+
+  // The refresh handler is its own threading member (`critical` handed to
+  // `createSessionRefreshHandler`), so the install-time forward above does not
+  // cover its verify call.
+  test("the refresh handler re-verifies under the deployment critical declaration", async () => {
+    const ctx = buildCtx(await cookieFor(HANDLE), mockProteus);
+    ctx.state = {
+      app: {
+        config: createTestAppConfig({
+          auth: createTestAuthConfig({ critical: ["objectId"] }),
+        }),
+      },
+    };
+
+    await createConnectionSessionMiddleware(mockProteus, options)(ctx, next);
+    (ctx.aegis.verify as Mock).mockClear();
+
+    await ctx.io.socket.data.pylon.auth.refresh({});
+
+    expect(ctx.aegis.verify).toHaveBeenCalledWith("access_token", undefined, {
+      critical: ["objectId"],
+    });
   });
 
   test("should load session, register auth, and parse bearer when cookie valid", async () => {

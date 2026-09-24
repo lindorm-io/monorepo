@@ -35,6 +35,30 @@ describe("createSessionRefreshHandler", () => {
     };
   });
 
+  test("forwards the deployment critical declaration to aegis", async () => {
+    const futureSession = {
+      id: "sess-1",
+      accessToken: "new-session-jwt",
+      expiresAt: new Date("2099-01-01T00:00:00.000Z"),
+      issuedAt: new Date(),
+      scope: ["openid"],
+      subject: "alice",
+    } as any;
+
+    const handler = createSessionRefreshHandler({
+      aegis,
+      critical: ["objectId"],
+      lookup: async () => futureSession,
+      socket,
+    });
+
+    await handler(undefined);
+
+    expect(aegis.verify).toHaveBeenCalledWith("new-session-jwt", undefined, {
+      critical: ["objectId"],
+    });
+  });
+
   test("updates session, tokens, and auth state on successful lookup", async () => {
     const futureSession = {
       id: "sess-1",
@@ -47,6 +71,7 @@ describe("createSessionRefreshHandler", () => {
 
     const handler = createSessionRefreshHandler({
       aegis,
+      critical: undefined,
       lookup: async () => futureSession,
       socket,
     });
@@ -73,6 +98,7 @@ describe("createSessionRefreshHandler", () => {
 
     const handler = createSessionRefreshHandler({
       aegis,
+      critical: undefined,
       lookup: async () => futureSession,
       socket,
     });
@@ -88,6 +114,7 @@ describe("createSessionRefreshHandler", () => {
   test("throws when lookup returns null", async () => {
     const handler = createSessionRefreshHandler({
       aegis,
+      critical: undefined,
       lookup: async () => null,
       socket,
     });
@@ -107,6 +134,7 @@ describe("createSessionRefreshHandler", () => {
 
     const handler = createSessionRefreshHandler({
       aegis,
+      critical: undefined,
       lookup: async () => pastSession,
       socket,
     });

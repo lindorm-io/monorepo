@@ -86,11 +86,25 @@ describe("parseTokenData", () => {
 
   afterEach(vi.clearAllMocks);
 
+  test("forwards the deployment critical declaration to aegis", async () => {
+    // No subject on the access token, so the id_token arm verifies too.
+    aegis.verify.mockResolvedValueOnce(createJwtVerifyResult({ subject: undefined }));
+
+    await parseTokenData(aegis, data, { critical: ["objectId"] });
+
+    expect(aegis.verify).toHaveBeenCalledWith("accessToken", undefined, {
+      critical: ["objectId"],
+    });
+    expect(aegis.verify).toHaveBeenCalledWith("idToken", undefined, {
+      critical: ["objectId"],
+    });
+  });
+
   test("should resolve subject and expiresAt from JWT access token", async () => {
     data.idToken = undefined;
     data.refreshToken = undefined;
 
-    const result = await parseTokenData(aegis, data);
+    const result = await parseTokenData(aegis, data, { critical: undefined });
     expect(result).toMatchSnapshot();
   });
 
@@ -99,7 +113,7 @@ describe("parseTokenData", () => {
     data.refreshToken = undefined;
     aegis.verify.mockResolvedValueOnce(createCwtVerifyResult());
 
-    const result = await parseTokenData(aegis, data);
+    const result = await parseTokenData(aegis, data, { critical: undefined });
     expect(result).toMatchSnapshot();
   });
 
@@ -108,7 +122,7 @@ describe("parseTokenData", () => {
     data.refreshToken = undefined;
     aegis.verify.mockResolvedValueOnce(createJweWrappingJwtVerifyResult());
 
-    const result = await parseTokenData(aegis, data);
+    const result = await parseTokenData(aegis, data, { critical: undefined });
     expect(result).toMatchSnapshot();
   });
 
@@ -116,7 +130,7 @@ describe("parseTokenData", () => {
     aegis.verify.mockRejectedValueOnce(new AegisError("Invalid token type"));
     aegis.verify.mockResolvedValueOnce(createCwtVerifyResult());
 
-    const result = await parseTokenData(aegis, data);
+    const result = await parseTokenData(aegis, data, { critical: undefined });
     expect(result).toMatchSnapshot();
   });
 
@@ -124,7 +138,7 @@ describe("parseTokenData", () => {
     aegis.verify.mockResolvedValueOnce(createJweWrappingJwsVerifyResult());
     aegis.verify.mockResolvedValueOnce(createJwtVerifyResult());
 
-    const result = await parseTokenData(aegis, data);
+    const result = await parseTokenData(aegis, data, { critical: undefined });
     expect(result).toMatchSnapshot();
   });
 
@@ -133,7 +147,7 @@ describe("parseTokenData", () => {
     // second call for id_token should return JWT
     aegis.verify.mockResolvedValueOnce(createJwtVerifyResult());
 
-    const result = await parseTokenData(aegis, data);
+    const result = await parseTokenData(aegis, data, { critical: undefined });
     expect(result).toMatchSnapshot();
   });
 
@@ -142,7 +156,7 @@ describe("parseTokenData", () => {
     // id_token verify returns JWT
     aegis.verify.mockResolvedValueOnce(createJwtVerifyResult());
 
-    const result = await parseTokenData(aegis, data);
+    const result = await parseTokenData(aegis, data, { critical: undefined });
     expect(result).toMatchSnapshot();
   });
 
@@ -153,7 +167,7 @@ describe("parseTokenData", () => {
 
     data.refreshToken = undefined;
 
-    const result = await parseTokenData(aegis, data);
+    const result = await parseTokenData(aegis, data, { critical: undefined });
     expect(result).toMatchSnapshot();
   });
 
@@ -164,7 +178,10 @@ describe("parseTokenData", () => {
 
     const resolveSubject = vi.fn().mockResolvedValue("userinfo-subject");
 
-    const result = await parseTokenData(aegis, data, { resolveSubject });
+    const result = await parseTokenData(aegis, data, {
+      critical: undefined,
+      resolveSubject,
+    });
     expect(result).toMatchSnapshot();
     expect(resolveSubject).toHaveBeenCalledWith("accessToken");
   });
@@ -174,7 +191,7 @@ describe("parseTokenData", () => {
 
     data.idToken = undefined;
 
-    await expect(parseTokenData(aegis, data)).rejects.toThrow(
+    await expect(parseTokenData(aegis, data, { critical: undefined })).rejects.toThrow(
       CannotEstablishSessionIdentity,
     );
   });
@@ -183,11 +200,16 @@ describe("parseTokenData", () => {
     const error = new TypeError("network failure");
     aegis.verify.mockRejectedValueOnce(error);
 
-    await expect(parseTokenData(aegis, data)).rejects.toThrow(TypeError);
+    await expect(parseTokenData(aegis, data, { critical: undefined })).rejects.toThrow(
+      TypeError,
+    );
   });
 
   test("should parse all tokens correctly", async () => {
-    const result = await parseTokenData(aegis, data, { defaultTokenExpiry: "1h" });
+    const result = await parseTokenData(aegis, data, {
+      critical: undefined,
+      defaultTokenExpiry: "1h",
+    });
     expect(result).toMatchSnapshot();
   });
 
@@ -208,6 +230,7 @@ describe("parseTokenData", () => {
     aegis.verify.mockRejectedValueOnce(new AegisError("opaque"));
 
     const result = await parseTokenData(aegis, data, {
+      critical: undefined,
       defaultTokenExpiry: "1h",
       session: existingSession,
     });
@@ -221,7 +244,7 @@ describe("parseTokenData", () => {
 
     delete data.expiresOn;
 
-    const result = await parseTokenData(aegis, data);
+    const result = await parseTokenData(aegis, data, { critical: undefined });
     expect(result).toMatchSnapshot();
   });
 
@@ -235,7 +258,7 @@ describe("parseTokenData", () => {
     delete data.scope;
     data.refreshToken = undefined;
 
-    const result = await parseTokenData(aegis, data);
+    const result = await parseTokenData(aegis, data, { critical: undefined });
     expect(result.scope).toEqual(["openid", "profile", "email"]);
     expect(result).toMatchSnapshot();
   });
@@ -248,7 +271,7 @@ describe("parseTokenData", () => {
     data.scope = "envelope1 envelope2";
     data.refreshToken = undefined;
 
-    const result = await parseTokenData(aegis, data);
+    const result = await parseTokenData(aegis, data, { critical: undefined });
     expect(result.scope).toEqual(["envelope1", "envelope2"]);
   });
 
@@ -261,7 +284,7 @@ describe("parseTokenData", () => {
     data.idToken = undefined;
     data.refreshToken = undefined;
 
-    const result = await parseTokenData(aegis, data);
+    const result = await parseTokenData(aegis, data, { critical: undefined });
     expect(result.scope).toEqual(["from-jwt-claim"]);
   });
 
@@ -272,7 +295,10 @@ describe("parseTokenData", () => {
     delete data.expiresIn;
     delete data.expiresOn;
 
-    const result = await parseTokenData(aegis, data, { defaultTokenExpiry: "2h" });
+    const result = await parseTokenData(aegis, data, {
+      critical: undefined,
+      defaultTokenExpiry: "2h",
+    });
     expect(result).toMatchSnapshot();
   });
 });

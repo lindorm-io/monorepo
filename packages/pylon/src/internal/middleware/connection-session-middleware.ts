@@ -17,6 +17,7 @@ import { createSessionStore } from "../utils/create-session-store.js";
 import { resolveSessionKeys } from "../utils/keys/resolve-session-keys.js";
 import { createSessionRefreshHandler } from "../utils/refresh/create-session-refresh-handler.js";
 import { isSessionHandle } from "../utils/session/is-session-handle.js";
+import { deploymentCritical } from "../utils/tokens/deployment-critical.js";
 import { extractTokenFromSession } from "../utils/tokens/extract-token-from-session.js";
 import { sessionResolvedAccess } from "../utils/tokens/session-resolved-access.js";
 
@@ -93,7 +94,9 @@ export const createConnectionSessionMiddleware = <
       return next();
     }
 
-    const parsedToken = await extractTokenFromSession(ctx.aegis, session);
+    const critical = deploymentCritical(ctx.state.app.config.auth);
+
+    const parsedToken = await extractTokenFromSession(ctx.aegis, session, critical);
     if (parsedToken) {
       socket.data.tokens.bearer = parsedToken;
       socket.data.pylon.access = sessionResolvedAccess(session.accessToken, parsedToken);
@@ -108,6 +111,7 @@ export const createConnectionSessionMiddleware = <
     // would expose it to every listener and to any log line that dumps it.
     const refresh = createSessionRefreshHandler({
       aegis: ctx.aegis,
+      critical,
       lookup: () => store.get(ctx, handle),
       socket,
     });

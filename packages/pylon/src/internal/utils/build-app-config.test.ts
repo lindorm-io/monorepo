@@ -235,6 +235,31 @@ describe("buildAppConfig", () => {
       ).toEqual({ introspect: false, userinfo: false });
     });
 
+    describe("critical", () => {
+      // ⚠ `[]` and an absent setting mean the same thing to aegis — nothing is
+      // declared, so every critical parameter is refused. Fail closed.
+      test("should resolve an empty frozen array when the setting is absent", () => {
+        const critical = build({ auth: { driver: createDriver() } }).auth?.critical;
+
+        expect(critical).toEqual([]);
+        expect(Object.isFrozen(critical)).toBe(true);
+      });
+
+      test("should freeze a copy and leave the settings array alone", () => {
+        const declared = ["objectId"];
+
+        const critical = build({
+          auth: { driver: createDriver(), critical: declared },
+        }).auth?.critical;
+
+        expect(critical).toEqual(["objectId"]);
+        expect(critical).not.toBe(declared);
+        expect(Object.isFrozen(critical)).toBe(true);
+        expect(Object.isFrozen(declared)).toBe(false);
+        expect(() => (critical as Array<string>).push("x")).toThrow();
+      });
+    });
+
     describe("cache", () => {
       test("should resolve false when the block is absent", () => {
         expect(build({ auth: { driver: createDriver() } }).auth?.cache).toBe(false);

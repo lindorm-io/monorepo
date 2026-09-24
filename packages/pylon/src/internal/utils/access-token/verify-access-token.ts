@@ -5,6 +5,7 @@ import type { AccessTokenProfile } from "../../../types/index.js";
 export type VerifyAccessTokenOptions = {
   /** The resource server's own identifier — the `aud` the token must contain. */
   audience: string;
+  critical: Array<string> | undefined;
   /** The one issuer this deployment is a party to. */
   issuer: string;
   /**
@@ -74,6 +75,7 @@ export const verifyAccessToken = async (
     // verified path and once on the introspected one.
     return await aegis.verify(options.profile, token, undefined, {
       audience: options.audience,
+      critical: options.critical,
       issuer: options.issuer,
       trustBoundThumbprint: true,
     });

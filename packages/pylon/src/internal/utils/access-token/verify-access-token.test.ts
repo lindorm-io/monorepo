@@ -22,6 +22,7 @@ import { verifyAccessToken } from "./verify-access-token.js";
  */
 const OPTIONS = {
   audience: ACCESS_TEST_AUDIENCE,
+  critical: undefined,
   issuer: ACCESS_TEST_ISSUER,
   profile: "access_token" as const,
 };
@@ -60,6 +61,24 @@ describe("verifyAccessToken", () => {
       expect(verified.claims.subject).toBe("alice");
       expect(verified.claims.issuer).toBe(ACCESS_TEST_ISSUER);
       expect(verified.claims.audience).toEqual([ACCESS_TEST_AUDIENCE]);
+    });
+
+    // Measured on the OUTCOME, per this suite's rule: only a real key can prove
+    // the declaration reached aegis, because only aegis can refuse a `crit`.
+    test("forwards the deployment critical declaration to aegis", async () => {
+      const token = await mintTestAccessToken(
+        aegis,
+        {},
+        { sign: { header: { critical: ["objectId"], objectId: "1.2.3.4" } } },
+      );
+
+      const verified = await verifyAccessToken(aegis, token, {
+        ...OPTIONS,
+        critical: ["objectId"],
+      });
+
+      expect(verified.header.critical).toEqual(["objectId"]);
+      expect(verified.header.objectId).toBe("1.2.3.4");
     });
 
     // The COSE twin of the same credential, and the observable form of "pylon

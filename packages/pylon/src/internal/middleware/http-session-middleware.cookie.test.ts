@@ -3,6 +3,10 @@ import { Amphora } from "@lindorm/amphora";
 import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import {
+  createTestAppConfig,
+  createTestAuthConfig,
+} from "../../__fixtures__/app-config.js";
 import type { IPylonSession } from "../../interfaces/index.js";
 import type { PylonSessionSettings } from "../../types/index.js";
 import { createHttpCookiesMiddleware } from "./http-cookies-middleware.js";
@@ -93,7 +97,12 @@ describe("httpSessionMiddleware — session cookie attributes", () => {
       get: vi.fn().mockReturnValue(""),
       set: vi.fn(),
       logger,
-      state: { metadata: {}, session: null, tokens: {} },
+      state: {
+        app: { config: createTestAppConfig({ auth: createTestAuthConfig() }) },
+        metadata: {},
+        session: null,
+        tokens: {},
+      },
     };
   });
 

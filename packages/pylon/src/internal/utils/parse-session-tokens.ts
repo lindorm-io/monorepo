@@ -1,6 +1,7 @@
 import { AegisError, isStructuredToken, type VerifiedToken } from "@lindorm/aegis";
 import type { IPylonSession } from "../../interfaces/index.js";
 import type { PylonCommonContext } from "../../types/index.js";
+import { deploymentCritical } from "./tokens/deployment-critical.js";
 
 /**
  * Verify ONE of the session's tokens, or answer `undefined` when there is no
@@ -14,11 +15,12 @@ import type { PylonCommonContext } from "../../types/index.js";
 const verifySessionToken = async (
   ctx: Pick<PylonCommonContext, "aegis">,
   token: string | undefined,
+  critical: Array<string> | undefined,
 ): Promise<VerifiedToken | null> => {
   if (!token) return null;
 
   try {
-    const verified = await ctx.aegis.verify(token);
+    const verified = await ctx.aegis.verify(token, undefined, { critical });
     // Claims-bearing, not "is a JWT": a CWT/CWM carries claims, and so does a
     // JWE/CWE that wrapped one (verify returns the inner's claims under the
     // outer tag). Only jws/cws are genuinely opaque.
@@ -50,8 +52,10 @@ export const parseSessionTokens = async (
   ctx: Pick<PylonCommonContext, "aegis" | "state">,
   session: IPylonSession | null,
 ): Promise<void> => {
-  const accessToken = await verifySessionToken(ctx, session?.accessToken);
-  const idToken = await verifySessionToken(ctx, session?.idToken);
+  const critical = deploymentCritical(ctx.state.app.config.auth);
+
+  const accessToken = await verifySessionToken(ctx, session?.accessToken, critical);
+  const idToken = await verifySessionToken(ctx, session?.idToken, critical);
 
   if (accessToken) {
     ctx.state.tokens.accessToken = accessToken;

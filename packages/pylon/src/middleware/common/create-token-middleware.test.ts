@@ -1,6 +1,10 @@
 import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
 import { ClientError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import {
+  createTestAppConfig,
+  createTestAuthConfig,
+} from "../../__fixtures__/app-config.js";
 import { createTokenMiddleware } from "./create-token-middleware.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
@@ -19,7 +23,10 @@ describe("createTokenMiddleware", () => {
       ctx = {
         aegis: createMockAegis(),
         logger: createMockLogger(),
-        state: { tokens: {} },
+        state: {
+          app: { config: createTestAppConfig({ auth: createTestAuthConfig() }) },
+          tokens: {},
+        },
         request: { body: { id_token: "token_value" } },
       };
     });
@@ -32,9 +39,40 @@ describe("createTokenMiddleware", () => {
       expect(ctx.aegis.verify).toHaveBeenCalledWith(
         "token_value",
         { issuer: "issuer" },
-        {},
+        { critical: [] },
       );
       expect(ctx.state.tokens.idToken).toMatchSnapshot();
+    });
+
+    test("forwards the deployment critical declaration to aegis", async () => {
+      ctx.state.app.config = createTestAppConfig({
+        auth: createTestAuthConfig({ critical: ["objectId"] }),
+      });
+
+      await createTokenMiddleware(options)("request.body.id_token")(ctx, next);
+
+      expect(ctx.aegis.verify).toHaveBeenCalledWith(
+        "token_value",
+        { issuer: "issuer" },
+        { critical: ["objectId"] },
+      );
+    });
+
+    // The deployment's declaration is spread LAST at the verify site, so a
+    // cast-in `critical` on the mount cannot widen it (type AND runtime).
+    test("a route cannot widen the deployment's declaration", async () => {
+      const middleware = createTokenMiddleware({
+        ...options,
+        critical: ["objectId"],
+      } as any)("request.body.id_token");
+
+      await middleware(ctx, next);
+
+      expect(ctx.aegis.verify).toHaveBeenCalledWith(
+        "token_value",
+        { issuer: "issuer" },
+        { critical: [] },
+      );
     });
 
     test("should call next", async () => {
@@ -93,7 +131,10 @@ describe("createTokenMiddleware", () => {
         aegis: createMockAegis(),
         event: "test:event",
         logger: createMockLogger(),
-        state: { tokens: {} },
+        state: {
+          app: { config: createTestAppConfig({ auth: createTestAuthConfig() }) },
+          tokens: {},
+        },
         io: { socket: { data: { tokens: {} } } },
         args: { id_token: "token_value" },
       };
@@ -107,7 +148,7 @@ describe("createTokenMiddleware", () => {
       expect(ctx.aegis.verify).toHaveBeenCalledWith(
         "token_value",
         { issuer: "issuer" },
-        {},
+        { critical: [] },
       );
       expect(ctx.state.tokens.idToken).toMatchSnapshot();
       expect(ctx.io.socket.data.tokens.idToken).toMatchSnapshot();

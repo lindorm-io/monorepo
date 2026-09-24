@@ -11,6 +11,7 @@ import {
   PYLON_SESSION_REFRESHED_HEADER,
 } from "../../constants/headers.js";
 import { parseSessionTokens } from "../parse-session-tokens.js";
+import { deploymentCritical } from "../tokens/deployment-critical.js";
 import { createAuthDriverContext } from "./create-auth-driver-context.js";
 import { parseTokenData } from "./parse-token-data.js";
 
@@ -105,6 +106,7 @@ export const createRefreshMiddleware = <C extends PylonHttpContext>(
             });
 
             ctx.state.session = await parseTokenData(ctx.aegis, data, {
+              critical: deploymentCritical(ctx.state.app.config.auth),
               defaultTokenExpiry: config.defaultTokenExpiry,
               session: ctx.state.session,
             });

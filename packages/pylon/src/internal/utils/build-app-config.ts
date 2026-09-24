@@ -108,6 +108,8 @@ const buildAuth = (
           }),
         })
       : false,
+    // pinned: build-app-config.test.ts
+    critical: Object.freeze([...(settings.critical ?? [])]),
   });
 };
 

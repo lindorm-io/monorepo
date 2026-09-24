@@ -9,6 +9,7 @@ import type {
 } from "../../../types/index.js";
 import { registerBearerHandshakeAuth } from "../handshake/register-bearer-handshake-auth.js";
 import { createSessionRefreshHandler } from "../refresh/create-session-refresh-handler.js";
+import { deploymentCritical } from "../tokens/deployment-critical.js";
 import { extractTokenFromSession } from "../tokens/extract-token-from-session.js";
 import { resolveHandshakeTokenSource } from "../tokens/resolve-handshake-token-source.js";
 import { sessionResolvedAccess } from "../tokens/session-resolved-access.js";
@@ -51,7 +52,9 @@ export const runHandshakeAccessToken = async (
     // with an equivalent one for no reason.
     if (socket.data.pylon.auth) return;
 
-    const parsed = await extractTokenFromSession(ctx.aegis, source.session);
+    const critical = deploymentCritical(ctx.state.app.config.auth);
+
+    const parsed = await extractTokenFromSession(ctx.aegis, source.session, critical);
     if (parsed) {
       const access = sessionResolvedAccess(source.session.accessToken, parsed);
 
@@ -79,6 +82,7 @@ export const runHandshakeAccessToken = async (
     };
     auth.refresh = createSessionRefreshHandler({
       aegis: ctx.aegis,
+      critical,
       lookup: async () => source.session,
       socket,
     });

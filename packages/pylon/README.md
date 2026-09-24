@@ -312,6 +312,7 @@ ctx.state.app.config.auth?.issuer; // string | null — from driver.endpoints()
 ctx.state.app.config.auth?.clientId; // string | null — null for a verify-only driver
 ctx.state.app.config.auth?.capabilities; // { introspect, userinfo } — derived from the driver
 ctx.state.app.config.auth?.cache; // PylonAuthCacheConfig | false
+ctx.state.app.config.auth?.critical; // ReadonlyArray<string> — [] when the setting is absent
 ```
 
 `issuer` is `null` only when the driver's pinned scope resolves to nothing (no idp on amphora, or one whose issuer amphora never settled) — pylon warns once at setup, and the request paths that genuinely need an issuer still raise the driver's own named error. `clientId` is `null` for a verify-only driver, which is nobody's OAuth client. Either one missing means the driver-response cache has no key it is safe to share, so it steps aside and calls the driver.
@@ -736,7 +737,7 @@ Every other option is an aegis **claim matcher** (`audience`, `scope`, `roles`, 
 
 The OIDC Core §3.1.3.6 hash-**derive** inputs (`accessToken`/`authCode`/`authState`) need no exclusion: they are not aegis matchers at all. Each hashes its source with the **token's own signing algorithm**, a header parameter, so they exist only on the surface that holds a key. The already-computed `accessTokenHash`/`codeHash`/`stateHash` claims are ordinary matchers and are statable here like any other.
 
-`createTokenMiddleware({ issuer })` is the DIFFERENT job and keeps its per-mount issuer: it accepts tokens from issuers that are **not** ours — `amphora.external`, of which a service may hold several — while `useAccessToken` pins the one issuer this deployment is a party to.
+`createTokenMiddleware({ issuer })` is the DIFFERENT job and keeps its per-mount issuer: it accepts tokens from issuers that are **not** ours — `amphora.external`, of which a service may hold several — while `useAccessToken` pins the one issuer this deployment is a party to. It carries the deployment's `critical` declaration and takes none of its own; a deployment with no `auth` block declares nothing.
 
 #### Resolved access — `ctx.state.access`
 
@@ -1212,15 +1213,16 @@ const app = new Pylon({
 });
 ```
 
-| `auth` setting       | Meaning                                                                                                                           |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `driver`             | **Required.** How pylon talks to the provider — see the drivers below                                                             |
-| `router`             | Mounts the login/logout routes under `pathPrefix`. Omit it entirely for a pure resource server                                    |
-| `session`            | The session cookie and its `Session` store — see [Sessions](#sessions)                                                            |
-| `encryption`         | KEK selector for the cached payloads. Default `{ condition: { purpose: "pylon:kek" } }`                                           |
-| `cache`              | Driver-response caching — RFC 7662 introspection and OIDC Core §5.3 userinfo; see [Driver-response cache](#driver-response-cache) |
-| `refresh`            | When to auto-refresh a session's tokens. Default derived from the driver — see [Refresh](#refresh)                                |
-| `defaultTokenExpiry` | Fallback session lifetime when the token response carries no expiry. Default `1d`                                                 |
+| `auth` setting       | Meaning                                                                                                                                                                                                                                                                    |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `driver`             | **Required.** How pylon talks to the provider — see the drivers below                                                                                                                                                                                                      |
+| `router`             | Mounts the login/logout routes under `pathPrefix`. Omit it entirely for a pure resource server                                                                                                                                                                             |
+| `session`            | The session cookie and its `Session` store — see [Sessions](#sessions)                                                                                                                                                                                                     |
+| `encryption`         | KEK selector for the cached payloads. Default `{ condition: { purpose: "pylon:kek" } }`                                                                                                                                                                                    |
+| `cache`              | Driver-response caching — RFC 7662 introspection and OIDC Core §5.3 userinfo; see [Driver-response cache](#driver-response-cache)                                                                                                                                          |
+| `refresh`            | When to auto-refresh a session's tokens. Default derived from the driver — see [Refresh](#refresh)                                                                                                                                                                         |
+| `defaultTokenExpiry` | Fallback session lifetime when the token response carries no expiry. Default `1d`                                                                                                                                                                                          |
+| `critical`           | Custom header parameters this deployment acts on (RFC 7515 §4.1.11) — DOMAIN names in aegis vocabulary (`["objectId"]`). One declaration for **every** verify pylon performs, the outer layer of a nested token included. Absent means every critical parameter is refused |
 
 Client credentials and the authorization request's defaults are the **provider's**, so they live on the driver, not on `auth`. The **issuer** lives on neither — it is amphora's.
 

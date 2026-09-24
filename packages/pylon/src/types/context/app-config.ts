@@ -78,6 +78,13 @@ export type AppAuthConfig = {
    * entries live in `ctx.cache` like every other evictable row.
    */
   readonly cache: PylonAuthCacheConfig | false;
+  /**
+   * The custom header parameters this deployment declared it acts on — aegis's
+   * `VerifyOptions.critical`, DOMAIN names. `[]` when the deployment named
+   * none, which refuses every critical parameter exactly like an absent
+   * declaration. Fail closed.
+   */
+  readonly critical: ReadonlyArray<string>;
 };
 
 /**

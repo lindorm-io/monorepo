@@ -11,6 +11,7 @@ import {
   assertIntrospectionScheme,
   type PresentedScheme,
 } from "./assert-introspection-scheme.js";
+import { deploymentCritical } from "../tokens/deployment-critical.js";
 import { resolveAccessIssuer } from "./resolve-access-issuer.js";
 import { verifyAccessToken } from "./verify-access-token.js";
 
@@ -101,6 +102,7 @@ export const resolveAccess = async (
   if (isClaimsBearingToken(token)) {
     const verified = await verifyAccessToken(ctx.aegis, token, {
       audience: options.audience,
+      critical: deploymentCritical(ctx.state.app.config.auth),
       issuer,
       profile: options.profile,
     });

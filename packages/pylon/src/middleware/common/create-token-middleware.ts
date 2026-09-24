@@ -1,4 +1,5 @@
 import { isSocketContext } from "../../internal/utils/is-context.js";
+import { deploymentCritical } from "../../internal/utils/tokens/deployment-critical.js";
 import { splitVerifyInput } from "../../internal/utils/tokens/split-verify-input.js";
 import type { DomainAssert, VerifyOptions } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
@@ -7,7 +8,9 @@ import { sanitiseToken } from "@lindorm/utils";
 import objectPath from "object-path";
 import type { PylonContext, PylonMiddleware } from "../../types/index.js";
 
-type Options = Omit<DomainAssert & VerifyOptions, "issuer"> & {
+// `critical` is omitted: the declaration is the DEPLOYMENT's
+// (`PylonAuthSettings.critical`), never a mount's to widen.
+type Options = Omit<DomainAssert & VerifyOptions, "issuer" | "critical"> & {
   contextKey: string;
   issuer: string;
 };
@@ -44,7 +47,13 @@ export const createTokenMiddleware = <C extends PylonContext = PylonContext>(
         }
 
         if (token) {
-          const verified = await ctx.aegis.verify(token, assert, verifyOptions);
+          // The deployment's declaration is spread LAST, so an untyped or
+          // cast-in bag cannot widen it — pinned: create-token-middleware.test.ts
+          // "a route cannot widen the deployment's declaration".
+          const verified = await ctx.aegis.verify(token, assert, {
+            ...verifyOptions,
+            critical: deploymentCritical(ctx.state.app.config.auth),
+          });
 
           timer.debug("Token verified", { verified });
 

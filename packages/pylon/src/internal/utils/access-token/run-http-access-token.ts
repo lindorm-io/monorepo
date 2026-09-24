@@ -6,6 +6,7 @@ import type {
   PylonHttpContext,
 } from "../../../types/index.js";
 import { assertDpopBinding } from "../dpop/assert-dpop-binding.js";
+import { deploymentCritical } from "../tokens/deployment-critical.js";
 import { extractTokenFromSession } from "../tokens/extract-token-from-session.js";
 import { resolveHttpTokenSource } from "../tokens/resolve-http-token-source.js";
 import { sessionResolvedAccess } from "../tokens/session-resolved-access.js";
@@ -76,7 +77,11 @@ export const runHttpAccessToken = async (
   }
 
   if (source.kind === "session") {
-    const parsed = await extractTokenFromSession(ctx.aegis, source.session);
+    const parsed = await extractTokenFromSession(
+      ctx.aegis,
+      source.session,
+      deploymentCritical(ctx.state.app.config.auth),
+    );
     if (!parsed) {
       throw new ClientError("Invalid session access token", {
         status: ClientError.Status.Unauthorized,

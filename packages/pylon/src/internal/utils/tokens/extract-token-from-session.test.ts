@@ -23,36 +23,46 @@ describe("extractTokenFromSession", () => {
     };
   });
 
+  test("forwards the deployment critical declaration to aegis", async () => {
+    await extractTokenFromSession(aegis, session, ["objectId"]);
+
+    expect(aegis.verify).toHaveBeenCalledWith("session-jwt", undefined, {
+      critical: ["objectId"],
+    });
+  });
+
   test("returns parsed token when session has accessToken", async () => {
-    expect(await extractTokenFromSession(aegis, session)).toMatchSnapshot();
+    expect(await extractTokenFromSession(aegis, session, undefined)).toMatchSnapshot();
   });
 
   test("returns null when session is null", async () => {
-    expect(await extractTokenFromSession(aegis, null)).toMatchSnapshot();
+    expect(await extractTokenFromSession(aegis, null, undefined)).toMatchSnapshot();
   });
 
   test("returns null when session is undefined", async () => {
-    expect(await extractTokenFromSession(aegis, undefined)).toMatchSnapshot();
+    expect(await extractTokenFromSession(aegis, undefined, undefined)).toMatchSnapshot();
   });
 
   test("returns null when accessToken is missing", async () => {
     expect(
-      await extractTokenFromSession(aegis, { ...session, accessToken: "" }),
+      await extractTokenFromSession(aegis, { ...session, accessToken: "" }, undefined),
     ).toMatchSnapshot();
   });
 
   test("returns null when aegis.verify throws AegisError", async () => {
     aegis.verify.mockRejectedValue(new AegisError("bad token"));
-    expect(await extractTokenFromSession(aegis, session)).toMatchSnapshot();
+    expect(await extractTokenFromSession(aegis, session, undefined)).toMatchSnapshot();
   });
 
   test("returns null when verified token is not jwt kind", async () => {
     aegis.verify.mockResolvedValue({ format: "jws", raw: "opaque" });
-    expect(await extractTokenFromSession(aegis, session)).toMatchSnapshot();
+    expect(await extractTokenFromSession(aegis, session, undefined)).toMatchSnapshot();
   });
 
   test("rethrows non-AegisError", async () => {
     aegis.verify.mockRejectedValue(new TypeError("unexpected"));
-    await expect(extractTokenFromSession(aegis, session)).rejects.toThrow(TypeError);
+    await expect(extractTokenFromSession(aegis, session, undefined)).rejects.toThrow(
+      TypeError,
+    );
   });
 });

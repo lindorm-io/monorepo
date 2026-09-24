@@ -9,6 +9,10 @@ import {
   createMockRepository,
 } from "@lindorm/proteus/mocks/vitest";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
+import {
+  createTestAppConfig,
+  createTestAuthConfig,
+} from "../../__fixtures__/app-config.js";
 import type { IPylonSession, PylonSessionHandle } from "../../interfaces/index.js";
 import type { PylonCookieSettings, PylonSessionSettings } from "../../types/index.js";
 import { sessionRecordKit } from "../utils/session/session-record-key.js";
@@ -118,7 +122,11 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
       get: vi.fn().mockReturnValue(cookie),
       set: vi.fn(),
       logger,
-      state: { metadata: {}, tokens: {} },
+      state: {
+        app: { config: createTestAppConfig({ auth: createTestAuthConfig() }) },
+        metadata: {},
+        tokens: {},
+      },
     };
   };
 

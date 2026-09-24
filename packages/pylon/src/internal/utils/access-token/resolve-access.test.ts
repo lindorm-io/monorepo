@@ -82,6 +82,22 @@ describe("resolveAccess", () => {
 
       expect(ctx.aegis.verify).toHaveBeenCalledWith("access_token", TOKEN, undefined, {
         audience: ACCESS_TEST_AUDIENCE,
+        critical: [],
+        issuer: ACCESS_TEST_APP_ISSUER,
+        trustBoundThumbprint: true,
+      });
+    });
+
+    test("forwards the deployment critical declaration to aegis", async () => {
+      ctx.state.app.config = createTestAppConfig({
+        auth: createTestAuthConfig({ critical: ["objectId"] }),
+      });
+
+      await resolveAccess(ctx, TOKEN, OPTIONS);
+
+      expect(ctx.aegis.verify).toHaveBeenCalledWith("access_token", TOKEN, undefined, {
+        audience: ACCESS_TEST_AUDIENCE,
+        critical: ["objectId"],
         issuer: ACCESS_TEST_APP_ISSUER,
         trustBoundThumbprint: true,
       });

@@ -24,5 +24,6 @@ export const createTestAuthConfig = (
   clientId: "client-a",
   capabilities: { introspect: true, userinfo: true },
   cache: false,
+  critical: [],
   ...overrides,
 });

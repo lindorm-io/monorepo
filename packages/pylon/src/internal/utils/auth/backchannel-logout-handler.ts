@@ -1,8 +1,11 @@
 import { ClientError } from "@lindorm/errors";
 import type { PylonHttpMiddleware } from "../../../types/index.js";
+import { deploymentCritical } from "../tokens/deployment-critical.js";
 
 export const backchannelLogoutHandler: PylonHttpMiddleware = async (ctx) => {
-  const verified = await ctx.aegis.verify(ctx.data.logoutToken);
+  const verified = await ctx.aegis.verify(ctx.data.logoutToken, undefined, {
+    critical: deploymentCritical(ctx.state.app.config.auth),
+  });
 
   if (!verified.custom.events?.["http://schemas.openid.net/event/backchannel-logout"]) {
     throw new ClientError("Invalid backchannel logout token", {

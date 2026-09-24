@@ -162,4 +162,12 @@ export type PylonAuthSettings = {
   cache?: PylonAuthCacheSettings;
   refresh?: Partial<PylonAuthRefreshConfig>;
   defaultTokenExpiry?: ReadableTime;
+  /**
+   * Custom header parameters this deployment acts on — aegis's
+   * `VerifyOptions.critical`, applied to EVERY verify pylon performs, the outer
+   * layer of a nested token included. DOMAIN names (`["objectId"]`, never
+   * `["oid"]`). Absent means nothing is declared, so every critical parameter is
+   * refused. Fail closed. RFC 7515 §4.1.11.
+   */
+  critical?: Array<string>;
 };

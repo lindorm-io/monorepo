@@ -8,6 +8,7 @@ import type {
   PylonLoginCookie,
 } from "../../../types/index.js";
 import { redactLoginCookie } from "../redact/redact-login-cookie.js";
+import { deploymentCritical } from "../tokens/deployment-critical.js";
 import { createAuthDriverContext } from "./create-auth-driver-context.js";
 import { parseTokenData } from "./parse-token-data.js";
 
@@ -90,6 +91,7 @@ export const createLoginCallbackHandler = (
 
     if (cookie.responseType.includes("token")) {
       ctx.state.session = await parseTokenData(ctx.aegis, ctx.data, {
+        critical: deploymentCritical(ctx.state.app.config.auth),
         resolveSubject,
         defaultTokenExpiry: config.defaultTokenExpiry,
       });
@@ -116,6 +118,7 @@ export const createLoginCallbackHandler = (
       });
 
       ctx.state.session = await parseTokenData(ctx.aegis, data, {
+        critical: deploymentCritical(ctx.state.app.config.auth),
         resolveSubject,
         defaultTokenExpiry: config.defaultTokenExpiry,
       });
@@ -134,7 +137,9 @@ export const createLoginCallbackHandler = (
     }
 
     if (ctx.state.session.idToken) {
-      const verified = await ctx.aegis.verify(ctx.state.session.idToken);
+      const verified = await ctx.aegis.verify(ctx.state.session.idToken, undefined, {
+        critical: deploymentCritical(ctx.state.app.config.auth),
+      });
 
       // ⚠ This gate is NEGATIVE — the throw only fires for a token it admits, so
       // a format it does not admit skips the replay check ENTIRELY. Under

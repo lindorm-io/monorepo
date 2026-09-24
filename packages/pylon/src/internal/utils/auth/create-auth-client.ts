@@ -24,6 +24,7 @@ import type {
 } from "../../../types/index.js";
 import { cacheIntrospection } from "../auth-cache/cache-introspection.js";
 import { cacheUserinfo } from "../auth-cache/cache-userinfo.js";
+import { deploymentCritical } from "../tokens/deployment-critical.js";
 import { assertAuthorizeUrl } from "./assert-authorize-url.js";
 import { createAuthDriverContext } from "./create-auth-driver-context.js";
 import { userinfoFromVerified } from "./userinfo-from-verified.js";
@@ -56,7 +57,11 @@ export const createClaimsClient = (
     // token's own buckets, exactly as the introspection fast path below is.
     if (token) {
       try {
-        const result = userinfoFromVerified(await ctx.aegis.verify(token));
+        const result = userinfoFromVerified(
+          await ctx.aegis.verify(token, undefined, {
+            critical: deploymentCritical(ctx.state.app.config.auth),
+          }),
+        );
         if (result) {
           userinfoCache.set(cacheKey, result);
           return result;
@@ -122,7 +127,9 @@ export const createClaimsClient = (
     // Fast path: explicit token — try local verify first.
     if (token) {
       try {
-        const verified = await ctx.aegis.verify(token);
+        const verified = await ctx.aegis.verify(token, undefined, {
+          critical: deploymentCritical(ctx.state.app.config.auth),
+        });
         // Domain-keyed `claims`/`custom`, so a CWT introspects locally exactly
         // as a JWT does — the gate is claims-bearing, not JWT.
         if (isStructuredToken(verified)) {

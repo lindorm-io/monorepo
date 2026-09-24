@@ -6,6 +6,10 @@ import {
 import type { Next } from "@lindorm/middleware";
 import MockDate from "mockdate";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
+import {
+  createTestAppConfig,
+  createTestAuthConfig,
+} from "../../__fixtures__/app-config.js";
 import type { IPylonSession, PylonSessionHandle } from "../../interfaces/index.js";
 import type { PylonSessionSettings } from "../../types/index.js";
 import { createHttpSessionMiddleware } from "./http-session-middleware.js";
@@ -71,6 +75,7 @@ describe("httpSessionMiddleware", () => {
         verify: vi.fn().mockResolvedValue({ claims: {}, format: "jwt" }),
       },
       state: {
+        app: { config: createTestAppConfig({ auth: createTestAuthConfig() }) },
         metadata: {},
         session: null,
         tokens: {},

@@ -132,6 +132,7 @@ const defaultState = (): PylonState => ({
         clientId: "test-client",
         capabilities: { introspect: true, userinfo: true },
         cache: false,
+        critical: [],
       },
     },
     domain: "http://localhost:3000",

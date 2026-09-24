@@ -15,12 +15,14 @@ export type SessionLookup = () => Promise<IPylonSession | null>;
 
 type CreateSessionRefreshHandlerOptions = {
   aegis: IAegis;
+  critical: Array<string> | undefined;
   lookup: SessionLookup;
   socket: PylonSocket;
 };
 
 export const createSessionRefreshHandler = ({
   aegis,
+  critical,
   lookup,
   socket,
 }: CreateSessionRefreshHandlerOptions) => {
@@ -33,7 +35,7 @@ export const createSessionRefreshHandler = ({
     socket.data.session = session;
 
     try {
-      const verified = await aegis.verify(session.accessToken);
+      const verified = await aegis.verify(session.accessToken, undefined, { critical });
       // Domain-keyed claims, so a rotated CWT re-arms the socket's expiry the
       // same way a JWT does — under the old gate it silently did not.
       if (isStructuredToken(verified)) {

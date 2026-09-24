@@ -1,5 +1,9 @@
 import { ClientError, ServerError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import {
+  createTestAppConfig,
+  createTestAuthConfig,
+} from "../../../__fixtures__/app-config.js";
 import { createLoginCallbackHandler } from "./login-callback-handler.js";
 import { parseTokenData as _parseTokenData } from "./parse-token-data.js";
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
@@ -70,7 +74,10 @@ describe("createLoginCallbackHandler", async () => {
         del: vi.fn(),
       },
       state: {
-        app: { environment: "test" },
+        app: {
+          config: createTestAppConfig({ auth: createTestAuthConfig() }),
+          environment: "test",
+        },
         metadata: { correlationId: "test-correlation" },
         origin: "http://localhost",
       },
@@ -183,7 +190,26 @@ describe("createLoginCallbackHandler", async () => {
       createLoginCallbackHandler(authConfig)(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
-    expect(ctx.aegis.verify).toHaveBeenCalledWith("idToken");
+    expect(ctx.aegis.verify).toHaveBeenCalledWith("idToken", undefined, {
+      critical: [],
+    });
+  });
+
+  test("forwards the deployment critical declaration to aegis", async () => {
+    ctx.state.app.config = createTestAppConfig({
+      auth: createTestAuthConfig({ critical: ["objectId"] }),
+    });
+
+    await createLoginCallbackHandler(authConfig)(ctx, vi.fn());
+
+    expect(ctx.aegis.verify).toHaveBeenCalledWith("idToken", undefined, {
+      critical: ["objectId"],
+    });
+    expect(parseTokenData).toHaveBeenCalledWith(
+      ctx.aegis,
+      expect.anything(),
+      expect.objectContaining({ critical: ["objectId"] }),
+    );
   });
 
   test("should throw on invalid state", async () => {
