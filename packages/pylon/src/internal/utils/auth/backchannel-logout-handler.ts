@@ -7,7 +7,7 @@ export const backchannelLogoutHandler: PylonHttpMiddleware = async (ctx) => {
     critical: deploymentCritical(ctx.state.app.config.auth),
   });
 
-  if (!verified.custom.events?.["http://schemas.openid.net/event/backchannel-logout"]) {
+  if (!verified.claims.events?.["http://schemas.openid.net/event/backchannel-logout"]) {
     throw new ClientError("Invalid backchannel logout token", {
       code: "invalid_backchannel_logout_token",
       title: "Invalid Backchannel Logout Token",

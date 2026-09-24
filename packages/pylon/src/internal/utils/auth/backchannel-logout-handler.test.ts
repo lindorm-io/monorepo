@@ -15,13 +15,12 @@ describe("backchannelLogoutHandler", () => {
     ctx = {
       aegis: {
         verify: vi.fn().mockResolvedValue({
-          custom: {
+          custom: {},
+          claims: {
+            subject: "subject",
             events: {
               "http://schemas.openid.net/event/backchannel-logout": {},
             },
-          },
-          claims: {
-            subject: "subject",
           },
         }),
       },
