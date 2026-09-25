@@ -128,7 +128,6 @@ describe("serializeMigration — empty plan", () => {
       timestamp: fixedDate,
     });
     expect(result.content).toMatchSnapshot();
-    expect(result.checksum).toMatchSnapshot();
   });
 });
 
@@ -362,15 +361,6 @@ describe("serializeMigration — extension operations", () => {
       serializeMigration(plan, emptySnapshot, { timestamp: fixedDate }),
     ).toThrow("Cannot serialize a create_extension operation without an extension name");
   });
-
-  it("should checksum the extension SQL, not the emitted call", () => {
-    // The checksum hashes `op.sql`, so moving the op out of the transaction
-    // block leaves already-generated checksums alone.
-    const result = serializeMigration(makePlan([makeExtensionOp()]), emptySnapshot, {
-      timestamp: fixedDate,
-    });
-    expect(result.checksum).toMatchSnapshot();
-  });
 });
 
 // --- warn_only filtering ---
@@ -454,50 +444,6 @@ describe("serializeMigration — escaping", () => {
     // The escaped form must be present in the content
     expect(result.content).toContain("\\${");
     expect(result.content).toMatchSnapshot();
-  });
-});
-
-// --- Checksum stability ---
-
-describe("serializeMigration — checksum", () => {
-  it("should produce same checksum for equivalent SQL with different whitespace", () => {
-    const plan1 = makePlan([
-      makeOp({
-        type: "add_column",
-        description: 'Add column "x" to "app"."users"',
-        sql: 'ALTER TABLE "app"."users" ADD COLUMN "x" TEXT;',
-      }),
-    ]);
-    const plan2 = makePlan([
-      makeOp({
-        type: "add_column",
-        description: 'Add column "x" to "app"."users"',
-        sql: 'ALTER TABLE "app"."users"\n  ADD COLUMN "x"\n    TEXT;',
-      }),
-    ]);
-    const r1 = serializeMigration(plan1, emptySnapshot, { timestamp: fixedDate });
-    const r2 = serializeMigration(plan2, emptySnapshot, { timestamp: fixedDate });
-    expect(r1.checksum).toBe(r2.checksum);
-  });
-
-  it("should produce different checksum for different SQL", () => {
-    const plan1 = makePlan([
-      makeOp({
-        type: "add_column",
-        description: 'Add column "x" to "app"."users"',
-        sql: 'ALTER TABLE "app"."users" ADD COLUMN "x" TEXT;',
-      }),
-    ]);
-    const plan2 = makePlan([
-      makeOp({
-        type: "add_column",
-        description: 'Add column "y" to "app"."users"',
-        sql: 'ALTER TABLE "app"."users" ADD COLUMN "y" INTEGER;',
-      }),
-    ]);
-    const r1 = serializeMigration(plan1, emptySnapshot, { timestamp: fixedDate });
-    const r2 = serializeMigration(plan2, emptySnapshot, { timestamp: fixedDate });
-    expect(r1.checksum).not.toBe(r2.checksum);
   });
 });
 

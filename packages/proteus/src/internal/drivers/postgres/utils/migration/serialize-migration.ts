@@ -3,7 +3,6 @@ import {
   kebabToPascal,
   sanitizeName,
 } from "../../../../cli/utils/migration-naming.js";
-import { ShaKit } from "@lindorm/sha";
 import { randomUUID } from "crypto";
 import { PostgresMigrationError } from "../../errors/PostgresMigrationError.js";
 import type { DbSnapshot } from "../../types/db-snapshot.js";
@@ -13,7 +12,6 @@ import { generateDownSql } from "./generate-down-sql.js";
 export type SerializedMigration = {
   filename: string;
   content: string;
-  checksum: string;
   id: string;
   ts: string;
 };
@@ -30,8 +28,8 @@ type DownEntry = {
   isExtension: boolean;
 };
 
-// Collapse all whitespace (newlines, tabs, runs of spaces) to single
-// spaces for checksum stability. Whitespace inside SQL string literals
+// Collapse all whitespace (newlines, tabs, runs of spaces) to single spaces so
+// each operation emits as one line. Whitespace inside SQL string literals
 // (e.g. DEFAULT 'hello  world') is theoretically affected, but the
 // DDL generators do not produce such values.
 const normalizeSql = (sql: string): string => sql.replace(/\s+/g, " ").trim();
@@ -178,13 +176,6 @@ export const serializeMigration = (
   const reversedAutocommit = reversed.filter((e) => e.autocommit && !e.isExtension);
   const reversedTx = reversed.filter((e) => !e.autocommit && !e.isExtension);
 
-  // Compute checksum from normalized SQL
-  // Canonical format: up SQL joined by "\n", then "\n---\n", then down SQL (reversed) joined by "\n"
-  const upSqlStrings = ops.map((op) => normalizeSql(op.sql));
-  const downSqlStrings = reversed.map((e) => (e.sql ? normalizeSql(e.sql) : ""));
-  const canonical = upSqlStrings.join("\n") + "\n---\n" + downSqlStrings.join("\n");
-  const checksum = ShaKit.S256(canonical);
-
   // Build method bodies
   const upBody = buildUpBody(extensionOps, txOps, autocommitOps);
   const downBody = buildDownBody(reversedExtension, reversedAutocommit, reversedTx);
@@ -210,5 +201,5 @@ export const serializeMigration = (
 
   const content = lines.join("\n");
 
-  return { filename, content, checksum, id, ts };
+  return { filename, content, id, ts };
 };

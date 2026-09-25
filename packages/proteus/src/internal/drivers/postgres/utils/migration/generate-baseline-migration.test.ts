@@ -127,7 +127,6 @@ const makePlan = (ops: Array<SyncOperation>): SyncPlan => ({
 const fixedMigration: SerializedMigration = {
   filename: "20260220090000-baseline.ts",
   content: "// migration content",
-  checksum: "abc123",
   id: "00000000-0000-0000-0000-000000000001",
   ts: "2026-02-20T09:00:00.000Z",
 };
@@ -466,7 +465,7 @@ describe("generateBaselineMigration — markedAsApplied", () => {
         id: fixedMigration.id,
         name: "20260220090000-baseline", // .ts extension stripped
         // The checksum is hashed off the LOADED module, which is what apply()
-        // and status() recompute — never the SQL-derived serializer checksum.
+        // and status() recompute.
         checksum: computeHash(loadedBaseline.migration),
       }),
       undefined,

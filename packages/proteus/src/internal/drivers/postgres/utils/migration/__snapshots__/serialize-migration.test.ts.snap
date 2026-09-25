@@ -35,8 +35,6 @@ export class Generated20260220090000 implements MigrationInterface {
 "
 `;
 
-exports[`serializeMigration — empty plan > should produce valid empty migration 2`] = `"MW3usoiSsc3r_lwSws1iC1uPKSicH_49T1_Bsuak6n0"`;
-
 exports[`serializeMigration — escaping > should escape \${ sequences to prevent template literal interpolation 1`] = `
 "import type { MigrationInterface, MigrationQueryRunner } from "@lindorm/proteus";
 
@@ -59,8 +57,6 @@ export class Generated20260220090000 implements MigrationInterface {
 }
 "
 `;
-
-exports[`serializeMigration — extension operations > should checksum the extension SQL, not the emitted call 1`] = `"B3oyzBNu7MkFJWG0qPPVkoMW7Q5YJswij2LTGjKMrkY"`;
 
 exports[`serializeMigration — extension operations > should emit extensions before autocommit ops with no transaction block 1`] = `
 "import type { MigrationInterface, MigrationQueryRunner } from "@lindorm/proteus";
