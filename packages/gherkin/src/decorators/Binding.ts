@@ -7,6 +7,7 @@ import {
   readOwnSteps,
 } from "../internal/metadata/stage-metadata.js";
 import { BINDING_BRAND } from "../internal/metadata/symbols.js";
+import type { BindingRegistration } from "../internal/registry/registrations.js";
 import { addRegistration } from "../internal/registry/registrations.js";
 import { assertChainGuards } from "./assert-chain-guards.js";
 import { assertNoConflictingBrand } from "./assert-no-conflicting-brand.js";
@@ -44,7 +45,7 @@ export const Binding =
     // Inside a class decorator, target[Symbol.metadata] is the SUPERCLASS's
     // metadata — the class's own level is context.metadata. Pinned:
     // Binding.test.ts ("a subclass does not mutate its parent's staged steps").
-    addRegistration({
+    const registration: BindingRegistration = {
       className: target.name,
       hooks: composeHooks(
         target.name,
@@ -55,7 +56,15 @@ export const Binding =
       parameterTypes: readOwnParameterTypes(context.metadata),
       steps: readOwnSteps(context.metadata),
       target,
-    });
+    };
 
     Object.defineProperty(target, BINDING_BRAND, { value: true });
+
+    // Enqueued from an initializer, never inline: class decorators apply
+    // inside-out and initializers run only once the whole declaration
+    // succeeded, so a later decorator's throw leaves nothing in the queue.
+    // Pinned: Binding.test.ts ("a LATER class decorator rejects the
+    // declaration"), e2e/tsc-lowering.test.ts for the lowering `npm run
+    // build` ships.
+    context.addInitializer(() => addRegistration(registration));
   };

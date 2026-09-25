@@ -1,3 +1,4 @@
+import type { Constructor } from "@lindorm/types";
 import { AbstractSteps } from "../../src/decorators/AbstractSteps.js";
 import { BeforeFeature } from "../../src/decorators/BeforeFeature.js";
 import { BeforeScenario } from "../../src/decorators/BeforeScenario.js";
@@ -62,6 +63,31 @@ export const defineInjectOnlyOffender = (): void => {
   @Binding()
   class Offending extends UnmarkedInjectBase {}
   void Offending;
+};
+
+const RejectClass =
+  () =>
+  (target: Constructor): void => {
+    throw new Error(`rejected ${target.name}`);
+  };
+
+/** Registration-atomicity probe: a later class decorator rejects @Binding, under tsc. */
+export const defineRejectedBinding = (): void => {
+  @RejectClass()
+  @Binding()
+  class Rejected {
+    @Given("a rejected step")
+    rejectedStep(): void {}
+  }
+  void Rejected;
+};
+
+/** Registration-atomicity probe: a later class decorator rejects @Context, under tsc. */
+export const defineRejectedContext = (): void => {
+  @RejectClass()
+  @Context()
+  class Rejected {}
+  void Rejected;
 };
 
 @AbstractSteps()

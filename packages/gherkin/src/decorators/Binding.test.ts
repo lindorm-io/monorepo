@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, test } from "vitest";
-import { capture, errorShape, metadataOf } from "../__fixtures__/test-helpers.js";
+import {
+  capture,
+  errorShape,
+  metadataOf,
+  RejectClass,
+} from "../__fixtures__/test-helpers.js";
 import { GherkinError } from "../errors/GherkinError.js";
 import { STEPS_METADATA } from "../internal/metadata/symbols.js";
 import {
@@ -152,6 +157,34 @@ describe("Binding", () => {
       @Binding()
       class Leaf extends Base {}
       return Leaf;
+    });
+
+    expect(drainRegistrations()).toEqual([]);
+  });
+
+  test("should register nothing when a LATER class decorator rejects the declaration", () => {
+    capture(() => {
+      @RejectClass()
+      @Binding()
+      class Rejected {
+        @Given("a rejected step")
+        rejectedStep(): void {}
+      }
+      return Rejected;
+    });
+
+    expect(drainRegistrations()).toEqual([]);
+  });
+
+  test("should register nothing when @Binding is applied twice", () => {
+    capture(() => {
+      @Binding()
+      @Binding()
+      class Twice {
+        @Given("a step")
+        step(): void {}
+      }
+      return Twice;
     });
 
     expect(drainRegistrations()).toEqual([]);

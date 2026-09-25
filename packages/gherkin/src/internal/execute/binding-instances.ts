@@ -57,23 +57,16 @@ export const createBindingInstances = (
     try {
       instance = new target() as object;
     } catch (error) {
-      // The original error is rethrown with its message extended in place —
-      // wrapping in a new error would drop the stack and any assertion diff.
-      if (isError(error)) {
-        error.message = formatConstructorFailure({
-          anchor,
-          className,
-          message: error.message,
-          remaining,
-        });
-        throw error;
-      }
-
+      // A NEW error carries the anchor and the thrown value travels untouched
+      // as `cause`: a frozen error cannot take a message, and the same
+      // instance thrown twice would collect two anchors. Pinned:
+      // binding-instances.test.ts ("a FROZEN binding-constructor error",
+      // "the SAME thrown instance twice").
       throw new Error(
         formatConstructorFailure({
           anchor,
           className,
-          message: String(error),
+          message: isError(error) ? error.message : String(error),
           remaining,
         }),
         { cause: error },

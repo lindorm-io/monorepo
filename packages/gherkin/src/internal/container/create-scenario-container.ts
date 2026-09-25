@@ -13,6 +13,12 @@ import type {
   ScenarioContainerOptions,
 } from "./types.js";
 
+/** A dependency already resolved, awaiting its field on a constructed instance. */
+type ResolvedField = {
+  fieldName: string;
+  value: object;
+};
+
 /**
  * One container per SCENARIO — and per Examples row — created by the runner;
  * two containers never share a context instance. Context constructors are
@@ -34,11 +40,12 @@ export const createScenarioContainer = (
   const instances = new Map<Constructor, object>([[ScenarioInfo, options.scenarioInfo]]);
 
   /**
-   * FIRST-RESOLVED order: an instance is recorded once its own inject fields
-   * are assigned, so its dependencies are recorded BEFORE it — the reversed
-   * disposal walk then disposes a dependent before the contexts it injects,
-   * and a dispose() may still use its injected fields. Pinned:
-   * create-scenario-container.test.ts ("reverse first-resolved order").
+   * FIRST-RESOLVED order: an instance is recorded once constructed and
+   * assigned, and its dependencies resolve before it is constructed, so they
+   * are recorded BEFORE it — the reversed disposal walk then disposes a
+   * dependent before the contexts it injects, and a dispose() may still use
+   * its injected fields. Pinned: create-scenario-container.test.ts ("reverse
+   * first-resolved order").
    */
   const resolved: Array<object> = [];
 
@@ -46,18 +53,20 @@ export const createScenarioContainer = (
 
   let disposed = false;
 
-  const assignFields = (
-    instance: object,
+  const resolveFields = (
     injects: Array<StagedInject>,
     className: string,
-  ): void => {
+  ): Array<ResolvedField> =>
+    injects.map((inject) => ({
+      fieldName: inject.fieldName,
+      value: resolveToken(inject.token, { className, fieldName: inject.fieldName }),
+    }));
+
+  const assignFields = (instance: object, fields: Array<ResolvedField>): void => {
     // Each field by name — never Object.assign, which would attach unknown
     // keys silently and clobber with undefined.
-    for (const inject of injects) {
-      (instance as Record<string, unknown>)[inject.fieldName] = resolveToken(
-        inject.token,
-        { className, fieldName: inject.fieldName },
-      );
+    for (const field of fields) {
+      (instance as Record<string, unknown>)[field.fieldName] = field.value;
     }
   };
 
@@ -128,6 +137,13 @@ export const createScenarioContainer = (
     resolving.push(registration);
 
     try {
+      // Dependencies FIRST: a constructor that ran before they existed could
+      // acquire a resource and then be discarded by their failure, leaving
+      // nothing recorded for disposal. Pinned:
+      // create-scenario-container.test.ts ("NEVER run the dependent
+      // constructor when a dependency cannot resolve").
+      const fields = resolveFields(registration.injects, registration.className);
+
       let instance: object;
 
       try {
@@ -136,26 +152,21 @@ export const createScenarioContainer = (
         // create-scenario-container.test.ts ("undefined inside the constructor").
         instance = new registration.target() as object;
       } catch (error) {
-        // The original error is rethrown with its message extended in place —
-        // wrapping in a new error would drop the stack and any assertion diff.
-        if (isError(error)) {
-          error.message = formatContextConstructorFailure({
-            className: registration.className,
-            message: error.message,
-          });
-          throw error;
-        }
-
+        // A NEW error carries the anchor and the thrown value travels
+        // untouched as `cause`: a frozen error cannot take a message, and the
+        // same instance thrown twice would collect two anchors. Pinned:
+        // create-scenario-container.test.ts ("without mutating the thrown
+        // error", "the SAME thrown instance twice").
         throw new Error(
           formatContextConstructorFailure({
             className: registration.className,
-            message: String(error),
+            message: isError(error) ? error.message : String(error),
           }),
           { cause: error },
         );
       }
 
-      assignFields(instance, registration.injects, registration.className);
+      assignFields(instance, fields);
       instances.set(token, instance);
       resolved.push(instance);
 
@@ -221,7 +232,7 @@ export const createScenarioContainer = (
 
   return {
     assignInjects: ({ className, injects, instance }: AssignInjectsOptions): void =>
-      assignFields(instance, injects, className),
+      assignFields(instance, resolveFields(injects, className)),
     dispose,
     resolve: (token: Constructor): object => resolveToken(token),
   };

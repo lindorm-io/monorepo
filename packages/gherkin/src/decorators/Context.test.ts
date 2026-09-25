@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test } from "vitest";
-import { capture, errorShape } from "../__fixtures__/test-helpers.js";
+import { capture, errorShape, RejectClass } from "../__fixtures__/test-helpers.js";
 import { GherkinError } from "../errors/GherkinError.js";
 import { CONTEXT_BRAND } from "../internal/metadata/symbols.js";
 import {
@@ -219,6 +219,28 @@ describe("Context", () => {
       @Context()
       class Leaf extends Base {}
       return Leaf;
+    });
+
+    expect(drainContextRegistrations()).toEqual([]);
+  });
+
+  test("should register nothing when a LATER class decorator rejects the declaration", () => {
+    capture(() => {
+      @RejectClass()
+      @Context()
+      class Rejected {}
+      return Rejected;
+    });
+
+    expect(drainContextRegistrations()).toEqual([]);
+  });
+
+  test("should register nothing when @Context is applied twice", () => {
+    capture(() => {
+      @Context()
+      @Context()
+      class Twice {}
+      return Twice;
     });
 
     expect(drainContextRegistrations()).toEqual([]);

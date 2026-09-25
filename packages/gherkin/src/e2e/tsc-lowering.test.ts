@@ -89,6 +89,8 @@ type FixtureModule = {
   defineBehaviourOffender: () => void;
   defineContextBehaviourOffender: () => void;
   defineInjectOnlyOffender: () => void;
+  defineRejectedBinding: () => void;
+  defineRejectedContext: () => void;
 };
 
 type RegistrationsModule = {
@@ -259,5 +261,19 @@ describe("tsc lowering", () => {
       memberKind: "step",
       memberName: "contextStep",
     });
+  });
+
+  test("should leave the binding queue empty when a later class decorator rejects the declaration", () => {
+    registrations.drainRegistrations();
+
+    expect(() => compiled.defineRejectedBinding()).toThrow("rejected Rejected");
+    expect(registrations.drainRegistrations()).toEqual([]);
+  });
+
+  test("should leave the context queue empty when a later class decorator rejects the declaration", () => {
+    registrations.drainContextRegistrations();
+
+    expect(() => compiled.defineRejectedContext()).toThrow("rejected Rejected");
+    expect(registrations.drainContextRegistrations()).toEqual([]);
   });
 });

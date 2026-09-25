@@ -3,6 +3,7 @@ import type { Constructor } from "@lindorm/types";
 import { GherkinError } from "../errors/GherkinError.js";
 import { readOwnPriorities } from "../internal/metadata/stage-metadata.js";
 import { CONTEXT_BRAND } from "../internal/metadata/symbols.js";
+import type { ContextRegistration } from "../internal/registry/registrations.js";
 import { addContextRegistration } from "../internal/registry/registrations.js";
 import { assertChainGuards } from "./assert-chain-guards.js";
 import { assertNoConflictingBrand } from "./assert-no-conflicting-brand.js";
@@ -61,11 +62,16 @@ export const Context =
     // composing an empty hook list is exactly that check.
     composeHooks(target.name, [], readOwnPriorities(context.metadata));
 
-    addContextRegistration({
+    const registration: ContextRegistration = {
       className: target.name,
       injects: collectInjects(target, context.metadata),
       target,
-    });
+    };
 
     Object.defineProperty(target, CONTEXT_BRAND, { value: true });
+
+    // Enqueued from an initializer, never inline, as in Binding.ts: a later
+    // class decorator's throw must leave nothing in the queue. Pinned:
+    // Context.test.ts ("a LATER class decorator rejects the declaration").
+    context.addInitializer(() => addContextRegistration(registration));
   };

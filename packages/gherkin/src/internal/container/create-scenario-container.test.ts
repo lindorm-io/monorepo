@@ -69,7 +69,7 @@ describe("createScenarioContainer", () => {
       );
     });
 
-    test("should assign inject fields eagerly after construction, in field order", () => {
+    test("should construct every dependency BEFORE the dependent context, in field order", () => {
       const log: Array<string> = [];
 
       class BContext {
@@ -101,11 +101,48 @@ describe("createScenarioContainer", () => {
 
       const resolved = scoped.resolve(AContext) as AContext;
 
-      // Construction first, then the fields in declaration order — lazy
-      // accessors would leave this log at ["construct A"] until a read.
-      expect(log).toEqual(["construct A", "construct B", "construct C"]);
+      // Dependencies in declaration order, then the dependent — a constructor
+      // that runs before its dependencies exist can allocate and then vanish.
+      expect(log).toEqual(["construct B", "construct C", "construct A"]);
       expect(resolved.b).toBeInstanceOf(BContext);
       expect(resolved.c).toBeInstanceOf(CContext);
+    });
+
+    test("should NEVER run the dependent constructor when a dependency cannot resolve", () => {
+      const constructed: Array<string> = [];
+
+      class BContext {
+        public constructor() {
+          constructed.push("B");
+        }
+      }
+
+      class CContext {
+        public constructor() {
+          constructed.push("C");
+          throw new Error("C ctor boom");
+        }
+      }
+
+      class AContext {
+        public b!: BContext;
+        public c!: CContext;
+
+        public constructor() {
+          constructed.push("A");
+        }
+      }
+
+      const scoped = container([
+        registration(AContext, [inject("b", BContext), inject("c", CContext)]),
+        registration(BContext),
+        registration(CContext),
+      ]);
+
+      const error = capture(() => scoped.resolve(AContext));
+
+      expect(error.message).toContain("Context class CContext constructor threw");
+      expect(constructed).toEqual(["B", "C"]);
     });
 
     test("should leave injected fields undefined inside the constructor", () => {
@@ -187,7 +224,7 @@ describe("createScenarioContainer", () => {
       await expect(scoped.dispose()).resolves.toEqual([]);
     });
 
-    test("should anchor a throwing constructor to its TOKEN, preserving the original instance", () => {
+    test("should anchor a throwing constructor to its TOKEN without mutating the thrown error", () => {
       const original = new Error("no endpoint configured");
 
       class AnchoredContext {
@@ -199,12 +236,52 @@ describe("createScenarioContainer", () => {
       const scoped = container([registration(AnchoredContext)]);
       const error = capture(() => scoped.resolve(AnchoredContext));
 
-      // The SAME instance, message extended in place — a wrap would drop the
-      // stack and any assertion diff.
-      expect(error).toBe(original);
+      expect(error).not.toBe(original);
       expect(error.message).toBe(
         "Context class AnchoredContext constructor threw\n\nno endpoint configured",
       );
+      expect(error.cause).toBe(original);
+      expect(original.message).toBe("no endpoint configured");
+    });
+
+    test("should anchor a FROZEN context-constructor error, retaining it as cause", () => {
+      const original = Object.freeze(new Error("frozen context boom"));
+
+      class FrozenContext {
+        public constructor() {
+          throw original;
+        }
+      }
+
+      const scoped = container([registration(FrozenContext)]);
+      const error = capture(() => scoped.resolve(FrozenContext));
+
+      expect(error.message).toBe(
+        "Context class FrozenContext constructor threw\n\nfrozen context boom",
+      );
+      expect(error.cause).toBe(original);
+    });
+
+    test("should anchor the SAME thrown instance twice independently, never compounding its message", () => {
+      const original = new Error("shared boom");
+
+      class SharedThrowContext {
+        public constructor() {
+          throw original;
+        }
+      }
+
+      const scoped = container([registration(SharedThrowContext)]);
+
+      const first = capture(() => scoped.resolve(SharedThrowContext));
+      const second = capture(() => scoped.resolve(SharedThrowContext));
+
+      expect(first).not.toBe(second);
+      expect(first.message).toBe(
+        "Context class SharedThrowContext constructor threw\n\nshared boom",
+      );
+      expect(second.message).toBe(first.message);
+      expect(original.message).toBe("shared boom");
     });
 
     test("should anchor the INNER token when a recursive resolution's constructor throws", () => {
@@ -459,7 +536,7 @@ describe("createScenarioContainer", () => {
   });
 
   describe("disposal", () => {
-    test("should dispose the contexts constructed BEFORE a partial construction failed", async () => {
+    test("should dispose every context that completed construction when a dependency throws", async () => {
       const disposals: Array<string> = [];
 
       class BContext {
@@ -484,7 +561,6 @@ describe("createScenarioContainer", () => {
       }
 
       const scoped = container([
-        // A resolves B first (recorded), then C throws — A never records.
         registration(AContext, [inject("b", BContext), inject("c", CContext)]),
         registration(BContext),
         registration(CContext),
@@ -494,10 +570,44 @@ describe("createScenarioContainer", () => {
 
       expect(error.message).toContain("Context class CContext constructor threw");
       expect(await scoped.dispose()).toEqual([]);
-      // B was fully constructed and MUST dispose; A never completed, so its
-      // dispose never runs — running it against a half-injected instance
-      // would hand dispose() an undefined field.
+      // B constructed and MUST dispose. A was never constructed — its
+      // dependency threw first — so there is no A to dispose.
       expect(disposals).toEqual(["B"]);
+    });
+
+    test("should dispose a shared diamond dependency exactly once", async () => {
+      const disposals: Array<string> = [];
+
+      class DContext {
+        public dispose(): void {
+          disposals.push("D");
+        }
+      }
+
+      class BContext {
+        public d!: DContext;
+      }
+
+      class CContext {
+        public d!: DContext;
+      }
+
+      class AContext {
+        public b!: BContext;
+        public c!: CContext;
+      }
+
+      const scoped = container([
+        registration(AContext, [inject("b", BContext), inject("c", CContext)]),
+        registration(BContext, [inject("d", DContext)]),
+        registration(CContext, [inject("d", DContext)]),
+        registration(DContext),
+      ]);
+
+      scoped.resolve(AContext);
+
+      await expect(scoped.dispose()).resolves.toEqual([]);
+      expect(disposals).toEqual(["D"]);
     });
 
     test("should dispose in reverse first-resolved order, dependencies last", async () => {
@@ -534,8 +644,8 @@ describe("createScenarioContainer", () => {
       scoped.resolve(AContext);
       scoped.resolve(CContext);
 
-      // First-resolved (completion) order is [B, A, C]: B finishes while A's
-      // fields are being assigned. Reversed: C, then A, then B.
+      // First-resolved order is [B, A, C]: B resolves before A is
+      // constructed. Reversed: C, then A, then B.
       await expect(scoped.dispose()).resolves.toEqual([]);
       expect(disposals).toEqual(["C", "A", "B"]);
     });

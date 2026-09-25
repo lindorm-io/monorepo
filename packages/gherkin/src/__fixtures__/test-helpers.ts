@@ -1,4 +1,12 @@
+import type { Constructor } from "@lindorm/types";
 import type { GherkinError } from "../errors/GherkinError.js";
+
+/** Rejects the class declaration — the later-class-decorator-throws case. */
+export const RejectClass =
+  () =>
+  (target: Constructor): void => {
+    throw new Error(`rejected ${target.name}`);
+  };
 
 export const capture = (fn: () => unknown): GherkinError => {
   try {

@@ -130,6 +130,65 @@ describe("createBindingInstances", () => {
     expect((error as unknown as { cause: unknown }).cause).toBe("ctor string");
   });
 
+  test("should anchor a FROZEN binding-constructor error, retaining it as cause", () => {
+    const original = Object.freeze(new Error("frozen store boom"));
+
+    class FrozenSteps {
+      constructor() {
+        throw original;
+      }
+    }
+
+    const instances = createBindingInstances(container());
+
+    const error = capture(() =>
+      instances.acquire(
+        { className: "FrozenSteps", injects: [], target: FrozenSteps },
+        position,
+      ),
+    );
+
+    expect(error.message).toBe(
+      [
+        "Binding class FrozenSteps constructor threw",
+        "",
+        "  under test",
+        "  at src/features/binding.feature:3:3",
+        "",
+        "frozen store boom",
+        "",
+        "The remaining 2 steps in this scenario were skipped.",
+      ].join("\n"),
+    );
+    expect(error.cause).toBe(original);
+  });
+
+  test("should anchor the SAME thrown instance twice independently, never compounding its message", () => {
+    const original = new Error("shared store boom");
+
+    class SharedThrowSteps {
+      constructor() {
+        throw original;
+      }
+    }
+
+    const binding = {
+      className: "SharedThrowSteps",
+      injects: [],
+      target: SharedThrowSteps,
+    };
+    const instances = createBindingInstances(container());
+
+    const first = capture(() => instances.acquire(binding, position));
+    const second = capture(() => instances.acquire(binding, position));
+
+    expect(first).not.toBe(second);
+    expect(first.message).toContain("Binding class SharedThrowSteps constructor threw");
+    expect(first.message).toContain("shared store boom");
+    expect(second.message).toBe(first.message);
+    expect(original.message).toBe("shared store boom");
+  });
+
   test("should let a context constructor failure propagate with its TOKEN anchor untouched", () => {
     class BrokenContext {
       constructor() {
