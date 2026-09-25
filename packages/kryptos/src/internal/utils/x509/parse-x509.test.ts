@@ -43,7 +43,7 @@ describe("parseX509", () => {
 
   test("throws for empty input array", () => {
     expect(() => parseX509([])).toThrow(
-      "certificateChain must contain at least one certificate",
+      "Certificate input must contain at least one certificate",
     );
   });
 

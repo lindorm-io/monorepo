@@ -46,32 +46,33 @@ export const parseX509 = (input: string | Array<string>): Array<Buffer> => {
   const inputs = Array.isArray(input) ? input : [input];
 
   if (inputs.length === 0) {
-    throw new KryptosError("certificateChain must contain at least one certificate", {
+    throw new KryptosError("Certificate input must contain at least one certificate", {
       code: "certificate_chain_empty",
       title: "Certificate Chain Empty",
       details:
-        "An empty certificateChain array was provided; at least one certificate is required.",
+        "An empty certificate chain or trust anchor array was provided; at least one certificate is required.",
     });
   }
 
   const ders: Array<Buffer> = [];
   for (const item of inputs) {
     if (!isString(item) || item.length === 0) {
-      throw new KryptosError("certificateChain entries must be non-empty strings", {
+      throw new KryptosError("Certificate input entries must be non-empty strings", {
         code: "invalid_certificate_input",
         title: "Invalid Certificate Input",
         details:
-          "A certificateChain entry was not a non-empty string; each entry must be PEM or base64-DER text.",
+          "A certificate chain or trust anchor entry was not a non-empty string; each entry must be PEM or base64-DER text.",
       });
     }
     ders.push(...toDerBuffers(item));
   }
 
   if (ders.length === 0) {
-    throw new KryptosError("certificateChain produced no certificates", {
+    throw new KryptosError("Certificate input produced no certificates", {
       code: "certificate_chain_empty",
       title: "Certificate Chain Empty",
-      details: "Decoding the certificateChain input produced zero DER certificates.",
+      details:
+        "Decoding the certificate chain or trust anchor input produced zero DER certificates.",
     });
   }
 
