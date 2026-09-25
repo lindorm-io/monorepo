@@ -571,7 +571,7 @@ Configure `HermesOptions.encryption` to control the JWE algorithm and content-en
 
 ### Separating the DEK from the ciphertext
 
-By default the DEK lives in the same `proteus` source as the event ciphertext, so a single-store dump yields both the ciphertext and the key that unlocks it. Erasure still holds, but at-rest confidentiality against a full dump does not. Set `HermesOptions.encryptionSource` to route `EncryptionRecord` to a separate Proteus source; a dump of either store alone is then insufficient — ciphertext and key no longer travel together. Erasure semantics are unchanged (delete the row to forget). When omitted, `encryptionSource` defaults to `proteus` and behaviour is identical to before.
+By default the DEK lives in the same `proteus` source as the event ciphertext, so a single-store dump yields both the ciphertext and the key that unlocks it. Erasure still holds, but at-rest confidentiality against a full dump does not. Set `HermesOptions.encryptionSource` to route `EncryptionRecord` to a separate Proteus source; a dump of either store alone is then insufficient — ciphertext and key do not travel together. Erasure semantics are unchanged (delete the row to forget). When omitted, `encryptionSource` defaults to `proteus`.
 
 ```ts
 const hermes = new Hermes({

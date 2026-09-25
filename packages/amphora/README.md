@@ -89,9 +89,8 @@ URN (`urn:example:auth`). One rule, one shape, three scopes. An opaque
 
 The rule is not cosmetic. Key resolution narrows a `kid` lookup to the issuer that
 owns it, and that narrowing applies **only when the issuer is a URI** — key names
-are unique per issuer, so an issuer that cannot be matched cannot scope. A service
-whose own issuer was opaque used to boot fine and quietly resolve its own tokens'
-keys across every registered issuer at once; it now fails to construct instead.
+are unique per issuer, so an issuer that cannot be matched cannot scope: its own
+tokens' keys would resolve across every registered issuer at once.
 
 ### An address is an http(s) URL
 
@@ -244,7 +243,7 @@ applyKeyFloor(SIGN_FLOOR, UNPUBLISHED_DEFAULT, { purpose: "cookie" });
 // → { purpose: "cookie", publish: false, use: "sig", hasPrivateKey: true, isActive: true }
 ```
 
-A **floor** (`SIGN_FLOOR`, `VERIFY_FLOOR`, `SEAL_FLOOR`, `ENVELOPE_FLOOR`, `DECRYPT_FLOOR`) is spread **last** and can never be overridden — it is the minimum that makes the operation possible. A **default** is spread among the caller layers, so the caller wins: state `publish: true` and you get a published key. Without the default layer, every consumer had to spell `publish: false` in its own config to reach its own key, and forgetting it silently selected the JWKS token key instead.
+A **floor** (`SIGN_FLOOR`, `VERIFY_FLOOR`, `SEAL_FLOOR`, `ENVELOPE_FLOOR`, `DECRYPT_FLOOR`) is spread **last** and can never be overridden — it is the minimum that makes the operation possible. A **default** is spread among the caller layers, so the caller wins: state `publish: true` and you get a published key. Without the default layer a consumer must spell `publish: false` in its own config to reach its own key, and forgetting it silently selects the JWKS token key instead.
 
 ⚠ **The default is about `publish`, not about safety — it does not belong everywhere.** A **token** signature exists to be verified against our JWKS, so its key must be published: `@lindorm/aegis` applies the floor and the deployment's own selector and deliberately no default. Nor does it belong on a **check**: where a key is resolved by `kid` through the unfiltered `findById` there is no gate to reach past, and a `publish` layer stops being "where to look" and becomes an assertion that the key is unpublished (pylon's cookie verification is that shape, and gets no default). Sharing `SIGN_FLOOR` with an operation says nothing about sharing this default with it.
 
@@ -377,7 +376,7 @@ An issuer belongs to exactly **one** scope — the idp or `external`, never both
 
 Retry the call; nothing needs unwinding first.
 
-**`addIssuer()` is idempotent by issuer**, sequentially and concurrently. Registering an issuer amphora already holds REPLACES it rather than adding a second entry beside it, and concurrent calls for one issuer share a single in-flight registration and a single fetch. A caller cannot do this itself — a registration flow is check-then-act with an `await` in the middle, so two concurrent first-time authentications for one client both see "not registered". Duplicates cost a second `maxIssuers` slot and a second fetch, and left `removeIssuer` dropping one source while the eviction took ALL of that issuer's keys.
+**`addIssuer()` is idempotent by issuer**, sequentially and concurrently. Registering an issuer amphora already holds REPLACES it rather than adding a second entry beside it, and concurrent calls for one issuer share a single in-flight registration and a single fetch. A caller cannot do this itself — a registration flow is check-then-act with an `await` in the middle, so two concurrent first-time authentications for one client both see "not registered". Duplicates would cost a second `maxIssuers` slot and a second fetch, and leave `removeIssuer` dropping one source while the eviction takes ALL of that issuer's keys.
 
 **A replaced source takes its keys with it.** A discovery document's published `issuer` wins over the declared one, so an entry can hold keys under a name it was not registered by; the replacement evicts them rather than leaving them in the vault where no source names them. And a fetch still in flight for a source that has since been replaced installs nothing — its keys would otherwise strip the replacement's, leaving `external.issuers()` naming one source while the vault serves another's.
 
@@ -411,7 +410,7 @@ A registered issuer is kept fresh by DEMAND instead, which reaches exactly the i
 - a **miss** on a scoped lookup refetches that issuer immediately;
 - `external.refresh(issuer)` refetches it on demand.
 
-⚠ **The cost, stated plainly: an UNSCOPED path no longer reaches a registered issuer** — neither for staleness nor for miss recovery, since `findById(id)` with no issuer routes to the declared sweep. Read a registered issuer's keys through a scoped lookup. An issuer nobody authenticates as has no key anyone reads, so there is nothing to go stale against.
+⚠ **The cost, stated plainly: an UNSCOPED path does not reach a registered issuer** — neither for staleness nor for miss recovery, since `findById(id)` with no issuer routes to the declared sweep. Read a registered issuer's keys through a scoped lookup. An issuer nobody authenticates as has no key anyone reads, so there is nothing to go stale against.
 
 ### Retry and backoff
 

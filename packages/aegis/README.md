@@ -683,7 +683,7 @@ Everything else is unchanged: `iss` / `sub` / `aud` / `iat` / `jti` / `exp` are 
 
 ⚠ A `typ` the WIRE layer refuses never reaches the profile: `JwtKit.verify` rejects a present `typ` that is neither `JWT` nor `<type>+jwt` (`jwt_invalid_typ`), so an issuer stamping something else — Keycloak's `typ: Bearer` — is refused before any profile floor runs.
 
-The profile declares `use: "verify"`, so `mint("external_access_token", …)` is refused outright — at the call site, where the content type resolves to `never`, and at runtime with `profile_not_mintable`. `autoInject` stays empty because nothing here is ours to generate; it was never the guard, since a caller hand-supplying `iss` / `iat` / `jti` still got a degraded access token signed by our own vault.
+The profile declares `use: "verify"`, so `mint("external_access_token", …)` is refused outright — at the call site, where the content type resolves to `never`, and at runtime with `profile_not_mintable`. `autoInject` stays empty because nothing here is ours to generate; that is no guard on its own — a mintable profile would let a caller hand-supply `iss` / `iat` / `jti` and get a degraded access token signed by our own vault.
 
 ## COSE / CWT
 

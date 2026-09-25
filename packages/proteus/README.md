@@ -1405,8 +1405,8 @@ commentCount!: number;
 The field must also have `@Field("integer")`.
 
 Both decorators name a relation by key, and a name that matches no relation on the entity fails when
-the metadata is built — a misspelled relation used to resolve to nothing and be skipped without a
-word on every driver.
+the metadata is built, rather than resolving to nothing and being skipped without a word on every
+driver.
 
 The count is computed per read — the backing column is never maintained in the database — so it
 cannot be used in `WHERE` or `ORDER BY`. Count-sorted lists need a raw aggregate query or a
@@ -2113,10 +2113,10 @@ orderable operand, and an unrecognised `$`-prefixed key raises too.
 | `{ age: undefined }`                      | ✓ the key is not there at all                |
 | `{}`                                      | ✓ the root is where "no constraint" lives    |
 
-This matters beyond tidiness: a payload the compiler could not read used to
-compile to no clause at all, so `delete({ published: { $not: false } })` — which
-typechecks, and is the natural way to write "published is true" — ran an
-unfiltered `DELETE`.
+This matters beyond tidiness: a payload the compiler cannot read must raise,
+since compiling it to no clause at all turns
+`delete({ published: { $not: false } })` — which typechecks, and is the natural
+way to write "published is true" — into an unfiltered `DELETE`.
 
 ### `undefined` means "the key was not supplied"
 
@@ -2208,18 +2208,18 @@ with `undefined`, which means "not specified".
 
 `$exists` is a NOT NULL test, never a key-presence test — a relational column
 always exists, so "is it null" is the only reading every driver can implement.
-An empty list or an empty string is a value and is therefore PRESENT. MongoDB
-used to receive the key verbatim, where it means its own key-presence operator:
+An empty list or an empty string is a value and is therefore PRESENT. Passing the
+key verbatim to MongoDB would mean its own key-presence operator instead:
 documents carry an explicit null for every declared field, so `$exists: true`
-matched every document and `$exists: false` matched none.
+would match every document and `$exists: false` none.
 
 The two sides are different concerns. A null on the **value** side is a row that
 does not satisfy a comparison, which is what every database already does. A null
 on the **operand** side of `$gt` / `$gte` / `$lt` / `$lte` / `$between` / `$mod`
 is a malformed payload — "greater than or equal to nothing" is not a question —
-and raises like any other bad payload. It used to bind as a parameter, and
-`label >= NULL` is UNKNOWN for every row, so a condition that is an error
-returned an empty result set instead.
+and raises like any other bad payload. Binding it as a parameter would not raise:
+`label >= NULL` is UNKNOWN for every row, so a condition that is an error would
+return an empty result set instead.
 
 ### Empty operands
 
@@ -2230,7 +2230,7 @@ column is null. At criteria level `$or: []` is the empty
 disjunction and matches nothing, and `$and: []` constrains nothing. These are
 compiled as constants rather than as clauses, so the query planner sees
 `WHERE FALSE` or no `WHERE` at all — and, more importantly, "matches every row"
-is no longer indistinguishable from "there was nothing to emit".
+stays distinct from "there was nothing to emit".
 
 ### Bare nested object
 
@@ -2244,9 +2244,9 @@ same open gap as the whole-list form below: the SQL compiler binds the operand a
 a plain parameter, which no dialect accepts for a composite.
 
 The column has to be declared `@Field("object")`. On the SQL drivers a nested
-condition on any other column raises — it used to fall through and emit no
-clause at all, so a fully typed, natural-reading condition returned the whole
-table; the in-memory drivers simply match nothing. Dotted paths
+condition on any other column raises rather than falling through and emitting no
+clause at all, which would let a fully typed, natural-reading condition return
+the whole table; the in-memory drivers simply match nothing. Dotted paths
 (`{ "address.city": … }`) are not supported.
 
 For an `@Embedded` parent key the same shape means the same thing by a different
@@ -2297,9 +2297,7 @@ runtime inspection of the stored value and no `json` type to blur them.
 | `$in` / `$nin`                 | overlap and its negation  | value comparison      | value comparison |
 
 `$length` on a column that has no length — a number, a boolean, a date, a binary
-— raises. Every dialect used to measure every column as a JSON array: on a
-character column postgres, mysql and sqlite all errored; on a document postgres
-errored, sqlite silently returned nothing, and only mysql happened to be right.
+— raises.
 
 ⚠ `$has` on a scalar column is a documented divergence: the SQL drivers raise,
 while the in-memory drivers reduce it to an equality and match. Raising keeps one
@@ -2308,8 +2306,7 @@ database error or a silent empty result.
 
 A NULL column satisfies none of them. `{ tags: { $all: [] } }` matches every row
 that HAS a list and no row whose column is null; `{ tags: { $contained: [] } }`
-matches only the empty list. mysql and sqlite used to admit the null rows in both,
-and sqlite's `$contained` over a null column was vacuously true.
+matches only the empty list.
 
 ### Field-level `$and` / `$or`
 
