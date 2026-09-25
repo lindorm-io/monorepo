@@ -4,6 +4,7 @@ import { assertResolvedAccess } from "../access-token/assert-resolved-access.js"
 import { resolveAccess } from "../access-token/resolve-access.js";
 import { assertDpopBinding } from "../dpop/assert-dpop-binding.js";
 import { createBearerRefreshHandler } from "../refresh/create-bearer-refresh-handler.js";
+import { deploymentCritical } from "../tokens/deployment-critical.js";
 import { reconstructHandshakeHtu } from "./reconstruct-handshake-htu.js";
 import type {
   AccessTokenMatchers,
@@ -117,7 +118,11 @@ export const registerBearerHandshakeAuth = async (
     // A socket handshake is an HTTP GET upgrade request, so `htm` is fixed; and
     // there is no authorization SCHEME to read on it, so the mount's `dpop` mode
     // carries the "a bound token is asserted" intent instead.
-    assertDpopBinding(access, { htm: "GET", htu, proof: dpopProof, scheme: false });
+    assertDpopBinding(
+      access,
+      { htm: "GET", htu, proof: dpopProof, scheme: false },
+      deploymentCritical(ctx.state.app.config.auth),
+    );
   }
 
   const dpopValidated = dpopMode !== "disabled" && bound;

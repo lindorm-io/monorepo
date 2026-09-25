@@ -54,11 +54,11 @@ describe("assertDpopBinding", () => {
       });
 
       expect(() =>
-        assertDpopBinding(access(provenance, client.jkt), {
-          ...HTTP,
-          proof,
-          scheme: true,
-        }),
+        assertDpopBinding(
+          access(provenance, client.jkt),
+          { ...HTTP, proof, scheme: true },
+          undefined,
+        ),
       ).not.toThrow();
     },
   );
@@ -73,32 +73,32 @@ describe("assertDpopBinding", () => {
       });
 
       expect(() =>
-        assertDpopBinding(access(provenance, client.jkt), {
-          ...HTTP,
-          proof,
-          scheme: true,
-        }),
+        assertDpopBinding(
+          access(provenance, client.jkt),
+          { ...HTTP, proof, scheme: true },
+          undefined,
+        ),
       ).toThrow(ClientError);
     },
   );
 
   test("rejects a bound credential presented with no proof", () => {
     expect(() =>
-      assertDpopBinding(access("introspected", client.jkt), {
-        ...HTTP,
-        proof: undefined,
-        scheme: false,
-      }),
+      assertDpopBinding(
+        access("introspected", client.jkt),
+        { ...HTTP, proof: undefined, scheme: false },
+        undefined,
+      ),
     ).toThrow(expect.objectContaining({ code: "missing_dpop_proof" }));
   });
 
   test("rejects a bound credential presented with an empty proof", () => {
     expect(() =>
-      assertDpopBinding(access("verified", client.jkt), {
-        ...HTTP,
-        proof: "",
-        scheme: true,
-      }),
+      assertDpopBinding(
+        access("verified", client.jkt),
+        { ...HTTP, proof: "", scheme: true },
+        undefined,
+      ),
     ).toThrow(expect.objectContaining({ code: "missing_dpop_proof" }));
   });
 
@@ -110,17 +110,21 @@ describe("assertDpopBinding", () => {
     });
 
     expect(() =>
-      assertDpopBinding(access("introspected"), { ...HTTP, proof, scheme: true }),
+      assertDpopBinding(
+        access("introspected"),
+        { ...HTTP, proof, scheme: true },
+        undefined,
+      ),
     ).toThrow(expect.objectContaining({ code: "token_not_dpop_bound" }));
   });
 
   test("passes through an unbound credential presented as bearer", () => {
     expect(() =>
-      assertDpopBinding(access("verified"), {
-        ...HTTP,
-        proof: undefined,
-        scheme: false,
-      }),
+      assertDpopBinding(
+        access("verified"),
+        { ...HTTP, proof: undefined, scheme: false },
+        undefined,
+      ),
     ).not.toThrow();
   });
 
@@ -136,11 +140,11 @@ describe("assertDpopBinding", () => {
     });
 
     expect(() =>
-      assertDpopBinding(access("introspected", client.jkt), {
-        ...HTTP,
-        proof,
-        scheme: true,
-      }),
+      assertDpopBinding(
+        access("introspected", client.jkt),
+        { ...HTTP, proof, scheme: true },
+        undefined,
+      ),
     ).toThrow(expect.objectContaining({ code: "invalid_dpop_proof", status: 401 }));
   });
 
@@ -152,12 +156,55 @@ describe("assertDpopBinding", () => {
     });
 
     expect(() =>
-      assertDpopBinding(access("verified", client.jkt), {
-        ...HTTP,
-        proof,
-        scheme: true,
-      }),
+      assertDpopBinding(
+        access("verified", client.jkt),
+        { ...HTTP, proof, scheme: true },
+        undefined,
+      ),
     ).toThrow(expect.objectContaining({ code: "invalid_dpop_proof" }));
+  });
+
+  // The deployment's `critical` declaration, which the caller reads off
+  // `deploymentCritical` and this function hands to `Aegis.verifyDpopProof`. The
+  // proof header spells the parameter on the WIRE (`oid`); the declaration is
+  // DOMAIN-named (`objectId`), and aegis crosses between them.
+  describe("crit declaration", () => {
+    const critProof = (): Promise<string> =>
+      client.sign({
+        method: "POST",
+        uri: HTTP_URI,
+        accessToken: token,
+        header: { crit: ["oid"], oid: "1.2.3.4" },
+      });
+
+    test("accepts a proof marking a declared parameter critical", async () => {
+      const proof = await critProof();
+
+      expect(() =>
+        assertDpopBinding(
+          access("verified", client.jkt),
+          { ...HTTP, proof, scheme: true },
+          ["objectId"],
+        ),
+      ).not.toThrow();
+    });
+
+    test("refuses a proof marking an undeclared parameter critical", async () => {
+      const proof = await critProof();
+
+      expect(() =>
+        assertDpopBinding(
+          access("verified", client.jkt),
+          { ...HTTP, proof, scheme: true },
+          undefined,
+        ),
+      ).toThrow(
+        expect.objectContaining({
+          code: "invalid_dpop_proof",
+          data: { param: "oid", provenance: "verified" },
+        }),
+      );
+    });
   });
 
   // The handshake half: the SAME function, given the reconstructed upgrade URI
@@ -171,11 +218,11 @@ describe("assertDpopBinding", () => {
       });
 
       expect(() =>
-        assertDpopBinding(access("introspected", client.jkt), {
-          ...HANDSHAKE,
-          proof,
-          scheme: false,
-        }),
+        assertDpopBinding(
+          access("introspected", client.jkt),
+          { ...HANDSHAKE, proof, scheme: false },
+          undefined,
+        ),
       ).not.toThrow();
     });
 
@@ -187,11 +234,11 @@ describe("assertDpopBinding", () => {
       });
 
       expect(() =>
-        assertDpopBinding(access("verified", client.jkt), {
-          ...HANDSHAKE,
-          proof,
-          scheme: false,
-        }),
+        assertDpopBinding(
+          access("verified", client.jkt),
+          { ...HANDSHAKE, proof, scheme: false },
+          undefined,
+        ),
       ).toThrow(expect.objectContaining({ code: "dpop_htu_mismatch" }));
     });
   });

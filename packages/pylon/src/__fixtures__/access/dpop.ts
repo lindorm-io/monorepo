@@ -1,5 +1,6 @@
 import { KryptosKit } from "@lindorm/kryptos";
 import { ShaKit } from "@lindorm/sha";
+import type { Dict } from "@lindorm/types";
 import { webcrypto } from "crypto";
 
 type Jwk = Record<string, unknown>;
@@ -23,6 +24,12 @@ export type DpopTestClient = {
     accessToken: string;
     /** Proof `iat`, in seconds. Defaults to now. */
     issuedAt?: number;
+    /**
+     * Extra protected header parameters, WIRE-named — the proof is assembled here
+     * rather than through a domain mint door, so `crit: ["oid"]` is how the
+     * declaration `["objectId"]` is spelled on this wire.
+     */
+    header?: Dict;
   }) => Promise<string>;
 };
 
@@ -45,7 +52,9 @@ export const createDpopTestClient = async (): Promise<DpopTestClient> => {
   const jkt = KryptosKit.from.jwk({ ...jwk, alg: "ES256", use: "sig" } as any).thumbprint;
 
   const sign: DpopTestClient["sign"] = async (options) => {
-    const header = base64url(JSON.stringify({ alg: "ES256", typ: "dpop+jwt", jwk }));
+    const header = base64url(
+      JSON.stringify({ alg: "ES256", typ: "dpop+jwt", jwk, ...options.header }),
+    );
     const payload = base64url(
       JSON.stringify({
         jti: webcrypto.randomUUID(),

@@ -67,12 +67,16 @@ export const runHttpAccessToken = async (
     if (verified) ctx.state.tokens.accessToken = verified;
     ctx.state.access = access;
 
-    assertDpopBinding(access, {
-      htm: ctx.method,
-      htu: { origin: ctx.origin, path: ctx.path },
-      proof: dpopProof,
-      scheme: source.kind === "dpop",
-    });
+    assertDpopBinding(
+      access,
+      {
+        htm: ctx.method,
+        htu: { origin: ctx.origin, path: ctx.path },
+        proof: dpopProof,
+        scheme: source.kind === "dpop",
+      },
+      deploymentCritical(ctx.state.app.config.auth),
+    );
     return;
   }
 

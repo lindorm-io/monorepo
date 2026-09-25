@@ -39,12 +39,20 @@ export type DpopBinding = {
  *
  * `Aegis.verifyDpopProof` does the proof-side work (signature over the embedded
  * `jwk`, thumbprint against `cnf.jkt`, the §7 `ath` hash of the presented token,
- * `iat` freshness); this adds the request-side `htm`/`htu` comparison, which
- * aegis cannot do because it never sees the request.
+ * `iat` freshness, and the RFC 7515 §4.1.11 `crit` gate under `critical`); this
+ * adds the request-side `htm`/`htu` comparison, which aegis cannot do because it
+ * never sees the request.
+ *
+ * `critical` is DEPLOYMENT policy, not request material, which is why it travels
+ * beside `DpopBinding` rather than inside it: every caller reads it from
+ * `deploymentCritical`, so a route cannot widen what the deployment declared.
+ * ⚠ REQUIRED, not optional — an optional parameter lets a call site omit it, and
+ * the proof is then refused for an extension the deployment has declared.
  */
 export const assertDpopBinding = (
   access: PylonResolvedAccess,
   binding: DpopBinding,
+  critical: Array<string> | undefined,
 ): void => {
   const thumbprint = access.claims.confirmation?.thumbprint;
 
@@ -89,6 +97,7 @@ export const assertDpopBinding = (
       proof: binding.proof,
       accessToken: access.token,
       expectedThumbprint: thumbprint,
+      critical,
     });
   } catch (error: any) {
     throw new ClientError("Invalid DPoP proof", {
