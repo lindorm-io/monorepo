@@ -76,24 +76,6 @@ describe("serializeMysqlMigration", () => {
     expect(result.ts).toMatchSnapshot();
   });
 
-  it("should produce a non-empty checksum string", () => {
-    const result = serializeMysqlMigration(singleOpPlan, emptySnapshot, {
-      timestamp: fixedDate,
-    });
-    expect(typeof result.checksum).toBe("string");
-    expect(result.checksum.length).toBeGreaterThan(0);
-  });
-
-  it("should produce different checksums for different plans", () => {
-    const a = serializeMysqlMigration(singleOpPlan, emptySnapshot, {
-      timestamp: fixedDate,
-    });
-    const b = serializeMysqlMigration(multiOpPlan, emptySnapshot, {
-      timestamp: fixedDate,
-    });
-    expect(a.checksum).not.toBe(b.checksum);
-  });
-
   it("should generate full migration content for a single add_column", () => {
     const result = serializeMysqlMigration(singleOpPlan, emptySnapshot, {
       name: "add-email",

@@ -3,7 +3,6 @@ import {
   kebabToPascal,
   sanitizeName,
 } from "../../../../cli/utils/migration-naming.js";
-import { ShaKit } from "@lindorm/sha";
 import { randomUUID } from "crypto";
 import type { MysqlDbSnapshot } from "../../types/db-snapshot.js";
 import type { MysqlSyncOperation, MysqlSyncPlan } from "../../types/sync-plan.js";
@@ -12,7 +11,6 @@ import { generateMysqlDownSql } from "./generate-down-sql.js";
 export type SerializedMysqlMigration = {
   filename: string;
   content: string;
-  checksum: string;
   id: string;
   ts: string;
 };
@@ -22,7 +20,7 @@ export type SerializeMysqlMigrationOptions = {
   timestamp?: Date;
 };
 
-// Collapse all whitespace to single spaces for checksum stability
+// Collapse all whitespace to single spaces so each operation emits as one line
 const normalizeSql = (sql: string): string => sql.replace(/\s+/g, " ").trim();
 
 const escapeBacktick = (sql: string): string =>
@@ -115,12 +113,6 @@ export const serializeMysqlMigration = (
   }));
   const reversed = [...downEntries].reverse();
 
-  // Compute checksum from normalized SQL
-  const upSqlStrings = ops.map((op) => normalizeSql(op.sql));
-  const downSqlStrings = reversed.map((e) => (e.sql ? normalizeSql(e.sql) : ""));
-  const canonical = upSqlStrings.join("\n") + "\n---\n" + downSqlStrings.join("\n");
-  const checksum = ShaKit.S256(canonical);
-
   // Build method bodies
   const upBody = buildUpBody(ops);
   const downBody = buildDownBody(reversed);
@@ -147,5 +139,5 @@ export const serializeMysqlMigration = (
 
   const content = lines.join("\n");
 
-  return { filename, content, checksum, id, ts };
+  return { filename, content, id, ts };
 };

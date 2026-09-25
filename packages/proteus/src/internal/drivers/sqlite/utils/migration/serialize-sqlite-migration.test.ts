@@ -8,11 +8,6 @@ vi.mock("crypto", async () => ({
   randomUUID: vi.fn(() => "00000000-0000-0000-0000-000000000000"),
 }));
 
-// Mock ShaKit for deterministic checksums
-vi.mock("@lindorm/sha", () => ({
-  ShaKit: { S256: vi.fn(() => "mocked-checksum-sha256") },
-}));
-
 import { serializeSqliteMigration } from "./serialize-sqlite-migration.js";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -29,7 +24,7 @@ const makePlan = (operations: Array<SqliteSyncOperation>): SqliteSyncPlan => ({
 
 describe("serializeSqliteMigration", () => {
   describe("metadata", () => {
-    test("should produce deterministic filename, id, ts, and checksum", () => {
+    test("should produce deterministic filename, id, and ts", () => {
       const plan = makePlan([
         {
           type: "create_table",
@@ -46,7 +41,6 @@ describe("serializeSqliteMigration", () => {
       expect(result.filename).toMatchSnapshot();
       expect(result.id).toMatchSnapshot();
       expect(result.ts).toMatchSnapshot();
-      expect(result.checksum).toMatchSnapshot();
     });
 
     test("should use custom name for filename and class name", () => {

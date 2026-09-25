@@ -390,9 +390,9 @@ export class SqliteMigrationManager implements IMigrationManager {
     if (liveDiff.operations.length === 0) {
       // Load the written file back and compute the checksum from the actual module,
       // because that is what apply() and status() compute via computeHash. Any other
-      // value — including the SQL-derived `migration.checksum` — records a baseline
-      // that can only ever report checksum_mismatch, so refuse rather than mark it
-      // applied: the file is on disk and nothing has been recorded yet.
+      // value records a baseline that can only ever report checksum_mismatch, so
+      // refuse rather than mark it applied: the file is on disk and nothing has been
+      // recorded yet.
       const loaded = await loadMigrations(this.directory, this.logger);
       const baselineEntry = loaded.find((l) => l.migration.id === migration.id);
 

@@ -241,13 +241,11 @@ export class Generated20250615103045 implements MigrationInterface {
 "
 `;
 
-exports[`serializeSqliteMigration > metadata > should produce deterministic filename, id, ts, and checksum 1`] = `"20250615103045-generated.ts"`;
+exports[`serializeSqliteMigration > metadata > should produce deterministic filename, id, and ts 1`] = `"20250615103045-generated.ts"`;
 
-exports[`serializeSqliteMigration > metadata > should produce deterministic filename, id, ts, and checksum 2`] = `"00000000-0000-0000-0000-000000000000"`;
+exports[`serializeSqliteMigration > metadata > should produce deterministic filename, id, and ts 2`] = `"00000000-0000-0000-0000-000000000000"`;
 
-exports[`serializeSqliteMigration > metadata > should produce deterministic filename, id, ts, and checksum 3`] = `"2025-06-15T10:30:45.000Z"`;
-
-exports[`serializeSqliteMigration > metadata > should produce deterministic filename, id, ts, and checksum 4`] = `"mocked-checksum-sha256"`;
+exports[`serializeSqliteMigration > metadata > should produce deterministic filename, id, and ts 3`] = `"2025-06-15T10:30:45.000Z"`;
 
 exports[`serializeSqliteMigration > metadata > should sanitize custom name 1`] = `"20250615103045-add-user-table.ts"`;
 

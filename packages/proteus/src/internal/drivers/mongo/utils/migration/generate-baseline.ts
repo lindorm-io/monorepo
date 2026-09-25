@@ -22,9 +22,7 @@ export type GenerateMongoBaselineOptions = {
   timestamp?: Date;
   tableName?: string;
   // Required: the written baseline is read back through `loadMigrations` so the
-  // recorded checksum is the one `apply()` / `status()` recompute. An optional
-  // logger made that read skippable, and the skip path recorded a checksum
-  // derived from the serialized plan instead — a value no reader can reproduce.
+  // recorded checksum is the one `apply()` / `status()` recompute.
   logger: ILogger;
 };
 

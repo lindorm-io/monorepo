@@ -3,14 +3,12 @@ import {
   kebabToPascal,
   sanitizeName,
 } from "../../../../cli/utils/migration-naming.js";
-import { ShaKit } from "@lindorm/sha";
 import { randomUUID } from "crypto";
 import type { MongoSyncPlan, DesiredMongoIndex } from "../sync/types.js";
 
 export type SerializedMongoMigration = {
   filename: string;
   content: string;
-  checksum: string;
   id: string;
   ts: string;
 };
@@ -126,10 +124,6 @@ export const serializeMongoMigration = (
   const upBody = buildUpBody(plan);
   const downBody = buildDownBody(plan);
 
-  // Compute checksum from the serialized up+down bodies
-  const canonical = upBody.join("\n") + "\n---\n" + downBody.join("\n");
-  const checksum = ShaKit.S256(canonical);
-
   const lines: Array<string> = [
     `import type { MigrationInterface } from "@lindorm/proteus";`,
     ``,
@@ -151,5 +145,5 @@ export const serializeMongoMigration = (
 
   const content = lines.join("\n");
 
-  return { filename, content, checksum, id, ts };
+  return { filename, content, id, ts };
 };

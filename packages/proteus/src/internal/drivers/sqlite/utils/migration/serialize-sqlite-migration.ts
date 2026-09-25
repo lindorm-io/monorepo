@@ -3,7 +3,6 @@ import {
   kebabToPascal,
   sanitizeName,
 } from "../../../../cli/utils/migration-naming.js";
-import { ShaKit } from "@lindorm/sha";
 import { randomUUID } from "crypto";
 import type { SqliteDbSnapshot } from "../../types/db-snapshot.js";
 import type { SqliteSyncOperation, SqliteSyncPlan } from "../../types/sync-plan.js";
@@ -11,7 +10,6 @@ import type { SqliteSyncOperation, SqliteSyncPlan } from "../../types/sync-plan.
 export type SerializedSqliteMigration = {
   filename: string;
   content: string;
-  checksum: string;
   id: string;
   ts: string;
 };
@@ -21,7 +19,7 @@ export type SerializeSqliteMigrationOptions = {
   timestamp?: Date;
 };
 
-// Collapse all whitespace to single spaces for checksum stability.
+// Collapse all whitespace to single spaces so each operation emits as one line.
 const normalizeSql = (sql: string): string => sql.replace(/\s+/g, " ").trim();
 
 const escapeBacktick = (sql: string): string =>
@@ -43,54 +41,6 @@ const extractIndexName = (ddl: string): string | null => {
 const extractTempTableName = (ddl: string): string | null => {
   const match = ddl.match(/CREATE\s+TABLE\s+"([^"]+)"/i);
   return match ? match[1] : null;
-};
-
-const buildUpSqlStrings = (ops: Array<SqliteSyncOperation>): Array<string> => {
-  const sqls: Array<string> = [];
-
-  for (const op of ops) {
-    switch (op.type) {
-      case "create_table":
-        sqls.push(op.ddl);
-        break;
-      case "add_column":
-        sqls.push(op.ddl);
-        break;
-      case "create_index":
-        sqls.push(op.ddl);
-        break;
-      case "drop_index":
-        sqls.push(`DROP INDEX IF EXISTS "${op.indexName}";`);
-        break;
-      case "drop_table":
-        sqls.push(`DROP TABLE IF EXISTS "${op.tableName}";`);
-        break;
-      case "recreate_table": {
-        const tempName = extractTempTableName(op.newDdl) ?? `_new_${op.tableName}`;
-        sqls.push(`PRAGMA foreign_keys = OFF`);
-        sqls.push(op.newDdl);
-        sqls.push(
-          `INSERT INTO "${tempName}" SELECT ${op.copyColumns.map((c) => `"${c}"`).join(", ")} FROM "${op.tableName}"`,
-        );
-        sqls.push(`DROP TABLE "${op.tableName}"`);
-        sqls.push(`ALTER TABLE "${tempName}" RENAME TO "${op.tableName}"`);
-        for (const idxDdl of op.newIndexesDdl) {
-          sqls.push(idxDdl);
-        }
-        sqls.push(`PRAGMA foreign_keys = ON`);
-        sqls.push(`PRAGMA foreign_key_check`);
-        break;
-      }
-      case "create_trigger":
-        sqls.push(op.ddl);
-        break;
-      case "drop_trigger":
-        sqls.push(`DROP TRIGGER IF EXISTS "${op.triggerName}"`);
-        break;
-    }
-  }
-
-  return sqls;
 };
 
 const buildUpBody = (ops: Array<SqliteSyncOperation>): Array<string> => {
@@ -169,42 +119,6 @@ const buildUpBody = (ops: Array<SqliteSyncOperation>): Array<string> => {
   return lines;
 };
 
-const buildDownSqlStrings = (ops: Array<SqliteSyncOperation>): Array<string> => {
-  const sqls: Array<string> = [];
-  const reversed = [...ops].reverse();
-
-  for (const op of reversed) {
-    switch (op.type) {
-      case "create_table":
-        sqls.push(`DROP TABLE IF EXISTS "${op.tableName}"`);
-        break;
-
-      case "create_index": {
-        const indexName = extractIndexName(op.ddl);
-        if (indexName) {
-          sqls.push(`DROP INDEX IF EXISTS "${indexName}"`);
-        }
-        break;
-      }
-
-      case "add_column":
-      case "drop_index":
-      case "drop_table":
-      case "recreate_table":
-      case "drop_trigger":
-        // Irreversible — emit empty string for checksum slot (matches MySQL pattern)
-        sqls.push("");
-        break;
-
-      case "create_trigger":
-        sqls.push(`DROP TRIGGER IF EXISTS "${op.triggerName}"`);
-        break;
-    }
-  }
-
-  return sqls;
-};
-
 const buildDownBody = (ops: Array<SqliteSyncOperation>): Array<string> => {
   const lines: Array<string> = [];
   const reversed = [...ops].reverse();
@@ -280,12 +194,6 @@ export const serializeSqliteMigration = (
 
   const ops = plan.operations;
 
-  // Compute checksum from normalized raw SQL (not TypeScript body fragments)
-  const upSqlStrings = buildUpSqlStrings(ops).map(normalizeSql);
-  const downSqlStrings = buildDownSqlStrings(ops).map(normalizeSql);
-  const canonical = upSqlStrings.join("\n") + "\n---\n" + downSqlStrings.join("\n");
-  const checksum = ShaKit.S256(canonical);
-
   // Build method bodies
   const upBody = buildUpBody(ops);
   const downBody = buildDownBody(ops);
@@ -312,5 +220,5 @@ export const serializeSqliteMigration = (
 
   const content = lines.join("\n");
 
-  return { filename, content, checksum, id, ts };
+  return { filename, content, id, ts };
 };
