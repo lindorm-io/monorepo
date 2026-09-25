@@ -19,7 +19,7 @@ Reqnroll-style BDD for vitest. A `.feature` file **is** a vitest test file: a Vi
 npm install --save-dev @lindorm/gherkin unplugin-swc
 ```
 
-Peer dependencies: `vite` >= 8, `vitest` >= 4.1.4 and `zod` >= 4.3.6. `unplugin-swc` lowers the stage-3 decorators step classes are written with — without a lowering transform every feature file fails to import with `SyntaxError: Invalid or unexpected token`.
+Peer dependencies: `vite` >= 8, `vitest` >= 4.1.4 and `zod` >= 4.3.6, plus `unplugin-swc` >= 1.5.9 as an optional peer. Step classes are written with stage-3 decorators, so the pipeline has to lower them; `unplugin-swc` is the route this package verifies, and any equivalent transform does. Without one, every feature file fails to import with `SyntaxError: Invalid or unexpected token`.
 
 ## Quick start
 
