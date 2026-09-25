@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
-if (typeof Symbol.metadata === "undefined") {
-  (Symbol as any).metadata = Symbol.for("Symbol.metadata");
+if (isUndefined((Symbol as { metadata?: symbol }).metadata)) {
+  (Symbol as { metadata?: symbol }).metadata = Symbol.for("Symbol.metadata");
 }
 
+import { isUndefined } from "@lindorm/is";
 import { readFileSync, realpathSync } from "fs";
 import { basename, dirname, resolve } from "path";
 import { fileURLToPath, pathToFileURL } from "url";

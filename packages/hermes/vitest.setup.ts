@@ -1,8 +1,9 @@
+import { isUndefined } from "@lindorm/is";
 import { expect } from "vitest";
 import { z } from "zod";
 
-if (typeof Symbol.metadata === "undefined") {
-  (Symbol as any).metadata = Symbol("Symbol.metadata");
+if (isUndefined((Symbol as { metadata?: symbol }).metadata)) {
+  (Symbol as { metadata?: symbol }).metadata = Symbol.for("Symbol.metadata");
 }
 
 // Zod schemas serialise to their full enumerable method surface by default,
