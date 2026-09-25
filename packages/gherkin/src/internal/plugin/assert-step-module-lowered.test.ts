@@ -104,7 +104,7 @@ describe("assertStepModuleLowered", () => {
       expect(error.code).toBe("step_module_not_lowered");
     });
 
-    test("should name the step module and carry it as the id vite prints as File", () => {
+    test("should name the step module and carry it as the id vitest prints as File", () => {
       const error = capture(() =>
         assertStepModuleLowered({
           code: '@Binding() export class GreetingSteps { @Given("a step") step() {} }',

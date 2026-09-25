@@ -29,12 +29,12 @@ describe("GherkinError", () => {
     ]);
   });
 
-  test("should carry code, data, details and id", () => {
+  test("should carry code, data, details and the file as id", () => {
     const error = new GherkinError("message", {
       code: "custom_code",
       data: { value: "data" },
       details: "details",
-      id: "src/greeting.steps.ts",
+      file: "src/greeting.steps.ts",
     });
 
     expect({

@@ -68,7 +68,7 @@ export const assertStepModuleLowered = ({
         details: NOT_COMPILED_DETAILS,
         data: { uri },
         cause: error,
-        id: uri,
+        file: uri,
       },
     );
   }
@@ -87,7 +87,7 @@ export const assertStepModuleLowered = ({
       code: "step_module_not_lowered",
       details: NOT_LOWERED_DETAILS,
       data: { uri },
-      id: uri,
+      file: uri,
     },
   );
 };

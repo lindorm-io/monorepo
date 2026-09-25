@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`GherkinError > should carry code, data, details and id 1`] = `
+exports[`GherkinError > should carry code, data, details and the file as id 1`] = `
 {
   "code": "custom_code",
   "data": {

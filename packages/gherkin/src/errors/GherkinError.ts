@@ -4,17 +4,20 @@ export type GherkinErrorOptions = ErrorOptions & {
   code: string;
   data?: Dict;
   details?: string;
-  /**
-   * The file the error concerns — vite's error formatter prints it as `File:`.
-   * Pinned by src/e2e/meta-no-lowering.test.ts.
-   */
-  id?: string;
+  /** The file the error concerns. */
+  file?: string;
 };
 
 export class GherkinError extends Error {
   readonly code: string;
   readonly data: Dict;
   readonly details: string | null;
+  /**
+   * The file, under the name vitest's error printer reads: it renders `err.id`
+   * as `File:`, so a field named `file` would never be printed. Pinned by
+   * src/internal/plugin/assert-step-module-lowered.test.ts and
+   * src/e2e/meta-no-lowering.test.ts.
+   */
   readonly id: string | null;
 
   constructor(message: string, options: GherkinErrorOptions) {
@@ -24,6 +27,6 @@ export class GherkinError extends Error {
     this.code = options.code;
     this.data = options.data ?? {};
     this.details = options.details ?? null;
-    this.id = options.id ?? null;
+    this.id = options.file ?? null;
   }
 }
