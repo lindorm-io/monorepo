@@ -16,38 +16,14 @@ Reqnroll-style BDD for vitest. A `.feature` file **is** a vitest test file: a Vi
 ## Installation
 
 ```bash
-npm install --save-dev @lindorm/gherkin
+npm install --save-dev @lindorm/gherkin unplugin-swc
 ```
 
-Peer dependencies: `vite` >= 8, `vitest` >= 4.1.4 and `zod` >= 4.3.6.
+Peer dependencies: `vite` >= 8, `vitest` >= 4.1.4 and `zod` >= 4.3.6. `unplugin-swc` lowers the stage-3 decorators step classes are written with — without a lowering transform every feature file fails to import with `SyntaxError: Invalid or unexpected token`.
 
 ## Quick start
 
 ### 1. Wire the plugin
-
-In the lindorm monorepo, that is the whole config:
-
-```js
-// vitest.config.mjs
-import { createVitestConfig } from "../../vitest.config.base.mjs";
-
-const config = await createVitestConfig({
-  decorators: true,
-  gherkin: {},
-});
-
-// Extend test.include by SPREADING — overwriting drops the feature globs.
-config.test.include = [...config.test.include, "__tests__/**/*.test.ts"];
-
-export default config;
-```
-
-`createVitestConfig` adds the plugin, the decorator transform and the feature globs, and `.feature`
-files follow the same cadence lanes as tests via the `*.integration.feature` / `*.weekly.feature`
-suffixes. `@lindorm/aes` is the worked example: `AesKit.feature` and `AesKit.steps.ts` beside the
-class.
-
-Outside the monorepo, the same wiring by hand:
 
 ```ts
 // vitest.config.ts
@@ -82,13 +58,13 @@ export default defineConfig({
 });
 ```
 
-Note that `test.include` REPLACES vitest's default test globs — a package that also has plain `*.test.ts` files must list both patterns.
-
-Either way, never overwrite `test.include` once the plugin is wired: the run fails with `feature_not_collected` when a feature file matches no `test.include` pattern in its cadence FAMILY. A lane-suffixed glob (`*.integration.feature` / `*.weekly.feature`) counts for the whole family, so an overwrite that keeps a suffixed glob still passes the guard while the plain lane runs without its features.
+`test.include` REPLACES vitest's default test globs, so a package that also has plain `*.test.ts` files lists both patterns. Add to it by SPREADING: an overwrite that drops the feature globs fails the run at startup (`feature_not_collected`) instead of quietly emptying the counts.
 
 ### 2. Write a feature
 
 ```gherkin
+# src/greeting.feature
+@greeting
 Feature: Greeting
 
   Background:
@@ -101,6 +77,16 @@ Feature: Greeting
   Example: greet shouting
     When I greet "world" shouting
     Then the result is "Hello, WORLD!"
+
+  Example: greet a table of guests
+    When I greet everyone
+      | name |
+      | Anna |
+      | Bo   |
+    Then the card reads
+      """
+      Hello, Anna! Hello, Bo!
+      """
 
   Scenario Outline: every greeting applies
     Given the greeting "<greeting>"
@@ -117,7 +103,15 @@ Feature: Greeting
 
 ```ts
 // src/greeting.steps.ts
-import { Binding, Given, ParameterType, Then, When } from "@lindorm/gherkin";
+import {
+  Binding,
+  type DataTable,
+  type DocString,
+  Given,
+  ParameterType,
+  Then,
+  When,
+} from "@lindorm/gherkin";
 import { expect } from "vitest";
 
 type Volume = (value: string) => string;
@@ -144,6 +138,20 @@ export class GreetingSteps {
     this.result = `${this.greeting}, ${volume(name)}!`;
   }
 
+  // A DataTable or DocString arrives in the TRAILING argument slot.
+  @When("I greet everyone")
+  iGreetEveryone(table: DataTable): void {
+    this.result = table
+      .hashes()
+      .map(({ name }) => `${this.greeting}, ${name}!`)
+      .join(" ");
+  }
+
+  @Then("the card reads")
+  theCardReads(card: DocString): void {
+    expect(this.result).toBe(card.content);
+  }
+
   @Then("the result is {string}")
   theResultIs(expected: string): void {
     expect(this.result).toBe(expected);
@@ -158,63 +166,75 @@ export class GreetingSteps {
 }
 ```
 
-The same example is runnable in [`example/`](./example).
+The same example is runnable in [`example/`](https://github.com/lindorm-io/monorepo/tree/main/packages/gherkin/example).
 
-Matching is text-only, following Cucumber: `Given`/`When`/`Then` are decorative, `And`/`But` inherit from the line above, and two definitions matching the same text are ambiguous — an error, never a resolution. Built-in parameter types (`{string}`, `{int}`, `{word}`, …) come from `@cucumber/cucumber-expressions`; `@ParameterType` declares custom ones on a static method. A `@ParameterType` regexp is required, and a custom type does not strip quotes — put them in the expression (`encryption "{encryption}"`) when the value is quoted.
+Matching is text-only, following Cucumber: `Given`/`When`/`Then` are decorative, `And`/`But` inherit from the line above, and two definitions matching the same text are ambiguous — an error, never a resolution. Built-in parameter types (`{string}`, `{int}`, `{word}`, …) come from `@cucumber/cucumber-expressions`; `@ParameterType` declares custom ones on a static method. A `@ParameterType` regexp is required, and a custom type does not strip quotes — put them in the expression (`I greet "{name}"`) when the value is quoted.
 
 ## Hooks and shared state
 
 ```ts
+// src/greeting-book.steps.ts
 import {
   AbstractSteps,
   AfterScenario,
+  AfterStep,
   BeforeFeature,
-  BeforeScenario,
   Binding,
   Context,
   Inject,
   Priority,
-  ScenarioInfo,
   type ScenarioResult,
+  type StepInfo,
+  type StepResult,
+  Then,
 } from "@lindorm/gherkin";
+import { expect } from "vitest";
 
+// One instance per scenario, shared by every class that injects it.
 @Context()
-export class AesContext {
-  kit!: AesKit;
+export class GreetingBook {
+  entries: Array<string> = [];
+
   async dispose(): Promise<void> {
     /* optional teardown */
   }
 }
 
+// An @AbstractSteps base carries @Inject fields — never steps or hooks.
 @AbstractSteps()
-export abstract class AesBase {
-  @Inject(AesContext) protected readonly aes!: AesContext;
+export abstract class GreetingBase {
+  @Inject(GreetingBook) protected readonly book!: GreetingBook;
 }
 
 @Binding()
-export class AesSteps extends AesBase {
-  @Inject(ScenarioInfo) private readonly info!: ScenarioInfo;
-
-  @BeforeFeature("@docker") // STATIC — wider than a scenario
-  static async startDocker(): Promise<void> {
+export class GreetingBookSteps extends GreetingBase {
+  @BeforeFeature("@greeting") // STATIC — wider than a scenario
+  @Priority(100) // lower runs first; After* run in REVERSE
+  static async loadPhrases(): Promise<void> {
     /* … */
   }
 
-  @BeforeScenario()
-  @Priority(100) // lower runs first; After* run in REVERSE
-  async seed(): Promise<void> {
-    /* … */
+  @AfterStep()
+  record(step: StepInfo, result: StepResult): void {
+    this.book.entries.push(`${step.text}: ${result.status}`);
   }
 
   @AfterScenario()
   dump(result: ScenarioResult): void {
-    /* e.g. capture state on failure */
+    /* e.g. capture this.book.entries when result.status is "failed" */
+  }
+
+  @Then("the book has recorded {int} steps")
+  theBookHasRecorded(count: number): void {
+    expect(this.book.entries).toHaveLength(count);
   }
 }
 ```
 
+`And the book has recorded 3 steps`, appended to the first Example, asserts what the hook collected.
+
 - **Lifetime rule:** scope wider than a scenario ⇒ static method. `@BeforeFeature`/`@AfterFeature` are static and run once per feature FILE (compiled to `beforeAll`/`afterAll`); the scenario- and step-level hooks are instance methods.
-- **Tag expressions** gate every hook — scenario/step hooks against the scenario's tags, feature hooks against the union of the feature's tags. The syntax is Cucumber's (`@cucumber/tag-expressions`): `and` / `or` / `not` with parentheses over `@`-prefixed tags, e.g. `"@docker and not @slow"`. No expression means always.
+- **Tag expressions** gate every hook — scenario/step hooks against the scenario's tags, feature hooks against the union of the feature's tags. The syntax is Cucumber's (`@cucumber/tag-expressions`): `and` / `or` / `not` with parentheses over `@`-prefixed tags, e.g. `"@greeting and not @slow"`. No expression means always.
 - **Order is total:** priority ascending → module path → declaration order; every `After*` kind runs in REVERSE of it — teardown unwinds setup.
 - **Arguments carry per-invocation data:** `@BeforeStep(step: StepInfo)`, `@AfterStep(step: StepInfo, result: StepResult)`, `@AfterScenario(result: ScenarioResult)`. Scenario-scoped state is injected instead.
 - **`@Context` classes** are constructed per scenario (per Examples row), resolved recursively (`@Context` may `@Inject` another; cycles are detected and named), and disposed in reverse construction order — disposal ALWAYS runs, even after failures, and continues past a throwing `dispose()`.
@@ -224,40 +244,11 @@ export class AesSteps extends AesBase {
 
 ## DataTable and DocString
 
-A step's DataTable or DocString arrives as the **trailing argument**, after any expression parameters. The slot is always passed — `undefined` when the step carries none — so the argument position never shifts.
-
-```gherkin
-When I import the catalog for "tenant-1"
-  | name  | price |
-  | apple | 3     |
-  | pear  | 4     |
-```
-
-```ts
-import { Binding, DataTable, DocString, When } from "@lindorm/gherkin";
-import { z } from "zod";
-
-const ProductSchema = z.object({ name: z.string(), price: z.coerce.number() });
-
-@Binding()
-export class CatalogSteps {
-  @When("I import the catalog for {string}")
-  iImportTheCatalog(tenant: string, table: DataTable): void {
-    const products = table.createSet(ProductSchema); // Array<{ name: string; price: number }>
-    /* … */
-  }
-
-  @When("I read the payload")
-  iReadThePayload(doc: DocString): void {
-    doc.content; // the body, verbatim
-    doc.mediaType; // the word after """ — e.g. "json", or undefined
-  }
-}
-```
+A step's DataTable or DocString arrives as the **trailing argument**, after any expression parameters. The slot is always passed — `undefined` when the step carries none — so the argument position never shifts. `DocString` carries `content` (the body, verbatim) and `mediaType` (the word after `"""` — e.g. `"json"`, or `undefined`).
 
 `DataTable` carries cucumber-js's five methods, all values `string`: `raw()` (full matrix), `rows()` (body minus header), `hashes()` (header-keyed Records — a repeated header cell throws `invalid_data_table`, naming the key and its columns), `rowsHash()` (two-column key/value Record — any other width, or a repeated key, throws `invalid_data_table`), `transpose()` (a new DataTable). Outline `<placeholder>` values substitute into cells and DocString bodies exactly as into step text.
 
-Typed conversion is zod: `createSet(schema)` parses every `hashes()` row; `create(schema)` parses the table's **single** body row (any other count throws — never silent truncation; for vertical key/value tables use `schema.parse(table.rowsHash())`). Both are **synchronous** on purpose — they run inside your step body, where the runner cannot await them. A schema with an async refinement makes them throw zod's own "Encountered Promise during synchronous parse. Use `.parseAsync()` instead." — switch to `createAsync`/`createSetAsync` and `await`. A failed conversion is red (`table_conversion_failed`) with zod's issues and the step anchor.
+Typed conversion is zod: `createSet(schema)` parses every `hashes()` row — `table.createSet(z.object({ name: z.string() }))` in place of `hashes()` above — and `create(schema)` parses the table's **single** body row (any other count throws — never silent truncation; for vertical key/value tables use `schema.parse(table.rowsHash())`). Both are **synchronous** on purpose — they run inside your step body, where the runner cannot await them. A schema with an async refinement makes them throw zod's own "Encountered Promise during synchronous parse. Use `.parseAsync()` instead." — switch to `createAsync`/`createSetAsync` and `await`. A failed conversion is red (`table_conversion_failed`) with zod's issues and the step anchor.
 
 An undefined step that carries an argument gets its snippet with the trailing parameter typed — `dataTable: DataTable` or `docString: DocString`.
 
@@ -292,20 +283,20 @@ There is deliberately **no skip tag**: a per-scenario skip is a hide-a-red-row e
 No scenario can silently pass. Undefined, ambiguous, pending and conversion failures are all RED in the printed counts, anchored to the `.feature` file and line:
 
 ```
-FAIL  features/aes-round-trip.feature > AES round trip > content survives a round trip > every content encryption round-trips
+FAIL  src/greeting.feature > Greeting > greet a table of guests
 GherkinError: Undefined step
 
-  Given an oct key with algorithm "A128KW" and encryption "A256CBC-HS512"
-  at features/aes-round-trip.feature:11:7
+  When I greet everyone
+  at src/greeting.feature:17:5
 
 No step definition matched. Implement it:
 
-  @Given("an oct key with algorithm {string} and encryption {string}")
-  anOctKeyWithAlgorithmAndEncryption(string: string, string2: string): void {
+  @When("I greet everyone")
+  iGreetEveryone(dataTable: DataTable): void {
     throw new PendingStepError();
   }
 
-The remaining 2 steps in this scenario were skipped.
+The remaining 1 step in this scenario was skipped.
 ```
 
 - **Undefined** — no definition matched: red, with a pasteable snippet.
@@ -314,11 +305,10 @@ The remaining 2 steps in this scenario were skipped.
 - **Conversion failed** — the step matched but a parameter transform threw: reported honestly as a conversion failure, never downgraded to undefined.
 - **Disposal failed** — a context's `dispose()` threw during teardown: the scenario is red (`disposal_failed`), disposal continues through the remaining contexts, and the failure is appended after any earlier one.
 - Remaining steps in a failed scenario are **skipped**, so the cause is never buried.
-- There is deliberately **no skip tag** — exclusion is a config decision, not a per-scenario escape hatch (see Tags).
 
 The runner's OWN failures — undefined, ambiguous, pending, conversion, disposal, authoring errors — carry a `urn:lindorm:gherkin:error:<code>` type. A failing step or hook rethrows YOUR error with the anchor prepended, so assertion diffs survive intact. Gherkin syntax errors, empty scenarios and zero-row `Examples:` tables are authoring errors and fail red at the offending line.
 
-The plugin also fails the whole run at startup if any `.feature` file on disk is not matched by the configured `features` patterns (`feature_not_included`), or matches them but no `test.include` pattern in its cadence family (`feature_not_collected`) — a feature file nobody collects would otherwise be a silent pass at file granularity. The collection guard checks the FAMILY, not the mode: a lane-suffixed include glob proves the family collectable, so it cannot catch an overwrite that keeps only a suffixed glob.
+The plugin also fails the whole run at startup if a `.feature` file on disk matches none of the configured `features` patterns (`feature_not_included`), or matches one but no `test.include` pattern (`feature_not_collected`) — a feature file nobody collects would otherwise be a silent pass at file granularity. The collection guard strips a `.integration.` / `.weekly.` suffix from the include globs before matching, so a suffixed glob satisfies it for the unsuffixed family too.
 
 ## Current scope
 

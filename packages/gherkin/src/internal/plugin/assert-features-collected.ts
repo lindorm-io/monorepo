@@ -21,8 +21,8 @@ type UncollectedFeature = {
 
 /**
  * A lane include narrows `pattern.feature` to the suffixed form
- * (`toFeatureIncludes` in the repo's vitest.config.base.mjs; cadence
- * documented in README.md#quick-start): the suffixed include proves the
+ * (`toFeatureIncludes` in the repo's vitest.config.base.mjs): the suffixed
+ * include proves the
  * cadence-independent FAMILY is wired for collection, so a plain feature the
  * integration/weekly lane correctly leaves out must not read as
  * uncollectable. Pinned by the integration-mode child in
@@ -104,7 +104,7 @@ export const assertFeaturesCollected = ({
       code: "feature_not_collected",
       title: "Feature File Not Collected",
       details:
-        "A .feature file matches the configured `features` patterns but no `test.include` pattern, so vitest never collects it — the coverage check passes, the counts stay green, and the feature silently never runs. Append the feature globs to `test.include` by spreading the existing array — never overwrite it (see the monorepo `createVitestConfig` note in README.md). A feature that must never be collected belongs in BOTH `test.include` and `test.exclude`.",
+        "A .feature file matches the configured `features` patterns but no `test.include` pattern, so vitest never collects it — the coverage check passes, the counts stay green, and the feature silently never runs. Append the feature globs to `test.include` by spreading the existing array — never overwrite it. A feature that must never be collected belongs in BOTH `test.include` and `test.exclude`.",
       data: { features, include: resolvedInclude, root, uncollected },
     },
   );
