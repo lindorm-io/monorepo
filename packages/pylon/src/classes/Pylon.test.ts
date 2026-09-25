@@ -407,10 +407,9 @@ describe("Pylon", () => {
   // WebCrypto — so `jose`, so every mainstream RP — refuses to import a public
   // JWK that does. `use` conveys the intent instead.
   //
-  // ⚠ This assertion previously encoded a BUG as expected behaviour: the
-  // `purpose: "session"` ECDH key was in the published set. Session and cookie
-  // keys are INTERNAL — they never leave the server and no RP has any business
-  // seeing them. The set below is the INTENDED one: `publish: true` keys only.
+  // ⚠ The set below is `publish: true` keys only. Session and cookie keys are
+  // INTERNAL — they never leave the server and no RP has any business seeing
+  // them.
   test("should return well-known jwks", async () => {
     const response = await loopback
       .request(pylon.callback)

@@ -110,7 +110,7 @@ Semantics:
 - **Arrays are transparent containers** — they have no keys of their own, so entering one does not consume a level. `snakeKeys([{ firstName: "Alice" }], { depth: 1 })` converts `firstName`.
 - Descending into an object **value** consumes a level.
 - A subtree beyond the depth is kept verbatim, by reference — it is neither converted nor cloned.
-- Omitting `depth` (or passing `Infinity`) means unlimited, which is the historical behaviour.
+- Omitting `depth` (or passing `Infinity`) means unlimited.
 - `depth` must be an integer `>= 1`; `0`, negatives and fractions throw. "Convert nothing" is spelled `changeKeys(input, "none")`.
 
 `changeKeys` takes the same options as a third argument: `changeKeys(input, "snake", { depth: 1 })`. With mode `"none"` the input is returned as-is and the options are not inspected.
@@ -190,14 +190,20 @@ So for example: `camelCase`, `camelKeys`, `camelArray`; `snakeCase`, `snakeKeys`
 | --------------- | -------------------------- | ---------------------------------------------------------------------------------------------------- |
 | `isVerbatimKey` | `(key: string) => boolean` | `true` for a key holding a character that is neither a letter, a digit nor `_`. Pass it as `exempt`. |
 
+### Constants
+
+| Constant            | Type             | Description                                            |
+| ------------------- | ---------------- | ------------------------------------------------------ |
+| `CHANGE_CASE_MODES` | `readonly tuple` | Every supported mode. `ChangeCase` is derived from it. |
+
 ### Types
 
-| Type           | Definition                                                                                                                               | Description                                           |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| `ChangeCase`   | `"camel" \| "capital" \| "constant" \| "dot" \| "header" \| "kebab" \| "lower" \| "pascal" \| "path" \| "sentence" \| "snake" \| "none"` | Mode accepted by `changeCase` and `changeKeys`.       |
-| `CaseCallback` | `(input: string) => string`                                                                                                              | Signature shared by all per-mode `xxxCase` functions. |
-| `KeysInput`    | `Dict \| Array<Dict>` (where `Dict` is `Record<string, any>`)                                                                            | Input shape accepted by `xxxKeys` and `changeKeys`.   |
-| `KeysOptions`  | `{ depth?: number; exempt?: (key: string) => boolean }`                                                                                  | Per-call options for `xxxKeys` and `changeKeys`.      |
+| Type           | Definition                                                    | Description                                           |
+| -------------- | ------------------------------------------------------------- | ----------------------------------------------------- |
+| `ChangeCase`   | `(typeof CHANGE_CASE_MODES)[number]`                          | Mode accepted by `changeCase` and `changeKeys`.       |
+| `CaseCallback` | `(input: string) => string`                                   | Signature shared by all per-mode `xxxCase` functions. |
+| `KeysInput`    | `Dict \| Array<Dict>` (where `Dict` is `Record<string, any>`) | Input shape accepted by `xxxKeys` and `changeKeys`.   |
+| `KeysOptions`  | `{ depth?: number; exempt?: (key: string) => boolean }`       | Per-call options for `xxxKeys` and `changeKeys`.      |
 
 ## Error handling
 

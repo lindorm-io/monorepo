@@ -1,18 +1,21 @@
 import type { Dict } from "@lindorm/types";
 
-export type ChangeCase =
-  | "camel"
-  | "capital"
-  | "constant"
-  | "dot"
-  | "header"
-  | "kebab"
-  | "lower"
-  | "pascal"
-  | "path"
-  | "sentence"
-  | "snake"
-  | "none";
+export const CHANGE_CASE_MODES = [
+  "camel",
+  "capital",
+  "constant",
+  "dot",
+  "header",
+  "kebab",
+  "lower",
+  "pascal",
+  "path",
+  "sentence",
+  "snake",
+  "none",
+] as const;
+
+export type ChangeCase = (typeof CHANGE_CASE_MODES)[number];
 
 export type CaseCallback = (input: string) => string;
 

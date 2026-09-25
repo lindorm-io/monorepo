@@ -143,7 +143,7 @@ Pylon takes **four** sources, and where each built-in entity lives is fixed — 
 
 Reach for `ctx.cache` for anything throwaway. Writing evictable churn through `ctx.kv` puts it in the `noeviction` instance, which is the exact failure this split exists to prevent.
 
-The split criterion is one question — **is eviction under memory pressure acceptable for this data?** — which is exactly what a Redis `maxmemory-policy` answers. Two populations with opposite needs used to share one instance: evict a `Session` to make room for a rate-limit bucket and a traffic spike logs users out.
+The split criterion is one question — **is eviction under memory pressure acceptable for this data?** — which is exactly what a Redis `maxmemory-policy` answers. Two populations with opposite needs must not share one instance: evict a `Session` to make room for a rate-limit bucket and a traffic spike logs users out.
 
 - **`kv` → `noeviction`.** Losing a `Session` or a `Presence` record loses state a user can see.
 - **`cache` → `allkeys-lru`.** Losing a cached response, a cached introspection answer or a rate-limit counter costs work, never state.
@@ -720,7 +720,7 @@ One mount, because a deployment that had to mount a request/event middleware and
 
 Verifying with no issuer matcher is not a weaker check but NO check, so a mount refuses by name (`access_issuer_unresolved`, 500) when no `auth` block resolved one — on **both** credential routes. RFC 7662 makes the authorization server the authority on an opaque credential, but "the authority answered" is not "the answer came from OUR authority", and letting the opaque route skip the comparison made it the laxer of two routes serving one mount.
 
-⚠ **It REQUIRES an `audience`** — this service's own identifier. Only the mount knows it, RFC 9068 §4 has a resource server validate `aud`, and it is what lets the local route verify against a profile at all — on the lenient one it carries a second job, below. A mount that stated one used to have it applied on the locally-verified route alone, so a JWT audienced elsewhere was refused while the opaque handle for the same wrong audience was served.
+⚠ **It REQUIRES an `audience`** — this service's own identifier. Only the mount knows it, RFC 9068 §4 has a resource server validate `aud`, and it is what lets the local route verify against a profile at all — on the lenient one it carries a second job, below.
 
 `{ dpop: "required" | "optional" | "disabled" }` sets how strictly the HANDSHAKE treats DPoP (default `"optional"`). It is handshake-only: on HTTP the scheme states the intent per request.
 
@@ -806,7 +806,7 @@ The RFC 7662 response members that describe the ANSWER rather than the token —
 
 ##### Claim matchers apply to BOTH routes, and to every way a credential arrives
 
-A matcher stated on the mount is asserted **after** resolution, over `access.claims` — for a bearer, a DPoP-presented credential, an introspected handle, and a cookie SESSION alike. The session arm used to sit outside it, so a mount's `audience` silently did not apply to a browser-presented credential:
+A matcher stated on the mount is asserted **after** resolution, over `access.claims` — for a bearer, a DPoP-presented credential, an introspected handle, and a cookie SESSION alike:
 
 ```typescript
 router.use(
@@ -1449,11 +1449,9 @@ The `Session` row therefore has five columns, and every cleartext one is there b
 
 **The secret does not rotate on refresh.** It is minted when the session id is, and every update re-seals under it. Rotating per write would re-seal the row under a key the deployment's other tabs do not hold, turning every concurrent refresh into a hard logout race with no grace window.
 
-There is no flag: this is the only mode for a kv-backed session. What is genuinely lost is any read of a session's **tokens or scope** without the holder's cookie — an offline job acting on a stored refresh token, or `redis-cli GET` as a debugging tool.
+There is no flag: this is the only mode for a kv-backed session. The cost is that a session's **tokens or scope** cannot be read without the holder's cookie — no offline job acting on a stored refresh token, no `redis-cli GET` as a debugging tool.
 
-⚠ **Upgrading:** flush the pylon session namespace in `kv`. Rows written under the previous scheme have columns the entity no longer declares and none of the one it needs, and no key exists that could open them. Old cookies carry a bare id string, which the shape check rejects — the cookie is cleared and the next login establishes a new session, so it is self-healing.
-
-**Cookie-only sessions are unchanged.** With no `kv` source there is no store and no handle: the whole session object travels in the cookie, sealed with the configured key.
+**Cookie-only sessions are unaffected.** With no `kv` source there is no store and no handle: the whole session object travels in the cookie, sealed with the configured key.
 
 ```typescript
 const app = new Pylon({

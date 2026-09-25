@@ -1,21 +1,11 @@
-import type { ChangeCase } from "../../types/index.js";
+import { CHANGE_CASE_MODES, type ChangeCase } from "../../types/index.js";
 import { isVerbatimKey } from "../is-verbatim-key.js";
 import { changeKeys } from "./change-keys.js";
 import { describe, expect, test, vi } from "vitest";
 
-const CONVERTING_MODES: Array<Exclude<ChangeCase, "none">> = [
-  "camel",
-  "capital",
-  "constant",
-  "dot",
-  "header",
-  "kebab",
-  "lower",
-  "pascal",
-  "path",
-  "sentence",
-  "snake",
-];
+const CONVERTING_MODES: Array<Exclude<ChangeCase, "none">> = CHANGE_CASE_MODES.filter(
+  (mode): mode is Exclude<ChangeCase, "none"> => mode !== "none",
+);
 
 describe("changeKeys exempt", () => {
   test("should keep an exempt key verbatim", () => {
