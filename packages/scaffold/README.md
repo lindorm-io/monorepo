@@ -4,6 +4,14 @@ Scaffold-only config layer shared by the proteus, iris and pylon CLIs and `@lind
 
 > Never import this from application runtime. It exists to resolve where generated files go — CLI/scaffold tooling only.
 
+## Installation
+
+```bash
+npm install @lindorm/scaffold
+```
+
+Two entry points: `@lindorm/scaffold` for the config layer, `@lindorm/scaffold/mocks/vitest` for the `createMockLindormConfig` factory.
+
 ## `lindorm.config.{ts,mjs}`
 
 Projects describe their scaffold target directories in a `lindorm.config.ts` (or `.mjs`) at the project root:

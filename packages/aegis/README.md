@@ -735,7 +735,7 @@ By default the whole token is fully interoperable — a string-keyed payload tha
 await aegis.mint("access_token", content, { format: "cwt", proprietary: true });
 ```
 
-Either way the signature itself is plain RFC 9052 — verified in interop tests against `@auth0/cose` and `cose-js`.
+Either way the signature itself is plain RFC 9052: `@auth0/cose` and `cose-js` verify it.
 
 ### Opaque handles (raw COSE sign — `cws`)
 
@@ -1170,13 +1170,12 @@ A verify knob means the same thing whether the token arrived as a JWT or a CWT:
 **every field of `VerifyOptions` is read on both wires.** None is accepted on one
 and silently ignored on the other.
 
-The contract is a value, not prose: every field has a row in the internal
-wire-parity table stating which wires read it and what it resolves to per wire.
-Adding a field to `VerifyOptions` fails to compile until it has a row, and the
-knob matrix drives one probe per option off the same key set, requiring the run
-with the knob and the run without it to disagree.
+The contract is enforced, not documented: a field cannot join `VerifyOptions`
+until it declares which wires read it and what it resolves to on each, and
+every option is probed with the knob and without it, the two runs required to
+disagree.
 
-Two rows record a wire limit rather than a parity gap. `dpopProof` and
+Two options record a wire limit rather than a parity gap. `dpopProof` and
 `trustBoundThumbprint` both turn on a `cnf` **JWK** thumbprint binding, and aegis
 has no COSE form for one: the COSE thumbprint digests a deterministically encoded
 COSE_Key where the JOSE one digests a canonical JSON JWK, so the same key yields
@@ -1192,9 +1191,9 @@ One default legitimately differs per wire and always will: `typPresence` resolve
 (RFC 9596). Passing an explicit value behaves
 identically on both.
 
-`VERIFY_OPTION_KEYS` is the exported key set, derived from that table — use it
-instead of hand-listing the knobs when partitioning a flat bag of matchers and
-options, so the split moves with the type:
+`VERIFY_OPTION_KEYS` is the exported key set, derived from the same declaration.
+Use it instead of hand-listing the knobs when partitioning a flat bag of
+matchers and options, so the split moves with the type:
 
 ```typescript
 import { VERIFY_OPTION_KEYS } from "@lindorm/aegis";

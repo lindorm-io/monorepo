@@ -1931,9 +1931,8 @@ included entity is not selectable there (include it from the root instead), and 
 entity's own `@RelationId` or `@RelationCount` — no driver loads either for an included relation, so
 a count would come back as the stored column nothing maintains.
 
-**Driver support:** all six drivers implement `include()`, and the conformance suite asserts the
-behaviour above on every one of them. The repository path loads the same relations without a
-builder:
+**Driver support:** all six drivers implement `include()`, and the behaviour above is asserted on
+every one of them. The repository path loads the same relations without a builder:
 
 ```typescript
 await repository.find({ status: "active" }, { relations: ["posts", "profile"] });

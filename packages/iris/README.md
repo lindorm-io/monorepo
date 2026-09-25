@@ -988,9 +988,9 @@ new IrisSource({
 
 Every driver declares its honest runtime capabilities, surfaced on the source as
 `source.capabilities`. Query it to branch on what the active driver actually
-supports — the same declaration the conformance suite (TCK) gates on, so it never
-drifts from real behaviour. It is available before `connect()` (resolved from the
-driver type) and delegates to the live driver once connected.
+supports — a driver that declares a capability is tested on it, so the
+declaration cannot over-claim. It is available before `connect()` (resolved from
+the driver type) and delegates to the live driver once connected.
 
 ```typescript
 const source = new IrisSource({ driver: "kafka", brokers, logger, messages });

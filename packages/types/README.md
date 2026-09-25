@@ -1,6 +1,6 @@
 # @lindorm/types
 
-Shared TypeScript types and a small set of `const` runtime values used across the Lindorm monorepo.
+Shared TypeScript types and a small set of `const` runtime values used across the `@lindorm/*` packages.
 
 This package is **ESM-only**. All examples use `import` syntax — `require` is not supported.
 
@@ -17,7 +17,7 @@ This package has no runtime or peer dependencies.
 - JOSE-aligned JWK types: `Jwks`, `LindormJwks`, `JwksAlgorithm`, `JwksEncryptionAlgorithm`, `JwksSigningAlgorithm`, `JwksCurve`, `JwksKeyOps`, `JwksKeyType`, `JwksUse`
 - AES content-encryption algorithm tags and key-length constants (`AesEncryption`, `AesCbcEncryption`, `AesGcmEncryption`, `AES_ENCRYPTION_ALGORITHMS`, `AES_KEY_LENGTH_*`)
 - Generic crypto primitives: `KeyData`, `DsaEncoding`, `ShaAlgorithm`
-- Predicate generics (`Predicate<T>`, `RootPredicate<T>`, `PredicateOperator<T>`) used by repository drivers across the monorepo
+- Predicate generics (`Predicate<T>`, `RootPredicate<T>`, `PredicateOperator<T>`) used by repository drivers
 - `AbortSignal` companions: an `AbortReason` discriminated union and a `WithSignal<T>` mixin
 - A `DpopSigner` contract for RFC 9449 DPoP proofs that does not take a hard dependency on `node:crypto`
 - General TypeScript helpers (`DeepPartial<T>`, `Dict<T>`, `Optional<T, K>`, `Constructor<T>`, `ClassLike<T>`, `ReverseMap<T>`, `Function<T>`, `Header`, `Param`, `Query`)

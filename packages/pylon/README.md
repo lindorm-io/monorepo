@@ -1230,7 +1230,7 @@ Client credentials and the authorization request's defaults are the **provider's
 
 | Driver                 | Reads                        | Capabilities                                                   | Use for                                                                                               |
 | ---------------------- | ---------------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `OpenIdDriver`         | `amphora.idp`                | Everything, backed by `.well-known/openid-configuration`       | Any standard OP — tyr, Auth0, Google                                                                  |
+| `OpenIdDriver`         | `amphora.idp`                | Everything, backed by `.well-known/openid-configuration`       | Any standard OP — Auth0, Google                                                                       |
 | `OpenIdResourceDriver` | `amphora.idp`                | `introspect` · `userinfo` · `subject` only                     | An API service that validates tokens and never logs anyone in                                         |
 | `Auth0Driver`          | `amphora.idp`                | `OpenIdDriver`, with the resource indicator sent as `audience` | Auth0 tenants without the RFC 8707 compatibility profile                                              |
 | `JwtDriver`            | `amphora.internal` OR `.idp` | `endpoints()` only — verify-only, no network, no client id     | A service that mints its own tokens, or an upstream that publishes no discovery document              |

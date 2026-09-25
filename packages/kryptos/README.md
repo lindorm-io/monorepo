@@ -109,7 +109,7 @@ const auto = KryptosKit.from.auto(unknownInput);
 
 A key serialises to a single `kryptos:` blob for a `.env` file. There is **one prefix** and two encodings:
 
-- **CBOR** (`kryptos:<base64url-cbor>`) — the compact **default**. A proprietary integer-keyed map (see [`cbor-table.ts`](src/internal/constants/cbor-table.ts)); raw key material as byte strings, enums as integers. Typically 30–60% smaller than JSON.
+- **CBOR** (`kryptos:<base64url-cbor>`) — the compact **default**. A proprietary integer-keyed map; raw key material as byte strings, enums as integers. Typically 30–60% smaller than JSON.
 - **JSON** (`kryptos:<base64url-json>`) — opt-in, human-readable, the classic private JWK.
 
 ```ts
@@ -395,7 +395,7 @@ The three cert members come from `certificate("jwk")` — the same derivation `t
 
 `KryptosKit.from.jwk` rejects a JWK whose incoming `x5t#S256` does not match the recomputed leaf hash, catching tampered or mis-paired chains at the boundary. The SHA-1 `x5t` is not cross-checked: the strong digest already pinned the chain.
 
-The two `kryptos:` env formats carry different cert members. **CBOR** carries only the fields declared in `internal/constants/cbor-env-spec.ts` — a declared field is what reaches the wire, and each may only name a label from `CBOR_LABEL`, which has one for `x5c` and none for either digest. **JSON** is the private JWK verbatim, so it carries `x5c` _and_ both digests. Either way both digests are recomputed from `x5c` on import, so the two round-trip to the same key.
+The two `kryptos:` env formats carry different cert members. **CBOR** carries `x5c` alone — the encoding has an integer label for the chain and none for either digest. **JSON** is the private JWK verbatim, so it carries `x5c` _and_ both digests. Either way both digests are recomputed from `x5c` on import, so the two round-trip to the same key.
 
 ## Supported algorithms
 
@@ -418,7 +418,7 @@ The two `kryptos:` env formats carry different cert members. **CBOR** carries on
 > relying party built on it, rejects it on the `alg` value alone. It is fine ON-PLATFORM, where both ends
 > are ours; **never make it a PUBLISHED key's algorithm** — a key nobody can import is not a key. Use
 > `ECDH-ES+A256KW` there. (The standalone `A128/192/256GCMKW` oct algorithms ARE registered, RFC 7518
-> §4.7, and are unaffected.) `Kryptos.jose-interop.test.ts` asserts the rejection as intentional.
+> §4.7, and are unaffected.) `jose`'s rejection is the intended outcome, not a kryptos defect.
 
 ### RSA
 
@@ -605,7 +605,7 @@ kryptos derive --type oct --use enc --algorithm A256KW \
 kryptos inspect ./secrets/key_<kid>.kryptos
 ```
 
-`.kryptos` files hold private key material — keep them out of version control. `@lindorm/create-pylon` adds `*.kryptos` to the generated `.gitignore`; both workspace-root `.gitignore`s already ignore it.
+`.kryptos` files hold private key material — keep them out of version control. `@lindorm/create-pylon` adds `*.kryptos` to the generated `.gitignore`.
 
 ### `kryptos derive`
 
@@ -690,8 +690,6 @@ import {
 ```
 
 These subpaths are intended for test code and are not re-exported from the package root.
-
-Kryptos's behaviour is specified in `src/classes/*.feature` files, run by `@lindorm/gherkin` as vitest tests. `npm test` runs them together with the unit suite; `npm test -- Kryptos.feature` scopes the run to one file.
 
 ## License
 
