@@ -73,7 +73,6 @@ describe("assertFeaturesCollected", () => {
     // deterministic across machines and snapshot-safe; `data.root` is not.
     expect(error.message).toMatchSnapshot();
     expect(error.code).toBe("feature_not_collected");
-    expect(error.title).toBe("Feature File Not Collected");
     expect(error.data).toEqual({
       features: ["src/**/*.feature"],
       include: ["src/**/*.test.ts"],

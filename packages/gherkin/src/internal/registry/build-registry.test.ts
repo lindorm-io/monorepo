@@ -371,7 +371,6 @@ describe("buildRegistry", () => {
 
     expect(error).toEqual(expect.any(GherkinError));
     expect(error.code).toEqual("invalid_step_expression");
-    expect(error.type).toEqual("urn:lindorm:gherkin:error:invalid_step_expression");
     expect(error.data).toEqual({
       className: "BrokenSteps",
       expression: "an {",

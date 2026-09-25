@@ -59,7 +59,6 @@ describe("createParseError", () => {
     });
 
     expect(error.code).toBe("parse_error");
-    expect(error.type).toBe("urn:lindorm:gherkin:error:parse_error");
     // The MESSAGE carries the anchored entries — the reporter prints only the
     // message, so entries living in error.data alone would point at nothing.
     expect(error.message).toContain("(4:3): unexpected token");

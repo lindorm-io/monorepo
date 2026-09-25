@@ -8,7 +8,5 @@ exports[`toDisplayKeyword > should throw on a step type outside the union 1`] = 
   },
   "details": "The StepType union gained a value this renderer does not map.",
   "message": "Unexpected step type "Bogus"",
-  "title": "Model Invariant Violated",
-  "type": "urn:lindorm:gherkin:error:model_invariant",
 }
 `;

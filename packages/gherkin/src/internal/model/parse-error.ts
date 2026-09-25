@@ -44,7 +44,6 @@ export const toParseErrorEntries = (error: unknown): Array<ParseErrorEntry> => {
 export const createParseError = (model: ParseErrorModel): GherkinError =>
   new GherkinError(formatParseError(model), {
     code: "parse_error",
-    title: "Gherkin Parse Error",
     details:
       "The feature file is not valid Gherkin. Every location is a line in the feature file itself. Fix the first error first — later ones are often knock-ons.",
     data: { errors: model.errors, uri: model.uri },

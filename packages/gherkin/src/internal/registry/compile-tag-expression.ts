@@ -40,7 +40,6 @@ export const compileTagExpression = ({
       `Invalid tag expression ${JSON.stringify(tagExpression)} on ${className}.${methodName}`,
       {
         code: "invalid_tag_expression",
-        title: "Invalid Tag Expression",
         details:
           "The hook's tag expression could not be parsed. The language is `and` / `or` / `not` with parentheses over @-prefixed tags — fix the expression on the hook decorator.",
         data: {
@@ -49,9 +48,7 @@ export const compileTagExpression = ({
           modulePath,
           tagExpression,
         },
-        // Always an Error on 11.0.1 (its parser throws `new Error(...)` for
-        // every syntax failure), so no non-Error branch to keep covered.
-        error: error as Error,
+        cause: error,
       },
     );
   }

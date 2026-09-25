@@ -69,13 +69,8 @@ const convertArguments = async (
         }),
         {
           code: "conversion_failed",
-          title: "Step Argument Conversion Failed",
           details:
             "The step matched a definition, but a parameter type's transform threw or rejected while converting the matched text. Fix the value in the feature file, or the transform.",
-          // EXPLICIT: a transform is consumer code that may throw any
-          // foreign-urn LindormError — this wrapper's identity must not
-          // depend on the inner error's shape. Pinned: run-scenario.test.ts.
-          type: "urn:lindorm:gherkin:error:conversion_failed",
           data: {
             line: step.line,
             parameterTypeName: argument.parameterTypeName,
@@ -83,7 +78,7 @@ const convertArguments = async (
             text: step.text,
             uri,
           },
-          ...(isError(error) ? { error } : {}),
+          cause: error,
         },
       );
     }
@@ -125,15 +120,8 @@ const invokeStep = async (
         }),
         {
           code: "pending_step",
-          title: "Pending Step",
           details:
             "The step matched a definition whose body is not implemented; the scenario is red until it is.",
-          // EXPLICIT, not coincidence: our own PendingStepError's type happens
-          // to equal this urn, but a dual-install copy's could drift — the
-          // wrapper's urn must never depend on the inner error's. Pinned:
-          // run-scenario.test.ts ("branded pending error from a second
-          // installed package copy").
-          type: "urn:lindorm:gherkin:error:pending_step",
           data: {
             className: match.definition.className,
             line: step.line,
@@ -141,7 +129,7 @@ const invokeStep = async (
             text: step.text,
             uri,
           },
-          error,
+          cause: error,
         },
       );
     }

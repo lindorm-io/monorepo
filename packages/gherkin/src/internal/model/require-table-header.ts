@@ -15,7 +15,6 @@ export const requireTableHeader = (examples: Examples): TableRow => {
 
   throw new GherkinError("Examples block carries data rows but no header row", {
     code: "model_invariant",
-    title: "Model Invariant Violated",
     details:
       "A non-empty Examples table always parses with its first row as the header — a miss means the @cucumber/gherkin dependency changed behaviour underneath the model builder.",
     data: { line: examples.location.line },

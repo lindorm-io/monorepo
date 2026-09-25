@@ -52,7 +52,6 @@ const emitNode = (
       api.test(node.name, { tags: toVitestTags(node.tags) }, () => {
         throw new GherkinError(formatEmptyExamples(node, uri), {
           code: "empty_examples",
-          title: "Empty Examples Table",
           details:
             "The Examples table has a header and zero data rows, so the outline compiles to zero scenarios. Add data rows, or delete the block.",
           data: { line: node.line, name: node.name, uri },
@@ -67,7 +66,6 @@ const emitNode = (
       api.test(node.name, { tags: toVitestTags(node.tags) }, () => {
         throw new GherkinError(formatEmptyScenario(node, uri), {
           code: "empty_scenario",
-          title: "Empty Scenario",
           details:
             "The scenario has a name and zero steps — running it would report green having executed nothing. Write its steps, or delete it.",
           data: { line: node.line, name: node.name, uri },
@@ -79,7 +77,6 @@ const emitNode = (
       const exhaustive: never = node;
       throw new GherkinError("Unexpected suite node kind", {
         code: "model_invariant",
-        title: "Model Invariant Violated",
         details: "The SuiteNode union gained a kind this emitter does not map.",
         data: { node: exhaustive },
       });
@@ -121,7 +118,6 @@ const emitFeatureSuite = (
       `Structural invariant violated: ${registered} tests registered, ${model.expectedTests} expected for ${model.uri}`,
       {
         code: "structural_invariant",
-        title: "Structural Invariant Violated",
         details:
           "The number of registered tests must equal the model's expected count — a mismatch means the suite emitter dropped or doubled a scenario, a bug that would otherwise be invisible in the printed counts.",
         data: { expected: model.expectedTests, registered, uri: model.uri },
@@ -164,7 +160,6 @@ export const emitFeature = ({ api, model, registry }: EmitFeatureOptions): void 
       const exhaustive: never = model;
       throw new GherkinError("Unexpected feature model kind", {
         code: "model_invariant",
-        title: "Model Invariant Violated",
         details: "The FeatureModel union gained a kind this emitter does not map.",
         data: { model: exhaustive },
       });

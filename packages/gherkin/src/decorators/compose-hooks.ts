@@ -45,7 +45,6 @@ export const composeHooks = (
     `@Priority on method ${orphan.methodName} of class ${className} has no hook to modify`,
     {
       code: "priority_without_hook",
-      title: "Priority Without Hook",
       details:
         "@Priority orders hooks and nothing else — steps run in pickle order and parameter types have no order, so a priority there would be silently inert. Remove it, or add the hook decorator it was meant for.",
       data: { className, method: orphan.methodName, static: orphan.static },

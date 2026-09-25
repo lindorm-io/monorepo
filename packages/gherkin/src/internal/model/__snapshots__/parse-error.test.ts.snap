@@ -20,7 +20,5 @@ exports[`createParseError > should carry the parse_error taxonomy code with the 
   at src/features/broken.feature:4:3
 
 Fix the first error first — later ones are often knock-ons.",
-  "title": "Gherkin Parse Error",
-  "type": "urn:lindorm:gherkin:error:parse_error",
 }
 `;

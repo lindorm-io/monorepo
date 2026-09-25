@@ -16,16 +16,29 @@ describe("formatAdditionalFailures", () => {
     ).toMatchSnapshot();
   });
 
-  test("should render the urn type above a runner-owned failure and none for a consumer error", () => {
+  test("should render the code above a runner-owned failure and none for a codeless error", () => {
     const rendered = formatAdditionalFailures([
       new Error("@AfterStep hook failed\n\n  AesHooks.capture\n\nboom"),
       new GherkinError("Context class AesContext dispose() threw\n\nclosed", {
         code: "disposal_failed",
-        title: "Context Disposal Failed",
       }),
     ]);
 
-    expect(rendered).toContain("urn:lindorm:gherkin:error:disposal_failed");
+    expect(rendered).toContain("disposal_failed");
     expect(rendered).toMatchSnapshot();
+  });
+
+  test("should render a consumer error's own code", () => {
+    const failure = new Error("no such file or directory") as Error & { code: string };
+    failure.code = "ENOENT";
+
+    expect(formatAdditionalFailures([failure])).toContain("ENOENT");
+  });
+
+  test("should render no code line when the code is not a string", () => {
+    const failure = new Error("boom") as Error & { code: number };
+    failure.code = 42;
+
+    expect(formatAdditionalFailures([failure])).not.toContain("42");
   });
 });

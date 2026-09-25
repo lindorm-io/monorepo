@@ -65,10 +65,9 @@ export const assertStepModuleLowered = ({
       ].join("\n"),
       {
         code: "step_module_not_compiled",
-        title: "Step Module Not Compiled",
         details: NOT_COMPILED_DETAILS,
         data: { uri },
-        error: error as Error,
+        cause: error,
         id: uri,
       },
     );
@@ -86,7 +85,6 @@ export const assertStepModuleLowered = ({
     ].join("\n"),
     {
       code: "step_module_not_lowered",
-      title: "Step Module Not Lowered",
       details: NOT_LOWERED_DETAILS,
       data: { uri },
       id: uri,

@@ -24,7 +24,6 @@ export const toDisplayKeyword = (type: StepType): string => {
       const exhaustive: never = type;
       throw new GherkinError(`Unexpected step type "${String(exhaustive)}"`, {
         code: "model_invariant",
-        title: "Model Invariant Violated",
         details: "The StepType union gained a value this renderer does not map.",
         data: { type: exhaustive },
       });

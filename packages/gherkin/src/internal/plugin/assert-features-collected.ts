@@ -102,7 +102,6 @@ export const assertFeaturesCollected = ({
     ].join("\n"),
     {
       code: "feature_not_collected",
-      title: "Feature File Not Collected",
       details:
         "A .feature file matches the configured `features` patterns but no `test.include` pattern, so vitest never collects it — the coverage check passes, the counts stay green, and the feature silently never runs. Append the feature globs to `test.include` by spreading the existing array — never overwrite it. A feature that must never be collected belongs in BOTH `test.include` and `test.exclude`.",
       data: { features, include: resolvedInclude, root, uncollected },

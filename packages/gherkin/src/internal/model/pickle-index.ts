@@ -21,7 +21,6 @@ export const requirePickle = (index: Map<string, Pickle>, key: string): Pickle =
 
   throw new GherkinError(`No pickle compiled for AST node "${key}"`, {
     code: "model_invariant",
-    title: "Model Invariant Violated",
     details:
       "The AST walk expected compile() to have produced a pickle for this scenario or Examples row and it did not — the @cucumber/gherkin dependency changed behaviour underneath the model builder.",
     data: { key },

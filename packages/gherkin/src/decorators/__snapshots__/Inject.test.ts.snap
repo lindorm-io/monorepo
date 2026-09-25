@@ -8,8 +8,6 @@ exports[`Inject > should throw duplicate_inject when @Inject is applied twice to
   },
   "details": "A field resolves one token; with two staged, resolution would silently pick one. Remove the extra decorator.",
   "message": "@Inject is applied twice to field twice",
-  "title": "Duplicate Inject",
-  "type": "urn:lindorm:gherkin:error:duplicate_inject",
 }
 `;
 
@@ -21,7 +19,5 @@ exports[`Inject > should throw scope_violation for a static field at decoration 
   },
   "details": "Injection resolves from a per-scenario container; a static field outlives every scenario. Remove the static modifier.",
   "message": "@Inject requires an instance field",
-  "title": "Scope Violation",
-  "type": "urn:lindorm:gherkin:error:scope_violation",
 }
 `;

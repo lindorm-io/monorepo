@@ -9,7 +9,5 @@ exports[`Priority > should throw duplicate_priority when @Priority is applied tw
   },
   "details": "A hook holds one priority; with two staged, composition would silently pick one. Remove the extra decorator.",
   "message": "@Priority is applied twice to method seed",
-  "title": "Duplicate Priority",
-  "type": "urn:lindorm:gherkin:error:duplicate_priority",
 }
 `;

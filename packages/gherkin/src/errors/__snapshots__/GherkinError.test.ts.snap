@@ -1,17 +1,13 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`GherkinError > should carry code, data, debug, title and details 1`] = `
+exports[`GherkinError > should carry code, data, details and id 1`] = `
 {
   "code": "custom_code",
   "data": {
     "value": "data",
   },
-  "debug": {
-    "value": "debug",
-  },
   "details": "details",
+  "id": "src/greeting.steps.ts",
   "message": "message",
-  "title": "title",
-  "type": "urn:lindorm:gherkin:error:custom_code",
 }
 `;

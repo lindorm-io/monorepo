@@ -16,7 +16,5 @@ exports[`assertSupportedTags > should carry the full house error shape, anchored
   at src/features/tags.feature:3:3
 
 this runner has no skip tag — exclude via \`tags\` in config",
-  "title": "Unsupported Tag",
-  "type": "urn:lindorm:gherkin:error:unsupported_tag",
 }
 `;

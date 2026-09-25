@@ -25,7 +25,6 @@ export const Context =
     if (Object.hasOwn(target, CONTEXT_BRAND)) {
       throw new GherkinError(`@Context is applied twice to class ${target.name}`, {
         code: "duplicate_context",
-        title: "Duplicate Context",
         details:
           "The class is already registered as a context token; a second @Context would register it twice. Remove the extra decorator.",
         data: { className: target.name },
@@ -44,7 +43,6 @@ export const Context =
         `@Context class ${target.name} declares ${behaviour.kind} ${behaviour.memberName}`,
         {
           code: "context_declares_behaviour",
-          title: "Context Declares Behaviour",
           details:
             "A @Context class carries state only. Steps, hooks and parameter types belong on a @Binding class — staged on a context, a step never registers and a hook never runs, a silent no-op. Move the member to a @Binding class.",
           data: {

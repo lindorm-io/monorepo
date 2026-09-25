@@ -43,7 +43,6 @@ export const assertFeaturesCovered = ({
     ].join("\n"),
     {
       code: "feature_not_included",
-      title: "Feature File Not Included",
       details:
         "A .feature file exists under the project root but matches none of the configured `features` patterns, so it would silently run zero tests. Widen the patterns, or move/delete the file.",
       data: { features, orphans, root },

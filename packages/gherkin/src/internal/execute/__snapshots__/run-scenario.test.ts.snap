@@ -23,8 +23,6 @@ Parameter {evens} could not convert "3"
 The step matched — the argument did not convert.
 
 The remaining 1 step in this scenario was skipped.",
-  "title": "Step Argument Conversion Failed",
-  "type": "urn:lindorm:gherkin:error:conversion_failed",
 }
 `;
 
@@ -45,8 +43,6 @@ exports[`runScenario > failure modes > should fail a pending step naming the cla
   at src/features/run.feature:10:5
 
 RecordSteps.pending is pending — implement its body.",
-  "title": "Pending Step",
-  "type": "urn:lindorm:gherkin:error:pending_step",
 }
 `;
 
@@ -85,8 +81,6 @@ exports[`runScenario > failure modes > should fail an ambiguous step listing eve
     at src/run.steps.ts
 
 Remove one, or make the expressions disjoint.",
-  "title": "Ambiguous Step",
-  "type": "urn:lindorm:gherkin:error:ambiguous_step",
 }
 `;
 
@@ -112,7 +106,5 @@ No step definition matched. Implement it:
   }
 
 The remaining 2 steps in this scenario were skipped.",
-  "title": "Undefined Step",
-  "type": "urn:lindorm:gherkin:error:undefined_step",
 }
 `;

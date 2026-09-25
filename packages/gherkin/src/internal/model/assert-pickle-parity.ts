@@ -56,7 +56,6 @@ export const assertPickleParity = ({
     `Pickle parity violated: ${orphans.length} compiled pickle(s) reached no suite node for ${uri}`,
     {
       code: "model_invariant",
-      title: "Model Invariant Violated",
       details:
         "compile() produced a pickle the AST walk neither consumed as a scenario node nor superseded with a failing node — the model builder dropped a scenario, which would silently vanish from the emitted suite.",
       data: { orphans, uri },

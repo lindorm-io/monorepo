@@ -16,7 +16,5 @@ exports[`assertTagNames > should carry the full house error shape, anchored to t
   at src/features/tags.feature:4:3
 
 vitest tag names cannot contain "!", "*", "&", "|", "(" or ")"",
-  "title": "Invalid Tag Name",
-  "type": "urn:lindorm:gherkin:error:invalid_tag_name",
 }
 `;

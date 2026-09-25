@@ -9,7 +9,5 @@ exports[`Given > should throw scope_violation for a static method at decoration 
   },
   "details": "Step methods run against a per-scenario instance; a static method has no scenario scope. Remove the static modifier.",
   "message": "@Given requires an instance method",
-  "title": "Scope Violation",
-  "type": "urn:lindorm:gherkin:error:scope_violation",
 }
 `;

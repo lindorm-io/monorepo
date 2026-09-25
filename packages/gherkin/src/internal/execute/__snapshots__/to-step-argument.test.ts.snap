@@ -10,7 +10,5 @@ exports[`toStepArgument > should throw model_invariant on an unknown kind 1`] = 
   },
   "details": "The StepArgumentModel union gained a kind this factory does not map.",
   "message": "Unexpected step argument kind",
-  "title": "Model Invariant Violated",
-  "type": "urn:lindorm:gherkin:error:model_invariant",
 }
 `;

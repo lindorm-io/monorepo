@@ -1,4 +1,3 @@
-import { LindormError } from "@lindorm/errors";
 import { beforeEach, describe, expect, test } from "vitest";
 import { z } from "zod";
 import { captureAsync, errorShape } from "../../__fixtures__/test-helpers.js";
@@ -59,10 +58,10 @@ class RecordSteps {
   foreignPending(): void {
     // The dual-install shape: a PendingStepError from a SECOND installed copy
     // of the package — same Symbol.for brand, foreign prototype chain, and a
-    // DRIFTED urn (an older copy spelling the code differently). The wrapper
-    // must report the canonical urn, never the inner error's.
-    const error = new Error("Step is not implemented") as Error & { type: string };
-    error.type = "urn:lindorm:gherkin:error:pending";
+    // DRIFTED code (an older copy spelling it differently). The wrapper must
+    // report the canonical code, never the inner error's.
+    const error = new Error("Step is not implemented") as Error & { code: string };
+    error.code = "pending";
     Object.defineProperty(error, PENDING_STEP_BRAND, { value: true });
     throw error;
   }
@@ -156,12 +155,9 @@ class TransformSteps {
 
   @ParameterType("foreignbad", /[a-z]+/)
   static foreignbad(raw: string): string {
-    // A consumer transform throwing its OWN lindorm urn — the wrapper's type
-    // must stay conversion_failed, never the inner error's.
-    throw new LindormError(`no such algorithm ${raw}`, {
-      code: "unknown_algorithm",
-      type: "urn:lindorm:amphora:error:unknown_algorithm",
-    });
+    // A consumer transform throwing its OWN code — the wrapper's code must
+    // stay conversion_failed, never the inner error's.
+    throw new GherkinError(`no such algorithm ${raw}`, { code: "unknown_algorithm" });
   }
 
   @Given("non-error conversion of {rawthrow}")
@@ -335,16 +331,13 @@ describe("runScenario", () => {
       expect(error.message).toContain("TransformSteps.evens (src/run.steps.ts)");
     });
 
-    test("should keep the conversion_failed urn when a transform throws a FOREIGN LindormError", async () => {
+    test("should keep the conversion_failed code when a transform throws an error carrying its own", async () => {
       const error = await captureAsync(() => run([step("foreign conversion of xyz")]));
 
-      // Without the wrapper's explicit type, the inner error's own urn wins
-      // (LindormError inner-type precedence) and the taxonomy lies.
       expect(error.code).toBe("conversion_failed");
-      expect(error.type).toBe("urn:lindorm:gherkin:error:conversion_failed");
-      // The original still travels through the lineage.
-      expect(error.errors).toContain("LindormError: no such algorithm xyz");
+      // The original still travels — in the message and as the cause.
       expect(error.message).toContain("no such algorithm xyz");
+      expect((error.cause as GherkinError).code).toBe("unknown_algorithm");
     });
   });
 
@@ -483,10 +476,8 @@ describe("runScenario", () => {
     test("should detect a branded pending error from a second installed package copy", async () => {
       const error = await captureAsync(() => run([step("a foreign pending step")]));
 
+      // The CANONICAL code even though the foreign copy carries a drifted one.
       expect(error.code).toBe("pending_step");
-      // The CANONICAL urn even though the foreign copy carries a drifted one —
-      // the explicit type option, never the inner error's precedence.
-      expect(error.type).toBe("urn:lindorm:gherkin:error:pending_step");
       expect(error.message).toContain("Pending step");
       expect(error.message).toContain(
         "RecordSteps.foreignPending is pending — implement its body.",

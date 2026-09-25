@@ -8,7 +8,5 @@ exports[`requireTableHeader > should throw when the parser reports no header row
   },
   "details": "A non-empty Examples table always parses with its first row as the header — a miss means the @cucumber/gherkin dependency changed behaviour underneath the model builder.",
   "message": "Examples block carries data rows but no header row",
-  "title": "Model Invariant Violated",
-  "type": "urn:lindorm:gherkin:error:model_invariant",
 }
 `;

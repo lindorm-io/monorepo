@@ -34,6 +34,4 @@ export const errorShape = (error: GherkinError): object => ({
   data: error.data,
   details: error.details,
   message: error.message,
-  title: error.title,
-  type: error.type,
 });

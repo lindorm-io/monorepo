@@ -1,7 +1,6 @@
 import type { Constructor } from "@lindorm/types";
 import { describe, expect, test } from "vitest";
 import { capture, errorShape } from "../../__fixtures__/test-helpers.js";
-import { LindormError } from "@lindorm/errors";
 import { ScenarioInfo } from "../../classes/ScenarioInfo.js";
 import { Context } from "../../decorators/Context.js";
 import { GherkinError } from "../../errors/GherkinError.js";
@@ -755,25 +754,16 @@ describe("createScenarioContainer", () => {
 
       expect(error).toBeInstanceOf(GherkinError);
       expect((error as GherkinError).code).toBe("disposal_failed");
-      expect((error as GherkinError).type).toBe(
-        "urn:lindorm:gherkin:error:disposal_failed",
-      );
       expect(error.message).toBe(
         "Context class StringContext dispose() threw\n\nstring failure",
       );
       expect(error.cause).toBe("string failure");
     });
 
-    test("should keep the disposal_failed urn when dispose() throws a FOREIGN LindormError", async () => {
+    test("should keep the disposal_failed code when dispose() throws an error carrying its own", async () => {
       class VaultContext {
         public dispose(): void {
-          // A consumer teardown error carrying its OWN urn — without the
-          // wrapper's explicit type, LindormError's inner-type precedence
-          // would report this foreign urn as the disposal failure's type.
-          throw new LindormError("vault sealed", {
-            code: "vault_sealed",
-            type: "urn:lindorm:amphora:error:vault_sealed",
-          });
+          throw new GherkinError("vault sealed", { code: "vault_sealed" });
         }
       }
 
@@ -784,15 +774,9 @@ describe("createScenarioContainer", () => {
       const [error] = await scoped.dispose();
 
       expect((error as GherkinError).code).toBe("disposal_failed");
-      expect((error as GherkinError).type).toBe(
-        "urn:lindorm:gherkin:error:disposal_failed",
-      );
-      // The original still travels: cause holds the instance, the lineage
-      // records it.
-      expect((error.cause as LindormError).type).toBe(
-        "urn:lindorm:amphora:error:vault_sealed",
-      );
-      expect((error as GherkinError).errors).toContain("LindormError: vault sealed");
+      // The original still travels as the cause.
+      expect((error.cause as GherkinError).code).toBe("vault_sealed");
+      expect(error.message).toContain("vault sealed");
     });
 
     test("should dispose nothing and return empty on a second call", async () => {

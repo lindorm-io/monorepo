@@ -26,7 +26,6 @@ export const Priority =
         `@Priority requires a finite number, got ${String(priority)}`,
         {
           code: "invalid_priority",
-          title: "Invalid Priority",
           details:
             "Hooks order by numeric comparison — NaN or an infinite priority corrupts the sort silently instead of failing. Pass a finite number.",
           data: { method: String(context.name), priority, static: context.static },
@@ -51,7 +50,6 @@ export const Priority =
       `@Priority is applied twice to method ${String(context.name)}`,
       {
         code: "duplicate_priority",
-        title: "Duplicate Priority",
         details:
           "A hook holds one priority; with two staged, composition would silently pick one. Remove the extra decorator.",
         data: { method: String(context.name), static: context.static },

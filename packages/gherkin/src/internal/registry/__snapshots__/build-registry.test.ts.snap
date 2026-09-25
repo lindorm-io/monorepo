@@ -11,8 +11,6 @@ exports[`buildRegistry > should wrap a duplicate parameter type name, anchored t
   },
   "details": "A parameter type name registers once per registry — the flat step namespace shares one registry across every step module, and the built-in names are taken too. Rename one of the two declarations.",
   "message": "Duplicate parameter type {dup}",
-  "title": "Duplicate Parameter Type",
-  "type": "urn:lindorm:gherkin:error:duplicate_parameter_type",
 }
 `;
 
@@ -36,8 +34,6 @@ an {
    ^
 The '{' does not have a matching '}'.
 If you did not intend to use a parameter you can use '\\{' to escape the a parameter",
-  "title": "Invalid Step Expression",
-  "type": "urn:lindorm:gherkin:error:invalid_step_expression",
 }
 `;
 
@@ -53,7 +49,5 @@ exports[`buildRegistry > should wrap an unknown parameter type, anchored to the 
   },
   "details": "The step expression references a parameter type that no @ParameterType declaration or built-in provides. Declare it on a static method, or fix the name in the expression.",
   "message": "Unknown parameter type {nope}",
-  "title": "Unknown Parameter Type",
-  "type": "urn:lindorm:gherkin:error:unknown_parameter_type",
 }
 `;

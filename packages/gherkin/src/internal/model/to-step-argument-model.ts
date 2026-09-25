@@ -35,7 +35,6 @@ export const toStepArgumentModel = (argument: PickleStepArgument): StepArgumentM
   // that, so reaching here means the model would silently drop data.
   throw new GherkinError("Pickle step argument carries no DocString and no DataTable", {
     code: "model_invariant",
-    title: "Model Invariant Violated",
     details:
       "A pickle step argument must hold either a DocString or a DataTable — an empty argument object means the parser contract changed underneath this model.",
     data: { argument },

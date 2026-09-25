@@ -27,7 +27,6 @@ export const Inject =
 
       throw new GherkinError(`@Inject is applied twice to field ${fieldName}`, {
         code: "duplicate_inject",
-        title: "Duplicate Inject",
         details:
           "A field resolves one token; with two staged, resolution would silently pick one. Remove the extra decorator.",
         data: { field: fieldName },
@@ -36,7 +35,6 @@ export const Inject =
 
     throw new GherkinError(`@Inject requires an instance field`, {
       code: "scope_violation",
-      title: "Scope Violation",
       details:
         "Injection resolves from a per-scenario container; a static field outlives every scenario. Remove the static modifier.",
       data: { field: fieldName },

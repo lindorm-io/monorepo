@@ -8,7 +8,5 @@ exports[`requirePickle > should throw when no pickle was compiled for the key 1`
   },
   "details": "The AST walk expected compile() to have produced a pickle for this scenario or Examples row and it did not — the @cucumber/gherkin dependency changed behaviour underneath the model builder.",
   "message": "No pickle compiled for AST node "3/7"",
-  "title": "Model Invariant Violated",
-  "type": "urn:lindorm:gherkin:error:model_invariant",
 }
 `;

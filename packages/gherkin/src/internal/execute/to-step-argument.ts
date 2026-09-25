@@ -34,7 +34,6 @@ export const toStepArgument = (
       const exhaustive: never = argument;
       throw new GherkinError("Unexpected step argument kind", {
         code: "model_invariant",
-        title: "Model Invariant Violated",
         details: "The StepArgumentModel union gained a kind this factory does not map.",
         data: { argument: exhaustive },
       });

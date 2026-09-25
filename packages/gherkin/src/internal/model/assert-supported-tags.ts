@@ -38,7 +38,6 @@ export const assertSupportedTags = (tags: Array<AstTag>, uri: string): void => {
 
     throw new GherkinError(formatTagError("Unsupported tag", tag, uri, reason), {
       code: "unsupported_tag",
-      title: "Unsupported Tag",
       details:
         "The tag means something in another Gherkin runner and nothing in this one — a silently ignored modifier is a lie, so it fails loudly. Tags do exactly two jobs here: selecting scenarios (`tags` in config at transform time, --tagsFilter at runtime) and gating hooks. Remove the tag, or express the intent through one of those.",
       data: { column: tag.column, line: tag.line, tag: tag.name, uri },

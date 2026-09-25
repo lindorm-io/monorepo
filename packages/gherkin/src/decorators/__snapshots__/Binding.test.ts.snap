@@ -9,8 +9,6 @@ exports[`Binding > should name the UNMARKED class in a deep chain — not its al
   },
   "details": "Under swc's decorator lowering an unmarked base's metadata drops off the prototype chain silently, so every ancestor declaring decorated members must carry @AbstractSteps. Mark the named class @AbstractSteps (its decorated members may be @Inject fields only) — unless it is decorated @Context: a context cannot double as a base, so restructure to @Inject it from a field instead of extending it.",
   "message": "@Binding class Leaf may only extend @AbstractSteps classes — UnmarkedMid is not marked @AbstractSteps",
-  "title": "Abstract Base Undecorated",
-  "type": "urn:lindorm:gherkin:error:abstract_base_undecorated",
 }
 `;
 
@@ -25,8 +23,6 @@ exports[`Binding > should throw abstract_base_declares_behaviour for a single un
   },
   "details": "Registration is own-only, so an inherited step never registers and an inherited hook never runs — a silent no-op. Move the member onto the @Binding class; a shared base may carry @Inject fields only, marked @AbstractSteps.",
   "message": "@Binding class Leaf inherits hook seed from class UnmarkedBase",
-  "title": "Abstract Base Declares Behaviour",
-  "type": "urn:lindorm:gherkin:error:abstract_base_declares_behaviour",
 }
 `;
 
@@ -38,8 +34,6 @@ exports[`Binding > should throw duplicate_binding when @Binding is applied twice
   },
   "details": "The class is already registered; a second @Binding would register every step and parameter type twice and later misreport them as ambiguous. Remove the extra decorator.",
   "message": "@Binding is applied twice to class Twice",
-  "title": "Duplicate Binding",
-  "type": "urn:lindorm:gherkin:error:duplicate_binding",
 }
 `;
 
@@ -52,8 +46,6 @@ exports[`Binding > should throw inheritance_forbidden when a @Binding class exte
   },
   "details": "Each @Binding and @Context class is instantiated with its own \`this\`, so state set through the parent would be invisible through the child. Extract shared @Inject wiring into an @AbstractSteps base class instead.",
   "message": "@Binding class Leaf may not extend @Binding class Base",
-  "title": "Binding Inheritance Forbidden",
-  "type": "urn:lindorm:gherkin:error:inheritance_forbidden",
 }
 `;
 
@@ -67,7 +59,5 @@ exports[`Binding > should throw priority_without_hook for a @Priority on a step 
   },
   "details": "@Priority orders hooks and nothing else — steps run in pickle order and parameter types have no order, so a priority there would be silently inert. Remove it, or add the hook decorator it was meant for.",
   "message": "@Priority on method step of class Bad has no hook to modify",
-  "title": "Priority Without Hook",
-  "type": "urn:lindorm:gherkin:error:priority_without_hook",
 }
 `;

@@ -26,7 +26,6 @@ const assertKnownKeys = (settings: GherkinSettings): void => {
 
     throw new GherkinError(`Unknown gherkin setting "${key}"`, {
       code: "unknown_setting",
-      title: "Unknown Gherkin Setting",
       details:
         "GherkinSettings carries `features`, `steps` and `tags` only. An accepted-but-unimplemented key would be a silent no-op, so an unknown one fails at config time instead. Remove the key, or fix its spelling.",
       data: { key, known: [...KNOWN_KEYS] },
@@ -54,13 +53,10 @@ const toTagFilter = (tags?: string): TagMatcher => {
       `Invalid tag expression ${JSON.stringify(tags)} in gherkin setting "tags"`,
       {
         code: "invalid_tag_expression",
-        title: "Invalid Tag Expression",
         details:
           "The `tags` setting selects scenarios at transform time with Cucumber's tag-expression language — `and` / `or` / `not` with parentheses over @-prefixed tags (NOT vitest's --tagsFilter syntax). Fix the expression.",
         data: { tags },
-        // Always an Error on 11.0.1 (its parser throws `new Error(...)` for
-        // every syntax failure), so no non-Error branch to keep covered.
-        error: error as Error,
+        cause: error,
       },
     );
   }

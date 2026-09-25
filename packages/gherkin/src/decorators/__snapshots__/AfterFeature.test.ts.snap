@@ -9,7 +9,5 @@ exports[`AfterFeature > should throw scope_violation for an instance method at d
   },
   "details": "The hook's scope is wider than a scenario, so it cannot run against a per-scenario instance. Add the static modifier.",
   "message": "@AfterFeature requires a static method",
-  "title": "Scope Violation",
-  "type": "urn:lindorm:gherkin:error:scope_violation",
 }
 `;

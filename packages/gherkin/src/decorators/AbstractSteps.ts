@@ -24,7 +24,6 @@ export const AbstractSteps =
     if (Object.hasOwn(target, ABSTRACT_STEPS_BRAND)) {
       throw new GherkinError(`@AbstractSteps is applied twice to class ${target.name}`, {
         code: "duplicate_abstract_steps",
-        title: "Duplicate Abstract Steps",
         details:
           "The class is already marked as a shared base; a second @AbstractSteps adds nothing. Remove the extra decorator.",
         data: { className: target.name },
@@ -46,7 +45,6 @@ export const AbstractSteps =
       `@AbstractSteps class ${target.name} declares ${behaviour.kind} ${behaviour.memberName}`,
       {
         code: "abstract_base_declares_behaviour",
-        title: "Abstract Base Declares Behaviour",
         details:
           "An @AbstractSteps base may carry @Inject fields and plain helpers only. Steps, hooks, parameter types and priorities belong on the @Binding class — an inherited hook would run once per extending class, and an inherited step either vanishes or registers once per leaf.",
         data: {

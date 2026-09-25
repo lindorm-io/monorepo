@@ -286,7 +286,6 @@ describe("DataTable", () => {
 
       expect(error).toBeInstanceOf(GherkinError);
       expect(error.code).toBe("table_conversion_failed");
-      expect(error.type).toBe("urn:lindorm:gherkin:error:table_conversion_failed");
       expect(error.message).toContain("Data table body row 2 failed schema conversion");
       // zod's issue details stay visible in the message.
       expect(error.message).toContain("Invalid input: expected number, received NaN");

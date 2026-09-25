@@ -11,7 +11,5 @@ exports[`compileTagExpression > should throw invalid_tag_expression for a malfor
   },
   "details": "The hook's tag expression could not be parsed. The language is \`and\` / \`or\` / \`not\` with parentheses over @-prefixed tags — fix the expression on the hook decorator.",
   "message": "Invalid tag expression "@a and (" on LifecycleHooks.startDocker",
-  "title": "Invalid Tag Expression",
-  "type": "urn:lindorm:gherkin:error:invalid_tag_expression",
 }
 `;

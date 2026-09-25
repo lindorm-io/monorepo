@@ -172,7 +172,7 @@ describe("meta-suite: lifecycle failures", () => {
     );
   });
 
-  test("should append the disposal failure with its urn after a primary step failure", () => {
+  test("should append the disposal failure with its code after a primary step failure", () => {
     expect(output).toContain(
       "× features/dispose-throw.feature > disposal throw > a step failure stays primary and the disposal failure appends",
     );
@@ -182,7 +182,7 @@ describe("meta-suite: lifecycle failures", () => {
         "",
         "1 additional failure followed the one above:",
         "",
-        "  1) urn:lindorm:gherkin:error:disposal_failed",
+        "  1) disposal_failed",
         "",
         "     Context class DisposeAlphaContext dispose() threw",
         "",

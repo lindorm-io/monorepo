@@ -64,7 +64,6 @@ export const buildRegistry = (
           // false above.
           throw new GherkinError(`Duplicate parameter type {${staged.name}}`, {
             code: "duplicate_parameter_type",
-            title: "Duplicate Parameter Type",
             details:
               "A parameter type name registers once per registry — the flat step namespace shares one registry across every step module, and the built-in names are taken too. Rename one of the two declarations.",
             data: {
@@ -73,7 +72,7 @@ export const buildRegistry = (
               modulePath,
               name: staged.name,
             },
-            error: error as Error,
+            cause: error,
           });
         }
       }
@@ -104,7 +103,6 @@ export const buildRegistry = (
               `Unknown parameter type {${error.undefinedParameterTypeName}}`,
               {
                 code: "unknown_parameter_type",
-                title: "Unknown Parameter Type",
                 details:
                   "The step expression references a parameter type that no @ParameterType declaration or built-in provides. Declare it on a static method, or fix the name in the expression.",
                 data: {
@@ -114,7 +112,7 @@ export const buildRegistry = (
                   modulePath,
                   name: error.undefinedParameterTypeName,
                 },
-                error,
+                cause: error,
               },
             );
           }
@@ -125,7 +123,8 @@ export const buildRegistry = (
           // could not find the offending decorator. Always an Error: the
           // thrower is cucumber's own parser (CucumberExpressionError et al).
           const cause = error as Error;
-          const failure = new GherkinError(
+
+          throw new GherkinError(
             [
               `Invalid step expression "${staged.expression}"`,
               `  ${className}.${staged.methodName} (${modulePath})`,
@@ -133,7 +132,6 @@ export const buildRegistry = (
             ].join("\n\n"),
             {
               code: "invalid_step_expression",
-              title: "Invalid Step Expression",
               details:
                 "The step expression is not a valid Cucumber Expression — construction failed before any matching could happen. Fix the expression on the named method; the parser's own diagnosis follows the anchor.",
               data: {
@@ -142,12 +140,9 @@ export const buildRegistry = (
                 methodName: staged.methodName,
                 modulePath,
               },
-              error: cause,
+              cause,
             },
           );
-
-          failure.cause = cause;
-          throw failure;
         }
       }
     }

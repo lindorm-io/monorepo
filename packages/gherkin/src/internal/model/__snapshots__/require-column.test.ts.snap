@@ -8,7 +8,5 @@ exports[`requireColumn > should throw when the parser reports no column 1`] = `
   },
   "details": "Every location the Gherkin parser produces carries a column — a miss means the @cucumber/gherkin dependency changed behaviour underneath the model builder.",
   "message": "AST location carries no column",
-  "title": "Model Invariant Violated",
-  "type": "urn:lindorm:gherkin:error:model_invariant",
 }
 `;

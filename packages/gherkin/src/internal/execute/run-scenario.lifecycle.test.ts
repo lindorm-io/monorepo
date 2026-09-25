@@ -586,9 +586,9 @@ describe("runScenario lifecycle", () => {
 
       expect(log).toEqual(["step:leaky"]);
       // The PRIMARY failure is the runner's own disposal_failed GherkinError —
-      // teardown errors are never a consumer assertion, so they carry the urn.
+      // teardown errors are never a consumer assertion, so they carry the
+      // house code.
       expect(error.code).toBe("disposal_failed");
-      expect(error.type).toBe("urn:lindorm:gherkin:error:disposal_failed");
       expect((error.cause as Error).message).toBe("dispose boom");
       expect(errorShape(error as never)).toMatchSnapshot();
     });
@@ -605,8 +605,8 @@ describe("runScenario lifecycle", () => {
 
       // Primary = the step failure; the after-step hook throw and the
       // disposal throw are APPENDED in lifecycle order — the disposal entry
-      // renders its urn code above the anchored message.
-      expect(error.message).toContain("urn:lindorm:gherkin:error:disposal_failed");
+      // renders its code above the anchored message.
+      expect(error.message).toContain("disposal_failed");
       expect(error.message).toMatchSnapshot();
     });
   });

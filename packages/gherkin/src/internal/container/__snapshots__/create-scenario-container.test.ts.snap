@@ -12,8 +12,6 @@ exports[`createScenarioContainer > cycles > should throw cyclic_context naming t
   },
   "details": "Resolving the token re-entered its own resolution — the @Context classes inject each other in a loop, which no construction order can satisfy. Break the loop by removing one of the @Inject fields, or move the shared state into a third context both inject.",
   "message": "Cyclic context injection: AContext -> BContext -> AContext",
-  "title": "Cyclic Context Injection",
-  "type": "urn:lindorm:gherkin:error:cyclic_context",
 }
 `;
 
@@ -25,8 +23,6 @@ exports[`createScenarioContainer > resolution > should refuse to resolve after d
   },
   "details": "The scenario container was already disposed; resolving would construct a context whose dispose() never runs. Nothing may touch the container after the scenario's teardown.",
   "message": "Cannot resolve LateContext after dispose()",
-  "title": "Container Disposed",
-  "type": "urn:lindorm:gherkin:error:container_disposed",
 }
 `;
 
@@ -40,7 +36,5 @@ exports[`createScenarioContainer > unknown tokens > should name the token and th
   },
   "details": "The token is neither a registered @Context class nor ScenarioInfo — the usual authoring mistake is a missing @Context() decorator on the token class. Add @Context() to it, or inject a registered context.",
   "message": "Unknown context token UnregisteredContext demanded by BindingHost.missing",
-  "title": "Unknown Context Token",
-  "type": "urn:lindorm:gherkin:error:unknown_context_token",
 }
 `;

@@ -60,7 +60,6 @@ export const requireStepLocation = (
 
   throw new GherkinError(`No AST step found for pickle step astNodeId "${id}"`, {
     code: "model_invariant",
-    title: "Model Invariant Violated",
     details:
       "Every pickle step's astNodeIds[0] must resolve to an AST step — a miss means the @cucumber/gherkin dependency changed behaviour underneath the model builder.",
     data: { id },

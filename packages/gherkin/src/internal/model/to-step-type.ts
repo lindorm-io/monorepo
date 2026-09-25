@@ -26,7 +26,6 @@ export const toStepType = (type: PickleStepType | undefined): StepType => {
     case undefined:
       throw new GherkinError("Pickle step carries no keyword type", {
         code: "model_invariant",
-        title: "Model Invariant Violated",
         details:
           "compile() resolves a keyword type for every pickle step; a step without one means the @cucumber/gherkin dependency changed behaviour underneath the model builder.",
       });
@@ -35,7 +34,6 @@ export const toStepType = (type: PickleStepType | undefined): StepType => {
       const exhaustive: never = type;
       throw new GherkinError(`Unexpected pickle step type "${String(exhaustive)}"`, {
         code: "model_invariant",
-        title: "Model Invariant Violated",
         details:
           "The @cucumber/messages PickleStepType enum gained a value this model builder does not map.",
         data: { type: exhaustive },

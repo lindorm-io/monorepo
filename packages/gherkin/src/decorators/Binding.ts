@@ -32,7 +32,6 @@ export const Binding =
     if (Object.hasOwn(target, BINDING_BRAND)) {
       throw new GherkinError(`@Binding is applied twice to class ${target.name}`, {
         code: "duplicate_binding",
-        title: "Duplicate Binding",
         details:
           "The class is already registered; a second @Binding would register every step and parameter type twice and later misreport them as ambiguous. Remove the extra decorator.",
         data: { className: target.name },

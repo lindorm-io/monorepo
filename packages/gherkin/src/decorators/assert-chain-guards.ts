@@ -21,7 +21,6 @@ const throwInheritanceForbidden = (
     `@${decorator} class ${target.name} may not extend @${ancestorDecorator} class ${ancestor.name}`,
     {
       code: "inheritance_forbidden",
-      title: `${decorator} Inheritance Forbidden`,
       details:
         "Each @Binding and @Context class is instantiated with its own `this`, so state set through the parent would be invisible through the child. Extract shared @Inject wiring into an @AbstractSteps base class instead.",
       data: { child: target.name, parent: ancestor.name },
@@ -76,7 +75,6 @@ export const assertChainGuards = (
         `@${decorator} class ${target.name} may only extend @AbstractSteps classes — ${ancestorClass.name} is not marked @AbstractSteps`,
         {
           code: "abstract_base_undecorated",
-          title: "Abstract Base Undecorated",
           details:
             "Under swc's decorator lowering an unmarked base's metadata drops off the prototype chain silently, so every ancestor declaring decorated members must carry @AbstractSteps. Mark the named class @AbstractSteps (its decorated members may be @Inject fields only) — unless it is decorated @Context: a context cannot double as a base, so restructure to @Inject it from a field instead of extending it.",
           data: { ancestor: ancestorClass.name, className: target.name },
@@ -88,7 +86,6 @@ export const assertChainGuards = (
       `@${decorator} class ${target.name} inherits ${behaviour.kind} ${behaviour.memberName} from class ${ancestorClass.name}`,
       {
         code: "abstract_base_declares_behaviour",
-        title: "Abstract Base Declares Behaviour",
         details:
           "Registration is own-only, so an inherited step never registers and an inherited hook never runs — a silent no-op. Move the member onto the @Binding class; a shared base may carry @Inject fields only, marked @AbstractSteps.",
         data: {

@@ -135,7 +135,7 @@ describe("assertStepModuleLowered", () => {
       expect(errorShape(error)).toMatchSnapshot();
     });
 
-    test("should keep the parser's own message and carry the uri as the id", () => {
+    test("should keep the parser's own message as the cause and carry the uri as the id", () => {
       const error = capture(() =>
         assertStepModuleLowered({
           code: "export const greeting: string = 'hello';\n",
@@ -144,7 +144,7 @@ describe("assertStepModuleLowered", () => {
       );
 
       expect(error.code).toBe("step_module_not_compiled");
-      expect(error.errors.join("\n")).toContain("Parse failed");
+      expect((error.cause as Error).message).toContain("Parse failed");
       expect(error.id).toBe(URI);
     });
   });

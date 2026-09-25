@@ -9,7 +9,5 @@ exports[`BeforeScenario > should throw scope_violation for a static method at de
   },
   "details": "The hook runs against a per-scenario instance; a static method has no scenario scope. Remove the static modifier.",
   "message": "@BeforeScenario requires an instance method",
-  "title": "Scope Violation",
-  "type": "urn:lindorm:gherkin:error:scope_violation",
 }
 `;

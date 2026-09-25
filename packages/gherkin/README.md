@@ -307,7 +307,7 @@ The remaining 1 step in this scenario was skipped.
 - **Disposal failed** — a context's `dispose()` threw during teardown: the scenario is red (`disposal_failed`), disposal continues through the remaining contexts, and the failure is appended after any earlier one.
 - Remaining steps in a failed scenario are **skipped**, so the cause is never buried.
 
-The runner's OWN failures — undefined, ambiguous, pending, conversion, disposal, authoring errors — carry a `urn:lindorm:gherkin:error:<code>` type. A failing step or hook rethrows YOUR error with the anchor prepended, so assertion diffs survive intact. Gherkin syntax errors, empty scenarios and zero-row `Examples:` tables are authoring errors and fail red at the offending line.
+The runner's OWN failures — undefined, ambiguous, pending, conversion, disposal, authoring errors — are `GherkinError`s carrying a stable `code`. A failing step or hook rethrows YOUR error with the anchor prepended, so assertion diffs survive intact. Gherkin syntax errors, empty scenarios and zero-row `Examples:` tables are authoring errors and fail red at the offending line.
 
 The plugin also fails the whole run at startup if a `.feature` file on disk matches none of the configured `features` patterns (`feature_not_included`), or matches one but no `test.include` pattern (`feature_not_collected`) — a feature file nobody collects would otherwise be a silent pass at file granularity. The collection guard strips a `.integration.` / `.weekly.` suffix from the include globs before matching, so a suffixed glob satisfies it for the unsuffixed family too.
 

@@ -26,7 +26,6 @@ export const createHookDecorator =
       ) {
         throw new GherkinError(`@${kind} is applied twice to method ${methodName}`, {
           code: "duplicate_hook",
-          title: "Duplicate Hook",
           details:
             "Both decorators stage, so the method would silently run twice per match. Tag expressions support `or`, so stacking two of them buys nothing except double execution — combine them into one decorator.",
           data: { hook: kind, method: methodName },
@@ -45,7 +44,6 @@ export const createHookDecorator =
     if (staticScope) {
       throw new GherkinError(`@${kind} requires a static method`, {
         code: "scope_violation",
-        title: "Scope Violation",
         details:
           "The hook's scope is wider than a scenario, so it cannot run against a per-scenario instance. Add the static modifier.",
         data: { hook: kind, method: String(context.name) },
@@ -54,7 +52,6 @@ export const createHookDecorator =
 
     throw new GherkinError(`@${kind} requires an instance method`, {
       code: "scope_violation",
-      title: "Scope Violation",
       details:
         "The hook runs against a per-scenario instance; a static method has no scenario scope. Remove the static modifier.",
       data: { hook: kind, method: String(context.name) },

@@ -39,7 +39,6 @@ export const resolveDispatch = ({
       }),
       {
         code: "undefined_step",
-        title: "Undefined Step",
         details:
           "No step definition matched the step text. Paste the snippet into a @Binding class and implement it.",
         data: { line: step.line, text: step.text, uri },
@@ -52,7 +51,6 @@ export const resolveDispatch = ({
       formatAmbiguousStep({ candidates: match.candidates, remaining, step, uri }),
       {
         code: "ambiguous_step",
-        title: "Ambiguous Step",
         details:
           "More than one step definition matched the step text. Matching is text-only — the decorator keyword does not disambiguate. Remove one, or make the expressions disjoint.",
         data: {

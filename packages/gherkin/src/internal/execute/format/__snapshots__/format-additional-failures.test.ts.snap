@@ -20,7 +20,7 @@ exports[`formatAdditionalFailures > should number one additional failure with si
   1) dispose failed"
 `;
 
-exports[`formatAdditionalFailures > should render the urn type above a runner-owned failure and none for a consumer error 1`] = `
+exports[`formatAdditionalFailures > should render the code above a runner-owned failure and none for a codeless error 1`] = `
 "2 additional failures followed the one above:
 
   1) @AfterStep hook failed
@@ -29,7 +29,7 @@ exports[`formatAdditionalFailures > should render the urn type above a runner-ow
 
      boom
 
-  2) urn:lindorm:gherkin:error:disposal_failed
+  2) disposal_failed
 
      Context class AesContext dispose() threw
 

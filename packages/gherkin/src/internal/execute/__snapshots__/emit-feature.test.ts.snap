@@ -15,8 +15,6 @@ exports[`emitFeature > feature models > should emit a failing test for an empty-
   at src/features/emit.feature:14:5
 
 The Examples table has a header and zero data rows, so the outline compiles to zero scenarios. Add data rows, or delete the block.",
-  "title": "Empty Examples Table",
-  "type": "urn:lindorm:gherkin:error:empty_examples",
 }
 `;
 
@@ -35,8 +33,6 @@ exports[`emitFeature > feature models > should emit a failing test for an empty-
   at src/features/emit.feature:6:3
 
 The scenario has a name and zero steps — running it would report green having executed nothing. Write its steps, or delete it.",
-  "title": "Empty Scenario",
-  "type": "urn:lindorm:gherkin:error:empty_scenario",
 }
 `;
 
@@ -60,8 +56,6 @@ exports[`emitFeature > parse-error models > should emit ONE failing test carryin
   at src/features/emit.feature:4:3
 
 Fix the first error first — later ones are often knock-ons.",
-  "title": "Gherkin Parse Error",
-  "type": "urn:lindorm:gherkin:error:parse_error",
 }
 `;
 
@@ -75,7 +69,5 @@ exports[`emitFeature > structural invariant > should throw stating both numbers 
   },
   "details": "The number of registered tests must equal the model's expected count — a mismatch means the suite emitter dropped or doubled a scenario, a bug that would otherwise be invisible in the printed counts.",
   "message": "Structural invariant violated: 1 tests registered, 3 expected for src/features/emit.feature",
-  "title": "Structural Invariant Violated",
-  "type": "urn:lindorm:gherkin:error:structural_invariant",
 }
 `;

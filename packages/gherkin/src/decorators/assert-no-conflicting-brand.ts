@@ -39,7 +39,6 @@ export const assertNoConflictingBrand = (
     `@${decorator} class ${target.name} is already decorated @${conflict.decorator}`,
     {
       code: "conflicting_decorators",
-      title: "Conflicting Decorators",
       details:
         "A class carries ONE gherkin role — @AbstractSteps marks a shared base, @Binding hosts steps and hooks, @Context is a state token. Split the class, or remove one of the decorators.",
       data: {

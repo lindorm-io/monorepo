@@ -68,7 +68,6 @@ export class DataTable {
         `hashes() requires unique header cells — "${duplicate.key}" appears in columns ${duplicate.positions.join(", ")}`,
         {
           code: "invalid_data_table",
-          title: "Invalid Data Table Shape",
           details:
             "Each body row becomes one Record keyed by the header, so a repeated header cell would discard every value under it but the last. Rename the columns, or read the table through raw().",
           data: { columns: duplicate.positions, key: duplicate.key },
@@ -98,7 +97,6 @@ export class DataTable {
         `rowsHash() requires every row to have exactly two columns — row ${offending + 1} has ${this.cells[offending].length}`,
         {
           code: "invalid_data_table",
-          title: "Invalid Data Table Shape",
           details:
             "rowsHash() reads a two-column table as key/value pairs; a row with any other width has no key/value reading. Reshape the table, or use hashes() for header-keyed rows.",
           data: { row: offending + 1, width: this.cells[offending].length },
@@ -113,7 +111,6 @@ export class DataTable {
         `rowsHash() requires unique keys — "${duplicate.key}" appears in rows ${duplicate.positions.join(", ")}`,
         {
           code: "invalid_data_table",
-          title: "Invalid Data Table Shape",
           details:
             "rowsHash() reads every row as one key/value pair, so a repeated key would discard every value under it but the last. Rename the keys, or read the table through raw().",
           data: { key: duplicate.key, rows: duplicate.positions },
@@ -195,7 +192,6 @@ export class DataTable {
       `create() converts exactly one body row — this table has ${hashes.length}. Use createSet() for multi-row tables.`,
       {
         code: "invalid_data_table",
-        title: "Invalid Data Table Shape",
         details:
           "create() returns ONE object, so the table must carry a header row and exactly one body row — converting any other count would silently truncate or invent data.",
         data: { bodyRows: hashes.length },
@@ -239,14 +235,10 @@ export class DataTable {
         `Data table body row ${bodyRow} failed schema conversion\n\n${error.message}`,
         {
           code: "table_conversion_failed",
-          title: "Data Table Conversion Failed",
           details:
             "The table's string cells did not satisfy the zod schema. Fix the table in the feature file, or the schema — string cells usually need z.coerce for numbers, booleans and dates.",
-          // EXPLICIT, mirroring conversion_failed: the wrapper's urn must
-          // never depend on the inner error's shape.
-          type: "urn:lindorm:gherkin:error:table_conversion_failed",
           data: { issues: error.issues, row: bodyRow },
-          error,
+          cause: error,
         },
       );
     }

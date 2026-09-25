@@ -1,17 +1,14 @@
-import { LindormError } from "@lindorm/errors";
+import { isString } from "@lindorm/is";
 import { indent } from "./indent.js";
 import { joinBlocks } from "./join-blocks.js";
 
 const formatEntry = (error: Error, index: number): string => {
   const label = `  ${index + 1}) `;
-  // Carries a lindorm urn ⇒ urn line — the error's OWN type, which is
-  // informative whether the failure is runner-owned (disposal_failed, …) or a
-  // consumer hook rethrowing its own LindormError. The instanceof is safe in
-  // the load-bearing direction: runner-owned GherkinErrors share this module
-  // graph, so no false negative; a dual-install consumer LindormError merely
-  // degrades to the plain consumer rendering.
-  const message =
-    error instanceof LindormError ? `${error.type}\n\n${error.message}` : error.message;
+  // Any error carrying a string `code` gets a code line — runner-owned
+  // (disposal_failed, …) and consumer alike, read off the property rather than
+  // the prototype, so a second installed copy of this package renders the same.
+  const code = (error as { code?: unknown }).code;
+  const message = isString(code) ? `${code}\n\n${error.message}` : error.message;
 
   // Indent the whole message to the label's width, then splice the label into
   // the first line — multi-line messages stay aligned under their number.

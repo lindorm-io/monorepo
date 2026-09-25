@@ -10,8 +10,6 @@ exports[`Context > should throw context_declares_behaviour for a staged step, na
   },
   "details": "A @Context class carries state only. Steps, hooks and parameter types belong on a @Binding class — staged on a context, a step never registers and a hook never runs, a silent no-op. Move the member to a @Binding class.",
   "message": "@Context class Bad declares step contextStep",
-  "title": "Context Declares Behaviour",
-  "type": "urn:lindorm:gherkin:error:context_declares_behaviour",
 }
 `;
 
@@ -23,8 +21,6 @@ exports[`Context > should throw duplicate_context when @Context is applied twice
   },
   "details": "The class is already registered as a context token; a second @Context would register it twice. Remove the extra decorator.",
   "message": "@Context is applied twice to class Twice",
-  "title": "Duplicate Context",
-  "type": "urn:lindorm:gherkin:error:duplicate_context",
 }
 `;
 
@@ -37,7 +33,5 @@ exports[`Context > should throw inheritance_forbidden when a @Context class exte
   },
   "details": "Each @Binding and @Context class is instantiated with its own \`this\`, so state set through the parent would be invisible through the child. Extract shared @Inject wiring into an @AbstractSteps base class instead.",
   "message": "@Context class Leaf may not extend @Context class Base",
-  "title": "Context Inheritance Forbidden",
-  "type": "urn:lindorm:gherkin:error:inheritance_forbidden",
 }
 `;

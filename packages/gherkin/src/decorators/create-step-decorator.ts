@@ -22,7 +22,6 @@ export const createStepDecorator =
 
     throw new GherkinError(`@${decorator} requires an instance method`, {
       code: "scope_violation",
-      title: "Scope Violation",
       details:
         "Step methods run against a per-scenario instance; a static method has no scenario scope. Remove the static modifier.",
       data: { decorator, method: String(context.name) },

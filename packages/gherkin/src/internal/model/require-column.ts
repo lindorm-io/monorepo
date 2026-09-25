@@ -16,7 +16,6 @@ export const requireColumn = (location: Location): number => {
 
   throw new GherkinError("AST location carries no column", {
     code: "model_invariant",
-    title: "Model Invariant Violated",
     details:
       "Every location the Gherkin parser produces carries a column — a miss means the @cucumber/gherkin dependency changed behaviour underneath the model builder.",
     data: { line: location.line },

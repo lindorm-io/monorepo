@@ -76,7 +76,7 @@ leaky step boom
 
      after-step boom
 
-  2) urn:lindorm:gherkin:error:disposal_failed
+  2) disposal_failed
 
      Context class ThrowingDisposeContext dispose() threw
 
@@ -93,7 +93,5 @@ exports[`runScenario lifecycle > §4: disposal > should fail a scenario whose ON
   "message": "Context class ThrowingDisposeContext dispose() threw
 
 dispose boom",
-  "title": "Context Disposal Failed",
-  "type": "urn:lindorm:gherkin:error:disposal_failed",
 }
 `;

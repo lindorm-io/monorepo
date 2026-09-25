@@ -78,7 +78,6 @@ export const createScenarioContainer = (
     if (disposed) {
       throw new GherkinError(`Cannot resolve ${token.name} after dispose()`, {
         code: "container_disposed",
-        title: "Container Disposed",
         details:
           "The scenario container was already disposed; resolving would construct a context whose dispose() never runs. Nothing may touch the container after the scenario's teardown.",
         data: { token: token.name },
@@ -103,7 +102,6 @@ export const createScenarioContainer = (
 
       throw new GherkinError(`Unknown context token ${token.name}${demanded}`, {
         code: "unknown_context_token",
-        title: "Unknown Context Token",
         details:
           "The token is neither a registered @Context class nor ScenarioInfo — the usual authoring mistake is a missing @Context() decorator on the token class. Add @Context() to it, or inject a registered context.",
         data: {
@@ -127,7 +125,6 @@ export const createScenarioContainer = (
 
       throw new GherkinError(`Cyclic context injection: ${cycle.join(" -> ")}`, {
         code: "cyclic_context",
-        title: "Cyclic Context Injection",
         details:
           "Resolving the token re-entered its own resolution — the @Context classes inject each other in a loop, which no construction order can satisfy. Break the loop by removing one of the @Inject fields, or move the shared state into a third context both inject.",
         data: { cycle },
@@ -197,7 +194,7 @@ export const createScenarioContainer = (
           // Anchored HERE — only this frame knows which context's dispose()
           // threw. Wrapped as `disposal_failed` (§4 taxonomy): a teardown
           // error is the runner's own failure, never an assertion diff, so it
-          // gets the house urn instead of the primary-instance rethrow steps
+          // gets the house code instead of the primary-instance rethrow steps
           // and hooks use. The original travels as the cause.
           const className = instance.constructor.name;
           const failure = new GherkinError(
@@ -207,21 +204,13 @@ export const createScenarioContainer = (
             }),
             {
               code: "disposal_failed",
-              title: "Context Disposal Failed",
               details:
                 "A context's dispose() threw or rejected during the scenario's teardown. Disposal continues through the remaining contexts; the failure is reported against the scenario, appended after any earlier failure.",
               data: { className },
-              // EXPLICIT: pins this wrapper's identity independently of
-              // LindormError's type-resolution semantics — a consumer
-              // dispose() may throw any foreign-urn LindormError. Pinned:
-              // create-scenario-container.test.ts ("keep the disposal_failed
-              // urn when dispose() throws a FOREIGN LindormError").
-              type: "urn:lindorm:gherkin:error:disposal_failed",
-              ...(isError(error) ? { error } : {}),
+              cause: error,
             },
           );
 
-          failure.cause = error;
           errors.push(failure);
         }
       }

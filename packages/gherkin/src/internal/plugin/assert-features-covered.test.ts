@@ -41,7 +41,6 @@ describe("assertFeaturesCovered", () => {
     // across machines and snapshot-safe; `data.root` is not.
     expect(error.message).toMatchSnapshot();
     expect(error.code).toBe("feature_not_included");
-    expect(error.title).toBe("Feature File Not Included");
     expect(error.data.orphans).toEqual(["stray/orphan.feature"]);
     expect(error.data.features).toEqual(["src/**/*.feature"]);
     expect(error.data.root).toBe(ROOT);

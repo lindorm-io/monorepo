@@ -50,7 +50,6 @@ export const assertTagNames = (tags: Array<AstTag>, uri: string): void => {
 
     throw new GherkinError(formatTagError("Invalid tag name", tag, uri, reason), {
       code: "invalid_tag_name",
-      title: "Invalid Tag Name",
       details:
         "Gherkin tags are registered as vitest tags with the `@` stripped, and vitest rejects this name at config resolution — where no feature file is named. Rename the tag: `@issue(1234)` becomes e.g. `@issue-1234`.",
       data: { column: tag.column, line: tag.line, tag: tag.name, uri },
