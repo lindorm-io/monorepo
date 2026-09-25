@@ -94,8 +94,8 @@ type StandardOpenIdConfiguration = {
   tokenEndpoint: string;
 
   /**
-   * wire: `jwks_uri` — REQUIRED (OIDC Discovery §3; RECOMMENDED by RFC 8414
-   * §2). URL of the provider's JWK Set — see `JwksResponse`.
+   * wire: `jwks_uri` — REQUIRED (OIDC Discovery §3; OPTIONAL in RFC 8414 §2).
+   * URL of the provider's JWK Set — see `JwksResponse`.
    */
   jwksUri: string;
 
