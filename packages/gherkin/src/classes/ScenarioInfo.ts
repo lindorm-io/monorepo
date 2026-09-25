@@ -22,7 +22,7 @@ export class ScenarioInfo {
     this.featureUri = settings.featureUri;
     this.ruleName = settings.ruleName;
     this.scenarioName = settings.scenarioName;
-    this.tags = settings.tags;
+    this.tags = [...settings.tags];
     // Object.fromEntries creates OWN data properties, so a "__proto__"
     // Examples column survives as a readable key — the reason the settings
     // carry entries rather than a Record (scenario-info-settings.ts). Pinned:

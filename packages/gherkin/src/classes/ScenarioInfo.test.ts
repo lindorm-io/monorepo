@@ -63,6 +63,38 @@ describe("ScenarioInfo", () => {
     expect(Object.getPrototypeOf(info.examplesRow)).toBe(Object.prototype);
   });
 
+  test("should not observe later mutation of the settings tags array", () => {
+    const tags = ["@integration"];
+
+    const info = new ScenarioInfo({
+      featureName: "AES round trip",
+      featureUri: "src/features/aes.feature",
+      scenarioName: "every content encryption round-trips",
+      tags,
+      line: 12,
+    });
+
+    tags.push("@added");
+
+    expect(info.tags).toEqual(["@integration"]);
+  });
+
+  test("should not change the settings tags array when a consumer mutates info.tags", () => {
+    const tags = ["@integration"];
+
+    const info = new ScenarioInfo({
+      featureName: "AES round trip",
+      featureUri: "src/features/aes.feature",
+      scenarioName: "every content encryption round-trips",
+      tags,
+      line: 12,
+    });
+
+    info.tags.push("@added");
+
+    expect(tags).toEqual(["@integration"]);
+  });
+
   test("should leave the optional fields undefined outside a Rule and an Examples row", () => {
     const info = new ScenarioInfo({
       featureName: "AES round trip",

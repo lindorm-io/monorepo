@@ -4,11 +4,45 @@ exports[`DataTable > cucumber-js methods > should throw invalid_data_table from 
 {
   "code": "invalid_data_table",
   "data": {
-    "columns": 3,
     "row": 2,
+    "width": 3,
   },
   "details": "rowsHash() reads a two-column table as key/value pairs; a row with any other width has no key/value reading. Reshape the table, or use hashes() for header-keyed rows.",
   "message": "rowsHash() requires every row to have exactly two columns — row 2 has 3",
+  "title": "Invalid Data Table Shape",
+  "type": "urn:lindorm:gherkin:error:invalid_data_table",
+}
+`;
+
+exports[`DataTable > duplicate keys > should throw invalid_data_table from hashes() on a repeated header cell, naming the key and its columns 1`] = `
+{
+  "code": "invalid_data_table",
+  "data": {
+    "columns": [
+      1,
+      2,
+    ],
+    "key": "name",
+  },
+  "details": "Each body row becomes one Record keyed by the header, so a repeated header cell would discard every value under it but the last. Rename the columns, or read the table through raw().",
+  "message": "hashes() requires unique header cells — "name" appears in columns 1, 2",
+  "title": "Invalid Data Table Shape",
+  "type": "urn:lindorm:gherkin:error:invalid_data_table",
+}
+`;
+
+exports[`DataTable > duplicate keys > should throw invalid_data_table from rowsHash() on a repeated key, naming the key and its rows 1`] = `
+{
+  "code": "invalid_data_table",
+  "data": {
+    "key": "algorithm",
+    "rows": [
+      1,
+      2,
+    ],
+  },
+  "details": "rowsHash() reads every row as one key/value pair, so a repeated key would discard every value under it but the last. Rename the keys, or read the table through raw().",
+  "message": "rowsHash() requires unique keys — "algorithm" appears in rows 1, 2",
   "title": "Invalid Data Table Shape",
   "type": "urn:lindorm:gherkin:error:invalid_data_table",
 }

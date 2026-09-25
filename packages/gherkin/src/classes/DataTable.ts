@@ -3,11 +3,16 @@ import type { output, ZodType } from "zod";
 import { ZodError } from "zod";
 import { GherkinError } from "../errors/GherkinError.js";
 
+type DuplicateKey = {
+  key: string;
+  positions: Array<number>;
+};
+
 /**
  * A step's DataTable argument, delivered in the trailing argument slot. The
  * five untyped methods are cucumber-js's exactly (models/data_table.ts, read
  * 2026-08-19): `raw`, `rows`, `hashes`, `rowsHash`, `transpose` — all values
- * `string`. Two deliberate divergences, both toward explicitness:
+ * `string`. Three deliberate divergences, all toward explicitness:
  *
  * - COPYING: cucumber's `raw()` is a shallow `slice(0)`, so mutating an inner
  *   row through it corrupts every later `hashes()`/`rows()` call on the same
@@ -18,6 +23,10 @@ import { GherkinError } from "../errors/GherkinError.js";
  * - EMPTY TABLES: cucumber's `transpose()`/`hashes()` crash with a TypeError
  *   on a zero-row table; here every method is total (empty in, empty out).
  *   Gherkin cannot produce a zero-row table, but the constructor is public.
+ * - UNIQUE KEYS: a repeated `hashes()` header cell or `rowsHash()` key
+ *   overwrites the earlier cell under cucumber's last-write-wins assignment,
+ *   so a cell the feature file carries never reaches the step. Here both
+ *   throw `invalid_data_table` (pinned: DataTable.test.ts).
  *
  * Typed conversion is zod: `create`/`createSet` are SYNCHRONOUS (`.parse`) —
  * they run inside the consumer's step body where the runner cannot await
@@ -52,6 +61,21 @@ export class DataTable {
       return [];
     }
 
+    const duplicate = this.duplicateKey(header);
+
+    if (!isUndefined(duplicate)) {
+      throw new GherkinError(
+        `hashes() requires unique header cells — "${duplicate.key}" appears in columns ${duplicate.positions.join(", ")}`,
+        {
+          code: "invalid_data_table",
+          title: "Invalid Data Table Shape",
+          details:
+            "Each body row becomes one Record keyed by the header, so a repeated header cell would discard every value under it but the last. Rename the columns, or read the table through raw().",
+          data: { columns: duplicate.positions, key: duplicate.key },
+        },
+      );
+    }
+
     // Object.fromEntries creates OWN data properties, so a "__proto__"
     // header cell survives as a readable key — cucumber's `object[key] =`
     // assignment would silently set the prototype instead (the examplesRow /
@@ -69,20 +93,35 @@ export class DataTable {
   rowsHash(): Record<string, string> {
     const offending = this.cells.findIndex((row) => row.length !== 2);
 
-    if (offending === -1) {
-      return Object.fromEntries(this.cells.map((row) => [row[0], row[1]]));
+    if (offending !== -1) {
+      throw new GherkinError(
+        `rowsHash() requires every row to have exactly two columns — row ${offending + 1} has ${this.cells[offending].length}`,
+        {
+          code: "invalid_data_table",
+          title: "Invalid Data Table Shape",
+          details:
+            "rowsHash() reads a two-column table as key/value pairs; a row with any other width has no key/value reading. Reshape the table, or use hashes() for header-keyed rows.",
+          data: { row: offending + 1, width: this.cells[offending].length },
+        },
+      );
     }
 
-    throw new GherkinError(
-      `rowsHash() requires every row to have exactly two columns — row ${offending + 1} has ${this.cells[offending].length}`,
-      {
-        code: "invalid_data_table",
-        title: "Invalid Data Table Shape",
-        details:
-          "rowsHash() reads a two-column table as key/value pairs; a row with any other width has no key/value reading. Reshape the table, or use hashes() for header-keyed rows.",
-        data: { columns: this.cells[offending].length, row: offending + 1 },
-      },
-    );
+    const duplicate = this.duplicateKey(this.cells.map(([key]) => key));
+
+    if (!isUndefined(duplicate)) {
+      throw new GherkinError(
+        `rowsHash() requires unique keys — "${duplicate.key}" appears in rows ${duplicate.positions.join(", ")}`,
+        {
+          code: "invalid_data_table",
+          title: "Invalid Data Table Shape",
+          details:
+            "rowsHash() reads every row as one key/value pair, so a repeated key would discard every value under it but the last. Rename the keys, or read the table through raw().",
+          data: { key: duplicate.key, rows: duplicate.positions },
+        },
+      );
+    }
+
+    return Object.fromEntries(this.cells.map((row) => [row[0], row[1]]));
   }
 
   /** The matrix transposed — a NEW DataTable; this one is untouched. */
@@ -126,6 +165,23 @@ export class DataTable {
     }
 
     return set;
+  }
+
+  /** The first key occurring more than once, with its one-based positions. */
+  private duplicateKey(keys: Array<string>): DuplicateKey | undefined {
+    const seen = new Map<string, Array<number>>();
+
+    for (const [index, key] of keys.entries()) {
+      seen.set(key, [...(seen.get(key) ?? []), index + 1]);
+    }
+
+    for (const [key, positions] of seen) {
+      if (positions.length > 1) {
+        return { key, positions };
+      }
+    }
+
+    return undefined;
   }
 
   private exactlyOneHash(): Record<string, string> {

@@ -255,7 +255,7 @@ export class CatalogSteps {
 }
 ```
 
-`DataTable` carries cucumber-js's five methods, all values `string`: `raw()` (full matrix), `rows()` (body minus header), `hashes()` (header-keyed Records), `rowsHash()` (two-column key/value Record — any other width throws `invalid_data_table`), `transpose()` (a new DataTable). Outline `<placeholder>` values substitute into cells and DocString bodies exactly as into step text.
+`DataTable` carries cucumber-js's five methods, all values `string`: `raw()` (full matrix), `rows()` (body minus header), `hashes()` (header-keyed Records — a repeated header cell throws `invalid_data_table`, naming the key and its columns), `rowsHash()` (two-column key/value Record — any other width, or a repeated key, throws `invalid_data_table`), `transpose()` (a new DataTable). Outline `<placeholder>` values substitute into cells and DocString bodies exactly as into step text.
 
 Typed conversion is zod: `createSet(schema)` parses every `hashes()` row; `create(schema)` parses the table's **single** body row (any other count throws — never silent truncation; for vertical key/value tables use `schema.parse(table.rowsHash())`). Both are **synchronous** on purpose — they run inside your step body, where the runner cannot await them. A schema with an async refinement makes them throw zod's own "Encountered Promise during synchronous parse. Use `.parseAsync()` instead." — switch to `createAsync`/`createSetAsync` and `await`. A failed conversion is red (`table_conversion_failed`) with zod's issues and the step anchor.
 

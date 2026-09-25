@@ -103,6 +103,119 @@ describe("DataTable", () => {
     });
   });
 
+  describe("duplicate keys", () => {
+    test("should throw invalid_data_table from hashes() on a repeated header cell, naming the key and its columns", () => {
+      const error = capture(() =>
+        new DataTable([
+          ["name", "name"],
+          ["apple", "pear"],
+        ]).hashes(),
+      );
+
+      expect(error).toBeInstanceOf(GherkinError);
+      expect(error.code).toBe("invalid_data_table");
+      expect(error.message).toContain('"name" appears in columns 1, 2');
+      expect(error.data).toEqual({ columns: [1, 2], key: "name" });
+      expect(errorShape(error)).toMatchSnapshot();
+    });
+
+    test("should name every column a thrice-repeated header cell occupies", () => {
+      const error = capture(() =>
+        new DataTable([
+          ["algorithm", "encryption", "algorithm", "algorithm"],
+          ["A128KW", "A128GCM", "A256KW", "dir"],
+        ]).hashes(),
+      );
+
+      expect(error.data).toEqual({ columns: [1, 3, 4], key: "algorithm" });
+    });
+
+    test("should throw from hashes() on a repeated header cell in a table with no body rows", () => {
+      const error = capture(() => new DataTable([["name", "name"]]).hashes());
+
+      expect(error.code).toBe("invalid_data_table");
+      expect(error.data).toEqual({ columns: [1, 2], key: "name" });
+    });
+
+    test("should throw invalid_data_table from rowsHash() on a repeated key, naming the key and its rows", () => {
+      const error = capture(() =>
+        new DataTable([
+          ["algorithm", "A128KW"],
+          ["algorithm", "A256KW"],
+        ]).rowsHash(),
+      );
+
+      expect(error).toBeInstanceOf(GherkinError);
+      expect(error.code).toBe("invalid_data_table");
+      expect(error.message).toContain('"algorithm" appears in rows 1, 2');
+      expect(error.data).toEqual({ key: "algorithm", rows: [1, 2] });
+      expect(errorShape(error)).toMatchSnapshot();
+    });
+
+    test("should name every row a thrice-repeated rowsHash() key occupies", () => {
+      const error = capture(() =>
+        new DataTable([
+          ["algorithm", "A128KW"],
+          ["encryption", "A128GCM"],
+          ["algorithm", "A256KW"],
+          ["algorithm", "dir"],
+        ]).rowsHash(),
+      );
+
+      expect(error.data).toEqual({ key: "algorithm", rows: [1, 3, 4] });
+    });
+
+    test("should refuse a repeated __proto__ header cell by name", () => {
+      const error = capture(() =>
+        new DataTable([
+          ["__proto__", "__proto__"],
+          ["evil", "worse"],
+        ]).hashes(),
+      );
+
+      expect(error.data).toEqual({ columns: [1, 2], key: "__proto__" });
+    });
+
+    test("should refuse a repeated __proto__ rowsHash() key by name", () => {
+      const error = capture(() =>
+        new DataTable([
+          ["__proto__", "evil"],
+          ["__proto__", "worse"],
+        ]).rowsHash(),
+      );
+
+      expect(error.data).toEqual({ key: "__proto__", rows: [1, 2] });
+    });
+
+    test("should accept repeated VALUES — only keys carry the uniqueness rule", () => {
+      expect(
+        new DataTable([
+          ["name", "price"],
+          ["apple", "apple"],
+        ]).hashes(),
+      ).toEqual([{ name: "apple", price: "apple" }]);
+
+      expect(
+        new DataTable([
+          ["algorithm", "dir"],
+          ["encryption", "dir"],
+        ]).rowsHash(),
+      ).toEqual({ algorithm: "dir", encryption: "dir" });
+    });
+
+    test("should refuse a repeated header cell from create() before schema conversion", () => {
+      const error = capture(() =>
+        new DataTable([
+          ["name", "name"],
+          ["apple", "pear"],
+        ]).create(ProductSchema),
+      );
+
+      expect(error.code).toBe("invalid_data_table");
+      expect(error.data).toEqual({ columns: [1, 2], key: "name" });
+    });
+  });
+
   describe("defensive copying", () => {
     test("should not corrupt the instance when a consumer mutates raw()", () => {
       // The deliberate divergence from cucumber's shallow slice(0), where
