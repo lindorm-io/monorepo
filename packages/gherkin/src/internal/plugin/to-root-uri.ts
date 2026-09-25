@@ -7,5 +7,5 @@ import { normalizePath } from "vite";
  * per input: same root + id gives byte-identical output regardless of
  * platform separators (normalizePath is vite's own posix normalization).
  */
-export const toFeatureUri = (root: string, file: string): string =>
+export const toRootUri = (root: string, file: string): string =>
   normalizePath(relative(root, file));

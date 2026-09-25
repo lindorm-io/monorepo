@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { parseAst } from "vite";
 import { describe, expect, test } from "vitest";
-import { captureAsync } from "../../__fixtures__/test-helpers.js";
+import { capture, captureAsync } from "../../__fixtures__/test-helpers.js";
 import { buildFeatureModel } from "../model/build-feature-model.js";
 import { gherkinPlugin } from "./gherkin-plugin.js";
 
@@ -45,7 +45,7 @@ const source = [
 
 describe("gherkinPlugin", () => {
   test("should identify itself and run before other transforms", () => {
-    const plugin = gherkinPlugin();
+    const [plugin] = gherkinPlugin();
 
     expect(plugin.name).toBe("lindorm-gherkin");
     // enforce "pre" is spike-verified load-bearing: swc must never see raw
@@ -53,22 +53,29 @@ describe("gherkinPlugin", () => {
     expect(plugin.enforce).toBe("pre");
   });
 
+  test("should wire the feature plugin and the lowering guard as one pair", () => {
+    expect(gherkinPlugin().map((entry) => entry.name)).toEqual([
+      "lindorm-gherkin",
+      "lindorm-gherkin-lowering",
+    ]);
+  });
+
   describe("transform", () => {
     test("should ignore non-feature ids", () => {
-      const plugin = gherkinPlugin();
+      const [plugin] = gherkinPlugin();
 
       expect(plugin.transform("export const x = 1;", "/repo/src/a.ts")).toBeNull();
       expect(plugin.transform("Feature: f", "/repo/src/a.feature.ts")).toBeNull();
     });
 
     test("should ignore a non-feature id whose query mentions the extension", () => {
-      const plugin = gherkinPlugin();
+      const [plugin] = gherkinPlugin();
 
       expect(plugin.transform("export {};", "/repo/src/a.ts?path=b.feature")).toBeNull();
     });
 
     test("should transform a feature id and carry no source map", () => {
-      const plugin = gherkinPlugin();
+      const [plugin] = gherkinPlugin();
       plugin.configResolved({ root: "/repo/pkg" });
 
       const result = plugin.transform(source, "/repo/pkg/src/features/a.feature");
@@ -80,7 +87,7 @@ describe("gherkinPlugin", () => {
     });
 
     test("should strip a query suffix from the id before extension check and uri", () => {
-      const plugin = gherkinPlugin();
+      const [plugin] = gherkinPlugin();
       plugin.configResolved({ root: "/repo/pkg" });
 
       const plain = plugin.transform(source, "/repo/pkg/src/features/a.feature");
@@ -93,7 +100,7 @@ describe("gherkinPlugin", () => {
     });
 
     test("should compute the uri relative to the resolved root", () => {
-      const plugin = gherkinPlugin();
+      const [plugin] = gherkinPlugin();
       plugin.configResolved({ root: "/repo/pkg" });
 
       const result = plugin.transform(source, "/repo/pkg/src/features/a.feature");
@@ -104,7 +111,7 @@ describe("gherkinPlugin", () => {
     });
 
     test("should emit byte-identical output for identical input", () => {
-      const plugin = gherkinPlugin();
+      const [plugin] = gherkinPlugin();
       plugin.configResolved({ root: "/repo/pkg" });
 
       const first = plugin.transform(source, "/repo/pkg/src/a.feature");
@@ -114,7 +121,7 @@ describe("gherkinPlugin", () => {
     });
 
     test("should embed default step patterns root-absolute", () => {
-      const plugin = gherkinPlugin();
+      const [plugin] = gherkinPlugin();
       plugin.configResolved({ root: "/repo/pkg" });
 
       const result = plugin.transform(source, "/repo/pkg/src/a.feature");
@@ -125,7 +132,9 @@ describe("gherkinPlugin", () => {
     });
 
     test("should embed configured step patterns root-absolute", () => {
-      const plugin = gherkinPlugin({ steps: ["steps/**/*.steps.ts", "/abs/*.steps.ts"] });
+      const [plugin] = gherkinPlugin({
+        steps: ["steps/**/*.steps.ts", "/abs/*.steps.ts"],
+      });
       plugin.configResolved({ root: "/repo/pkg" });
 
       const result = plugin.transform(source, "/repo/pkg/src/a.feature");
@@ -143,7 +152,7 @@ describe("gherkinPlugin", () => {
         "    Given a step with `${injection}`; characters",
       ].join("\n");
 
-      const plugin = gherkinPlugin();
+      const [plugin] = gherkinPlugin();
       plugin.configResolved({ root: "/repo/pkg" });
 
       const result = plugin.transform(hostileSource, "/repo/pkg/src/hostile.feature");
@@ -167,7 +176,7 @@ describe("gherkinPlugin", () => {
         "      | evil      | ok   |",
       ].join("\n");
 
-      const plugin = gherkinPlugin();
+      const [plugin] = gherkinPlugin();
       plugin.configResolved({ root: "/repo/pkg" });
 
       const result = plugin.transform(protoSource, "/repo/pkg/src/proto.feature");
@@ -211,7 +220,7 @@ describe("gherkinPlugin", () => {
         "      | evil      | ok   |",
       ].join("\n");
 
-      const plugin = gherkinPlugin();
+      const [plugin] = gherkinPlugin();
       plugin.configResolved({ root: "/repo/pkg" });
 
       const result = plugin.transform(argumentSource, "/repo/pkg/src/args.feature");
@@ -264,7 +273,7 @@ describe("gherkinPlugin", () => {
     ].join("\n");
 
     test("should omit scenarios the settings tags expression excludes — they never become tests", () => {
-      const plugin = gherkinPlugin({ tags: "not @slow" });
+      const [plugin] = gherkinPlugin({ tags: "not @slow" });
       plugin.configResolved({ root: "/repo/pkg" });
 
       const result = plugin.transform(taggedSource, "/repo/pkg/src/tagged.feature");
@@ -278,7 +287,7 @@ describe("gherkinPlugin", () => {
     });
 
     test("should emit the full model without a tags setting", () => {
-      const plugin = gherkinPlugin();
+      const [plugin] = gherkinPlugin();
       plugin.configResolved({ root: "/repo/pkg" });
 
       const result = plugin.transform(taggedSource, "/repo/pkg/src/tagged.feature");
@@ -308,7 +317,7 @@ describe("gherkinPlugin", () => {
           ].join("\n"),
         );
 
-        const plugin = gherkinPlugin();
+        const [plugin] = gherkinPlugin();
 
         await expect(plugin.config({ root })).resolves.toEqual({
           test: { tags: [{ name: "lane" }, { name: "smoke" }] },
@@ -328,7 +337,7 @@ describe("gherkinPlugin", () => {
       // The vitest worker's cwd IS this package, so the default `features`
       // pattern finds the package's own fixture features; @lifecycle is the
       // one tag under src/ (src/__fixtures__/features/lifecycle.feature).
-      await expect(gherkinPlugin().config({})).resolves.toEqual({
+      await expect(gherkinPlugin()[0].config({})).resolves.toEqual({
         test: { tags: [{ name: "lifecycle" }] },
       });
     });
@@ -342,7 +351,7 @@ describe("gherkinPlugin", () => {
         await mkdir(join(root, "src"), { recursive: true });
         await writeFile(join(root, "src", "a.feature"), "Feature: a\n");
 
-        const plugin = gherkinPlugin();
+        const [plugin] = gherkinPlugin();
         plugin.configResolved({ root, test: { include: ["src/**/*.feature"] } });
 
         await expect(plugin.buildStart()).resolves.toBeUndefined();
@@ -365,7 +374,7 @@ describe("gherkinPlugin", () => {
         await mkdir(join(root, "src"), { recursive: true });
         await writeFile(join(root, "src", "a.feature"), "Feature: a\n");
 
-        const plugin = gherkinPlugin();
+        const [plugin] = gherkinPlugin();
         // The overwrite accident: an include without the feature globs.
         plugin.configResolved({ root, test: { include: ["src/**/*.test.ts"] } });
 
@@ -378,6 +387,70 @@ describe("gherkinPlugin", () => {
       } finally {
         await rm(root, { force: true, recursive: true });
       }
+    });
+  });
+
+  describe("lowering guard", () => {
+    const lowered = "export class Steps { step() {} }\n";
+    const unlowered = 'export class Steps { @Given("a step") step() {} }\n';
+
+    test("should read the code every other transform is done with", () => {
+      const [, lowering] = gherkinPlugin();
+
+      expect(lowering.name).toBe("lindorm-gherkin-lowering");
+      expect(lowering.transform.order).toBe("post");
+    });
+
+    test("should ignore a module outside the steps patterns", () => {
+      const [plugin, lowering] = gherkinPlugin();
+      plugin.configResolved({ root: "/repo/pkg" });
+
+      expect(lowering.transform.handler(unlowered, "/repo/pkg/src/a.ts")).toBeNull();
+    });
+
+    test("should pass a step module the pipeline lowered", () => {
+      const [plugin, lowering] = gherkinPlugin();
+      plugin.configResolved({ root: "/repo/pkg" });
+
+      expect(lowering.transform.handler(lowered, "/repo/pkg/src/a.steps.ts")).toBeNull();
+    });
+
+    test("should refuse a step module that still carries a decorator, named root-relative", () => {
+      const [plugin, lowering] = gherkinPlugin();
+      plugin.configResolved({ root: "/repo/pkg" });
+
+      const error = capture(() =>
+        lowering.transform.handler(unlowered, "/repo/pkg/src/a.steps.ts"),
+      );
+
+      expect(error.code).toBe("step_module_not_lowered");
+      expect(error.data).toEqual({ uri: "src/a.steps.ts" });
+    });
+
+    test("should strip a query suffix before matching the steps patterns", () => {
+      const [plugin, lowering] = gherkinPlugin();
+      plugin.configResolved({ root: "/repo/pkg" });
+
+      const error = capture(() =>
+        lowering.transform.handler(unlowered, "/repo/pkg/src/a.steps.ts?v=abc"),
+      );
+
+      expect(error.data).toEqual({ uri: "src/a.steps.ts" });
+    });
+
+    test("should anchor the configured steps patterns at the resolved root", () => {
+      const [plugin, lowering] = gherkinPlugin({ steps: ["steps/**/*.steps.ts"] });
+      plugin.configResolved({ root: "/repo/pkg" });
+
+      expect(
+        lowering.transform.handler(unlowered, "/elsewhere/steps/a.steps.ts"),
+      ).toBeNull();
+
+      const error = capture(() =>
+        lowering.transform.handler(unlowered, "/repo/pkg/steps/a.steps.ts"),
+      );
+
+      expect(error.data).toEqual({ uri: "steps/a.steps.ts" });
     });
   });
 });

@@ -137,7 +137,7 @@ export const createVitestConfig = ({
     // The plugin gets the cadence-INDEPENDENT list: its buildStart coverage
     // check must not fire on a lane a mode correctly excludes
     // (assert-features-covered.ts). Before swc — .feature is not TypeScript.
-    config.plugins.unshift(gherkinPlugin({ ...gherkin, features }));
+    config.plugins.unshift(...gherkinPlugin({ ...gherkin, features }));
 
     // Copy, never push: test.include IS the shared INCLUDES_BY_MODE array
     // (pinned by base-config.test.ts — pushing would grow it across calls).

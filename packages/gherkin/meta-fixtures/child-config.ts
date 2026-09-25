@@ -23,7 +23,7 @@ export const createChildConfig = (settings: GherkinSettings): ViteUserConfig =>
   defineConfig({
     plugins: [
       // MUST precede swc — swc would fail to parse raw .feature text.
-      gherkinPlugin(settings),
+      ...gherkinPlugin(settings),
       swc.vite({
         jsc: {
           parser: { syntax: "typescript", decorators: true },

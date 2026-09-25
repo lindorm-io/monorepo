@@ -8,7 +8,7 @@ import { gherkinPlugin } from "../src/plugin.js";
 export default defineConfig({
   plugins: [
     // Before swc: .feature files are not TypeScript.
-    gherkinPlugin({
+    ...gherkinPlugin({
       features: ["features/**/*.feature"],
       steps: ["steps/**/*.steps.ts"],
     }),

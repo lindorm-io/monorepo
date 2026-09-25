@@ -2,7 +2,7 @@ import { isString } from "@lindorm/is";
 import { createFilter } from "vite";
 import { configDefaults } from "vitest/config";
 import { GherkinError } from "../../errors/GherkinError.js";
-import { toFeatureUri } from "./to-feature-uri.js";
+import { toRootUri } from "./to-root-uri.js";
 
 export type AssertFeaturesCollectedOptions = {
   features: Array<string>;
@@ -85,7 +85,7 @@ export const assertFeaturesCollected = ({
         // here — it is the coverage guard's orphan.
         isString(entry.pattern) && collected(entry.file) === false,
     )
-    .map(({ file, pattern }) => ({ pattern, uri: toFeatureUri(root, file) }));
+    .map(({ file, pattern }) => ({ pattern, uri: toRootUri(root, file) }));
 
   if (uncollected.length === 0) {
     return;

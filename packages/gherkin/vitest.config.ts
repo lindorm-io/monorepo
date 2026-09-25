@@ -13,7 +13,7 @@ const config = createVitestConfig({
 });
 
 config.plugins.unshift(
-  gherkinPlugin({
+  ...gherkinPlugin({
     // meta-fixtures features are covered (buildStart walks the package root
     // and dies on any orphan .feature) but NOT collected — only the child
     // processes spawned by src/e2e run them.

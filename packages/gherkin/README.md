@@ -33,8 +33,9 @@ import { gherkinPlugin } from "@lindorm/gherkin/plugin";
 
 export default defineConfig({
   plugins: [
-    // Before any TypeScript transform — .feature files are not TypeScript.
-    gherkinPlugin({
+    // Two plugins: the emitter, before any TypeScript transform because
+    // .feature files are not TypeScript, and the lowering guard behind it.
+    ...gherkinPlugin({
       features: ["src/**/*.feature"], // default
       steps: ["src/**/*.steps.ts"], // default
       // tags: "not @slow", // optional transform-time selection — see Tags
@@ -309,6 +310,8 @@ The remaining 1 step in this scenario was skipped.
 The runner's OWN failures — undefined, ambiguous, pending, conversion, disposal, authoring errors — carry a `urn:lindorm:gherkin:error:<code>` type. A failing step or hook rethrows YOUR error with the anchor prepended, so assertion diffs survive intact. Gherkin syntax errors, empty scenarios and zero-row `Examples:` tables are authoring errors and fail red at the offending line.
 
 The plugin also fails the whole run at startup if a `.feature` file on disk matches none of the configured `features` patterns (`feature_not_included`), or matches one but no `test.include` pattern (`feature_not_collected`) — a feature file nobody collects would otherwise be a silent pass at file granularity. The collection guard strips a `.integration.` / `.weekly.` suffix from the include globs before matching, so a suffixed glob satisfies it for the unsuffixed family too.
+
+And it fails a step module whose transformed code could never have run — one that still carries a stage-3 decorator (`step_module_not_lowered`) or does not parse as JavaScript at all (`step_module_not_compiled`) — naming the missing transform instead of letting a bare `SyntaxError` escape with `Tests no tests`.
 
 ## Current scope
 

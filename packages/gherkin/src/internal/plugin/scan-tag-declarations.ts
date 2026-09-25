@@ -3,7 +3,7 @@ import { createFilter } from "vite";
 import { assertTagNames } from "../model/assert-tag-names.js";
 import { toVitestTags } from "../model/to-vitest-tags.js";
 import { collectFeatureTags } from "./collect-feature-tags.js";
-import { toFeatureUri } from "./to-feature-uri.js";
+import { toRootUri } from "./to-root-uri.js";
 import { walkFeatureFiles } from "./walk-feature-files.js";
 
 /** The minimal vitest TestTagDefinition shape the scan produces. */
@@ -48,7 +48,7 @@ export const scanTagDeclarations = async ({
     // Anchored HERE or nowhere: an illegal vitest tag name kills the run at
     // config resolution, before any transform, and vitest's own message
     // names no file (assert-tag-names.ts).
-    assertTagNames(tags, toFeatureUri(root, file));
+    assertTagNames(tags, toRootUri(root, file));
 
     for (const tag of tags) {
       names.add(tag.name);

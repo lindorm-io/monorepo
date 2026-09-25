@@ -87,10 +87,14 @@ describe("createVitestConfig (vitest.config.base.mjs)", () => {
       );
     });
 
-    test("should place the gherkin plugin before swc", async () => {
+    test("should place the gherkin pair before swc — the feature transform must precede it", async () => {
       const config = (await create({ decorators: true, gherkin: {} })) as AnyConfig;
 
-      expect(config.plugins.map((p) => p.name)).toEqual(["lindorm-gherkin", "swc"]);
+      expect(config.plugins.map((p) => p.name)).toEqual([
+        "lindorm-gherkin",
+        "lindorm-gherkin-lowering",
+        "swc",
+      ]);
     });
 
     test("should derive every mode's feature includes and excludes from the one features list", async () => {
@@ -168,7 +172,11 @@ describe("createVitestConfig (vitest.config.base.mjs)", () => {
         gherkin: { tags: "not @slow" },
       })) as AnyConfig;
 
-      expect(config.plugins.map((p) => p.name)).toEqual(["lindorm-gherkin", "swc"]);
+      expect(config.plugins.map((p) => p.name)).toEqual([
+        "lindorm-gherkin",
+        "lindorm-gherkin-lowering",
+        "swc",
+      ]);
 
       await expect(
         create({ decorators: true, gherkin: { tags: "@smoke and" } }),
@@ -181,7 +189,11 @@ describe("createVitestConfig (vitest.config.base.mjs)", () => {
         gherkin: { features: ["features/**/*.feature"], steps: ["steps/**/*.steps.ts"] },
       })) as AnyConfig;
 
-      expect(config.plugins.map((p) => p.name)).toEqual(["lindorm-gherkin", "swc"]);
+      expect(config.plugins.map((p) => p.name)).toEqual([
+        "lindorm-gherkin",
+        "lindorm-gherkin-lowering",
+        "swc",
+      ]);
     });
 
     test("should derive suffixed includes from a custom features list", async () => {

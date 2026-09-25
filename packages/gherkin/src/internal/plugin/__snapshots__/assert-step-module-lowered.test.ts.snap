@@ -1,0 +1,31 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`assertStepModuleLowered > a decorator that survived > should refuse a decorated method 1`] = `
+{
+  "code": "step_module_not_lowered",
+  "data": {
+    "uri": "src/greeting.steps.ts",
+  },
+  "details": "No JavaScript engine executes a stage-3 decorator, and gherkin lowers nothing itself, so the vite config must carry a transform that does. Any transform whose output is executable JavaScript works, tsc's own __esDecorate lowering included; the route this package verifies is \`unplugin-swc\` with \`jsc.parser.decorators: true\`, \`jsc.transform.decoratorVersion: "2022-03"\` and \`oxc: false\`, as the README's Quick start wires it.",
+  "message": "Step module src/greeting.steps.ts still carries a stage-3 decorator after the transform pipeline ran.
+
+No JavaScript engine executes a stage-3 decorator, and gherkin lowers nothing itself, so the vite config must carry a transform that does. Any transform whose output is executable JavaScript works, tsc's own __esDecorate lowering included; the route this package verifies is \`unplugin-swc\` with \`jsc.parser.decorators: true\`, \`jsc.transform.decoratorVersion: "2022-03"\` and \`oxc: false\`, as the README's Quick start wires it.",
+  "title": "Step Module Not Lowered",
+  "type": "urn:lindorm:gherkin:error:step_module_not_lowered",
+}
+`;
+
+exports[`assertStepModuleLowered > code the pipeline never compiled > should refuse TypeScript that reached the runtime untransformed 1`] = `
+{
+  "code": "step_module_not_compiled",
+  "data": {
+    "uri": "src/greeting.steps.ts",
+  },
+  "details": "Step modules are TypeScript with stage-3 decorators and gherkin lowers nothing itself, so the vite config must carry a transform that compiles them. Any transform whose output is executable JavaScript works, tsc's own __esDecorate lowering included; the route this package verifies is \`unplugin-swc\` with \`jsc.parser.decorators: true\`, \`jsc.transform.decoratorVersion: "2022-03"\` and \`oxc: false\`, as the README's Quick start wires it. With one configured, this module's own syntax is the fault.",
+  "message": "Step module src/greeting.steps.ts does not parse as JavaScript after the transform pipeline ran, so it can never load.
+
+Step modules are TypeScript with stage-3 decorators and gherkin lowers nothing itself, so the vite config must carry a transform that compiles them. Any transform whose output is executable JavaScript works, tsc's own __esDecorate lowering included; the route this package verifies is \`unplugin-swc\` with \`jsc.parser.decorators: true\`, \`jsc.transform.decoratorVersion: "2022-03"\` and \`oxc: false\`, as the README's Quick start wires it. With one configured, this module's own syntax is the fault.",
+  "title": "Step Module Not Compiled",
+  "type": "urn:lindorm:gherkin:error:step_module_not_compiled",
+}
+`;

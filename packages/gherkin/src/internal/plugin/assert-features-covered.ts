@@ -1,6 +1,6 @@
 import { createFilter } from "vite";
 import { GherkinError } from "../../errors/GherkinError.js";
-import { toFeatureUri } from "./to-feature-uri.js";
+import { toRootUri } from "./to-root-uri.js";
 
 export type AssertFeaturesCoveredOptions = {
   features: Array<string>;
@@ -28,7 +28,7 @@ export const assertFeaturesCovered = ({
   const filter = createFilter(features, [], { resolve: root });
   const orphans = files
     .filter((file) => filter(file) === false)
-    .map((file) => toFeatureUri(root, file));
+    .map((file) => toRootUri(root, file));
 
   if (orphans.length === 0) {
     return;
