@@ -44,7 +44,7 @@ import { AccountSummaryView } from "./AccountSummaryView.js";
 export class AccountSummaryProjection {
   @ViewEventHandler(AccountOpened)
   @RequireNotCreated()
-  public async onAccountOpened(
+  async onAccountOpened(
     ctx: ViewEventCtx<AccountOpened, AccountSummaryView>,
   ): Promise<void> {
     ctx.entity.ownerName = ctx.event.ownerName;
@@ -56,7 +56,7 @@ export class AccountSummaryProjection {
 
   @ViewEventHandler(FundsDeposited_V2)
   @RequireCreated()
-  public async onFundsDeposited(
+  async onFundsDeposited(
     ctx: ViewEventCtx<FundsDeposited_V2, AccountSummaryView>,
   ): Promise<void> {
     ctx.entity.balance += ctx.event.amount;
@@ -65,7 +65,7 @@ export class AccountSummaryProjection {
 
   @ViewEventHandler(FundsWithdrawn)
   @RequireCreated()
-  public async onFundsWithdrawn(
+  async onFundsWithdrawn(
     ctx: ViewEventCtx<FundsWithdrawn, AccountSummaryView>,
   ): Promise<void> {
     ctx.entity.balance -= ctx.event.amount;
@@ -74,7 +74,7 @@ export class AccountSummaryProjection {
 
   @ViewEventHandler(AccountFlagged)
   @RequireCreated()
-  public async onAccountFlagged(
+  async onAccountFlagged(
     ctx: ViewEventCtx<AccountFlagged, AccountSummaryView>,
   ): Promise<void> {
     ctx.entity.status = "flagged";
@@ -82,7 +82,7 @@ export class AccountSummaryProjection {
 
   @ViewEventHandler(AccountClosed)
   @RequireCreated()
-  public async onAccountClosed(
+  async onAccountClosed(
     ctx: ViewEventCtx<AccountClosed, AccountSummaryView>,
   ): Promise<void> {
     ctx.entity.status = "closed";
@@ -90,19 +90,19 @@ export class AccountSummaryProjection {
   }
 
   @ViewIdHandler(AccountOpened)
-  public resolveId(ctx: ViewIdCtx<AccountOpened>): string {
+  resolveId(ctx: ViewIdCtx<AccountOpened>): string {
     return ctx.aggregate.id;
   }
 
   @ViewQueryHandler(GetAccountSummary)
-  public async onGetAccountSummary(
+  async onGetAccountSummary(
     ctx: ViewQueryCtx<GetAccountSummary, AccountSummaryView>,
   ): Promise<AccountSummaryView | null> {
     return ctx.repository.findOne({ id: ctx.query.accountId });
   }
 
   @ViewErrorHandler(DomainError)
-  public onDomainError(ctx: ViewErrorCtx<AccountSummaryView>): void {
+  onDomainError(ctx: ViewErrorCtx<AccountSummaryView>): void {
     ctx.logger.warn("View domain error", { error: ctx.error.message });
   }
 }

@@ -56,7 +56,7 @@ export class AccountAggregate {
   @AggregateCommandHandler(OpenAccount)
   @RequireNotCreated()
   @Validate(OpenAccountSchema)
-  public async onOpenAccount(
+  async onOpenAccount(
     ctx: AggregateCommandCtx<OpenAccount, AccountState>,
   ): Promise<void> {
     await ctx.apply(
@@ -71,7 +71,7 @@ export class AccountAggregate {
   @AggregateCommandHandler(DepositFunds)
   @RequireCreated()
   @Validate(DepositFundsSchema)
-  public async onDepositFunds(
+  async onDepositFunds(
     ctx: AggregateCommandCtx<DepositFunds, AccountState>,
   ): Promise<void> {
     await ctx.apply(new FundsDeposited_V2(ctx.command.amount, ctx.command.currency));
@@ -80,7 +80,7 @@ export class AccountAggregate {
   @AggregateCommandHandler(WithdrawFunds)
   @RequireCreated()
   @Validate(WithdrawFundsSchema)
-  public async onWithdrawFunds(
+  async onWithdrawFunds(
     ctx: AggregateCommandCtx<WithdrawFunds, AccountState>,
   ): Promise<void> {
     if (ctx.state.balance < ctx.command.amount) {
@@ -93,7 +93,7 @@ export class AccountAggregate {
 
   @AggregateCommandHandler(FlagAccount)
   @RequireCreated()
-  public async onFlagAccount(
+  async onFlagAccount(
     ctx: AggregateCommandCtx<FlagAccount, AccountState>,
   ): Promise<void> {
     await ctx.apply(new AccountFlagged(ctx.command.reason));
@@ -101,7 +101,7 @@ export class AccountAggregate {
 
   @AggregateCommandHandler(CloseAccount)
   @RequireCreated()
-  public async onCloseAccount(
+  async onCloseAccount(
     ctx: AggregateCommandCtx<CloseAccount, AccountState>,
   ): Promise<void> {
     if (ctx.state.balance !== 0) {
@@ -113,7 +113,7 @@ export class AccountAggregate {
   }
 
   @AggregateEventHandler(AccountOpened)
-  public async onAccountOpened(
+  async onAccountOpened(
     ctx: AggregateEventCtx<AccountOpened, AccountState>,
   ): Promise<void> {
     ctx.mergeState({
@@ -126,7 +126,7 @@ export class AccountAggregate {
   }
 
   @AggregateEventHandler(FundsDeposited_V2)
-  public async onFundsDeposited(
+  async onFundsDeposited(
     ctx: AggregateEventCtx<FundsDeposited_V2, AccountState>,
   ): Promise<void> {
     ctx.mergeState({
@@ -136,7 +136,7 @@ export class AccountAggregate {
   }
 
   @AggregateEventHandler(FundsWithdrawn)
-  public async onFundsWithdrawn(
+  async onFundsWithdrawn(
     ctx: AggregateEventCtx<FundsWithdrawn, AccountState>,
   ): Promise<void> {
     ctx.mergeState({
@@ -146,14 +146,14 @@ export class AccountAggregate {
   }
 
   @AggregateEventHandler(AccountFlagged)
-  public async onAccountFlagged(
+  async onAccountFlagged(
     ctx: AggregateEventCtx<AccountFlagged, AccountState>,
   ): Promise<void> {
     ctx.mergeState({ status: "flagged" });
   }
 
   @AggregateEventHandler(AccountClosed)
-  public async onAccountClosed(
+  async onAccountClosed(
     ctx: AggregateEventCtx<AccountClosed, AccountState>,
   ): Promise<void> {
     ctx.mergeState({ status: "closed" });
@@ -167,12 +167,12 @@ export class AccountAggregate {
   // V1 record in the event store is never modified.
 
   @EventUpcaster(FundsDeposited_V1, FundsDeposited_V2)
-  public upcastFundsDepositedV1toV2(event: FundsDeposited_V1): FundsDeposited_V2 {
+  upcastFundsDepositedV1toV2(event: FundsDeposited_V1): FundsDeposited_V2 {
     return new FundsDeposited_V2(event.amount, "USD");
   }
 
   @AggregateErrorHandler(DomainError)
-  public async onDomainError(ctx: AggregateErrorCtx): Promise<void> {
+  async onDomainError(ctx: AggregateErrorCtx): Promise<void> {
     ctx.logger.warn("Aggregate domain error", { error: ctx.error.message });
   }
 }

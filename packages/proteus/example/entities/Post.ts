@@ -10,19 +10,19 @@ import { User } from "./User.js";
 @Entity()
 export class Post {
   @PrimaryKeyField()
-  public id!: string;
+  id!: string;
 
   @CreateDateField()
-  public createdAt!: Date;
+  createdAt!: Date;
 
   @Field("string")
-  public title!: string;
+  title!: string;
 
   @Field("text")
-  public content!: string;
+  content!: string;
 
   @ManyToOne(() => User, "posts")
-  public author!: User | null;
+  author!: User | null;
 
-  public authorId!: string | null;
+  authorId!: string | null;
 }

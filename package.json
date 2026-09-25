@@ -14,7 +14,7 @@
   "scripts": {
     "build": "lerna run build",
     "init": "tsx ./.scripts/initialise-package.ts && npm i",
-    "lint": "eslint packages/*/src/ && node scripts/audit/cadence-script-guard.mjs",
+    "lint": "eslint packages/ && node scripts/audit/cadence-script-guard.mjs",
     "prepare": "husky",
     "prettier": "prettier --write packages/*/src/",
     "release": "lerna publish --yes",

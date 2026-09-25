@@ -19,22 +19,22 @@ export class AccountSummaryView extends HermesViewEntity {
   @Field("string")
   @Index()
   @Default("")
-  public ownerName: string = "";
+  ownerName: string = "";
 
   @Field("string")
   @Default("USD")
-  public currency: string = "USD";
+  currency: string = "USD";
 
   @Field("float")
   @Default(0)
-  public balance: number = 0;
+  balance: number = 0;
 
   @Field("string")
   @Index()
   @Default("open")
-  public status: string = "open";
+  status: string = "open";
 
   @Field("integer")
   @Default(0)
-  public transactionCount: number = 0;
+  transactionCount: number = 0;
 }

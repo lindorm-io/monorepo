@@ -3,7 +3,7 @@ import { Command } from "@lindorm/hermes";
 
 @Command()
 export class WithdrawFunds {
-  public constructor(public readonly amount: number) {}
+  constructor(readonly amount: number) {}
 }
 
 export const WithdrawFundsSchema = z.object({

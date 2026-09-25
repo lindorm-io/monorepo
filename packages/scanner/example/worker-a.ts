@@ -1,5 +1,5 @@
 export class WorkerBrand {
-  public constructor(public readonly alias: string) {}
+  constructor(readonly alias: string) {}
 }
 
 export const brand = new WorkerBrand("worker-a");

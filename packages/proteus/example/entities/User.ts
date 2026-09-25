@@ -13,24 +13,24 @@ import { Post } from "./Post.js";
 @Entity()
 export class User {
   @PrimaryKeyField()
-  public id!: string;
+  id!: string;
 
   @VersionField()
-  public version!: number;
+  version!: number;
 
   @CreateDateField()
-  public createdAt!: Date;
+  createdAt!: Date;
 
   @UpdateDateField()
-  public updatedAt!: Date;
+  updatedAt!: Date;
 
   @Field("string")
-  public name!: string;
+  name!: string;
 
   @Field("string")
   @Unique()
-  public email!: string;
+  email!: string;
 
   @OneToMany(() => Post, "author")
-  public posts!: Post[];
+  posts!: Post[];
 }

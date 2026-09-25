@@ -3,9 +3,9 @@ import { Command } from "@lindorm/hermes";
 
 @Command()
 export class DepositFunds {
-  public constructor(
-    public readonly amount: number,
-    public readonly currency: string,
+  constructor(
+    readonly amount: number,
+    readonly currency: string,
   ) {}
 }
 

@@ -3,10 +3,10 @@ import { Command } from "@lindorm/hermes";
 
 @Command()
 export class OpenAccount {
-  public constructor(
-    public readonly ownerName: string,
-    public readonly currency: string,
-    public readonly initialDeposit: number,
+  constructor(
+    readonly ownerName: string,
+    readonly currency: string,
+    readonly initialDeposit: number,
   ) {}
 }
 

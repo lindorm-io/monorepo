@@ -54,7 +54,7 @@ const INACTIVITY_DELAY_MS = 30_000;
 export class OverdraftProtectionSaga {
   @SagaEventHandler(AccountOpened)
   @RequireNotCreated()
-  public async onAccountOpened(
+  async onAccountOpened(
     ctx: SagaEventCtx<AccountOpened, OverdraftProtectionState>,
   ): Promise<void> {
     ctx.mergeState({
@@ -68,7 +68,7 @@ export class OverdraftProtectionSaga {
 
   @SagaEventHandler(FundsDeposited_V2)
   @RequireCreated()
-  public async onFundsDeposited(
+  async onFundsDeposited(
     ctx: SagaEventCtx<FundsDeposited_V2, OverdraftProtectionState>,
   ): Promise<void> {
     const newBalance = ctx.state.balance + ctx.event.amount;
@@ -81,7 +81,7 @@ export class OverdraftProtectionSaga {
 
   @SagaEventHandler(FundsWithdrawn)
   @RequireCreated()
-  public async onFundsWithdrawn(
+  async onFundsWithdrawn(
     ctx: SagaEventCtx<FundsWithdrawn, OverdraftProtectionState>,
   ): Promise<void> {
     const newBalance = ctx.state.balance - ctx.event.amount;
@@ -102,19 +102,19 @@ export class OverdraftProtectionSaga {
 
   @SagaEventHandler(AccountClosed)
   @RequireCreated()
-  public async onAccountClosed(
+  async onAccountClosed(
     ctx: SagaEventCtx<AccountClosed, OverdraftProtectionState>,
   ): Promise<void> {
     ctx.destroy();
   }
 
   @SagaIdHandler(AccountOpened)
-  public resolveId(ctx: SagaIdCtx<AccountOpened>): string {
+  resolveId(ctx: SagaIdCtx<AccountOpened>): string {
     return ctx.aggregate.id;
   }
 
   @SagaTimeoutHandler(InactivityTimeout)
-  public async onInactivityTimeout(
+  async onInactivityTimeout(
     ctx: SagaTimeoutCtx<InactivityTimeout, OverdraftProtectionState>,
   ): Promise<void> {
     ctx.logger.info("Inactivity timeout fired", {
@@ -129,7 +129,7 @@ export class OverdraftProtectionSaga {
   }
 
   @SagaErrorHandler(DomainError)
-  public async onDomainError(ctx: SagaErrorCtx): Promise<void> {
+  async onDomainError(ctx: SagaErrorCtx): Promise<void> {
     ctx.logger.warn("Saga domain error", { error: ctx.error.message });
   }
 }
