@@ -10,7 +10,7 @@ This package is **ESM-only**. All examples use `import`; `require` is not suppor
 npm install @lindorm/conduit
 ```
 
-`@lindorm/logger` is an optional peer dependency — it only needs to be installed if you pass a logger to the `Conduit` constructor.
+`zod` >= 4.3.6 is a required peer — response validation takes a Zod schema. `@lindorm/logger` >= 0.5 is an optional peer, needed only if you pass a logger to the `Conduit` constructor.
 
 ## Quick Start
 

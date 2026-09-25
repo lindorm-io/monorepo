@@ -14,11 +14,12 @@ npm install @lindorm/hermes
 
 Hermes does not bundle persistence or messaging. The following peers are required at runtime — install them alongside Hermes:
 
-| Peer               | Range    | Purpose                                                |
-| ------------------ | -------- | ------------------------------------------------------ |
-| `@lindorm/iris`    | `^0.2.0` | Messaging source (command queue, event bus, timeouts). |
-| `@lindorm/logger`  | `^0.5.3` | Structured logger interface (`ILogger`).               |
-| `@lindorm/proteus` | `^0.5.0` | Persistence source (event store, sagas, views).        |
+| Peer               | Range     | Purpose                                                |
+| ------------------ | --------- | ------------------------------------------------------ |
+| `@lindorm/iris`    | `>=0.2.0` | Messaging source (command queue, event bus, timeouts). |
+| `@lindorm/logger`  | `>=0.5.0` | Structured logger interface (`ILogger`).               |
+| `@lindorm/proteus` | `>=0.5.0` | Persistence source (event store, sagas, views).        |
+| `zod`              | `>=4.3.6` | Command payload validation (`@Validate`).              |
 
 Concrete drivers for each peer (postgres, mongodb, redis, rabbit, kafka, memory, …) are configured on the `ProteusSource` and `IrisSource` instances you pass to Hermes.
 

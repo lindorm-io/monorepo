@@ -14,15 +14,15 @@ This package is **ESM-only** and ships native (TC39 stage 3) decorators. Use it 
 
 Iris is broker-agnostic. The driver is chosen via the `IrisSource` constructor; the matching peer dependency is loaded lazily and only needs to be installed for the driver(s) you use.
 
-| Driver   | Peer Dependency |
-| -------- | --------------- |
-| `memory` | _(none)_        |
-| `rabbit` | `amqplib` ^0.10 |
-| `kafka`  | `kafkajs` ^2.2  |
-| `nats`   | `nats` ^2.29    |
-| `redis`  | `ioredis` ^5.10 |
+| Driver   | Peer Dependency   |
+| -------- | ----------------- |
+| `memory` | _(none)_          |
+| `rabbit` | `amqplib` >= 0.10 |
+| `kafka`  | `kafkajs` >= 2.2  |
+| `nats`   | `nats` >= 2.29    |
+| `redis`  | `ioredis` >= 5.10 |
 
-`@lindorm/amphora` ^0.4 and `@lindorm/kryptos` ^0.11 are optional peers used for payload encryption (`@Encrypted`). `@lindorm/logger` ^0.5 is a required peer — every `IrisSource` takes an `ILogger`.
+`@lindorm/amphora` >= 0.4 and `@lindorm/kryptos` >= 0.11 are optional peers used for payload encryption (`@Encrypted`). `@lindorm/logger` >= 0.5 and `zod` >= 4.3.6 are required peers — every `IrisSource` takes an `ILogger`.
 
 ```bash
 npm install amqplib       # RabbitMQ

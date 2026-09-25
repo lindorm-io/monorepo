@@ -21,12 +21,7 @@ Peer dependencies are driver-specific. Install only the ones you need:
 | Redis      | `ioredis` >= 5.10        |
 | In-Memory  | none                     |
 
-Two further peer dependencies are optional and only needed for specific features:
-
-| Peer               | Required for                                     |
-| ------------------ | ------------------------------------------------ |
-| `@lindorm/amphora` | `@Encrypted` field-level encryption              |
-| `@lindorm/logger`  | `ILogger` instance — required on `ProteusSource` |
+`@lindorm/logger` >= 0.5 and `zod` >= 4.3.6 are required — every `ProteusSource` takes an `ILogger`, and field validation is Zod-based. `@lindorm/aes` >= 0.6, `@lindorm/amphora` >= 0.4 and `@lindorm/kryptos` >= 0.11 are optional peers, needed only for `@Encrypted` field-level encryption.
 
 ## Quick Start
 
@@ -100,6 +95,7 @@ await source.disconnect();
 | Export                          | Purpose                                            |
 | ------------------------------- | -------------------------------------------------- |
 | `@lindorm/proteus`              | Main runtime API: ProteusSource, decorators, types |
+| `@lindorm/proteus/scaffold`     | Source and entity generators behind the CLI        |
 | `@lindorm/proteus/mocks/jest`   | Jest mock factories for tests                      |
 | `@lindorm/proteus/mocks/vitest` | Vitest mock factories for tests                    |
 

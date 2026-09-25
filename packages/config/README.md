@@ -8,6 +8,8 @@ Type-safe runtime configuration loader that merges YAML files, `.env` files, pro
 npm install @lindorm/config
 ```
 
+`zod` >= 4.3.6 is a required peer — `configuration()` takes a Zod schema.
+
 This package is ESM-only. Import it with `import`; `require()` is not supported.
 
 ## Features
