@@ -26,7 +26,7 @@ describe("isCritEligible", () => {
    * and is NOT crit-eligible. A predicate answering "is this registered" would be
    * wrong for every one of them and green everywhere else.
    */
-  test.each(["alg", "typ", "cty", "kid", "crit", "enc", "x5c", "x5t", "x5t#S256", "zip"])(
+  test.each(["alg", "typ", "cty", "kid", "crit", "enc", "x5c", "x5t", "x5t#S256", "x5u"])(
     "a registered parameter (%s) is NOT eligible, though the registry answers for it",
     (name) => {
       expect(headerByJose(name), `${name} is not registered at all`).toBeDefined();
@@ -38,8 +38,11 @@ describe("isCritEligible", () => {
     expect(isCritEligible("oid")).toBe(true);
   });
 
-  test("an unregistered name is not eligible", () => {
-    expect(isCritEligible("ext")).toBe(false);
+  // ⚠ `zip` is unregistered here AND specification-defined, so this column answers
+  // `false` for it while `is-spec-defined-header-param.ts` answers `true` — the two
+  // questions the crit gates ask in that order (RFC 7516 §4.1.3).
+  test.each(["ext", "zip"])("an unregistered name (%s) is not eligible", (name) => {
+    expect(isCritEligible(name)).toBe(false);
   });
 
   /**

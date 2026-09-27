@@ -27,11 +27,13 @@ MockDate.set(new Date(DEFAULT_CLOCK));
  * The PER-SPEC MATRIX — a generated matrix over the claim and header registries,
  * and the consumer `ParamSpec.sample` was written for and never had.
  *
- * `sample` is REQUIRED on all 99 registry entries. Its own docstring says why:
- * "so a new parameter cannot be added without giving the generated conformance
- * suite something to round-trip — which is what stops a new parameter from
- * dodging coverage entirely." Nothing read it. The column enforced the writing of
- * a value and nothing else, and two of the values it enforced were unusable — a
+ * `sample` is REQUIRED on all 98 registry entries (pinned:
+ * `classes/Aegis.spec-matrix.test.ts#should keep the documented registry
+ * totals true`). Its own docstring says why: "so a new parameter cannot be
+ * added without giving the generated conformance suite something to
+ * round-trip — which is what stops a new parameter from dodging coverage
+ * entirely." Nothing read it. The column enforced the writing of a value and
+ * nothing else, and two of the values it enforced were unusable — a
  * `namingSystem` that is not a member of its own union, and a NumericDate two
  * years ahead of any clock that could verify it — which is exactly what a
  * required-but-unread column produces.
@@ -115,6 +117,22 @@ describe("Aegis — per-spec matrix", () => {
     expect(Object.keys(HEADER_DISPOSITIONS).sort()).toEqual(
       HEADER_SPECS.map((spec) => spec.domain).sort(),
     );
+  });
+
+  // The two hand-maintained totals in `spec-dispositions.ts` — "98 registry
+  // entries" and "SIX of the twenty" — name this test as their binding, so a
+  // 21st header row reddens here rather than leaving stale prose standing.
+  // `mint.header` is the generic header-options-bag door (as opposed to a
+  // dedicated option like `mint.typ` or `encrypt.party`), so filtering on it
+  // is exactly "caller-settable through the domain header bag".
+  test("should keep the documented registry totals true", () => {
+    expect(CLAIM_SPECS.length + HEADER_SPECS.length).toBe(98);
+
+    const domainHeaderBagParams = Object.values(HEADER_DISPOSITIONS).filter(
+      (disposition) => disposition.door === "mint.header",
+    );
+
+    expect(domainHeaderBagParams.length).toBe(6);
   });
 
   // A `roundTrip` names the door it goes through — "how does a caller set this?"

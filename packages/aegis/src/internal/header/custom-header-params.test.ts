@@ -264,7 +264,7 @@ describe("custom header parameters", () => {
       },
     );
 
-    test.each(["b64", "ppt", "url", "nonce", "svt"])(
+    test.each(["b64", "ppt", "url", "nonce", "svt", "zip"])(
       "a spec-defined name aegis does not implement (%s) is refused from custom",
       (name) => {
         const kit = new JwtKit({ kryptos: TEST_EC_KEY_SIG, logger });

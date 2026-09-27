@@ -4,8 +4,8 @@ import { canonicalWireHeader } from "./canonical-wire-header.js";
 describe("canonicalWireHeader", () => {
   test("orders the keys alphabetically by JOSE name", () => {
     expect(
-      Object.keys(canonicalWireHeader({ zip: "DEF", alg: "ES512", kid: "key_test" })),
-    ).toEqual(["alg", "kid", "zip"]);
+      Object.keys(canonicalWireHeader({ typ: "JWT", alg: "ES512", kid: "key_test" })),
+    ).toEqual(["alg", "kid", "typ"]);
   });
 
   test("the certificate family orders x5c, x5t, x5t#S256, x5u", () => {

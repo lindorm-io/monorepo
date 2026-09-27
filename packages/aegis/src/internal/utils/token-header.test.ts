@@ -9,13 +9,12 @@ import {
 import { describe, expect, test } from "vitest";
 
 describe("data-driven header codec", () => {
-  test("the full RFC set (x5t/x5u/zip/apu/apv) round-trips map -> parse", () => {
+  test("the full RFC set (x5t/x5u/apu/apv) round-trips map -> parse", () => {
     const options: DomainTokenHeaderOptions = {
       algorithm: "ES512",
       headerType: "JWS",
       keyId: "test-key-id",
       certificateUrl: "https://example.com/certs",
-      zip: "DEF",
       partyProducer: "party-u-info",
       partyRecipient: "party-v-info",
     };
@@ -28,7 +27,6 @@ describe("data-driven header codec", () => {
 
     expect(raw.x5t).toBe("cert-sha1-thumbprint");
     expect(raw.x5u).toBe("https://example.com/certs");
-    expect(raw.zip).toBe("DEF");
     expect(raw.apu).toBe("party-u-info");
     expect(raw.apv).toBe("party-v-info");
 
@@ -36,7 +34,6 @@ describe("data-driven header codec", () => {
 
     expect(parsed.certificateThumbprintSha1).toBe("cert-sha1-thumbprint");
     expect(parsed.certificateUrl).toBe("https://example.com/certs");
-    expect(parsed.zip).toBe("DEF");
     expect(parsed.partyProducer).toBe("party-u-info");
     expect(parsed.partyRecipient).toBe("party-v-info");
   });
@@ -45,7 +42,7 @@ describe("data-driven header codec", () => {
     // The source is deliberately NOT in jose order; the encoder must re-sort so the
     // signed-header bytes stay canonical regardless of caller insertion order.
     const options: DomainTokenHeaderOptions = {
-      zip: "DEF",
+      certificateUrl: "https://example.com/certs",
       keyId: "test-key-id",
       algorithm: "ES512",
       partyRecipient: "v",
@@ -56,7 +53,18 @@ describe("data-driven header codec", () => {
 
     const raw = mapTokenHeader(options);
 
-    expect(Object.keys(raw)).toEqual(["alg", "apu", "apv", "cty", "kid", "typ", "zip"]);
+    expect(Object.keys(raw)).toEqual(["alg", "apu", "apv", "cty", "kid", "typ", "x5u"]);
+  });
+
+  /**
+   * ⛔ COMPRESSION CROSSES NEITHER PASS, in either vocabulary. aegis compresses no
+   * payload, so no registry row answers for `zip` and the closed-set rule disposes
+   * of it at the domain crossing as well as at the emission boundary.
+   * RFC 7516 §4.1.3.
+   */
+  test("compression is not a parameter either pass carries", () => {
+    expect(mapTokenHeader({ zip: "DEF" } as never)).toEqual({});
+    expect(shapeWireHeader({ zip: "DEF" } as never)).toEqual({});
   });
 
   test("an unregistered domain key is dropped on write (headers are a closed set)", () => {
@@ -257,10 +265,9 @@ describe("shapeWireHeader (the wire-keyed write pass)", () => {
   });
 
   test("does NOT canonicalise key order — a shaped bag is a merge input", () => {
-    expect(Object.keys(shapeWireHeader({ zip: "DEF", cty: "JWT" }))).toEqual([
-      "zip",
-      "cty",
-    ]);
+    expect(
+      Object.keys(shapeWireHeader({ x5u: "https://example.com/certs", cty: "JWT" })),
+    ).toEqual(["x5u", "cty"]);
   });
 
   test("sorts crit's members and leaves the wire-named ones alone", () => {

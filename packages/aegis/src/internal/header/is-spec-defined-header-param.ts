@@ -20,6 +20,8 @@ import { HEADER_SPECS, headerByJose, headerJoseName } from "./header-registry.js
  * attack rather than an inert hint (RFC 7519 §5.3).
  */
 const UNIMPLEMENTED_SPEC_PARAMS: ReadonlySet<string> = new Set([
+  // RFC 7516 §4.1.3 — compression algorithm.
+  "zip",
   // RFC 7519 §10.4.1 — unencrypted replicas of the claims of the same name.
   "iss",
   "sub",

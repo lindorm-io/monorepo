@@ -367,7 +367,7 @@ describe("buildJoseHeader", () => {
     // one.
     const header = build({
       defaults: { cty: "application/json" },
-      header: { oid: "1.2.3.4", zip: "DEF" },
+      header: { oid: "1.2.3.4", x5u: "https://example.com/certs" },
       derived: { alg: "ES512", kid: "key_test", typ: "JWT" },
       cert: { certificateThumbprint: "sha256-thumbprint" },
     });
@@ -379,7 +379,7 @@ describe("buildJoseHeader", () => {
       "oid",
       "typ",
       "x5t#S256",
-      "zip",
+      "x5u",
     ]);
   });
 
@@ -387,6 +387,17 @@ describe("buildJoseHeader", () => {
     test("an unregistered parameter is dropped — headers are a closed set", () => {
       expect(build({ header: { nonsense: "value" } as never }).alg).toBe("ES512");
       expect("nonsense" in build({ header: { nonsense: "value" } as never })).toBe(false);
+    });
+
+    /**
+     * ⛔ COMPRESSION IS NOT A PARAMETER THIS BUILDER WRITES. aegis compresses no
+     * payload, so `zip` has no registry row and the closed-set rule disposes of
+     * it here — `JweKit.decrypt` refuses a token carrying it, so a header bag
+     * that could still put it on the wire would mint a token aegis cannot read.
+     * RFC 7516 §4.1.3.
+     */
+    test("compression is not a parameter the header bag can write", () => {
+      expect("zip" in build({ header: { zip: "DEF" } as never })).toBe(false);
     });
 
     test("a value of the wrong shape is dropped by the registry's guard", () => {

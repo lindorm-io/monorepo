@@ -55,6 +55,19 @@ describe("validateCrit", () => {
     expect(validateCrit(header)).toMatch(/specification-defined/);
   });
 
+  // ⚠ `zip` names a transform aegis performs in neither direction: nothing writes
+  // it and `JweKit.decrypt` refuses a token carrying it, so a `crit` naming it asks
+  // a recipient to understand a parameter aegis has no meaning for
+  // (RFC 7516 §4.1.3).
+  test("rejects crit containing the compression parameter aegis does not implement", () => {
+    const header = {
+      ...base,
+      crit: ["zip"],
+      zip: "DEF",
+    } as unknown as WireTokenHeader;
+    expect(validateCrit(header)).toMatch(/specification-defined/);
+  });
+
   test("rejects crit listing a name that is not present in the header", () => {
     const header = { ...base, crit: ["missing_param"] } as WireTokenHeader;
     expect(validateCrit(header)).toMatch(/not present/);

@@ -20,8 +20,9 @@ import { headerByDomain, headerByJose } from "./header-registry.js";
  * (`internal/header/assert-crit-eligible.ts`), so one name means one thing per
  * tier.
  *
- * ⚠ `jwk` and `zip` spell the same at both tiers, so they resolve through
- * `headerByDomain` and never reach the refusal.
+ * ⚠ `jwk` is the one parameter spelling the same at both tiers, so it resolves
+ * through `headerByDomain` and never reaches the refusal — frozen by name in
+ * `declared-crit-to-wire.test.ts`, which derives the set from the registry.
  *
  * ⚠ Both lookups are `Map` reads, so a CALLER-CONTROLLED member cannot resolve
  * through `Object.prototype`.

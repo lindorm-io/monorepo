@@ -7,6 +7,7 @@ import { JweError } from "../errors/index.js";
 import type { IJweKit } from "../interfaces/index.js";
 import { buildJoseHeader } from "../internal/header/build-jose-header.js";
 import { normaliseHeaders } from "../internal/header/normalise-headers.js";
+import { writtenHeader } from "../internal/header/written-header.js";
 import { KIT_CAPABILITIES } from "../internal/registry/kit-capabilities.js";
 import { assertWireTyp } from "../internal/utils/assert-wire-typ.js";
 import { buildJweDecryptionRecord } from "../internal/utils/build-jwe-decryption-record.js";
@@ -181,10 +182,19 @@ export class JweKit implements IJweKit {
     // Aegis deliberately does not support compressed payloads (RFC 7516 §4.1.3).
     // Compression-before-encryption enables oracle attacks (CVE-2016-1000031 class).
     // Explicit rejection is safer than silent passthrough.
-    if ((decoded.header as { zip?: unknown }).zip !== undefined) {
+    //
+    // ⛔ ASKED OF THE HEADER AS THE PRODUCER WROTE IT, never of the typed bag alone.
+    // No registry row declares `zip`, so `decodeJoseHeader` routes it to `custom` —
+    // and a guard reading `decoded.header` answers `undefined` for every token that
+    // carries the parameter, putting the ciphertext through the AEAD
+    // (`internal/header/written-header.ts`).
+    // pinned: JweKit.test.ts.
+    const zip = writtenHeader(decoded.header, decoded.custom).zip;
+
+    if (zip !== undefined) {
       throw new JweError("Compressed JWE payloads are not supported", {
         code: "jwe_compression_unsupported",
-        data: { zip: (decoded.header as { zip?: unknown }).zip },
+        data: { zip },
         title: "JWE Compression Unsupported",
         details:
           "The header carries a zip parameter, but Aegis rejects compressed JWE payloads to avoid compression-oracle attacks.",

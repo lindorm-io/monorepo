@@ -420,6 +420,55 @@ describe("JweKit", () => {
   });
 
   describe("zip (compression) rejection", () => {
+    // ⭐ THE PAIR IS THE CLAIM: the write door cannot put the parameter on the
+    // wire, so the guard below can only ever fire on a token somebody else wrote.
+    // A door that emitted it would mint a token this kit refuses to open.
+    // RFC 7516 §4.1.3.
+    test("the header bag cannot put zip on the wire, so the token still decrypts", () => {
+      const token = kit.encrypt("data", {
+        header: { oid: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03", zip: "DEF" } as never,
+      });
+
+      // BOTH buckets: the keyless read splits a header the producer did not, so the
+      // typed bag alone would answer "absent" for a parameter riding `custom`.
+      const decoded = JweKit.decode(token);
+
+      expect(decoded.header).not.toHaveProperty("zip");
+      expect(decoded.custom.header).not.toHaveProperty("zip");
+      expect(() => kit.decrypt(token)).not.toThrow();
+    });
+
+    /**
+     * ⛔ THE GUARD READS THE HEADER AS THE PRODUCER WROTE IT. No registry row
+     * declares `zip`, so the keyless read reports a foreign one under `custom` —
+     * and a guard reading the typed bag alone would answer `undefined` for every
+     * token that carries the parameter and put the ciphertext through the AEAD.
+     */
+    test("the refusal fires on the bucket the keyless read puts a foreign zip in", () => {
+      const token = kit.encrypt("data", {
+        header: { oid: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03" },
+      });
+
+      const headerWithZip = { ...JweKit.decode(token).header, zip: "DEF" };
+      const parts = token.split(".");
+      const modifiedHeader = Buffer.from(JSON.stringify(headerWithZip))
+        .toString("base64url")
+        .replace(/=/g, "");
+      const modifiedToken = [modifiedHeader, ...parts.slice(1)].join(".");
+
+      const decoded = JweKit.decode(modifiedToken);
+
+      expect(decoded.header).not.toHaveProperty("zip");
+      expect(decoded.custom.header).toHaveProperty("zip", "DEF");
+
+      expect(() => kit.decrypt(modifiedToken)).toThrow(
+        expect.objectContaining({
+          code: "jwe_compression_unsupported",
+          data: { zip: "DEF" },
+        }),
+      );
+    });
+
     test("rejects a JWE with zip: DEF to prevent compression oracle attacks", () => {
       const token = kit.encrypt("data", {
         header: { oid: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03" },

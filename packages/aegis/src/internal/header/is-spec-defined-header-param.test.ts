@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
-import { HEADER_SPECS, headerJoseName } from "./header-registry.js";
+import { HEADER_SPECS, headerByJose, headerJoseName } from "./header-registry.js";
 import {
   isSpecDefinedHeaderParam,
   registeredJoseNames,
@@ -64,6 +64,20 @@ describe("isSpecDefinedHeaderParam", () => {
       .sort();
 
     expect([...unimplementedSpecParams()].sort()).toEqual(expected);
+  });
+
+  /**
+   * ⭐ THE HAND-WRITTEN HALF IS THE ONLY HALF THAT ANSWERS FOR `zip`, and the
+   * registry half must NOT: a row is what makes a parameter emittable, and aegis
+   * compresses nothing on any write path while `JweKit.decrypt` refuses a token
+   * that merely carries the parameter. A name no row declares reads as one a
+   * producer may invent unless this set names it, which is what would let `zip`
+   * back onto the wire through `custom`. RFC 7516 §4.1.3.
+   */
+  test("compression is spec-defined with no registry row answering for it", () => {
+    expect(headerByJose("zip")).toBeUndefined();
+    expect(unimplementedSpecParams()).toContain("zip");
+    expect(isSpecDefinedHeaderParam("zip")).toBe(true);
   });
 
   /**

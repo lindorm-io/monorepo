@@ -551,33 +551,6 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     placement: "protected",
     critEligible: false,
   },
-  // RFC 7516 §4.1.3 — compression algorithm.
-  {
-    domain: "zip",
-    spec: {
-      kind: "rfc",
-      rfc: "RFC 7516",
-      section: "4.1.3",
-      url: "https://www.rfc-editor.org/rfc/rfc7516#section-4.1.3",
-    },
-    wire: {
-      jose: wireName("zip"),
-      cose: wireAbsent(
-        "aegis compresses nothing on the COSE wire, so there is no compression algorithm to declare.",
-      ),
-    },
-    codec: { kind: "string" },
-    cose: null,
-    sample: "DEF",
-    // PRUNE: `""` names no compression algorithm (RFC 7518 §7.3). aegis compresses
-    // nothing on any write path, so an empty `zip` declares a transform that did not
-    // happen — on a token `JweKit.decrypt` then refuses for merely CARRYING the
-    // parameter. A FOREIGN token's `zip` is untouched: the read path is not
-    // normalised.
-    whenEmpty: "prune",
-    placement: "protected",
-    critEligible: false,
-  },
 ];
 
 /** The JOSE wire name. Every header parameter rides JOSE, so it is always defined. */

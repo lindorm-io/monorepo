@@ -17,6 +17,7 @@ exports[`normaliseHeaders > the registry-driven empty prune > should never prune
   "empty_map": {},
   "kept": 1,
   "nonsense": "",
+  "zip": "",
 }
 `;
 

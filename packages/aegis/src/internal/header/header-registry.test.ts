@@ -46,7 +46,6 @@ const PARSED_DOMAIN_FIELDS: Record<
   pbkdfSalt: true,
   publicEncryptionJwk: true,
   publicEncryptionTag: true,
-  zip: true,
 };
 
 // Witness whose keys ARE the wire keys of WireTokenHeader (RFC 7515 §4.1). Same
@@ -73,7 +72,6 @@ const TOKEN_HEADER_WIRE: Record<keyof WireTokenHeader, true> = {
   x5t: true,
   "x5t#S256": true,
   x5u: true,
-  zip: true,
 };
 
 /**
@@ -144,7 +142,6 @@ describe("HEADER_SPECS", () => {
       // has no COSE spelling of its own. It is reached on READ only through label
       // 34's `hashAlg` dispatch.
       "x5t",
-      "zip",
     ]);
 
     for (const spec of absent) {
@@ -316,7 +313,7 @@ describe("HEADER_SPECS", () => {
     // author never thought about. The type forces a cell; nothing forces the
     // DECISION. A count beside the frozen lists is what makes a new parameter fail
     // this test until someone reads the split above and states which side it is on.
-    expect(HEADER_SPECS.length).toBe(21);
+    expect(HEADER_SPECS.length).toBe(20);
   });
 
   test("crit is the only member-transforming (critical) codec kind", () => {
@@ -329,11 +326,27 @@ describe("HEADER_SPECS", () => {
   test("the full RFC-registered additive set is present as normal caller entries", () => {
     // Caller-supplyable strings that the codec wires in both directions.
     // (`x5t` is not in this set — the kit derives it from the signing key.)
-    for (const wire of ["x5u", "zip", "apu", "apv"]) {
+    for (const wire of ["x5u", "apu", "apv"]) {
       const spec = headerByJose(wire);
       expect(spec, `missing RFC param "${wire}"`).toBeDefined();
       expect(spec?.codec.kind).toBe("string");
     }
+  });
+
+  /**
+   * ⛔ NO ROW IS WHAT MAKES THE PARAMETER UNWRITABLE. A row is the only thing
+   * either write pass resolves a name through, so compression has none on either
+   * wire: the JOSE passes drop the name as unregistered and the COSE one refuses
+   * it with `header_no_cose_label`. It stays spec-defined through
+   * `is-spec-defined-header-param.ts`, which is what keeps it out of `custom` and
+   * out of `crit`. RFC 7516 §4.1.3.
+   */
+  test("compression has no registry row on either wire", () => {
+    expect(headerByJose("zip")).toBeUndefined();
+    expect(headerByDomain("zip")).toBeUndefined();
+    expect(() => coseWireKey("zip", undefined)).toThrow(
+      expect.objectContaining({ code: "header_no_cose_label" }),
+    );
   });
 
   test("the lindorm-proprietary oid param is registered", () => {

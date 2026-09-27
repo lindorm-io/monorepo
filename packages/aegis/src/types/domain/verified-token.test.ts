@@ -31,7 +31,6 @@ const header: DomainTokenHeader = {
   publicEncryptionJwk: undefined,
   publicEncryptionTag: undefined,
   tokenType: "access_token",
-  zip: undefined,
 };
 
 describe("VerifiedToken (type witness)", () => {

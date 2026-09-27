@@ -3,14 +3,16 @@ import type { Wire } from "../internal/registry/wire.js";
 /**
  * THE PER-SPEC DISPOSITION TABLES — the consumer `ParamSpec.sample` never had.
  *
- * `sample` is REQUIRED on all 99 registry entries (78 claims, 21 header
- * parameters) and its whole stated purpose is to stop a new parameter being
- * added without giving the conformance suite something to round-trip. Nothing
- * read it. A required column with no reader is a column that documents an
- * intention, and the parameters it was meant to cover were free to be added,
- * mis-shaped or dropped without a single test noticing — which is how a sample
- * that is not a member of its own union, and a sample two years ahead of any
- * clock that could verify it, both sat in the registry unread.
+ * `sample` is REQUIRED on all 98 registry entries (78 claims, 20 header
+ * parameters; pinned: `classes/Aegis.spec-matrix.test.ts#should keep the
+ * documented registry totals true`) and its whole stated purpose is to stop
+ * a new parameter being added without giving the conformance suite something
+ * to round-trip. Nothing read it. A required column with no reader is a
+ * column that documents an intention, and the parameters it was meant to
+ * cover were free to be added, mis-shaped or dropped without a single test
+ * noticing — which is how a sample that is not a member of its own union,
+ * and a sample two years ahead of any clock that could verify it, both sat
+ * in the registry unread.
  *
  * Every entry here states ONE of three dispositions for its parameter, and the
  * matrix RUNS it:
@@ -260,11 +262,15 @@ export const CLAIM_DISPOSITIONS: Readonly<Record<string, SpecDisposition>> = {
  * One entry per {@link HEADER_SPECS} member, keyed by its DOMAIN name. Same
  * runtime key-set binding as the claim table.
  *
- * The caller-settable set is SEVEN of the twenty-one, and it is not a judgement
- * — `DomainProtectedHeader` is `Omit<DomainTokenHeader, KitOwnedDomainParam>`,
- * so the fourteen the kit derives are unreachable by construction. Every one of
- * those fourteen is therefore `notSuppliable`, and the question each entry has to
- * answer is whether its presence can be OBSERVED.
+ * The caller-settable set is SIX of the twenty (pinned:
+ * `classes/Aegis.spec-matrix.test.ts#should keep the documented registry
+ * totals true`), and it is not a judgement — `DomainProtectedHeader` is
+ * `Omit<DomainTokenHeader, KitOwnedDomainParam>`, so the fourteen the kit
+ * derives are unreachable by construction. Of those fourteen, eleven are
+ * `notSuppliable` — the question each has to answer is whether its presence
+ * can be OBSERVED — and three ride a dedicated option instead: `headerType`
+ * (`door: "mint.typ"`), `partyProducer` and `partyRecipient` (`door:
+ * "encrypt.party"`).
  */
 export const HEADER_DISPOSITIONS: Readonly<Record<string, SpecDisposition>> = {
   // --- caller-settable through the domain header bag -------------------------
@@ -295,19 +301,6 @@ export const HEADER_DISPOSITIONS: Readonly<Record<string, SpecDisposition>> = {
         door: "mint.header",
         reason:
           "aegis maps no COSE header parameter for a key SOURCE, so `coseByJose` refuses with `header_no_cose_label`. RFC 9052 §3.1.",
-      },
-    },
-  },
-
-  zip: {
-    disposition: "roundTrip",
-    door: "mint.header",
-    per: {
-      cose: {
-        disposition: "refused",
-        door: "mint.header",
-        reason:
-          "aegis maps no COSE header parameter for compression, so the registry marks it absent and `coseByJose` refuses it. RFC 9052 §3.1.",
       },
     },
   },

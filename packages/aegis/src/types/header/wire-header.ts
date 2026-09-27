@@ -41,7 +41,6 @@ export type WireTokenHeader = {
   x5t?: string;
   "x5t#S256"?: string;
   x5u?: string; // x.509 url
-  zip?: string; // compression algorithm
 };
 
 /**

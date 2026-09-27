@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { declaredCritToWire } from "./declared-crit-to-wire.js";
+import { HEADER_SPECS, headerJoseName } from "./header-registry.js";
 
 describe("declaredCritToWire", () => {
   test("passes an absent declaration through as absent", () => {
@@ -30,14 +31,21 @@ describe("declaredCritToWire", () => {
     );
   });
 
-  test.each(["jwk", "zip"])(
-    "accepts %s, whose domain and wire spellings coincide",
-    (member) => {
-      // Both resolve through `headerByDomain`, so neither reaches the refusal —
-      // the check must not fire on a name that IS the domain name.
+  test("accepts every member whose domain and wire spellings coincide", () => {
+    // ⚠ THE POPULATION IS DERIVED AND THEN FROZEN, because the refusal's own
+    // comment names it: such a member resolves through `headerByDomain` and never
+    // reaches the check, so a new coinciding row is a new name this gate must not
+    // fire on.
+    const coinciding = HEADER_SPECS.filter(
+      (spec) => headerJoseName(spec) === spec.domain,
+    ).map((spec) => spec.domain);
+
+    expect(coinciding).toEqual(["jwk"]);
+
+    for (const member of coinciding) {
       expect(declaredCritToWire([member])).toEqual([member]);
-    },
-  );
+    }
+  });
 
   test("a prototype member is neither resolved nor refused", () => {
     // Both registry lookups are `Map` reads. Through a plain object

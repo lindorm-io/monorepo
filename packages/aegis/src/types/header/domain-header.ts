@@ -36,7 +36,6 @@ export type DomainTokenHeader = {
   publicEncryptionJwk: PublicEncryptionJwk | undefined;
   publicEncryptionTag: string | undefined;
   tokenType: string | undefined;
-  zip: string | undefined;
 };
 
 /**

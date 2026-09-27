@@ -53,7 +53,6 @@ describe("normaliseHeaders", () => {
           cty: "",
           oid: "",
           x5u: "",
-          zip: "",
           jwk: {},
           kid: "key_test",
         }),
@@ -92,10 +91,20 @@ describe("normaliseHeaders", () => {
      * instead and never crosses these passes — `build-custom-header.ts`.) If the prune took it
      * first, an empty-valued unregistered parameter would vanish silently instead
      * of reaching the refusal a caller must hear.
+     *
+     * ⚠ `zip` is in this row rather than in the prune above, and that is the rule:
+     * no registry row answers for it, so there is no `whenEmpty` cell to read and
+     * the closed-set rule is what disposes of it (RFC 7516 §4.1.3).
      */
     test("should never prune an unregistered key", () => {
       expect(
-        normaliseHeaders({ nonsense: "", empty_list: [], empty_map: {}, kept: 1 }),
+        normaliseHeaders({
+          nonsense: "",
+          empty_list: [],
+          empty_map: {},
+          kept: 1,
+          zip: "",
+        }),
       ).toMatchSnapshot();
     });
 
