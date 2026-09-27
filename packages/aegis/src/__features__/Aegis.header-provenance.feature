@@ -138,21 +138,24 @@ Feature: Header provenance, empty header parameters and the asserted token type
       Then signing is refused as a CWT error "header_registered_in_custom"
       And the refusal names the parameter "cty" in the bucket "unprotected"
 
-  Rule: a parameter stated in both header buckets is reported as the issuer signed it
+  Rule: a verifier reads a signed COSE token's key identifier from the protected bucket, and from the unprotected one only where the protected states none
 
-    The protected bucket is covered by the signature and the unprotected one
-    is not (RFC 9052 §3), so where both state the same parameter only one of
-    the two values has an author a verifier can name. The signed value must
-    therefore win, unconditionally: resolving the other way, or by which
-    bucket happens to be read first, would let whoever last held the token
-    overwrite a statement its issuer signed. The token is a foreign producer's,
-    since no aegis writer emits this shape. It verifies, which is what makes
-    this about the merge and not about key resolution: `kid` is a routing hint
-    (RFC 9052 §3.1), so aegis finds the key by the unprotected one and the
-    signature then proves it. What the result reports is the signed value. The
-    jose wire has no scenario: the JOSE compact serialisation has one header
-    and no second bucket to restate a parameter from (RFC 7515 §7.1), so the
-    collision cannot be constructed on that wire.
+    A COSE header states a parameter in the bucket the signature covers or in
+    the one it does not, and the protected bucket is the authoritative one
+    (RFC 9052 §3). A reader consulting the unprotected bucket first would let
+    whoever last held the token choose which key a verifier asks the vault
+    for, and would refuse the producer that made the more conservative choice
+    of signing its own hint. Every token here is a foreign producer's, since
+    aegis writes `kid` in one bucket only, and the producer places its OWN key
+    id: a literal names a key the vault does not hold, so such a scenario
+    would be refused for the lookup rather than answer the placement. Each
+    accepting scenario reads both raw buckets off the bytes before asserting
+    what the verify reported, so a reader that relocated the parameter cannot
+    satisfy it. A token naming no key in either bucket is refused rather than
+    searched for, because nothing a token declares may steer key selection.
+    The jose wire has no scenario: the JOSE compact serialisation has one
+    header and no second bucket to read a parameter from (RFC 7515 §7.1), so
+    there is no order for a reader to get right.
 
     Background:
       Given the wire claims
@@ -162,17 +165,103 @@ Feature: Header provenance, empty header parameters and the asserted token type
         | jti | "token-1"                  |
       And the wire claims were issued at "2024-01-01T08:00:00.000Z"
       And the wire claims expire at "2024-01-01T09:00:00.000Z"
-      And the foreign protected header carries
-        | kid | "key_the_issuer_signed" |
 
-    Scenario: cose: the token verifies, and the key identifier reported is the one the signature covers
+    @RFC-9052
+    Scenario: cose: a key identifier the signature covers resolves the verification key (RFC-9052 §3)
+      Given the third party writes its key identifier in the protected bucket
       When a third party signs the wire claims on the cose wire
       And I verify the token
-      Then the verified token is a "cwt"
-      And the raw protected header carries label 4 as the byte string "key_the_issuer_signed"
-      And the raw unprotected header carries all of label 4
-      And the verified header includes
-        | keyId | "key_the_issuer_signed" |
+      Then the raw protected header carries all of label 4
+      And the raw unprotected header carries none of label 4
+      And the verified token is a "cwt"
+      And the verified header reports the key id of the ES512 signing key
+
+    Scenario: cose: a key identifier in the unprotected bucket alone resolves the verification key
+      Given the third party writes its key identifier in the unprotected bucket
+      When a third party signs the wire claims on the cose wire
+      And I verify the token
+      Then the raw unprotected header carries all of label 4
+      And the raw protected header carries none of label 4
+      And the verified token is a "cwt"
+      And the verified header reports the key id of the ES512 signing key
+
+    Scenario: cose: a token naming no key in either bucket is refused rather than searched for
+      Given the third party writes its key identifier in neither bucket
+      When a third party signs the wire claims on the cose wire
+      And I verify the token
+      Then verification is refused as a key error "verify_key_missing_kid"
+
+  Rule: a signed COSE token stating its key identifier in both header buckets is refused as malformed
+
+    A header parameter lives in the protected bucket or in the unprotected one,
+    and a token stating `kid` in both states two routing hints where a reader
+    needs one. aegis refuses it: the specification asks a reader to verify that
+    the two buckets do not collide and leaves the disposal to the application,
+    so the refusal is aegis policy — the read side of the one the mint already
+    makes when a caller states a parameter in both buckets. PRESENCE is the
+    fault rather than disagreement: every scenario states the SAME key id in
+    each bucket, so no reading of the two values conflicts. One verdict at
+    every door, because `parse` and `verify` are two doors onto the same bytes
+    and a rule enforced at one of them is an accident of which door a caller
+    reached for. The verdict also precedes key resolution, so a malformed
+    token is never reported as an unresolvable key. The jose wire has no
+    scenario: the JOSE compact serialisation has one header and no second
+    bucket to restate a parameter from (RFC 7515 §7.1), so the collision
+    cannot be constructed on that wire.
+
+    Background:
+      Given the wire claims
+        | iss | "https://test.lindorm.io/" |
+        | sub | "user-1"                   |
+        | aud | ["https://rs.lindorm.io/"] |
+        | jti | "token-1"                  |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+
+    Scenario: cose: the verify door refuses a token whose key identifier is stated twice, naming the parameter
+      Given the third party writes its key identifier in both buckets
+      When a third party signs the wire claims on the cose wire
+      And I verify the token
+      Then verification is refused as a COSE error "cose_duplicate_kid"
+      And the refusal names the parameter "kid"
+
+    Scenario: cose: the keyless read refuses a token whose key identifier is stated twice
+      Given the third party writes its key identifier in both buckets
+      When a third party signs the wire claims on the cose wire
+      And I read the token without a key
+      Then the keyless read is refused as a COSE error "cose_duplicate_kid"
+
+    Scenario: cose: the raw claims door refuses a token whose key identifier is stated twice
+      Given the third party writes its key identifier in both buckets
+      When a third party signs the wire claims on the cose wire
+      And I verify the token as a claims token on the cose wire
+      Then verification is refused as a COSE error "cose_duplicate_kid"
+
+    Scenario: cose: the raw opaque door refuses a token whose key identifier is stated twice
+      Given the third party writes its key identifier in both buckets
+      When a third party signs the wire claims on the cose wire
+      And I verify the token as opaque content on the cose wire
+      Then verification is refused as a COSE error "cose_duplicate_kid"
+
+    Scenario: cose: the verify door reaches the malformed verdict before it resolves a key
+      Given the third party writes its key identifier in neither bucket
+      And the foreign protected header carries
+        | kid | "a-key-the-vault-does-not-hold" |
+      And the foreign unprotected header carries
+        | kid | "a-key-the-vault-does-not-hold" |
+      When a third party signs the wire claims on the cose wire
+      And I verify the token
+      Then verification is refused as a COSE error "cose_duplicate_kid"
+
+    Scenario: cose: the raw claims door reaches it before its own key resolution too
+      Given the third party writes its key identifier in neither bucket
+      And the foreign protected header carries
+        | kid | "a-key-the-vault-does-not-hold" |
+      And the foreign unprotected header carries
+        | kid | "a-key-the-vault-does-not-hold" |
+      When a third party signs the wire claims on the cose wire
+      And I verify the token as a claims token on the cose wire
+      Then verification is refused as a COSE error "cose_duplicate_kid"
 
   Rule: header parameters that must be signed are ignored when they arrive unauthenticated
 

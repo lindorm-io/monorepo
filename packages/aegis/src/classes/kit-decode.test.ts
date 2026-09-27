@@ -145,16 +145,18 @@ describe("kit decode — per-wire header buckets, no signature check", () => {
     });
 
     test("a parameter in BOTH maps is reported once per bucket, not resolved", () => {
-      // Craft a COSE_Sign1 whose kid (label 4) sits in BOTH maps with different
+      // Craft a COSE_Sign1 whose typ (label 16) sits in BOTH maps with different
       // values. There is no precedence to state any more — the buckets are
-      // different statements about the token, and only one of them is signed.
+      // different statements about the token, and only one of them is signed. ⚠ The
+      // witness is `typ`, which the DOMAIN tier admits from the protected bucket
+      // alone (`is-protected-only.ts`): seeing it reported from both is exactly the
+      // separation this tier owes its caller. `kid` cannot witness it — stated in
+      // both buckets it is refused outright (`assert-kid-one-bucket.ts`).
       const protectedMap = new Map<number, unknown>();
       protectedMap.set(1, algToCoseLabel("ES512")); // alg (label 1)
-      protectedMap.set(4, Buffer.from("protected-kid", "utf8")); // kid (label 4)
+      protectedMap.set(16, "application/signed+cws"); // typ (label 16)
 
-      const unprotected = new Map<number, unknown>([
-        [4, Buffer.from("unprotected-kid", "utf8")],
-      ]);
+      const unprotected = new Map<number, unknown>([[16, "application/presented+cws"]]);
 
       const structure = new Tag(COSE_TAG.sign1, [
         encodeProtectedHeader(protectedMap),
@@ -166,8 +168,8 @@ describe("kit decode — per-wire header buckets, no signature check", () => {
       const { protectedHeader, unprotectedHeader } = CwsKit.decode(encodeCbor(structure));
 
       expect(protectedHeader.alg).toBe("ES512");
-      expect(protectedHeader.kid).toBe("protected-kid");
-      expect(unprotectedHeader.kid).toBe("unprotected-kid");
+      expect(protectedHeader.typ).toBe("application/signed+cws");
+      expect(unprotectedHeader.typ).toBe("application/presented+cws");
     });
 
     test("a CWE maps the COSE_Encrypt0 content-encryption label (1) to `enc`", () => {

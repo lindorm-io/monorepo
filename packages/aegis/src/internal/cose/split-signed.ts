@@ -3,6 +3,7 @@ import type { CoseError } from "../../errors/index.js";
 import type { WireTokenHeader } from "../../types/index.js";
 import type { CoseLabel } from "./cose-label.js";
 import { coseWireHeader } from "../header/cose-wire-header.js";
+import { assertKidOneBucket } from "./assert-kid-one-bucket.js";
 import { decodeCbor } from "./cbor.js";
 import { requireBstr } from "./require-bstr.js";
 import { requireCose } from "./require-cose.js";
@@ -116,6 +117,11 @@ export const splitSigned = (
   // Decoded ONCE and used twice: a second decode is a second chance for the raw
   // and translated buckets to disagree about the same bytes.
   const protectedMap = decodeProtectedHeader(protectedBstr);
+
+  // ONE verdict at every signed door. `decodeCwt` runs this guard too, because the
+  // verification key resolves there before a kit exists
+  // (`assert-kid-one-bucket.ts`).
+  assertKidOneBucket({ protectedMap, unprotected, error });
 
   const protectedWire = coseWireHeader(protectedMap, "sig");
   const unprotectedWire = coseWireHeader(

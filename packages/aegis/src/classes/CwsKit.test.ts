@@ -1,5 +1,5 @@
 import { EcError } from "@lindorm/ec";
-import { KryptosKit } from "@lindorm/kryptos";
+import { type IKryptos, KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { describe, expect, test } from "vitest";
 import { AegisError, CwsError } from "../errors/index.js";
@@ -780,4 +780,47 @@ describe("CwsKit — the protected typ", () => {
       expect.objectContaining({ code: "cws_unsupported_crit_param" }),
     );
   });
+});
+
+// ⛔ Two routing hints where a reader needs one. The opaque door opens the same
+// `splitSigned` structure the claims doors do, so the verdict is theirs
+// (`assert-kid-one-bucket.ts`) — aegis policy rather than an RFC 9052 §3
+// requirement, and pinned here because this door resolves no key to refuse on.
+describe("CwsKit — a key identifier stated in both header buckets", () => {
+  const payload = Buffer.from("the content bytes");
+
+  /**
+   * The protected map of a genuine aegis token with `kid` ADDED — the fixture
+   * writes one unprotected, so the re-sealed token states the hint twice.
+   */
+  const bothBuckets = (kryptos: IKryptos): Buffer => {
+    const kit = new CwsKit({ kryptos, logger: createMockLogger() });
+    const [protectedBstr] = decodeCbor<Tag>(kit.sign(payload, { tokenType: "at" }))
+      .contents as [Buffer];
+    const map = decodeProtectedHeader(protectedBstr);
+
+    map.set(coseByJose("kid"), Buffer.from(kryptos.id, "utf8"));
+
+    return foreignSignedCose(kryptos, map, payload);
+  };
+
+  test.each([
+    ["COSE_Sign1", TEST_EC_KEY_SIG],
+    ["COSE_Mac0", TEST_OCT_KEY_SIG],
+  ])(
+    "CwsKit.decode refuses a %s stating it twice, naming the parameter",
+    (_structure, kryptos) => {
+      let thrown: AegisError | undefined;
+
+      try {
+        CwsKit.decode(bothBuckets(kryptos));
+      } catch (error) {
+        thrown = error as AegisError;
+      }
+
+      expect(thrown).toBeInstanceOf(CwsError);
+      expect(thrown?.code).toBe("cose_duplicate_kid");
+      expect(thrown?.data).toEqual({ parameter: "kid" });
+    },
+  );
 });

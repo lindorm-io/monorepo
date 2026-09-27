@@ -24,14 +24,6 @@ export class AegisHeaderProvenanceSteps extends AegisStepsBase {
     this.carriesNoneOf("protectedHeader", keys);
   }
 
-  @Then("the raw protected header carries {wireKey} as the byte string {string}")
-  theRawProtectedHeaderCarriesAsTheByteString(key: WireKey, text: string): void {
-    const value = this.raw("protectedHeader").get(key);
-
-    expect(value).toBeInstanceOf(Uint8Array);
-    expect(Buffer.from(value as Uint8Array).toString("utf8")).toBe(text);
-  }
-
   @Then("the raw unprotected header carries {wireKey} {string}")
   theRawUnprotectedHeaderCarries(key: WireKey, value: string): void {
     expect(this.raw("unprotectedHeader").get(key)).toBe(value);

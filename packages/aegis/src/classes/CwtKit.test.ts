@@ -1,17 +1,20 @@
 import { EcError } from "@lindorm/ec";
-import { KryptosKit } from "@lindorm/kryptos";
+import { type IKryptos, KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import MockDate from "mockdate";
 import { beforeEach, describe, expect, test } from "vitest";
-import { AegisError, CwmError, CwsError, CwtError } from "../errors/index.js";
+import { AegisError, CoseError, CwmError, CwsError, CwtError } from "../errors/index.js";
 import {
   TEST_EC_KEY_SIG,
   TEST_OCT_KEY_SIG,
   TEST_OKP_KEY_SIG,
 } from "../__fixtures__/keys.js";
+import { algToCoseLabel } from "../internal/cose/alg-labels.js";
 import { Tag, decodeCbor, encodeCbor } from "../internal/cose/cbor.js";
+import type { CoseLabel } from "../internal/cose/cose-label.js";
 import { COSE_TAG, encodeProtectedHeader } from "../internal/cose/structures.js";
 import { coseByJose } from "../internal/header/header-registry.js";
+import { foreignSignedCose } from "../__fixtures__/foreign-signed-cose.js";
 import { spliceCoseSlot } from "../__fixtures__/splice-cose-slot.js";
 import { CwmKit } from "./CwmKit.js";
 import { CwsKit } from "./CwsKit.js";
@@ -119,6 +122,53 @@ describe("CwtKit (COSE_Sign1, asymmetric)", () => {
     // The title is derived from the format tag; `CwmKit` asserts its own, which
     // is the pair that says the derivation distinguishes the two structures.
     expect(error?.title).toBe("CWT Kid Mismatch");
+  });
+
+  // The same fail-fast over a hint the SIGNATURE covers, which the row above cannot
+  // state: aegis writes `kid` unprotected, so only a foreign producer puts one in
+  // the protected bucket.
+  //
+  // ⚠ SLOT 1 IS EMPTIED ON PURPOSE. `foreignSignedCose` writes `kid` unprotected
+  // too, and a token stating it in both buckets answers `cose_duplicate_kid`
+  // instead — a different gate. The unprotected bucket is outside the
+  // `Sig_structure` (RFC 9052 §4.4), so emptying it after sealing leaves the hint in
+  // the protected bucket alone over a signature this kit's own key really made.
+  test("kid fail-fast — a signed kid naming a different key throws cwt_kid_mismatch", () => {
+    // A CWT Claims Set at the registered keys (RFC 8392 §4), temporally valid under
+    // the mocked clock, so the token is one this kit would otherwise verify.
+    const claims = encodeCbor(
+      new Map<number, unknown>([
+        [1, wire.iss],
+        [2, wire.sub],
+        [4, wire.exp],
+        [6, wire.iat],
+      ]),
+    );
+    const token = spliceCoseSlot(
+      foreignSignedCose(
+        TEST_EC_KEY_SIG,
+        new Map<CoseLabel, unknown>([
+          [coseByJose("alg"), algToCoseLabel(TEST_EC_KEY_SIG.algorithm)],
+          [coseByJose("kid"), Buffer.from("a-key-the-vault-does-not-hold", "utf8")],
+        ]),
+        claims,
+      ),
+      1,
+      new Map<CoseLabel, unknown>(),
+    );
+
+    const error = (() => {
+      try {
+        kit.verify(token);
+      } catch (err) {
+        return err as AegisError;
+      }
+    })();
+
+    expect(error?.code).toBe("cwt_kid_mismatch");
+    // The PROTECTED value is the one reported, which is what says the read reached
+    // that bucket rather than merely refusing the token for some other reason.
+    expect(error?.data).toEqual({ kid: "a-key-the-vault-does-not-hold" });
   });
 
   describe("ML-DSA is official COSE (RFC 9964)", () => {
@@ -770,6 +820,49 @@ describe("CwmKit — the typ gate refuses a COSE object of another shape", () =>
     // read reports itself as a CWM under either spelling (`verify-cwt.ts`).
     expect(thrown?.title).toBe("CWM Invalid Typ");
     expect(thrown?.data).toEqual({ typ: "application/cws" });
+  });
+});
+
+// The KEYLESS decode doors, which resolve no key at all: the refusal comes from
+// the `splitSigned` opening (`assert-kid-one-bucket.ts`), so a token stating its
+// routing hint twice is malformed whether or not anything was going to route by it.
+// `decodeCwt` runs the same guard for the doors that resolve a key first.
+describe("a signed COSE token stating its key identifier in both header buckets", () => {
+  // A CWT Claims Set carrying `iss` (1) and `sub` (2) at their registered keys
+  // (RFC 8392 §4), so the duplicate is the only thing wrong with the token.
+  const claims = encodeCbor(
+    new Map<number, unknown>([
+      [1, wire.iss],
+      [2, wire.sub],
+    ]),
+  );
+
+  /** The fixture writes `kid` unprotected; this restates it in the protected bucket. */
+  const bothBuckets = (kryptos: IKryptos): Buffer =>
+    foreignSignedCose(
+      kryptos,
+      new Map<CoseLabel, unknown>([
+        [coseByJose("alg"), algToCoseLabel(kryptos.algorithm)],
+        [coseByJose("kid"), Buffer.from(kryptos.id, "utf8")],
+      ]),
+      claims,
+    );
+
+  test.each([
+    ["CwtKit.decode", (): unknown => CwtKit.decode(bothBuckets(TEST_EC_KEY_SIG))],
+    ["CwmKit.decode", (): unknown => CwmKit.decode(bothBuckets(TEST_OCT_KEY_SIG))],
+  ])("%s refuses it as malformed, naming the parameter", (_door, door) => {
+    let thrown: AegisError | undefined;
+
+    try {
+      door();
+    } catch (error) {
+      thrown = error as AegisError;
+    }
+
+    expect(thrown).toBeInstanceOf(CoseError);
+    expect(thrown?.code).toBe("cose_duplicate_kid");
+    expect(thrown?.data).toEqual({ parameter: "kid" });
   });
 });
 

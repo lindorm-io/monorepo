@@ -6,8 +6,10 @@ import { expect } from "vitest";
 import type { CoseHeaderBuckets, JoseHeaderBuckets } from "../types/index.js";
 import type { RawDoorResult } from "../__fixtures__/aegis-context.js";
 import { AegisStepsBase } from "../__fixtures__/aegis-steps-base.js";
+import { alternationOf } from "../__fixtures__/alternation-of.js";
 import { jsonCells } from "../__fixtures__/json-cells.js";
 import type { Wire, WireKey } from "../__fixtures__/raw-bucket.js";
+import type { ForeignKidPlacement } from "../__fixtures__/third-party-producer.js";
 import { WIRE_ERROR, type WireError } from "../__fixtures__/wire-errors.js";
 import { SEALED_FORMAT } from "../__fixtures__/wire-formats.js";
 
@@ -22,6 +24,14 @@ const JSON_VALUE = /"(?:[^"\\]|\\.)*"|-?\d+|\[[^\]]*\]/;
 const isJoseBuckets = (
   buckets: JoseHeaderBuckets | CoseHeaderBuckets,
 ): buckets is JoseHeaderBuckets => "header" in buckets;
+
+/** How a sentence names the bucket a foreign producer's own `kid` rides in (RFC 9052 §3). */
+const KID_PLACEMENT: Record<string, ForeignKidPlacement> = {
+  "in the protected bucket": "protected",
+  "in the unprotected bucket": "unprotected",
+  "in both buckets": "both",
+  "in neither bucket": "neither",
+};
 
 /**
  * A table whose key cell is a COSE INTEGER label rather than a parameter name
@@ -84,6 +94,11 @@ export class AegisCriticalHeaderSteps extends AegisStepsBase {
   @Given("the foreign unprotected header carries, at the integer labels")
   theForeignUnprotectedHeaderCarriesAtTheIntegerLabels(table: DataTable): void {
     this.ctx.foreignHeaders.integerLabelledUnprotected = integerLabelCells(table);
+  }
+
+  @Given("the third party writes its key identifier {kidPlacement}")
+  theThirdPartyWritesItsKeyIdentifier(placement: ForeignKidPlacement): void {
+    this.ctx.foreignHeaders.kidPlacement = placement;
   }
 
   // the recipient's declaration, forwarded by every reading door
@@ -233,6 +248,11 @@ export class AegisCriticalHeaderSteps extends AegisStepsBase {
   @ParameterType("json", JSON_VALUE)
   static json(raw: string): unknown {
     return JSON.parse(raw);
+  }
+
+  @ParameterType("kidPlacement", alternationOf(Object.keys(KID_PLACEMENT)))
+  static kidPlacement(raw: string): ForeignKidPlacement {
+    return KID_PLACEMENT[raw];
   }
 
   // helpers

@@ -3,6 +3,7 @@ import { CoseError } from "../../errors/index.js";
 import type { CwtClaimsWire } from "../../types/index.js";
 import { coseByJose } from "../header/header-registry.js";
 import { coseLabelToAlg } from "./alg-labels.js";
+import { assertKidOneBucket } from "./assert-kid-one-bucket.js";
 import { decodeCbor } from "./cbor.js";
 import { decodeCwtClaims } from "./cwt-claims.js";
 import type { CwtDecoded } from "./cwt-format.js";
@@ -18,8 +19,8 @@ import { stripCwtTag } from "./unwrap-cose.js";
  * ⚠ It NEVER throws: every caller is resolving a key, not reading claims, and two
  * legitimate inputs carry no claims at all — a DETACHED payload, and an OPAQUE
  * CWS payload of arbitrary bytes. An unreadable payload — including a slot holding
- * something other than a byte string — is "no claims"; the structural verdict
- * belongs to `verifyCwt`/`decodeCwtWire`.
+ * something other than a byte string — is "no claims"; the PAYLOAD's structural
+ * verdict belongs to `verifyCwt`/`decodeCwtWire`.
  */
 const decodeUnverifiedClaims = (payloadBstr: unknown): CwtClaimsWire | undefined => {
   if (!(payloadBstr instanceof Uint8Array)) return undefined;
@@ -64,11 +65,25 @@ export const decodeCwt = (token: Buffer): CwtDecoded => {
   const [, unprotected, payloadBstr] = contents;
   const protectedMap = decodeProtectedHeader(protectedBstr);
 
+  // The HEADER verdict, raised here and not left to `splitSigned` alone: the key
+  // resolves off the `kid` below, before any kit opens the structure
+  // (`internal/wire/cose-token-wire.ts`, `internal/utils/raw-verify-cwt.ts`), so a
+  // token stating the hint twice would otherwise answer a key refusal rather than
+  // a malformed one.
+  assertKidOneBucket({ protectedMap, unprotected, error: CoseError });
+
+  // ⚠ THE PROTECTED BUCKET FIRST — the unprotected one answers only where the
+  // protected states no `kid` (RFC 9052 §3). The guard above is what makes the
+  // fallback unambiguous: no token reaching it states the label in both.
+  //
   // ⚠ NARROWED, NOT CAST — the same narrowing `splitSigned` and `CweKit` apply to
-  // this slot. An unindexable bucket carries no kid hint, and this door hands back
-  // a best-effort view rather than a verdict, so it reads as absent.
+  // this slot. A bucket this reader cannot index states no hint, and a hint is all
+  // it is: the key it names is proven by the signature, so an unreadable bucket
+  // reads as absent and the missing-kid refusal stays `resolve-key.ts`'s to make.
+  const kidLabel = coseByJose("kid");
   const kidValue =
-    unprotected instanceof Map ? unprotected.get(coseByJose("kid")) : undefined;
+    protectedMap.get(kidLabel) ??
+    (unprotected instanceof Map ? unprotected.get(kidLabel) : undefined);
   const algLabel = protectedMap.get(coseByJose("alg"));
   const typ = protectedMap.get(coseByJose("typ"));
 

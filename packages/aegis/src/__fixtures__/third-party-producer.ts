@@ -85,6 +85,12 @@ const CBOR_TAG = { cwt: 61, sign1: 18, mac0: 17 } as const;
 export type IntegerLabelledEntries = ReadonlyMap<number, unknown>;
 
 /**
+ * Which of the two COSE header buckets a producer writes its own `kid` into
+ * (RFC 9052 §3). `"neither"` mints a token that names no key at all.
+ */
+export type ForeignKidPlacement = "protected" | "unprotected" | "both" | "neither";
+
+/**
  * Header parameters a third party writes beside its own `alg` and `kid`, stated
  * in the JOSE vocabulary on either wire. A COSE producer keys each at the label
  * the specifications register for it, or under its text label when none is.
@@ -94,6 +100,15 @@ export type ForeignHeaders = {
   protectedHeader?: Dict;
   /** COSE only: the second bucket, covered by nothing (RFC 9052 §3). */
   unprotectedHeader?: Dict;
+  /**
+   * COSE only: which bucket the producer's OWN `kid` rides in, `"unprotected"`
+   * when unstated. It is always the signing key's id and never a value a caller
+   * chooses — a reader resolves the key the hint names and then compares the two
+   * (`src/internal/utils/assert-kid-match.ts#export const assertKidMatch`), so a
+   * literal would be refused for naming another key rather than answer the
+   * placement under test.
+   */
+  kidPlacement?: ForeignKidPlacement;
   /**
    * COSE only: protected entries written under their TEXT label whatever the
    * registrations say — the integer 2 and the text `"crit"` are different labels
@@ -241,6 +256,12 @@ const signJose = async (
     );
   }
 
+  if (headers.kidPlacement !== undefined) {
+    throw new Error(
+      "a JOSE compact serialisation has one header and the key id rides it (RFC 7515 §7.1): there is no bucket for a producer to place it in",
+    );
+  }
+
   // The producer's own parameters first, so a stated one can restate them.
   const header: Dict & { alg: string } = {
     alg: kryptos.algorithm,
@@ -267,10 +288,16 @@ const signCose = async (
 ): Promise<string> => {
   const { kty, crv, x, y, d, k } = kryptos.export("jwk") as Dict;
 
+  const placement = headers.kidPlacement ?? "unprotected";
+  const kidInProtected = placement === "protected" || placement === "both";
+  const kidInUnprotected = placement === "unprotected" || placement === "both";
+  const kid: [CoseLabel, unknown] = [coseLabelOf("kid"), Buffer.from(kryptos.id, "utf8")];
+
   const protectedEntries: Array<[CoseLabel, unknown]> = [
     [coseLabelOf("alg"), coseAlgorithmOf(kryptos)],
   ];
 
+  if (kidInProtected) protectedEntries.push(kid);
   if (typ !== undefined) protectedEntries.push([coseLabelOf("typ"), typ]);
 
   protectedEntries.push(...coseEntriesOf(headers.protectedHeader));
@@ -278,9 +305,10 @@ const signCose = async (
   protectedEntries.push(...Object.entries(headers.textLabelledProtected ?? {}));
 
   // The producer's own `kid` first, so a stated one is written beside it, never
-  // in place of it: it is the routing hint a reader resolves the key by.
+  // in place of it: it is the routing hint a reader resolves the key by. WHICH
+  // bucket carries it is the caller's (RFC 9052 §3).
   const unprotectedEntries: Array<[CoseLabel, unknown]> = [
-    [coseLabelOf("kid"), Buffer.from(kryptos.id, "utf8")],
+    ...(kidInUnprotected ? [kid] : []),
     ...coseEntriesOf(headers.unprotectedHeader),
     ...(headers.integerLabelledUnprotected ?? []),
   ];
