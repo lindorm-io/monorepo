@@ -47,6 +47,29 @@ export const decodeProtectedHeader = (bstr: Uint8Array): Map<CoseLabel, unknown>
   });
 };
 
+/**
+ * The protected header of a slot that has not been authenticated — its label map,
+ * or `undefined` where the slot states none.
+ *
+ * ⚠ IT NEVER THROWS, which is the whole reason it stands beside the gate above.
+ * `internal/cose/cose-encryption.ts` reads the recipient `kid` off this bucket to
+ * CHOOSE the decryption key, so the slot is a stranger's bytes and every
+ * malformedness a producer can write here — a slot that is no byte string, bytes
+ * holding no CBOR, CBOR holding no map — states no parameter rather than raising a
+ * verdict the door that opens the whole structure owns.
+ */
+export const readProtectedHeader = (
+  slot: unknown,
+): Map<CoseLabel, unknown> | undefined => {
+  if (!(slot instanceof Uint8Array)) return undefined;
+
+  try {
+    return decodeProtectedHeader(slot);
+  } catch {
+    return undefined;
+  }
+};
+
 /** The to-be-signed bytes for COSE_Sign1 — `Sig_structure`. RFC 9052 §4.4. */
 export const buildSigStructure = (
   protectedHeader: Buffer,

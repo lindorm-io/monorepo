@@ -8,7 +8,7 @@ import type {
 } from "../../types/index.js";
 import { coseByJose } from "../header/header-registry.js";
 import { decodeCbor } from "./cbor.js";
-import { COSE_TAG } from "./structures.js";
+import { COSE_TAG, readProtectedHeader } from "./structures.js";
 import { coseStructure } from "./unwrap-cose.js";
 
 /**
@@ -96,19 +96,38 @@ export const decryptCose = <T extends TokenContent = Buffer>({
 export const isEncryptedCose = (token: Buffer): boolean =>
   coseStructure(decodeCbor(token))?.tag === COSE_TAG.encrypt0;
 
-/** Read the COSE_Encrypt0 kid off the unprotected bucket WITHOUT decrypting. */
+/** Read the COSE_Encrypt0 kid off its header buckets WITHOUT decrypting. */
 export const decodeEncryptedCoseKid = (token: Buffer): string | undefined => {
   const cose = coseStructure(decodeCbor(token));
-  // ⚠ The slot is TYPE-CHECKED, not cast. This runs BEFORE the recipient key is
+  const contents: Array<unknown> | undefined = Array.isArray(cose?.contents)
+    ? cose.contents
+    : undefined;
+  const kidLabel = coseByJose("kid");
+  const protectedMap = readProtectedHeader(contents?.[0]);
+  const unprotected = contents?.[1];
+
+  // ⚠ THE PROTECTED BUCKET FIRST, AND ON `has` — the unprotected one answers only
+  // where the attribute is NOT FOUND in the protected one (RFC 9052 §3), which is
+  // presence and not usability, so `Map.get` answering `null` for the CBOR null or
+  // `undefined` for the CBOR undefined is a kid the producer STATED. Deciding on
+  // the value instead would let the rewritable bucket choose the recipient key.
+  // pinned: cose-sign-encrypt.test.ts
+  //
+  // ⚠ Both slots are TYPE-CHECKED, not cast, and the protected one through the
+  // NEVER-THROWING `readProtectedHeader`. This runs BEFORE the recipient key is
   // resolved — `internal/wire/cose-token-wire.ts` and
-  // `internal/utils/raw-decrypt-cwe.ts` call it to CHOOSE that key — so the bucket
-  // is a stranger's bytes. A producer may write anything, and `preferMap: false`
-  // hands a wholly text-keyed map back as a plain object, so a cast lets `.get`
-  // throw a raw `TypeError` out of an unauthenticated read. RFC 9052 §3.
-  const unprotected = Array.isArray(cose?.contents) ? cose.contents[1] : undefined;
-  // A bucket this reader cannot index states no kid — the same answer a conformant
+  // `internal/utils/raw-decrypt-cwe.ts` call it to CHOOSE that key — so both
+  // buckets are a stranger's bytes. A producer may write an integer, a text string,
+  // an array or a byte string where the map belongs, and a cast lets `.get` throw a
+  // raw `TypeError` out of an unauthenticated read.
+  //
+  // A slot this reader cannot index holds no kid — the same answer a conformant
   // bucket without one gives. The malformedness verdict belongs to
   // `CweKit.decrypt`, which reads the whole structure.
-  const kid = unprotected instanceof Map ? unprotected.get(coseByJose("kid")) : undefined;
+  const unprotectedKid =
+    unprotected instanceof Map ? unprotected.get(kidLabel) : undefined;
+
+  const kid = protectedMap?.has(kidLabel) ? protectedMap.get(kidLabel) : unprotectedKid;
+
   return kid instanceof Uint8Array ? Buffer.from(kid).toString("utf8") : undefined;
 };
