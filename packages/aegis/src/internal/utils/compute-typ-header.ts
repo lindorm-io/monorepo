@@ -2,6 +2,7 @@ import { TOKEN_TYPE_TO_SHORT_NAME, type TokenType } from "../../constants/token-
 import { AegisError } from "../../errors/index.js";
 import type { TokenFormatTag } from "../../types/domain/verified-token.js";
 import type { BaseTokenFormat } from "../../types/header/wire-header.js";
+import { mediaTypeMatches, normaliseMediaType } from "./media-type-matches.js";
 
 /**
  * The kit-tier format set — an ALIAS of the domain `TokenFormatTag`, not a second
@@ -144,27 +145,40 @@ export const computeTypHeader = (
  * Inverse of computeTypHeader: given a typ header and kit format, derive the
  * tokenType. Returns undefined if the typ is the bare format fallback (ambiguous)
  * or has no recoverable tokenType.
+ *
+ * ⚠ IT DECIDES ON THE MEDIA TYPE, not on the spelling — through the same
+ * {@link normaliseMediaType} the verify floor matches a profile's `typ` with
+ * (`enforce-verify-floor.ts`). A token typed `application/AT+jwt` verifies as an
+ * access token (RFC 7515 §4.1.9), so it is reported as one; a lookup on the
+ * letters would hand the caller `AT` for a token aegis had just accepted under
+ * the `access_token` profile.
+ *
+ * An unrecognised short name is reported folded for the same reason: the two
+ * spellings are one type, so they read as one value. Nothing loses the letters
+ * the token carried — the domain `headerType` reports `typ` as it arrived
+ * (pinned: `__features__/Aegis.profile-floor.feature`).
  */
 export const decodeTokenTypeFromTyp = (
   typ: string | undefined,
   kitFormat: KitFormat,
 ): string | undefined => {
   if (!typ) return undefined;
-  if (typ === FORMAT_FALLBACK[kitFormat]) return undefined;
+  if (mediaTypeMatches(typ, FORMAT_FALLBACK[kitFormat])) return undefined;
 
   const suffix = FORMAT_SUFFIX[kitFormat];
-  if (typ.endsWith(suffix)) {
-    // Structured types are minted as `application/<short>+jwt`; strip the
-    // prefix before the reverse lookup.
-    const shortName = typ.slice(0, -suffix.length).replace(/^application\//, "");
-    // Reverse lookup known short names to their canonical tokenType
-    for (const [tokenType, known] of Object.entries(TOKEN_TYPE_TO_SHORT_NAME)) {
-      if (known === shortName) return tokenType;
-    }
-    return shortName;
+  const mediaType = normaliseMediaType(typ);
+  if (!mediaType.endsWith(suffix)) return undefined;
+
+  // Structured types are minted as `application/<short>+jwt`; strip the prefix
+  // before the reverse lookup. Normalising folded it, so no case flag here.
+  const shortName = mediaType.slice(0, -suffix.length).replace(/^application\//, "");
+
+  // Reverse lookup known short names to their canonical tokenType
+  for (const [tokenType, known] of Object.entries(TOKEN_TYPE_TO_SHORT_NAME)) {
+    if (known.toLowerCase() === shortName) return tokenType;
   }
 
-  return undefined;
+  return shortName;
 };
 
 /**

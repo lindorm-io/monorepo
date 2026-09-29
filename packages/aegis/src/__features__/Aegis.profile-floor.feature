@@ -37,6 +37,103 @@ Feature: The profile floor, applied to a token that arrived
         | jose |
         | cose |
 
+  Rule: the profile's type is matched as a media type, so a short or differently cased spelling of it satisfies the profile
+
+    A recipient using the type value must read it as if `application/` were
+    prepended when the value carries no `/`, and a media type and its subtype
+    are case insensitive (RFC 7515 §4.1.9, RFC 2045 §5.1); an access token may
+    therefore arrive under either spelling and a resource server must accept
+    both (RFC 9068 §4). Comparing the header verbatim refuses the shorter
+    spelling every other issuer is free to emit, so a conformant token is
+    rejected for how it spelled a type it got right. What widens is what a
+    verifier accepts: our own mint keeps emitting the long form. The tokens are
+    a third party's because aegis cannot write the short spelling, so one it
+    wrote would prove nothing. Prepending on the COSE wire is aegis policy —
+    RFC 9596 gives the parameter the same media type syntax and names no type
+    of its own.
+
+    Background:
+      Given the wire claims
+        | iss       | "https://test.lindorm.io/" |
+        | sub       | "user-1"                   |
+        | aud       | ["https://rs.lindorm.io/"] |
+        | jti       | "token-1"                  |
+        | client_id | "client-1"                 |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+
+    @RFC-9068
+    Scenario: jose: an access token typed without the application prefix satisfies the profile (RFC-9068 §4)
+      When a third party signs the wire claims on the jose wire, typed "at+jwt"
+      And I verify the token under the "access_token" profile as the audience "https://rs.lindorm.io/"
+      Then the verified token is a "jwt"
+
+    Scenario: cose: an access token typed without the application prefix satisfies the profile
+      When a third party signs the wire claims on the cose wire, typed "at+cwt"
+      And I verify the token under the "access_token" profile as the audience "https://rs.lindorm.io/"
+      Then the verified token is a "cwt"
+
+    @RFC-7515
+    Scenario: jose: an access token whose subtype is spelled in upper case satisfies the profile (RFC-7515 §4.1.9)
+      When a third party signs the wire claims on the jose wire, typed "application/AT+jwt"
+      And I verify the token under the "access_token" profile as the audience "https://rs.lindorm.io/"
+      Then the verified token is a "jwt"
+
+    Scenario: cose: an access token whose subtype is spelled in upper case satisfies the profile
+      When a third party signs the wire claims on the cose wire, typed "application/AT+cwt"
+      And I verify the token under the "access_token" profile as the audience "https://rs.lindorm.io/"
+      Then the verified token is a "cwt"
+
+    Scenario Outline: <wire>: a token naming another media type is still refused
+      When a third party signs the wire claims on the <wire> wire, typed "<typ>"
+      And I verify the token under the "access_token" profile as the audience "https://rs.lindorm.io/"
+      Then verification is refused as a domain error "profile_typ_mismatch"
+
+      Examples:
+        | wire | typ                    |
+        | jose | application/logout+jwt |
+        | cose | application/logout+cwt |
+
+  Rule: the token type a verified header reports is the canonical one, whatever case the type arrived in
+
+    A verifier that accepts `application/AT+jwt` as an access token has already
+    decided the spelling says nothing (RFC 7515 §4.1.9), so the type it reports
+    for that token is the type it accepted: a consumer left to fold the report
+    itself is comparing letters, which is the comparison the floor does not
+    make. Which name a type is reported under is aegis's own vocabulary and no
+    specification's requirement. Nothing is lost by folding — the header type
+    reports the typ exactly as the token carried it.
+
+    Background:
+      Given the wire claims
+        | iss       | "https://test.lindorm.io/" |
+        | sub       | "user-1"                   |
+        | aud       | ["https://rs.lindorm.io/"] |
+        | jti       | "token-1"                  |
+        | client_id | "client-1"                 |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+
+    Scenario Outline: <wire>: an access token whose subtype is spelled in upper case is reported as an access token
+      When a third party signs the wire claims on the <wire> wire, typed "<typ>"
+      And I verify the token under the "access_token" profile as the audience "https://rs.lindorm.io/"
+      Then the verified header reports the token type "access_token"
+
+      Examples:
+        | wire | typ                |
+        | jose | application/AT+jwt |
+        | cose | application/AT+cwt |
+
+    Scenario Outline: <wire>: the spelling the token arrived under stays readable as the header type
+      When a third party signs the wire claims on the <wire> wire, typed "<typ>"
+      And I verify the token under the "access_token" profile as the audience "https://rs.lindorm.io/"
+      Then the verified header reports the header type "<typ>"
+
+      Examples:
+        | wire | typ                |
+        | jose | application/AT+jwt |
+        | cose | application/AT+cwt |
+
   Rule: a token missing a claim its profile requires is refused when it is verified
 
     `iat` is REQUIRED in a JWT access token, and the same claim rides the COSE

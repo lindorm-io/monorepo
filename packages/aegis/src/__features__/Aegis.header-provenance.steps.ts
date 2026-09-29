@@ -51,6 +51,16 @@ export class AegisHeaderProvenanceSteps extends AegisStepsBase {
     expect(this.verified().header.tokenType).toBeUndefined();
   }
 
+  @Then("the verified header reports the token type {string}")
+  theVerifiedHeaderReportsTheTokenType(tokenType: string): void {
+    expect(this.verified().header.tokenType).toBe(tokenType);
+  }
+
+  @Then("the verified header reports the header type {string}")
+  theVerifiedHeaderReportsTheHeaderType(headerType: string): void {
+    expect(this.verified().header.headerType).toBe(headerType);
+  }
+
   @Then("the verified header reports the key id of the ES512 signing key")
   theVerifiedHeaderReportsTheKeyIdOfTheSigningKey(): void {
     expect(this.verified().header.keyId).toBe(TEST_EC_KEY_SIG.id);

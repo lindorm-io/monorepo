@@ -3,6 +3,7 @@ import type { Dict } from "@lindorm/types";
 import { AegisDomainError } from "../../errors/index.js";
 import type { TokenFormatTag, TokenProfile } from "../../types/index.js";
 import { enforcePolicy } from "../profiles/enforce-policy.js";
+import { mediaTypeMatches } from "./media-type-matches.js";
 import { algPermitted } from "./rules/alg-permitted.js";
 import { isClaimSatisfied } from "./rules/is-claim-satisfied.js";
 
@@ -69,8 +70,9 @@ const typMismatch = (
  *   - `algClass` — the algorithm the signature was verified under is of the
  *     class the profile permits (the verify half of the constraint mint applies
  *     when it SELECTS a signing key),
- *   - `typ` per the profile's presence policy: `required` demands an exact
- *     match, `none` runs no check (unless the COSE path overrides),
+ *   - `typ` per the profile's presence policy: `required` demands a MEDIA TYPE
+ *     match ({@link mediaTypeMatches}), `none` runs no check (unless the COSE
+ *     path overrides),
  *   - `iss` exact-match against the expected issuer,
  *   - `aud` contains the verifier's identity (`audience`),
  *   - `exp` SATISFIED when `profile.lifetime !== null` (no `$exists:false`
@@ -118,14 +120,17 @@ export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
     case "none":
       // No profile typ to enforce — but a caller override (the COSE path) is a
       // media type mintCose actually stamped, so it is enforced as required.
-      if (input.expectedTyp !== undefined && decodedTyp !== input.expectedTyp) {
+      if (
+        input.expectedTyp !== undefined &&
+        !mediaTypeMatches(decodedTyp, input.expectedTyp)
+      ) {
         throw typMismatch(decodedTyp, input.expectedTyp, profile, format);
       }
       break;
 
     case "required": {
       const expected = input.expectedTyp ?? profile.typ.value;
-      if (decodedTyp !== expected) {
+      if (!mediaTypeMatches(decodedTyp, expected)) {
         throw typMismatch(decodedTyp, expected, profile, format);
       }
       break;

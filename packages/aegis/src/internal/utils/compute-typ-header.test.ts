@@ -1,3 +1,4 @@
+import { TOKEN_TYPE_TO_SHORT_NAME } from "../../constants/token-type.js";
 import {
   computeTypHeader,
   decodeTokenTypeFromTyp,
@@ -144,14 +145,103 @@ describe("decodeTokenTypeFromTyp", () => {
     );
   });
 
-  test("returns the raw short name for unknown types", () => {
+  /**
+   * ⭐ THE SUBTYPE CARRIES NO CASE (RFC 7515 §4.1.9), so the type a header
+   * REPORTS is the one the verify floor matched it against — the floor compares
+   * `typ` as a media type (`media-type-matches.ts`), and a reverse lookup that
+   * compared the spelling would report the wire's letters for a token it had
+   * just accepted as an access token.
+   *
+   * The `application/` prefix folds with it: it is the media type's TYPE half,
+   * equally case insensitive. So does the structured suffix, and that is why the
+   * lookup tests for it on the NORMALISED value: `typ.endsWith(suffix)` on the raw
+   * one reports NO token type for a spelling `media-type-matches.ts` reads as the
+   * very media type the floor matched.
+   */
+  test.each([
+    ["application/AT+jwt", "jwt", "access_token"],
+    ["AT+jwt", "jwt", "access_token"],
+    ["APPLICATION/at+jwt", "jwt", "access_token"],
+    ["application/At+jwt", "jwt", "access_token"],
+    ["application/RT+jws", "jws", "refresh_token"],
+    ["application/SecEvent+jwt", "jwt", "security_event"],
+    ["application/LOGOUT+jwt", "jwt", "logout_token"],
+    ["application/DPoP+jwt", "jwt", "dpop"],
+    ["application/Erasure+jwt", "jwt", "erasure_token"],
+    ["application/AT+JWT", "jwt", "access_token"],
+    ["logout+JWT", "jwt", "logout_token"],
+    ["application/RT+JWS", "jws", "refresh_token"],
+  ] as const)(
+    "reads the type %s on a %s as the token type %s",
+    (typ, kitFormat, expected) => {
+      expect(decodeTokenTypeFromTyp(typ, kitFormat)).toBe(expected);
+    },
+  );
+
+  // Every mandated short name, so a type added to the table cannot be matched on
+  // one spelling and missed on another. `id_token` is excluded because its own
+  // typ is the bare conventional form, covered below in its own right.
+  test.each(
+    Object.entries(TOKEN_TYPE_TO_SHORT_NAME).filter(([, short]) => short !== "JWT"),
+  )("reads the upper-case typ of %s as itself", (tokenType, shortName) => {
+    expect(
+      decodeTokenTypeFromTyp(`application/${shortName.toUpperCase()}+jwt`, "jwt"),
+    ).toBe(tokenType);
+  });
+
+  // The reverse lookup is a lookup only while the folded short names stay
+  // distinct: two token types sharing one would make the answer the table's
+  // order.
+  test("gives no two token types the same short name once case is folded", () => {
+    const folded = Object.values(TOKEN_TYPE_TO_SHORT_NAME).map((short) =>
+      short.toLowerCase(),
+    );
+
+    expect(new Set(folded).size).toBe(folded.length);
+  });
+
+  test("returns the short name for unknown types", () => {
     expect(decodeTokenTypeFromTyp("my_custom_thing+jwt", "jwt")).toBe("my_custom_thing");
+    expect(decodeTokenTypeFromTyp("application/access+jwt", "jwt")).toBe("access");
+  });
+
+  // An unrecognised short name is reported in the ONE spelling the media type
+  // has, as a known one is. The letters the token wrote stay readable on
+  // `headerType` — pinned: __features__/Aegis.profile-floor.feature.
+  test("folds the short name of an unknown type", () => {
+    expect(decodeTokenTypeFromTyp("My_Custom_Thing+jwt", "jwt")).toBe("my_custom_thing");
+    expect(decodeTokenTypeFromTyp("application/ACCESS+jwt", "jwt")).toBe("access");
   });
 
   test("returns undefined for format fallback (bare JWT treated as ambiguous)", () => {
     expect(decodeTokenTypeFromTyp("JWT", "jwt")).toBeUndefined();
     expect(decodeTokenTypeFromTyp("JWS", "jws")).toBeUndefined();
   });
+
+  // The bare form is a media type too, so its own case says nothing either —
+  // every format's, because each floors to a spelling of its own.
+  test.each(["jwt", "jws", "jwe", "cwt", "cwm", "cws", "cwe"] as const)(
+    "reads the bare %s form as no token type in any case",
+    (kitFormat) => {
+      const bare = computeTypHeader(undefined, kitFormat);
+
+      expect(decodeTokenTypeFromTyp(bare, kitFormat)).toBeUndefined();
+      expect(decodeTokenTypeFromTyp(bare.toLowerCase(), kitFormat)).toBeUndefined();
+      expect(decodeTokenTypeFromTyp(bare.toUpperCase(), kitFormat)).toBeUndefined();
+    },
+  );
+
+  /**
+   * `id_token`'s short name IS the bare conventional form (no `id+jwt` media
+   * type is registered), so a typ naming it as a SUBTYPE is the one lookup the
+   * table's own casing decides — and it decides the same way in either spelling.
+   */
+  test.each(["application/JWT+jwt", "application/jwt+jwt"])(
+    "reads the type %s as the token type id_token",
+    (typ) => {
+      expect(decodeTokenTypeFromTyp(typ, "jwt")).toBe("id_token");
+    },
+  );
 
   test("returns undefined when typ is absent", () => {
     expect(decodeTokenTypeFromTyp(undefined, "jwt")).toBeUndefined();

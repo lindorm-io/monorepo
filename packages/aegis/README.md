@@ -394,6 +394,8 @@ result.header.tokenType; // domain-keyed; the two wire buckets merged, protected
 // jws/cws carry empty claims/custom and deliver the opaque payload on result.raw
 ```
 
+`header.tokenType` names the TYPE, not the spelling it arrived in: a token typed `application/AT+jwt` reads back as `access_token`, and a subtype aegis has no name for is reported ASCII case-folded, because the type and subtype of a media type carry no case (RFC 7515 §4.1.9). `header.headerType` is the `typ` exactly as the token wrote it.
+
 ### Encryption
 
 ⚠ **`"jwe"` is a legitimate `format` in its own right, so the PRESENCE of `wrapper` is the whole discriminator.** A bare `aegis.encrypt` result reports `{ format: "jwe" }` with no `wrapper` — its own kind IS `jwe`, and nothing encloses it. A signed token in an envelope reports `{ format: "jwt", wrapper: "jwe" }`. Reading `format === "jwe"` alone therefore never means "a signed token is inside"; check `wrapper`.
@@ -658,7 +660,7 @@ await aegis.mint("id_token", content, { context: { accessTokenIssued: false } })
 
 `use` is optional when you write a profile and resolves to `"both"`; only a deliberate narrowing changes anything. `mint` refuses a `"verify"` profile with `profile_not_mintable`, profiled `verify` refuses a `"mint"` one with `profile_not_verifiable` — and the narrowing is enforced by the compiler too: a verify-only name resolves to `never` as `mint`'s content type, so the call site does not typecheck either.
 
-**`typ` presence.** Each profile declares a `typ` policy: `required` (the header must carry exactly the profile's typ) or `none` (no typ mandated). Mint always stamps the profile's typ value — presence only governs verify.
+**`typ` presence.** Each profile declares a `typ` policy: `required` (the header must name the profile's typ) or `none` (no typ mandated). Mint always stamps the profile's typ value — presence only governs verify. The `required` comparison is a **media type** comparison, not a string one: `application/` is prepended to a value carrying no `/`, and the type and subtype are ASCII case-folded, so a token typed `at+jwt` or `application/AT+jwt` satisfies `access_token` alongside the `application/at+jwt` mint emits (RFC 7515 §4.1.9, RFC 9068 §4). A **parameterised** value keeps its parameter section byte for byte, because a parameter value is case sensitive (RFC 2045 §5.1) — so it matches a profile's bare type under no spelling.
 
 **The whole policy runs on verify.** Every rule naming the verify direction is enforced by profiled verify, through the same enforcer mint uses — a mint-time policy alone buys nothing for a profile that verifies tokens minted elsewhere. Beyond the rule list, the floor also asserts what the claims alone cannot state: the algorithm class, the header `typ`, the expected issuer, the verifier's own `audience`, and `exp` presence for a profile with a lifetime.
 

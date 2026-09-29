@@ -117,6 +117,40 @@ describe("enforceVerifyFloor", () => {
     test("passes an exact typ match", () => {
       expect(() => enforceVerifyFloor({ ...base, payload: validPayload })).not.toThrow();
     });
+
+    // The floor compares MEDIA TYPES (`media-type-matches.ts`), so the two
+    // spellings RFC 9068 §4 names for an access token both satisfy the profile.
+    test("passes the typ spelled without its application prefix", () => {
+      expect(() =>
+        enforceVerifyFloor({ ...base, decodedTyp: "at+jwt", payload: validPayload }),
+      ).not.toThrow();
+    });
+
+    test("passes the typ whose subtype is spelled in upper case", () => {
+      expect(() =>
+        enforceVerifyFloor({
+          ...base,
+          decodedTyp: "application/AT+jwt",
+          payload: validPayload,
+        }),
+      ).not.toThrow();
+    });
+
+    test("rejects a bare typ whose subtype merely ends as the profile's does", () => {
+      expect(() =>
+        enforceVerifyFloor({ ...base, decodedTyp: "jwt", payload: validPayload }),
+      ).toThrow(expect.objectContaining({ code: "profile_typ_mismatch" }));
+    });
+
+    test("rejects the profile's typ carrying a media type parameter", () => {
+      expect(() =>
+        enforceVerifyFloor({
+          ...base,
+          decodedTyp: "application/at+jwt;charset=utf-8",
+          payload: validPayload,
+        }),
+      ).toThrow(expect.objectContaining({ code: "profile_typ_mismatch" }));
+    });
   });
 
   describe("typ presence: none (default profile)", () => {
@@ -172,6 +206,28 @@ describe("enforceVerifyFloor", () => {
           expectedTyp: "application/cwt",
         }),
       ).not.toThrow();
+    });
+
+    // The override arm reads a media type too, so the COSE side is aligned by the
+    // one comparison rather than by a second copy of it.
+    test("reads a COSE expectedTyp override as a media type", () => {
+      expect(() =>
+        enforceVerifyFloor({
+          ...noneBase,
+          format: "cwt",
+          decodedTyp: "CWT",
+          expectedTyp: "application/cwt",
+        }),
+      ).not.toThrow();
+
+      expect(() =>
+        enforceVerifyFloor({
+          ...noneBase,
+          format: "cwt",
+          decodedTyp: "application/at+cwt",
+          expectedTyp: "application/cwt",
+        }),
+      ).toThrow(expect.objectContaining({ code: "profile_typ_mismatch" }));
     });
   });
 
