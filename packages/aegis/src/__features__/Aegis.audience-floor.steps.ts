@@ -71,8 +71,10 @@ export class AegisAudienceFloorSteps extends AegisStepsBase {
     this.refusedAsADomainError(code);
   }
 
-  @Then("the refusal reports the audience it read as the list {stringList}")
-  theRefusalReportsTheAudienceItRead(audience: Array<string>): void {
-    expect(this.refusal()).toMatchObject({ data: { audience } });
+  @Then(
+    "the refusal reports the format {string} and the audience it read as the list {stringList}",
+  )
+  theRefusalReportsTheAudienceItRead(format: string, audience: Array<string>): void {
+    expect(this.refusalData()).toEqual({ audience, format });
   }
 }

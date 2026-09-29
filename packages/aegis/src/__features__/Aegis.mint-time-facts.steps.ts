@@ -65,8 +65,10 @@ export class AegisMintTimeFactsSteps extends AegisStepsBase {
 
   // the refusals
 
-  @Then("the refusal names the missing mint context {stringList}")
-  theRefusalNamesTheMissingMintContext(missing: Array<string>): void {
-    expect(this.refusal()).toMatchObject({ data: { missing } });
+  @Then(
+    "the refusal reports the format {string} and names the missing mint context {stringList}",
+  )
+  theRefusalNamesTheMissingMintContext(format: string, missing: Array<string>): void {
+    expect(this.refusalData()).toEqual({ missing, format });
   }
 }

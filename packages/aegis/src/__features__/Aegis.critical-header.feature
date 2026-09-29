@@ -72,12 +72,12 @@ Feature: Critical header parameters
     Scenario Outline: <wire>: the signature is refused under the kit-owned verdict, naming the parameter
       When I sign the wire claims as a claims token on the <wire> wire
       Then signing is refused as a <error> error "header_kit_owned_in_custom"
-      And the refusal names the parameter "alg"
+      And the refusal names the parameter "alg" in the bucket "<bucket>"
 
       Examples:
-        | wire | error |
-        | jose | JWT   |
-        | cose | CWT   |
+        | wire | error | bucket    |
+        | jose | JWT   | header    |
+        | cose | CWT   | protected |
 
   Rule: a header parameter the library does not know is reported, never dropped
 
@@ -181,7 +181,9 @@ Feature: Critical header parameters
       When a third party signs the wire claims on the cose wire
       And I verify the token as a claims token on the cose wire
       Then verification is refused as a CWT error "cwt_invalid_crit"
-      And the refusal reports the critical list ["oid"]
+      And the refusal's data is exactly
+        | crit      | ["oid"] |
+        | parameter | "oid"   |
 
   Rule: a crit member naming an integer label is not satisfied by the text label of the same numeral
 
@@ -214,8 +216,9 @@ Feature: Critical header parameters
       When a third party signs the wire claims on the cose wire
       And I verify the token
       Then verification is refused as a CWT error "cwt_invalid_crit"
-      And the refusal reports the critical list [-5885]
-      And the refusal names the parameter -5885
+      And the refusal's data is exactly
+        | crit      | [-5885] |
+        | parameter | -5885   |
 
   Rule: the crit a refusal reports is the one the reader actually judged, not the typed bag beside it
 
@@ -247,8 +250,9 @@ Feature: Critical header parameters
       When a third party signs the wire claims on the cose wire
       And I read the token without a key
       Then the keyless read is refused as a CWT error "cwt_invalid_crit"
-      And the refusal reports the critical list ["x-shadow"]
-      And the refusal names the parameter "x-shadow"
+      And the refusal's data is exactly
+        | crit      | ["x-shadow"] |
+        | parameter | "x-shadow"   |
 
   Rule: a token this library signs can be read back by its own keyless reader
 
@@ -611,8 +615,9 @@ Feature: Critical header parameters
     Scenario Outline: <wire>: the refusal carries the whole list and names the forbidden member, not the first
       When I sign the wire claims as a claims token on the <wire> wire
       Then signing is refused as a <error> error
-      And the refusal reports the critical list ["oid", "alg"]
-      And the refusal names the parameter "alg"
+      And the refusal's data is exactly
+        | crit      | ["oid", "alg"] |
+        | parameter | "alg"          |
 
       Examples:
         | wire | error |
@@ -789,12 +794,16 @@ Feature: Critical header parameters
     Scenario: jose: the signature is refused, naming the specification-defined member (RFC-7515 §4.1.11)
       When I sign the wire claims as a claims token on the jose wire
       Then signing is refused as a JWT error
-      And the refusal names the parameter "alg"
+      And the refusal's data is exactly
+        | crit      | ["alg"] |
+        | parameter | "alg"   |
 
     Scenario: cose: the signature is refused, naming the specification-defined member
       When I sign the wire claims as a claims token on the cose wire
       Then signing is refused as a CWT error
-      And the refusal names the parameter "alg"
+      And the refusal's data is exactly
+        | crit      | ["alg"] |
+        | parameter | "alg"   |
 
   Rule: a mint refuses a critical-parameter list that names the same parameter twice
 
@@ -826,14 +835,16 @@ Feature: Critical header parameters
     Scenario: jose: the signature is refused, reporting the repeating list and the repeated member (RFC-7515 §4.1.11)
       When I sign the wire claims as a claims token on the jose wire
       Then signing is refused as a JWT error
-      And the refusal reports the critical list ["oid", "oid"]
-      And the refusal names the parameter "oid"
+      And the refusal's data is exactly
+        | crit      | ["oid", "oid"] |
+        | parameter | "oid"          |
 
     Scenario: cose: the signature is refused, reporting the repeating list and the repeated member
       When I sign the wire claims as a claims token on the cose wire
       Then signing is refused as a CWT error
-      And the refusal reports the critical list ["oid", "oid"]
-      And the refusal names the parameter "oid"
+      And the refusal's data is exactly
+        | crit      | ["oid", "oid"] |
+        | parameter | "oid"          |
 
   Rule: a wire-named door refuses a critical-parameter list written in domain vocabulary
 
@@ -861,7 +872,9 @@ Feature: Critical header parameters
     Scenario Outline: <wire>: the signature is refused, naming the domain-spelled member
       When I sign the wire claims as a claims token on the <wire> wire
       Then signing is refused as a <error> error
-      And the refusal names the parameter "objectId"
+      And the refusal's data is exactly
+        | crit      | ["objectId"] |
+        | parameter | "objectId"   |
 
       Examples:
         | wire | error |

@@ -100,11 +100,6 @@ export class AegisDelegationSteps extends AegisStepsBase {
 
   // the refusals
 
-  @Then("the refusal names the claim {string}")
-  theRefusalNamesTheClaim(claim: string): void {
-    expect(this.refusal()).toMatchObject({ data: { claim } });
-  }
-
   @Then(
     "the refusal names the member {string} of the claim {string}, keyed at both label {int} and name {string}",
   )
@@ -114,7 +109,7 @@ export class AegisDelegationSteps extends AegisStepsBase {
     label: number,
     key: string,
   ): void {
-    expect(this.refusal()).toMatchObject({ data: { claim, member, label, key } });
+    expect(this.refusalData()).toEqual({ claim, member, label, key });
   }
 
   // parameter types

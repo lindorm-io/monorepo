@@ -36,13 +36,13 @@ Feature: Logout tokens
       When I sign the wire claims as a claims token on the jose wire
       And I verify the token under the "logout_token" profile as the audience "client-1"
       Then verification is refused as a domain error "profile_policy_invalid"
-      And the refusal reports the direction "verify" and locates the fault at "subject|sessionId": At least one of [subject, sessionId] is required
+      And the refusal reports the format "jwt", the direction "verify" and locates the fault at "subject|sessionId": At least one of [subject, sessionId] is required
 
     Scenario: cose: the token is refused by the floor, naming the alternation it fails
       When I sign the wire claims as a claims token on the cose wire
       And I verify the token under the "logout_token" profile as the audience "client-1"
       Then verification is refused as a domain error "profile_policy_invalid"
-      And the refusal reports the direction "verify" and locates the fault at "subject|sessionId": At least one of [subject, sessionId] is required
+      And the refusal reports the format "cwt", the direction "verify" and locates the fault at "subject|sessionId": At least one of [subject, sessionId] is required
 
   Rule: a logout token naming a subject verifies
 

@@ -460,7 +460,9 @@ Feature: Header provenance, empty header parameters and the asserted token type
     Scenario Outline: <wire>: the signature is refused as a malformed crit, naming the parameter with nothing to understand
       When I sign the wire claims as a claims token on the <wire> wire
       Then signing is refused as a <error> error "<code>"
-      And the refusal names the parameter "oid"
+      And the refusal's data is exactly
+        | crit      | ["oid"] |
+        | parameter | "oid"   |
 
       Examples:
         | wire | error | code             |
@@ -569,8 +571,9 @@ Feature: Header provenance, empty header parameters and the asserted token type
       When I sign the wire claims as a claims token on the <wire> wire
       And I verify the token
       Then verification is refused as a domain error "token_type_mismatch"
-      And the refusal reports the type header it read "<typ>"
-      And the refusal reports the format "<format>"
+      And the refusal's data is exactly
+        | typ    | "<typ>"    |
+        | format | "<format>" |
 
       Examples:
         | wire | typ                | format |

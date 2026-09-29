@@ -72,12 +72,14 @@ Feature: The claim matcher a verify is asked beyond the floor
       When I sign the wire claims as a claims token on the <wire> wire
       And I verify the token
       Then verification is refused as a domain error "claims_invalid"
-      And the refusal lists the invalid claims "audience"
+      And the refusal's data is exactly
+        | invalid | ["audience"] |
+        | format  | "<format>"   |
 
       Examples:
-        | wire |
-        | jose |
-        | cose |
+        | wire | format |
+        | jose | jwt    |
+        | cose | cwt    |
 
   Rule: a caller presenting the raw access token, code and state is answered from the hash claims the token carries
 
@@ -149,13 +151,17 @@ Feature: The claim matcher a verify is asked beyond the floor
       When I mint the content under the "default" profile on the jose wire
       And I verify the token
       Then verification is refused as a domain error "claims_invalid"
-      And the refusal lists the invalid claims "accessToken"
+      And the refusal's data is exactly
+        | invalid | ["accessToken"] |
+        | format  | "jwt"           |
 
     Scenario: cose: the substituted access token is refused under the raw source the caller presented
       When I mint the content under the "default" profile on the cose wire
       And I verify the token
       Then verification is refused as a domain error "claims_invalid"
-      And the refusal lists the invalid claims "accessToken"
+      And the refusal's data is exactly
+        | invalid | ["accessToken"] |
+        | format  | "cwt"           |
 
   Rule: a caller writing a condition operator under a raw hash source key is refused as unsupported
 
@@ -219,12 +225,14 @@ Feature: The claim matcher a verify is asked beyond the floor
       When I sign the wire claims as a claims token on the <wire> wire
       And I verify the token
       Then verification is refused as a domain error "claims_invalid"
-      And the refusal lists the invalid claims "issuer"
+      And the refusal's data is exactly
+        | invalid | ["issuer"] |
+        | format  | "<format>" |
 
       Examples:
-        | wire |
-        | jose |
-        | cose |
+        | wire | format |
+        | jose | jwt    |
+        | cose | cwt    |
 
   Rule: a profiled verify refuses a caller matcher the token does not satisfy even when the profile floor passes
 
@@ -285,12 +293,14 @@ Feature: The claim matcher a verify is asked beyond the floor
       When I sign the wire claims as a claims token on the <wire> wire
       And I verify the token
       Then verification is refused as a domain error "claims_invalid"
-      And the refusal lists the invalid claims "tokenId"
+      And the refusal's data is exactly
+        | invalid | ["tokenId"] |
+        | format  | "<format>"  |
 
       Examples:
-        | wire |
-        | jose |
-        | cose |
+        | wire | format |
+        | jose | jwt    |
+        | cose | cwt    |
 
   Rule: a caller stating a conjunction of claim matchers is answered by a token satisfying every member
 
@@ -347,12 +357,14 @@ Feature: The claim matcher a verify is asked beyond the floor
       When I mint the content under the "default" profile on the <wire> wire
       And I verify the token
       Then verification is refused as a domain error "claims_invalid"
-      And the refusal lists the invalid claims "$and"
+      And the refusal's data is exactly
+        | invalid | ["$and"]   |
+        | format  | "<format>" |
 
       Examples:
-        | wire |
-        | jose |
-        | cose |
+        | wire | format |
+        | jose | jwt    |
+        | cose | cwt    |
 
   Rule: a caller stating a disjunction is answered by a token satisfying only its second member
 
@@ -408,12 +420,14 @@ Feature: The claim matcher a verify is asked beyond the floor
       When I mint the content under the "default" profile on the <wire> wire
       And I verify the token
       Then verification is refused as a domain error "claims_invalid"
-      And the refusal lists the invalid claims "$not"
+      And the refusal's data is exactly
+        | invalid | ["$not"]   |
+        | format  | "<format>" |
 
       Examples:
-        | wire |
-        | jose |
-        | cose |
+        | wire | format |
+        | jose | jwt    |
+        | cose | cwt    |
 
   Rule: a caller stating a raw access token inside a disjunction is answered by the id token issued alongside it
 
@@ -514,12 +528,14 @@ Feature: The claim matcher a verify is asked beyond the floor
       When I mint the content under the "default" profile on the <wire> wire
       And I verify the token
       Then verification is refused as a domain error "claims_invalid"
-      And the refusal lists the invalid claims "accessTokenHash"
+      And the refusal's data is exactly
+        | invalid | ["accessTokenHash"] |
+        | format  | "<format>"          |
 
       Examples:
-        | wire |
-        | jose |
-        | cose |
+        | wire | format |
+        | jose | jwt    |
+        | cose | cwt    |
 
   Rule: a caller stating the raw source beside the digest claim inside one branch is refused as conflicting matchers
 
@@ -553,7 +569,7 @@ Feature: The claim matcher a verify is asked beyond the floor
       When I mint the content under the "default" profile on the <wire> wire
       And I verify the token
       Then verification is refused as a domain error "jwt_verify_conflicting_matchers"
-      And the refusal names the conflicting matchers "accessToken", "accessTokenHash"
+      And the refusal names the wire claim "at_hash" and the conflicting matchers "accessToken", "accessTokenHash"
 
       Examples:
         | wire |
@@ -680,9 +696,11 @@ Feature: The claim matcher a verify is asked beyond the floor
       When I mint the content under the "default" profile on the <wire> wire
       And I verify the token
       Then verification is refused as a domain error "claims_invalid"
-      And the refusal lists the invalid claims "$not"
+      And the refusal's data is exactly
+        | invalid | ["$not"]   |
+        | format  | "<format>" |
 
       Examples:
-        | wire |
-        | jose |
-        | cose |
+        | wire | format |
+        | jose | jwt    |
+        | cose | cwt    |

@@ -86,7 +86,7 @@ export class AegisEmptyClaimPruneSteps extends AegisStepsBase {
     claim: string,
     whenEmpty: string,
   ): void {
-    expect(this.refusal()).toMatchObject({ data: { claim, whenEmpty } });
+    expect(this.refusalData()).toEqual({ claim, whenEmpty });
   }
 
   // parameter types

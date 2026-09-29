@@ -138,14 +138,19 @@ export class AegisProofOfPossessionSteps extends AegisStepsBase {
     expect(refusal).toMatchObject({ code });
   }
 
-  @Then("the refusal lists the unrepresentable members {stringList}")
-  theRefusalListsTheUnrepresentableMembers(members: Array<string>): void {
-    expect(this.refusal()).toMatchObject({ data: { members } });
+  @Then(
+    "the refusal lists the unrepresentable members {stringList} beside the supported ones {stringList}",
+  )
+  theRefusalListsTheUnrepresentableMembers(
+    members: Array<string>,
+    supported: Array<string>,
+  ): void {
+    expect(this.refusalData()).toEqual({ members, supported });
   }
 
   @Then("the refusal reports the format {string} and names the member {string}")
   theRefusalReportsTheFormatAndNamesTheMember(format: string, member: string): void {
-    expect(this.refusal()).toMatchObject({ data: { format, member } });
+    expect(this.refusalData()).toEqual({ format, member });
   }
 
   // parameter types

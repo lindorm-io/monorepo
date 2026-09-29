@@ -34,12 +34,12 @@ Feature: Mint-time facts a token's claims do not carry
     Scenario Outline: <wire>: the mint is refused, naming the fact it was not told
       When I mint the content under the "id_token" profile on the <wire> wire
       Then minting is refused as a domain error "missing_sign_context"
-      And the refusal names the missing mint context "accessTokenIssued"
+      And the refusal reports the format "<format>" and names the missing mint context "accessTokenIssued"
 
       Examples:
-        | wire |
-        | jose |
-        | cose |
+        | wire | format |
+        | jose | jwt    |
+        | cose | cwt    |
 
   Rule: minting an id_token with a context bag that misspells the co-issuance key is refused
 
@@ -63,12 +63,12 @@ Feature: Mint-time facts a token's claims do not carry
     Scenario Outline: <wire>: the mint is refused, naming the fact it was not told
       When I mint the content under the "id_token" profile on the <wire> wire
       Then minting is refused as a domain error "missing_sign_context"
-      And the refusal names the missing mint context "accessTokenIssued"
+      And the refusal reports the format "<format>" and names the missing mint context "accessTokenIssued"
 
       Examples:
-        | wire |
-        | jose |
-        | cose |
+        | wire | format |
+        | jose | jwt    |
+        | cose | cwt    |
 
   Rule: minting a token whose required claim is an empty string is refused
 
@@ -86,12 +86,12 @@ Feature: Mint-time facts a token's claims do not carry
     Scenario Outline: <wire>: the mint is refused, reporting the claim as missing
       When I mint the content under the "userinfo" profile on the <wire> wire
       Then minting is refused as a domain error "profile_policy_invalid"
-      And the refusal reports the direction "mint" and locates the fault at "subject": Required claim "subject" is missing
+      And the refusal reports the format "<format>", the direction "mint" and locates the fault at "subject": Required claim "subject" is missing
 
       Examples:
-        | wire |
-        | jose |
-        | cose |
+        | wire | format |
+        | jose | jwt    |
+        | cose | cwt    |
 
   Rule: minting a token whose required audience is an empty list is refused
 
@@ -111,12 +111,12 @@ Feature: Mint-time facts a token's claims do not carry
     Scenario Outline: <wire>: the mint is refused, reporting the claim as missing
       When I mint the content under the "userinfo" profile on the <wire> wire
       Then minting is refused as a domain error "profile_policy_invalid"
-      And the refusal reports the direction "mint" and locates the fault at "audience": Required claim "audience" is missing
+      And the refusal reports the format "<format>", the direction "mint" and locates the fault at "audience": Required claim "audience" is missing
 
       Examples:
-        | wire |
-        | jose |
-        | cose |
+        | wire | format |
+        | jose | jwt    |
+        | cose | cwt    |
 
   Rule: minting a token whose required claim is not of its declared type is refused
 
@@ -139,12 +139,12 @@ Feature: Mint-time facts a token's claims do not carry
     Scenario Outline: <wire>: the mint is refused, naming the value's type as the fault
       When I mint the content under the "access_token" profile on the <wire> wire
       Then minting is refused as a domain error "profile_policy_invalid"
-      And the refusal reports the direction "mint" and locates the fault at "subject": Required claim "subject" is not of its declared type
+      And the refusal reports the format "<format>", the direction "mint" and locates the fault at "subject": Required claim "subject" is not of its declared type
 
       Examples:
-        | wire |
-        | jose |
-        | cose |
+        | wire | format |
+        | jose | jwt    |
+        | cose | cwt    |
 
   Rule: minting a sender-constrained token whose confirmation binds no key is refused
 
@@ -171,9 +171,9 @@ Feature: Mint-time facts a token's claims do not carry
     Scenario Outline: <wire>: the mint is refused, reporting the confirmation as missing
       When I mint the content under the "sender_constrained" profile on the <wire> wire
       Then minting is refused as a domain error "profile_policy_invalid"
-      And the refusal reports the direction "mint" and locates the fault at "confirmation": Required claim "confirmation" is missing
+      And the refusal reports the format "<format>", the direction "mint" and locates the fault at "confirmation": Required claim "confirmation" is missing
 
       Examples:
-        | wire |
-        | jose |
-        | cose |
+        | wire | format |
+        | jose | jwt    |
+        | cose | cwt    |

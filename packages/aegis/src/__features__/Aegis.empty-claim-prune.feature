@@ -409,15 +409,15 @@ Feature: The empty-claim prune
     Scenario Outline: <wire>: the mint is refused by the floor, listing the missing claim and the shape it failed
       When I mint the content under the "logout_token" profile on the <wire> wire
       Then minting is refused as a domain error "profile_policy_invalid"
-      And the refusal reports the direction "mint" and lists the faults
+      And the refusal reports the format "<format>", the direction "mint" and lists the faults
         | key    | message                                      |
         | events | Required claim "events" is missing           |
         | events | events must contain at least one event type  |
 
       Examples:
-        | wire |
-        | jose |
-        | cose |
+        | wire | format |
+        | jose | jwt    |
+        | cose | cwt    |
 
   Rule: an explicitly empty authorization details list reaches the wire as the empty list on both wires
 

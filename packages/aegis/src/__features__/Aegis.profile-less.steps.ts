@@ -248,14 +248,19 @@ export class AegisProfileLessSteps extends AegisStepsBase {
 
   @Then("the refusal names the claim {string} and locates the fault at {string}: {}")
   theRefusalNamesTheClaim(claim: string, key: string, message: string): void {
-    expect(this.refusal()).toMatchObject({
-      data: { claim, invalid: [{ key, message }] },
-    });
+    expect(this.refusalData()).toEqual({ claim, invalid: [{ key, message }] });
   }
 
-  @Then("the refusal reports format {string}, operation {string} and option {string}")
-  theRefusalReports(format: string, operation: string, option: string): void {
-    expect(this.refusal()).toMatchObject({ data: { format, operation, option } });
+  @Then(
+    "the refusal reports format {string}, operation {string} and option {string}, unsupported because: {}",
+  )
+  theRefusalReports(
+    format: string,
+    operation: string,
+    option: string,
+    reason: string,
+  ): void {
+    expect(this.refusalData()).toEqual({ format, operation, option, reason });
   }
 
   // parameter types

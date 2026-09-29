@@ -72,12 +72,14 @@ Feature: The token identifier matcher
       When I sign the wire claims as a claims token on the <wire> wire
       And I verify the token
       Then verification is refused as a domain error "claims_invalid"
-      And the refusal lists the invalid claims "tokenId"
+      And the refusal's data is exactly
+        | invalid | ["tokenId"] |
+        | format  | "<format>"  |
 
       Examples:
-        | wire |
-        | jose |
-        | cose |
+        | wire | format |
+        | jose | jwt    |
+        | cose | cwt    |
 
   Rule: a caller asserting that no token identifier is present is refused by a token that carries one
 
@@ -105,9 +107,11 @@ Feature: The token identifier matcher
       When I sign the wire claims as a claims token on the <wire> wire
       And I verify the token
       Then verification is refused as a domain error "claims_invalid"
-      And the refusal lists the invalid claims "tokenId"
+      And the refusal's data is exactly
+        | invalid | ["tokenId"] |
+        | format  | "<format>"  |
 
       Examples:
-        | wire |
-        | jose |
-        | cose |
+        | wire | format |
+        | jose | jwt    |
+        | cose | cwt    |

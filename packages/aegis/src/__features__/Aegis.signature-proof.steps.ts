@@ -72,9 +72,20 @@ export class AegisSignatureProofSteps extends AegisStepsBase {
 
   // the refusals
 
-  @Then("the refusal reports the algorithm it read {string}")
-  theRefusalReportsTheAlgorithmItRead(algorithm: string): void {
-    expect(this.refusal()).toMatchObject({ data: { algorithm } });
+  @Then(
+    "the refusal reports the format {string}, the algorithm it read {string} and locates the fault at {string}: {}",
+  )
+  theRefusalReportsTheAlgorithmItRead(
+    format: string,
+    algorithm: string,
+    key: string,
+    message: string,
+  ): void {
+    expect(this.refusalData()).toEqual({
+      algorithm,
+      invalid: [{ key, message }],
+      format,
+    });
   }
 
   // parameter types

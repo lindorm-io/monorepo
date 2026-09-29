@@ -75,18 +75,19 @@ export class AegisProfileFloorSteps extends AegisStepsBase {
     this.refusedAsADomainError(code);
   }
 
-  @Then("the refusal reports the direction {string} and lists the faults")
+  @Then(
+    "the refusal reports the format {string}, the direction {string} and lists the faults",
+  )
   theRefusalReportsTheDirectionAndListsTheFaults(
+    format: string,
     direction: string,
     table: DataTable,
   ): void {
-    expect(this.refusal()).toMatchObject({
-      data: { direction, invalid: table.hashes() },
-    });
+    expect(this.refusalData()).toEqual({ direction, invalid: table.hashes(), format });
   }
 
   @Then("the refusal names the claim {string} and lists the faults")
   theRefusalNamesTheClaimAndListsTheFaults(claim: string, table: DataTable): void {
-    expect(this.refusal()).toMatchObject({ data: { claim, invalid: table.hashes() } });
+    expect(this.refusalData()).toEqual({ claim, invalid: table.hashes() });
   }
 }

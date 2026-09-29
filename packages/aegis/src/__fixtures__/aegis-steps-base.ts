@@ -1,7 +1,8 @@
 import { AbstractSteps, Inject } from "@lindorm/gherkin";
+import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
 import { expect } from "vitest";
-import { AegisDomainError } from "../errors/index.js";
+import { AegisDomainError, AegisError } from "../errors/index.js";
 import type {
   AegisVerifyKey,
   CoseWireTokenEnvelope,
@@ -38,6 +39,22 @@ export abstract class AegisStepsBase {
     if (this.ctx.refusal !== undefined) return this.ctx.refusal;
 
     throw new Error("the act was not refused: it produced a token");
+  }
+
+  /**
+   * The client-visible bag the refusal reports. Every call site compares the whole
+   * bag with `toEqual`, so a member a thrower adds to `data` reddens its scenario —
+   * unless the value is `undefined`, which `toEqual` ignores: merging the `debug` of
+   * `src/internal/utils/apply-verify-policy.ts#DPoP Token Not Bound` into its `data`
+   * stays green for that reason. No scenario asserts `debug`, which is where content
+   * a client must not see goes.
+   */
+  protected refusalData(): Dict {
+    const refusal = this.refusal();
+
+    if (refusal instanceof AegisError) return refusal.data;
+
+    throw new Error("the refusal is not an aegis error, so it reports no data");
   }
 
   /** The refusal is aegis's domain error, under `code` when the sentence names one. */

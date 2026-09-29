@@ -187,13 +187,13 @@ Feature: What a signature proves
       When a third party authenticates the wire claims with the shared secret on the jose wire, typed "application/at+jwt"
       And I verify the token under the "access_token" profile as the audience "https://rs.lindorm.io/"
       Then verification is refused as a domain error "algorithm_not_permitted"
-      And the refusal reports the algorithm it read "HS256"
+      And the refusal reports the format "jwt", the algorithm it read "HS256" and locates the fault at "alg": symmetric alg "HS256" is not permitted for this artifact (asymmetric only)
 
     Scenario: cose: the profile refuses the token under the algorithm-class floor, naming the MAC algorithm
       When a third party authenticates the wire claims with the shared secret on the cose wire, typed "application/at+cwt"
       And I verify the token under the "access_token" profile as the audience "https://rs.lindorm.io/"
       Then verification is refused as a domain error "algorithm_not_permitted"
-      And the refusal reports the algorithm it read "HS256"
+      And the refusal reports the format "cwm", the algorithm it read "HS256" and locates the fault at "alg": symmetric alg "HS256" is not permitted for this artifact (asymmetric only)
 
   Rule: a third-party access token authenticated with a shared secret is refused by the profile written to accept it
 
@@ -225,13 +225,13 @@ Feature: What a signature proves
       When a third party authenticates the wire claims with the shared secret on the jose wire, typed "application/at+jwt"
       And I verify the token under the "external_access_token" profile as the audience "https://rs.lindorm.io/"
       Then verification is refused as a domain error "algorithm_not_permitted"
-      And the refusal reports the algorithm it read "HS256"
+      And the refusal reports the format "jwt", the algorithm it read "HS256" and locates the fault at "alg": symmetric alg "HS256" is not permitted for this artifact (asymmetric only)
 
     Scenario: cose: the third-party profile refuses the token under the algorithm-class floor, naming the MAC algorithm
       When a third party authenticates the wire claims with the shared secret on the cose wire, typed "application/at+cwt"
       And I verify the token under the "external_access_token" profile as the audience "https://rs.lindorm.io/"
       Then verification is refused as a domain error "algorithm_not_permitted"
-      And the refusal reports the algorithm it read "HS256"
+      And the refusal reports the format "cwm", the algorithm it read "HS256" and locates the fault at "alg": symmetric alg "HS256" is not permitted for this artifact (asymmetric only)
 
   Rule: a delegation designation authenticated with a shared secret is refused by its profile
 
@@ -264,13 +264,13 @@ Feature: What a signature proves
       When a third party authenticates the wire claims with the shared secret on the jose wire, typed "application/delegation+jwt"
       And I verify the token under the "delegation" profile as the audience "https://test.lindorm.io/"
       Then verification is refused as a domain error "algorithm_not_permitted"
-      And the refusal reports the algorithm it read "HS256"
+      And the refusal reports the format "jwt", the algorithm it read "HS256" and locates the fault at "alg": symmetric alg "HS256" is not permitted for this artifact (asymmetric only)
 
     Scenario: cose: the delegation profile refuses the designation under the algorithm-class floor, naming the MAC algorithm
       When a third party authenticates the wire claims with the shared secret on the cose wire, typed "application/delegation+cwt"
       And I verify the token under the "delegation" profile as the audience "https://test.lindorm.io/"
       Then verification is refused as a domain error "algorithm_not_permitted"
-      And the refusal reports the algorithm it read "HS256"
+      And the refusal reports the format "cwm", the algorithm it read "HS256" and locates the fault at "alg": symmetric alg "HS256" is not permitted for this artifact (asymmetric only)
 
   Rule: a token authenticated with a shared secret verifies under a profile that requires no signature
 

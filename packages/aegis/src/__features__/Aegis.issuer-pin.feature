@@ -36,7 +36,7 @@ Feature: The issuer pin — which keys may answer, and which iss is believed
       When I mint the content under the "access_token" profile on the <wire> wire
       And I verify the token under the "access_token" profile as the audience "https://rs.lindorm.io/"
       Then verification is refused as a key error "verify_key_not_found"
-      And the refusal names the issuer "https://not-the-issuer/"
+      And the refusal names the issuer "https://not-the-issuer/", beside the key id it could not find
 
       Examples:
         | wire |

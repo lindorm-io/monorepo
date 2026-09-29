@@ -85,24 +85,33 @@ export class AegisVerifyOnlyProfileSteps extends AegisStepsBase {
 
   @Then("the refusal reports the type header it read {string}")
   theRefusalReportsTheTypeHeaderItRead(typ: string): void {
-    expect(this.refusal()).toMatchObject({ data: { typ } });
-  }
-
-  @Then("the refusal names the profile {string} and its declared use {string}")
-  theRefusalNamesTheProfileAndItsDeclaredUse(profile: string, use: string): void {
-    expect(this.refusal()).toMatchObject({ data: { profile, use } });
+    expect(this.refusalData()).toEqual({ typ });
   }
 
   @Then(
-    "the refusal reports the direction {string} and locates the fault at {string}: {}",
+    "the refusal reports the format {string}, names the profile {string} and its declared use {string}",
+  )
+  theRefusalNamesTheProfileAndItsDeclaredUse(
+    format: string,
+    profile: string,
+    use: string,
+  ): void {
+    expect(this.refusalData()).toEqual({ profile, use, format });
+  }
+
+  @Then(
+    "the refusal reports the format {string}, the direction {string} and locates the fault at {string}: {}",
   )
   theRefusalReportsTheDirectionAndLocatesTheFault(
+    format: string,
     direction: string,
     key: string,
     message: string,
   ): void {
-    expect(this.refusal()).toMatchObject({
-      data: { direction, invalid: [{ key, message }] },
+    expect(this.refusalData()).toEqual({
+      direction,
+      invalid: [{ key, message }],
+      format,
     });
   }
 

@@ -48,7 +48,7 @@ Feature: Proof-of-possession bindings
     Scenario: cose: the mint is refused as a COSE error naming the thumbprint as the one member the wire cannot carry
       When I mint the content under the "access_token" profile on the cose wire
       Then minting is refused as a COSE error "cose_cnf_unsupported"
-      And the refusal lists the unrepresentable members "jkt"
+      And the refusal lists the unrepresentable members "jkt" beside the supported ones "jwk", "kid"
 
   Rule: a token carrying a confirmation is refused when the verifier is shown no proof of possession
 

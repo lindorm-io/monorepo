@@ -70,16 +70,18 @@ export class AegisClaimMatcherSteps extends AegisStepsBase {
 
   @Then("the refusal lists the invalid claims {stringList}")
   theRefusalListsTheInvalidClaims(invalid: Array<string>): void {
-    expect(this.refusal()).toMatchObject({ data: { invalid } });
+    expect(this.refusalData()).toEqual({ invalid });
   }
 
   @Then("the refusal names the matcher {string}")
   theRefusalNamesTheMatcher(key: string): void {
-    expect(this.refusal()).toMatchObject({ data: { key } });
+    expect(this.refusalData()).toEqual({ key });
   }
 
-  @Then("the refusal names the conflicting matchers {stringList}")
-  theRefusalNamesTheConflictingMatchers(keys: Array<string>): void {
-    expect(this.refusal()).toMatchObject({ data: { keys } });
+  @Then(
+    "the refusal names the wire claim {string} and the conflicting matchers {stringList}",
+  )
+  theRefusalNamesTheConflictingMatchers(claim: string, keys: Array<string>): void {
+    expect(this.refusalData()).toEqual({ claim, keys });
   }
 }
