@@ -15,10 +15,9 @@ import { Aegis } from "./Aegis.js";
  * check against its own import states no consequence, and a caller that got a
  * different-but-identically-shaped translator would be equally broken.
  *
- * ⚠ Not a feature scenario: there is no token and no act. These operate on a flat
- * claim dict of unknown provenance, which is a different door from the token
- * read path — `toDomain` answers to either spelling, where a token read resolves
- * the wire name and nothing else.
+ * ⚠ THE DOOR'S OWN RULES ARE SCENARIOS (`__features__/Aegis.vocabulary-door.feature`);
+ * what is left here is the round trip through both statics, which is a statement
+ * about the pair rather than about either door's behaviour.
  */
 describe("Aegis — the public claim translators", () => {
   test("round-trips a domain claim set out to the wire and back", () => {
@@ -63,6 +62,32 @@ describe("Aegis — the public claim translators", () => {
 
   test("splits a space-delimited wire string to the domain list", () => {
     expect(Aegis.toDomain({ scope: "a b" }).claims.scope).toEqual(["a", "b"]);
+  });
+
+  // The public door reads WIRE names, so a claim handed to it under its domain
+  // name is refused by name rather than translated or bucketed as a custom claim.
+  test("refuses a claim stated under its domain name", () => {
+    const read = () => Aegis.toDomain({ clientId: "c1" });
+
+    expect(read).toThrow(AegisDomainError);
+    expect(read).toThrow(
+      expect.objectContaining({
+        code: "claim_structure_invalid",
+        data: {
+          claim: "clientId",
+          invalid: [
+            {
+              key: "clientId",
+              message: 'Claim "clientId" must be stated under its wire name "client_id"',
+            },
+          ],
+        },
+      }) as unknown as Error,
+    );
+  });
+
+  test("resolves the same claim stated under its wire name", () => {
+    expect(Aegis.toDomain({ client_id: "c1" }).claims).toEqual({ clientId: "c1" });
   });
 
   // The public translator reaches the same refusal the mint pipeline does: a

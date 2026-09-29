@@ -814,9 +814,9 @@ const walkObject = (
 };
 
 /**
- * THE ONE REFUSAL A DECLARED STRUCTURE RAISES ABOUT A CALLER'S OR A PRODUCER'S
- * DATA — as opposed to the drift refusals around it, which are about the
- * REGISTRY disagreeing with the translator.
+ * THE ONE REFUSAL THE TRANSLATOR RAISES ABOUT A CALLER'S OR A PRODUCER'S DATA —
+ * as opposed to the drift refusals around it, which are about the REGISTRY
+ * disagreeing with the translator.
  *
  * ⚠⚠ IT RUNS IN BOTH DIRECTIONS AND UNDER EVERY PROFILE, INCLUDING NONE. A
  * structure's mandatory member is a SHAPE fact: it holds wherever the structure
@@ -836,9 +836,14 @@ const walkObject = (
  * THAT RESOLVE TO ONE KEY, a member the structure's CLOSED member set does not
  * declare, a claim value that is not the COLLECTION its codec declares, an
  * ELEMENT of that collection that is not a structure, and a MEMBER of a
- * space-delimited list that is not a string or contains a space. They share one
- * code because they share one repair — the claim's shape — and each entry's own
- * `message` says which it is.
+ * space-delimited list that is not a string or contains a space. Those share one
+ * repair — the claim's shape — and each entry's own `message` says which it is.
+ *
+ * ⚠ AND ONE THAT IS A DIFFERENT REPAIR UNDER THE SAME CODE: a claim the dict door
+ * was handed under its DOMAIN name ({@link refuseDomainSpellings}), whose repair is
+ * the claim's SPELLING. The code is shared with the member-depth twin the same
+ * mistake raises — two names meeting on one member key — so a consumer catching
+ * one catches the other, and `details` states both repairs.
  */
 const refuseInvalidStructure = (claim: string, invalid: Array<InvalidEntry>): never => {
   throw new AegisDomainError("Invalid claim structure", {
@@ -847,7 +852,7 @@ const refuseInvalidStructure = (claim: string, invalid: Array<InvalidEntry>): ne
     debug: { claim, invalid },
     title: "Invalid Claim Structure",
     details:
-      "A claim does not have the structure the registry declares for it: a member its specification makes mandatory is absent or empty, two members resolve to the same key so neither can be honoured, a member is not one the claim's closed member set declares, the value is not the collection the claim is defined as, an element of that collection is not a structure, or a member of a space-delimited list is not a string or contains a space. Each entry in `invalid` names the offending position and what is wrong with it.",
+      "A claim does not have the structure the registry declares for it: a member its specification makes mandatory is absent or empty, two members resolve to the same key so neither can be honoured, a member is not one the claim's closed member set declares, the value is not the collection the claim is defined as, an element of that collection is not a structure, or a member of a space-delimited list is not a string or contains a space. A claim stated under its domain name where the door reads wire names is refused the same way, and is repaired by spelling it as the entry says. Each entry in `invalid` names the offending position and what is wrong with it.",
   });
 };
 
@@ -1420,9 +1425,10 @@ const decodeValue = (
  *                `domainClaim`-marked claims resolve (the {@link DomainClaims}
  *                set), and every other key stays in `custom` VERBATIM.
  *   - `"dict"`   the PUBLIC vocabulary door (`Aegis.toDomain`), whose input is a
- *                claim dict of unknown provenance — an introspection response, a
- *                userinfo body, or an already-domain-shaped set. It therefore
- *                answers to EITHER spelling, domain form winning.
+ *                claim dict of unknown provenance — an introspection response or a
+ *                userinfo body. Wire names only, like the token modes, and a key
+ *                spelled as a registered claim's DOMAIN name is REFUSED rather
+ *                than carried into `custom`.
  *
  * ⚠⚠ The wire-name-only rule on the two TOKEN modes is the load-bearing one.
  * Which claim an ISSUER stated is decided by the registered wire claim and by
@@ -1444,8 +1450,10 @@ export type ClaimReadMode = "token" | "floor" | "dict";
  *   - `resolves`   whether the pass looks this registered claim up at all.
  *   - `lookup`     which input key, if any, the claim is read from.
  *   - `customKey`  how a key the pass did not consume is spelled in `custom`.
+ *   - `reserves`   whether an unconsumed key spelled as a registered claim's
+ *                  DOMAIN name is refused instead of reaching `custom`.
  *
- * The three facts travel together because they are one policy, and deciding them
+ * The four facts travel together because they are one policy, and deciding them
  * in a single `switch` is what makes a fourth mode a COMPILE error rather than a
  * silent fall into another door's behaviour — the failure a scatter of
  * `mode === "floor"` ternaries invites.
@@ -1454,6 +1462,7 @@ type ClaimReadRules = {
   resolves: (spec: ClaimSpec) => boolean;
   lookup: (spec: ClaimSpec, wireName: string, wire: Dict) => string | undefined;
   customKey: (key: string) => string;
+  reserves: boolean;
 };
 
 /**
@@ -1482,30 +1491,78 @@ const wireLookup = (
   wire: Dict,
 ): string | undefined => (Object.hasOwn(wire, wireName) ? wireName : undefined);
 
-/** The public dict door accepts either spelling; the domain form wins. */
-const eitherLookup = (
-  spec: ClaimSpec,
-  wireName: string,
+/**
+ * Refuse a claim the dict door was handed under its DOMAIN name — the top level's
+ * half of the reservation {@link walkObject} makes for a declared MEMBER, and the
+ * same ruling one level out: a claim is stated under the name the read looks it up
+ * by, and the other spelling is refused rather than translated or carried.
+ *
+ * ⛔⛔ THE RESERVED NAMES COME FROM THE REGISTRY, so a look-alike has something to
+ * collide with whether or not the claim it impersonates arrived. The two doors
+ * differ because their inputs do: a TOKEN is a stranger's artifact, where an
+ * unregistered `audience` is a custom claim the issuer chose to write and `custom`
+ * is where it belongs; a DICT is the caller's own call into this registry, where
+ * the same key is one claim spelled two ways and no reading of it is the caller's.
+ *
+ * ⚠ IT ASKS ONLY ABOUT THE KEYS THE READ DID NOT CONSUME, and that is what keeps
+ * the claims spelled the SAME in both vocabularies readable — `scope`, `address`
+ * and `email` among them are their own domain names, so the key the reservation
+ * would name is the key the lookup already took. Composing with the lookup rather
+ * than restating which claims diverge is the point: the second derivation is the
+ * one that drifts. Both halves of the registry are covered as POPULATIONS:
+ * `translate.test.ts`, "the dict read resolves EVERY claim whose domain name is
+ * its wire name" and its refusing twin.
+ *
+ * ⚠ `Object.hasOwn`, for the reason {@link wireLookup} states, failing the other
+ * way: with `in`, a library writing `Object.prototype.subject` would make this
+ * door refuse every dict in the process, including one spelling nothing in domain
+ * form.
+ *
+ * ⚠ ONE CLAIM PER REFUSAL, IN REGISTRY ORDER. `data.claim` names one claim at
+ * every depth, and the read loop above already refuses the first claim it cannot
+ * decode rather than collecting across claims; the registry's order is the stable
+ * one, where a dict's key order is whatever its producer wrote.
+ */
+const refuseDomainSpellings = (
   wire: Dict,
-): string | undefined =>
-  Object.hasOwn(wire, spec.domain)
-    ? spec.domain
-    : Object.hasOwn(wire, wireName)
-      ? wireName
-      : undefined;
+  consumed: ReadonlySet<string>,
+  nameOf: NameSelector,
+): void => {
+  for (const spec of CLAIM_SPECS) {
+    if (consumed.has(spec.domain) || !Object.hasOwn(wire, spec.domain)) continue;
+
+    refuseInvalidStructure(spec.domain, [
+      {
+        key: spec.domain,
+        message: `Claim "${spec.domain}" must be stated under its wire name "${nameOf(spec)}"`,
+      },
+    ]);
+  }
+};
 
 const claimReadRules = (mode: ClaimReadMode): ClaimReadRules => {
   switch (mode) {
     case "token":
-      return { resolves: () => true, lookup: wireLookup, customKey: camelCase };
+      return {
+        resolves: () => true,
+        lookup: wireLookup,
+        customKey: camelCase,
+        reserves: false,
+      };
     case "floor":
       return {
         resolves: (spec) => spec.domainClaim !== undefined,
         lookup: wireLookup,
         customKey: (key) => key,
+        reserves: false,
       };
     case "dict":
-      return { resolves: () => true, lookup: eitherLookup, customKey: camelCase };
+      return {
+        resolves: () => true,
+        lookup: wireLookup,
+        customKey: camelCase,
+        reserves: true,
+      };
     default: {
       const exhaustive: never = mode;
       throw new AegisDomainError("Unhandled claim read mode", {
@@ -1567,6 +1624,8 @@ export const wireToDomain = (
     const decoded = decodeClaim(spec, wire[key], nameOf);
     if (decoded !== undefined) claims[spec.domain] = decoded;
   }
+
+  if (rules.reserves) refuseDomainSpellings(wire, consumed, nameOf);
 
   // ⛔ `Object.fromEntries`, NEVER `custom[key] = value`. The keys are the WIRE's,
   // so a token carrying `__proto__` reaches here as an own property — the FLOOR

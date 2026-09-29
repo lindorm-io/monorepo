@@ -64,10 +64,6 @@ export const parseIntrospection = (data: IntrospectClaimsInput): PylonIntrospect
     ...claims,
     active: true as const,
     custom: pickCustomClaims(custom),
-    tokenType: isString(data.tokenType)
-      ? data.tokenType
-      : isString((data as Dict).token_type)
-        ? ((data as Dict).token_type as string)
-        : undefined,
+    tokenType: isString(data.token_type) ? data.token_type : undefined,
   }) as PylonIntrospectionActive;
 };

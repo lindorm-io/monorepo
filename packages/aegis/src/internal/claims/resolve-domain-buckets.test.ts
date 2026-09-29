@@ -62,26 +62,27 @@ describe("resolveDomainBuckets", () => {
     });
   });
 
-  // ⚠ These are the two TOKEN reads, one per wire — NOT the token read against
-  // the public dict door, which resolves a different set on purpose (it answers
-  // to the domain spelling; a token read does not). Comparing across that
-  // boundary would pass only for a fixture carrying no domain-spelled key, and
-  // would stop meaning "the wires agree" the moment one did.
-  //
-  // `cti` where JOSE says `jti` is the only naming divergence, and this dict
-  // carries neither, so the two wires must agree exactly.
+  // ⚠ These are the two TOKEN reads, one per wire. `cti` where JOSE says `jti` is
+  // the only naming divergence, and this dict carries neither, so the two wires
+  // must agree exactly.
   test("should reach the same buckets from either wire's token read", () => {
     expect(tokenToBucketsCose(JOSE_WIRE)).toEqual(tokenToBuckets(JOSE_WIRE, joseName));
   });
 
-  // The public dict door is the one that answers to EITHER spelling. Stating the
-  // difference here is what stops the comparison above from being widened back
-  // across it.
-  test("the dict door resolves a domain spelling the token read refuses", () => {
+  // ⛔ THE TWO DOORS DISPOSE OF A DOMAIN SPELLING DIFFERENTLY, and the difference
+  // is stated here because it is the one thing the bucket shape cannot show. A
+  // TOKEN is a stranger's artifact, so a look-alike key is an unregistered claim
+  // and rides in `custom`; the vocabulary door is the caller's own call into the
+  // registry, so the same key is a claim stated in the wrong vocabulary and is
+  // refused rather than read.
+  test("the dict door refuses a domain spelling the token read carries into custom", () => {
     const camel = { issuer: "https://test.lindorm.io/", subject: "user-1" };
 
-    expect(dictToBuckets(camel).claims).toEqual(camel);
+    expect(() => dictToBuckets(camel)).toThrow(
+      expect.objectContaining({ code: "claim_structure_invalid" }) as unknown as Error,
+    );
     expect(tokenToBuckets(camel, joseName).claims).toEqual({});
+    expect(tokenToBuckets(camel, joseName).custom).toEqual(camel);
   });
 
   test("should return undefined buckets when nothing qualifies", () => {

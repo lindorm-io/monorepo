@@ -386,6 +386,32 @@ describe("OpenIdDriver", () => {
       expect(scope.isDone()).toBe(true);
     });
 
+    // OIDC Core §5.1.1 — `address` carries members the claim declares itself, so
+    // a response-wide case conversion collides each with its own domain spelling
+    // and the whole answer is refused.
+    test("should keep a nested address whole", async () => {
+      nock(ISSUER)
+        .get("/userinfo")
+        .reply(200, {
+          sub: "user-123",
+          address: {
+            street_address: "1 Storgatan",
+            postal_code: "11122",
+            country: "SE",
+          },
+        });
+
+      const result = await createDriver().userinfo(context, {
+        accessToken: "access-token",
+      });
+
+      expect(result.address).toEqual({
+        streetAddress: "1 Storgatan",
+        postalCode: "11122",
+        country: "SE",
+      });
+    });
+
     test("should fail by name when the IdP publishes no userinfo endpoint", async () => {
       delete openIdConfiguration.userinfoEndpoint;
 

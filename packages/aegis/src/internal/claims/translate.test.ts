@@ -5,7 +5,13 @@ import { describe, expect, test } from "vitest";
 import type { AegisDomainError } from "../../errors/index.js";
 import type { TokenProfile } from "../../types/index.js";
 import { assembleCommonClaims } from "../utils/assemble-common-claims.js";
-import { CLAIM_SPECS, claimByDomain, coseName, joseName } from "./claims-registry.js";
+import {
+  CLAIM_SPECS,
+  type ClaimSpec,
+  claimByDomain,
+  coseName,
+  joseName,
+} from "./claims-registry.js";
 import { isNotStated } from "./is-not-stated.js";
 import type { ClaimMemberSpec } from "../registry/claim-spec.js";
 import { wireName } from "../registry/wire-key.js";
@@ -21,6 +27,18 @@ import {
 
 // The JOSE TOKEN read — what verify/parse run over a token's wire payload.
 const joseToDomain = (wire: Dict) => wireToDomain(wire, joseName, "token");
+
+// Which of the given claims the DICT door refuses when handed its DOMAIN name,
+// reported as domain names so a failure names the claims rather than diffing specs.
+const refusedByTheDictDoor = (specs: ReadonlyArray<ClaimSpec>): Array<string> =>
+  specs.flatMap((spec) => {
+    try {
+      wireToDomain({ [spec.domain]: null }, joseName, "dict");
+      return [];
+    } catch {
+      return [spec.domain];
+    }
+  });
 
 // Freeze time so the `expires("1h")` / `new Date()` calls resolve to a stable
 // instant (the pinned snapshot, not a race).
@@ -767,19 +785,114 @@ describe("joseToDomain — the two read modes decode identically", () => {
     expect(custom).toEqual(camel);
   });
 
-  // The PUBLIC vocabulary door is the one that answers to either spelling: its
-  // input is a claim dict of unknown provenance, not a token deciding an access
-  // decision. `Aegis.toDomain` documents that tolerance as its contract.
-  test("the dict read accepts the domain spelling", () => {
-    const camel: Dict = {
-      subject: "user-1",
-      issuer: "https://i/",
-      tokenId: "jti-1",
-      authMethods: ["pwd"],
-    };
-    const { claims } = wireToDomain(camel, joseName, "dict");
+  // ⛔ THE PUBLIC VOCABULARY DOOR READS WIRE NAMES TOO — and where the token read
+  // above buckets the look-alike into `custom`, this door REFUSES it. The door has
+  // the registry to compare the key against, and a dict admitting two spellings of
+  // one claim is a dict in which the claim can be stated twice; nothing signs the
+  // input, so which spelling arrives is the producer's choice.
+  //
+  // ⚠ THE REFUSAL IS REPORTED IN REGISTRY ORDER, NOT IN THE DICT'S KEY ORDER. The
+  // dict below spells `subject` first and `iss` is the first registry entry, so a
+  // report keyed off `Object.entries` would name the wrong claim — and the dict's
+  // key order is the producer's, which makes it no basis for a stable message.
+  test("the dict read refuses the domain spelling", () => {
+    const camel: Dict = { subject: "user-1", issuer: "https://i/" };
 
-    expect(claims).toEqual(camel);
+    expect(() => wireToDomain(camel, joseName, "dict")).toThrow(
+      expect.objectContaining({
+        code: "claim_structure_invalid",
+        data: {
+          claim: "issuer",
+          invalid: [
+            {
+              key: "issuer",
+              message: 'Claim "issuer" must be stated under its wire name "iss"',
+            },
+          ],
+        },
+      }) as unknown as Error,
+    );
+  });
+
+  // ⚠⚠ A DICT CARRYING BOTH SPELLINGS IS REFUSED, NOT RESOLVED BY PRECEDENCE. One
+  // claim stated twice has no reading a consumer can rely on: whichever half won,
+  // the other would ride on in `custom` as a claim the door reports the dict as
+  // carrying under a second name.
+  test("the dict read refuses a dict carrying BOTH spellings of one claim", () => {
+    const both: Dict = { sub: "wire-spelling", subject: "domain-spelling" };
+
+    expect(() => wireToDomain(both, joseName, "dict")).toThrow(
+      expect.objectContaining({
+        code: "claim_structure_invalid",
+        data: {
+          claim: "subject",
+          invalid: [
+            {
+              key: "subject",
+              message: 'Claim "subject" must be stated under its wire name "sub"',
+            },
+          ],
+        },
+      }) as unknown as Error,
+    );
+  });
+
+  // ⛔⛔ A REGISTERED CLAIM SPELLED THE SAME IN BOTH VOCABULARIES MUST NOT BE
+  // REACHED BY THE REFUSAL ABOVE: the key it would name is the key the lookup
+  // already consumed. This row reads three of them back to show the claim is
+  // RESOLVED and not merely un-refused; the two rows after it are total over the
+  // registry's own halves, which is what keeps a claim added later in scope.
+  test("the dict read resolves a claim whose domain name IS its wire name", () => {
+    const { claims, custom } = wireToDomain(
+      {
+        scope: "a b",
+        email: "user@example.com",
+        address: { street_address: "Sample 1" },
+      },
+      joseName,
+      "dict",
+    );
+
+    expect(claims.scope).toEqual(["a", "b"]);
+    expect(claims.email).toBe("user@example.com");
+    expect(claims.address).toEqual({ streetAddress: "Sample 1" });
+    expect(custom).toEqual({});
+  });
+
+  // ⭐ TOTAL OVER THE REGISTRY, both halves, because the rule's whole content is
+  // WHICH keys it reaches. Three examples cannot say that, and the population is
+  // the registry's to state rather than a count in a comment. `null` is the value
+  // in both rows: a key is consumed BEFORE its value is classified, so the read
+  // asks nothing of a codec and the reservation is the only thing under test.
+  test("the dict read resolves EVERY claim whose domain name is its wire name", () => {
+    const shared = CLAIM_SPECS.filter((spec) => spec.domain === joseName(spec));
+
+    expect(shared.length).toBeGreaterThan(0);
+    expect(refusedByTheDictDoor(shared)).toEqual([]);
+  });
+
+  test("the dict read refuses EVERY claim whose domain name differs from its wire name", () => {
+    const diverging = CLAIM_SPECS.filter((spec) => spec.domain !== joseName(spec));
+
+    expect(diverging.length).toBeGreaterThan(0);
+    expect(refusedByTheDictDoor(diverging)).toEqual(diverging.map((spec) => spec.domain));
+  });
+
+  // ⚠ AN UNREGISTERED KEY KEEPS ITS DISPOSITION — the refusal reads the key as it
+  // ARRIVES, so it never widens to a key the registry does not declare. Including
+  // the sharp case: `expires_at` camelCases onto the DOMAIN name of `exp`, and it
+  // is still an unregistered key the door carries verbatim into `custom` rather
+  // than a claim stated in the wrong vocabulary.
+  test("the dict read carries an unregistered key into custom even when its flip lands on a domain name", () => {
+    const { claims, custom } = wireToDomain(
+      { sub: "user-1", expires_at: 1704099600, tenant: "acme" },
+      joseName,
+      "dict",
+    );
+
+    expect(claims.subject).toBe("user-1");
+    expect(claims.expiresAt).toBeUndefined();
+    expect(custom).toEqual({ expiresAt: 1704099600, tenant: "acme" });
   });
 
   test("reads a Subject Identifier's iss and sub back as issuer and subject", () => {
@@ -1096,9 +1209,9 @@ describe("a stranger's payload cannot answer through Object.prototype", () => {
   );
 
   test("no registered claim's DOMAIN or WIRE name is an Object.prototype member", () => {
-    // DERIVED from the registry, both vocabularies, because both are looked up:
-    // the token read asks for the wire name, the dict door asks for the domain
-    // name first and the wire name second.
+    // DERIVED from the registry, both vocabularies, because both are asked about:
+    // every read looks a claim up by its wire name, and the dict door additionally
+    // asks whether an unconsumed key is a claim's domain name.
     const collisions = CLAIM_SPECS.filter(
       (spec) =>
         PROTOTYPE_MEMBERS.includes(spec.domain) ||
@@ -1143,7 +1256,7 @@ describe("a stranger's payload cannot answer through Object.prototype", () => {
 
   test("the DICT door — which also asks by DOMAIN name — answers the same way", () => {
     const wire = JSON.parse(
-      '{"subject":"user-1","valueOf":"not a function","propertyIsEnumerable":["nope"]}',
+      '{"sub":"user-1","valueOf":"not a function","propertyIsEnumerable":["nope"]}',
     ) as Dict;
 
     const { claims, custom } = wireToDomain(wire, joseName, "dict");
@@ -1201,25 +1314,28 @@ describe("a stranger's payload cannot answer through Object.prototype", () => {
     }
   });
 
-  test("the DICT door resolves the DOMAIN spelling when a dict carries BOTH", () => {
-    // ⚠ THE ONE READ MODE WHOSE LOOKUP IS DELIBERATELY PERMISSIVE, and precedence
-    // is the entire content of that permission. `eitherLookup` asks for the domain
-    // name FIRST — but which half wins is only observable when a dict carries both
-    // spellings, and reversing the two ternary arms is otherwise invisible.
-    //
-    // Domain-first is the right way round because this door's input is a claim
-    // dict of unknown provenance that may ALREADY be domain-shaped (an aegis read
-    // handed back in), and the domain spelling is the one this package produced.
-    // ⚠ It is the opposite of the TOKEN modes, where only the wire name may answer
-    // — there the presenter chooses the domain spelling and the issuer chose the
-    // other one, so accepting either would hand the decision to the presenter.
-    const { claims } = wireToDomain(
-      { sub: "wire-spelling", subject: "domain-spelling" },
-      joseName,
-      "dict",
-    );
+  test("a POLLUTED Object.prototype cannot make the DICT door refuse a wire-spelled dict", () => {
+    // ⛔⛔ THE MECHANISM, on the door's OTHER question. The row above puts a wire
+    // name on the prototype and asks whether a claim can be FABRICATED; this one
+    // puts a DOMAIN name there and asks whether a dict that spells nothing in
+    // domain form can be REFUSED — the same `in`-versus-`Object.hasOwn` mistake,
+    // failing the other way. A library writing `Object.prototype.subject` would
+    // make the vocabulary door reject every dict in the process.
+    Object.defineProperty(Object.prototype, "subject", {
+      value: "evil-subject",
+      configurable: true,
+      enumerable: false,
+      writable: true,
+    });
 
-    expect(claims.subject).toBe("domain-spelling");
+    try {
+      const { claims, custom } = wireToDomain({ sub: "user-1" }, joseName, "dict");
+
+      expect(claims.subject).toBe("user-1");
+      expect(custom).toEqual({});
+    } finally {
+      delete (Object.prototype as Dict).subject;
+    }
   });
 
   /**

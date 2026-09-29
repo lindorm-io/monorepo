@@ -7,23 +7,23 @@ describe("parseUserinfo", () => {
     test("should map standard OIDC claims to PylonUserinfo", () => {
       const data = {
         sub: "user-abc-123",
-        givenName: "John",
-        familyName: "Doe",
+        given_name: "John",
+        family_name: "Doe",
         email: "john@example.com",
-        emailVerified: true,
-        phoneNumber: "+1234567890",
-        phoneNumberVerified: false,
+        email_verified: true,
+        phone_number: "+1234567890",
+        phone_number_verified: false,
         picture: "https://example.com/photo.jpg",
         birthdate: "1990-01-01",
         gender: "male",
         locale: "en-US",
         name: "John Doe",
         nickname: "Johnny",
-        preferredUsername: "johnd",
+        preferred_username: "johnd",
         profile: "https://example.com/johnd",
         website: "https://johndoe.example.com",
         zoneinfo: "America/New_York",
-        updatedAt: 1700000000,
+        updated_at: 1700000000,
       } as unknown as UserinfoClaimsInput;
 
       const result = parseUserinfo(data);
@@ -37,7 +37,7 @@ describe("parseUserinfo", () => {
     test("should keep SENSITIVE claims released by the userinfo endpoint", () => {
       const data = {
         sub: "user-abc-123",
-        givenName: "John",
+        given_name: "John",
         national_identity_number: "19900101-1234",
         national_identity_number_verified: true,
         social_security_number: "123-45-6789",
@@ -56,8 +56,8 @@ describe("parseUserinfo", () => {
 
     test("should throw UserinfoEndpointFailed when sub is missing", () => {
       const data = {
-        givenName: "John",
-        familyName: "Doe",
+        given_name: "John",
+        family_name: "Doe",
       } as unknown as UserinfoClaimsInput;
 
       expect(() => parseUserinfo(data)).toThrow(UserinfoEndpointFailed);
@@ -67,11 +67,11 @@ describe("parseUserinfo", () => {
     test("should include lindorm extension fields", () => {
       const data = {
         sub: "user-ext-123",
-        displayName: "Johnny D",
+        display_name: "Johnny D",
         honorific: "Dr.",
         pronouns: "he/him",
         department: "Engineering",
-        jobTitle: "Staff Engineer",
+        job_title: "Staff Engineer",
         organization: "Acme Corp",
       } as unknown as UserinfoClaimsInput;
 

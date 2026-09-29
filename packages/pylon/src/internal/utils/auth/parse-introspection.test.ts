@@ -1,3 +1,4 @@
+import { AegisDomainError } from "@lindorm/aegis";
 import { describe, expect, test } from "vitest";
 import { IntrospectionEndpointFailed } from "../../../errors/IntrospectionEndpointFailed.js";
 import type { PylonIntrospectionActive } from "../../../types/index.js";
@@ -14,9 +15,9 @@ describe("parseIntrospection", () => {
     const data: IntrospectClaimsInput = {
       active: true,
       sub: "user-intro-123",
-      clientId: "client-abc",
+      client_id: "client-abc",
       scope: "openid profile email",
-      tokenType: "bearer",
+      token_type: "bearer",
       exp: 1700003600,
       iat: 1700000000,
       nbf: 1700000000,
@@ -56,9 +57,9 @@ describe("parseIntrospection", () => {
     const data = {
       active: true,
       sub: "user-ext-789",
-      clientId: "client-ext",
+      client_id: "client-ext",
       scope: "openid",
-      tokenType: "bearer",
+      token_type: "bearer",
       exp: 1700003600,
       iat: 1700000000,
       nbf: 1700000000,
@@ -67,16 +68,16 @@ describe("parseIntrospection", () => {
       jti: "tok-ext-123",
       username: "janedoe",
       // Lindorm extensions
-      tenantId: "tenant-abc",
+      tenant_id: "tenant-abc",
       roles: ["admin", "user"],
       permissions: ["read", "write"],
-      levelOfAssurance: 3,
-      sessionId: "session-xyz",
-      sessionHint: "browser",
-      subjectHint: "identity",
-      grantType: "authorization_code",
-      authFactorReference: "2fa",
-      authFactorCategories: ["knowledge", "possession"],
+      loa: 3,
+      sid: "session-xyz",
+      sih: "browser",
+      suh: "identity",
+      gty: "authorization_code",
+      afr: "2fa",
+      afc: ["knowledge", "possession"],
       entitlements: ["premium"],
       groups: ["engineering", "leads"],
     } as IntrospectClaimsInput;
@@ -90,9 +91,9 @@ describe("parseIntrospection", () => {
     const data = {
       active: true,
       sub: "user-rar-123",
-      clientId: "client-rar",
+      client_id: "client-rar",
       scope: "payment",
-      tokenType: "bearer",
+      token_type: "bearer",
       exp: 1700003600,
       iat: 1700000000,
       nbf: 1700000000,
@@ -140,13 +141,41 @@ describe("parseIntrospection", () => {
     expect(() => parseIntrospection(data)).toThrow("Missing active claim");
   });
 
+  // The refusal must reach the caller: `parseIntrospection` wraps no aegis error,
+  // so a domain-spelled claim fails loudly instead of being read as absent.
+  test("should refuse a registered claim stated under its domain name", () => {
+    const read = () =>
+      parseIntrospection({
+        active: true,
+        sub: "user-domain-spelling",
+        nationalIdentityNumber: "01019012345",
+      });
+
+    expect(read).toThrow(AegisDomainError);
+    expect(read).toThrow(
+      expect.objectContaining({
+        code: "claim_structure_invalid",
+        data: {
+          claim: "nationalIdentityNumber",
+          invalid: [
+            {
+              key: "nationalIdentityNumber",
+              message:
+                'Claim "nationalIdentityNumber" must be stated under its wire name "national_identity_number"',
+            },
+          ],
+        },
+      }) as unknown as Error,
+    );
+  });
+
   test("should split scope string into array", () => {
     const data = {
       active: true,
       sub: "user-scope",
-      clientId: null,
+      client_id: null,
       scope: "openid profile email offline_access",
-      tokenType: null,
+      token_type: null,
       exp: 1700003600,
       iat: 1700000000,
       nbf: 1700000000,
@@ -161,13 +190,13 @@ describe("parseIntrospection", () => {
     expect(result.scope).toMatchSnapshot();
   });
 
-  test("should handle loa shorthand field", () => {
+  test("should resolve the loa wire name to levelOfAssurance", () => {
     const data = {
       active: true,
       sub: "user-loa",
-      clientId: null,
+      client_id: null,
       scope: null,
-      tokenType: null,
+      token_type: null,
       exp: 1700003600,
       iat: 1700000000,
       nbf: 1700000000,
@@ -183,13 +212,13 @@ describe("parseIntrospection", () => {
     expect(result.levelOfAssurance).toBe(2);
   });
 
-  test("should prefer long-form over shorthand when both present", () => {
+  test("should bucket an unregistered level_of_assurance without displacing the registered loa", () => {
     const data = {
       active: true,
       sub: "user-both",
-      clientId: null,
+      client_id: null,
       scope: null,
-      tokenType: null,
+      token_type: null,
       exp: 1700003600,
       iat: 1700000000,
       nbf: 1700000000,
@@ -197,22 +226,23 @@ describe("parseIntrospection", () => {
       aud: [],
       jti: null,
       username: null,
-      levelOfAssurance: 4,
       loa: 2,
+      level_of_assurance: 4,
     } as IntrospectClaimsInput;
 
     const result = parseActive(data);
 
-    expect(result.levelOfAssurance).toBe(4);
+    expect(result.levelOfAssurance).toBe(2);
+    expect(result.custom).toEqual({ levelOfAssurance: 4 });
   });
 
   test("should convert epoch timestamps to Date objects", () => {
     const data: IntrospectClaimsInput = {
       active: true,
       sub: "user-dates",
-      clientId: null,
+      client_id: null,
       scope: null,
-      tokenType: null,
+      token_type: null,
       exp: 1700003600,
       iat: 1700000000,
       nbf: 1699999000,
@@ -335,27 +365,15 @@ describe("parseIntrospection", () => {
       expect(result.custom).toEqual({});
       expect(JSON.stringify(result)).not.toContain("01019012345");
     });
-
-    test("should drop them in their camelCase form too", () => {
-      const result = parseActive({
-        active: true,
-        sub: "user-sensitive-camel",
-        nationalIdentityNumber: "01019012345",
-        scope: "openid",
-      });
-
-      expect(result).not.toHaveProperty("nationalIdentityNumber");
-      expect(result.scope).toEqual(["openid"]);
-    });
   });
 
   test("should wrap single audience string in array", () => {
     const data = {
       active: true,
       sub: "user-aud",
-      clientId: null,
+      client_id: null,
       scope: null,
-      tokenType: null,
+      token_type: null,
       exp: 1700003600,
       iat: 1700000000,
       nbf: 1700000000,

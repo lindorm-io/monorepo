@@ -69,6 +69,10 @@ export class AegisContext {
   assert?: VerifyAssert;
   /** The boolean door's answer, when the claims were checked without a signature. */
   matched?: boolean;
+  /** The flat claim dict handed to the vocabulary door, in whichever vocabulary the scenario states it. */
+  dict: Dict = {};
+  /** What the vocabulary door resolved the dict into. */
+  buckets?: ReturnType<typeof Aegis.toDomain>;
 
   /** The last act's artifact, whichever verb produced it. */
   token?: string;

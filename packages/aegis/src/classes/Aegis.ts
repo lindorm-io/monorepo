@@ -494,9 +494,11 @@ export class Aegis implements IAegis {
   // These ARE the internal translator functions, so a consumer builds its claim
   // mapping on them without re-deriving the registry. `toWire`: domain-keyed
   // common claims →
-  // jose-keyed wire dict; `toDomain`: jose/camel-keyed wire →
+  // jose-keyed wire dict; `toDomain`: jose-keyed wire →
   // `{ claims, custom, profile, sensitive }` — the SAME four buckets the token
-  // read path resolves, so a consumer never re-derives the split itself.
+  // read path resolves, so a consumer never re-derives the split itself. Each
+  // door takes ONE vocabulary: a claim handed to `toDomain` under its domain name
+  // is refused, not translated.
   static toWire = domainToJose;
 
   static toDomain = dictToBuckets;

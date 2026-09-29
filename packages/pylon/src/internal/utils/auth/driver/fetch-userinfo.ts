@@ -1,17 +1,13 @@
-import {
-  conduitBearerAuthMiddleware,
-  conduitChangeResponseDataMiddleware,
-} from "@lindorm/conduit";
+import { conduitBearerAuthMiddleware } from "@lindorm/conduit";
 import { ServerError } from "@lindorm/errors";
 import { isString } from "@lindorm/is";
-import type { Claims } from "@lindorm/openid";
 import { UserinfoEndpointFailed } from "../../../../errors/UserinfoEndpointFailed.js";
 import type {
   PylonAuthDriverContext,
   PylonAuthEndpoints,
   PylonUserinfo,
 } from "../../../../types/index.js";
-import { parseUserinfo } from "../parse-userinfo.js";
+import { parseUserinfo, type UserinfoClaimsInput } from "../parse-userinfo.js";
 
 export type FetchUserinfoOptions = {
   accessToken: string;
@@ -43,17 +39,17 @@ export const fetchUserinfo = async (
     });
   }
 
-  let data: Claims;
+  let data: UserinfoClaimsInput;
 
   try {
-    // Unbounded case conversion here on purpose: a userinfo response nests
-    // legitimately (OIDC Core §5.1 `address`) and every key is OIDC's own.
-    ({ data } = await context.conduit.get<Claims>(endpoints.userinfoEndpoint, {
-      middleware: [
-        conduitBearerAuthMiddleware(accessToken),
-        conduitChangeResponseDataMiddleware(),
-      ],
-    }));
+    // ⚠ NO response case conversion: `parseUserinfo` hands this body to
+    // `Aegis.toDomain`, which reads WIRE names, and a camelised `address` collides
+    // with the members the claim itself declares (OIDC Core §5.1.1).
+    // pinned: OpenIdDriver.test.ts, "should keep a nested address whole"
+    ({ data } = await context.conduit.get<UserinfoClaimsInput>(
+      endpoints.userinfoEndpoint,
+      { middleware: [conduitBearerAuthMiddleware(accessToken)] },
+    ));
   } catch (error) {
     throw new UserinfoEndpointFailed(
       error instanceof Error ? error.message : "Userinfo endpoint request failed",

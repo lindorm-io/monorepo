@@ -53,15 +53,15 @@ export const tokenToBuckets = <C extends Dict = Dict>(
 ): DomainBuckets<C> => toBuckets<C>(wire, nameOf, "token");
 
 /**
- * The PUBLIC vocabulary door (`Aegis.toDomain`): a jose-keyed OR camel-keyed
- * claim dict -> the four domain buckets.
+ * The PUBLIC vocabulary door (`Aegis.toDomain`): a jose-keyed claim dict -> the
+ * four domain buckets.
  *
- * ⚠ It answers to EITHER spelling, and that is the documented contract — its
- * input is a claim dict of unknown provenance (an introspection response, a
- * userinfo body over TLS, an already-domain-shaped set), not a token whose
- * audience decides an access decision. The token read above is deliberately
- * stricter; the two are separated by a named {@link ClaimReadMode}, not by a
- * second implementation.
+ * ⚠ Wire-name lookup, as above — and one step stricter than the token read: a key
+ * spelled as a registered claim's DOMAIN name is REFUSED rather than carried into
+ * `custom`. Its input is a claim dict of unknown provenance (an introspection
+ * response, a userinfo body over TLS), and a door admitting two spellings of one
+ * claim is a door on which the claim can be stated twice. The two reads are
+ * separated by a named {@link ClaimReadMode}, not by a second implementation.
  */
 export const dictToBuckets = <C extends Dict = Dict>(wire: Dict): DomainBuckets<C> =>
   toBuckets<C>(wire, joseName, "dict");

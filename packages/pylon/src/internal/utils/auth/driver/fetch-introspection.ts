@@ -1,7 +1,5 @@
-import { conduitChangeResponseDataMiddleware } from "@lindorm/conduit";
 import { ServerError } from "@lindorm/errors";
 import { isString } from "@lindorm/is";
-import type { IntrospectResponse } from "@lindorm/openid";
 import { sortKeys } from "@lindorm/utils";
 import { IntrospectionEndpointFailed } from "../../../../errors/IntrospectionEndpointFailed.js";
 import type {
@@ -11,7 +9,10 @@ import type {
   PylonClientAuthMethod,
   PylonIntrospection,
 } from "../../../../types/index.js";
-import { parseIntrospection } from "../parse-introspection.js";
+import {
+  type IntrospectClaimsInput,
+  parseIntrospection,
+} from "../parse-introspection.js";
 import { resolveClientAuthentication } from "./resolve-client-authentication.js";
 
 export type FetchIntrospectionOptions = {
@@ -64,10 +65,10 @@ export const fetchIntrospection = async (
     method,
   });
 
-  let data: IntrospectResponse;
+  let data: IntrospectClaimsInput;
 
   try {
-    ({ data } = await context.conduit.post<IntrospectResponse>(
+    ({ data } = await context.conduit.post<IntrospectClaimsInput>(
       endpoints.introspectionEndpoint,
       {
         body: sortKeys({
@@ -76,13 +77,11 @@ export const fetchIntrospection = async (
           ...(isString(tokenTypeHint) && { tokenTypeHint }),
         }),
         contentType: "application/x-www-form-urlencoded",
-        middleware: [
-          ...auth.middleware,
-          // Depth 1 — RFC 9396 §2 `authorization_details` entries carry fields
-          // defined by the schema named in `type`, which MAY be camelCase
-          // already; camelising them rewrites someone else's schema.
-          conduitChangeResponseDataMiddleware("camel", { depth: 1 }),
-        ],
+        // ⚠ NO response case conversion: `parseIntrospection` hands this body to
+        // `Aegis.toDomain`, which reads WIRE names and refuses a domain spelling,
+        // and camelCases the unregistered keys itself.
+        // pinned: use-access-token.custom-claims.test.ts
+        middleware: auth.middleware,
       },
     ));
   } catch (error) {

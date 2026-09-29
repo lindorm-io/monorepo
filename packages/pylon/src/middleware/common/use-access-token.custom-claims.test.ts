@@ -213,6 +213,22 @@ describe("useAccessToken — custom claims", () => {
       expect(ctx.state.access.custom).toEqual({});
     });
 
+    // The bucket's TOP-LEVEL key is camelCased and the value's keys are not: an
+    // extension claim's inner fields belong to whoever defined the schema, the
+    // same reason RFC 9396 §2 `authorization_details` entries ride verbatim.
+    test("should camelCase the bucket key and leave the nested keys verbatim", async () => {
+      const ctx = createIntrospectedContext({
+        sub: "alice",
+        tenant_profile: { billing_plan: "gold", limits: { max_seats: 5 } },
+      });
+
+      await useAccessToken(ACCESS_MOUNT)(ctx, next);
+
+      expect(ctx.state.access.custom).toEqual({
+        tenantProfile: { billing_plan: "gold", limits: { max_seats: 5 } },
+      });
+    });
+
     // The flat shape reserves `custom` for the bucket, so a server returning a
     // member of that name is neither lost nor ambiguous: it is unregistered like
     // any other, so it lands INSIDE the bucket.
