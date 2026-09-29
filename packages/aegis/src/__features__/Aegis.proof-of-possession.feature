@@ -295,6 +295,40 @@ Feature: Proof-of-possession bindings
       Then verification is refused as a domain error "claim_structure_invalid"
       And the refusal names the claim "confirmation" and locates the fault at "confirmation.thumbprint": Member "thumbprint" must be a string
 
+  Rule: a token whose confirmation names a null thumbprint is refused, not read as carrying no confirmation
+
+    `null` is how this package spells a claim or a member nobody stated,
+    and the confirmation is the one claim exempt from that reading. The
+    exemption is the security property: a reader that erased the member
+    would be left with a confirmation naming nothing and then with no
+    confirmation at all, which is what a verifier reads as bearer
+    semantics (RFC 7800 §3) — so an attacker who can blank one field
+    turns a sender-constrained token into one anybody holding a copy may
+    present. RFC 9449 §6.1 types the member; refusing it rather than
+    dropping it is aegis policy at verify. The token comes from a third
+    party, because aegis's own mint refuses this confirmation, and the
+    refusal names the member alone — a read reports what a producer
+    wrote and takes no emptiness verdict on the confirmation it read.
+    The cose wire has no scenario: a JWK thumbprint confirmation has no
+    CWT counterpart (RFC 9679 §5.5), so the member this rule turns on
+    cannot be stated on that wire at all.
+
+    Background:
+      Given the wire claims
+        | iss | "https://test.lindorm.io/" |
+        | sub | "user-1"                   |
+        | aud | ["https://rs.lindorm.io/"] |
+        | jti | "token-1"                  |
+        | cnf | { "jkt": null }            |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+      And the wire claims expire at "2024-01-01T08:02:00.000Z"
+
+    Scenario: jose: the verify is refused, naming the thumbprint member rather than reading the token as unbound
+      When a third party signs the wire claims on the jose wire, typed "application/access+jwt"
+      And I verify the token
+      Then verification is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "confirmation" and locates the fault at "confirmation.thumbprint": Member "thumbprint" must be a string
+
   Rule: a confirmation naming a member in the wrong vocabulary is refused, not written into the declared member's slot
 
     Absent an application requirement, an unrecognised confirmation member is
