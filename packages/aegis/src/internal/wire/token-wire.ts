@@ -245,11 +245,14 @@ export type TokenWire = {
    */
   readonly defaultTypPresence: "required" | "optional";
   /**
-   * Whether reading a claims token on this wire REQUIRES an `iss` claim.
+   * Whether reading a claims token on this wire REQUIRES an `iss` claim. Both
+   * wires state `"optional"`: using the claim is OPTIONAL in a JWT (RFC 7519
+   * §4.1.1) and in a CWT (RFC 8392 §3.1.1). A caller needing one demands it
+   * through a claim matcher or a profile whose floor expects an issuer.
    *
-   * ⚠ THE TWO WIRES DIVERGE: JOSE refuses a claims token with no `iss`, COSE accepts
-   * one. Making them agree is a policy change, so the difference is one flippable
-   * value here rather than implicit in two functions.
+   * ⚠ A VALUE on the wire record, not a wire test in the reader: one
+   * implementation reads both wires (`build-token-result.ts`), and it compares
+   * this, so a wire that must demand an `iss` is one word here.
    */
   readonly issuerPresence: "required" | "optional";
   /** This wire's ENCRYPTING outer format. */

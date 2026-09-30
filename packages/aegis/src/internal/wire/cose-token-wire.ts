@@ -89,7 +89,7 @@ export const COSE_TOKEN_WIRE: TokenWire = {
   // RFC 9596 §2.
   defaultTypPresence: "optional",
 
-  // See the note on `TokenWire.issuerPresence`.
+  // RFC 8392 §3.1.1. See the note on `TokenWire.issuerPresence`.
   issuerPresence: "optional",
 
   encryptedFormat: "cwe",

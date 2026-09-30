@@ -74,8 +74,8 @@ export const JOSE_TOKEN_WIRE: TokenWire = {
   // AEGIS POLICY, modelled on RFC 8725 §3.11. Defaulting to required is our choice.
   defaultTypPresence: "required",
 
-  // See the note on `TokenWire.issuerPresence`.
-  issuerPresence: "required",
+  // RFC 7519 §4.1.1. See the note on `TokenWire.issuerPresence`.
+  issuerPresence: "optional",
 
   encryptedFormat: "jwe",
 

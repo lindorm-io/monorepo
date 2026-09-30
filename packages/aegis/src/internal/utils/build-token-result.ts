@@ -15,9 +15,10 @@ import { isClaimSatisfied } from "./rules/is-claim-satisfied.js";
 
 /**
  * Assemble the unified domain result for a VERIFIED or PARSED claims token, on
- * either wire. The one genuine per-wire fact is the issuer gate, which is a
- * PARAMETER here; the header translation is shared (`domainTokenHeader`, which
- * merges the buckets under the header registry's `placement` allowlist).
+ * either wire. Every wire fact arrives as a PARAMETER — the claim naming and the
+ * issuer gate — so nothing here asks which wire it is reading; the header
+ * translation is shared (`domainTokenHeader`, which merges the buckets under the
+ * header registry's `placement` allowlist).
  *
  * `delegation` is narrowed to REQUIRED on the way out: a claims-bearing token
  * always has an act summary (an absent `act` yields `isDelegated: false`, not
@@ -67,18 +68,19 @@ export const buildTokenResult = <C extends Dict = Dict>({
   encrypted: boolean;
   nameOf: NameSelector;
   /**
-   * Whether this wire's read REQUIRES an `iss` claim.
+   * Whether this wire's read REQUIRES an `iss` claim — `TokenWire.issuerPresence`,
+   * `"optional"` on both wires, forwarded rather than decided here.
    *
-   * ⚠ The wires DIVERGE: the JOSE read refuses a claims token with no non-empty
-   * string `iss`, the COSE read accepts one. Stated here as data — one boolean to
-   * flip — rather than left implicit in two functions.
+   * ⚠ A PARAMETER, so this one implementation serves both wires: a wire test in
+   * here is what would let the two answer differently.
    */
   issuerPresence: "required" | "optional";
 }): VerifiedToken<C> & { delegation: TokenDelegation } => {
-  // `iss` must be a NON-EMPTY string, not a URI: an assertion's `iss` is an
-  // opaque `client_id` (RFC 7523 §3). The platform-issuer exact match is enforced
-  // by the profile floor. NON-EMPTY is the demand notion, spelled as the rules
-  // layer spells it rather than as a hand-written length test.
+  // Where a wire demands `iss`, a NON-EMPTY string satisfies it and a URI is not
+  // required: an assertion's `iss` is an opaque `client_id` (RFC 7523 §3). The
+  // platform-issuer exact match is enforced by the profile floor. NON-EMPTY is the
+  // demand notion, spelled as the rules layer spells it rather than as a
+  // hand-written length test.
   if (
     issuerPresence === "required" &&
     !(isString(wire.iss) && isClaimSatisfied(wire.iss))

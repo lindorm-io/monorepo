@@ -21,45 +21,47 @@ const base = {
   token: "the.token",
   encrypted: false,
   nameOf: joseName,
-  issuerPresence: "required" as const,
+  issuerPresence: "optional" as const,
 };
 
 describe("buildTokenResult", () => {
   describe("the issuer presence gate", () => {
-    test("accepts a non-empty issuer", () => {
+    test("reports the issuer a claims token carries", () => {
       expect(buildTokenResult(base).claims.issuer).toBe("https://test.lindorm.io/");
     });
 
-    test("refuses an absent issuer when the wire requires one", () => {
+    test("accepts an absent issuer where the gate does not require one", () => {
       const { iss: _iss, ...rest } = JOSE_WIRE;
 
-      expect(() => buildTokenResult({ ...base, wire: rest })).toThrow(AegisDomainError);
+      expect(() => buildTokenResult({ ...base, wire: rest })).not.toThrow();
+    });
+
+    test("accepts a non-empty issuer where the gate requires one", () => {
+      expect(
+        buildTokenResult({ ...base, issuerPresence: "required" }).claims.issuer,
+      ).toBe("https://test.lindorm.io/");
+    });
+
+    test("refuses an absent issuer where the gate requires one", () => {
+      const { iss: _iss, ...rest } = JOSE_WIRE;
+
+      expect(() =>
+        buildTokenResult({ ...base, wire: rest, issuerPresence: "required" }),
+      ).toThrow(AegisDomainError);
     });
 
     // ⚠ The EMPTY-STRING case, and the reason the guard is `isString(x) &&
-    // x.length > 0` rather than `isString(x)`: `isString("")` is TRUE, so an
+    // isClaimSatisfied(x)` rather than `isString(x)`: `isString("")` is TRUE, so an
     // issuer of "" slips through a type-only check and every downstream
     // comparison then runs against a claim that names nobody.
-    test("refuses an EMPTY-STRING issuer", () => {
-      expect(() =>
-        buildTokenResult({ ...base, wire: { ...JOSE_WIRE, iss: "" } }),
-      ).toThrow(expect.objectContaining({ code: "missing_claim_iss" }));
-    });
-
-    // ⚠ PRESERVED DIVERGENCE, pinned so it cannot change silently: the COSE read
-    // has never required an `iss` and the JOSE read always has.
-    test("accepts an absent issuer when the wire does not require one", () => {
-      const { iss: _iss, ...rest } = JOSE_WIRE;
-
+    test("refuses an EMPTY-STRING issuer where the gate requires one", () => {
       expect(() =>
         buildTokenResult({
           ...base,
-          format: "cwt",
-          wire: rest,
-          nameOf: coseName,
-          issuerPresence: "optional",
+          wire: { ...JOSE_WIRE, iss: "" },
+          issuerPresence: "required",
         }),
-      ).not.toThrow();
+      ).toThrow(expect.objectContaining({ code: "missing_claim_iss" }));
     });
   });
 
