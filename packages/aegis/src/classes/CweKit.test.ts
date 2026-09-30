@@ -519,8 +519,8 @@ describe("CweKit — proprietary alg/enc gate", () => {
 
 /**
  * ⭐ THE TOKEN-CONTROLLED HALF of the COSE label tables. `decrypt` reads the
- * content-encryption label straight off the FOREIGN protected header — a COSE
- * label is `int / tstr` (RFC 9052 §1.5), so a stranger can write a text one — and the
+ * content-encryption label straight off the FOREIGN protected header — `alg` is
+ * `int / tstr` (RFC 9052 §3.1 Table 3), so a stranger can write a text one — and the
  * lookup table is a plain object. Indexed bare, `COSE_TO_ENC["constructor"]` is
  * the `Object` function rather than `undefined`, the "not supported" guard never
  * fires, and the function reaches `tagBytesForEncryption` where `.startsWith`
@@ -555,6 +555,60 @@ describe("CweKit — a protected alg label naming an Object.prototype member", (
       expect((thrown as AegisError).code).toBe("cose_encryption_not_supported");
     },
   );
+});
+
+/**
+ * ⭐ THE SAME DOOR, THE OTHER SPELLING: the alg VALUE written as text. `alg` is
+ * `int / tstr` (RFC 9052 §3.1 Table 3), so a stranger may write a text one, and a
+ * JS object's own keys are strings — `Object.hasOwn(COSE_TO_ENC, "3")` is true, so a
+ * bare index answers the text `"3"` with integer label 3's A256GCM and whoever wrote
+ * the token picks this recipient's AEAD with a value COSE never registered. A text
+ * value is legal but unregistered, and it is refused as any unknown value is.
+ *
+ * ⚠ The refusal is SPLICED and the contrast SEALED: the label gate runs before the
+ * AEAD, so a refusal is sayable on a rewritten protected bucket, while an accepting
+ * verdict needs a token whose AAD and ciphertext were sealed together
+ * (`__fixtures__/foreign-encrypt0.ts`).
+ */
+describe("CweKit — a protected alg label spelled as a digit text string", () => {
+  const kryptos = KryptosKit.generate.enc.oct({
+    algorithm: "dir",
+    encryption: "A256GCM",
+  });
+  const kit = new CweKit({ kryptos, logger: createMockLogger() });
+  const payload = Buffer.from("the cwt claims bytes");
+
+  test("a foreign COSE_Encrypt0 whose alg is the text `3` is refused", () => {
+    const encrypt0 = decodeCbor<Tag>(kit.encrypt(payload));
+    const contents = encrypt0.contents as Array<unknown>;
+
+    contents[0] = encodeProtectedHeader(
+      new Map<number, unknown>([[coseByJose("alg"), "3"]]),
+    );
+
+    let thrown: unknown;
+    try {
+      kit.decrypt(encodeCbor(encrypt0));
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(AegisError);
+    expect((thrown as AegisError).code).toBe("cose_encryption_not_supported");
+  });
+
+  test("the integer label 3 is the same numeral and still decrypts as A256GCM", () => {
+    const token = foreignEncrypt0(
+      kryptos,
+      new Map<number | string, unknown>([[coseByJose("alg"), 3]]),
+      payload,
+    );
+
+    const { payload: out, protectedHeader: header } = kit.decrypt(token);
+
+    expect(out.equals(payload)).toBe(true);
+    expect(header.enc).toBe("A256GCM");
+  });
 });
 
 /**

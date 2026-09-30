@@ -314,7 +314,7 @@ export class CweKit implements ICweKit {
 
     // Label 1 also fixes the AEAD tag length (GCM/CCM-128 = 16 bytes, CCM-64 = 8),
     // which is what splits the ciphertext below.
-    const encryption = coseLabelToEnc(decodedProtected.get(coseByJose("alg")) as number);
+    const encryption = coseLabelToEnc(decodedProtected.get(coseByJose("alg")));
 
     // The label names what the SENDER used; `this.encryption` is what this
     // deployment configured. The protected bucket is the AEAD's AAD, so the two

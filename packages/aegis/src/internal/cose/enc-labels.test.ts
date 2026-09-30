@@ -72,10 +72,26 @@ describe("enc-labels", () => {
   });
 
   test.each(PROTO_NAMES)("a `%s` LABEL resolves to no encryption", (name) => {
-    expect(() => coseLabelToEnc(name as never)).toThrow(
+    expect(() => coseLabelToEnc(name)).toThrow(
       expect.objectContaining({ code: "cose_encryption_not_supported" }),
     );
   });
+
+  /**
+   * The table is keyed by the registry VALUE, and the value of `alg` is
+   * `int / tstr` (RFC 9052 §3.1 Table 3): the text `"3"` is a legal but
+   * unregistered value, refused exactly as the integer 999 above is. A JS object's
+   * own keys are strings, so `Object.hasOwn(COSE_TO_ENC, "3")` is true and a bare
+   * index answers the text `"3"` with integer label 3's A256GCM.
+   */
+  test.each(["1", "3", "-65537"])(
+    "a digit text label `%s` resolves to no encryption",
+    (name) => {
+      expect(() => coseLabelToEnc(name)).toThrow(
+        expect.objectContaining({ code: "cose_encryption_not_supported" }),
+      );
+    },
+  );
 
   test("tag length follows the algorithm (GCM/CCM-128 = 16, CCM-64 = 8, CBC-HS = key size)", () => {
     expect(tagBytesForEncryption("A256GCM")).toBe(16);

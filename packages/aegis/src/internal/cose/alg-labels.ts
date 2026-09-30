@@ -1,6 +1,6 @@
 import type { KryptosAlgorithm } from "@lindorm/kryptos";
 import { CoseError } from "../../errors/index.js";
-import { ownEntry } from "./own-entry.js";
+import { ownIntEntry, ownTextEntry } from "./own-entry.js";
 
 /**
  * OFFICIAL JOSE algorithm name <-> COSE algorithm label — the non-private-use
@@ -39,9 +39,10 @@ const COSE_TO_JOSE: Readonly<Record<number, string>> = Object.fromEntries(
   Object.entries(JOSE_TO_COSE_OFFICIAL).map(([alg, label]) => [label, alg]),
 );
 
-// ⚠ Both tables are read through `ownEntry`, never indexed directly: a plain index
-// resolves an `Object.prototype` member name, so `table["toString"]` is a FUNCTION
-// that reaches the CBOR encoder as an alg label. See own-entry.ts.
+// ⚠ Both tables are read through the lookup matching their KEY SPACE, never indexed
+// directly: a plain index resolves an `Object.prototype` member name, so
+// `table["toString"]` is a FUNCTION that reaches the CBOR encoder as an alg label,
+// and it answers label -7 for the text `"-7"`. See own-entry.ts.
 
 /**
  * Interop gate: true iff the algorithm has an OFFICIAL (non-private-use) COSE
@@ -51,11 +52,11 @@ const COSE_TO_JOSE: Readonly<Record<number, string>> = Object.fromEntries(
  * for any real key; the enc-side (AES-CBC-HMAC) gate exercises the mechanism.
  */
 export const isOfficialCoseAlg = (algorithm: KryptosAlgorithm): boolean =>
-  ownEntry(JOSE_TO_COSE_OFFICIAL, algorithm) !== undefined;
+  ownTextEntry(JOSE_TO_COSE_OFFICIAL, algorithm) !== undefined;
 
 /** The COSE integer label for a JOSE/kryptos signing or MAC algorithm. */
 export const algToCoseLabel = (algorithm: KryptosAlgorithm): number => {
-  const label = ownEntry(JOSE_TO_COSE_OFFICIAL, algorithm);
+  const label = ownTextEntry(JOSE_TO_COSE_OFFICIAL, algorithm);
 
   if (label === undefined) {
     throw new CoseError(`No COSE algorithm label for "${algorithm}"`, {
@@ -70,12 +71,18 @@ export const algToCoseLabel = (algorithm: KryptosAlgorithm): number => {
   return label;
 };
 
-/** The JOSE/kryptos algorithm name for a COSE integer label. */
-export const coseLabelToAlg = (label: number): string => {
-  const algorithm = ownEntry(COSE_TO_JOSE, label);
+/**
+ * The JOSE/kryptos algorithm name for a COSE integer label.
+ *
+ * ⚠ It takes the label UNNARROWED, because the table is the narrowing: `alg` is
+ * `int / tstr` (RFC 9052 §3.1 Table 3) and `decodeCwt` reads it off a foreign
+ * protected header, so a text value is legal, unregistered, and refused here.
+ */
+export const coseLabelToAlg = (label: unknown): string => {
+  const algorithm = ownIntEntry(COSE_TO_JOSE, label);
 
   if (algorithm === undefined) {
-    throw new CoseError(`No algorithm for COSE label "${label}"`, {
+    throw new CoseError(`No algorithm for COSE label "${String(label)}"`, {
       code: "cose_algorithm_not_supported",
       data: { label },
       title: "COSE Algorithm Not Supported",

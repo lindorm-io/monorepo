@@ -44,4 +44,20 @@ describe("alg-labels", () => {
       expect.objectContaining({ code: "cose_algorithm_not_supported" }),
     );
   });
+
+  /**
+   * The table is keyed by the registry VALUE, and the value of `alg` is
+   * `int / tstr` (RFC 9052 §3.1 Table 3): a text value is legal but unregistered,
+   * refused as the integer 9999 above is. A JS object's own keys are strings, so
+   * `Object.hasOwn(COSE_TO_JOSE, "-7")` is true and a bare index answers the text
+   * `"-7"` with label -7's ES256.
+   */
+  test.each(["-7", "5", "-257"])(
+    "a digit text label `%s` resolves to no algorithm",
+    (name) => {
+      expect(() => coseLabelToAlg(name)).toThrow(
+        expect.objectContaining({ code: "cose_algorithm_not_supported" }),
+      );
+    },
+  );
 });

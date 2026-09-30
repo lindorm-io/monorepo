@@ -1,6 +1,6 @@
 import type { KryptosEncryption } from "@lindorm/kryptos";
 import { CoseError } from "../../errors/index.js";
-import { ownEntry } from "./own-entry.js";
+import { ownIntEntry, ownTextEntry } from "./own-entry.js";
 
 /**
  * COSE content-encryption algorithm labels. RFC 9053 §4.
@@ -45,10 +45,11 @@ const COSE_TO_ENC = Object.fromEntries(
   ),
 ) as Record<number, KryptosEncryption>;
 
-// ⚠ Every table here is read through `ownEntry`, never indexed directly: a plain
-// index resolves an `Object.prototype` member name, so `table["toString"]` is a
-// FUNCTION and the `undefined` guards below never fire. `CweKit.decrypt` reads the
-// label off a FOREIGN protected header. See own-entry.ts.
+// ⚠ Every table here is read through the lookup matching its KEY SPACE, never
+// indexed directly: a plain index resolves an `Object.prototype` member name, so
+// `table["toString"]` is a FUNCTION and the `undefined` guards below never fire, and
+// it answers integer label 3 for the text `"3"`. `CweKit.decrypt` reads the label
+// off a FOREIGN protected header. See own-entry.ts.
 
 /**
  * The AEAD authentication-tag length in bytes — the COSE_Encrypt0 ciphertext is
@@ -72,7 +73,7 @@ export const tagBytesForEncryption = (encryption: KryptosEncryption): number => 
  * label. A non-proprietary `encrypt` refuses anything this returns `false` for.
  */
 export const isOfficialCoseEnc = (encryption: KryptosEncryption): boolean =>
-  ownEntry(ENC_TO_COSE_OFFICIAL, encryption) !== undefined;
+  ownTextEntry(ENC_TO_COSE_OFFICIAL, encryption) !== undefined;
 
 const NOT_SUPPORTED =
   "COSE_Encrypt0 supports the AES-GCM family (A128/A192/A256GCM), the AES-CCM family (AES-CCM-16/64-64/128-128/256), and — in proprietary mode — the AES-CBC-HMAC family.";
@@ -81,8 +82,8 @@ export const encToCoseLabel = (
   encryption: KryptosEncryption | null | undefined,
 ): number => {
   const label = encryption
-    ? (ownEntry(ENC_TO_COSE_OFFICIAL, encryption) ??
-      ownEntry(ENC_TO_COSE_PRIVATE, encryption))
+    ? (ownTextEntry(ENC_TO_COSE_OFFICIAL, encryption) ??
+      ownTextEntry(ENC_TO_COSE_PRIVATE, encryption))
     : undefined;
   if (label === undefined) {
     throw new CoseError(`No COSE label for content encryption "${encryption}"`, {
@@ -95,10 +96,15 @@ export const encToCoseLabel = (
   return label;
 };
 
-export const coseLabelToEnc = (label: number): KryptosEncryption => {
-  const encryption = ownEntry(COSE_TO_ENC, label);
+/**
+ * ⚠ It takes the label UNNARROWED, because the table is the narrowing: `alg` is
+ * `int / tstr` (RFC 9052 §3.1 Table 3) and `CweKit.decrypt` reads it off a foreign
+ * protected header, so a text value is legal, unregistered, and refused here.
+ */
+export const coseLabelToEnc = (label: unknown): KryptosEncryption => {
+  const encryption = ownIntEntry(COSE_TO_ENC, label);
   if (encryption === undefined) {
-    throw new CoseError(`No content encryption for COSE label "${label}"`, {
+    throw new CoseError(`No content encryption for COSE label "${String(label)}"`, {
       code: "cose_encryption_not_supported",
       data: { label },
       title: "COSE Encryption Not Supported",

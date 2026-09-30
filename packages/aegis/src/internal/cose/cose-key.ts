@@ -8,7 +8,7 @@ import {
   COSE_CNF_MEMBERS,
   type CoseCnfMember,
 } from "../claims/cnf-members.js";
-import { ownEntry } from "./own-entry.js";
+import { ownIntEntry, ownTextEntry } from "./own-entry.js";
 
 // COSE_Key parameter labels (RFC 9052 §7).
 const KEY = { kty: 1, kid: 2, alg: 3, crv: -1, x: -2, y: -3 } as const;
@@ -74,9 +74,10 @@ const coordinate = (value: unknown, member: "x" | "y"): Buffer =>
  * keys only; RSA/oct cnf keys are not handled.
  */
 export const jwkToCoseKey = (jwk: Dict): Map<number, unknown> => {
-  // ⚠ `ownEntry`, never `table[key]`: `jwk` is the caller's bag and a JSON body
-  // can spell `kty`/`crv` as an `Object.prototype` member name. See own-entry.ts.
-  const ktyLabel = ownEntry(KTY_TO_COSE, jwk.kty);
+  // ⚠ `ownTextEntry`, never `table[key]`: `jwk` is the caller's bag and a JSON body
+  // can spell `kty`/`crv` as an `Object.prototype` member name. The table is keyed
+  // by the JWK name, so a JWK spelling one as a number has none. See own-entry.ts.
+  const ktyLabel = ownTextEntry(KTY_TO_COSE, jwk.kty);
   if (ktyLabel === undefined) unsupported(`Unknown JWK kty "${jwk.kty}".`);
 
   const key = new Map<number, unknown>();
@@ -84,7 +85,7 @@ export const jwkToCoseKey = (jwk: Dict): Map<number, unknown> => {
   if (isString(jwk.kid)) key.set(KEY.kid, Buffer.from(jwk.kid, "utf8"));
 
   if (jwk.kty === "EC" || jwk.kty === "OKP") {
-    const crvLabel = ownEntry(CRV_TO_COSE, jwk.crv);
+    const crvLabel = ownTextEntry(CRV_TO_COSE, jwk.crv);
     if (crvLabel === undefined) unsupported(`Unknown curve "${jwk.crv}".`);
     key.set(KEY.crv, crvLabel);
     // ⚠ The write twin of {@link coordinate}, needing its own guard: here the
@@ -112,10 +113,12 @@ export const jwkToCoseKey = (jwk: Dict): Map<number, unknown> => {
 
 /** Convert a COSE_Key map back to a public JWK. */
 export const coseKeyToJwk = (key: Map<number, unknown>): Dict => {
-  // ⚠ Every label here comes off a FOREIGN token — `decodeCnf` reaches this on any
-  // CWT read — so the tables go through `ownEntry`, never a direct index. See
-  // own-entry.ts.
-  const kty = ownEntry(COSE_TO_KTY, key.get(KEY.kty));
+  // ⚠ Every value here comes off a FOREIGN token — `decodeCnf` reaches this on any
+  // CWT read — so the tables go through `ownIntEntry`, never a direct index. A
+  // COSE_Key kty is `tstr / int` (RFC 9052 §7.1 Table 4) and a crv `int / tstr`
+  // (RFC 9053 §7.1.1 Table 19); these tables are keyed by the registered INTEGER, so
+  // a text value is unregistered and refused below. See own-entry.ts.
+  const kty = ownIntEntry(COSE_TO_KTY, key.get(KEY.kty));
   if (kty === undefined) unsupported("Unknown COSE_Key kty.");
 
   const jwk: Dict = { kty };
@@ -125,7 +128,7 @@ export const coseKeyToJwk = (key: Map<number, unknown>): Dict => {
   if (kty === "EC" || kty === "OKP") {
     // Fail closed, as `kty` does one line up: an unnameable curve label is refused
     // rather than written onto the JWK a caller may act on.
-    const crv = ownEntry(COSE_TO_CRV, key.get(KEY.crv));
+    const crv = ownIntEntry(COSE_TO_CRV, key.get(KEY.crv));
     if (crv === undefined) unsupported("Unknown COSE_Key crv.");
 
     jwk.crv = crv;

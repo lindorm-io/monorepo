@@ -48,7 +48,7 @@ export const foreignEncrypt0 = (
   plaintext: Buffer,
   recipientKid: ForeignRecipientKid = "unprotected",
 ): Buffer => {
-  const declared = coseLabelToEnc(protectedEntries.get(coseByJose("alg")) as number);
+  const declared = coseLabelToEnc(protectedEntries.get(coseByJose("alg")));
   const sealed = resolveContentEncryption(kryptos, undefined);
 
   // The AEAD follows the KEY, and `CweKit.decrypt` follows label 1. A row whose

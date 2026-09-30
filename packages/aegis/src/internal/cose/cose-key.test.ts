@@ -252,6 +252,33 @@ describe("encodeCnf, on keys that are not what they look like", () => {
   });
 });
 
+const foreignCwt = (claims: Map<number | string, unknown>): Buffer =>
+  Buffer.from(
+    encodeCbor(
+      new Tag(
+        COSE_TAG.cwt,
+        new Tag(COSE_TAG.sign1, [
+          encodeProtectedHeader(new Map<number, unknown>([[coseByJose("alg"), -7]])),
+          new Map<number, unknown>([[coseByJose("kid"), Buffer.from("k", "utf8")]]),
+          encodeCbor(claims),
+          Buffer.alloc(8),
+        ]),
+      ),
+    ),
+  );
+
+const withCoseKey = (key: Map<number, unknown>): Buffer =>
+  foreignCwt(
+    new Map<number | string, unknown>([
+      [CNF_LABEL, new Map<number, unknown>([[COSE_CNF_LABELS.jwk, key]])],
+    ]),
+  );
+
+const EC2_KTY = 2;
+const OKP_KTY = 1;
+const P256 = 1;
+const ED25519 = 6;
+
 /**
  * A COSE_Key reaches this codec from a FOREIGN token — `decodeCnf` runs on every
  * CWT carrying a `cnf` embedded key — so every label is a stranger's. The tables
@@ -339,6 +366,91 @@ describe("COSE_Key labels that name an Object.prototype member", () => {
 });
 
 /**
+ * ⭐ THE SAME TABLES, THE OTHER SPELLING. A COSE_Key `kty` is `tstr / int`
+ * (RFC 9052 §7.1 Table 4) and an EC2 `crv` is `int / tstr` (RFC 9053 §7.1.1
+ * Table 19), so a foreign token may write either as text — and a JS object's own
+ * keys are strings, so `Object.hasOwn(COSE_TO_KTY, "2")` is true and a bare index
+ * answers the text `"2"` with integer label 2's `EC`. A text value is legal but
+ * unregistered, so it reaches the same refusal an unknown label does.
+ */
+describe("COSE_Key labels spelled as digit text strings", () => {
+  const X = Buffer.from("x", "utf8");
+  const Y = Buffer.from("y", "utf8");
+
+  // ⚠ An AKP key with its `pub`, because an AKP key needs nothing else: a row that
+  // resolved the text label would decode CLEAN, so the refusal can only be the
+  // kty's own. Spelled `"2"`, the missing curve refuses the map either way.
+  test("a kty of the text `7` is REFUSED, not read as AKP", () => {
+    const key = new Map<number, unknown>([
+      [KTY, "7"],
+      [AKP_PUB, Buffer.from("pub", "utf8")],
+    ]);
+
+    expect(thrownBy(() => coseKeyToJwk(key)).code).toBe("cose_key_unsupported");
+  });
+
+  test("a crv of the text `1` is REFUSED, not read as P-256", () => {
+    const key = new Map<number, unknown>([
+      [KTY, EC2_KTY],
+      [-1, "1"],
+      [-2, X],
+      [-3, Y],
+    ]);
+
+    expect(thrownBy(() => coseKeyToJwk(key)).code).toBe("cose_key_unsupported");
+  });
+
+  // The integer half of the same rule, in the same place: one class of value is
+  // removed and every registered label answers as it did.
+  test("the integer labels 2 and 1 still read back as EC / P-256", () => {
+    const key = new Map<number, unknown>([
+      [KTY, EC2_KTY],
+      [-1, P256],
+      [-2, X],
+      [-3, Y],
+    ]);
+
+    expect(coseKeyToJwk(key)).toEqual({
+      kty: "EC",
+      crv: "P-256",
+      x: B64.encode(X, B64U),
+      y: B64.encode(Y, B64U),
+    });
+  });
+
+  // Through a REAL read door: `CwtKit.decode` needs no key, so a stranger's CWT
+  // reaches this codec on the keyless read as readily as on verify.
+  test.each([
+    [
+      "kty",
+      new Map<number, unknown>([
+        [KTY, "2"],
+        [-1, P256],
+        [-2, X],
+        [-3, Y],
+      ]),
+    ],
+    [
+      "crv",
+      new Map<number, unknown>([
+        [KTY, EC2_KTY],
+        [-1, "1"],
+        [-2, X],
+        [-3, Y],
+      ]),
+    ],
+  ])(
+    "a foreign CWT spelling its cnf key's %s as text is refused at the keyless decode",
+    (_name, key) => {
+      const error = thrownBy(() => CwtKit.decode(withCoseKey(key)));
+
+      expect(error).toBeInstanceOf(AegisError);
+      expect(error.code).toBe("cose_key_unsupported");
+    },
+  );
+});
+
+/**
  * The structural refusals the KEYLESS door owes. `CwtKit.decode` takes no key and
  * checks no signature, so every byte reaching this codec through it is a
  * stranger's, and `decode-cwt-wire.ts` sets the standard: a structure this reader
@@ -346,33 +458,6 @@ describe("COSE_Key labels that name an Object.prototype member", () => {
  * no caller can catch as an `AegisError`.
  */
 describe("a foreign CWT whose cnf is structurally unusable", () => {
-  const foreignCwt = (claims: Map<number | string, unknown>): Buffer =>
-    Buffer.from(
-      encodeCbor(
-        new Tag(
-          COSE_TAG.cwt,
-          new Tag(COSE_TAG.sign1, [
-            encodeProtectedHeader(new Map<number, unknown>([[coseByJose("alg"), -7]])),
-            new Map<number, unknown>([[coseByJose("kid"), Buffer.from("k", "utf8")]]),
-            encodeCbor(claims),
-            Buffer.alloc(8),
-          ]),
-        ),
-      ),
-    );
-
-  const withCoseKey = (key: Map<number, unknown>): Buffer =>
-    foreignCwt(
-      new Map<number | string, unknown>([
-        [CNF_LABEL, new Map<number, unknown>([[COSE_CNF_LABELS.jwk, key]])],
-      ]),
-    );
-
-  const EC2_KTY = 2;
-  const OKP_KTY = 1;
-  const P256 = 1;
-  const ED25519 = 6;
-
   test.each([
     [
       "an EC2 key with no x",

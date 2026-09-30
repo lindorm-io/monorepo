@@ -91,6 +91,6 @@ describe("the content-encryption floor resolves KEY FIRST", () => {
     // management to name there. RFC 9052 §5.2.
     const header = decodeProtectedHeader(splitEncrypt0(token).protectedBstr);
 
-    expect(coseLabelToEnc(header.get(coseByJose("alg")) as number)).toBe("A128GCM");
+    expect(coseLabelToEnc(header.get(coseByJose("alg")))).toBe("A128GCM");
   });
 });
