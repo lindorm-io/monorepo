@@ -29,4 +29,456 @@ exports[`createMockAegis > declares every member of IAegis 1`] = `
 ]
 `;
 
+exports[`createMockAegis > resolves cwe.decrypt to its interface shape 1`] = `
+{
+  "custom": {
+    "protected": {},
+    "unprotected": {},
+  },
+  "payload": {
+    "data": [
+      109,
+      111,
+      99,
+      107,
+      101,
+      100,
+      95,
+      112,
+      97,
+      121,
+      108,
+      111,
+      97,
+      100,
+    ],
+    "type": "Buffer",
+  },
+  "protectedHeader": {
+    "alg": "HS256",
+  },
+  "token": {
+    "data": [
+      109,
+      111,
+      99,
+      107,
+      101,
+      100,
+      95,
+      116,
+      111,
+      107,
+      101,
+      110,
+    ],
+    "type": "Buffer",
+  },
+  "unprotectedHeader": {},
+}
+`;
+
+exports[`createMockAegis > resolves cwe.encrypt to its interface shape 1`] = `
+{
+  "format": "cwe",
+  "token": "mocked_token",
+}
+`;
+
+exports[`createMockAegis > resolves cwm.sign to its interface shape 1`] = `
+{
+  "expiresAt": 2999-01-01T00:00:00.000Z,
+  "expiresIn": 999,
+  "expiresOn": 9999,
+  "format": "cwm",
+  "objectId": "mocked_object_id",
+  "token": "mocked_token",
+  "tokenId": "mocked_token_id",
+}
+`;
+
+exports[`createMockAegis > resolves cwm.verify to its interface shape 1`] = `
+{
+  "custom": {
+    "protected": {},
+    "unprotected": {},
+  },
+  "payload": {
+    "sub": "verified_subject",
+  },
+  "protectedHeader": {
+    "alg": "HS256",
+  },
+  "token": {
+    "data": [
+      109,
+      111,
+      99,
+      107,
+      101,
+      100,
+      95,
+      116,
+      111,
+      107,
+      101,
+      110,
+    ],
+    "type": "Buffer",
+  },
+  "unprotectedHeader": {},
+}
+`;
+
+exports[`createMockAegis > resolves cws.sign to its interface shape 1`] = `
+{
+  "expiresAt": 2999-01-01T00:00:00.000Z,
+  "expiresIn": 999,
+  "expiresOn": 9999,
+  "format": "cws",
+  "objectId": "mocked_object_id",
+  "token": "mocked_token",
+  "tokenId": "mocked_token_id",
+}
+`;
+
+exports[`createMockAegis > resolves cws.verify to its interface shape 1`] = `
+{
+  "custom": {
+    "protected": {},
+    "unprotected": {},
+  },
+  "payload": {
+    "data": [
+      118,
+      101,
+      114,
+      105,
+      102,
+      105,
+      101,
+      100,
+      95,
+      112,
+      97,
+      121,
+      108,
+      111,
+      97,
+      100,
+    ],
+    "type": "Buffer",
+  },
+  "protectedHeader": {
+    "alg": "HS256",
+  },
+  "token": {
+    "data": [
+      109,
+      111,
+      99,
+      107,
+      101,
+      100,
+      95,
+      116,
+      111,
+      107,
+      101,
+      110,
+    ],
+    "type": "Buffer",
+  },
+  "unprotectedHeader": {},
+}
+`;
+
+exports[`createMockAegis > resolves cwt.sign to its interface shape 1`] = `
+{
+  "expiresAt": 2999-01-01T00:00:00.000Z,
+  "expiresIn": 999,
+  "expiresOn": 9999,
+  "format": "cwt",
+  "objectId": "mocked_object_id",
+  "token": "mocked_token",
+  "tokenId": "mocked_token_id",
+}
+`;
+
+exports[`createMockAegis > resolves cwt.verify to its interface shape 1`] = `
+{
+  "custom": {
+    "protected": {},
+    "unprotected": {},
+  },
+  "payload": {
+    "sub": "verified_subject",
+  },
+  "protectedHeader": {
+    "alg": "HS256",
+  },
+  "token": {
+    "data": [
+      109,
+      111,
+      99,
+      107,
+      101,
+      100,
+      95,
+      116,
+      111,
+      107,
+      101,
+      110,
+    ],
+    "type": "Buffer",
+  },
+  "unprotectedHeader": {},
+}
+`;
+
+exports[`createMockAegis > resolves decrypt to its interface shape 1`] = `
+{
+  "format": "jwe",
+  "header": {
+    "algorithm": "HS256",
+    "baseFormat": undefined,
+    "certificateChain": undefined,
+    "certificateThumbprint": undefined,
+    "certificateThumbprintSha1": undefined,
+    "certificateUrl": undefined,
+    "contentType": undefined,
+    "critical": [],
+    "encryption": undefined,
+    "headerType": undefined,
+    "initialisationVector": undefined,
+    "jwk": undefined,
+    "jwksUri": undefined,
+    "keyId": undefined,
+    "objectId": undefined,
+    "partyProducer": undefined,
+    "partyRecipient": undefined,
+    "pbkdfIterations": undefined,
+    "pbkdfSalt": undefined,
+    "publicEncryptionJwk": undefined,
+    "publicEncryptionTag": undefined,
+    "tokenType": undefined,
+  },
+  "payload": "mocked_payload",
+  "token": "mocked_token",
+}
+`;
+
+exports[`createMockAegis > resolves encrypt to its interface shape 1`] = `
+{
+  "format": "jwe",
+  "token": "mocked_token",
+}
+`;
+
+exports[`createMockAegis > resolves jwe.decrypt to its interface shape 1`] = `
+{
+  "custom": {
+    "header": {},
+  },
+  "header": {
+    "alg": "HS256",
+  },
+  "payload": {
+    "data": [
+      109,
+      111,
+      99,
+      107,
+      101,
+      100,
+      95,
+      112,
+      97,
+      121,
+      108,
+      111,
+      97,
+      100,
+    ],
+    "type": "Buffer",
+  },
+  "token": "mocked_token",
+}
+`;
+
+exports[`createMockAegis > resolves jwe.encrypt to its interface shape 1`] = `
+{
+  "format": "jwe",
+  "token": "mocked_token",
+}
+`;
+
+exports[`createMockAegis > resolves jws.sign to its interface shape 1`] = `
+{
+  "expiresAt": 2999-01-01T00:00:00.000Z,
+  "expiresIn": 999,
+  "expiresOn": 9999,
+  "format": "jws",
+  "objectId": "mocked_object_id",
+  "token": "mocked_token",
+  "tokenId": "mocked_token_id",
+}
+`;
+
+exports[`createMockAegis > resolves jws.verify to its interface shape 1`] = `
+{
+  "custom": {
+    "header": {},
+  },
+  "header": {
+    "alg": "HS256",
+  },
+  "payload": {
+    "data": [
+      118,
+      101,
+      114,
+      105,
+      102,
+      105,
+      101,
+      100,
+      95,
+      112,
+      97,
+      121,
+      108,
+      111,
+      97,
+      100,
+    ],
+    "type": "Buffer",
+  },
+  "token": "mocked_token",
+}
+`;
+
+exports[`createMockAegis > resolves jwt.sign to its interface shape 1`] = `
+{
+  "expiresAt": 2999-01-01T00:00:00.000Z,
+  "expiresIn": 999,
+  "expiresOn": 9999,
+  "format": "jwt",
+  "objectId": "mocked_object_id",
+  "token": "mocked_token",
+  "tokenId": "mocked_token_id",
+}
+`;
+
+exports[`createMockAegis > resolves jwt.verify to its interface shape 1`] = `
+{
+  "custom": {
+    "header": {},
+  },
+  "header": {
+    "alg": "HS256",
+  },
+  "payload": {
+    "sub": "verified_subject",
+  },
+  "token": "mocked_token",
+}
+`;
+
+exports[`createMockAegis > resolves mint to its interface shape 1`] = `
+{
+  "expiresAt": 2999-01-01T00:00:00.000Z,
+  "expiresIn": 999,
+  "expiresOn": 9999,
+  "format": "jwt",
+  "objectId": "mocked_object_id",
+  "token": "mocked_token",
+  "tokenId": "mocked_token_id",
+}
+`;
+
+exports[`createMockAegis > resolves parse to its interface shape 1`] = `
+{
+  "claims": {},
+  "custom": {},
+  "format": "jwt",
+  "header": {
+    "algorithm": "HS256",
+    "baseFormat": undefined,
+    "certificateChain": undefined,
+    "certificateThumbprint": undefined,
+    "certificateThumbprintSha1": undefined,
+    "certificateUrl": undefined,
+    "contentType": undefined,
+    "critical": [],
+    "encryption": undefined,
+    "headerType": undefined,
+    "initialisationVector": undefined,
+    "jwk": undefined,
+    "jwksUri": undefined,
+    "keyId": undefined,
+    "objectId": undefined,
+    "partyProducer": undefined,
+    "partyRecipient": undefined,
+    "pbkdfIterations": undefined,
+    "pbkdfSalt": undefined,
+    "publicEncryptionJwk": undefined,
+    "publicEncryptionTag": undefined,
+    "tokenType": undefined,
+  },
+  "token": "mocked_token",
+}
+`;
+
+exports[`createMockAegis > resolves registerProfile to its interface shape 1`] = `undefined`;
+
+exports[`createMockAegis > resolves sign to its interface shape 1`] = `
+{
+  "expiresAt": 2999-01-01T00:00:00.000Z,
+  "expiresIn": 999,
+  "expiresOn": 9999,
+  "format": "jwt",
+  "objectId": "mocked_object_id",
+  "token": "mocked_token",
+  "tokenId": "mocked_token_id",
+}
+`;
+
+exports[`createMockAegis > resolves verify to its interface shape 1`] = `
+{
+  "claims": {
+    "subject": "verified_subject",
+  },
+  "custom": {},
+  "format": "jwt",
+  "header": {
+    "algorithm": "HS256",
+    "baseFormat": undefined,
+    "certificateChain": undefined,
+    "certificateThumbprint": undefined,
+    "certificateThumbprintSha1": undefined,
+    "certificateUrl": undefined,
+    "contentType": undefined,
+    "critical": [],
+    "encryption": undefined,
+    "headerType": undefined,
+    "initialisationVector": undefined,
+    "jwk": undefined,
+    "jwksUri": undefined,
+    "keyId": undefined,
+    "objectId": undefined,
+    "partyProducer": undefined,
+    "partyRecipient": undefined,
+    "pbkdfIterations": undefined,
+    "pbkdfSalt": undefined,
+    "publicEncryptionJwk": undefined,
+    "publicEncryptionTag": undefined,
+    "tokenType": undefined,
+  },
+  "token": "mocked_token",
+}
+`;
+
 exports[`createMockAegis > supplies issuer as a string 1`] = `"https://test.lindorm.io/"`;

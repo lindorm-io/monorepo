@@ -1,44 +1,99 @@
 import type { IAesKit } from "@lindorm/aes";
-import type { IAegis } from "../interfaces/index.js";
 import type {
-  CoseDecryptedEncryptedToken,
+  IAegis,
+  IAegisAes,
+  IAegisCwe,
+  IAegisCwm,
+  IAegisCws,
+  IAegisCwt,
+  IAegisJwe,
+  IAegisJws,
+  IAegisJwt,
+} from "../interfaces/index.js";
+import type {
   CoseHeaderBuckets,
-  CoseVerifiedStructuredToken,
-  CoseVerifiedUnstructuredToken,
-  EncryptedToken,
+  DomainTokenHeader,
+  JoseHeaderBuckets,
   SignedToken,
 } from "../types/index.js";
 
+/** Any member of `IAegis` or of one of its namespaces. */
+type AegisArm = (...args: Array<any>) => any;
+
 /**
- * The mock is returned AS `IAegis` with no widening cast, so the compiler refuses
- * a member the interface declares and the factory omits — the completeness check
- * `create-mock-aegis.test.ts` then repeats at runtime for "is it a mock function".
+ * Every arm is typed by the interface member it stands in for, so a default that
+ * drifts from `IAegis` is a compile error: `resolves<IAegisJwe["encrypt"]>` takes
+ * an `EncryptedToken` and nothing else. The `IAegis` return type adds the
+ * completeness half — a member the interface declares and the factory omits is
+ * refused — and `create-mock-aegis.test.ts` repeats both at runtime, for "is it a
+ * mock function" and "what does it resolve".
+ *
+ * ⚠ EVERY DEFAULT BELOW IS SNAPSHOTTED, and `verify`'s across a package boundary:
+ * `create-mock-aegis.test.ts`, plus
+ * `pylon/src/middleware/common/__snapshots__/create-token-middleware.test.ts.snap`.
  */
 export const _createMockAegis = (mockFn: () => any, aesKit: IAesKit): IAegis => {
-  const impl = (fn: (...args: Array<any>) => any): any => {
+  /**
+   * ⚠ `fn` is NOT typed by `F`, and cannot be: the aes arms forward to a real
+   * `IAesKit` and `IAegisAes.encrypt` declares four overloads, so no single
+   * signature is assignable to the member. `F` types the ARM, which is what a
+   * caller sees.
+   */
+  const impl = <F extends AegisArm>(fn: AegisArm): F => {
     const m = mockFn();
     m.mockImplementation(fn);
     return m;
   };
-  const resolves = <T>(value: T): any => {
+  /**
+   * ⚠ A GENERIC ARM RESOLVES ITS TYPE PARAMETER TO THE CONSTRAINT, not to the
+   * declaration's default: `IAegisJwe["decrypt"]` asks for `payload: TokenContent`
+   * rather than `payload: Buffer`, so one default serves every instantiation.
+   */
+  const resolves = <F extends AegisArm>(value: Awaited<ReturnType<F>>): F => {
     const m = mockFn();
     m.mockResolvedValue(value);
     return m;
   };
-  const returns = <T>(value: T): any => {
+  const returns = <F extends AegisArm>(value: ReturnType<F>): F => {
     const m = mockFn();
     m.mockReturnValue(value);
     return m;
   };
 
-  // COSE-only: the four arms that spread it are `cwe`/`cwm`/`cws`/`cwt`. A JOSE
-  // kit result reports ONE header (`types/header/wire-buckets.ts#JoseHeaderBuckets`),
-  // so this value is not assignable to a JOSE arm — the ⚠⚠ block below says why
-  // the JOSE arms are unannotated.
+  const joseBuckets: JoseHeaderBuckets = {
+    header: { alg: "HS256" },
+    custom: { header: {} },
+  };
+
   const coseBuckets: CoseHeaderBuckets = {
     protectedHeader: { alg: "HS256" },
     unprotectedHeader: {},
     custom: { protected: {}, unprotected: {} },
+  };
+
+  const domainHeader: DomainTokenHeader = {
+    algorithm: "HS256",
+    baseFormat: undefined,
+    certificateChain: undefined,
+    certificateThumbprint: undefined,
+    certificateThumbprintSha1: undefined,
+    certificateUrl: undefined,
+    contentType: undefined,
+    critical: [],
+    encryption: undefined,
+    headerType: undefined,
+    initialisationVector: undefined,
+    jwk: undefined,
+    jwksUri: undefined,
+    keyId: undefined,
+    objectId: undefined,
+    partyProducer: undefined,
+    partyRecipient: undefined,
+    pbkdfIterations: undefined,
+    pbkdfSalt: undefined,
+    publicEncryptionJwk: undefined,
+    publicEncryptionTag: undefined,
+    tokenType: undefined,
   };
 
   const signed = (format: SignedToken["format"]): SignedToken => ({
@@ -55,129 +110,99 @@ export const _createMockAegis = (mockFn: () => any, aesKit: IAesKit): IAegis => 
     issuer: "https://test.lindorm.io/",
 
     aes: {
-      encrypt: impl((data: any, mode?: string) =>
+      encrypt: impl<IAegisAes["encrypt"]>((data: any, mode?: string) =>
         Promise.resolve(aesKit.encrypt(data, mode as any)),
       ),
-      decrypt: impl((data: any) => Promise.resolve(aesKit.decrypt(data))),
+      decrypt: impl<IAegisAes["decrypt"]>((data: any) =>
+        Promise.resolve(aesKit.decrypt(data)),
+      ),
     },
 
     cwe: {
-      encrypt: resolves<EncryptedToken>({ format: "cwe", token: "mocked_token" }),
-      decrypt: resolves<CoseDecryptedEncryptedToken>({
+      encrypt: resolves<IAegisCwe["encrypt"]>({ format: "cwe", token: "mocked_token" }),
+      decrypt: resolves<IAegisCwe["decrypt"]>({
         ...coseBuckets,
         payload: Buffer.from("mocked_payload"),
         token: Buffer.from("mocked_token"),
       }),
     },
     cwm: {
-      sign: resolves(signed("cwm")),
-      verify: resolves<CoseVerifiedStructuredToken>({
+      sign: resolves<IAegisCwm["sign"]>(signed("cwm")),
+      verify: resolves<IAegisCwm["verify"]>({
         ...coseBuckets,
         payload: { sub: "verified_subject" },
         token: Buffer.from("mocked_token"),
       }),
     },
     cws: {
-      sign: resolves(signed("cws")),
-      verify: resolves<CoseVerifiedUnstructuredToken>({
+      sign: resolves<IAegisCws["sign"]>(signed("cws")),
+      verify: resolves<IAegisCws["verify"]>({
         ...coseBuckets,
         payload: Buffer.from("verified_payload"),
         token: Buffer.from("mocked_token"),
       }),
     },
     cwt: {
-      sign: resolves(signed("cwt")),
-      verify: resolves<CoseVerifiedStructuredToken>({
+      sign: resolves<IAegisCwt["sign"]>(signed("cwt")),
+      verify: resolves<IAegisCwt["verify"]>({
         ...coseBuckets,
         payload: { sub: "verified_subject" },
         token: Buffer.from("mocked_token"),
       }),
     },
 
-    // ⚠⚠ THE SIX JOSE ARMS BELOW TEACH A DIFFERENT RESULT SHAPE FROM THEIR COSE
-    // TWINS, and the divergence is stale rather than intended. The COSE arms above
-    // resolve the real kit shape — the two wire header buckets plus a WIRE-keyed
-    // `payload` (`CoseVerifiedStructuredToken`) — while these resolve `{ decoded,
-    // header, payload }` with `payload.subject` DOMAIN-keyed. `decoded` is not a
-    // member of any current result type, and `jwt.verify`'s real payload is
-    // wire-keyed (`sub`), so a consumer that reads the mock to learn the contract
-    // learns two contradictory ones for the same operation.
-    //
-    // ⛔ NOT CORRECTED HERE, and NOT because pylon pins them — measured, it does
-    // not: `verified_payload` and `mocked_object_id` appear ZERO times in
-    // `pylon/src/**/*.snap` (the one pylon snapshot of this factory is the DOMAIN
-    // `verify` default noted below, which is why that one carries a constraint and
-    // these do not). What blocks it is that `resolves<T>` returns `any`, so the
-    // `IAegis` return type checks member PRESENCE and never member SHAPE — only
-    // the arms that annotate (`resolves<SignedToken>(…)`) are held to a contract,
-    // and correcting these six needs that annotation plus a test asserting a
-    // resolved shape, which `create-mock-aegis.test.ts` does not yet do.
     jwe: {
-      encrypt: resolves({ token: "mocked_token" }),
-      decrypt: resolves({
-        decoded: {},
-        header: {},
-        payload: "mocked_payload",
+      encrypt: resolves<IAegisJwe["encrypt"]>({ format: "jwe", token: "mocked_token" }),
+      decrypt: resolves<IAegisJwe["decrypt"]>({
+        ...joseBuckets,
+        payload: Buffer.from("mocked_payload"),
+        token: "mocked_token",
       }),
     },
     jws: {
-      sign: resolves({
-        objectId: "mocked_object_id",
+      sign: resolves<IAegisJws["sign"]>(signed("jws")),
+      verify: resolves<IAegisJws["verify"]>({
+        ...joseBuckets,
+        payload: Buffer.from("verified_payload"),
         token: "mocked_token",
-      }),
-      verify: resolves({
-        decoded: {},
-        header: {},
-        payload: "verified_payload",
       }),
     },
     jwt: {
-      sign: resolves({
-        expiresAt: new Date("2999-01-01T00:00:00.000Z"),
-        expiresIn: 999,
-        expiresOn: 9999,
-        objectId: "mocked_object_id",
+      sign: resolves<IAegisJwt["sign"]>(signed("jwt")),
+      verify: resolves<IAegisJwt["verify"]>({
+        ...joseBuckets,
+        payload: { sub: "verified_subject" },
         token: "mocked_token",
-        tokenId: "mocked_token_id",
-      }),
-      verify: resolves({
-        decoded: {},
-        header: {},
-        payload: { subject: "verified_subject" },
       }),
     },
 
-    registerProfile: mockFn(),
+    registerProfile: returns<IAegis["registerProfile"]>(undefined),
 
-    sign: resolves(signed("jwt")),
+    sign: resolves<IAegis["sign"]>(signed("jwt")),
 
-    encrypt: resolves<EncryptedToken>({ format: "jwe", token: "mocked_token" }),
+    encrypt: resolves<IAegis["encrypt"]>({ format: "jwe", token: "mocked_token" }),
 
-    decrypt: resolves({
+    decrypt: resolves<IAegis["decrypt"]>({
       format: "jwe",
-      header: {},
+      header: domainHeader,
       payload: "mocked_payload",
       token: "mocked_token",
     }),
 
-    mint: resolves(signed("jwt")),
+    mint: resolves<IAegis["mint"]>(signed("jwt")),
 
-    // The domain-result members state `header: {}` rather than a full
-    // `DomainTokenHeader`. pylon snapshots this verify default verbatim
-    // (pylon/src/middleware/common/__snapshots__/create-token-middleware.test.ts.snap),
-    // so widening it is a cross-package break.
-    verify: resolves({
+    verify: resolves<IAegis["verify"]>({
       format: "jwt",
-      header: {},
+      header: domainHeader,
       claims: { subject: "verified_subject" },
       custom: {},
       token: "mocked_token",
     }),
 
     // parse is a SYNCHRONOUS keyless read — a plain mockReturnValue, not resolves.
-    parse: returns({
+    parse: returns<IAegis["parse"]>({
       format: "jwt",
-      header: {},
+      header: domainHeader,
       claims: {},
       custom: {},
       token: "mocked_token",
