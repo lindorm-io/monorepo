@@ -75,7 +75,7 @@ export const applyVerifyPolicy = ({
 }: {
   /**
    * The WIRE-keyed claim dict the matcher pass reads, with temporal claims as
-   * `Date`s; the spaced lists are lifted off it per call
+   * `Date`s; a list claim's string form is lifted off it per call
    * ({@link withSpacedArrays}). Both wires produce this; only the key spelling
    * differs, which is what `nameOf` accounts for.
    */
@@ -176,10 +176,10 @@ export const applyVerifyPolicy = ({
   // member is answered with the matcher's own error" and "a caller negating a
   // value that is not a condition is answered with the matcher's own error".
   try {
-    // ⚠ The spaced lists are lifted from their wire string to the list it
-    // spells before the predicate runs ({@link withSpacedArrays}): the caller's
-    // containment matcher compiles to a `$all` (`lift-claim-matcher.ts`), which
-    // no string satisfies.
+    // ⚠ A list claim's string form — a spaced `scope`, a lone `aud` — is lifted
+    // to the list it stands for before the predicate runs
+    // ({@link withSpacedArrays}): the caller's containment matcher compiles to a
+    // `$all` (`lift-claim-matcher.ts`), which no string satisfies.
     validate(
       withSpacedArrays(wireClaims, nameOf),
       predicate as never,
@@ -206,9 +206,9 @@ export const applyVerifyPolicy = ({
         invalid: invalid?.map((key) => domainByWire.get(key) ?? key),
         format,
       },
-      // `debug` stays WIRE-spelled and carries the values. A spaced claim's
-      // value is the lifted list ({@link withSpacedArrays}), not the token's
-      // own string.
+      // `debug` stays WIRE-spelled and carries the values. A lifted claim's
+      // value is the list ({@link withSpacedArrays}), not the token's own
+      // string.
       debug: { invalid: err.debug?.invalid },
       title: "Claims Invalid",
       details:

@@ -46,6 +46,40 @@ Feature: The claim matcher a verify is asked beyond the floor
       And I verify the token
       Then the verified token is a "cwt"
 
+  Rule: a caller asserting one audience is answered by a token whose audience is that one string
+
+    A lone audience rides as the string itself, and it is what an issuer with one
+    resource writes. The question the matcher puts is the same for both forms —
+    is the verifier among the audiences — so the string is read as the
+    one-element list it names before the question is put. A token refused for
+    its shaping alone would be the ordinary single-resource token every such
+    deployment presents.
+
+    Background:
+      Given the wire claims
+        | iss | "https://test.lindorm.io/" |
+        | sub | "user-1"                   |
+        | aud | "https://rs.lindorm.io/"   |
+        | jti | "token-1"                  |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+      And the verifier asserts
+        """json
+        { "audience": "https://rs.lindorm.io/" }
+        """
+
+    @RFC-7519
+    Scenario: jose: a verifier named by the lone audience string is answered by the token (RFC-7519 §4.1.3)
+      When I sign the wire claims as a claims token on the jose wire
+      And I verify the token
+      Then the verified token is a "jwt"
+
+    @RFC-8392
+    Scenario: cose: a verifier named by the lone audience string is answered by the token (RFC-8392 §3.1.3)
+      When I sign the wire claims as a claims token on the cose wire
+      And I verify the token
+      Then the verified token is a "cwt"
+
   Rule: a caller asserting an audience the token does not name is refused
 
     Containment is only a check if the absent case fails. A matcher relaxed

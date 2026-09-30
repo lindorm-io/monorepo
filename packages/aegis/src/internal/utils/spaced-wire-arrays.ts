@@ -2,20 +2,39 @@ import { isString } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import { CLAIM_SPECS, type NameSelector } from "../claims/claims-registry.js";
 import { decodeClaim } from "../claims/translate.js";
+import type { ArrayScalar } from "../registry/claim-spec.js";
 
 /**
- * Lift every spaced array claim of a WIRE payload from its space-delimited
- * string (RFC 8693 §4.2) to the list it spells — the sibling of `withJoseDates`
- * (`internal/utils/jose-dates.ts`): that helper puts both wires' temporal
- * claims in one shape for the matcher pass, and this one does the same for the
- * spaced lists, so a caller's containment matcher (`{ scope: "read" }`, lifted
- * to a `$all` by `lift-claim-matcher.ts`) is answered against the LIST rather
- * than against one string no list operator matches.
+ * Which array policies have a STRING wire form standing for a list: the
+ * space-delimited one (RFC 8693 §4.2) and the lone audience (RFC 7519 §4.1.3).
+ * A `strict` array has none, so its scalar is not a list this helper may invent
+ * boundaries for.
  *
- * ⚠ Registry-driven in both halves: WHICH claims are spaced comes from the
- * codec cell, and the split IS the read side's own decoder ({@link decodeClaim}),
- * so what the matcher sees cannot drift from what a verify result reports for
- * the same wire value.
+ * ⚠ A table over {@link ArrayScalar}, not a set of the two: a new policy does
+ * not compile until this answers for it, where a set would leave the new claim's
+ * string form facing a list operator no string satisfies.
+ */
+const LIFTED: Readonly<Record<ArrayScalar, boolean>> = {
+  spaced: true,
+  strict: false,
+  wrap: true,
+};
+
+/**
+ * Lift every array claim of a WIRE payload whose string form stands for a list
+ * — `scope`'s space-delimited string (RFC 8693 §4.2) to the list it spells, a
+ * lone `aud` (RFC 7519 §4.1.3) to the one-element list it names — the sibling of
+ * `withJoseDates` (`internal/utils/jose-dates.ts`): that helper puts both wires'
+ * temporal claims in one shape for the matcher pass, and this one does the same
+ * for the lists, so a caller's containment matcher (`{ scope: "read" }`,
+ * `{ audience: "https://rs.lindorm.io/" }`, lifted to a `$all` by
+ * `lift-claim-matcher.ts`) is answered against the LIST rather than against one
+ * string no list operator matches.
+ *
+ * ⚠ Registry-driven in both halves: WHICH claims lift comes from the codec cell
+ * ({@link LIFTED}), and the lift IS the read side's own decoder
+ * ({@link decodeClaim}), so what the matcher sees cannot drift from what a
+ * verify result reports for the same wire value.
  *
  * ⚠ A value that is not a string is carried untouched: an array is already the
  * matcher's shape, and anything else must keep failing the matchers as itself.
@@ -26,7 +45,7 @@ export const withSpacedArrays = (payload: Dict, nameOf: NameSelector): Dict => {
   for (const spec of CLAIM_SPECS) {
     if (spec.codec.kind !== "array") continue;
     if (spec.codec.of !== undefined) continue;
-    if (spec.codec.scalar !== "spaced") continue;
+    if (!LIFTED[spec.codec.scalar]) continue;
 
     const key = nameOf(spec);
 
