@@ -31,6 +31,7 @@ export class AegisConfidentialitySteps extends AegisStepsBase {
 
   @When("I encrypt the text on the {wire} wire")
   async iEncryptTheText(wire: Wire): Promise<void> {
+    this.assertScenarioWire(wire);
     const format = SEALED_FORMAT[wire];
     const { text } = this.ctx;
 
@@ -50,6 +51,7 @@ export class AegisConfidentialitySteps extends AegisStepsBase {
 
   @When("I sign the payload as opaque content on the {wire} wire")
   async iSignThePayloadAsOpaqueContent(wire: Wire): Promise<void> {
+    this.assertScenarioWire(wire);
     const format = OPAQUE_FORMAT[wire];
 
     const signed = await this.attempt(() =>

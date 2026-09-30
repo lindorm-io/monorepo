@@ -32,6 +32,7 @@ export class AegisOpaqueAndRawDoorsSteps extends AegisStepsBase {
 
   @When("I sign the text as opaque content on the {wire} wire")
   async iSignTheTextAsOpaqueContent(wire: Wire): Promise<void> {
+    this.assertScenarioWire(wire);
     const format = OPAQUE_FORMAT[wire];
     const { text } = this.ctx;
 

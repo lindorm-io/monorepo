@@ -75,6 +75,7 @@ export class AegisRoundTripSteps extends AegisStepsBase {
 
   @When("I mint the content under the {string} profile on the {wire} wire")
   async iMintTheContent(profile: string, wire: Wire): Promise<void> {
+    this.assertScenarioWire(wire);
     const format = SIGNED_FORMAT[wire];
 
     const minted = await this.attempt(() =>

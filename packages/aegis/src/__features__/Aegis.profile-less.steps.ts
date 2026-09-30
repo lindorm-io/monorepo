@@ -107,6 +107,7 @@ export class AegisProfileLessSteps extends AegisStepsBase {
 
   @When("I sign the claims without a profile on the {wire} wire")
   async iSignTheClaims(wire: Wire): Promise<void> {
+    this.assertScenarioWire(wire);
     const format = SIGNED_FORMAT[wire];
 
     const signed = await this.attempt(() =>
@@ -139,6 +140,7 @@ export class AegisProfileLessSteps extends AegisStepsBase {
 
   @When("I encrypt the data on the {wire} wire")
   async iEncryptTheData(wire: Wire): Promise<void> {
+    this.assertScenarioWire(wire);
     await this.encrypt(wire, undefined);
   }
 
@@ -147,6 +149,7 @@ export class AegisProfileLessSteps extends AegisStepsBase {
     wire: Wire,
     partyProducer: string,
   ): Promise<void> {
+    this.assertScenarioWire(wire);
     await this.encrypt(wire, partyProducer);
   }
 

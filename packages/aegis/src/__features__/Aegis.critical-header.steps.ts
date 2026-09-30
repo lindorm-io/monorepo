@@ -112,6 +112,7 @@ export class AegisCriticalHeaderSteps extends AegisStepsBase {
 
   @When("I verify the token as a claims token on the {wire} wire")
   async iVerifyTheTokenAsAClaimsToken(wire: Wire): Promise<void> {
+    this.assertScenarioWire(wire);
     const token = this.token();
     const options = this.rawClaimsDoorOptions();
 
@@ -127,6 +128,7 @@ export class AegisCriticalHeaderSteps extends AegisStepsBase {
 
   @When("I verify the token as opaque content on the {wire} wire")
   async iVerifyTheTokenAsOpaqueContent(wire: Wire): Promise<void> {
+    this.assertScenarioWire(wire);
     const token = this.token();
     const options = this.rawOpaqueDoorOptions();
 
@@ -141,6 +143,7 @@ export class AegisCriticalHeaderSteps extends AegisStepsBase {
 
   @When("I encrypt the text as sealed content on the {wire} wire")
   async iEncryptTheTextAsSealedContent(wire: Wire): Promise<void> {
+    this.assertScenarioWire(wire);
     const { text } = this.ctx;
 
     if (text === undefined) {
@@ -152,6 +155,7 @@ export class AegisCriticalHeaderSteps extends AegisStepsBase {
 
   @When("I encrypt the data as sealed content on the {wire} wire")
   async iEncryptTheDataAsSealedContent(wire: Wire): Promise<void> {
+    this.assertScenarioWire(wire);
     await this.seal(wire, this.ctx.claims);
   }
 

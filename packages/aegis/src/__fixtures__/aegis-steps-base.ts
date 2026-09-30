@@ -1,4 +1,4 @@
-import { AbstractSteps, Inject } from "@lindorm/gherkin";
+import { AbstractSteps, Inject, ScenarioInfo } from "@lindorm/gherkin";
 import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
 import { expect } from "vitest";
@@ -19,11 +19,19 @@ import type {
 } from "../types/index.js";
 import { AegisContext, type RawDoorResult } from "./aegis-context.js";
 import { inspectToken, type TokenInspection } from "./inspect-token.js";
-import { rawBucketOf, type RawBucket, type RawPart } from "./raw-bucket.js";
+import { rawBucketOf, type RawBucket, type RawPart, type Wire } from "./raw-bucket.js";
+import { assertNameStatesWire } from "./scenario-wire.js";
 
 @AbstractSteps()
 export abstract class AegisStepsBase {
   @Inject(AegisContext) protected readonly ctx!: AegisContext;
+
+  @Inject(ScenarioInfo) protected readonly info!: ScenarioInfo;
+
+  /** The wire the step was handed, judged against the wire its scenario's name states. */
+  protected assertScenarioWire(wire: Wire): void {
+    assertNameStatesWire(this.info.scenarioName, wire);
+  }
 
   /** Run an act, keeping its refusal for a Then to judge. `undefined` means it refused. */
   protected async attempt<T>(act: () => Promise<T>): Promise<T | undefined> {

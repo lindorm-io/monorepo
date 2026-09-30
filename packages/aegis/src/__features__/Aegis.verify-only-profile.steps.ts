@@ -38,6 +38,7 @@ export class AegisVerifyOnlyProfileSteps extends AegisStepsBase {
 
   @When("a third party signs the wire claims on the {wire} wire")
   async aThirdPartySignsTheWireClaims(wire: Wire): Promise<void> {
+    this.assertScenarioWire(wire);
     this.ctx.token = await signAsThirdParty(
       wire,
       this.ctx.wireClaims,
@@ -49,6 +50,7 @@ export class AegisVerifyOnlyProfileSteps extends AegisStepsBase {
 
   @When("a third party signs the wire claims on the {wire} wire, typed {string}")
   async aThirdPartySignsTheWireClaimsTyped(wire: Wire, typ: string): Promise<void> {
+    this.assertScenarioWire(wire);
     this.ctx.token = await signAsThirdParty(
       wire,
       this.ctx.wireClaims,

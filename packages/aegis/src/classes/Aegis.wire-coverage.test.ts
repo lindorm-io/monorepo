@@ -1,6 +1,7 @@
 import { isString, isUndefined } from "@lindorm/is";
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
+import { scenarioWireOf } from "../__fixtures__/scenario-wire.js";
 import { WIRE_TAGS, type Wire } from "../internal/registry/wire.js";
 
 /**
@@ -14,6 +15,11 @@ import { WIRE_TAGS, type Wire } from "../internal/registry/wire.js";
  * so the check is a substring test and never a judgement about prose. A Rule
  * naming no wire is not counted. Most Rules run on both wires, and the share is
  * pinned so that drift is visible in review rather than discovered later.
+ *
+ * A scenario states its wire a SECOND time, in the `{wire}` argument of the steps
+ * it runs, and nothing in the runtime compares the two. Every `{wire}` step must
+ * therefore open by asserting the wire its own scenario's name states, which is
+ * read here off the steps files as text.
  *
  * Reads the feature files as text: `@lindorm/gherkin` drops descriptions before
  * its runtime model exists, so a reason is readable only off the text.
@@ -46,9 +52,6 @@ const KEYWORD = new RegExp(`^(${KEYWORDS.join("|")}):\\s*(.*)$`);
 const DOC_STRING = /^("""|```)/;
 
 const isWire = (cell: string): cell is Wire => WIRE_TAGS.includes(cell as Wire);
-
-const wireOf = (name: string): Wire | undefined =>
-  WIRE_TAGS.find((wire) => name.startsWith(`${wire}: `));
 
 const cellsOf = (row: string): Array<string> =>
   row
@@ -87,7 +90,7 @@ const scanFeature = (file: string, text: string): Array<FeatureRule> => {
   let docString: string | undefined;
 
   const name = (scenario: string): void => {
-    const wire = wireOf(scenario);
+    const wire = scenarioWireOf(scenario);
     if (rule && wire) rule.wires.add(wire);
   };
 
@@ -213,6 +216,75 @@ const RULES: ReadonlyArray<FeatureRule> = FEATURES.flatMap((file) =>
   scanFeature(file, readFileSync(new URL(file, SRC), "utf8")),
 );
 
+/** One `{wire}` step, read off a steps file as text. */
+type WireStep = {
+  /** `__features__/Aegis.x.steps.ts:76` — the step decorator's line. */
+  at: string;
+  /** The cucumber expression the decorator states. */
+  expression: string;
+  /** The parameter `{wire}` binds to, read off the signature. */
+  parameter: string | undefined;
+  /** The first statement of the method body, empty for a body with none. */
+  first: string;
+};
+
+const STEP_DECORATOR = /^@(?:Given|When|Then)\(/;
+const EXPRESSION = /"((?:[^"\\]|\\.)*)"/;
+const WIRE_PARAMETER = /(\w+):\s*Wire\b/;
+
+/**
+ * The `{wire}` steps a file declares. The decorator and the signature are joined
+ * up to the brace that opens the body — a step expression never ends a line with
+ * one — so a step written across several lines reads like a one-liner.
+ */
+const scanSteps = (file: string, text: string): Array<WireStep> => {
+  const lines = text.split("\n");
+  const steps: Array<WireStep> = [];
+
+  for (const [index, raw] of lines.entries()) {
+    if (!STEP_DECORATOR.test(raw.trim())) continue;
+
+    let head = raw.trim();
+    let cursor = index;
+
+    while (!head.endsWith("{") && cursor + 1 < lines.length) {
+      cursor += 1;
+      head = `${head} ${lines[cursor].trim()}`;
+    }
+
+    const expression = EXPRESSION.exec(head)?.[1];
+
+    if (isUndefined(expression) || !expression.includes("{wire}")) continue;
+
+    steps.push({
+      at: `${file}:${index + 1}`,
+      expression,
+      parameter: WIRE_PARAMETER.exec(head)?.[1],
+      first:
+        lines
+          .slice(cursor + 1)
+          .find((line) => line.trim() !== "")
+          ?.trim() ?? "",
+    });
+  }
+
+  return steps;
+};
+
+const STEP_FILES = readdirSync(SRC, { encoding: "utf8", recursive: true })
+  .filter((file) => file.endsWith(".steps.ts"))
+  .sort();
+
+const WIRE_STEPS: ReadonlyArray<WireStep> = STEP_FILES.flatMap((file) =>
+  scanSteps(file, readFileSync(new URL(file, SRC), "utf8")),
+);
+
+/** The statement a `{wire}` step must open with, spelled for its own parameter. */
+const assertionOf = (step: WireStep): string =>
+  isUndefined(step.parameter)
+    ? "this.assertScenarioWire(<the {wire} parameter>);"
+    : `this.assertScenarioWire(${step.parameter});`;
+
 const NAMING = RULES.filter((rule) => rule.wires.size > 0);
 const ONE_WIRE = NAMING.filter((rule) => rule.wires.size < WIRE_TAGS.length);
 const BOTH_WIRES = NAMING.filter((rule) => rule.wires.size === WIRE_TAGS.length);
@@ -255,5 +327,20 @@ describe(`Aegis — wire coverage: ${CENSUS}`, () => {
   // wire half the time.
   test("should state most rules on every wire", () => {
     expect(RATIO).toBeGreaterThan(0.5);
+  });
+
+  // The step argument is the scenario's second statement of its wire, and the
+  // name prefix is the first. A step reading only the argument acts on whichever
+  // wire its sentence names, under a name free to claim the other — so the step
+  // compares the two before it acts, and it does so FIRST: an assertion after
+  // the act judges a token that should never have been written.
+  test("should assert the scenario's wire in every {wire} step", () => {
+    expect(WIRE_STEPS.length).toBeGreaterThan(0);
+    expect(
+      WIRE_STEPS.filter((step) => step.first !== assertionOf(step)).map(
+        (step) =>
+          `${step.at} — "${step.expression}" opens with \`${step.first}\` instead of \`${assertionOf(step)}\``,
+      ),
+    ).toEqual([]);
   });
 });

@@ -40,6 +40,7 @@ export class AegisSignatureProofSteps extends AegisStepsBase {
     wire: Wire,
     typ: string,
   ): Promise<void> {
+    this.assertScenarioWire(wire);
     this.ctx.token = await signAsThirdParty(
       wire,
       this.ctx.wireClaims,

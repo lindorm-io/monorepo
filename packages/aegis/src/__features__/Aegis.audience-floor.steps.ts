@@ -47,6 +47,7 @@ export class AegisAudienceFloorSteps extends AegisStepsBase {
 
   @When("I sign the wire claims as a claims token on the {wire} wire")
   async iSignTheWireClaimsAsAClaimsToken(wire: Wire): Promise<void> {
+    this.assertScenarioWire(wire);
     const format = SIGNED_FORMAT[wire];
 
     const signed = await this.attempt(() =>
