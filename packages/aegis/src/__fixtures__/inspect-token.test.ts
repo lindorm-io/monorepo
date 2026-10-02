@@ -299,25 +299,26 @@ describe("inspectToken", () => {
       });
     });
 
-    test("should state that an opaque JWS body is not JSON", async () => {
+    test("should state that an opaque JWS body is not JSON without quoting the JSON parser", async () => {
       const { token } = await ctx.aegis.jws.sign("just some bytes");
       const inspection = jose(inspectToken(token));
 
       expect(inspection.partCount).toBe(3);
-      if (inspection.payload.readable === true) {
-        throw new Error("an opaque JWS body is not a claims payload");
-      }
-      expect(inspection.payload.reason).toContain("opaque JWS body");
+      expect(inspection.payload).toEqual({
+        readable: false,
+        reason: "the payload is not JSON — it is an opaque JWS body",
+      });
     });
 
-    test("should state that an opaque CWS body is not a claims map", async () => {
+    test("should state that an opaque CWS body is not a claims map without quoting the CBOR decoder", async () => {
       const { token } = await ctx.aegis.cws.sign("just some bytes");
       const inspection = cose(inspectToken(token));
 
-      if (inspection.payload.readable === true) {
-        throw new Error("an opaque CWS body is not a claims payload");
-      }
-      expect(inspection.payload.reason).toContain("not a CBOR map");
+      expect(inspection.payload).toEqual({
+        readable: false,
+        reason:
+          "the payload is not a CBOR map, so it carries no claims to read (it is not decodable CBOR)",
+      });
     });
 
     test("should state that a detached payload has nothing to read", () => {

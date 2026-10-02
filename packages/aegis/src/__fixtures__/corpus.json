@@ -1,0 +1,5555 @@
+{
+  "caseCount": 66,
+  "cases": [
+    {
+      "inspection": {
+        "partCount": 3,
+        "parts": [
+          "eyJhbGciOiJFUzUxMiIsImprdSI6Imh0dHBzOi8vdGVzdC5saW5kb3JtLmlvLy53ZWxsLWtub3duL2p3a3MuanNvbiIsImtpZCI6ImI5ZTdiYjRkLWQzMzItNTVkMi05YjMzLWY5OTBmZjdkYjRjNyIsInR5cCI6IkpXVCJ9",
+          "eyJzdWIiOiJjb3JwdXNfc3ViamVjdF8wMDAxIiwiaWF0IjoxNzA0MDk2MDAwLCJuYmYiOjE3MDQwOTYwMDAsImp0aSI6ImNvcnB1c19qdGlfMDAwMSIsImV4cCI6MTcwNDA5OTYwMCwiaXNzIjoiaHR0cHM6Ly90ZXN0LmxpbmRvcm0uaW8vIn0",
+          "<random:132 bytes>"
+        ],
+        "payload": {
+          "readable": true,
+          "value": {
+            "exp": 1704099600,
+            "iat": 1704096000,
+            "iss": "https://test.lindorm.io/",
+            "jti": "corpus_jti_0001",
+            "nbf": 1704096000,
+            "sub": "corpus_subject_0001"
+          }
+        },
+        "protectedHeader": {
+          "alg": "ES512",
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+          "typ": "JWT"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "mint-default-jwt-ec",
+      "note": "The JOSE baseline: the policy floor profile over an EC signature. Every other JWT row is read against this one.",
+      "profile": "default",
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "jwt",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "jwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0001"
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:529 chars>",
+      "verb": "mint",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 3,
+        "parts": [
+          "eyJhbGciOiJSUzUxMiIsImprdSI6Imh0dHBzOi8vdGVzdC5saW5kb3JtLmlvLy53ZWxsLWtub3duL2p3a3MuanNvbiIsImtpZCI6ImFhYWMyMmIzLTIyNTMtNTU5OC04ZTBjLTE3MzNmYzc0ODEyMiIsInR5cCI6IkpXVCJ9",
+          "eyJzdWIiOiJjb3JwdXNfc3ViamVjdF8wMDAxIiwiaWF0IjoxNzA0MDk2MDAwLCJuYmYiOjE3MDQwOTYwMDAsImp0aSI6ImNvcnB1c19qdGlfMDAwMiIsImV4cCI6MTcwNDA5OTYwMCwiaXNzIjoiaHR0cHM6Ly90ZXN0LmxpbmRvcm0uaW8vIn0",
+          "ZkqR4KYuhCi350hv_9JtRAr54DP2b28t4KlBVC68rq4xI6LI8qETqXoxkpGtL7ZBQpW38rk6_NvnWzSUBoAO0Du6E62Zbe-3tpZoGRXAMB6zRpGBkqL7vR7ThBeBq9pR403k9T2TrXjTtl4TyRg1IG1AapMP84SLRG_cvBtuyJ3OVX9_FojrtYTFPsxtISjNEw2rSACoaBOnNOStGUDy0lBR0yTvlWYfZNYjGoLVPlfOuD5ZtxAyFzJhfv-qYLiLWaaCtHgY_RVQuPVAsJmcIw2WWip_zB-6cslhHJ_wvJMPFwRbRosjieNPdrXoVrr0D1VelM7UXIXSFMrUVwODUMTsykn0XCQoFTn94keIxtdKsasz8cZruDjTPpIKQwIAIxJVOYR6i3eJnG3rRGqrpHaWOL1t-MRoRMw4b0ijkTexkDquFUeQ5m98szVK9O_aSOcmvgTE0GvISGgfIVLc7lYiuRdq074piT0jvjJicf7832aaKof5Dn-y4lo174KsxnIJ0zzpzAkyMF6MypEOIMwjbymztWpU-kMQrskglKN9w5tIGnG1e-Y8YFJlorpFvlBiMt9JIMiaWtZxC3eg10Gfr6BsFR8YRcbrZBHUwRZo2zcbhGgg6_t2AB-4a_qWLSXRP15cP_7gzOwbU_vvxLf3rKuHSIXl9bxN56xx2ns"
+        ],
+        "payload": {
+          "readable": true,
+          "value": {
+            "exp": 1704099600,
+            "iat": 1704096000,
+            "iss": "https://test.lindorm.io/",
+            "jti": "corpus_jti_0002",
+            "nbf": 1704096000,
+            "sub": "corpus_subject_0001"
+          }
+        },
+        "protectedHeader": {
+          "alg": "RS512",
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "aaac22b3-2253-5598-8e0c-1733fc748122",
+          "typ": "JWT"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "mint-default-jwt-rsa",
+      "note": "The same claims under RS512 — an RSA `alg`, a 512-byte signature, and a deterministic one.",
+      "profile": "default",
+      "randomness": {
+        "encrypted": false,
+        "signature": false
+      },
+      "reportedFormat": "jwt",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "jwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0002"
+      },
+      "signAlgorithm": "RS512",
+      "token": "eyJhbGciOiJSUzUxMiIsImprdSI6Imh0dHBzOi8vdGVzdC5saW5kb3JtLmlvLy53ZWxsLWtub3duL2p3a3MuanNvbiIsImtpZCI6ImFhYWMyMmIzLTIyNTMtNTU5OC04ZTBjLTE3MzNmYzc0ODEyMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjb3JwdXNfc3ViamVjdF8wMDAxIiwiaWF0IjoxNzA0MDk2MDAwLCJuYmYiOjE3MDQwOTYwMDAsImp0aSI6ImNvcnB1c19qdGlfMDAwMiIsImV4cCI6MTcwNDA5OTYwMCwiaXNzIjoiaHR0cHM6Ly90ZXN0LmxpbmRvcm0uaW8vIn0.ZkqR4KYuhCi350hv_9JtRAr54DP2b28t4KlBVC68rq4xI6LI8qETqXoxkpGtL7ZBQpW38rk6_NvnWzSUBoAO0Du6E62Zbe-3tpZoGRXAMB6zRpGBkqL7vR7ThBeBq9pR403k9T2TrXjTtl4TyRg1IG1AapMP84SLRG_cvBtuyJ3OVX9_FojrtYTFPsxtISjNEw2rSACoaBOnNOStGUDy0lBR0yTvlWYfZNYjGoLVPlfOuD5ZtxAyFzJhfv-qYLiLWaaCtHgY_RVQuPVAsJmcIw2WWip_zB-6cslhHJ_wvJMPFwRbRosjieNPdrXoVrr0D1VelM7UXIXSFMrUVwODUMTsykn0XCQoFTn94keIxtdKsasz8cZruDjTPpIKQwIAIxJVOYR6i3eJnG3rRGqrpHaWOL1t-MRoRMw4b0ijkTexkDquFUeQ5m98szVK9O_aSOcmvgTE0GvISGgfIVLc7lYiuRdq074piT0jvjJicf7832aaKof5Dn-y4lo174KsxnIJ0zzpzAkyMF6MypEOIMwjbymztWpU-kMQrskglKN9w5tIGnG1e-Y8YFJlorpFvlBiMt9JIMiaWtZxC3eg10Gfr6BsFR8YRcbrZBHUwRZo2zcbhGgg6_t2AB-4a_qWLSXRP15cP_7gzOwbU_vvxLf3rKuHSIXl9bxN56xx2ns",
+      "verb": "mint",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 3,
+        "parts": [
+          "eyJhbGciOiJFZERTQSIsImprdSI6Imh0dHBzOi8vdGVzdC5saW5kb3JtLmlvLy53ZWxsLWtub3duL2p3a3MuanNvbiIsImtpZCI6IjJmYTUyYTkxLTdmNjMtNTczMS1hNTVkLTMwZDM2MzUwYzY0MiIsInR5cCI6IkpXVCJ9",
+          "eyJzdWIiOiJjb3JwdXNfc3ViamVjdF8wMDAxIiwiaWF0IjoxNzA0MDk2MDAwLCJuYmYiOjE3MDQwOTYwMDAsImp0aSI6ImNvcnB1c19qdGlfMDAwMyIsImV4cCI6MTcwNDA5OTYwMCwiaXNzIjoiaHR0cHM6Ly90ZXN0LmxpbmRvcm0uaW8vIn0",
+          "1YqL1dNkJSHd0u0h8D8EI8JQW-HfZssMictkXIlGrUf4qJl5h6Jbd1-t0JhUMaEDpDmqFa_xwz1vvjD6_jqYBQ"
+        ],
+        "payload": {
+          "readable": true,
+          "value": {
+            "exp": 1704099600,
+            "iat": 1704096000,
+            "iss": "https://test.lindorm.io/",
+            "jti": "corpus_jti_0003",
+            "nbf": 1704096000,
+            "sub": "corpus_subject_0001"
+          }
+        },
+        "protectedHeader": {
+          "alg": "EdDSA",
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "2fa52a91-7f63-5731-a55d-30d36350c642",
+          "typ": "JWT"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "mint-default-jwt-okp",
+      "note": "EdDSA over Ed25519 — the OKP header shape, and the smallest deterministic signature aegis emits.",
+      "profile": "default",
+      "randomness": {
+        "encrypted": false,
+        "signature": false
+      },
+      "reportedFormat": "jwt",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "jwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0003"
+      },
+      "signAlgorithm": "EdDSA",
+      "token": "eyJhbGciOiJFZERTQSIsImprdSI6Imh0dHBzOi8vdGVzdC5saW5kb3JtLmlvLy53ZWxsLWtub3duL2p3a3MuanNvbiIsImtpZCI6IjJmYTUyYTkxLTdmNjMtNTczMS1hNTVkLTMwZDM2MzUwYzY0MiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjb3JwdXNfc3ViamVjdF8wMDAxIiwiaWF0IjoxNzA0MDk2MDAwLCJuYmYiOjE3MDQwOTYwMDAsImp0aSI6ImNvcnB1c19qdGlfMDAwMyIsImV4cCI6MTcwNDA5OTYwMCwiaXNzIjoiaHR0cHM6Ly90ZXN0LmxpbmRvcm0uaW8vIn0.1YqL1dNkJSHd0u0h8D8EI8JQW-HfZssMictkXIlGrUf4qJl5h6Jbd1-t0JhUMaEDpDmqFa_xwz1vvjD6_jqYBQ",
+      "verb": "mint",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 3,
+        "parts": [
+          "eyJhbGciOiJIUzI1NiIsImprdSI6Imh0dHBzOi8vdGVzdC5saW5kb3JtLmlvLy53ZWxsLWtub3duL2p3a3MuanNvbiIsImtpZCI6ImQzMmJlZDdiLTQwZDctNTg1MS1hYWQ2LTk1NTg5ZGFkYjY1ZSIsInR5cCI6IkpXVCJ9",
+          "eyJzdWIiOiJjb3JwdXNfc3ViamVjdF8wMDAxIiwiaWF0IjoxNzA0MDk2MDAwLCJuYmYiOjE3MDQwOTYwMDAsImp0aSI6ImNvcnB1c19qdGlfMDAwNCIsImV4cCI6MTcwNDA5OTYwMCwiaXNzIjoiaHR0cHM6Ly90ZXN0LmxpbmRvcm0uaW8vIn0",
+          "z337-XworCnpLUNag5hK8K2M8pO58yrXZqoWsDmmJAw"
+        ],
+        "payload": {
+          "readable": true,
+          "value": {
+            "exp": 1704099600,
+            "iat": 1704096000,
+            "iss": "https://test.lindorm.io/",
+            "jti": "corpus_jti_0004",
+            "nbf": 1704096000,
+            "sub": "corpus_subject_0001"
+          }
+        },
+        "protectedHeader": {
+          "alg": "HS256",
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "d32bed7b-40d7-5851-aad6-95589dadb65e",
+          "typ": "JWT"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "mint-default-jwt-oct",
+      "note": "HS256 — the symmetric header shape on the JOSE wire, which no profile with an algClass floor can reach.",
+      "profile": "default",
+      "randomness": {
+        "encrypted": false,
+        "signature": false
+      },
+      "reportedFormat": "jwt",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "jwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0004"
+      },
+      "signAlgorithm": "HS256",
+      "token": "eyJhbGciOiJIUzI1NiIsImprdSI6Imh0dHBzOi8vdGVzdC5saW5kb3JtLmlvLy53ZWxsLWtub3duL2p3a3MuanNvbiIsImtpZCI6ImQzMmJlZDdiLTQwZDctNTg1MS1hYWQ2LTk1NTg5ZGFkYjY1ZSIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjb3JwdXNfc3ViamVjdF8wMDAxIiwiaWF0IjoxNzA0MDk2MDAwLCJuYmYiOjE3MDQwOTYwMDAsImp0aSI6ImNvcnB1c19qdGlfMDAwNCIsImV4cCI6MTcwNDA5OTYwMCwiaXNzIjoiaHR0cHM6Ly90ZXN0LmxpbmRvcm0uaW8vIn0.z337-XworCnpLUNag5hK8K2M8pO58yrXZqoWsDmmJAw",
+      "verb": "mint",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 3,
+        "parts": [
+          "eyJhbGciOiJNTC1EU0EtNjUiLCJqa3UiOiJodHRwczovL3Rlc3QubGluZG9ybS5pby8ud2VsbC1rbm93bi9qd2tzLmpzb24iLCJraWQiOiJhMWQ1NGMyMi05ZjM3LTViOWUtYjZjOC05YzE1ZDkyYTY0MTAiLCJ0eXAiOiJKV1QifQ",
+          "eyJzdWIiOiJjb3JwdXNfc3ViamVjdF8wMDAxIiwiaWF0IjoxNzA0MDk2MDAwLCJuYmYiOjE3MDQwOTYwMDAsImp0aSI6ImNvcnB1c19qdGlfMDAwNSIsImV4cCI6MTcwNDA5OTYwMCwiaXNzIjoiaHR0cHM6Ly90ZXN0LmxpbmRvcm0uaW8vIn0",
+          "<random:3309 bytes>"
+        ],
+        "payload": {
+          "readable": true,
+          "value": {
+            "exp": 1704099600,
+            "iat": 1704096000,
+            "iss": "https://test.lindorm.io/",
+            "jti": "corpus_jti_0005",
+            "nbf": 1704096000,
+            "sub": "corpus_subject_0001"
+          }
+        },
+        "protectedHeader": {
+          "alg": "ML-DSA-65",
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "a1d54c22-9f37-5b9e-b6c8-9c15d92a6410",
+          "typ": "JWT"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "mint-default-jwt-akp",
+      "note": "ML-DSA-65 — the post-quantum header shape and the largest signature in the corpus.",
+      "profile": "default",
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "jwt",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "jwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0005"
+      },
+      "signAlgorithm": "ML-DSA-65",
+      "token": "<random:4771 chars>",
+      "verb": "mint",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 3,
+        "parts": [
+          "eyJhbGciOiJFUzUxMiIsImprdSI6Imh0dHBzOi8vdGVzdC5saW5kb3JtLmlvLy53ZWxsLWtub3duL2p3a3MuanNvbiIsImtpZCI6ImI5ZTdiYjRkLWQzMzItNTVkMi05YjMzLWY5OTBmZjdkYjRjNyIsInR5cCI6IkpXVCJ9",
+          "eyJzdWIiOiJjb3JwdXNfc3ViamVjdF8wMDAxIiwic2NvcGUiOiIiLCJpYXQiOjE3MDQwOTYwMDAsIm5iZiI6MTcwNDA5NjAwMCwianRpIjoiY29ycHVzX2p0aV8wMDA2IiwiZXhwIjoxNzA0MDk5NjAwLCJpc3MiOiJodHRwczovL3Rlc3QubGluZG9ybS5pby8ifQ",
+          "<random:132 bytes>"
+        ],
+        "payload": {
+          "readable": true,
+          "value": {
+            "exp": 1704099600,
+            "iat": 1704096000,
+            "iss": "https://test.lindorm.io/",
+            "jti": "corpus_jti_0006",
+            "nbf": 1704096000,
+            "scope": "",
+            "sub": "corpus_subject_0001"
+          }
+        },
+        "protectedHeader": {
+          "alg": "ES512",
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+          "typ": "JWT"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "mint-default-jwt-empty-claims",
+      "note": "The registry's empty-claim decision on the JOSE wire: the empty `nonce` is pruned and the empty `scope` is kept, with nothing asked for. A flipped `whenEmpty` cell shows here as a claims-bytes diff.",
+      "profile": "default",
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "jwt",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "jwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0006"
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:544 chars>",
+      "verb": "mint",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 3,
+        "parts": [
+          "eyJhbGciOiJFUzUxMiIsImprdSI6Imh0dHBzOi8vdGVzdC5saW5kb3JtLmlvLy53ZWxsLWtub3duL2p3a3MuanNvbiIsImtpZCI6ImI5ZTdiYjRkLWQzMzItNTVkMi05YjMzLWY5OTBmZjdkYjRjNyIsInR5cCI6ImFwcGxpY2F0aW9uL2NvcnB1cytqd3QifQ",
+          "eyJzdWIiOiJjb3JwdXNfc3ViamVjdF8wMDAxIiwiaWF0IjoxNzA0MDk2MDAwLCJuYmYiOjE3MDQwOTYwMDAsImp0aSI6ImNvcnB1c19qdGlfMDAwOCIsImV4cCI6MTcwNDA5OTYwMCwiaXNzIjoiaHR0cHM6Ly90ZXN0LmxpbmRvcm0uaW8vIn0",
+          "<random:132 bytes>"
+        ],
+        "payload": {
+          "readable": true,
+          "value": {
+            "exp": 1704099600,
+            "iat": 1704096000,
+            "iss": "https://test.lindorm.io/",
+            "jti": "corpus_jti_0008",
+            "nbf": 1704096000,
+            "sub": "corpus_subject_0001"
+          }
+        },
+        "protectedHeader": {
+          "alg": "ES512",
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+          "typ": "application/corpus+jwt"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "mint-default-jwt-typ",
+      "note": "An explicit `typ` overriding a profile that mandates none — the JOSE header type knob.",
+      "profile": "default",
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "jwt",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "jwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0008"
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:555 chars>",
+      "verb": "mint",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 3,
+        "parts": [
+          "eyJhbGciOiJFUzUxMiIsImN0eSI6ImFwcGxpY2F0aW9uL2pzb24iLCJqa3UiOiJodHRwczovL3Rlc3QubGluZG9ybS5pby8ud2VsbC1rbm93bi9qd2tzLmpzb24iLCJraWQiOiJiOWU3YmI0ZC1kMzMyLTU1ZDItOWIzMy1mOTkwZmY3ZGI0YzciLCJvaWQiOiJjb3JwdXNfb2lkXzAwMDEiLCJ0eXAiOiJKV1QifQ",
+          "eyJzdWIiOiJjb3JwdXNfc3ViamVjdF8wMDAxIiwiaWF0IjoxNzA0MDk2MDAwLCJuYmYiOjE3MDQwOTYwMDAsImp0aSI6ImNvcnB1c19qdGlfMDAwOSIsImV4cCI6MTcwNDA5OTYwMCwiaXNzIjoiaHR0cHM6Ly90ZXN0LmxpbmRvcm0uaW8vIn0",
+          "<random:132 bytes>"
+        ],
+        "payload": {
+          "readable": true,
+          "value": {
+            "exp": 1704099600,
+            "iat": 1704096000,
+            "iss": "https://test.lindorm.io/",
+            "jti": "corpus_jti_0009",
+            "nbf": 1704096000,
+            "sub": "corpus_subject_0001"
+          }
+        },
+        "protectedHeader": {
+          "alg": "ES512",
+          "cty": "application/json",
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+          "oid": "corpus_oid_0001",
+          "typ": "JWT"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "mint-default-jwt-header-bag",
+      "note": "The caller header bag on the JOSE wire: `objectId` becomes `oid`, `contentType` becomes `cty`.",
+      "profile": "default",
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "jwt",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "jwt",
+        "objectId": "corpus_oid_0001",
+        "tokenId": "corpus_jti_0009"
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:595 chars>",
+      "verb": "mint",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 3,
+        "parts": [
+          "eyJhbGciOiJFUzUxMiIsImprdSI6Imh0dHBzOi8vY29ycHVzLmxpbmRvcm0uaW8vLndlbGwta25vd24vandrcy5qc29uIiwia2lkIjoiYjllN2JiNGQtZDMzMi01NWQyLTliMzMtZjk5MGZmN2RiNGM3IiwidHlwIjoiSldUIn0",
+          "eyJzdWIiOiJjb3JwdXNfc3ViamVjdF8wMDAxIiwiaWF0IjoxNzA0MDk2MDAwLCJuYmYiOjE3MDQwOTYwMDAsImp0aSI6ImNvcnB1c19qdGlfMDAwOWIiLCJleHAiOjE3MDQwOTk2MDAsImlzcyI6Imh0dHBzOi8vdGVzdC5saW5kb3JtLmlvLyJ9",
+          "<random:132 bytes>"
+        ],
+        "payload": {
+          "readable": true,
+          "value": {
+            "exp": 1704099600,
+            "iat": 1704096000,
+            "iss": "https://test.lindorm.io/",
+            "jti": "corpus_jti_0009b",
+            "nbf": 1704096000,
+            "sub": "corpus_subject_0001"
+          }
+        },
+        "protectedHeader": {
+          "alg": "ES512",
+          "jku": "https://corpus.lindorm.io/.well-known/jwks.json",
+          "kid": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+          "typ": "JWT"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "mint-default-jwt-header-jwks-uri",
+      "note": "A caller `jwksUri` on a key that publishes its own: the kit's value is a DEFAULT, so `jku` on the wire is the caller's, not the key's.",
+      "profile": "default",
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "jwt",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "jwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0009b"
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:533 chars>",
+      "verb": "mint",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 3,
+        "parts": [
+          "eyJhbGciOiJFUzUxMiIsImprdSI6Imh0dHBzOi8vdGVzdC5saW5kb3JtLmlvLy53ZWxsLWtub3duL2p3a3MuanNvbiIsImtpZCI6ImI5ZTdiYjRkLWQzMzItNTVkMi05YjMzLWY5OTBmZjdkYjRjNyIsInR5cCI6IkpXVCJ9",
+          "eyJzdWIiOiJjb3JwdXNfc3ViamVjdF8wMDAxIiwiaWF0IjoxNzA0MDk2MDAwLCJuYmYiOjE3MDQwOTYwMDAsImp0aSI6ImNvcnB1c19qdGlfMDAxMCIsImV4cCI6MTcwNDA5NjkwMCwiaXNzIjoiaHR0cHM6Ly90ZXN0LmxpbmRvcm0uaW8vIn0",
+          "<random:132 bytes>"
+        ],
+        "payload": {
+          "readable": true,
+          "value": {
+            "exp": 1704096900,
+            "iat": 1704096000,
+            "iss": "https://test.lindorm.io/",
+            "jti": "corpus_jti_0010",
+            "nbf": 1704096000,
+            "sub": "corpus_subject_0001"
+          }
+        },
+        "protectedHeader": {
+          "alg": "ES512",
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+          "typ": "JWT"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "mint-default-jwt-lifetime",
+      "note": "A per-call lifetime overriding the profile default — the `exp` claim, and nothing else, moves.",
+      "profile": "default",
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "jwt",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T08:15:00.000Z"
+        },
+        "expiresIn": 900,
+        "expiresOn": 1704096900,
+        "format": "jwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0010"
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:529 chars>",
+      "verb": "mint",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 3,
+        "parts": [
+          "eyJhbGciOiJFUzUxMiIsImprdSI6Imh0dHBzOi8vdGVzdC5saW5kb3JtLmlvLy53ZWxsLWtub3duL2p3a3MuanNvbiIsImtpZCI6ImI5ZTdiYjRkLWQzMzItNTVkMi05YjMzLWY5OTBmZjdkYjRjNyIsInR5cCI6IkpXVCJ9",
+          "eyJzdWIiOiJjb3JwdXNfc3ViamVjdF8wMDAxIiwiY25mIjp7ImtpZCI6ImNvcnB1c19jbmZfa2lkXzAwMDEifSwiYWN0Ijp7InN1YiI6ImNvcnB1c19hY3Rvcl8wMDAxIiwiaXNzIjoiaHR0cHM6Ly9hY3Rvci5jb3JwdXMubGluZG9ybS50ZXN0IiwiY2xpZW50X2lkIjoiY29ycHVzX2FjdG9yX2NsaWVudF8wMDAxIiwiYWN0Ijp7InN1YiI6ImNvcnB1c19hY3Rvcl8wMDAyIn19LCJhdXRob3JpemF0aW9uX2RldGFpbHMiOlt7InR5cGUiOiJjb3JwdXNfcmFyX3R5cGUiLCJhY3Rpb25zIjpbInJlYWQiLCJ3cml0ZSJdLCJsb2NhdGlvbnMiOlsiaHR0cHM6Ly9ycy5jb3JwdXMubGluZG9ybS50ZXN0Il19XSwibWF5X2FjdCI6eyJzdWIiOiJjb3JwdXNfbWF5X2FjdG9yXzAwMDEiLCJjbGllbnRfaWQiOiJjb3JwdXNfbWF5X2NsaWVudF8wMDAxIn0sInN1Yl9pZCI6eyJmb3JtYXQiOiJpc3Nfc3ViIiwiaXNzIjoiaHR0cHM6Ly9pZHAuY29ycHVzLmxpbmRvcm0udGVzdCIsInN1YiI6ImNvcnB1c19zdWJfaWRfMDAwMSJ9LCJldmVudHMiOnsidXJuOmxpbmRvcm06ZXZlbnQ6cnRiZiI6eyJzdWJqZWN0IjoiY29ycHVzX2V2ZW50X3N1YmplY3RfMDAwMSJ9LCJodHRwOi8vc2NoZW1hcy5vcGVuaWQubmV0L2V2ZW50L2JhY2tjaGFubmVsLWxvZ291dCI6e319LCJpYXQiOjE3MDQwOTYwMDAsIm5iZiI6MTcwNDA5NjAwMCwianRpIjoiY29ycHVzX2p0aV8wMDMzIiwiZXhwIjoxNzA0MDk5NjAwLCJpc3MiOiJodHRwczovL3Rlc3QubGluZG9ybS5pby8iLCJhZGRyZXNzIjp7ImNhcmVfb2YiOiJDb3JwdXMgQ2FyZSBPZiIsImNvdW50cnkiOiJTRSIsImxvY2FsaXR5IjoiU3RvY2tob2xtIiwicG9zdGFsX2NvZGUiOiIxMTEgMjIiLCJyZWdpb24iOiJTdG9ja2hvbG0iLCJzdHJlZXRfYWRkcmVzcyI6IkNvcnB1c2dhdGFuIDEifX0",
+          "<random:132 bytes>"
+        ],
+        "payload": {
+          "readable": true,
+          "value": {
+            "act": {
+              "act": {
+                "sub": "corpus_actor_0002"
+              },
+              "client_id": "corpus_actor_client_0001",
+              "iss": "https://actor.corpus.lindorm.test",
+              "sub": "corpus_actor_0001"
+            },
+            "address": {
+              "care_of": "Corpus Care Of",
+              "country": "SE",
+              "locality": "Stockholm",
+              "postal_code": "111 22",
+              "region": "Stockholm",
+              "street_address": "Corpusgatan 1"
+            },
+            "authorization_details": [
+              {
+                "actions": ["read", "write"],
+                "locations": ["https://rs.corpus.lindorm.test"],
+                "type": "corpus_rar_type"
+              }
+            ],
+            "cnf": {
+              "kid": "corpus_cnf_kid_0001"
+            },
+            "events": {
+              "http://schemas.openid.net/event/backchannel-logout": {},
+              "urn:lindorm:event:rtbf": {
+                "subject": "corpus_event_subject_0001"
+              }
+            },
+            "exp": 1704099600,
+            "iat": 1704096000,
+            "iss": "https://test.lindorm.io/",
+            "jti": "corpus_jti_0033",
+            "may_act": {
+              "client_id": "corpus_may_client_0001",
+              "sub": "corpus_may_actor_0001"
+            },
+            "nbf": 1704096000,
+            "sub": "corpus_subject_0001",
+            "sub_id": {
+              "format": "iss_sub",
+              "iss": "https://idp.corpus.lindorm.test",
+              "sub": "corpus_sub_id_0001"
+            }
+          }
+        },
+        "protectedHeader": {
+          "alg": "ES512",
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+          "typ": "JWT"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "mint-default-jwt-structured-claims",
+      "note": "Every structured claim on the JOSE wire — `cnf`, a recursive `act`, `may_act`, `sub_id`, `events`, `authorization_details` and the nested `address`. It is the JOSE half of the pair: the domain↔JOSE translator shapes these, and its output is what the COSE byte layer then re-shapes, so a change that moved only one of the two shows on exactly one row.",
+      "profile": "default",
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "jwt",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "jwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0033"
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:1561 chars>",
+      "verb": "mint",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 3,
+        "parts": [
+          "eyJhbGciOiJFUzUxMiIsImprdSI6Imh0dHBzOi8vdGVzdC5saW5kb3JtLmlvLy53ZWxsLWtub3duL2p3a3MuanNvbiIsImtpZCI6ImI5ZTdiYjRkLWQzMzItNTVkMi05YjMzLWY5OTBmZjdkYjRjNyIsInR5cCI6IkpXVCJ9",
+          "eyJzdWIiOiJjb3JwdXNfc3ViamVjdF8wMDAxIiwiY25mIjp7ImprdCI6IjBaY09DT1JaTll5LURXcHFxMzBqWnlKR0hUTjBkMkhnbEJWM3VpZ3VBNEkifSwiaWF0IjoxNzA0MDk2MDAwLCJuYmYiOjE3MDQwOTYwMDAsImp0aSI6ImNvcnB1c19qdGlfMDAzNCIsImV4cCI6MTcwNDA5OTYwMCwiaXNzIjoiaHR0cHM6Ly90ZXN0LmxpbmRvcm0uaW8vIn0",
+          "<random:132 bytes>"
+        ],
+        "payload": {
+          "readable": true,
+          "value": {
+            "cnf": {
+              "jkt": "0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I"
+            },
+            "exp": 1704099600,
+            "iat": 1704096000,
+            "iss": "https://test.lindorm.io/",
+            "jti": "corpus_jti_0034",
+            "nbf": 1704096000,
+            "sub": "corpus_subject_0001"
+          }
+        },
+        "protectedHeader": {
+          "alg": "ES512",
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+          "typ": "JWT"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "mint-default-jwt-confirmation-thumbprint",
+      "note": "A confirmation member the COSE wire cannot carry: the registry marks `jkt` absent on COSE, so this row records the JOSE spelling of a member that has no COSE twin — the shared structured row deliberately does not carry it. RFC 9449 §6, RFC 7638.",
+      "profile": "default",
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "jwt",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "jwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0034"
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:609 chars>",
+      "verb": "mint",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 3,
+        "parts": [
+          "eyJhbGciOiJFUzUxMiIsImprdSI6Imh0dHBzOi8vdGVzdC5saW5kb3JtLmlvLy53ZWxsLWtub3duL2p3a3MuanNvbiIsImtpZCI6ImI5ZTdiYjRkLWQzMzItNTVkMi05YjMzLWY5OTBmZjdkYjRjNyIsInR5cCI6IkpXVCJ9",
+          "eyJzdWIiOiJjb3JwdXNfc3ViamVjdF8wMDAxIiwiaWF0IjoxNzA0MDk2MDAwLCJuYmYiOjE3MDQwOTYwMDAsImp0aSI6ImNvcnB1c19qdGlfMDAzNSIsImV4cCI6MTcwNDA5OTYwMCwiaXNzIjoiaHR0cHM6Ly90ZXN0LmxpbmRvcm0uaW8vIiwiYXRfaGFzaCI6IlQwUkJkMDFFUVhkTlJFRjNUVVJCZDAxRVFYYyIsImNfaGFzaCI6IlVUQlNSbEV3T1VWU1ZVNVFVa1ZXUkZRd1VrWSIsInNfaGFzaCI6IlZURlNRbFpGVmxSV1JVWlZVbFpPVlZGV1VrWSJ9",
+          "<random:132 bytes>"
+        ],
+        "payload": {
+          "readable": true,
+          "value": {
+            "at_hash": "T0RBd01EQXdNREF3TURBd01EQXc",
+            "c_hash": "UTBSRlEwOUVSVU5QUkVWRFQwUkY",
+            "exp": 1704099600,
+            "iat": 1704096000,
+            "iss": "https://test.lindorm.io/",
+            "jti": "corpus_jti_0035",
+            "nbf": 1704096000,
+            "s_hash": "VTFSQlZFVlRWRUZVUlZOVVFWUkY",
+            "sub": "corpus_subject_0001"
+          }
+        },
+        "protectedHeader": {
+          "alg": "ES512",
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+          "typ": "JWT"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "mint-default-jwt-hash-claims",
+      "note": "The three OIDC hashes on the JOSE wire, where each is the base64url string verbatim. Their COSE twin decodes that alphabet to bytes, so this row is what says which of the two the JOSE wire holds.",
+      "profile": "default",
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "jwt",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "jwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0035"
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:686 chars>",
+      "verb": "mint",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 3,
+        "parts": [
+          "eyJhbGciOiJFUzUxMiIsImprdSI6Imh0dHBzOi8vdGVzdC5saW5kb3JtLmlvLy53ZWxsLWtub3duL2p3a3MuanNvbiIsImtpZCI6ImI5ZTdiYjRkLWQzMzItNTVkMi05YjMzLWY5OTBmZjdkYjRjNyIsInR5cCI6ImFwcGxpY2F0aW9uL2F0K2p3dCJ9",
+          "eyJzdWIiOiJjb3JwdXNfc3ViamVjdF8wMDAxIiwiYXVkIjpbImh0dHBzOi8vcnMuY29ycHVzLmxpbmRvcm0udGVzdCJdLCJjbGllbnRfaWQiOiJjb3JwdXNfY2xpZW50XzAwMDEiLCJpYXQiOjE3MDQwOTYwMDAsImp0aSI6ImNvcnB1c19qdGlfMDAxMSIsImV4cCI6MTcwNDA5OTYwMCwiaXNzIjoiaHR0cHM6Ly90ZXN0LmxpbmRvcm0uaW8vIn0",
+          "<random:132 bytes>"
+        ],
+        "payload": {
+          "readable": true,
+          "value": {
+            "aud": ["https://rs.corpus.lindorm.test"],
+            "client_id": "corpus_client_0001",
+            "exp": 1704099600,
+            "iat": 1704096000,
+            "iss": "https://test.lindorm.io/",
+            "jti": "corpus_jti_0011",
+            "sub": "corpus_subject_0001"
+          }
+        },
+        "protectedHeader": {
+          "alg": "ES512",
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+          "typ": "application/at+jwt"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "mint-access-token-jwt-ec",
+      "note": "RFC 9068 access token — the `application/at+jwt` typ and the profile's own required claim set.",
+      "profile": "access_token",
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "jwt",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "jwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0011"
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:625 chars>",
+      "verb": "mint",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 3,
+        "parts": [
+          "eyJhbGciOiJFUzI1NiIsImprdSI6Imh0dHBzOi8vdGVzdC5saW5kb3JtLmlvLy53ZWxsLWtub3duL2p3a3MuanNvbiIsImtpZCI6IjhlMThjZjRmLTFhM2ItNWNiMS05YTJlLTFjOWQwYTJiM2M0ZCIsInR5cCI6ImFwcGxpY2F0aW9uL2F0K2p3dCIsIng1dCI6IjgzUlRPREs0ZGhtQWFxWTdfZlFYOGF0c1hHNCIsIng1dCNTMjU2IjoiUFFlWkdkR0dHRzFBOVFyNHowcUJoX1RKcm1vaTVCLTZqYk1VT0duMzRRQSJ9",
+          "eyJzdWIiOiJjb3JwdXNfc3ViamVjdF8wMDAxIiwiYXVkIjpbImh0dHBzOi8vcnMuY29ycHVzLmxpbmRvcm0udGVzdCJdLCJjbGllbnRfaWQiOiJjb3JwdXNfY2xpZW50XzAwMDEiLCJpYXQiOjE3MDQwOTYwMDAsImp0aSI6ImNvcnB1c19qdGlfMDAxMiIsImV4cCI6MTcwNDA5OTYwMCwiaXNzIjoiaHR0cHM6Ly90ZXN0LmxpbmRvcm0uaW8vIn0",
+          "<random:64 bytes>"
+        ],
+        "payload": {
+          "readable": true,
+          "value": {
+            "aud": ["https://rs.corpus.lindorm.test"],
+            "client_id": "corpus_client_0001",
+            "exp": 1704099600,
+            "iat": 1704096000,
+            "iss": "https://test.lindorm.io/",
+            "jti": "corpus_jti_0012",
+            "sub": "corpus_subject_0001"
+          }
+        },
+        "protectedHeader": {
+          "alg": "ES256",
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "8e18cf4f-1a3b-5cb1-9a2e-1c9d0a2b3c4d",
+          "typ": "application/at+jwt",
+          "x5t": "83RTODK4dhmAaqY7_fQX8atsXG4",
+          "x5t#S256": "PQeZGdGGGG1A9Qr4z0qBh_TJrmoi5B-6jbMUOGn34QA"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "mint-access-token-jwt-cert-thumbprint",
+      "note": "Cert binding, thumbprint mode — `x5t#S256` and its `x5t` companion on the protected header.",
+      "profile": "access_token",
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "jwt",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "jwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0012"
+      },
+      "signAlgorithm": "ES256",
+      "token": "<random:659 chars>",
+      "verb": "mint",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 3,
+        "parts": [
+          "eyJhbGciOiJFUzI1NiIsImprdSI6Imh0dHBzOi8vdGVzdC5saW5kb3JtLmlvLy53ZWxsLWtub3duL2p3a3MuanNvbiIsImtpZCI6IjhlMThjZjRmLTFhM2ItNWNiMS05YTJlLTFjOWQwYTJiM2M0ZCIsInR5cCI6ImFwcGxpY2F0aW9uL2F0K2p3dCIsIng1YyI6WyJNSUlCb3pDQ0FVcWdBd0lCQWdJVUg4YStkNnVIN2haWXBsSytIb01iY3Y4bHk4UXdDZ1lJS29aSXpqMEVBd0l3SkRFaU1DQUdBMVVFQXd3WmJHbHVaRzl5YlMxMFpYTjBMV2x1ZEdWeWJXVmthV0YwWlRBZ0Z3MHlOakEwTVRNeE1UTTFNREJhR0E4eU1USTJNRE15TURFeE16VXdNRm93SERFYU1CZ0dBMVVFQXd3UmJHbHVaRzl5YlMxMFpYTjBMV3hsWVdZd1dUQVRCZ2NxaGtqT1BRSUJCZ2dxaGtqT1BRTUJCd05DQUFTRHY0OWtkb1pLeW1rR2xBcmE1anhGY0NTcXJxVFlmTUxIYjZVc0NMZXczV1F0c2o0bWl6TllkM1dwUkFhS1BRRnpzN1ZQMUcxY3d6UEU5UlFMVzFTM28yQXdYakFNQmdOVkhSTUJBZjhFQWpBQU1BNEdBMVVkRHdFQi93UUVBd0lIZ0RBZEJnTlZIUTRFRmdRVTdQUHhTdDlzWmhHTDV5M0RwV2FyaDAvb3VNOHdId1lEVlIwakJCZ3dGb0FVdXZjRjFhekZhTlc4U3k3Q0I2bkpzVmQ0WHBJd0NnWUlLb1pJemowRUF3SURSd0F3UkFJZ2M2V09ScXNKdGFBV0hmZlRuQm05akdsQVlya3g0Z240SEI4eVArQXhFZFVDSUVNVndjMnpFNS9xNFZiUUdGUkFiRUZPTm56cGkrYWtkVmN1SFlZeTg3VG8iLCJNSUlCcXpDQ0FWQ2dBd0lCQWdJVVByQlNwQ1RmVWhOai9RSVp1UXNFdFFyVHBKY3dDZ1lJS29aSXpqMEVBd0l3SERFYU1CZ0dBMVVFQXd3UmJHbHVaRzl5YlMxMFpYTjBMWEp2YjNRd0lCY05Nall3TkRFek1URXpOVEF3V2hnUE1qRXlOakF6TWpBeE1UTTFNREJhTUNReElqQWdCZ05WQkFNTUdXeHBibVJ2Y20wdGRHVnpkQzFwYm5SbGNtMWxaR2xoZEdVd1dUQVRCZ2NxaGtqT1BRSUJCZ2dxaGtqT1BRTUJCd05DQUFTWGpTbjRpUDVxRm94ODBXQ096V1FNM2MzSVU2VzhFQS9sanBQa1MyN0h4MjQ4c3hDVEpyQUlUcFNKOXJvRFhYeFJnK1d2bHpJOGFNSGRkZEVyVFpvWm8yWXdaREFTQmdOVkhSTUJBZjhFQ0RBR0FRSC9BZ0VBTUE0R0ExVWREd0VCL3dRRUF3SUJCakFkQmdOVkhRNEVGZ1FVdXZjRjFhekZhTlc4U3k3Q0I2bkpzVmQ0WHBJd0h3WURWUjBqQkJnd0ZvQVU0c2N0dXI3SW8ySlNteVdMV3pTVFZYRHdyQkF3Q2dZSUtvWkl6ajBFQXdJRFNRQXdSZ0loQUloTTFyZytFKzgvOFJ6bWd2WVRpSHczVUNaeFpqblh1WU1IY3ZiNWNhbFdBaUVBaVlYZ2JVRGRYeUhEemdESkI3bEJiYU5hZVB4dStLdnN4N2JZdW5TMnloWT0iLCJNSUlCbmpDQ0FVV2dBd0lCQWdJVUNRbTBDMTNCUXNGa0lnYzdTU2hoODBlamdRQXdDZ1lJS29aSXpqMEVBd0l3SERFYU1CZ0dBMVVFQXd3UmJHbHVaRzl5YlMxMFpYTjBMWEp2YjNRd0lCY05Nall3TkRFek1URXpOVEF3V2hnUE1qRXlOakF6TWpBeE1UTTFNREJhTUJ3eEdqQVlCZ05WQkFNTUVXeHBibVJ2Y20wdGRHVnpkQzF5YjI5ME1Ga3dFd1lIS29aSXpqMENBUVlJS29aSXpqMERBUWNEUWdBRU81Tjk4NUJsdG1HSVYzWFp1NFlNQmNycE8xRWJtUUJ0OWNFblZ5Tk5raU5DTktzQU9QMnpiRnM5a0x1OVRiKzJSL0JpRndWb0dwelFNaHFjeSszOWNLTmpNR0V3SFFZRFZSME9CQllFRk9MSExicSt5S05pVXBzbGkxczBrMVZ3OEt3UU1COEdBMVVkSXdRWU1CYUFGT0xITGJxK3lLTmlVcHNsaTFzMGsxVnc4S3dRTUE4R0ExVWRFd0VCL3dRRk1BTUJBZjh3RGdZRFZSMFBBUUgvQkFRREFnRUdNQW9HQ0NxR1NNNDlCQU1DQTBjQU1FUUNJR3ZEdFJyZy9NSEFSbHFZa05mWlUycGhsMmYrUWtad0hnazAwVDFyNHRYb0FpQm5kQjloTkVPa1JkU1BGQmN5NncvTFBXSCtZN0hRZGw4eHVralpjWTdZZWc9PSJdLCJ4NXQiOiI4M1JUT0RLNGRobUFhcVk3X2ZRWDhhdHNYRzQiLCJ4NXQjUzI1NiI6IlBRZVpHZEdHR0cxQTlRcjR6MHFCaF9USnJtb2k1Qi02amJNVU9HbjM0UUEifQ",
+          "eyJzdWIiOiJjb3JwdXNfc3ViamVjdF8wMDAxIiwiYXVkIjpbImh0dHBzOi8vcnMuY29ycHVzLmxpbmRvcm0udGVzdCJdLCJjbGllbnRfaWQiOiJjb3JwdXNfY2xpZW50XzAwMDEiLCJpYXQiOjE3MDQwOTYwMDAsImp0aSI6ImNvcnB1c19qdGlfMDAxMyIsImV4cCI6MTcwNDA5OTYwMCwiaXNzIjoiaHR0cHM6Ly90ZXN0LmxpbmRvcm0uaW8vIn0",
+          "<random:64 bytes>"
+        ],
+        "payload": {
+          "readable": true,
+          "value": {
+            "aud": ["https://rs.corpus.lindorm.test"],
+            "client_id": "corpus_client_0001",
+            "exp": 1704099600,
+            "iat": 1704096000,
+            "iss": "https://test.lindorm.io/",
+            "jti": "corpus_jti_0013",
+            "sub": "corpus_subject_0001"
+          }
+        },
+        "protectedHeader": {
+          "alg": "ES256",
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "8e18cf4f-1a3b-5cb1-9a2e-1c9d0a2b3c4d",
+          "typ": "application/at+jwt",
+          "x5c": [
+            "MIIBozCCAUqgAwIBAgIUH8a+d6uH7hZYplK+HoMbcv8ly8QwCgYIKoZIzj0EAwIwJDEiMCAGA1UEAwwZbGluZG9ybS10ZXN0LWludGVybWVkaWF0ZTAgFw0yNjA0MTMxMTM1MDBaGA8yMTI2MDMyMDExMzUwMFowHDEaMBgGA1UEAwwRbGluZG9ybS10ZXN0LWxlYWYwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAASDv49kdoZKymkGlAra5jxFcCSqrqTYfMLHb6UsCLew3WQtsj4mizNYd3WpRAaKPQFzs7VP1G1cwzPE9RQLW1S3o2AwXjAMBgNVHRMBAf8EAjAAMA4GA1UdDwEB/wQEAwIHgDAdBgNVHQ4EFgQU7PPxSt9sZhGL5y3DpWarh0/ouM8wHwYDVR0jBBgwFoAUuvcF1azFaNW8Sy7CB6nJsVd4XpIwCgYIKoZIzj0EAwIDRwAwRAIgc6WORqsJtaAWHffTnBm9jGlAYrkx4gn4HB8yP+AxEdUCIEMVwc2zE5/q4VbQGFRAbEFONnzpi+akdVcuHYYy87To",
+            "MIIBqzCCAVCgAwIBAgIUPrBSpCTfUhNj/QIZuQsEtQrTpJcwCgYIKoZIzj0EAwIwHDEaMBgGA1UEAwwRbGluZG9ybS10ZXN0LXJvb3QwIBcNMjYwNDEzMTEzNTAwWhgPMjEyNjAzMjAxMTM1MDBaMCQxIjAgBgNVBAMMGWxpbmRvcm0tdGVzdC1pbnRlcm1lZGlhdGUwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAASXjSn4iP5qFox80WCOzWQM3c3IU6W8EA/ljpPkS27Hx248sxCTJrAITpSJ9roDXXxRg+WvlzI8aMHdddErTZoZo2YwZDASBgNVHRMBAf8ECDAGAQH/AgEAMA4GA1UdDwEB/wQEAwIBBjAdBgNVHQ4EFgQUuvcF1azFaNW8Sy7CB6nJsVd4XpIwHwYDVR0jBBgwFoAU4sctur7Io2JSmyWLWzSTVXDwrBAwCgYIKoZIzj0EAwIDSQAwRgIhAIhM1rg+E+8/8RzmgvYTiHw3UCZxZjnXuYMHcvb5calWAiEAiYXgbUDdXyHDzgDJB7lBbaNaePxu+Kvsx7bYunS2yhY=",
+            "MIIBnjCCAUWgAwIBAgIUCQm0C13BQsFkIgc7SShh80ejgQAwCgYIKoZIzj0EAwIwHDEaMBgGA1UEAwwRbGluZG9ybS10ZXN0LXJvb3QwIBcNMjYwNDEzMTEzNTAwWhgPMjEyNjAzMjAxMTM1MDBaMBwxGjAYBgNVBAMMEWxpbmRvcm0tdGVzdC1yb290MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEO5N985BltmGIV3XZu4YMBcrpO1EbmQBt9cEnVyNNkiNCNKsAOP2zbFs9kLu9Tb+2R/BiFwVoGpzQMhqcy+39cKNjMGEwHQYDVR0OBBYEFOLHLbq+yKNiUpsli1s0k1Vw8KwQMB8GA1UdIwQYMBaAFOLHLbq+yKNiUpsli1s0k1Vw8KwQMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgEGMAoGCCqGSM49BAMCA0cAMEQCIGvDtRrg/MHARlqYkNfZU2phl2f+QkZwHgk00T1r4tXoAiBndB9hNEOkRdSPFBcy6w/LPWH+Y7HQdl8xukjZcY7Yeg=="
+          ],
+          "x5t": "83RTODK4dhmAaqY7_fQX8atsXG4",
+          "x5t#S256": "PQeZGdGGGG1A9Qr4z0qBh_TJrmoi5B-6jbMUOGn34QA"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "mint-access-token-jwt-cert-chain",
+      "note": "Cert binding, chain mode — the whole `x5c` chain on the wire, beside both digests.",
+      "profile": "access_token",
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "jwt",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "jwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0013"
+      },
+      "signAlgorithm": "ES256",
+      "token": "<random:2949 chars>",
+      "verb": "mint",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 3,
+        "parts": [
+          "eyJhbGciOiJFUzUxMiIsImprdSI6Imh0dHBzOi8vdGVzdC5saW5kb3JtLmlvLy53ZWxsLWtub3duL2p3a3MuanNvbiIsImtpZCI6ImI5ZTdiYjRkLWQzMzItNTVkMi05YjMzLWY5OTBmZjdkYjRjNyIsInR5cCI6IkpXVCJ9",
+          "eyJzdWIiOiJjb3JwdXNfc3ViamVjdF8wMDAxIiwiYXVkIjpbImNvcnB1c19jbGllbnRfMDAwMSJdLCJpYXQiOjE3MDQwOTYwMDAsImp0aSI6ImNvcnB1c19qdGlfMDAxNCIsImV4cCI6MTcwNDA5OTYwMCwiaXNzIjoiaHR0cHM6Ly90ZXN0LmxpbmRvcm0uaW8vIn0",
+          "<random:132 bytes>"
+        ],
+        "payload": {
+          "readable": true,
+          "value": {
+            "aud": ["corpus_client_0001"],
+            "exp": 1704099600,
+            "iat": 1704096000,
+            "iss": "https://test.lindorm.io/",
+            "jti": "corpus_jti_0014",
+            "sub": "corpus_subject_0001"
+          }
+        },
+        "protectedHeader": {
+          "alg": "ES512",
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+          "typ": "JWT"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "mint-id-token-jwt-ec",
+      "note": "OIDC id token — the bare `JWT` typ, and a profile whose token id is NOT auto-injected but is still stamped when stated.",
+      "profile": "id_token",
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "jwt",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "jwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0014"
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:545 chars>",
+      "verb": "mint",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 5,
+        "parts": [
+          "eyJhbGciOiJSU0EtT0FFUC0yNTYiLCJjdHkiOiJKV1QiLCJlbmMiOiJBMjU2R0NNIiwiamt1IjoiaHR0cHM6Ly90ZXN0LmxpbmRvcm0uaW8vLndlbGwta25vd24vandrcy5qc29uIiwia2lkIjoiMjBiMDkxMzgtYmFiNy01NGNlLWE0OTEtMWY0YmE1MmUzZDRlIiwidHlwIjoiSldFIn0",
+          "<random:512 bytes>",
+          "<random:12 bytes>",
+          "<random:545 bytes>",
+          "<random:16 bytes>"
+        ],
+        "payload": {
+          "readable": false,
+          "reason": "a 5-part JWE carries ciphertext where a JWS carries its payload"
+        },
+        "protectedHeader": {
+          "alg": "RSA-OAEP-256",
+          "cty": "JWT",
+          "enc": "A256GCM",
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "20b09138-bab7-54ce-a491-1f4ba52e3d4e",
+          "typ": "JWE"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "mint-id-token-jwt-encrypted-rsa",
+      "note": "Sign-then-encrypt on the JOSE wire with RSA-OAEP-256 key wrapping — the one JWE in the corpus whose encrypted-key segment is non-empty.",
+      "profile": "id_token",
+      "randomness": {
+        "encrypted": true,
+        "signature": true
+      },
+      "reportedFormat": "jwt",
+      "reportedWrapper": "jwe",
+      "requestedFormat": "jwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "jwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0015"
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:1667 chars>",
+      "verb": "mint",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 5,
+        "parts": [
+          "<random:379 bytes>",
+          "",
+          "<random:12 bytes>",
+          "<random:545 bytes>",
+          "<random:16 bytes>"
+        ],
+        "payload": {
+          "readable": false,
+          "reason": "a 5-part JWE carries ciphertext where a JWS carries its payload"
+        },
+        "protectedHeader": {
+          "alg": "ECDH-ES",
+          "cty": "JWT",
+          "enc": "A256GCM",
+          "epk": {
+            "crv": "P-521",
+            "kty": "EC",
+            "x": "<random:66 bytes>",
+            "y": "<random:66 bytes>"
+          },
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "43bd1720-5dab-5d52-ae1e-e9dbbe6adfe4",
+          "typ": "JWE"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "mint-id-token-jwt-encrypted-ecdh",
+      "note": "Sign-then-encrypt with ECDH-ES over P-521 — the ephemeral `epk` on the protected header and an empty encrypted-key segment.",
+      "profile": "id_token",
+      "randomness": {
+        "encrypted": true,
+        "signature": true
+      },
+      "reportedFormat": "jwt",
+      "reportedWrapper": "jwe",
+      "requestedFormat": "jwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "jwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0016"
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:1275 chars>",
+      "verb": "mint",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 5,
+        "parts": [
+          "eyJhbGciOiJkaXIiLCJjdHkiOiJKV1QiLCJlbmMiOiJBMjU2R0NNIiwiamt1IjoiaHR0cHM6Ly90ZXN0LmxpbmRvcm0uaW8vLndlbGwta25vd24vandrcy5qc29uIiwia2lkIjoiYWUyNjE3NWYtOTYxZC01OTQ3LTgzMTgtNjI5OWU0NTc2YjgzIiwidHlwIjoiSldFIn0",
+          "",
+          "<random:12 bytes>",
+          "<random:545 bytes>",
+          "<random:16 bytes>"
+        ],
+        "payload": {
+          "readable": false,
+          "reason": "a 5-part JWE carries ciphertext where a JWS carries its payload"
+        },
+        "protectedHeader": {
+          "alg": "dir",
+          "cty": "JWT",
+          "enc": "A256GCM",
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "ae26175f-961d-5947-8318-6299e4576b83",
+          "typ": "JWE"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "mint-id-token-jwt-encrypted-dir",
+      "note": "Sign-then-encrypt with a direct AES key — no key management on the wire at all, so only the IV, ciphertext and tag move.",
+      "profile": "id_token",
+      "randomness": {
+        "encrypted": true,
+        "signature": true
+      },
+      "reportedFormat": "jwt",
+      "reportedWrapper": "jwe",
+      "requestedFormat": "jwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "jwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0017"
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:972 chars>",
+      "verb": "mint",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "payload": {
+          "readable": true,
+          "value": {
+            "$map": [
+              [
+                {
+                  "$int": 1
+                },
+                "https://test.lindorm.io/"
+              ],
+              [
+                {
+                  "$int": 2
+                },
+                "corpus_subject_0001"
+              ],
+              [
+                {
+                  "$int": 4
+                },
+                1704099600
+              ],
+              [
+                {
+                  "$int": 5
+                },
+                1704096000
+              ],
+              [
+                {
+                  "$int": 6
+                },
+                1704096000
+              ],
+              [
+                {
+                  "$int": 7
+                },
+                {
+                  "$bytes": "636f727075735f6a74695f30303138",
+                  "$length": 15
+                }
+              ]
+            ]
+          }
+        },
+        "protectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 1
+              },
+              -36
+            ],
+            [
+              {
+                "$int": 16
+              },
+              "application/cwt"
+            ]
+          ]
+        },
+        "tags": [61, 18],
+        "unprotectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 4
+              },
+              {
+                "$bytes": "62396537626234642d643333322d353564322d396233332d663939306666376462346337",
+                "$length": 36
+              }
+            ]
+          ]
+        },
+        "wire": "cose"
+      },
+      "name": "mint-default-cwt-ec",
+      "note": "The COSE baseline: the same claims as the JOSE baseline, so the two wires can be read side by side.",
+      "profile": "default",
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "cwt",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "cwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "cwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0018"
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:382 chars>",
+      "verb": "mint",
+      "wire": "cose"
+    },
+    {
+      "inspection": {
+        "payload": {
+          "readable": true,
+          "value": {
+            "$map": [
+              [
+                {
+                  "$int": 1
+                },
+                "https://test.lindorm.io/"
+              ],
+              [
+                {
+                  "$int": 2
+                },
+                "corpus_subject_0001"
+              ],
+              [
+                {
+                  "$int": 4
+                },
+                1704099600
+              ],
+              [
+                {
+                  "$int": 5
+                },
+                1704096000
+              ],
+              [
+                {
+                  "$int": 6
+                },
+                1704096000
+              ],
+              [
+                {
+                  "$int": 7
+                },
+                {
+                  "$bytes": "636f727075735f6a74695f30303139",
+                  "$length": 15
+                }
+              ]
+            ]
+          }
+        },
+        "protectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 1
+              },
+              -259
+            ],
+            [
+              {
+                "$int": 16
+              },
+              "application/cwt"
+            ]
+          ]
+        },
+        "tags": [61, 18],
+        "unprotectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 4
+              },
+              {
+                "$bytes": "61616163323262332d323235332d353539382d386530632d313733336663373438313232",
+                "$length": 36
+              }
+            ]
+          ]
+        },
+        "wire": "cose"
+      },
+      "name": "mint-default-cwt-rsa",
+      "note": "RS512 on the COSE wire — a deterministic signature, so this row's token bytes are captured verbatim.",
+      "profile": "default",
+      "randomness": {
+        "encrypted": false,
+        "signature": false
+      },
+      "reportedFormat": "cwt",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "cwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "cwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0019"
+      },
+      "signAlgorithm": "RS512",
+      "token": "2D3ShFaiATkBAhBvYXBwbGljYXRpb24vY3d0oQRYJGFhYWMyMmIzLTIyNTMtNTU5OC04ZTBjLTE3MzNmYzc0ODEyMlhUpgF4GGh0dHBzOi8vdGVzdC5saW5kb3JtLmlvLwJzY29ycHVzX3N1YmplY3RfMDAwMQQaZZJ_EAUaZZJxAAYaZZJxAAdPY29ycHVzX2p0aV8wMDE5WQIAxGSrYQx36u9qUX_1D4GDT7FRGm--ZRkj3kN5EzYPCg9sAQYnslCbh86RqDOifCNyzNUqwYX9y7MooPogMdverHFG5OKGiLgoWtUCSUssUZs8w8lTNtAcirWqT69FYRI2tCOzJCyPzxbv4KVbYDhnUXZKvsJsCdpF8kFJBACgKjpbngH3y2d84Coe441fEczZpxYmzwOOtz6ziui7EUSy5WMQ4951OrkPmcjNlEBK5pjf4xbC1AX2O_eP9SLobmLg-WZF0lSTuS7DmnE1TN8-wHPt-OVgRUvJUt5EZGjKqyT9BiFf3EO6nr5X51_9V_6r9OvHuOmea2unK_KypVlrAloIGC-Tz927UrthyOcpwwvgHuBq8NKmP083yQNAWy5cB07YI4Heg1U_q3V2n3CwQka_56Y5V_rnJT4x2SSk-PwIXBZayJQoYwtIBiB83-VFmpbm8gYYdsxJFoJIVffAELzwwd_eKmpOc06wGjrFUPYGfOftmi7wdbr2PEKgf2V4dQ9vanZQ_jqdhUgIoecbgmsQ0zxQ3Kjg5TrWtZGjlS93CHSwO2g1FWaAthY35QXM_izNbywL__ZsoipSe3walQLD3LHbw8kQsLsfYhUPIgZxV_d3aXfeILGeVYJEDGq_JU-q1hdAKFfHHQGe4vQxENSYhb9DQ2my7HYgWL-5a1M",
+      "verb": "mint",
+      "wire": "cose"
+    },
+    {
+      "inspection": {
+        "payload": {
+          "readable": true,
+          "value": {
+            "$map": [
+              [
+                {
+                  "$int": 1
+                },
+                "https://test.lindorm.io/"
+              ],
+              [
+                {
+                  "$int": 2
+                },
+                "corpus_subject_0001"
+              ],
+              [
+                {
+                  "$int": 4
+                },
+                1704099600
+              ],
+              [
+                {
+                  "$int": 5
+                },
+                1704096000
+              ],
+              [
+                {
+                  "$int": 6
+                },
+                1704096000
+              ],
+              [
+                {
+                  "$int": 7
+                },
+                {
+                  "$bytes": "636f727075735f6a74695f30303230",
+                  "$length": 15
+                }
+              ]
+            ]
+          }
+        },
+        "protectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 1
+              },
+              -8
+            ],
+            [
+              {
+                "$int": 16
+              },
+              "application/cwt"
+            ]
+          ]
+        },
+        "tags": [61, 18],
+        "unprotectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 4
+              },
+              {
+                "$bytes": "32666135326139312d376636332d353733312d613535642d333064333633353063363432",
+                "$length": 36
+              }
+            ]
+          ]
+        },
+        "wire": "cose"
+      },
+      "name": "mint-default-cwt-okp",
+      "note": "EdDSA on the COSE wire — COSE label -8, whose curve is resolved from the key rather than the label.",
+      "profile": "default",
+      "randomness": {
+        "encrypted": false,
+        "signature": false
+      },
+      "reportedFormat": "cwt",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "cwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "cwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0020"
+      },
+      "signAlgorithm": "EdDSA",
+      "token": "2D3ShFSiAScQb2FwcGxpY2F0aW9uL2N3dKEEWCQyZmE1MmE5MS03ZjYzLTU3MzEtYTU1ZC0zMGQzNjM1MGM2NDJYVKYBeBhodHRwczovL3Rlc3QubGluZG9ybS5pby8Cc2NvcnB1c19zdWJqZWN0XzAwMDEEGmWSfxAFGmWScQAGGmWScQAHT2NvcnB1c19qdGlfMDAyMFhAQLEM-r5HidYdoR2dnzjEhxnLXhHkjKcYMatI6AZ8lOM29Qonw5E5vgbpTtwvR4aztjCWxNJnLzDGQApiF1N3CA",
+      "verb": "mint",
+      "wire": "cose"
+    },
+    {
+      "inspection": {
+        "payload": {
+          "readable": true,
+          "value": {
+            "$map": [
+              [
+                {
+                  "$int": 1
+                },
+                "https://test.lindorm.io/"
+              ],
+              [
+                {
+                  "$int": 2
+                },
+                "corpus_subject_0001"
+              ],
+              [
+                {
+                  "$int": 4
+                },
+                1704099600
+              ],
+              [
+                {
+                  "$int": 5
+                },
+                1704096000
+              ],
+              [
+                {
+                  "$int": 6
+                },
+                1704096000
+              ],
+              [
+                {
+                  "$int": 7
+                },
+                {
+                  "$bytes": "636f727075735f6a74695f30303231",
+                  "$length": 15
+                }
+              ]
+            ]
+          }
+        },
+        "protectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 1
+              },
+              -49
+            ],
+            [
+              {
+                "$int": 16
+              },
+              "application/cwt"
+            ]
+          ]
+        },
+        "tags": [61, 18],
+        "unprotectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 4
+              },
+              {
+                "$bytes": "61316435346332322d396633372d356239652d623663382d396331356439326136343130",
+                "$length": 36
+              }
+            ]
+          ]
+        },
+        "wire": "cose"
+      },
+      "name": "mint-default-cwt-akp",
+      "note": "ML-DSA-65 on the COSE wire — RFC 9964 label -49.",
+      "profile": "default",
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "cwt",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "cwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "cwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0021"
+      },
+      "signAlgorithm": "ML-DSA-65",
+      "token": "<random:4619 chars>",
+      "verb": "mint",
+      "wire": "cose"
+    },
+    {
+      "inspection": {
+        "payload": {
+          "readable": true,
+          "value": {
+            "$map": [
+              [
+                {
+                  "$int": 1
+                },
+                "https://test.lindorm.io/"
+              ],
+              [
+                {
+                  "$int": 2
+                },
+                "corpus_subject_0001"
+              ],
+              [
+                {
+                  "$int": 4
+                },
+                1704099600
+              ],
+              [
+                {
+                  "$int": 5
+                },
+                1704096000
+              ],
+              [
+                {
+                  "$int": 6
+                },
+                1704096000
+              ],
+              [
+                {
+                  "$int": 7
+                },
+                {
+                  "$bytes": "636f727075735f6a74695f30303232",
+                  "$length": 15
+                }
+              ],
+              [
+                {
+                  "$text": "groups"
+                },
+                ["corpus-group"]
+              ],
+              [
+                {
+                  "$text": "roles"
+                },
+                ["corpus-role"]
+              ]
+            ]
+          }
+        },
+        "protectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 1
+              },
+              -36
+            ],
+            [
+              {
+                "$int": 16
+              },
+              "application/cwt"
+            ]
+          ]
+        },
+        "tags": [61, 18],
+        "unprotectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 4
+              },
+              {
+                "$bytes": "62396537626234642d643333322d353564322d396233332d663939306666376462346337",
+                "$length": 36
+              }
+            ]
+          ]
+        },
+        "wire": "cose"
+      },
+      "name": "mint-default-cwt-interoperable",
+      "note": "`proprietary: false` — the interop spelling, where a private-use claim label is written under its JOSE string key instead.",
+      "profile": "default",
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "cwt",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "cwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "cwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0022"
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:435 chars>",
+      "verb": "mint",
+      "wire": "cose"
+    },
+    {
+      "inspection": {
+        "payload": {
+          "readable": true,
+          "value": {
+            "$map": [
+              [
+                {
+                  "$int": -65546
+                },
+                ["corpus-role"]
+              ],
+              [
+                {
+                  "$int": -65545
+                },
+                ["corpus-group"]
+              ],
+              [
+                {
+                  "$int": 1
+                },
+                "https://test.lindorm.io/"
+              ],
+              [
+                {
+                  "$int": 2
+                },
+                "corpus_subject_0001"
+              ],
+              [
+                {
+                  "$int": 4
+                },
+                1704099600
+              ],
+              [
+                {
+                  "$int": 5
+                },
+                1704096000
+              ],
+              [
+                {
+                  "$int": 6
+                },
+                1704096000
+              ],
+              [
+                {
+                  "$int": 7
+                },
+                {
+                  "$bytes": "636f727075735f6a74695f30303233",
+                  "$length": 15
+                }
+              ]
+            ]
+          }
+        },
+        "protectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 1
+              },
+              -36
+            ],
+            [
+              {
+                "$int": 16
+              },
+              "application/cwt"
+            ]
+          ]
+        },
+        "tags": [61, 18],
+        "unprotectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 4
+              },
+              {
+                "$bytes": "62396537626234642d643333322d353564322d396233332d663939306666376462346337",
+                "$length": 36
+              }
+            ]
+          ]
+        },
+        "wire": "cose"
+      },
+      "name": "mint-default-cwt-proprietary",
+      "note": "The same content with the on-platform compact integer labels — the other half of the proprietary pair.",
+      "profile": "default",
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "cwt",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "cwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "cwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0023"
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:431 chars>",
+      "verb": "mint",
+      "wire": "cose"
+    },
+    {
+      "inspection": {
+        "payload": {
+          "readable": true,
+          "value": {
+            "$map": [
+              [
+                {
+                  "$int": 1
+                },
+                "https://test.lindorm.io/"
+              ],
+              [
+                {
+                  "$int": 2
+                },
+                "corpus_subject_0001"
+              ],
+              [
+                {
+                  "$int": 4
+                },
+                1704099600
+              ],
+              [
+                {
+                  "$int": 5
+                },
+                1704096000
+              ],
+              [
+                {
+                  "$int": 6
+                },
+                1704096000
+              ],
+              [
+                {
+                  "$int": 7
+                },
+                {
+                  "$bytes": "636f727075735f6a74695f30303234",
+                  "$length": 15
+                }
+              ]
+            ]
+          }
+        },
+        "protectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 1
+              },
+              -36
+            ],
+            [
+              {
+                "$int": 3
+              },
+              "application/json"
+            ],
+            [
+              {
+                "$int": 16
+              },
+              "application/cwt"
+            ],
+            [
+              {
+                "$text": "oid"
+              },
+              "corpus_oid_0001"
+            ]
+          ]
+        },
+        "tags": [61, 18],
+        "unprotectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 4
+              },
+              {
+                "$bytes": "62396537626234642d643333322d353564322d396233332d663939306666376462346337",
+                "$length": 36
+              }
+            ]
+          ]
+        },
+        "wire": "cose"
+      },
+      "name": "mint-default-cwt-header-bag",
+      "note": "The caller header bag on the COSE wire: the SAME domain option that produced `oid` on JOSE lands at the COSE label the parameter rides under. `oid` has no IANA COSE parameter, so it takes a lindorm PRIVATE-USE label — and this row states no `proprietary`, so aegis writes the INTEROPERABLE spelling, the text label `oid` rather than the private-use integer no foreign reader can interpret. The row below holds the other spelling. RFC 9052 §1.5, RFC 8152 §16.2.",
+      "profile": "default",
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "cwt",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "cwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "cwt",
+        "objectId": "corpus_oid_0001",
+        "tokenId": "corpus_jti_0024"
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:434 chars>",
+      "verb": "mint",
+      "wire": "cose"
+    },
+    {
+      "inspection": {
+        "payload": {
+          "readable": true,
+          "value": {
+            "$map": [
+              [
+                {
+                  "$int": 1
+                },
+                "https://test.lindorm.io/"
+              ],
+              [
+                {
+                  "$int": 2
+                },
+                "corpus_subject_0001"
+              ],
+              [
+                {
+                  "$int": 4
+                },
+                1704099600
+              ],
+              [
+                {
+                  "$int": 5
+                },
+                1704096000
+              ],
+              [
+                {
+                  "$int": 6
+                },
+                1704096000
+              ],
+              [
+                {
+                  "$int": 7
+                },
+                {
+                  "$bytes": "636f727075735f6a74695f30303234",
+                  "$length": 15
+                }
+              ]
+            ]
+          }
+        },
+        "protectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": -70000
+              },
+              "corpus_oid_0001"
+            ],
+            [
+              {
+                "$int": 1
+              },
+              -36
+            ],
+            [
+              {
+                "$int": 3
+              },
+              "application/json"
+            ],
+            [
+              {
+                "$int": 16
+              },
+              "application/cwt"
+            ]
+          ]
+        },
+        "tags": [61, 18],
+        "unprotectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 4
+              },
+              {
+                "$bytes": "62396537626234642d643333322d353564322d396233332d663939306666376462346337",
+                "$length": 36
+              }
+            ]
+          ]
+        },
+        "wire": "cose"
+      },
+      "name": "mint-default-cwt-header-bag-proprietary",
+      "note": "The same header bag on-platform — the other half of the interop pair, and the only row that holds the private-use header label as an INTEGER. Without it the corpus would record one spelling of a parameter that has two, and a change that collapsed them back onto the compact form everywhere would move nothing here. `contentType` (label 3) is registered, so it is the integer in BOTH rows: the mode moves the private-use label and nothing else.",
+      "profile": "default",
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "cwt",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "cwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "cwt",
+        "objectId": "corpus_oid_0001",
+        "tokenId": "corpus_jti_0024"
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:435 chars>",
+      "verb": "mint",
+      "wire": "cose"
+    },
+    {
+      "inspection": {
+        "payload": {
+          "readable": true,
+          "value": {
+            "$map": [
+              [
+                {
+                  "$int": 1
+                },
+                "https://test.lindorm.io/"
+              ],
+              [
+                {
+                  "$int": 2
+                },
+                "corpus_subject_0001"
+              ],
+              [
+                {
+                  "$int": 4
+                },
+                1704099600
+              ],
+              [
+                {
+                  "$int": 5
+                },
+                1704096000
+              ],
+              [
+                {
+                  "$int": 6
+                },
+                1704096000
+              ],
+              [
+                {
+                  "$int": 7
+                },
+                {
+                  "$bytes": "636f727075735f6a74695f30303235",
+                  "$length": 15
+                }
+              ],
+              [
+                {
+                  "$int": 9
+                },
+                ""
+              ]
+            ]
+          }
+        },
+        "protectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 1
+              },
+              -36
+            ],
+            [
+              {
+                "$int": 16
+              },
+              "application/cwt"
+            ]
+          ]
+        },
+        "tags": [61, 18],
+        "unprotectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 4
+              },
+              {
+                "$bytes": "62396537626234642d643333322d353564322d396233332d663939306666376462346337",
+                "$length": 36
+              }
+            ]
+          ]
+        },
+        "wire": "cose"
+      },
+      "name": "mint-default-cwt-empty-claims",
+      "note": "The same registry decision on the COSE wire — its own forward into the normalisation, so a prune that reached only one wire shows as a diff on exactly one of the two rows. The empty `amr` is the claim that carries it here: an empty text claim never reaches the CWT bytes anyway.",
+      "profile": "default",
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "cwt",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "cwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "cwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0025"
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:384 chars>",
+      "verb": "mint",
+      "wire": "cose"
+    },
+    {
+      "inspection": {
+        "payload": {
+          "readable": true,
+          "value": {
+            "$map": [
+              [
+                {
+                  "$int": 1
+                },
+                "https://test.lindorm.io/"
+              ],
+              [
+                {
+                  "$int": 2
+                },
+                "corpus_subject_0001"
+              ],
+              [
+                {
+                  "$int": 4
+                },
+                1704099600
+              ],
+              [
+                {
+                  "$int": 5
+                },
+                1704096000
+              ],
+              [
+                {
+                  "$int": 6
+                },
+                1704096000
+              ],
+              [
+                {
+                  "$int": 7
+                },
+                {
+                  "$bytes": "636f727075735f6a74695f30303336",
+                  "$length": 15
+                }
+              ],
+              [
+                {
+                  "$int": 8
+                },
+                {
+                  "$map": [
+                    [
+                      {
+                        "$int": 3
+                      },
+                      {
+                        "$bytes": "636f727075735f636e665f6b69645f30303031",
+                        "$length": 19
+                      }
+                    ]
+                  ]
+                }
+              ],
+              [
+                {
+                  "$text": "act"
+                },
+                {
+                  "$map": [
+                    [
+                      {
+                        "$text": "act"
+                      },
+                      {
+                        "$map": [
+                          [
+                            {
+                              "$text": "sub"
+                            },
+                            "corpus_actor_0002"
+                          ]
+                        ]
+                      }
+                    ],
+                    [
+                      {
+                        "$text": "client_id"
+                      },
+                      "corpus_actor_client_0001"
+                    ],
+                    [
+                      {
+                        "$text": "iss"
+                      },
+                      "https://actor.corpus.lindorm.test"
+                    ],
+                    [
+                      {
+                        "$text": "sub"
+                      },
+                      "corpus_actor_0001"
+                    ]
+                  ]
+                }
+              ],
+              [
+                {
+                  "$text": "address"
+                },
+                {
+                  "$map": [
+                    [
+                      {
+                        "$text": "care_of"
+                      },
+                      "Corpus Care Of"
+                    ],
+                    [
+                      {
+                        "$text": "country"
+                      },
+                      "SE"
+                    ],
+                    [
+                      {
+                        "$text": "locality"
+                      },
+                      "Stockholm"
+                    ],
+                    [
+                      {
+                        "$text": "postal_code"
+                      },
+                      "111 22"
+                    ],
+                    [
+                      {
+                        "$text": "region"
+                      },
+                      "Stockholm"
+                    ],
+                    [
+                      {
+                        "$text": "street_address"
+                      },
+                      "Corpusgatan 1"
+                    ]
+                  ]
+                }
+              ],
+              [
+                {
+                  "$text": "authorization_details"
+                },
+                [
+                  {
+                    "$map": [
+                      [
+                        {
+                          "$text": "actions"
+                        },
+                        ["read", "write"]
+                      ],
+                      [
+                        {
+                          "$text": "locations"
+                        },
+                        ["https://rs.corpus.lindorm.test"]
+                      ],
+                      [
+                        {
+                          "$text": "type"
+                        },
+                        "corpus_rar_type"
+                      ]
+                    ]
+                  }
+                ]
+              ],
+              [
+                {
+                  "$text": "events"
+                },
+                {
+                  "$map": [
+                    [
+                      {
+                        "$text": "http://schemas.openid.net/event/backchannel-logout"
+                      },
+                      {
+                        "$map": []
+                      }
+                    ],
+                    [
+                      {
+                        "$text": "urn:lindorm:event:rtbf"
+                      },
+                      {
+                        "$map": [
+                          [
+                            {
+                              "$text": "subject"
+                            },
+                            "corpus_event_subject_0001"
+                          ]
+                        ]
+                      }
+                    ]
+                  ]
+                }
+              ],
+              [
+                {
+                  "$text": "may_act"
+                },
+                {
+                  "$map": [
+                    [
+                      {
+                        "$text": "client_id"
+                      },
+                      "corpus_may_client_0001"
+                    ],
+                    [
+                      {
+                        "$text": "sub"
+                      },
+                      "corpus_may_actor_0001"
+                    ]
+                  ]
+                }
+              ],
+              [
+                {
+                  "$text": "sub_id"
+                },
+                {
+                  "$map": [
+                    [
+                      {
+                        "$text": "format"
+                      },
+                      "iss_sub"
+                    ],
+                    [
+                      {
+                        "$text": "iss"
+                      },
+                      "https://idp.corpus.lindorm.test"
+                    ],
+                    [
+                      {
+                        "$text": "sub"
+                      },
+                      "corpus_sub_id_0001"
+                    ]
+                  ]
+                }
+              ]
+            ]
+          }
+        },
+        "protectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 1
+              },
+              -36
+            ],
+            [
+              {
+                "$int": 16
+              },
+              "application/cwt"
+            ]
+          ]
+        },
+        "tags": [61, 18],
+        "unprotectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 4
+              },
+              {
+                "$bytes": "62396537626234642d643333322d353564322d396233332d663939306666376462346337",
+                "$length": 36
+              }
+            ]
+          ]
+        },
+        "wire": "cose"
+      },
+      "name": "mint-default-cwt-structured-claims",
+      "note": "The same structured claims on the COSE wire, INTEROPERABLE. This is the row the CWT claim shaper writes: `cnf` becomes a COSE key map, and `act`/`may_act`/`sub_id` stay string-keyed because the compact form is on-platform only. A shaper that stopped shaping a claim would leave its JOSE-shaped value here and move exactly these bytes.",
+      "profile": "default",
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "cwt",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "cwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "cwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0036"
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:1260 chars>",
+      "verb": "mint",
+      "wire": "cose"
+    },
+    {
+      "inspection": {
+        "payload": {
+          "readable": true,
+          "value": {
+            "$map": [
+              [
+                {
+                  "$int": -65557
+                },
+                {
+                  "$map": [
+                    [
+                      {
+                        "$text": "care_of"
+                      },
+                      "Corpus Care Of"
+                    ],
+                    [
+                      {
+                        "$text": "country"
+                      },
+                      "SE"
+                    ],
+                    [
+                      {
+                        "$text": "locality"
+                      },
+                      "Stockholm"
+                    ],
+                    [
+                      {
+                        "$text": "postal_code"
+                      },
+                      "111 22"
+                    ],
+                    [
+                      {
+                        "$text": "region"
+                      },
+                      "Stockholm"
+                    ],
+                    [
+                      {
+                        "$text": "street_address"
+                      },
+                      "Corpusgatan 1"
+                    ]
+                  ]
+                }
+              ],
+              [
+                {
+                  "$int": -65550
+                },
+                {
+                  "$map": [
+                    [
+                      {
+                        "$text": "http://schemas.openid.net/event/backchannel-logout"
+                      },
+                      {
+                        "$map": []
+                      }
+                    ],
+                    [
+                      {
+                        "$text": "urn:lindorm:event:rtbf"
+                      },
+                      {
+                        "$map": [
+                          [
+                            {
+                              "$text": "subject"
+                            },
+                            "corpus_event_subject_0001"
+                          ]
+                        ]
+                      }
+                    ]
+                  ]
+                }
+              ],
+              [
+                {
+                  "$int": -65549
+                },
+                {
+                  "$map": [
+                    [
+                      {
+                        "$int": 0
+                      },
+                      "iss_sub"
+                    ],
+                    [
+                      {
+                        "$int": 1
+                      },
+                      "https://idp.corpus.lindorm.test"
+                    ],
+                    [
+                      {
+                        "$int": 2
+                      },
+                      "corpus_sub_id_0001"
+                    ]
+                  ]
+                }
+              ],
+              [
+                {
+                  "$int": -65543
+                },
+                {
+                  "$map": [
+                    [
+                      {
+                        "$int": 2
+                      },
+                      "corpus_may_actor_0001"
+                    ],
+                    [
+                      {
+                        "$int": 4
+                      },
+                      "corpus_may_client_0001"
+                    ]
+                  ]
+                }
+              ],
+              [
+                {
+                  "$int": -65542
+                },
+                [
+                  {
+                    "$map": [
+                      [
+                        {
+                          "$text": "actions"
+                        },
+                        ["read", "write"]
+                      ],
+                      [
+                        {
+                          "$text": "locations"
+                        },
+                        ["https://rs.corpus.lindorm.test"]
+                      ],
+                      [
+                        {
+                          "$text": "type"
+                        },
+                        "corpus_rar_type"
+                      ]
+                    ]
+                  }
+                ]
+              ],
+              [
+                {
+                  "$int": 1
+                },
+                "https://test.lindorm.io/"
+              ],
+              [
+                {
+                  "$int": 2
+                },
+                "corpus_subject_0001"
+              ],
+              [
+                {
+                  "$int": 4
+                },
+                1704099600
+              ],
+              [
+                {
+                  "$int": 5
+                },
+                1704096000
+              ],
+              [
+                {
+                  "$int": 6
+                },
+                1704096000
+              ],
+              [
+                {
+                  "$int": 7
+                },
+                {
+                  "$bytes": "636f727075735f6a74695f30303337",
+                  "$length": 15
+                }
+              ],
+              [
+                {
+                  "$int": 8
+                },
+                {
+                  "$map": [
+                    [
+                      {
+                        "$int": 3
+                      },
+                      {
+                        "$bytes": "636f727075735f636e665f6b69645f30303031",
+                        "$length": 19
+                      }
+                    ]
+                  ]
+                }
+              ],
+              [
+                {
+                  "$text": "act"
+                },
+                {
+                  "$map": [
+                    [
+                      {
+                        "$int": 1
+                      },
+                      "https://actor.corpus.lindorm.test"
+                    ],
+                    [
+                      {
+                        "$int": 2
+                      },
+                      "corpus_actor_0001"
+                    ],
+                    [
+                      {
+                        "$int": 4
+                      },
+                      "corpus_actor_client_0001"
+                    ],
+                    [
+                      {
+                        "$int": 5
+                      },
+                      {
+                        "$map": [
+                          [
+                            {
+                              "$int": 2
+                            },
+                            "corpus_actor_0002"
+                          ]
+                        ]
+                      }
+                    ]
+                  ]
+                }
+              ]
+            ]
+          }
+        },
+        "protectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 1
+              },
+              -36
+            ],
+            [
+              {
+                "$int": 16
+              },
+              "application/cwt"
+            ]
+          ]
+        },
+        "tags": [61, 18],
+        "unprotectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 4
+              },
+              {
+                "$bytes": "62396537626234642d643333322d353564322d396233332d663939306666376462346337",
+                "$length": 36
+              }
+            ]
+          ]
+        },
+        "wire": "cose"
+      },
+      "name": "mint-default-cwt-structured-claims-proprietary",
+      "note": "The on-platform half of the pair — the same structured claims with the compact encodings turned on, so `act`/`may_act`/`sub_id` collapse from string-keyed maps to integer-labelled ones. Without this row the compact builders would have no wire record at all, and a shaper that stopped reaching them would move nothing.",
+      "profile": "default",
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "cwt",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "cwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "cwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0037"
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:1164 chars>",
+      "verb": "mint",
+      "wire": "cose"
+    },
+    {
+      "inspection": {
+        "payload": {
+          "readable": true,
+          "value": {
+            "$map": [
+              [
+                {
+                  "$int": 1
+                },
+                "https://test.lindorm.io/"
+              ],
+              [
+                {
+                  "$int": 2
+                },
+                "corpus_subject_0001"
+              ],
+              [
+                {
+                  "$int": 4
+                },
+                1704099600
+              ],
+              [
+                {
+                  "$int": 5
+                },
+                1704096000
+              ],
+              [
+                {
+                  "$int": 6
+                },
+                1704096000
+              ],
+              [
+                {
+                  "$int": 7
+                },
+                {
+                  "$bytes": "636f727075735f6a74695f30303338",
+                  "$length": 15
+                }
+              ],
+              [
+                {
+                  "$text": "at_hash"
+                },
+                {
+                  "$bytes": "4f4441774d4441774d4441774d4441774d444177",
+                  "$length": 20
+                }
+              ],
+              [
+                {
+                  "$text": "c_hash"
+                },
+                {
+                  "$bytes": "513052465130394552554e505245564454305246",
+                  "$length": 20
+                }
+              ],
+              [
+                {
+                  "$text": "s_hash"
+                },
+                {
+                  "$bytes": "55315242564556545645465552564e5551565246",
+                  "$length": 20
+                }
+              ]
+            ]
+          }
+        },
+        "protectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 1
+              },
+              -36
+            ],
+            [
+              {
+                "$int": 16
+              },
+              "application/cwt"
+            ]
+          ]
+        },
+        "tags": [61, 18],
+        "unprotectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 4
+              },
+              {
+                "$bytes": "62396537626234642d643333322d353564322d396233332d663939306666376462346337",
+                "$length": 36
+              }
+            ]
+          ]
+        },
+        "wire": "cose"
+      },
+      "name": "mint-default-cwt-hash-claims",
+      "note": "The three OIDC hashes on the COSE wire, where each is the BYTES the base64url string decodes to rather than the string itself. The JOSE twin holds the string, so the pair is what records that the two wires disagree deliberately.",
+      "profile": "default",
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "cwt",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "cwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "cwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0038"
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:495 chars>",
+      "verb": "mint",
+      "wire": "cose"
+    },
+    {
+      "inspection": {
+        "payload": {
+          "readable": true,
+          "value": {
+            "$map": [
+              [
+                {
+                  "$int": 1
+                },
+                "https://test.lindorm.io/"
+              ],
+              [
+                {
+                  "$int": 2
+                },
+                "corpus_subject_0001"
+              ],
+              [
+                {
+                  "$int": 3
+                },
+                ["https://rs.corpus.lindorm.test"]
+              ],
+              [
+                {
+                  "$int": 4
+                },
+                1704099600
+              ],
+              [
+                {
+                  "$int": 6
+                },
+                1704096000
+              ],
+              [
+                {
+                  "$int": 7
+                },
+                {
+                  "$bytes": "636f727075735f6a74695f30303236",
+                  "$length": 15
+                }
+              ],
+              [
+                {
+                  "$text": "client_id"
+                },
+                "corpus_client_0001"
+              ]
+            ]
+          }
+        },
+        "protectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 1
+              },
+              -36
+            ],
+            [
+              {
+                "$int": 16
+              },
+              "application/at+cwt"
+            ]
+          ]
+        },
+        "tags": [61, 18],
+        "unprotectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 4
+              },
+              {
+                "$bytes": "62396537626234642d643333322d353564322d396233332d663939306666376462346337",
+                "$length": 36
+              }
+            ]
+          ]
+        },
+        "wire": "cose"
+      },
+      "name": "mint-access-token-cwt-ec",
+      "note": "RFC 9068 access token on the COSE wire — the `application/at+cwt` media type at COSE label 16.",
+      "profile": "access_token",
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "cwt",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "cwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "cwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0026"
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:463 chars>",
+      "verb": "mint",
+      "wire": "cose"
+    },
+    {
+      "inspection": {
+        "payload": {
+          "readable": true,
+          "value": {
+            "$map": [
+              [
+                {
+                  "$int": 1
+                },
+                "https://test.lindorm.io/"
+              ],
+              [
+                {
+                  "$int": 2
+                },
+                "corpus_subject_0001"
+              ],
+              [
+                {
+                  "$int": 3
+                },
+                ["corpus_client_0001"]
+              ],
+              [
+                {
+                  "$int": 4
+                },
+                1704099600
+              ],
+              [
+                {
+                  "$int": 6
+                },
+                1704096000
+              ],
+              [
+                {
+                  "$int": 7
+                },
+                {
+                  "$bytes": "636f727075735f6a74695f30303237",
+                  "$length": 15
+                }
+              ]
+            ]
+          }
+        },
+        "protectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 1
+              },
+              -36
+            ],
+            [
+              {
+                "$int": 16
+              },
+              "application/cwt"
+            ]
+          ]
+        },
+        "tags": [61, 18],
+        "unprotectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 4
+              },
+              {
+                "$bytes": "62396537626234642d643333322d353564322d396233332d663939306666376462346337",
+                "$length": 36
+              }
+            ]
+          ]
+        },
+        "wire": "cose"
+      },
+      "name": "mint-id-token-cwt-ec",
+      "note": "The id token on the COSE wire — a profile whose JOSE typ is the bare `JWT` has to say something else here.",
+      "profile": "id_token",
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "cwt",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "cwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "cwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0027"
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:402 chars>",
+      "verb": "mint",
+      "wire": "cose"
+    },
+    {
+      "inspection": {
+        "payload": {
+          "readable": false,
+          "reason": "a COSE_Encrypt0 carries ciphertext where a COSE_Sign1/Mac0 carries its payload"
+        },
+        "protectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 1
+              },
+              3
+            ],
+            [
+              {
+                "$int": 3
+              },
+              "application/cwt"
+            ],
+            [
+              {
+                "$int": 16
+              },
+              "application/cwe"
+            ]
+          ]
+        },
+        "tags": [16],
+        "unprotectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 4
+              },
+              {
+                "$bytes": "61653236313735662d393631642d353934372d383331382d363239396534353736623833",
+                "$length": 36
+              }
+            ],
+            [
+              {
+                "$int": 5
+              },
+              "<random:12 bytes>"
+            ]
+          ]
+        },
+        "wire": "cose"
+      },
+      "name": "mint-id-token-cwt-encrypted-dir",
+      "note": "Sign-then-encrypt on the COSE wire — a COSE_Encrypt0 whose IV rides the unprotected bucket (RFC 9052 §3.1).",
+      "profile": "id_token",
+      "randomness": {
+        "encrypted": true,
+        "signature": true
+      },
+      "reportedFormat": "cwt",
+      "reportedWrapper": "cwe",
+      "requestedFormat": "cwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "cwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0028"
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:554 chars>",
+      "verb": "mint",
+      "wire": "cose"
+    },
+    {
+      "inspection": {
+        "payload": {
+          "readable": false,
+          "reason": "a COSE_Encrypt0 carries ciphertext where a COSE_Sign1/Mac0 carries its payload"
+        },
+        "protectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 1
+              },
+              1
+            ],
+            [
+              {
+                "$int": 3
+              },
+              "application/cwt"
+            ],
+            [
+              {
+                "$int": 16
+              },
+              "application/cwe"
+            ]
+          ]
+        },
+        "tags": [16],
+        "unprotectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 4
+              },
+              {
+                "$bytes": "62326439653463372d386131352d356633362d396330622d346437653261386631353033",
+                "$length": 36
+              }
+            ],
+            [
+              {
+                "$int": 5
+              },
+              "<random:12 bytes>"
+            ]
+          ]
+        },
+        "wire": "cose"
+      },
+      "name": "mint-id-token-cwt-encrypted-gcm128",
+      "note": "The same wrapper under A128GCM — the content encryption is the one property of the resolved key legible from the protected bucket.",
+      "profile": "id_token",
+      "randomness": {
+        "encrypted": true,
+        "signature": true
+      },
+      "reportedFormat": "cwt",
+      "reportedWrapper": "cwe",
+      "requestedFormat": "cwt",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "cwt",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0029"
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:554 chars>",
+      "verb": "mint",
+      "wire": "cose"
+    },
+    {
+      "inspection": {
+        "payload": {
+          "readable": true,
+          "value": {
+            "$map": [
+              [
+                {
+                  "$int": 1
+                },
+                "https://test.lindorm.io/"
+              ],
+              [
+                {
+                  "$int": 2
+                },
+                "corpus_subject_0001"
+              ],
+              [
+                {
+                  "$int": 4
+                },
+                1704099600
+              ],
+              [
+                {
+                  "$int": 5
+                },
+                1704096000
+              ],
+              [
+                {
+                  "$int": 6
+                },
+                1704096000
+              ],
+              [
+                {
+                  "$int": 7
+                },
+                {
+                  "$bytes": "636f727075735f6a74695f30303330",
+                  "$length": 15
+                }
+              ]
+            ]
+          }
+        },
+        "protectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 1
+              },
+              5
+            ],
+            [
+              {
+                "$int": 16
+              },
+              "application/cwt"
+            ]
+          ]
+        },
+        "tags": [61, 17],
+        "unprotectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 4
+              },
+              {
+                "$bytes": "64333262656437622d343064372d353835312d616164362d393535383964616462363565",
+                "$length": 36
+              }
+            ]
+          ]
+        },
+        "wire": "cose"
+      },
+      "name": "mint-default-cwm-oct",
+      "note": "COSE_Mac0 — the symmetric COSE structure, which is a different tag chain from the signed one for the same claims.",
+      "profile": "default",
+      "randomness": {
+        "encrypted": false,
+        "signature": false
+      },
+      "reportedFormat": "cwm",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "cwm",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "cwm",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0030"
+      },
+      "signAlgorithm": "HS256",
+      "token": "2D3RhFSiAQUQb2FwcGxpY2F0aW9uL2N3dKEEWCRkMzJiZWQ3Yi00MGQ3LTU4NTEtYWFkNi05NTU4OWRhZGI2NWVYVKYBeBhodHRwczovL3Rlc3QubGluZG9ybS5pby8Cc2NvcnB1c19zdWJqZWN0XzAwMDEEGmWSfxAFGmWScQAGGmWScQAHT2NvcnB1c19qdGlfMDAzMFggO-Uc0ynVA89ZWh8Oj4X3ABHeJNft1s_4vhktsAAnHXA",
+      "verb": "mint",
+      "wire": "cose"
+    },
+    {
+      "inspection": {
+        "payload": {
+          "readable": true,
+          "value": {
+            "$map": [
+              [
+                {
+                  "$int": 1
+                },
+                "https://test.lindorm.io/"
+              ],
+              [
+                {
+                  "$int": 2
+                },
+                "corpus_subject_0001"
+              ],
+              [
+                {
+                  "$int": 3
+                },
+                ["corpus_client_0001"]
+              ],
+              [
+                {
+                  "$int": 4
+                },
+                1704099600
+              ],
+              [
+                {
+                  "$int": 6
+                },
+                1704096000
+              ],
+              [
+                {
+                  "$int": 7
+                },
+                {
+                  "$bytes": "636f727075735f6a74695f30303331",
+                  "$length": 15
+                }
+              ]
+            ]
+          }
+        },
+        "protectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 1
+              },
+              5
+            ],
+            [
+              {
+                "$int": 16
+              },
+              "application/cwt"
+            ]
+          ]
+        },
+        "tags": [61, 17],
+        "unprotectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 4
+              },
+              {
+                "$bytes": "64333262656437622d343064372d353835312d616164362d393535383964616462363565",
+                "$length": 36
+              }
+            ]
+          ]
+        },
+        "wire": "cose"
+      },
+      "name": "mint-id-token-cwm-oct",
+      "note": "A MACed id token in its COSE form — the HS-signed id token a confidential client may take. OIDC Core §10.1.",
+      "profile": "id_token",
+      "randomness": {
+        "encrypted": false,
+        "signature": false
+      },
+      "reportedFormat": "cwm",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "cwm",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "cwm",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0031"
+      },
+      "signAlgorithm": "HS256",
+      "token": "2D3RhFSiAQUQb2FwcGxpY2F0aW9uL2N3dKEEWCRkMzJiZWQ3Yi00MGQ3LTU4NTEtYWFkNi05NTU4OWRhZGI2NWVYY6YBeBhodHRwczovL3Rlc3QubGluZG9ybS5pby8Cc2NvcnB1c19zdWJqZWN0XzAwMDEDgXJjb3JwdXNfY2xpZW50XzAwMDEEGmWSfxAGGmWScQAHT2NvcnB1c19qdGlfMDAzMVggyPE_Q2yaHVwDWolt8jQqcd1hv-PxdMC-FM2xF2_ZytE",
+      "verb": "mint",
+      "wire": "cose"
+    },
+    {
+      "inspection": {
+        "payload": {
+          "readable": true,
+          "value": {
+            "$map": [
+              [
+                {
+                  "$int": 1
+                },
+                "https://test.lindorm.io/"
+              ],
+              [
+                {
+                  "$int": 2
+                },
+                "corpus_subject_0001"
+              ],
+              [
+                {
+                  "$int": 4
+                },
+                1704099600
+              ],
+              [
+                {
+                  "$int": 5
+                },
+                1704096000
+              ],
+              [
+                {
+                  "$int": 6
+                },
+                1704096000
+              ],
+              [
+                {
+                  "$int": 7
+                },
+                {
+                  "$bytes": "636f727075735f6a74695f30303332",
+                  "$length": 15
+                }
+              ],
+              [
+                {
+                  "$text": "groups"
+                },
+                ["corpus-group"]
+              ],
+              [
+                {
+                  "$text": "roles"
+                },
+                ["corpus-role"]
+              ]
+            ]
+          }
+        },
+        "protectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 1
+              },
+              5
+            ],
+            [
+              {
+                "$int": 16
+              },
+              "application/cwt"
+            ]
+          ]
+        },
+        "tags": [61, 17],
+        "unprotectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 4
+              },
+              {
+                "$bytes": "64333262656437622d343064372d353835312d616164362d393535383964616462363565",
+                "$length": 36
+              }
+            ]
+          ]
+        },
+        "wire": "cose"
+      },
+      "name": "mint-default-cwm-interoperable",
+      "note": "The interop label spelling on the MACed structure — `proprietary` is a claim-encoding knob, so it must reach cwm as well as cwt.",
+      "profile": "default",
+      "randomness": {
+        "encrypted": false,
+        "signature": false
+      },
+      "reportedFormat": "cwm",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "cwm",
+      "result": {
+        "expiresAt": {
+          "$date": "2024-01-01T09:00:00.000Z"
+        },
+        "expiresIn": 3600,
+        "expiresOn": 1704099600,
+        "format": "cwm",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": "corpus_jti_0032"
+      },
+      "signAlgorithm": "HS256",
+      "token": "2D3RhFSiAQUQb2FwcGxpY2F0aW9uL2N3dKEEWCRkMzJiZWQ3Yi00MGQ3LTU4NTEtYWFkNi05NTU4OWRhZGI2NWVYfKgBeBhodHRwczovL3Rlc3QubGluZG9ybS5pby8Cc2NvcnB1c19zdWJqZWN0XzAwMDEEGmWSfxAFGmWScQAGGmWScQAHT2NvcnB1c19qdGlfMDAzMmVyb2xlc4FrY29ycHVzLXJvbGVmZ3JvdXBzgWxjb3JwdXMtZ3JvdXBYIKZZdbZY2CYw0WmlHLHQexWUiGrOQCdBuznQt87pbeFh",
+      "verb": "mint",
+      "wire": "cose"
+    },
+    {
+      "inspection": {
+        "partCount": 3,
+        "parts": [
+          "eyJhbGciOiJFUzUxMiIsImN0eSI6ImFwcGxpY2F0aW9uL2pzb24iLCJqa3UiOiJodHRwczovL3Rlc3QubGluZG9ybS5pby8ud2VsbC1rbm93bi9qd2tzLmpzb24iLCJraWQiOiJiOWU3YmI0ZC1kMzMyLTU1ZDItOWIzMy1mOTkwZmY3ZGI0YzciLCJ0eXAiOiJKV1MifQ",
+          "eyJjb3JwdXMiOiJvcGFxdWUtb2JqZWN0IiwibmVzdGVkIjp7ImRlcHRoIjoxfSwibGlzdCI6WzEsMiwzXX0",
+          "<random:132 bytes>"
+        ],
+        "payload": {
+          "readable": true,
+          "value": {
+            "corpus": "opaque-object",
+            "list": [1, 2, 3],
+            "nested": {
+              "depth": 1
+            }
+          }
+        },
+        "protectedHeader": {
+          "alg": "ES512",
+          "cty": "application/json",
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+          "typ": "JWS"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "sign-jws-object-ec",
+      "note": "An opaque JWS over a JSON object — no claims layer, so the payload bytes are the caller's own serialisation.",
+      "profile": {
+        "$undefined": true
+      },
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "jws",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jws",
+      "result": {
+        "expiresAt": {
+          "$undefined": true
+        },
+        "expiresIn": {
+          "$undefined": true
+        },
+        "expiresOn": {
+          "$undefined": true
+        },
+        "format": "jws",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": {
+          "$undefined": true
+        }
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:463 chars>",
+      "verb": "sign",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 3,
+        "parts": [
+          "eyJhbGciOiJFZERTQSIsImN0eSI6InRleHQvcGxhaW4iLCJqa3UiOiJodHRwczovL3Rlc3QubGluZG9ybS5pby8ud2VsbC1rbm93bi9qd2tzLmpzb24iLCJraWQiOiIyZmE1MmE5MS03ZjYzLTU3MzEtYTU1ZC0zMGQzNjM1MGM2NDIiLCJ0eXAiOiJKV1MifQ",
+          "Y29ycHVzIG9wYXF1ZSBzdHJpbmcgcGF5bG9hZA",
+          "zpXRQSffuvn0SvkKXf9rmxt0vLbvBtrXr5DFqxmINYgso07FEVC1ZVO_8cHIdB7GeRKzLQMyILuzpECoHX4UDQ"
+        ],
+        "payload": {
+          "readable": false,
+          "reason": "the payload is not JSON — it is an opaque JWS body"
+        },
+        "protectedHeader": {
+          "alg": "EdDSA",
+          "cty": "text/plain",
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "2fa52a91-7f63-5731-a55d-30d36350c642",
+          "typ": "JWS"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "sign-jws-string-okp",
+      "note": "An opaque JWS over a string — the payload passes through untouched, which is the property that separates `sign` from `mint`.",
+      "profile": {
+        "$undefined": true
+      },
+      "randomness": {
+        "encrypted": false,
+        "signature": false
+      },
+      "reportedFormat": "jws",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jws",
+      "result": {
+        "expiresAt": {
+          "$undefined": true
+        },
+        "expiresIn": {
+          "$undefined": true
+        },
+        "expiresOn": {
+          "$undefined": true
+        },
+        "format": "jws",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": {
+          "$undefined": true
+        }
+      },
+      "signAlgorithm": "EdDSA",
+      "token": "eyJhbGciOiJFZERTQSIsImN0eSI6InRleHQvcGxhaW4iLCJqa3UiOiJodHRwczovL3Rlc3QubGluZG9ybS5pby8ud2VsbC1rbm93bi9qd2tzLmpzb24iLCJraWQiOiIyZmE1MmE5MS03ZjYzLTU3MzEtYTU1ZC0zMGQzNjM1MGM2NDIiLCJ0eXAiOiJKV1MifQ.Y29ycHVzIG9wYXF1ZSBzdHJpbmcgcGF5bG9hZA.zpXRQSffuvn0SvkKXf9rmxt0vLbvBtrXr5DFqxmINYgso07FEVC1ZVO_8cHIdB7GeRKzLQMyILuzpECoHX4UDQ",
+      "verb": "sign",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 3,
+        "parts": [
+          "eyJhbGciOiJIUzI1NiIsImN0eSI6ImFwcGxpY2F0aW9uL29jdGV0LXN0cmVhbSIsImprdSI6Imh0dHBzOi8vdGVzdC5saW5kb3JtLmlvLy53ZWxsLWtub3duL2p3a3MuanNvbiIsImtpZCI6ImQzMmJlZDdiLTQwZDctNTg1MS1hYWQ2LTk1NTg5ZGFkYjY1ZSIsInR5cCI6IkpXUyJ9",
+          "ABEiM0RVZneImaq7zN3u_wECAwQFBgcI",
+          "OjcM0twc15x8WnCLcrTE78JNQAlMrbKnt2hYnyNg4rI"
+        ],
+        "payload": {
+          "readable": false,
+          "reason": "the payload is not JSON — it is an opaque JWS body"
+        },
+        "protectedHeader": {
+          "alg": "HS256",
+          "cty": "application/octet-stream",
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "d32bed7b-40d7-5851-aad6-95589dadb65e",
+          "typ": "JWS"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "sign-jws-bytes-oct",
+      "note": "An opaque JWS over raw bytes under HS256 — the payload segment is base64url of exactly those bytes.",
+      "profile": {
+        "$undefined": true
+      },
+      "randomness": {
+        "encrypted": false,
+        "signature": false
+      },
+      "reportedFormat": "jws",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jws",
+      "result": {
+        "expiresAt": {
+          "$undefined": true
+        },
+        "expiresIn": {
+          "$undefined": true
+        },
+        "expiresOn": {
+          "$undefined": true
+        },
+        "format": "jws",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": {
+          "$undefined": true
+        }
+      },
+      "signAlgorithm": "HS256",
+      "token": "eyJhbGciOiJIUzI1NiIsImN0eSI6ImFwcGxpY2F0aW9uL29jdGV0LXN0cmVhbSIsImprdSI6Imh0dHBzOi8vdGVzdC5saW5kb3JtLmlvLy53ZWxsLWtub3duL2p3a3MuanNvbiIsImtpZCI6ImQzMmJlZDdiLTQwZDctNTg1MS1hYWQ2LTk1NTg5ZGFkYjY1ZSIsInR5cCI6IkpXUyJ9.ABEiM0RVZneImaq7zN3u_wECAwQFBgcI.OjcM0twc15x8WnCLcrTE78JNQAlMrbKnt2hYnyNg4rI",
+      "verb": "sign",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 3,
+        "parts": [
+          "eyJhbGciOiJFUzUxMiIsImN0eSI6ImFwcGxpY2F0aW9uL2pzb24iLCJqa3UiOiJodHRwczovL3Rlc3QubGluZG9ybS5pby8ud2VsbC1rbm93bi9qd2tzLmpzb24iLCJraWQiOiJiOWU3YmI0ZC1kMzMyLTU1ZDItOWIzMy1mOTkwZmY3ZGI0YzciLCJ0eXAiOiJhcHBsaWNhdGlvbi9hdCtqd3MifQ",
+          "eyJjb3JwdXMiOiJvcGFxdWUtb2JqZWN0IiwibmVzdGVkIjp7ImRlcHRoIjoxfSwibGlzdCI6WzEsMiwzXX0",
+          "<random:132 bytes>"
+        ],
+        "payload": {
+          "readable": true,
+          "value": {
+            "corpus": "opaque-object",
+            "list": [1, 2, 3],
+            "nested": {
+              "depth": 1
+            }
+          }
+        },
+        "protectedHeader": {
+          "alg": "ES512",
+          "cty": "application/json",
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+          "typ": "application/at+jws"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "sign-jws-object-token-type",
+      "note": "The `tokenType` knob — the domain token type becomes the media type in the JOSE `typ` header.",
+      "profile": {
+        "$undefined": true
+      },
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "jws",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jws",
+      "result": {
+        "expiresAt": {
+          "$undefined": true
+        },
+        "expiresIn": {
+          "$undefined": true
+        },
+        "expiresOn": {
+          "$undefined": true
+        },
+        "format": "jws",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": {
+          "$undefined": true
+        }
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:483 chars>",
+      "verb": "sign",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 3,
+        "parts": [
+          "eyJhbGciOiJFUzUxMiIsImN0eSI6ImFwcGxpY2F0aW9uL2pzb24iLCJqa3UiOiJodHRwczovL3Rlc3QubGluZG9ybS5pby8ud2VsbC1rbm93bi9qd2tzLmpzb24iLCJraWQiOiJiOWU3YmI0ZC1kMzMyLTU1ZDItOWIzMy1mOTkwZmY3ZGI0YzciLCJvaWQiOiJjb3JwdXNfb2lkXzAwMDIiLCJ0eXAiOiJKV1MifQ",
+          "eyJjb3JwdXMiOiJvcGFxdWUtb2JqZWN0IiwibmVzdGVkIjp7ImRlcHRoIjoxfSwibGlzdCI6WzEsMiwzXX0",
+          "<random:132 bytes>"
+        ],
+        "payload": {
+          "readable": true,
+          "value": {
+            "corpus": "opaque-object",
+            "list": [1, 2, 3],
+            "nested": {
+              "depth": 1
+            }
+          }
+        },
+        "protectedHeader": {
+          "alg": "ES512",
+          "cty": "application/json",
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+          "oid": "corpus_oid_0002",
+          "typ": "JWS"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "sign-jws-object-header-bag",
+      "note": "The caller header bag on the opaque JOSE path — the same translation the mint path performs, reached through a different door.",
+      "profile": {
+        "$undefined": true
+      },
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "jws",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jws",
+      "result": {
+        "expiresAt": {
+          "$undefined": true
+        },
+        "expiresIn": {
+          "$undefined": true
+        },
+        "expiresOn": {
+          "$undefined": true
+        },
+        "format": "jws",
+        "objectId": "corpus_oid_0002",
+        "tokenId": {
+          "$undefined": true
+        }
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:495 chars>",
+      "verb": "sign",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 3,
+        "parts": [
+          "eyJhbGciOiJFUzI1NiIsImN0eSI6ImFwcGxpY2F0aW9uL2pzb24iLCJqa3UiOiJodHRwczovL3Rlc3QubGluZG9ybS5pby8ud2VsbC1rbm93bi9qd2tzLmpzb24iLCJraWQiOiI4ZTE4Y2Y0Zi0xYTNiLTVjYjEtOWEyZS0xYzlkMGEyYjNjNGQiLCJ0eXAiOiJKV1MiLCJ4NWMiOlsiTUlJQm96Q0NBVXFnQXdJQkFnSVVIOGErZDZ1SDdoWllwbEsrSG9NYmN2OGx5OFF3Q2dZSUtvWkl6ajBFQXdJd0pERWlNQ0FHQTFVRUF3d1piR2x1Wkc5eWJTMTBaWE4wTFdsdWRHVnliV1ZrYVdGMFpUQWdGdzB5TmpBME1UTXhNVE0xTURCYUdBOHlNVEkyTURNeU1ERXhNelV3TUZvd0hERWFNQmdHQTFVRUF3d1JiR2x1Wkc5eWJTMTBaWE4wTFd4bFlXWXdXVEFUQmdjcWhrak9QUUlCQmdncWhrak9QUU1CQndOQ0FBU0R2NDlrZG9aS3lta0dsQXJhNWp4RmNDU3FycVRZZk1MSGI2VXNDTGV3M1dRdHNqNG1pek5ZZDNXcFJBYUtQUUZ6czdWUDFHMWN3elBFOVJRTFcxUzNvMkF3WGpBTUJnTlZIUk1CQWY4RUFqQUFNQTRHQTFVZER3RUIvd1FFQXdJSGdEQWRCZ05WSFE0RUZnUVU3UFB4U3Q5c1poR0w1eTNEcFdhcmgwL291TTh3SHdZRFZSMGpCQmd3Rm9BVXV2Y0YxYXpGYU5XOFN5N0NCNm5Kc1ZkNFhwSXdDZ1lJS29aSXpqMEVBd0lEUndBd1JBSWdjNldPUnFzSnRhQVdIZmZUbkJtOWpHbEFZcmt4NGduNEhCOHlQK0F4RWRVQ0lFTVZ3YzJ6RTUvcTRWYlFHRlJBYkVGT05uenBpK2FrZFZjdUhZWXk4N1RvIiwiTUlJQnF6Q0NBVkNnQXdJQkFnSVVQckJTcENUZlVoTmovUUladVFzRXRRclRwSmN3Q2dZSUtvWkl6ajBFQXdJd0hERWFNQmdHQTFVRUF3d1JiR2x1Wkc5eWJTMTBaWE4wTFhKdmIzUXdJQmNOTWpZd05ERXpNVEV6TlRBd1doZ1BNakV5TmpBek1qQXhNVE0xTURCYU1DUXhJakFnQmdOVkJBTU1HV3hwYm1SdmNtMHRkR1Z6ZEMxcGJuUmxjbTFsWkdsaGRHVXdXVEFUQmdjcWhrak9QUUlCQmdncWhrak9QUU1CQndOQ0FBU1hqU240aVA1cUZveDgwV0NPeldRTTNjM0lVNlc4RUEvbGpwUGtTMjdIeDI0OHN4Q1RKckFJVHBTSjlyb0RYWHhSZytXdmx6SThhTUhkZGRFclRab1pvMll3WkRBU0JnTlZIUk1CQWY4RUNEQUdBUUgvQWdFQU1BNEdBMVVkRHdFQi93UUVBd0lCQmpBZEJnTlZIUTRFRmdRVXV2Y0YxYXpGYU5XOFN5N0NCNm5Kc1ZkNFhwSXdId1lEVlIwakJCZ3dGb0FVNHNjdHVyN0lvMkpTbXlXTFd6U1RWWER3ckJBd0NnWUlLb1pJemowRUF3SURTUUF3UmdJaEFJaE0xcmcrRSs4LzhSem1ndllUaUh3M1VDWnhaam5YdVlNSGN2YjVjYWxXQWlFQWlZWGdiVURkWHlIRHpnREpCN2xCYmFOYWVQeHUrS3ZzeDdiWXVuUzJ5aFk9IiwiTUlJQm5qQ0NBVVdnQXdJQkFnSVVDUW0wQzEzQlFzRmtJZ2M3U1NoaDgwZWpnUUF3Q2dZSUtvWkl6ajBFQXdJd0hERWFNQmdHQTFVRUF3d1JiR2x1Wkc5eWJTMTBaWE4wTFhKdmIzUXdJQmNOTWpZd05ERXpNVEV6TlRBd1doZ1BNakV5TmpBek1qQXhNVE0xTURCYU1Cd3hHakFZQmdOVkJBTU1FV3hwYm1SdmNtMHRkR1Z6ZEMxeWIyOTBNRmt3RXdZSEtvWkl6ajBDQVFZSUtvWkl6ajBEQVFjRFFnQUVPNU45ODVCbHRtR0lWM1hadTRZTUJjcnBPMUVibVFCdDljRW5WeU5Oa2lOQ05Lc0FPUDJ6YkZzOWtMdTlUYisyUi9CaUZ3Vm9HcHpRTWhxY3krMzljS05qTUdFd0hRWURWUjBPQkJZRUZPTEhMYnEreUtOaVVwc2xpMXMwazFWdzhLd1FNQjhHQTFVZEl3UVlNQmFBRk9MSExicSt5S05pVXBzbGkxczBrMVZ3OEt3UU1BOEdBMVVkRXdFQi93UUZNQU1CQWY4d0RnWURWUjBQQVFIL0JBUURBZ0VHTUFvR0NDcUdTTTQ5QkFNQ0EwY0FNRVFDSUd2RHRScmcvTUhBUmxxWWtOZlpVMnBobDJmK1FrWndIZ2swMFQxcjR0WG9BaUJuZEI5aE5FT2tSZFNQRkJjeTZ3L0xQV0grWTdIUWRsOHh1a2paY1k3WWVnPT0iXSwieDV0IjoiODNSVE9ESzRkaG1BYXFZN19mUVg4YXRzWEc0IiwieDV0I1MyNTYiOiJQUWVaR2RHR0dHMUE5UXI0ejBxQmhfVEpybW9pNUItNmpiTVVPR24zNFFBIn0",
+          "eyJjb3JwdXMiOiJvcGFxdWUtb2JqZWN0IiwibmVzdGVkIjp7ImRlcHRoIjoxfSwibGlzdCI6WzEsMiwzXX0",
+          "<random:64 bytes>"
+        ],
+        "payload": {
+          "readable": true,
+          "value": {
+            "corpus": "opaque-object",
+            "list": [1, 2, 3],
+            "nested": {
+              "depth": 1
+            }
+          }
+        },
+        "protectedHeader": {
+          "alg": "ES256",
+          "cty": "application/json",
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "8e18cf4f-1a3b-5cb1-9a2e-1c9d0a2b3c4d",
+          "typ": "JWS",
+          "x5c": [
+            "MIIBozCCAUqgAwIBAgIUH8a+d6uH7hZYplK+HoMbcv8ly8QwCgYIKoZIzj0EAwIwJDEiMCAGA1UEAwwZbGluZG9ybS10ZXN0LWludGVybWVkaWF0ZTAgFw0yNjA0MTMxMTM1MDBaGA8yMTI2MDMyMDExMzUwMFowHDEaMBgGA1UEAwwRbGluZG9ybS10ZXN0LWxlYWYwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAASDv49kdoZKymkGlAra5jxFcCSqrqTYfMLHb6UsCLew3WQtsj4mizNYd3WpRAaKPQFzs7VP1G1cwzPE9RQLW1S3o2AwXjAMBgNVHRMBAf8EAjAAMA4GA1UdDwEB/wQEAwIHgDAdBgNVHQ4EFgQU7PPxSt9sZhGL5y3DpWarh0/ouM8wHwYDVR0jBBgwFoAUuvcF1azFaNW8Sy7CB6nJsVd4XpIwCgYIKoZIzj0EAwIDRwAwRAIgc6WORqsJtaAWHffTnBm9jGlAYrkx4gn4HB8yP+AxEdUCIEMVwc2zE5/q4VbQGFRAbEFONnzpi+akdVcuHYYy87To",
+            "MIIBqzCCAVCgAwIBAgIUPrBSpCTfUhNj/QIZuQsEtQrTpJcwCgYIKoZIzj0EAwIwHDEaMBgGA1UEAwwRbGluZG9ybS10ZXN0LXJvb3QwIBcNMjYwNDEzMTEzNTAwWhgPMjEyNjAzMjAxMTM1MDBaMCQxIjAgBgNVBAMMGWxpbmRvcm0tdGVzdC1pbnRlcm1lZGlhdGUwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAASXjSn4iP5qFox80WCOzWQM3c3IU6W8EA/ljpPkS27Hx248sxCTJrAITpSJ9roDXXxRg+WvlzI8aMHdddErTZoZo2YwZDASBgNVHRMBAf8ECDAGAQH/AgEAMA4GA1UdDwEB/wQEAwIBBjAdBgNVHQ4EFgQUuvcF1azFaNW8Sy7CB6nJsVd4XpIwHwYDVR0jBBgwFoAU4sctur7Io2JSmyWLWzSTVXDwrBAwCgYIKoZIzj0EAwIDSQAwRgIhAIhM1rg+E+8/8RzmgvYTiHw3UCZxZjnXuYMHcvb5calWAiEAiYXgbUDdXyHDzgDJB7lBbaNaePxu+Kvsx7bYunS2yhY=",
+            "MIIBnjCCAUWgAwIBAgIUCQm0C13BQsFkIgc7SShh80ejgQAwCgYIKoZIzj0EAwIwHDEaMBgGA1UEAwwRbGluZG9ybS10ZXN0LXJvb3QwIBcNMjYwNDEzMTEzNTAwWhgPMjEyNjAzMjAxMTM1MDBaMBwxGjAYBgNVBAMMEWxpbmRvcm0tdGVzdC1yb290MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEO5N985BltmGIV3XZu4YMBcrpO1EbmQBt9cEnVyNNkiNCNKsAOP2zbFs9kLu9Tb+2R/BiFwVoGpzQMhqcy+39cKNjMGEwHQYDVR0OBBYEFOLHLbq+yKNiUpsli1s0k1Vw8KwQMB8GA1UdIwQYMBaAFOLHLbq+yKNiUpsli1s0k1Vw8KwQMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgEGMAoGCCqGSM49BAMCA0cAMEQCIGvDtRrg/MHARlqYkNfZU2phl2f+QkZwHgk00T1r4tXoAiBndB9hNEOkRdSPFBcy6w/LPWH+Y7HQdl8xukjZcY7Yeg=="
+          ],
+          "x5t": "83RTODK4dhmAaqY7_fQX8atsXG4",
+          "x5t#S256": "PQeZGdGGGG1A9Qr4z0qBh_TJrmoi5B-6jbMUOGn34QA"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "sign-jws-object-cert",
+      "note": "Cert binding on the opaque JOSE path — the opaque JOSE namespace and `mint` resolve the binding through the same code, so both must be held. ⚠ `chain`, not `thumbprint`: a cert-bearing key emits `x5t#S256`/`x5t` on EVERY sign, so a `thumbprint` row produces bytes identical to a row that states nothing and the recorded token shows nothing about the option. `chain` is the only mode that adds `x5c` (RFC 7515 §4.1.6), so the recorded token is attributable to the request. ⚠ The corpus RECORDS; it does not assert header contents — the capability itself is held by the disposition probe row `jose signOpaque forwards bindCertificate`. The COSE twin honours `bindCertificate` too: `CwsKit.sign` resolves it and writes `x5chain` at label 33 (RFC 9360 §2).",
+      "profile": {
+        "$undefined": true
+      },
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "jws",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jws",
+      "result": {
+        "expiresAt": {
+          "$undefined": true
+        },
+        "expiresIn": {
+          "$undefined": true
+        },
+        "expiresOn": {
+          "$undefined": true
+        },
+        "format": "jws",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": {
+          "$undefined": true
+        }
+      },
+      "signAlgorithm": "ES256",
+      "token": "<random:2786 chars>",
+      "verb": "sign",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "payload": {
+          "readable": false,
+          "reason": "the payload is not a CBOR map, so it carries no claims to read (it is not decodable CBOR)"
+        },
+        "protectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 1
+              },
+              -36
+            ],
+            [
+              {
+                "$int": 3
+              },
+              "application/json"
+            ],
+            [
+              {
+                "$int": 16
+              },
+              "application/cws"
+            ]
+          ]
+        },
+        "tags": [61, 18],
+        "unprotectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 4
+              },
+              {
+                "$bytes": "62396537626234642d643333322d353564322d396233332d663939306666376462346337",
+                "$length": 36
+              }
+            ]
+          ]
+        },
+        "wire": "cose"
+      },
+      "name": "sign-cws-object-ec",
+      "note": "An opaque COSE_Sign1 over a JSON object — the CWS content codec stamps `application/json` and the payload stays a bstr.",
+      "profile": {
+        "$undefined": true
+      },
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "cws",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "cws",
+      "result": {
+        "expiresAt": {
+          "$undefined": true
+        },
+        "expiresIn": {
+          "$undefined": true
+        },
+        "expiresOn": {
+          "$undefined": true
+        },
+        "format": "cws",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": {
+          "$undefined": true
+        }
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:378 chars>",
+      "verb": "sign",
+      "wire": "cose"
+    },
+    {
+      "inspection": {
+        "payload": {
+          "readable": false,
+          "reason": "the payload is not a CBOR map, so it carries no claims to read (it is not decodable CBOR)"
+        },
+        "protectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 1
+              },
+              -8
+            ],
+            [
+              {
+                "$int": 3
+              },
+              "text/plain"
+            ],
+            [
+              {
+                "$int": 16
+              },
+              "application/cws"
+            ]
+          ]
+        },
+        "tags": [61, 18],
+        "unprotectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 4
+              },
+              {
+                "$bytes": "32666135326139312d376636332d353733312d613535642d333064333633353063363432",
+                "$length": 36
+              }
+            ]
+          ]
+        },
+        "wire": "cose"
+      },
+      "name": "sign-cws-string-okp",
+      "note": "An opaque COSE_Sign1 over a string under a deterministic signature — this row's token bytes are captured verbatim.",
+      "profile": {
+        "$undefined": true
+      },
+      "randomness": {
+        "encrypted": false,
+        "signature": false
+      },
+      "reportedFormat": "cws",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "cws",
+      "result": {
+        "expiresAt": {
+          "$undefined": true
+        },
+        "expiresIn": {
+          "$undefined": true
+        },
+        "expiresOn": {
+          "$undefined": true
+        },
+        "format": "cws",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": {
+          "$undefined": true
+        }
+      },
+      "signAlgorithm": "EdDSA",
+      "token": "2D3ShFggowEnA2p0ZXh0L3BsYWluEG9hcHBsaWNhdGlvbi9jd3OhBFgkMmZhNTJhOTEtN2Y2My01NzMxLWE1NWQtMzBkMzYzNTBjNjQyWBxjb3JwdXMgb3BhcXVlIHN0cmluZyBwYXlsb2FkWEAreLNguSCxTCxE5VOx_YdsbMdiwtXBXj_OQTrZg_tWVFDRyLNq0T-hRt4s_uLsemOAAO26QAiXFRRB93aL0QEH",
+      "verb": "sign",
+      "wire": "cose"
+    },
+    {
+      "inspection": {
+        "payload": {
+          "readable": false,
+          "reason": "the payload is not a CBOR map, so it carries no claims to read (it is not decodable CBOR)"
+        },
+        "protectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 1
+              },
+              5
+            ],
+            [
+              {
+                "$int": 3
+              },
+              "application/octet-stream"
+            ],
+            [
+              {
+                "$int": 16
+              },
+              "application/cws"
+            ]
+          ]
+        },
+        "tags": [61, 17],
+        "unprotectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 4
+              },
+              {
+                "$bytes": "64333262656437622d343064372d353835312d616164362d393535383964616462363565",
+                "$length": 36
+              }
+            ]
+          ]
+        },
+        "wire": "cose"
+      },
+      "name": "sign-cws-bytes-oct",
+      "note": "Raw bytes under a shared secret — a CWS with a symmetric key is a COSE_Mac0, not a COSE_Sign1.",
+      "profile": {
+        "$undefined": true
+      },
+      "randomness": {
+        "encrypted": false,
+        "signature": false
+      },
+      "reportedFormat": "cws",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "cws",
+      "result": {
+        "expiresAt": {
+          "$undefined": true
+        },
+        "expiresIn": {
+          "$undefined": true
+        },
+        "expiresOn": {
+          "$undefined": true
+        },
+        "format": "cws",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": {
+          "$undefined": true
+        }
+      },
+      "signAlgorithm": "HS256",
+      "token": "2D3RhFgvowEFA3gYYXBwbGljYXRpb24vb2N0ZXQtc3RyZWFtEG9hcHBsaWNhdGlvbi9jd3OhBFgkZDMyYmVkN2ItNDBkNy01ODUxLWFhZDYtOTU1ODlkYWRiNjVlWBgAESIzRFVmd4iZqrvM3e7_AQIDBAUGBwhYIMB2J8Pbh_YIP42B-LWOSAuVurguV3Db9OMOA4lWAipv",
+      "verb": "sign",
+      "wire": "cose"
+    },
+    {
+      "inspection": {
+        "payload": {
+          "readable": false,
+          "reason": "the payload is not a CBOR map, so it carries no claims to read (it is not decodable CBOR)"
+        },
+        "protectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 1
+              },
+              -36
+            ],
+            [
+              {
+                "$int": 3
+              },
+              "application/json"
+            ],
+            [
+              {
+                "$int": 16
+              },
+              "application/at+cws"
+            ]
+          ]
+        },
+        "tags": [61, 18],
+        "unprotectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 4
+              },
+              {
+                "$bytes": "62396537626234642d643333322d353564322d396233332d663939306666376462346337",
+                "$length": 36
+              }
+            ]
+          ]
+        },
+        "wire": "cose"
+      },
+      "name": "sign-cws-object-token-type",
+      "note": "The `tokenType` knob on the COSE wire — the same domain option produces a `+cws` media type here.",
+      "profile": {
+        "$undefined": true
+      },
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "cws",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "cws",
+      "result": {
+        "expiresAt": {
+          "$undefined": true
+        },
+        "expiresIn": {
+          "$undefined": true
+        },
+        "expiresOn": {
+          "$undefined": true
+        },
+        "format": "cws",
+        "objectId": {
+          "$undefined": true
+        },
+        "tokenId": {
+          "$undefined": true
+        }
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:382 chars>",
+      "verb": "sign",
+      "wire": "cose"
+    },
+    {
+      "inspection": {
+        "payload": {
+          "readable": false,
+          "reason": "the payload is not a CBOR map, so it carries no claims to read (it is not decodable CBOR)"
+        },
+        "protectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 1
+              },
+              -36
+            ],
+            [
+              {
+                "$int": 3
+              },
+              "application/json"
+            ],
+            [
+              {
+                "$int": 16
+              },
+              "application/cws"
+            ],
+            [
+              {
+                "$text": "oid"
+              },
+              "corpus_oid_0002"
+            ]
+          ]
+        },
+        "tags": [61, 18],
+        "unprotectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 4
+              },
+              {
+                "$bytes": "62396537626234642d643333322d353564322d396233332d663939306666376462346337",
+                "$length": 36
+              }
+            ]
+          ]
+        },
+        "wire": "cose"
+      },
+      "name": "sign-cws-object-header-bag",
+      "note": "The caller header bag on the opaque COSE path — the same parameter the JOSE twin writes, at the COSE label it rides under. `oid` is a lindorm PRIVATE-USE label and this row states no `proprietary`, so the interoperable spelling is on the wire: the text label `oid`, which every conformant COSE reader can parse, rather than the private-use integer only lindorm can interpret.",
+      "profile": {
+        "$undefined": true
+      },
+      "randomness": {
+        "encrypted": false,
+        "signature": true
+      },
+      "reportedFormat": "cws",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "cws",
+      "result": {
+        "expiresAt": {
+          "$undefined": true
+        },
+        "expiresIn": {
+          "$undefined": true
+        },
+        "expiresOn": {
+          "$undefined": true
+        },
+        "format": "cws",
+        "objectId": "corpus_oid_0002",
+        "tokenId": {
+          "$undefined": true
+        }
+      },
+      "signAlgorithm": "ES512",
+      "token": "<random:404 chars>",
+      "verb": "sign",
+      "wire": "cose"
+    },
+    {
+      "inspection": {
+        "partCount": 5,
+        "parts": [
+          "eyJhbGciOiJSU0EtT0FFUC0yNTYiLCJjdHkiOiJhcHBsaWNhdGlvbi9qc29uIiwiZW5jIjoiQTI1NkdDTSIsImprdSI6Imh0dHBzOi8vdGVzdC5saW5kb3JtLmlvLy53ZWxsLWtub3duL2p3a3MuanNvbiIsImtpZCI6IjIwYjA5MTM4LWJhYjctNTRjZS1hNDkxLTFmNGJhNTJlM2Q0ZSIsInR5cCI6IkpXRSJ9",
+          "<random:512 bytes>",
+          "<random:12 bytes>",
+          "<random:140 bytes>",
+          "<random:16 bytes>"
+        ],
+        "payload": {
+          "readable": false,
+          "reason": "a 5-part JWE carries ciphertext where a JWS carries its payload"
+        },
+        "protectedHeader": {
+          "alg": "RSA-OAEP-256",
+          "cty": "application/json",
+          "enc": "A256GCM",
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "20b09138-bab7-54ce-a491-1f4ba52e3d4e",
+          "typ": "JWE"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "encrypt-jwe-claims-rsa",
+      "note": "A domain-named object sealed to an RSA-OAEP-256 recipient — no inner signature, and a non-empty encrypted-key segment. The plaintext is the caller's own JSON, so `cty` is `application/json`.",
+      "profile": {
+        "$undefined": true
+      },
+      "randomness": {
+        "encrypted": true,
+        "signature": false
+      },
+      "reportedFormat": "jwe",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jwe",
+      "result": {
+        "format": "jwe"
+      },
+      "signAlgorithm": {
+        "$undefined": true
+      },
+      "token": "<random:1144 chars>",
+      "verb": "encrypt",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 5,
+        "parts": [
+          "<random:392 bytes>",
+          "",
+          "<random:12 bytes>",
+          "<random:140 bytes>",
+          "<random:16 bytes>"
+        ],
+        "payload": {
+          "readable": false,
+          "reason": "a 5-part JWE carries ciphertext where a JWS carries its payload"
+        },
+        "protectedHeader": {
+          "alg": "ECDH-ES",
+          "cty": "application/json",
+          "enc": "A256GCM",
+          "epk": {
+            "crv": "P-521",
+            "kty": "EC",
+            "x": "<random:66 bytes>",
+            "y": "<random:66 bytes>"
+          },
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "43bd1720-5dab-5d52-ae1e-e9dbbe6adfe4",
+          "typ": "JWE"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "encrypt-jwe-claims-ecdh",
+      "note": "A domain-named object sealed under ECDH-ES over P-521 — the ephemeral key on the protected header.",
+      "profile": {
+        "$undefined": true
+      },
+      "randomness": {
+        "encrypted": true,
+        "signature": false
+      },
+      "reportedFormat": "jwe",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jwe",
+      "result": {
+        "format": "jwe"
+      },
+      "signAlgorithm": {
+        "$undefined": true
+      },
+      "token": "<random:752 chars>",
+      "verb": "encrypt",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 5,
+        "parts": [
+          "<random:452 bytes>",
+          "",
+          "<random:12 bytes>",
+          "<random:140 bytes>",
+          "<random:16 bytes>"
+        ],
+        "payload": {
+          "readable": false,
+          "reason": "a 5-part JWE carries ciphertext where a JWS carries its payload"
+        },
+        "protectedHeader": {
+          "alg": "ECDH-ES",
+          "apu": "Y29ycHVzLXByb2R1Y2Vy",
+          "apv": "Y29ycHVzLXJlY2lwaWVudA",
+          "cty": "application/json",
+          "enc": "A256GCM",
+          "epk": {
+            "crv": "P-521",
+            "kty": "EC",
+            "x": "<random:66 bytes>",
+            "y": "<random:66 bytes>"
+          },
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "43bd1720-5dab-5d52-ae1e-e9dbbe6adfe4",
+          "typ": "JWE"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "encrypt-jwe-claims-ecdh-party",
+      "note": "The ECDH-ES party info (RFC 7518 §4.6) — `apu`/`apv` are emitted AND fed to the KDF, so they change the header and the ciphertext together.",
+      "profile": {
+        "$undefined": true
+      },
+      "randomness": {
+        "encrypted": true,
+        "signature": false
+      },
+      "reportedFormat": "jwe",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jwe",
+      "result": {
+        "format": "jwe"
+      },
+      "signAlgorithm": {
+        "$undefined": true
+      },
+      "token": "<random:832 chars>",
+      "verb": "encrypt",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 5,
+        "parts": [
+          "<random:254 bytes>",
+          "",
+          "<random:12 bytes>",
+          "<random:140 bytes>",
+          "<random:16 bytes>"
+        ],
+        "payload": {
+          "readable": false,
+          "reason": "a 5-part JWE carries ciphertext where a JWS carries its payload"
+        },
+        "protectedHeader": {
+          "alg": "ECDH-ES",
+          "cty": "application/json",
+          "enc": "A256GCM",
+          "epk": {
+            "crv": "X25519",
+            "kty": "OKP",
+            "x": "<random:32 bytes>"
+          },
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "035f7f00-8101-5387-a935-e92f57347309",
+          "typ": "JWE"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "encrypt-jwe-claims-okp-ecdh",
+      "note": "ECDH-ES over X25519 — an OKP ephemeral key, whose `epk` has no `y` member.",
+      "profile": {
+        "$undefined": true
+      },
+      "randomness": {
+        "encrypted": true,
+        "signature": false
+      },
+      "reportedFormat": "jwe",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jwe",
+      "result": {
+        "format": "jwe"
+      },
+      "signAlgorithm": {
+        "$undefined": true
+      },
+      "token": "<random:568 chars>",
+      "verb": "encrypt",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 5,
+        "parts": [
+          "eyJhbGciOiJkaXIiLCJjdHkiOiJ0ZXh0L3BsYWluIiwiZW5jIjoiQTI1NkdDTSIsImprdSI6Imh0dHBzOi8vdGVzdC5saW5kb3JtLmlvLy53ZWxsLWtub3duL2p3a3MuanNvbiIsImtpZCI6ImFlMjYxNzVmLTk2MWQtNTk0Ny04MzE4LTYyOTllNDU3NmI4MyIsInR5cCI6IkpXRSJ9",
+          "",
+          "<random:12 bytes>",
+          "<random:28 bytes>",
+          "<random:16 bytes>"
+        ],
+        "payload": {
+          "readable": false,
+          "reason": "a 5-part JWE carries ciphertext where a JWS carries its payload"
+        },
+        "protectedHeader": {
+          "alg": "dir",
+          "cty": "text/plain",
+          "enc": "A256GCM",
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "ae26175f-961d-5947-8318-6299e4576b83",
+          "typ": "JWE"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "encrypt-jwe-opaque-string-dir",
+      "note": "An opaque string sealed with a direct key — the `cty` says `text/plain`, which is the read side's reconstruction cue.",
+      "profile": {
+        "$undefined": true
+      },
+      "randomness": {
+        "encrypted": true,
+        "signature": false
+      },
+      "reportedFormat": "jwe",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jwe",
+      "result": {
+        "format": "jwe"
+      },
+      "signAlgorithm": {
+        "$undefined": true
+      },
+      "token": "<random:292 chars>",
+      "verb": "encrypt",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 5,
+        "parts": [
+          "eyJhbGciOiJkaXIiLCJjdHkiOiJhcHBsaWNhdGlvbi9vY3RldC1zdHJlYW0iLCJlbmMiOiJBMjU2R0NNIiwiamt1IjoiaHR0cHM6Ly90ZXN0LmxpbmRvcm0uaW8vLndlbGwta25vd24vandrcy5qc29uIiwia2lkIjoiYWUyNjE3NWYtOTYxZC01OTQ3LTgzMTgtNjI5OWU0NTc2YjgzIiwidHlwIjoiSldFIn0",
+          "",
+          "<random:12 bytes>",
+          "<random:24 bytes>",
+          "<random:16 bytes>"
+        ],
+        "payload": {
+          "readable": false,
+          "reason": "a 5-part JWE carries ciphertext where a JWS carries its payload"
+        },
+        "protectedHeader": {
+          "alg": "dir",
+          "cty": "application/octet-stream",
+          "enc": "A256GCM",
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "ae26175f-961d-5947-8318-6299e4576b83",
+          "typ": "JWE"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "encrypt-jwe-opaque-bytes-dir",
+      "note": "Opaque bytes sealed with a direct key — no `cty` interpretation at all, so the plaintext is returned as bytes.",
+      "profile": {
+        "$undefined": true
+      },
+      "randomness": {
+        "encrypted": true,
+        "signature": false
+      },
+      "reportedFormat": "jwe",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jwe",
+      "result": {
+        "format": "jwe"
+      },
+      "signAlgorithm": {
+        "$undefined": true
+      },
+      "token": "<random:305 chars>",
+      "verb": "encrypt",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 5,
+        "parts": [
+          "eyJhbGciOiJkaXIiLCJjdHkiOiJhcHBsaWNhdGlvbi9vY3RldC1zdHJlYW0iLCJlbmMiOiJBMTI4Q0JDLUhTMjU2Iiwiamt1IjoiaHR0cHM6Ly90ZXN0LmxpbmRvcm0uaW8vLndlbGwta25vd24vandrcy5qc29uIiwia2lkIjoiNmYzYjhkMmEtNGMxZS01YTkwLThiN2QtMmU1ZjljMGExYjM0IiwidHlwIjoiSldFIn0",
+          "",
+          "<random:16 bytes>",
+          "<random:32 bytes>",
+          "<random:16 bytes>"
+        ],
+        "payload": {
+          "readable": false,
+          "reason": "a 5-part JWE carries ciphertext where a JWS carries its payload"
+        },
+        "protectedHeader": {
+          "alg": "dir",
+          "cty": "application/octet-stream",
+          "enc": "A128CBC-HS256",
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "6f3b8d2a-4c1e-5a90-8b7d-2e5f9c0a1b34",
+          "typ": "JWE"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "encrypt-jwe-opaque-bytes-cbc",
+      "note": "AES-CBC-HMAC content encryption — a standard JOSE `enc` value, and private-use on COSE, so the same key is standard here and gated there. RFC 7518 §5.2.3, RFC 9053 §4.",
+      "profile": {
+        "$undefined": true
+      },
+      "randomness": {
+        "encrypted": true,
+        "signature": false
+      },
+      "reportedFormat": "jwe",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jwe",
+      "result": {
+        "format": "jwe"
+      },
+      "signAlgorithm": {
+        "$undefined": true
+      },
+      "token": "<random:330 chars>",
+      "verb": "encrypt",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 5,
+        "parts": [
+          "eyJhbGciOiJkaXIiLCJjdHkiOiJhcHBsaWNhdGlvbi9qc29uIiwiZW5jIjoiQTI1NkdDTSIsImprdSI6Imh0dHBzOi8vdGVzdC5saW5kb3JtLmlvLy53ZWxsLWtub3duL2p3a3MuanNvbiIsImtpZCI6ImFlMjYxNzVmLTk2MWQtNTk0Ny04MzE4LTYyOTllNDU3NmI4MyIsInR5cCI6ImFwcGxpY2F0aW9uL2F0K2p3ZSJ9",
+          "",
+          "<random:12 bytes>",
+          "<random:140 bytes>",
+          "<random:16 bytes>"
+        ],
+        "payload": {
+          "readable": false,
+          "reason": "a 5-part JWE carries ciphertext where a JWS carries its payload"
+        },
+        "protectedHeader": {
+          "alg": "dir",
+          "cty": "application/json",
+          "enc": "A256GCM",
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "ae26175f-961d-5947-8318-6299e4576b83",
+          "typ": "application/at+jwe"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "encrypt-jwe-claims-type",
+      "note": "The `type` knob — the domain token type becomes the JWE media type in `typ`.",
+      "profile": {
+        "$undefined": true
+      },
+      "randomness": {
+        "encrypted": true,
+        "signature": false
+      },
+      "reportedFormat": "jwe",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jwe",
+      "result": {
+        "format": "jwe"
+      },
+      "signAlgorithm": {
+        "$undefined": true
+      },
+      "token": "<random:469 chars>",
+      "verb": "encrypt",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 5,
+        "parts": [
+          "eyJhbGciOiJkaXIiLCJjdHkiOiJhcHBsaWNhdGlvbi9qc29uIiwiZW5jIjoiQTI1NkdDTSIsImprdSI6Imh0dHBzOi8vdGVzdC5saW5kb3JtLmlvLy53ZWxsLWtub3duL2p3a3MuanNvbiIsImtpZCI6ImFlMjYxNzVmLTk2MWQtNTk0Ny04MzE4LTYyOTllNDU3NmI4MyIsIm9pZCI6ImNvcnB1c19vaWRfMDAwMyIsInR5cCI6IkpXRSJ9",
+          "",
+          "<random:12 bytes>",
+          "<random:140 bytes>",
+          "<random:16 bytes>"
+        ],
+        "payload": {
+          "readable": false,
+          "reason": "a 5-part JWE carries ciphertext where a JWS carries its payload"
+        },
+        "protectedHeader": {
+          "alg": "dir",
+          "cty": "application/json",
+          "enc": "A256GCM",
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "ae26175f-961d-5947-8318-6299e4576b83",
+          "oid": "corpus_oid_0003",
+          "typ": "JWE"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "encrypt-jwe-claims-header-bag",
+      "note": "The caller header bag on the encrypt path — reaching the JWE writer, which is the only encrypt path that takes one.",
+      "profile": {
+        "$undefined": true
+      },
+      "randomness": {
+        "encrypted": true,
+        "signature": false
+      },
+      "reportedFormat": "jwe",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jwe",
+      "result": {
+        "format": "jwe"
+      },
+      "signAlgorithm": {
+        "$undefined": true
+      },
+      "token": "<random:481 chars>",
+      "verb": "encrypt",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "partCount": 5,
+        "parts": [
+          "<random:395 bytes>",
+          "",
+          "<random:12 bytes>",
+          "<random:140 bytes>",
+          "<random:16 bytes>"
+        ],
+        "payload": {
+          "readable": false,
+          "reason": "a 5-part JWE carries ciphertext where a JWS carries its payload"
+        },
+        "protectedHeader": {
+          "alg": "ECDH-ES",
+          "cty": "application/json",
+          "enc": "A256GCM",
+          "epk": {
+            "crv": "P-256",
+            "kty": "EC",
+            "x": "<random:32 bytes>",
+            "y": "<random:32 bytes>"
+          },
+          "jku": "https://test.lindorm.io/.well-known/jwks.json",
+          "kid": "0c7a2b61-5d4e-59f0-b3c2-7e6d5f4a3b2c",
+          "typ": "JWE",
+          "x5t": "83RTODK4dhmAaqY7_fQX8atsXG4",
+          "x5t#S256": "PQeZGdGGGG1A9Qr4z0qBh_TJrmoi5B-6jbMUOGn34QA"
+        },
+        "unprotectedHeader": {
+          "$undefined": true
+        },
+        "wire": "jose"
+      },
+      "name": "encrypt-jwe-claims-cert",
+      "note": "Cert binding on a JWE — the recipient key carries a chain, so the thumbprint rides the protected header.",
+      "profile": {
+        "$undefined": true
+      },
+      "randomness": {
+        "encrypted": true,
+        "signature": false
+      },
+      "reportedFormat": "jwe",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "jwe",
+      "result": {
+        "format": "jwe"
+      },
+      "signAlgorithm": {
+        "$undefined": true
+      },
+      "token": "<random:756 chars>",
+      "verb": "encrypt",
+      "wire": "jose"
+    },
+    {
+      "inspection": {
+        "payload": {
+          "readable": false,
+          "reason": "a COSE_Encrypt0 carries ciphertext where a COSE_Sign1/Mac0 carries its payload"
+        },
+        "protectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 1
+              },
+              3
+            ],
+            [
+              {
+                "$int": 3
+              },
+              "application/json"
+            ],
+            [
+              {
+                "$int": 16
+              },
+              "application/cwe"
+            ]
+          ]
+        },
+        "tags": [16],
+        "unprotectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 4
+              },
+              {
+                "$bytes": "61653236313735662d393631642d353934372d383331382d363239396534353736623833",
+                "$length": 36
+              }
+            ],
+            [
+              {
+                "$int": 5
+              },
+              "<random:12 bytes>"
+            ]
+          ]
+        },
+        "wire": "cose"
+      },
+      "name": "encrypt-cwe-claims-dir",
+      "note": "A domain-named object sealed as a COSE_Encrypt0 — the plaintext is the caller's own JSON under the caller's own keys, so `cty` (label 3) is `application/json`, the same answer every other opaque door gives. ⚠ It is NOT a CWT Claims Set: an encrypt has no signature behind it, so aegis may not promote `subject` to the registered label 2 a conformant reader would take for an asserted claim. Sealing a CWT is `mint(…, { encrypt })`, which signs first. RFC 8392 §4.",
+      "profile": {
+        "$undefined": true
+      },
+      "randomness": {
+        "encrypted": true,
+        "signature": false
+      },
+      "reportedFormat": "cwe",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "cwe",
+      "result": {
+        "format": "cwe"
+      },
+      "signAlgorithm": {
+        "$undefined": true
+      },
+      "token": "<random:339 chars>",
+      "verb": "encrypt",
+      "wire": "cose"
+    },
+    {
+      "inspection": {
+        "payload": {
+          "readable": false,
+          "reason": "a COSE_Encrypt0 carries ciphertext where a COSE_Sign1/Mac0 carries its payload"
+        },
+        "protectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 1
+              },
+              1
+            ],
+            [
+              {
+                "$int": 3
+              },
+              "application/json"
+            ],
+            [
+              {
+                "$int": 16
+              },
+              "application/cwe"
+            ]
+          ]
+        },
+        "tags": [16],
+        "unprotectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 4
+              },
+              {
+                "$bytes": "62326439653463372d386131352d356633362d396330622d346437653261386631353033",
+                "$length": 36
+              }
+            ],
+            [
+              {
+                "$int": 5
+              },
+              "<random:12 bytes>"
+            ]
+          ]
+        },
+        "wire": "cose"
+      },
+      "name": "encrypt-cwe-claims-gcm128",
+      "note": "The same object under A128GCM — the protected bucket's content encryption is what tells the two recipient keys apart.",
+      "profile": {
+        "$undefined": true
+      },
+      "randomness": {
+        "encrypted": true,
+        "signature": false
+      },
+      "reportedFormat": "cwe",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "cwe",
+      "result": {
+        "format": "cwe"
+      },
+      "signAlgorithm": {
+        "$undefined": true
+      },
+      "token": "<random:339 chars>",
+      "verb": "encrypt",
+      "wire": "cose"
+    },
+    {
+      "inspection": {
+        "payload": {
+          "readable": false,
+          "reason": "a COSE_Encrypt0 carries ciphertext where a COSE_Sign1/Mac0 carries its payload"
+        },
+        "protectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 1
+              },
+              3
+            ],
+            [
+              {
+                "$int": 3
+              },
+              "application/json"
+            ],
+            [
+              {
+                "$int": 16
+              },
+              "application/cwe"
+            ]
+          ]
+        },
+        "tags": [16],
+        "unprotectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 4
+              },
+              {
+                "$bytes": "61653236313735662d393631642d353934372d383331382d363239396534353736623833",
+                "$length": 36
+              }
+            ],
+            [
+              {
+                "$int": 5
+              },
+              "<random:12 bytes>"
+            ]
+          ]
+        },
+        "wire": "cose"
+      },
+      "name": "encrypt-cwe-claims-interoperable",
+      "note": "`proprietary: false` on the COSE seal — the interoperable default, stated. On this verb it reaches ONLY the encryption registration gate: there is no claim codec on the encrypt path any more, so the flag cannot move the plaintext, and this row is byte-comparable to `encrypt-cwe-claims-dir` for that reason rather than because false is the default. ⚠ THE CORPUS CANNOT SEE A PLAINTEXT AT ALL — it is ciphertext — so the flag's inability to reach it is pinned by `src/classes/cose-claims-encoding.test.ts#does not let proprietary reach the plaintext at all`, which decrypts and compares the bytes; this row holds the wire length steady around it.",
+      "profile": {
+        "$undefined": true
+      },
+      "randomness": {
+        "encrypted": true,
+        "signature": false
+      },
+      "reportedFormat": "cwe",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "cwe",
+      "result": {
+        "format": "cwe"
+      },
+      "signAlgorithm": {
+        "$undefined": true
+      },
+      "token": "<random:339 chars>",
+      "verb": "encrypt",
+      "wire": "cose"
+    },
+    {
+      "inspection": {
+        "payload": {
+          "readable": false,
+          "reason": "a COSE_Encrypt0 carries ciphertext where a COSE_Sign1/Mac0 carries its payload"
+        },
+        "protectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 1
+              },
+              -65537
+            ],
+            [
+              {
+                "$int": 3
+              },
+              "application/json"
+            ],
+            [
+              {
+                "$int": 16
+              },
+              "application/cwe"
+            ]
+          ]
+        },
+        "tags": [16],
+        "unprotectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 4
+              },
+              {
+                "$bytes": "36663362386432612d346331652d356139302d386237642d326535663963306131623334",
+                "$length": 36
+              }
+            ],
+            [
+              {
+                "$int": 5
+              },
+              "<random:16 bytes>"
+            ]
+          ]
+        },
+        "wire": "cose"
+      },
+      "name": "encrypt-cwe-claims-cbc-proprietary",
+      "note": "AES-CBC-HMAC on the COSE wire — aegis emits it under a lindorm private-use label, so it is reachable only through the proprietary gate, which is the one thing that flag still decides here. RFC 9053 §4.",
+      "profile": {
+        "$undefined": true
+      },
+      "randomness": {
+        "encrypted": true,
+        "signature": false
+      },
+      "reportedFormat": "cwe",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "cwe",
+      "result": {
+        "format": "cwe"
+      },
+      "signAlgorithm": {
+        "$undefined": true
+      },
+      "token": "<random:355 chars>",
+      "verb": "encrypt",
+      "wire": "cose"
+    },
+    {
+      "inspection": {
+        "payload": {
+          "readable": false,
+          "reason": "a COSE_Encrypt0 carries ciphertext where a COSE_Sign1/Mac0 carries its payload"
+        },
+        "protectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 1
+              },
+              3
+            ],
+            [
+              {
+                "$int": 3
+              },
+              "application/octet-stream"
+            ],
+            [
+              {
+                "$int": 16
+              },
+              "application/cwe"
+            ]
+          ]
+        },
+        "tags": [16],
+        "unprotectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 4
+              },
+              {
+                "$bytes": "61653236313735662d393631642d353934372d383331382d363239396534353736623833",
+                "$length": 36
+              }
+            ],
+            [
+              {
+                "$int": 5
+              },
+              "<random:12 bytes>"
+            ]
+          ]
+        },
+        "wire": "cose"
+      },
+      "name": "encrypt-cwe-opaque-bytes-dir",
+      "note": "Opaque bytes as a COSE_Encrypt0 — `cty` is `application/octet-stream` and the plaintext is returned as those bytes.",
+      "profile": {
+        "$undefined": true
+      },
+      "randomness": {
+        "encrypted": true,
+        "signature": false
+      },
+      "reportedFormat": "cwe",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "cwe",
+      "result": {
+        "format": "cwe"
+      },
+      "signAlgorithm": {
+        "$undefined": true
+      },
+      "token": "<random:196 chars>",
+      "verb": "encrypt",
+      "wire": "cose"
+    },
+    {
+      "inspection": {
+        "payload": {
+          "readable": false,
+          "reason": "a COSE_Encrypt0 carries ciphertext where a COSE_Sign1/Mac0 carries its payload"
+        },
+        "protectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 1
+              },
+              3
+            ],
+            [
+              {
+                "$int": 3
+              },
+              "text/plain"
+            ],
+            [
+              {
+                "$int": 16
+              },
+              "application/at+cwe"
+            ]
+          ]
+        },
+        "tags": [16],
+        "unprotectedHeader": {
+          "$map": [
+            [
+              {
+                "$int": 4
+              },
+              {
+                "$bytes": "61653236313735662d393631642d353934372d383331382d363239396534353736623833",
+                "$length": 36
+              }
+            ],
+            [
+              {
+                "$int": 5
+              },
+              "<random:12 bytes>"
+            ]
+          ]
+        },
+        "wire": "cose"
+      },
+      "name": "encrypt-cwe-opaque-string-type",
+      "note": "An opaque string with a caller `type` — the one place an opaque `cwe` carries a media type of the caller's choosing.",
+      "profile": {
+        "$undefined": true
+      },
+      "randomness": {
+        "encrypted": true,
+        "signature": false
+      },
+      "reportedFormat": "cwe",
+      "reportedWrapper": {
+        "$undefined": true
+      },
+      "requestedFormat": "cwe",
+      "result": {
+        "format": "cwe"
+      },
+      "signAlgorithm": {
+        "$undefined": true
+      },
+      "token": "<random:186 chars>",
+      "verb": "encrypt",
+      "wire": "cose"
+    }
+  ],
+  "clock": "2024-01-01T08:00:00.000Z",
+  "issuer": "https://test.lindorm.io/"
+}

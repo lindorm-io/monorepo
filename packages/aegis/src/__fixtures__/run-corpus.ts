@@ -1,5 +1,5 @@
 import { writeFile } from "node:fs/promises";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { Amphora, type IAmphora } from "@lindorm/amphora";
 import {
   isArray,
@@ -17,6 +17,7 @@ import type { ILogger } from "@lindorm/logger";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { Dict } from "@lindorm/types";
 import MockDate from "mockdate";
+import { format, resolveConfig } from "prettier";
 import { Aegis } from "../classes/Aegis.js";
 import {
   CORPUS_CASES,
@@ -755,6 +756,9 @@ export type CorpusRecord = {
   cases: ReadonlyArray<Dict>;
 };
 
+/** The committed record a fresh build must equal — `corpus.test.ts` holds the gate. */
+export const CORPUS_GOLDEN = new URL("./corpus.json", import.meta.url);
+
 /**
  * Produce every declared row, RAW.
  *
@@ -775,19 +779,30 @@ export const buildRawCorpus = async (): Promise<ReadonlyArray<RawCorpusEntry>> =
   return entries;
 };
 
-export const buildCorpus = async (): Promise<CorpusRecord> => {
-  const raw = await buildRawCorpus();
+/** The record one raw pass stands for: every row normalised, under its envelope. */
+export const normaliseCorpus = (raw: ReadonlyArray<RawCorpusEntry>): CorpusRecord => ({
+  clock: CORPUS_CLOCK,
+  issuer: CORPUS_ISSUER,
+  caseCount: raw.length,
+  cases: raw.map(normaliseEntry),
+});
 
-  return {
-    clock: CORPUS_CLOCK,
-    issuer: CORPUS_ISSUER,
-    caseCount: raw.length,
-    cases: raw.map(normaliseEntry),
-  };
+export const buildCorpus = async (): Promise<CorpusRecord> =>
+  normaliseCorpus(await buildRawCorpus());
+
+/**
+ * The corpus as `corpus.json` holds it: the canonical JSON, laid out by prettier.
+ *
+ * ⚠ The prettier config is resolved for the GOLDEN's path, never the
+ * destination's, so the bytes do not depend on where they are written: a copy
+ * outside the repo stays byte-comparable with the committed file.
+ */
+export const renderCorpus = async (): Promise<string> => {
+  const golden = fileURLToPath(CORPUS_GOLDEN);
+  const config = await resolveConfig(golden, { editorconfig: true });
+
+  return format(canonicalJson(await buildCorpus()), { ...config, filepath: golden });
 };
-
-export const renderCorpus = async (): Promise<string> =>
-  canonicalJson(await buildCorpus());
 
 // ---------------------------------------------------------------------------
 // The script
@@ -808,8 +823,8 @@ if (isMain()) {
   const out = outputPath();
 
   if (isString(out)) {
-    await writeFile(out, `${json}\n`, "utf8");
+    await writeFile(out, json, "utf8");
   } else {
-    process.stdout.write(`${json}\n`);
+    process.stdout.write(json);
   }
 }

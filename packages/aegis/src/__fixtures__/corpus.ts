@@ -11,30 +11,24 @@ import type {
 /**
  * The WIRE CORPUS — one declarative row per token aegis is asked to emit.
  *
- * It exists to be FROZEN. A restructuring step is about to collapse duplicated
- * JOSE/COSE write paths, and the only way to say afterwards that nothing
- * unintended moved is to hold a byte-level record of what the wire said before.
- * `run-corpus.ts` turns this table into that record; `corpus.test.ts` proves the
- * record is reproducible.
+ * It is a REGRESSION GATE over the wire. `run-corpus.ts` turns this table into a
+ * byte-level record, `corpus.json` is that record committed, and
+ * `corpus.test.ts` fails the moment a fresh build disagrees with it — so no change
+ * the record can see, intended or not, lands without the record moving with it.
+ * The same suite proves the record reproducible, which is what lets a failure
+ * mean a change rather than a re-run.
  *
- * ⭐ THE WORKFLOW — the freeze is taken BEFORE the restructuring, never after:
+ * ⭐ THE WORKFLOW — a change that moves the wire on purpose regenerates the record
+ * from the package root, and the record's diff is reviewed with the code:
  *
  * ```
- * npm run corpus -- /tmp/corpus-BEFORE.json   # on the UNCHANGED tree, first
- * …restructure…
- * npm run corpus -- /tmp/corpus-AFTER.json
- * diff -q /tmp/corpus-BEFORE.json /tmp/corpus-AFTER.json   # must be EMPTY
+ * npm run corpus -- src/__fixtures__/corpus.json
+ * git diff src/__fixtures__/corpus.json
  * ```
  *
- * ⚠ The BEFORE half is the whole gate, and it is the half that cannot be
- * recovered later: a baseline regenerated from an already-changed tree measures
- * the change against itself and would agree with anything. If the freeze was not
- * taken first, say so — do not produce one afterwards and call it a baseline.
- *
- * ⚠ The record is deliberately NOT committed — not as a fixture, not as a
- * `.snap`. It is a throwaway measurement of ONE restructuring, taken to a path
- * outside the repo; a checked-in copy would turn every deliberate wire change
- * into a snapshot update, which is the opposite of a freeze.
+ * ⚠ A regeneration CLAIMS that every byte it moves was meant to move. Read the
+ * diff before committing it: a record regenerated just to turn the test green
+ * takes whatever the tree emits, defect included, as the new truth.
  *
  * Same discipline as every other table in `__fixtures__`: rows are PURE DATA —
  * no lambdas, no `Buffer` literals, no live `Date`s — and ALL behaviour lives in

@@ -184,13 +184,17 @@ const joseWirePayload = (parts: ReadonlyArray<string>): WirePart<Dict> => {
       readable: true,
       value: JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8")) as Dict,
     };
-  } catch (err) {
+  } catch {
     // A 3-part token is not necessarily a JWT — a JWS over opaque bytes is one
     // too, and its payload is not JSON. That is a readable fact about the token,
     // not a malformed token.
+    //
+    // ⚠ The parser's message stays out of the reason: `corpus.json` records it,
+    // and a Node upgrade must not move the record.
+    // pinned: inspect-token.test.ts
     return {
       readable: false,
-      reason: `the payload is not JSON — it is an opaque JWS body (${(err as Error).message})`,
+      reason: "the payload is not JSON — it is an opaque JWS body",
     };
   }
 };
@@ -225,14 +229,19 @@ const cosePayload = (
 
   try {
     decoded = decodeCbor(value);
-  } catch (err) {
+  } catch {
     // ONE reason for both ways of not being a claims map — bytes that do not
     // decode as CBOR at all, and CBOR that decodes to something else. An opaque
     // CWS payload is arbitrary bytes and lands in either arm depending on what
     // those bytes happen to look like, which is no reason for two verdicts.
+    //
+    // ⚠ The decoder's message stays out of the reason: `corpus.json` records it,
+    // and a cbor2 upgrade must not move the record.
+    // pinned: inspect-token.test.ts
     return {
       readable: false,
-      reason: `the payload is not a CBOR map, so it carries no claims to read (${(err as Error).message})`,
+      reason:
+        "the payload is not a CBOR map, so it carries no claims to read (it is not decodable CBOR)",
     };
   }
 
