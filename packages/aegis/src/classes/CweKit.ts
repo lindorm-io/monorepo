@@ -233,7 +233,7 @@ export class CweKit implements ICweKit {
     // JweKit.decrypt). The outer CWT tag (61) is stripped by `splitEncrypt0`.
     const segments = splitEncrypt0(token);
     const { protectedBstr } = segments;
-    const decodedProtected = decodeProtectedHeader(protectedBstr);
+    const decodedProtected = decodeProtectedHeader(protectedBstr, CweError);
 
     // ⚠ PROTECTED FIRST, ON PRESENCE (`read-protected-first.ts`), so the IV the
     // AEAD runs with is the IV `aegis.decrypt` reports. pinned:
@@ -408,7 +408,10 @@ export class CweKit implements ICweKit {
     // it too. A bare, un-enveloped token passes through unchanged.
     const { protectedBstr, unprotected } = splitEncrypt0(token);
 
-    const protectedWire = coseWireHeader(decodeProtectedHeader(protectedBstr), "enc");
+    const protectedWire = coseWireHeader(
+      decodeProtectedHeader(protectedBstr, CweError),
+      "enc",
+    );
     const unprotectedWire = coseWireHeader(
       unprotected instanceof Map ? unprotected : undefined,
       "enc",

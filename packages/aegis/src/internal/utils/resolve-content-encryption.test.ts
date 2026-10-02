@@ -4,6 +4,7 @@ import MockDate from "mockdate";
 import { describe, expect, test } from "vitest";
 import { CweKit } from "../../classes/CweKit.js";
 import { JweKit } from "../../classes/JweKit.js";
+import { CweError } from "../../errors/index.js";
 import { decodeProtectedHeader } from "../cose/structures.js";
 import { splitEncrypt0 } from "../cose/split-encrypt0.js";
 import { coseByJose } from "../header/header-registry.js";
@@ -89,7 +90,7 @@ describe("the content-encryption floor resolves KEY FIRST", () => {
     // Label 1 on a COSE_Encrypt0 carries the CONTENT encryption: the structure
     // has no recipients array and runs no recipient algorithm, so there is no key
     // management to name there. RFC 9052 §5.2.
-    const header = decodeProtectedHeader(splitEncrypt0(token).protectedBstr);
+    const header = decodeProtectedHeader(splitEncrypt0(token).protectedBstr, CweError);
 
     expect(coseLabelToEnc(header.get(coseByJose("alg")))).toBe("A128GCM");
   });

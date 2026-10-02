@@ -8,7 +8,7 @@ import {
   TEST_EC_KEY_SIG,
   TEST_OCT_KEY_SIG,
 } from "../../__fixtures__/keys.js";
-import { AegisError } from "../../errors/index.js";
+import { AegisError, CoseError } from "../../errors/index.js";
 import { CweKit } from "../../classes/CweKit.js";
 import { CwmKit } from "../../classes/CwmKit.js";
 import { CwsKit } from "../../classes/CwsKit.js";
@@ -375,7 +375,11 @@ describe("KIT_CAPABILITIES", () => {
           const [protectedBstr, unprotected] = coseArrayOf(token);
 
           if (unprotected.has(coseByJose("kid"))) return "unprotected";
-          if (decodeProtectedHeader(Buffer.from(protectedBstr)).has(coseByJose("kid"))) {
+          if (
+            decodeProtectedHeader(Buffer.from(protectedBstr), CoseError).has(
+              coseByJose("kid"),
+            )
+          ) {
             return "protected";
           }
           return "absent";

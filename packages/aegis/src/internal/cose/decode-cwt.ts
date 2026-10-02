@@ -65,7 +65,7 @@ export const decodeCwt = (token: Buffer): CwtDecoded => {
     details: "The CWT protected header slot is not a byte string.",
   });
   const [, unprotected, payloadBstr] = contents;
-  const protectedMap = decodeProtectedHeader(protectedBstr);
+  const protectedMap = decodeProtectedHeader(protectedBstr, CoseError);
 
   // The HEADER verdict, raised here and not left to `splitSigned` alone: the key
   // resolves off the `kid` below, before any kit opens the structure

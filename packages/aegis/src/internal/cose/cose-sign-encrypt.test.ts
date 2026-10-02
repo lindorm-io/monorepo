@@ -386,7 +386,7 @@ describe("the IV a foreign COSE_Encrypt0 carries", () => {
     const [protectedBstr] = decodeCbor<Tag>(token).contents as [Uint8Array];
 
     return Buffer.from(
-      decodeProtectedHeader(protectedBstr).get(IV) as Uint8Array,
+      decodeProtectedHeader(protectedBstr, CweError).get(IV) as Uint8Array,
     ).toString("base64url");
   };
 
@@ -533,7 +533,7 @@ describe("a malformed COSE_Encrypt0", () => {
     [
       "a protected byte string holding an integer",
       "cose_malformed",
-      CoseError,
+      CweError,
       encrypt0(encodeCbor(1), IV_ONLY),
     ],
     [

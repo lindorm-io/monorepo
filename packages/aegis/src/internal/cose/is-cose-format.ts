@@ -1,4 +1,5 @@
 import { isString } from "@lindorm/is";
+import { CoseError } from "../../errors/index.js";
 import { coseByJose } from "../header/header-registry.js";
 import type { Tag } from "./cbor.js";
 import { decodeCbor } from "./cbor.js";
@@ -35,7 +36,7 @@ const coseProtected = (bytes: Buffer, jose: string): string | undefined => {
     const contents = coseStructure(decodeCbor(bytes))?.contents;
     const protectedBstr = Array.isArray(contents) ? contents[0] : undefined;
     if (!(protectedBstr instanceof Uint8Array)) return undefined;
-    const value = decodeProtectedHeader(protectedBstr).get(coseByJose(jose));
+    const value = decodeProtectedHeader(protectedBstr, CoseError).get(coseByJose(jose));
     return isString(value) ? value : undefined;
   } catch {
     return undefined;

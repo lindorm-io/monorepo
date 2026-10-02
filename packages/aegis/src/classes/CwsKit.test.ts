@@ -83,7 +83,7 @@ describe("CwsKit — caller-controlled protected / unprotected header bags", () 
   const rawMaps = (token: Buffer) => {
     const sign1 = decodeCbor<Tag>(token);
     const [protectedBstr, unprotected] = sign1.contents as [Buffer, Map<number, unknown>];
-    return { protectedMap: decodeProtectedHeader(protectedBstr), unprotected };
+    return { protectedMap: decodeProtectedHeader(protectedBstr, CwsError), unprotected };
   };
 
   test("places caller params protected and the derived routing hint unprotected", () => {
@@ -540,7 +540,7 @@ describe("CwsKit — a slot holding something other than a byte string", () => {
     ["an array", encodeCbor([1, 2])],
     ["nil", encodeCbor(null)],
     ["a tstr", encodeCbor("hi")],
-  ])("both doors refuse a protected byte string holding %s", (_name, bstr) => {
+  ])("both doors refuse a protected byte string holding %s as CwsError", (_, bstr) => {
     for (const door of [
       () => CwsKit.decode(spliceCoseSlot(token, 0, bstr)),
       () => kit.verify(spliceCoseSlot(token, 0, bstr)),
@@ -553,7 +553,7 @@ describe("CwsKit — a slot holding something other than a byte string", () => {
         thrown = error;
       }
 
-      expect(thrown).toBeInstanceOf(AegisError);
+      expect(thrown).toBeInstanceOf(CwsError);
       expect((thrown as CwsError).code).toBe("cose_malformed");
     }
   });
@@ -603,7 +603,7 @@ describe("CwsKit — the protected typ", () => {
   const foreignProtected = (kit: CwsKit, typ: unknown): Map<CoseLabel, unknown> => {
     const [protectedBstr] = decodeCbor<Tag>(kit.sign(payload, { tokenType: "at" }))
       .contents as [Buffer];
-    const map = decodeProtectedHeader(protectedBstr);
+    const map = decodeProtectedHeader(protectedBstr, CwsError);
 
     if (typ === undefined) map.delete(coseByJose("typ"));
     else map.set(coseByJose("typ"), typ);
@@ -799,7 +799,7 @@ describe("CwsKit — a key identifier stated in both header buckets", () => {
     const kit = new CwsKit({ kryptos, logger: createMockLogger() });
     const [protectedBstr] = decodeCbor<Tag>(kit.sign(payload, { tokenType: "at" }))
       .contents as [Buffer];
-    const map = decodeProtectedHeader(protectedBstr);
+    const map = decodeProtectedHeader(protectedBstr, CwsError);
 
     map.set(coseByJose("kid"), Buffer.from(kryptos.id, "utf8"));
 

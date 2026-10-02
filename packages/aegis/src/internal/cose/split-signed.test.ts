@@ -177,14 +177,13 @@ describe("splitSigned", () => {
 
   // The protected bucket is `bstr .cbor header_map` (RFC 9052 §3), and `requireBstr`
   // reaches only the outer `bstr`. `decodeProtectedHeader` (`structures.ts`) is
-  // where the inner half is enforced, which is why all four rows answer under
-  // `CoseError` rather than the caller's leaf class.
+  // where the inner half is enforced.
   test.each([
     ["an int", encodeCbor(42)],
     ["an array", encodeCbor([1, 2])],
     ["nil", encodeCbor(null)],
     ["a tstr", encodeCbor("hi")],
-  ])("refuses a protected byte string holding %s", (_, bstr) => {
+  ])("refuses a protected byte string holding %s as the caller's class", (_, bstr) => {
     let thrown: unknown;
 
     try {
@@ -193,8 +192,8 @@ describe("splitSigned", () => {
       thrown = error;
     }
 
-    expect(thrown).toBeInstanceOf(CoseError);
-    expect((thrown as CoseError).code).toBe("cose_malformed");
+    expect(thrown).toBeInstanceOf(CwsError);
+    expect((thrown as CwsError).code).toBe("cose_malformed");
   });
 
   test("the refusal carries the caller's words under the shared code", () => {

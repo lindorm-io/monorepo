@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { CoseError } from "../../errors/index.js";
+import { CoseError, CweError } from "../../errors/index.js";
 import { decodeCbor, encodeCbor } from "./cbor.js";
 import {
   COSE_TAG,
@@ -72,10 +72,10 @@ describe("encodeProtectedHeader", () => {
   });
 
   test("round-trips a populated header and reads zero bytes back as empty", () => {
-    expect(decodeProtectedHeader(encodeProtectedHeader(new Map([[1, -7]])))).toEqual(
-      new Map([[1, -7]]),
-    );
-    expect(decodeProtectedHeader(Buffer.alloc(0))).toEqual(new Map());
+    expect(
+      decodeProtectedHeader(encodeProtectedHeader(new Map([[1, -7]])), CoseError),
+    ).toEqual(new Map([[1, -7]]));
+    expect(decodeProtectedHeader(Buffer.alloc(0), CoseError)).toEqual(new Map());
   });
 });
 
@@ -89,20 +89,20 @@ describe("decodeProtectedHeader — the inner `.cbor header_map`", () => {
     ["nil", encodeCbor(null)],
     ["a tstr", encodeCbor("hi")],
     ["a bool", encodeCbor(true)],
-  ])("refuses a byte string holding %s", (_name, bstr) => {
+  ])("refuses a byte string holding %s under the class it is handed", (_name, bstr) => {
     let thrown: unknown;
 
     try {
-      decodeProtectedHeader(bstr);
+      decodeProtectedHeader(bstr, CweError);
     } catch (error) {
       thrown = error;
     }
 
-    expect(thrown).toBeInstanceOf(CoseError);
-    expect((thrown as CoseError).code).toBe("cose_malformed");
+    expect(thrown).toBeInstanceOf(CweError);
+    expect((thrown as CweError).code).toBe("cose_malformed");
     // THE WORDS. `requireBstr`'s OUTER slot refusal shares this code, so the
     // sentence is the only thing telling the two apart at a call site.
-    expect((thrown as CoseError).details).toBe(
+    expect((thrown as CweError).details).toBe(
       "The protected header byte string does not hold a CBOR map.",
     );
   });
@@ -111,7 +111,7 @@ describe("decodeProtectedHeader — the inner `.cbor header_map`", () => {
   // the empty header map, which `encodeProtectedHeader` emits for every aegis
   // token carrying no protected parameter, and it is not valid CBOR on its own.
   test("a ZERO-LENGTH byte string is still the empty map", () => {
-    expect(decodeProtectedHeader(Buffer.alloc(0))).toEqual(new Map());
+    expect(decodeProtectedHeader(Buffer.alloc(0), CoseError)).toEqual(new Map());
     expect(() => decodeCbor(Buffer.alloc(0))).toThrow();
   });
 });

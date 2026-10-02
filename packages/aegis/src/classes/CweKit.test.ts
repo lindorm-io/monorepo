@@ -173,6 +173,7 @@ describe("CweKit (COSE_Encrypt0)", () => {
     const foreignProtected = (typ: unknown): Map<number | string, unknown> => {
       const map = decodeProtectedHeader(
         splitEncrypt0(kit.encrypt(payload, { tokenType: "at" })).protectedBstr,
+        CweError,
       );
 
       if (typ === undefined) map.delete(coseByJose("typ"));
@@ -273,6 +274,7 @@ describe("CweKit (COSE_Encrypt0)", () => {
     const sealed = (entries: Array<[number | string, unknown]>): Buffer => {
       const map = decodeProtectedHeader(
         splitEncrypt0(kit.encrypt(payload, { tokenType: "at" })).protectedBstr,
+        CweError,
       );
 
       for (const [label, value] of entries) map.set(label, value);
@@ -363,7 +365,7 @@ describe("CweKit — caller-controlled protected / unprotected header bags", () 
       Buffer,
       Map<number, unknown>,
     ];
-    const protectedMap = decodeProtectedHeader(protectedBstr);
+    const protectedMap = decodeProtectedHeader(protectedBstr, CweError);
     expect(protectedMap.has(coseByJose("cty"))).toBe(true);
     expect(protectedMap.has(coseByJose("x5u"))).toBe(true);
     expect(protectedMap.has(coseByJose("alg"))).toBe(true); // enc sits on label 1
@@ -759,7 +761,7 @@ describe("CweKit — a slot holding something other than a byte string", () => {
     ["an array", encodeCbor([1, 2])],
     ["nil", encodeCbor(null)],
     ["a tstr", encodeCbor("hi")],
-  ])("both doors refuse a protected byte string holding %s", (_name, bstr) => {
+  ])("both doors refuse a protected byte string holding %s as CweError", (_, bstr) => {
     for (const door of [
       () => kit.decrypt(spliceCoseSlot(token, 0, bstr)),
       () => CweKit.decode(spliceCoseSlot(token, 0, bstr)),
@@ -772,7 +774,7 @@ describe("CweKit — a slot holding something other than a byte string", () => {
         thrown = error;
       }
 
-      expect(thrown).toBeInstanceOf(AegisError);
+      expect(thrown).toBeInstanceOf(CweError);
       expect((thrown as CweError).code).toBe("cose_malformed");
     }
   });

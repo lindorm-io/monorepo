@@ -33,14 +33,17 @@ export const encodeProtectedHeader = (header: Map<CoseLabel, unknown>): Buffer =
  * ⚠ A ZERO-LENGTH byte string is the empty header map — the encoder above emits
  * exactly that — so it reads as an empty `Map` and never reaches the decode.
  */
-export const decodeProtectedHeader = (bstr: Uint8Array): Map<CoseLabel, unknown> => {
+export const decodeProtectedHeader = (
+  bstr: Uint8Array,
+  error: typeof CoseError,
+): Map<CoseLabel, unknown> => {
   if (bstr.length === 0) return new Map();
 
   const decoded = decodeCbor<unknown>(bstr);
 
   if (decoded instanceof Map) return decoded as Map<CoseLabel, unknown>;
 
-  throw new CoseError("Malformed COSE protected header", {
+  throw new error("Malformed COSE protected header", {
     code: "cose_malformed",
     title: "Malformed COSE Protected Header",
     details: "The protected header byte string does not hold a CBOR map.",
@@ -64,7 +67,7 @@ export const readProtectedHeader = (
   if (!(slot instanceof Uint8Array)) return undefined;
 
   try {
-    return decodeProtectedHeader(slot);
+    return decodeProtectedHeader(slot, CoseError);
   } catch {
     return undefined;
   }

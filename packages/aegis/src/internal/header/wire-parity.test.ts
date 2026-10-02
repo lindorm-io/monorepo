@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import { TEST_EC_KEY_SIG } from "../../__fixtures__/keys.js";
 import { CwsKit } from "../../classes/CwsKit.js";
 import { JwsKit } from "../../classes/JwsKit.js";
+import { CwsError } from "../../errors/index.js";
 import type { WireProtectedHeader } from "../../types/index.js";
 import { decodeCbor, Tag } from "../cose/cbor.js";
 import type { CoseLabel } from "../cose/cose-label.js";
@@ -141,7 +142,7 @@ const coseVerdict = (jose: string, label: CoseLabel, value: unknown): Verdict =>
   // against, so an unprotected COSE parameter has no JOSE counterpart at all.
   const [protectedBstr] = decodeCbor<Tag>(token).contents as [Uint8Array];
 
-  return decodeProtectedHeader(protectedBstr).has(label) ? "present" : "absent";
+  return decodeProtectedHeader(protectedBstr, CwsError).has(label) ? "present" : "absent";
 };
 
 /**

@@ -4,6 +4,7 @@ import { describe, expect, test } from "vitest";
 import { TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG } from "../../__fixtures__/keys.js";
 import { CwmKit } from "../../classes/CwmKit.js";
 import { CwtKit } from "../../classes/CwtKit.js";
+import { CoseError } from "../../errors/index.js";
 import { Tag, decodeCbor, encodeCbor } from "../cose/cbor.js";
 import { decodeProtectedHeader, encodeProtectedHeader } from "../cose/structures.js";
 import { parseToken } from "../utils/parse-token.js";
@@ -45,7 +46,7 @@ describe("COSE_TOKEN_WIRE keyless read gates", () => {
     }
 
     const structure = value as Array<unknown>;
-    const header = decodeProtectedHeader(structure[0] as Uint8Array);
+    const header = decodeProtectedHeader(structure[0] as Uint8Array, CoseError);
 
     edit(header);
 
@@ -154,7 +155,7 @@ describe("COSE_TOKEN_WIRE keyless read gates", () => {
       }
 
       const structure = value as Array<unknown>;
-      const header = decodeProtectedHeader(structure[0] as Uint8Array);
+      const header = decodeProtectedHeader(structure[0] as Uint8Array, CoseError);
 
       edit(header);
 

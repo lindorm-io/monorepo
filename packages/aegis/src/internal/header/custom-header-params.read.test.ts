@@ -5,6 +5,7 @@ import { TEST_EC_KEY_SIG } from "../../__fixtures__/keys.js";
 import { CwtKit } from "../../classes/CwtKit.js";
 import { JwtKit } from "../../classes/JwtKit.js";
 import { SignatureKit } from "../../classes/SignatureKit.js";
+import { CoseError } from "../../errors/index.js";
 import { algToCoseLabel } from "../cose/alg-labels.js";
 import { Tag, decodeCbor, encodeCbor } from "../cose/cbor.js";
 import { signedCoseStructureTag } from "../cose/signed-cose-structure-tag.js";
@@ -71,7 +72,9 @@ const reprotected = (token: Buffer, entries: Array<[unknown, unknown]>): Buffer 
   // reach the kit as an algorithm-match refusal — the verdict the row was written
   // for, lost. Said as a refusal rather than a warning, because a warning does not
   // fire (`__fixtures__/foreign-signed-cose.ts` guards the same hazard).
-  const declared = decodeProtectedHeader(protectedHeader).get(coseByJose("alg"));
+  const declared = decodeProtectedHeader(protectedHeader, CoseError).get(
+    coseByJose("alg"),
+  );
   const sealed = algToCoseLabel(TEST_EC_KEY_SIG.algorithm);
 
   if (declared !== sealed) {

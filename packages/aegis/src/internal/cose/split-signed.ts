@@ -116,7 +116,7 @@ export const splitSigned = (
 
   // Decoded ONCE and used twice: a second decode is a second chance for the raw
   // and translated buckets to disagree about the same bytes.
-  const protectedMap = decodeProtectedHeader(protectedBstr);
+  const protectedMap = decodeProtectedHeader(protectedBstr, error);
 
   // ONE verdict at every signed door. `decodeCwt` runs this guard too, because the
   // verification key resolves there before a kit exists
