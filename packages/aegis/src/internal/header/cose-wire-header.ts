@@ -1,5 +1,5 @@
 import { B64 } from "@lindorm/b64";
-import { isNumber } from "@lindorm/is";
+import { isNumber, isString } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import { CoseError } from "../../errors/index.js";
 import type { WireTokenHeader } from "../../types/index.js";
@@ -90,6 +90,17 @@ const coseValueToWire = (
       return decodeCoseCertHash(value);
     case "passthrough":
       return { jose, value };
+    case "textString": {
+      // ⚠ `coseWireHeader` casts the bag to `WireTokenHeader`, so what this arm
+      // passes is read as the `string` that type declares for the parameter.
+      if (isString(value)) return { jose, value };
+
+      throw new CoseError(`Invalid token header: ${jose} must be a text string`, {
+        code: `cose_header_${jose}_invalid`,
+        title: `COSE Header ${jose.charAt(0).toUpperCase()}${jose.slice(1)} Invalid`,
+        details: `The decoded COSE header ${jose} is present but is not a text string, so aegis cannot read it.`,
+      });
+    }
     default: {
       // `noImplicitReturns` is off repo-wide, so without this a new codec kind
       // would silently yield `undefined` and DROP the parameter on read.

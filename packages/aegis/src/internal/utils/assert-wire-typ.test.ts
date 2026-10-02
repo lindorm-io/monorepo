@@ -242,11 +242,9 @@ describe("assertWireTyp", () => {
   });
 
   test("a NON-STRING typ is refused as the wire's own error, not a TypeError", () => {
-    // ⚠ The predicate guards `isString` before reaching `endsWith`. The call
-    // sites this replaced did not, so a non-string typ would have surfaced as a
-    // raw `TypeError`. It is DEFENSIVE only: no wire delivers one — the JOSE
-    // wires refuse it in `decodeJoseHeader` and the COSE wires normalise it to
-    // `undefined` in `decodeCwt` (both pinned by their own suites).
+    // ⚠ The predicate guards `isString` before reaching `endsWith`, which would
+    // throw a raw `TypeError` on a non-string. DEFENSIVE only
+    // (`assert-wire-typ.ts`).
     for (const typ of [123, null, {}, ["JWT"]]) {
       expect(() => assertWireTyp({ ...JWT, typ: typ as unknown as string })).toThrow(
         expect.objectContaining({ code: "jwt_invalid_typ", data: { typ } }),

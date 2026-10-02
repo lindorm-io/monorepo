@@ -115,3 +115,80 @@ Feature: The error contract at every door
         | wire | format |
         | jose | jwt    |
         | cose | cwt    |
+
+  Rule: a COSE type header that is not a text string is refused as a COSE error at every door
+
+    RFC 9596 §2 lets a COSE type header be a CoAP Content-Format integer as
+    well as a media-type string. aegis reads the type as a media type — it
+    decides which kind of token this is and it is what a profile's floor
+    compares — and an integer names no media type to compare. So a type
+    header that is not a text string is refused where the header is read,
+    under one code at every door, as an error the consumer's guard catches
+    rather than a failure that falls through it. That is aegis policy, not a
+    requirement of RFC 9596, which registers the parameter as an unsigned
+    integer or a text string. The jose wire has no scenario: the integer form
+    is one RFC 9596 gives the COSE type header alone, and a JOSE header whose
+    type is not a string is refused by the JOSE header decoder under a code of
+    its own.
+
+    Background:
+      Given the wire claims
+        | iss | "https://test.lindorm.io/" |
+        | sub | "user-1"                   |
+        | aud | ["https://rs.lindorm.io/"] |
+        | jti | "token-1"                  |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+      And the foreign protected header carries
+        | typ | 61 |
+
+    Scenario: cose: the domain verify refuses a type header stated as an integer
+      When a third party signs the wire claims on the cose wire
+      And I verify the token
+      Then verification is refused as a COSE error "cose_header_typ_invalid"
+
+    Scenario: cose: the keyless read refuses a type header stated as an integer
+      When a third party signs the wire claims on the cose wire
+      And I read the token without a key
+      Then the keyless read is refused as a COSE error "cose_header_typ_invalid"
+
+    Scenario: cose: the raw claims door refuses a type header stated as an integer
+      When a third party signs the wire claims on the cose wire
+      And I verify the token as a claims token on the cose wire
+      Then verification is refused as a COSE error "cose_header_typ_invalid"
+
+    Scenario: cose: the raw opaque door refuses a type header stated as an integer
+      When a third party signs the wire claims on the cose wire
+      And I verify the token as opaque content on the cose wire
+      Then verification is refused as a COSE error "cose_header_typ_invalid"
+
+  Rule: a COSE type header that is not a text string is refused in the unprotected bucket too
+
+    A type header in the bucket the signature does not cover is read and not
+    believed when it is text. One that is not text is refused there as well:
+    aegis reads a type header the same way in either bucket, so the bucket is
+    no way past the refusal. That is aegis policy too — RFC 9596 §2 forbids
+    the parameter in that bucket whatever its value, and aegis still accepts
+    a text one there and ignores it. The jose wire has no scenario: the JOSE
+    compact serialisation has no unprotected bucket (RFC 7515 §7.1).
+
+    Background:
+      Given the wire claims
+        | iss | "https://test.lindorm.io/" |
+        | sub | "user-1"                   |
+        | aud | ["https://rs.lindorm.io/"] |
+        | jti | "token-1"                  |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+      And the foreign unprotected header carries
+        | typ | 61 |
+
+    Scenario: cose: the domain verify refuses an unprotected type header stated as an integer
+      When a third party signs the wire claims on the cose wire
+      And I verify the token
+      Then verification is refused as a COSE error "cose_header_typ_invalid"
+
+    Scenario: cose: the raw opaque door refuses an unprotected type header stated as an integer
+      When a third party signs the wire claims on the cose wire
+      And I verify the token as opaque content on the cose wire
+      Then verification is refused as a COSE error "cose_header_typ_invalid"

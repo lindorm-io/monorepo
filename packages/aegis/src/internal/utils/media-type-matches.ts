@@ -55,11 +55,6 @@ export const normaliseMediaType = (value: string): string =>
  * token carrying the long form as readily as the reverse. Nothing validates a
  * profile's `typ` at registration (`internal/profiles/define-profile.ts`), so the
  * declared side is as free as the token's.
- *
- * ⚠ A NON-STRING NEVER MATCHES. The COSE `typ` (label 16) is a `passthrough`
- * registry cell (`internal/header/header-registry.ts`), so a CWT stating a CoAP
- * Content-Format integer travels as a number under the `string | undefined` this
- * takes — the declared type is not proof on that wire.
  */
 export const mediaTypeMatches = (actual: string | undefined, expected: string): boolean =>
   isString(actual) && normaliseMediaType(actual) === normaliseMediaType(expected);

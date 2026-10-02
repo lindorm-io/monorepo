@@ -278,9 +278,12 @@ Feature: Header provenance, empty header parameters and the asserted token type
     certificate reference whoever last held the token can rewrite. On read the
     header registry's placement column is the allowlist, and a parameter
     declared protected that arrives unauthenticated is dropped before the
-    domain header is built. Every parameter is hand-placed by a foreign
-    producer at the label aegis reads, and each scenario reads its label back
-    off the raw bytes before asserting the domain header does not believe it.
+    domain header is built. A type header that is not text is refused in
+    either bucket instead, as aegis policy: the error contract's rule for a
+    COSE type header that is not a text string. Every parameter is
+    hand-placed by a foreign producer at the label aegis reads, and each
+    scenario reads its label back off the raw bytes before asserting the
+    domain header does not believe it.
     The jose wire has no scenario: the JOSE compact serialisation has no
     unprotected bucket (RFC 7515 §7.1), so no parameter can arrive
     unauthenticated on that wire and there is nothing for a placement rule to

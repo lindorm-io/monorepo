@@ -2,6 +2,7 @@ import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { ILogger } from "@lindorm/logger";
 import { beforeEach, describe, expect, test } from "vitest";
 import { TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG } from "../../__fixtures__/keys.js";
+import { CoseError } from "../../errors/index.js";
 import { coseByJose } from "../header/header-registry.js";
 import { Tag, encodeCbor } from "./cbor.js";
 import { decodeCwt } from "./decode-cwt.js";
@@ -76,11 +77,8 @@ describe("decodeCwt", () => {
     expect(decoded.payload).toBeUndefined();
   });
 
-  // ⚠ Where a non-string typ is answered on this wire. `verifyCwt`'s typ gate has
-  // an `isString` guard nothing can reach, because this decode NORMALISES a
-  // non-string to `undefined` and a typ-less CWT is well-formed. So a numeric typ
-  // is not refused — it is unread.
-  test("normalises a NON-STRING typ to undefined rather than reporting it", () => {
+  // AEGIS POLICY, not RFC 9596 §4.1 — the typ row in `header-registry.ts`.
+  test("refuses a typ that is not a text string with the header codec's verdict", () => {
     const protectedHeader = encodeProtectedHeader(
       new Map<number, unknown>([
         [coseByJose("alg"), -7],
@@ -103,7 +101,36 @@ describe("decodeCwt", () => {
       ),
     );
 
-    expect(decodeCwt(token).typ).toBeUndefined();
+    expect(() => decodeCwt(token)).toThrow(CoseError);
+    expect(() => decodeCwt(token)).toThrow(
+      expect.objectContaining({ code: "cose_header_typ_invalid" }),
+    );
+  });
+
+  test("reports a text typ as written", () => {
+    const protectedHeader = encodeProtectedHeader(
+      new Map<number, unknown>([
+        [coseByJose("alg"), -7],
+        [coseByJose("typ"), "application/at+cwt"],
+      ]),
+    );
+    const unprotected = new Map<number, unknown>([
+      [coseByJose("kid"), Buffer.from("text-typ-kid", "utf8")],
+    ]);
+
+    const token = encodeCbor(
+      new Tag(
+        COSE_TAG.cwt,
+        new Tag(COSE_TAG.sign1, [
+          protectedHeader,
+          unprotected,
+          Buffer.alloc(0),
+          Buffer.alloc(8),
+        ]),
+      ),
+    );
+
+    expect(decodeCwt(token).typ).toBe("application/at+cwt");
   });
 
   // The same decode serves the OPAQUE CWS path, whose payload is arbitrary bytes,

@@ -1,4 +1,3 @@
-import { isString } from "@lindorm/is";
 import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import { CwsError } from "../errors/index.js";
@@ -227,19 +226,18 @@ export class CwsKit implements ICwsKit {
         payloadDetail: "there is no content to verify",
       });
 
-    // A typ-LESS COSE_Sign1/COSE_Mac0 is accepted here; a PRESENT string typ must
-    // be this family's. A NON-STRING typ reaches the gate as absent — the same
-    // answer `internal/cose/decode-cwt.ts` gives the CWT door for the identical
-    // value. Off the PROTECTED bucket alone: `splitSigned` reports the two
+    // A typ-LESS COSE_Sign1/COSE_Mac0 is accepted here; a PRESENT typ must be this
+    // family's. Off the PROTECTED bucket alone: `splitSigned` reports the two
     // buckets separately, and this is the one the signature/MAC covers.
     // RFC 9596 §2, RFC 9596 §3.
     //
-    // ⚠ AFTER `verifyCoseStructure`, so a token failing typ AND crit together
-    // answers the crit refusal on this door where `CweKit`/`JwsKit` answer typ —
-    // AEGIS POLICY, not a specification ordering. pinned: CwsKit.test.ts
-    // "answers the crit refusal for a token failing typ and crit together".
+    // ⚠ AFTER `verifyCoseStructure`, so a token failing this family gate AND crit
+    // together answers the crit refusal on this door where `CweKit`/`JwsKit`
+    // answer the family gate — AEGIS POLICY, not a specification ordering.
+    // pinned: CwsKit.test.ts
+    // "answers the crit refusal before the family typ gate for a token failing both".
     assertWireTyp({
-      typ: isString(protectedHeader.typ) ? protectedHeader.typ : undefined,
+      typ: protectedHeader.typ,
       accept: ["application/cws"],
       suffix: "+cws",
       presence: "optional",

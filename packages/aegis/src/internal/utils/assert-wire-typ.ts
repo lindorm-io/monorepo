@@ -44,10 +44,10 @@ export const assertWireTyp = ({
 }): void => {
   if (presence === "optional" && typ === undefined) return;
 
-  // The `isString` guard is DEFENSIVE: no wire delivers a non-string typ — the
-  // JOSE wires refuse one in `decodeJoseHeader` (`jose_header_typ_invalid`) and
-  // the COSE wires normalise it to `undefined` in `decodeCwt` — but without it a
-  // bare `typ.endsWith(...)` throws a raw `TypeError` instead of this leaf error.
+  // The `isString` guard is DEFENSIVE — each wire answers a non-string typ in its
+  // header decoder first (JOSE: `decodeJoseHeader`; COSE: the typ row in
+  // `header-registry.ts`) — but without it a bare `typ.endsWith(...)` throws a raw
+  // `TypeError` instead of this leaf error.
   if (isString(typ) && (accept.includes(typ) || typ.endsWith(suffix))) return;
 
   throw new error("Invalid token", { code, data: { typ }, title, details });

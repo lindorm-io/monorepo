@@ -280,11 +280,10 @@ const critToCoseLabels = (value: unknown, proprietary: boolean | undefined): unk
  * codec cell. The write half of the per-wire codec; `coseValueToWire` in
  * `header/cose-wire-header.ts` is the read half.
  *
- * ⚠ `alg`, `kid` and `iv` PASS THROUGH UNCHANGED: they are written onto their
- * buckets by `mergeCoseProtected`/`mergeCoseUnprotected`, so one reaching here came
- * from a CALLER's bag and `buildCoseHeaders` refuses it by name
- * (`cose_reserved_header`) one step later. Transforming the value first would
- * replace that refusal.
+ * ⚠ `alg`, `typ`, `kid` and `iv` PASS THROUGH UNCHANGED, and no write reaches them:
+ * the kits write each onto its bucket themselves
+ * (`mergeCoseProtected`/`mergeCoseUnprotected`), and `buildCoseHeaders` refuses a
+ * caller's by name (`cose_reserved_header`) before this translation runs.
  */
 const encodeCoseHeaderValue = (
   jose: string,
@@ -304,6 +303,7 @@ const encodeCoseHeaderValue = (
     case "textBytes":
     case "base64Bytes":
     case "passthrough":
+    case "textString":
       return value;
     default: {
       // See `encodeHeaderValue`: the reported fact is the string discriminant.

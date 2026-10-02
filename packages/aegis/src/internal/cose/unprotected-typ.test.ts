@@ -125,8 +125,8 @@ describe("COSE typ integrity", () => {
   //
   // ⚠ It stays the BROAD class: narrowing pins WHICH check happens to notice
   // (`assert-cose-token-type.ts` or `enforce-verify-floor.ts`), and the rule is
-  // that an unsigned typ answers nothing. ⚠ Scope that to `typ` alone — a broad
-  // "no kit-derived header in an unsigned bag" is false here, because
+  // that an unsigned text typ answers nothing. ⚠ Scope that to `typ` alone — a
+  // broad "no kit-derived header in an unsigned bag" is false here, because
   // `CwsKit.buildHeaders` puts the kit-derived `kid` in the UNPROTECTED map on
   // every CWT/CWS aegis mints (RFC 9052 §3.1) and `decodeCwt` reads it back.
   test("should NOT satisfy a token type assertion from an UNPROTECTED typ", async () => {

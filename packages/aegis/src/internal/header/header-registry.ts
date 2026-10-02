@@ -438,7 +438,10 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     },
     wire: { jose: wireName("typ"), cose: wireLabel(16, "typ") }, // RFC 9596 §4.1
     codec: { kind: "string" },
-    cose: { kind: "passthrough" },
+    // AEGIS POLICY, not RFC 9596 §4.1: the read refuses a typ that is not a text
+    // string, in either bucket, because aegis routes a token and floors a profile
+    // on the typ's MEDIA TYPE. pinned: `cose-wire-header.test.ts`.
+    cose: { kind: "textString" },
     // The FULL media type: aegis always writes and reports the complete form, so a
     // bare `"at+jwt"` here could not round-trip to itself (RFC 7515 §4.1.9).
     sample: "application/at+jwt",

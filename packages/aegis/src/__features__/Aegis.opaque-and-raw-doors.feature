@@ -252,18 +252,20 @@ Feature: The opaque signed artifact and the raw wire doors
       Then the raw protected header carries no label 16
       And the raw door accepts the token
 
-  Rule: the opaque verify does not consult a type carried only in the unprotected bucket
+  Rule: the opaque verify does not consult a text type carried only in the unprotected bucket
 
     No signature covers an unprotected parameter (RFC 9052 §3), and the type
     is what routes a token, so a type read from the unprotected bucket is a
     type the presenter chose. RFC 9596 §2 puts `typ` in the protected bucket;
-    a copy anywhere else must answer nothing — neither accepting a token on
-    its strength nor refusing one because of it. The claims type that would
-    be refused from the protected bucket rides the unprotected one alone, and
-    both halves of that premise are read off the raw wire. The jose wire has
-    no scenario: the JOSE compact serialisation has one header and it is
-    protected (RFC 7515 §7.1), so there is no unprotected bucket to carry a
-    second type in.
+    a text copy anywhere else must answer nothing — neither accepting a token
+    on its strength nor refusing one because of it. A copy that is not text
+    is refused in either bucket, as aegis policy: the error contract's rule
+    for a COSE type header that is not a text string. The claims type that
+    would be refused from the protected bucket rides the unprotected one
+    alone, and both halves of that premise are read off the raw wire. The
+    jose wire has no scenario: the JOSE compact serialisation has one header
+    and it is protected (RFC 7515 §7.1), so there is no unprotected bucket to
+    carry a second type in.
 
     Background:
       Given the wire claims

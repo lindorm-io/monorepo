@@ -1,6 +1,7 @@
-import { isNumber, isObject, isString } from "@lindorm/is";
+import { isNumber, isObject } from "@lindorm/is";
 import { CoseError } from "../../errors/index.js";
 import type { CwtClaimsWire } from "../../types/index.js";
+import { coseWireHeader } from "../header/cose-wire-header.js";
 import { coseByJose } from "../header/header-registry.js";
 import { coseLabelToAlg } from "./alg-labels.js";
 import { assertKidOneBucket } from "./assert-kid-one-bucket.js";
@@ -85,7 +86,6 @@ export const decodeCwt = (token: Buffer): CwtDecoded => {
     protectedMap.get(kidLabel) ??
     (unprotected instanceof Map ? unprotected.get(kidLabel) : undefined);
   const algLabel = protectedMap.get(coseByJose("alg"));
-  const typ = protectedMap.get(coseByJose("typ"));
 
   return {
     cose,
@@ -93,7 +93,11 @@ export const decodeCwt = (token: Buffer): CwtDecoded => {
     kid:
       kidValue instanceof Uint8Array ? Buffer.from(kidValue).toString("utf8") : undefined,
     algorithm: isNumber(algLabel) ? coseLabelToAlg(algLabel) : undefined,
-    typ: isString(typ) ? typ : undefined,
+    // ⚠ THROUGH THE HEADER CODEC, never label 16 off the raw map: this decode runs
+    // before any kit reads the header, so it refuses what the typ row in
+    // `header-registry.ts` refuses. pinned: `non-text-typ.test.ts`, the token-type
+    // assertion rows.
+    typ: coseWireHeader(protectedMap, "sig").header.typ,
     payload: decodeUnverifiedClaims(payloadBstr),
   };
 };

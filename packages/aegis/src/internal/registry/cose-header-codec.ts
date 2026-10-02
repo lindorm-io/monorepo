@@ -6,7 +6,9 @@
  * write, `header/cose-wire-header.ts` on read) switch over it exhaustively with a
  * `never` default, and neither carries its own list of parameter names.
  *
- *   - `"passthrough"` the CBOR value IS the JOSE value (cty, typ, x5u, oid).
+ *   - `"passthrough"` the CBOR value IS the JOSE value (cty, x5u, oid).
+ *   - `"textString"` a CBOR `tstr` IS the JOSE string, and the read refuses any
+ *                    other CBOR type (typ — AEGIS POLICY, on its registry row).
  *   - `"algorithmLabel"` an integer COSE algorithm label against the JOSE
  *                        algorithm NAME (alg, RFC 9052 §3.1).
  *   - `"textBytes"` a CBOR `bstr` against utf-8 text (kid).
@@ -20,6 +22,7 @@
  */
 export type CoseHeaderCodec =
   | { kind: "passthrough" }
+  | { kind: "textString" }
   | { kind: "algorithmLabel" }
   | { kind: "textBytes" }
   | { kind: "base64Bytes" }

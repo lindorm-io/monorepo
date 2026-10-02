@@ -2,7 +2,7 @@ import { AesError } from "@lindorm/aes";
 import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { describe, expect, test } from "vitest";
-import { AegisError, CweError } from "../errors/index.js";
+import { AegisError, CoseError, CweError } from "../errors/index.js";
 import { Tag, decodeCbor, encodeCbor } from "../internal/cose/cbor.js";
 import { coseByJose } from "../internal/header/header-registry.js";
 import {
@@ -188,18 +188,14 @@ describe("CweKit (COSE_Encrypt0)", () => {
       expect(kit.decrypt(token).protectedHeader.typ).toBeUndefined();
     });
 
-    // ⚠ A `uint` typ carries no media-type spelling to compare against a family, so
-    // it reaches the gate as absent — the same answer `decodeCwt` gives the CWT
-    // door for the identical value, which is what keeps the two COSE doors
-    // agreeing on what a typ IS. RFC 9596 §2.
-    test("accepts a COSE_Encrypt0 whose typ is a CoAP Content-Format uint", () => {
+    // AEGIS POLICY, not RFC 9596 §4.1 — the typ row in `header-registry.ts`.
+    test("refuses a COSE_Encrypt0 whose typ is a CoAP Content-Format uint", () => {
       const token = foreignEncrypt0(kryptos, foreignProtected(61), payload);
 
-      // The typ is asserted as the UINT it is, not merely absent: without it the
-      // row would still pass if the passthrough arm ever stopped delivering the
-      // raw value, and it would then be pinning the wrong reason.
-      expect(kit.decrypt(token).protectedHeader.typ).toBe(61);
-      expect(kit.decrypt(token).payload).toEqual(payload);
+      expect(() => kit.decrypt(token)).toThrow(
+        expect.objectContaining({ code: "cose_header_typ_invalid" }),
+      );
+      expect(() => kit.decrypt(token)).toThrow(CoseError);
     });
 
     // ⚠ THE WORDS, not just the code. `internal/utils/assert-wire-typ.test.ts`

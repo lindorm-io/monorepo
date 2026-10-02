@@ -186,9 +186,8 @@ describe("mediaTypeMatches", () => {
       expect(mediaTypeMatches("", "application/at+jwt")).toBe(false);
     });
 
-    // RFC 9596 §4.1 admits a CoAP Content-Format integer, and the COSE header
-    // registry passes it through, so the guard is what stops a number being read
-    // as the media type its numeral happens to stand for.
+    // No door delivers one (`non-text-typ.test.ts`), so this pins the function
+    // alone.
     test("a CoAP Content-Format integer names nothing", () => {
       expect(mediaTypeMatches(61 as never, "application/cwt")).toBe(false);
     });

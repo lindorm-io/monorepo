@@ -1,5 +1,4 @@
 import { AesKit } from "@lindorm/aes";
-import { isString } from "@lindorm/is";
 import type { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import { CweError } from "../errors/index.js";
@@ -270,14 +269,11 @@ export class CweKit implements ICweKit {
     const protectedHeader = protectedWire.header;
     const unprotectedWire = coseWireHeader(unprotected, "enc");
 
-    // A typ-LESS COSE_Encrypt0 is accepted here; a PRESENT string typ must be this
-    // family's. A NON-STRING typ reaches the gate as absent — the same answer
-    // `internal/cose/decode-cwt.ts` gives the CWT door for the identical value, so
-    // the two COSE doors agree on what a typ IS. It rides the protected bucket,
-    // which is the AEAD's AAD, so nothing here is attacker-settable.
-    // RFC 9596 §2, RFC 9596 §3.
+    // A typ-LESS COSE_Encrypt0 is accepted here; a PRESENT typ must be this
+    // family's. It rides the protected bucket, which is the AEAD's AAD, so nothing
+    // here is attacker-settable. RFC 9596 §2, RFC 9596 §3.
     assertWireTyp({
-      typ: isString(protectedHeader.typ) ? protectedHeader.typ : undefined,
+      typ: protectedHeader.typ,
       accept: ["application/cwe"],
       suffix: "+cwe",
       presence: "optional",

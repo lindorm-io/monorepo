@@ -2,7 +2,7 @@ import { EcError } from "@lindorm/ec";
 import { type IKryptos, KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { describe, expect, test } from "vitest";
-import { AegisError, CwsError } from "../errors/index.js";
+import { AegisError, CoseError, CwsError } from "../errors/index.js";
 import { TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG } from "../__fixtures__/keys.js";
 import { foreignSignedCose } from "../__fixtures__/foreign-signed-cose.js";
 import { Tag, decodeCbor, encodeCbor } from "../internal/cose/cbor.js";
@@ -723,38 +723,39 @@ describe("CwsKit — the protected typ", () => {
 
   const kit = new CwsKit({ kryptos: TEST_EC_KEY_SIG, logger: createMockLogger() });
 
-  // ⚠ A `uint` typ carries no media-type spelling to compare against a family, so
-  // it reaches the gate as absent — the same answer `decodeCwt` gives the CWT
-  // door for the identical value, which is what keeps the COSE doors agreeing on
-  // what a typ IS. RFC 9596 §2.
-  test("accepts a token whose typ is a CoAP Content-Format uint", () => {
-    const token = foreignSignedCose(TEST_EC_KEY_SIG, foreignProtected(kit, 61), payload);
-
-    // The typ is asserted as the UINT it is, not merely absent: without it the
-    // row would still pass if the passthrough arm ever stopped delivering the
-    // raw value, and it would then be pinning the wrong reason.
-    expect(kit.verify(token).protectedHeader.typ).toBe(61);
-    expect(kit.verify(token).payload).toEqual(payload);
-  });
-
-  // Every other non-text shape takes the uint's road: no spelling to compare, so
-  // the gate sees absent, and the passthrough arm reports the raw value back.
+  // AEGIS POLICY, not RFC 9596 §4.1 — the typ row in `header-registry.ts` — in
+  // either bucket.
   test.each([
+    ["CoAP Content-Format uint", 61],
     ["bstr", Buffer.from("application/at+cwt", "utf8")],
     ["nested array", ["application/at+cwt"]],
     ["nested map", new Map<number, unknown>([[1, "application/at+cwt"]])],
-  ])("accepts a token whose typ is a %s and reports it back unchanged", (_shape, typ) => {
+  ])("refuses a token whose typ is a %s", (_shape, typ) => {
     const token = foreignSignedCose(TEST_EC_KEY_SIG, foreignProtected(kit, typ), payload);
 
-    const { protectedHeader, payload: out } = kit.verify(token);
+    const thrown = refusalOf(() => kit.verify(token));
 
-    expect(out).toEqual(payload);
-    expect(protectedHeader.typ).toStrictEqual(typ);
+    expect(thrown).toBeInstanceOf(CoseError);
+    expect(thrown.code).toBe("cose_header_typ_invalid");
   });
 
-  // The unprotected bucket is covered by nothing, so a typ there answers
-  // nothing: it is reported, and it is not consulted. RFC 9596 §2.
-  test("does not consult a typ carried only in the unprotected bucket", () => {
+  test("refuses a token whose unprotected typ is a CoAP Content-Format uint", () => {
+    const token = spliceCoseSlot(
+      foreignSignedCose(TEST_EC_KEY_SIG, foreignProtected(kit, undefined), payload),
+      1,
+      new Map<CoseLabel, unknown>([[coseByJose("typ"), 61]]),
+    );
+
+    const thrown = refusalOf(() => kit.verify(token));
+
+    expect(thrown).toBeInstanceOf(CoseError);
+    expect(thrown.code).toBe("cose_header_typ_invalid");
+  });
+
+  // The unprotected bucket is covered by nothing, so a text typ there answers
+  // nothing: it is reported, and it is not consulted (one that is not text: the
+  // rows above). RFC 9596 §2.
+  test("does not consult a text typ carried only in the unprotected bucket", () => {
     const token = spliceCoseSlot(
       foreignSignedCose(TEST_EC_KEY_SIG, foreignProtected(kit, undefined), payload),
       1,
@@ -768,10 +769,11 @@ describe("CwsKit — the protected typ", () => {
     expect(protectedHeader.typ).toBeUndefined();
   });
 
-  // The ORDER on THIS door: crit answers before typ, because the typ gate sits
-  // after `verifyCoseStructure`, which runs crit, the algorithm-match and the
-  // signature cycle. `CweKit`, `JwsKit` and the CWT wire answer typ first.
-  test("answers the crit refusal for a token failing typ and crit together", () => {
+  // The ORDER on THIS door: crit answers before the family typ gate, because that
+  // gate sits after `verifyCoseStructure`, which runs crit, the algorithm-match
+  // and the signature cycle. `CweKit`, `JwsKit` and the CWT wire answer the
+  // family gate first.
+  test("answers the crit refusal before the family typ gate for a token failing both", () => {
     const map = foreignProtected(kit, "application/at+cwt");
     map.set(coseByJose("crit"), ["oid"]);
     map.set("oid", "1.2.3");
