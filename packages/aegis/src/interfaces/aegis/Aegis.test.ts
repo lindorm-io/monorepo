@@ -165,6 +165,38 @@ type AccessTokenResult = Awaited<ReturnType<typeof verifyAccessToken>>;
 type SecurityEventResult = Awaited<ReturnType<typeof verifySecurityEvent>>;
 type ProfilelessResult = Awaited<ReturnType<typeof verifyWithoutProfile>>;
 
+/**
+ * NEVER INVOKED — the compiler IS the assertion.
+ *
+ * Each pin is a FRESH object literal on the four-argument overload: a spread or a
+ * variable is not excess-checked and would compile whether or not the knob is
+ * offered. The un-marked calls hold the guard in the other direction.
+ */
+export const _verifyOptionGuards = (): void => {
+  void aegis.verify("access_token", "token", undefined, {
+    audience: RESOURCE,
+    // @ts-expect-error - a profiled verify takes typ presence from the profile
+    typPresence: "required",
+  });
+
+  void aegis.verify("access_token", "token", undefined, {
+    audience: RESOURCE,
+    // @ts-expect-error - a profiled verify takes exp presence from the profile
+    expPresence: "required",
+  });
+
+  void aegis.verify("access_token", "token", undefined, {
+    audience: RESOURCE,
+    issuer: RESOURCE,
+    clockTolerance: 5,
+  });
+
+  void aegis.verify("token", undefined, {
+    typPresence: "optional",
+    expPresence: "optional",
+  });
+};
+
 describe("IAegis — the compile-time contract", () => {
   describe("mint resolves its content type from the profile name", () => {
     test("should resolve every built-in name to its own content type", () => {
@@ -204,13 +236,6 @@ describe("IAegis — the compile-time contract", () => {
     test("should admit username on an access token and not on an id token", () => {
       expectTypeOf<AccessTokenContent>().toHaveProperty("username");
       expectTypeOf<IdTokenContent>().not.toHaveProperty("username");
-    });
-
-    test("should keep every guarded call site compiling exactly as declared", () => {
-      // The `@ts-expect-error` directives above ARE the assertion, and an unused
-      // one fails the build — so the only thing left to check at runtime is that
-      // the guard was not deleted along with whatever it was guarding.
-      expect(_mintContentGuards).toBeInstanceOf(Function);
     });
   });
 
@@ -265,5 +290,13 @@ describe("IAegis — the compile-time contract", () => {
       expectTypeOf<ProfilelessResult>().toHaveProperty("claims");
       expectTypeOf<ProfilelessResult>().toHaveProperty("custom");
     });
+  });
+
+  test("should keep every guarded call site compiling exactly as declared", () => {
+    // The `@ts-expect-error` directives above ARE the assertion, and an unused
+    // one fails the build — so the only thing left to check at runtime is that
+    // the guard was not deleted along with whatever it was guarding.
+    expect(_mintContentGuards).toBeInstanceOf(Function);
+    expect(_verifyOptionGuards).toBeInstanceOf(Function);
   });
 });

@@ -176,9 +176,10 @@ export type ProfileMintOptions = {
  * `aud` contains self. `issuer` may override the configured/profile issuer
  * source (per-token profiles). Declarative claim matching beyond the floor is
  * the separate positional `assert`
- * ({@link import("../domain/domain-assert.js").VerifyAssert}) argument.
+ * ({@link import("../domain/domain-assert.js").VerifyAssert}) argument. The
+ * `typ` and `exp` presence knobs are the profile's, so they are not offered.
  */
-export type ProfileVerifyOptions = VerifyOptions & {
+export type ProfileVerifyOptions = Omit<VerifyOptions, "typPresence" | "expPresence"> & {
   audience: string;
   issuer?: string;
   // ⛔ No `clockTolerance` — it is a standard verify knob, declared ONCE on
