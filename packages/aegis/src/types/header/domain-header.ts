@@ -10,32 +10,32 @@ import type {
 
 /**
  * THE domain type: the parsed header in aegis domain vocabulary. Byte fields
- * are decoded strings; `algorithm` and `critical` are always present, the rest
- * may be `undefined`.
+ * are decoded strings; `algorithm` and `critical` are always present, and every
+ * other member only when the header has it.
  */
 export type DomainTokenHeader = {
   algorithm: TokenHeaderAlgorithm;
-  baseFormat: BaseTokenFormat | undefined;
-  certificateChain: Array<string> | undefined;
-  certificateThumbprint: string | undefined;
-  certificateThumbprintSha1: string | undefined;
-  certificateUrl: string | undefined;
-  contentType: string | undefined;
+  baseFormat?: BaseTokenFormat;
+  certificateChain?: Array<string>;
+  certificateThumbprint?: string;
+  certificateThumbprintSha1?: string;
+  certificateUrl?: string;
+  contentType?: string;
   critical: Array<string>;
-  encryption: KryptosEncryption | undefined;
-  headerType: string | undefined;
-  initialisationVector: string | undefined;
-  jwk: KryptosJwk | undefined;
-  jwksUri: string | undefined;
-  keyId: string | undefined;
-  objectId: string | undefined;
-  partyProducer: string | undefined; // apu — ECDH-ES Agreement PartyUInfo
-  partyRecipient: string | undefined; // apv — ECDH-ES Agreement PartyVInfo
-  pbkdfIterations: number | undefined;
-  pbkdfSalt: string | undefined;
-  publicEncryptionJwk: PublicEncryptionJwk | undefined;
-  publicEncryptionTag: string | undefined;
-  tokenType: string | undefined;
+  encryption?: KryptosEncryption;
+  headerType?: string;
+  initialisationVector?: string;
+  jwk?: KryptosJwk;
+  jwksUri?: string;
+  keyId?: string;
+  objectId?: string;
+  partyProducer?: string; // apu — ECDH-ES Agreement PartyUInfo
+  partyRecipient?: string; // apv — ECDH-ES Agreement PartyVInfo
+  pbkdfIterations?: number;
+  pbkdfSalt?: string;
+  publicEncryptionJwk?: PublicEncryptionJwk;
+  publicEncryptionTag?: string;
+  tokenType?: string;
 };
 
 /**

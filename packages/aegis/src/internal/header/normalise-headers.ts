@@ -22,8 +22,8 @@ import { refuseEmptyHeaders } from "./refuse-empty-headers.js";
  * defaults `critical` to `[]` because `DomainTokenHeader.critical` is
  * non-optional (`internal/utils/token-header.ts`), so a read-side prune would
  * delete the value the parser just wrote; and a read must report what a producer
- * WROTE, which is the evidence `validate-crit.ts`, `JweKit.decrypt`'s `zip`
- * refusal and `verify-cert-binding.ts` fire on.
+ * WROTE, which is the evidence `JweKit.decrypt` and `verify-cert-binding.ts` fire
+ * on.
  *
  * ⚠ IDEMPOTENT, because a bag crosses it TWICE by design: a door that reads the
  * caller's bag before the header is assembled — `serialiseContent(data,

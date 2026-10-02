@@ -6,30 +6,13 @@ import type { TokenProfile } from "../profile/profile.js";
 import type { DecryptedToken } from "./decrypted-token.js";
 import type { NarrowedClaims, NarrowedToken, VerifiedToken } from "./verified-token.js";
 
-// A complete DomainTokenHeader (the full-breadth domain header). Building the
-// whole shape is the compile-check: every domain header field is accounted for.
 const header: DomainTokenHeader = {
   algorithm: "ES256",
   baseFormat: "JWT",
-  certificateChain: undefined,
-  certificateThumbprint: undefined,
-  certificateThumbprintSha1: undefined,
-  certificateUrl: undefined,
   contentType: "application/json",
   critical: [],
-  encryption: undefined,
   headerType: "at+jwt",
-  initialisationVector: undefined,
-  jwk: undefined,
-  jwksUri: undefined,
   keyId: "key_abc",
-  objectId: undefined,
-  partyProducer: undefined,
-  partyRecipient: undefined,
-  pbkdfIterations: undefined,
-  pbkdfSalt: undefined,
-  publicEncryptionJwk: undefined,
-  publicEncryptionTag: undefined,
   tokenType: "access_token",
 };
 

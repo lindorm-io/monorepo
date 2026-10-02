@@ -142,6 +142,70 @@ describe("data-driven header codec", () => {
 });
 
 describe("parseTokenHeader", () => {
+  describe("the members it reports", () => {
+    test("reports exactly the members the wire carried", () => {
+      expect(parseTokenHeader({ alg: "HS256" })).toStrictEqual({
+        algorithm: "HS256",
+        critical: [],
+      });
+    });
+
+    test("a wire key whose value is undefined reports no member", () => {
+      expect(parseTokenHeader({ alg: "HS256", kid: undefined })).toStrictEqual({
+        algorithm: "HS256",
+        critical: [],
+      });
+    });
+
+    test("an undefined inside an array-valued member is not reported", () => {
+      const decoded = { alg: "ES512", x5c: ["MIIB", undefined] } as never;
+
+      expect(parseTokenHeader(decoded)).toStrictEqual({
+        algorithm: "ES512",
+        certificateChain: ["MIIB"],
+        critical: [],
+      });
+    });
+
+    test("an undefined inside an object-valued member is not reported", () => {
+      const decoded = {
+        alg: "ECDH-ES",
+        epk: { kty: "EC", crv: "P-256", x: "eHNhbXBsZQ", y: undefined },
+      } as never;
+
+      expect(parseTokenHeader(decoded)).toStrictEqual({
+        algorithm: "ECDH-ES",
+        critical: [],
+        publicEncryptionJwk: { kty: "EC", crv: "P-256", x: "eHNhbXBsZQ" },
+      });
+    });
+
+    test("a byte-string member is reported as the same instance", () => {
+      const bytes = Buffer.from([1, 2]);
+
+      const header = parseTokenHeader({ alg: "ES512", cty: bytes } as never);
+
+      expect(header.contentType).toBe(bytes);
+    });
+
+    test("a map-valued member is reported as the same instance", () => {
+      const map = new Map([[1, "a"]]);
+
+      const header = parseTokenHeader({ alg: "ES512", cty: map } as never);
+
+      expect(header.contentType).toBe(map);
+    });
+
+    test("derives the JOSE family from a typ that names one", () => {
+      expect(parseTokenHeader({ alg: "HS256", typ: "JWT" })).toStrictEqual({
+        algorithm: "HS256",
+        baseFormat: "JWT",
+        critical: [],
+        headerType: "JWT",
+      });
+    });
+  });
+
   describe("critical parameter handling", () => {
     test("should preserve known critical parameters", () => {
       const decoded: WireTokenHeader = {

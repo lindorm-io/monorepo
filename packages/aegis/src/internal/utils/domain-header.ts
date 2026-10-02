@@ -53,9 +53,15 @@ export const domainTokenHeader = (
 ): DomainTokenHeader => {
   const wire = mergeHeaderBuckets(buckets);
   const header = parseTokenHeader(wire);
+  const baseFormat = BASE_FORMAT[format];
+  const tokenType = decodeTokenTypeFromTyp(wire.typ, format);
 
-  header.baseFormat = BASE_FORMAT[format];
-  header.tokenType = decodeTokenTypeFromTyp(wire.typ, format);
+  // ⚠ The FORMAT names the family, so a COSE object drops the one
+  // `parseTokenHeader` derived from `typ`. pinned: domain-header.test.ts
+  if (baseFormat === undefined) delete header.baseFormat;
+  else header.baseFormat = baseFormat;
+
+  if (tokenType !== undefined) header.tokenType = tokenType;
 
   return header;
 };

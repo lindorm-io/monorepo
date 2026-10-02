@@ -4,7 +4,7 @@ import {
   headerByJose,
   headerJoseName,
 } from "../../internal/header/header-registry.js";
-import type { KitOwnedDomainParam } from "./domain-header.js";
+import type { DomainTokenHeader, KitOwnedDomainParam } from "./domain-header.js";
 import type { KitOwnedHeaderParam } from "./wire-envelope.js";
 
 /**
@@ -70,5 +70,23 @@ describe("the kit-owned header parameters, spelled both ways", () => {
       .sort();
 
     expect(jose).toEqual(Object.keys(KIT_OWNED_WIRE).sort());
+  });
+});
+
+/**
+ * ⚠ `@ts-expect-error` IS THE ASSERTION, and it only bites under `tsc`: vitest
+ * strips types without checking them.
+ */
+describe("a DomainTokenHeader literal", () => {
+  test("states only the members it has, and never omits algorithm or critical", () => {
+    const minimal: DomainTokenHeader = { algorithm: "HS256", critical: [] };
+
+    // @ts-expect-error `algorithm` is required
+    const noAlgorithm: DomainTokenHeader = { critical: [] };
+
+    // @ts-expect-error `critical` is required
+    const noCritical: DomainTokenHeader = { algorithm: "HS256" };
+
+    expect([minimal, noAlgorithm, noCritical]).toHaveLength(3);
   });
 });

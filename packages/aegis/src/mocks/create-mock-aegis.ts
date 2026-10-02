@@ -71,30 +71,7 @@ export const _createMockAegis = (mockFn: () => any, aesKit: IAesKit): IAegis => 
     custom: { protected: {}, unprotected: {} },
   };
 
-  const domainHeader: DomainTokenHeader = {
-    algorithm: "HS256",
-    baseFormat: undefined,
-    certificateChain: undefined,
-    certificateThumbprint: undefined,
-    certificateThumbprintSha1: undefined,
-    certificateUrl: undefined,
-    contentType: undefined,
-    critical: [],
-    encryption: undefined,
-    headerType: undefined,
-    initialisationVector: undefined,
-    jwk: undefined,
-    jwksUri: undefined,
-    keyId: undefined,
-    objectId: undefined,
-    partyProducer: undefined,
-    partyRecipient: undefined,
-    pbkdfIterations: undefined,
-    pbkdfSalt: undefined,
-    publicEncryptionJwk: undefined,
-    publicEncryptionTag: undefined,
-    tokenType: undefined,
-  };
+  const domainHeader: DomainTokenHeader = { algorithm: "HS256", critical: [] };
 
   const signed = (format: SignedToken["format"]): SignedToken => ({
     expiresAt: new Date("2999-01-01T00:00:00.000Z"),

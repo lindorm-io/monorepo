@@ -4,6 +4,7 @@
  * they live here and not on the base.
  */
 
+import type { DomainTokenHeader } from "../../types/index.js";
 import type { CoseHeaderCodec } from "./cose-header-codec.js";
 import type { ParamSpec, WhenEmpty } from "./param-spec.js";
 
@@ -48,6 +49,7 @@ export type HeaderPlacement = "protected" | "unprotected" | "either";
  * `internal/header/refuse-empty-headers.ts`.
  */
 export type HeaderSpec<D = unknown> = ParamSpec<D, HeaderCodec, WhenEmpty> & {
+  domain: keyof DomainTokenHeader;
   /**
    * HOW THE VALUE IS SHAPED ON THE COSE WIRE — the per-wire other half of `codec`,
    * which describes JOSE. `null` exactly where `wire.cose` is `absent`, and the two

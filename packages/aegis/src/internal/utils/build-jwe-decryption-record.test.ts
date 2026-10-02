@@ -17,21 +17,12 @@ const segments = (overrides: Partial<JweCompactSegments> = {}): JweCompactSegmen
   ...overrides,
 });
 
-const header = (overrides: Partial<DomainTokenHeader> = {}): DomainTokenHeader =>
-  ({
-    algorithm: "A256KW",
-    critical: [],
-    encryption: "A256GCM",
-    keyId: undefined,
-    pbkdfIterations: undefined,
-    pbkdfSalt: undefined,
-    initialisationVector: undefined,
-    publicEncryptionJwk: undefined,
-    publicEncryptionTag: undefined,
-    partyProducer: undefined,
-    partyRecipient: undefined,
-    ...overrides,
-  }) as DomainTokenHeader;
+const header = (overrides: Partial<DomainTokenHeader> = {}): DomainTokenHeader => ({
+  algorithm: "A256KW",
+  critical: [],
+  encryption: "A256GCM",
+  ...overrides,
+});
 
 const build = (
   overrides: Partial<Parameters<typeof buildJweDecryptionRecord>[0]> = {},

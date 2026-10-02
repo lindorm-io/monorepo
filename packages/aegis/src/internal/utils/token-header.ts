@@ -1,4 +1,4 @@
-import { isFinite, isObject, isString, isUrlLike } from "@lindorm/is";
+import { isArray, isFinite, isObject, isString, isUrlLike } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
 import { JoseError } from "../../errors/index.js";
@@ -212,42 +212,68 @@ export const shapeWireHeader = (
 };
 
 /**
+ * ⚠ AN UNCHECKED NARROWING of the value alone — `member` is typed by the registry
+ * row's `domain` — because the read reports what the producer wrote, unguarded
+ * ({@link decodeHeaderValue}).
+ */
+const setHeaderMember = <K extends keyof DomainTokenHeader>(
+  header: DomainTokenHeader,
+  member: K,
+  value: unknown,
+): void => {
+  header[member] = value as DomainTokenHeader[K];
+};
+
+/**
+ * ⚠ An `undefined` is dropped even though {@link parseTokenHeader} reports what the
+ * producer wrote, because `DomainTokenHeader` promises a member only where the
+ * header has one; the guard is `isObject`, never `isObjectLike`, which would have
+ * `omitUndefined` rebuild a foreign `cty` byte string or map from `Object.entries`
+ * into a plain object.
+ * pinned: token-header.test.ts, domain-header.test.ts.
+ */
+const withoutUndefined = (value: unknown): unknown => {
+  if (isArray(value)) return omitUndefined(value);
+  if (isObject(value)) return omitUndefined(value);
+
+  return value;
+};
+
+/**
  * The READ pass: a decoded wire header -> the domain header. An unregistered wire
  * key is dropped (the closed-set rule), and `crit`'s members are remapped wire ->
  * domain.
  *
- * ⚠ IT DOES NOT NORMALISE — the `omitUndefined` below is not the twin of the write
- * passes' {@link normaliseHeaders}; do not "restore the symmetry". A read-side
- * prune would delete the `critical = []` default set below (non-optional on
- * `DomainTokenHeader`), would report a foreign token's `cty: ""` as absent, and
- * would delete the evidence `validate-crit.ts`, `JweKit.decrypt` and
- * `verify-cert-binding.ts` refuse on.
- *
- * The `omitUndefined` does a DIFFERENT job: it makes `baseFormat` ABSENT rather
- * than present-with-`undefined` when `typ` names no recognised format.
+ * ⚠ IT DOES NOT NORMALISE — the write passes' {@link normaliseHeaders} has no twin
+ * here; do not "restore the symmetry". A read-side prune would delete the
+ * `critical: []` default below (required on `DomainTokenHeader`) and would report a
+ * foreign token's `cty: ""` as absent. `JweKit.decrypt` refuses on what this
+ * returns (`encryption`, `partyRecipient`, and the thumbprints it hands
+ * `verify-cert-binding.ts`), so the report is what the producer wrote, less the
+ * `undefined` values {@link withoutUndefined} drops.
  */
-export const parseTokenHeader = <T extends DomainTokenHeader = DomainTokenHeader>(
-  decoded: WireTokenHeader,
-): T => {
+export const parseTokenHeader = (decoded: WireTokenHeader): DomainTokenHeader => {
+  // An absent `crit` reads as `[]`.
+  const header: DomainTokenHeader = { algorithm: decoded.alg, critical: [] };
+
   // Single pass over the decoded wire claims; an unregistered wire key is dropped.
-  const result: Dict = {};
   for (const key of Object.keys(decoded)) {
     const spec = headerByJose(key);
     if (!spec) continue;
 
-    result[spec.domain] = decodeHeaderValue(spec, decoded as Dict);
+    const value = decodeHeaderValue(spec, decoded as Dict);
+    if (value === undefined) continue;
+
+    setHeaderMember(header, spec.domain, withoutUndefined(value));
   }
 
-  // `critical` is always present in the domain header (an absent `crit` maps to
-  // `[]`), so default it after the pass — the loop only sets it when `crit` is on
-  // the wire.
-  if (result.critical === undefined) result.critical = [];
-
   // `baseFormat` is DERIVED from `typ` (not a wire parameter of its own), so it
-  // is set outside the registry pass. Kits may override it after parsing.
-  result.baseFormat = getBaseFormat(decoded.typ);
+  // is set outside the registry pass. `domainTokenHeader` replaces it with the
+  // family its format names, and drops it on a COSE format.
+  const baseFormat = getBaseFormat(decoded.typ);
+  if (baseFormat !== undefined) header.baseFormat = baseFormat;
 
-  return omitUndefined(result) as T;
+  return header;
 };
 
 /**
