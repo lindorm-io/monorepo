@@ -99,19 +99,6 @@ describe("refuseEmptyClaims", () => {
       amphora.add(TEST_EC_KEY_SIG);
     });
 
-    const REFUSAL = expect.objectContaining({
-      code: "claim_empty_value",
-      data: { claim: "confirmation", whenEmpty: "refuse" },
-    });
-
-    test("an empty confirmation is refused identically on both wires", async () => {
-      await expect(aegis.jws.sign({ cnf: {} })).rejects.toThrow(AegisDomainError);
-      await expect(aegis.jws.sign({ cnf: {} })).rejects.toThrow(REFUSAL);
-
-      await expect(aegis.cws.sign({ cnf: {} })).rejects.toThrow(AegisDomainError);
-      await expect(aegis.cws.sign({ cnf: {} })).rejects.toThrow(REFUSAL);
-    });
-
     // The control: the same doors still take a payload the cell says nothing about.
     test("the same doors sign a payload with no refused claim", async () => {
       await expect(
@@ -123,46 +110,20 @@ describe("refuseEmptyClaims", () => {
     });
 
     /**
-     * The STRUCTURED raw doors take the same normalisation: `JwtKit.sign`
-     * (`classes/JwtKit.ts`) and `internal/cose/sign-cwt.ts` both call
-     * `normaliseClaims` on the already-wire claims. On COSE it runs BEFORE the
-     * claim codec, so the answer is the emission boundary's `claim_empty_value`
-     * and never `encodeCnf`'s `cose_cnf_unsupported` (`internal/cose/cose-key.ts`).
-     */
-    test("an empty confirmation is refused on jwt.sign by the emission boundary", async () => {
-      await expect(aegis.jwt.sign({ cnf: {} })).rejects.toThrow(AegisDomainError);
-      await expect(aegis.jwt.sign({ cnf: {} })).rejects.toThrow(REFUSAL);
-    });
-
-    test("an empty confirmation is refused on cwt.sign by the emission boundary, ahead of the COSE cnf codec", async () => {
-      await expect(aegis.cwt.sign({ cnf: {} })).rejects.toThrow(AegisDomainError);
-      await expect(aegis.cwt.sign({ cnf: {} })).rejects.toThrow(REFUSAL);
-    });
-
-    /**
-     * The emptiness the door asks about is `isClaimSatisfied`'s
-     * (`internal/utils/rules/is-claim-satisfied.ts`): `[]` names no key exactly
-     * as `{}` does.
-     */
-    test("a confirmation that is an empty array is refused at every raw door", async () => {
-      const cnf: Array<never> = [];
-
-      await expect(aegis.jws.sign({ cnf })).rejects.toThrow(REFUSAL);
-      await expect(aegis.cws.sign({ cnf })).rejects.toThrow(REFUSAL);
-      await expect(aegis.jwt.sign({ cnf } as Dict)).rejects.toThrow(REFUSAL);
-      await expect(aegis.cwt.sign({ cnf } as Dict)).rejects.toThrow(REFUSAL);
-    });
-
-    /**
      * ⭐ EVERY REFUSE CELL AT EVERY RAW DOOR, derived from the registry like the
      * structural walk above — a cell flipped to `refuse` joins this table with no
-     * edit here. All three
-     * empty spellings a wire can carry: the cell's question is
-     * `isClaimSatisfied`'s, to which `""`, `[]` and `{}` are one answer, so a
-     * text-valued claim handed a container and an object-valued one handed the
-     * empty string are refused at these doors exactly as their own empty form is
-     * — no structure walk runs here to say otherwise. Each door is handed the
-     * spelling of its own wire.
+     * edit here. All three empty spellings a wire can carry: the cell's question is
+     * `isClaimSatisfied`'s (`internal/utils/rules/is-claim-satisfied.ts`), to which
+     * `""`, `[]` and `{}` are one answer, so a text-valued claim handed a container
+     * and an object-valued one handed the empty string are refused at these doors
+     * exactly as their own empty form is — no structure walk runs here to say
+     * otherwise. Each door is handed the spelling of its own wire.
+     *
+     * ⚠ `JwtKit.sign` (`classes/JwtKit.ts`) and `internal/cose/sign-cwt.ts` both
+     * call `normaliseClaims` on the already-wire claims. On COSE it runs BEFORE
+     * the claim codec, so
+     * `confirmation`'s answer is the emission boundary's `claim_empty_value` and
+     * never `encodeCnf`'s `cose_cnf_unsupported` (`internal/cose/cose-key.ts`).
      */
     const EMPTY_VALUES: ReadonlyArray<unknown> = ["", [], {}];
 
@@ -196,12 +157,12 @@ describe("refuseEmptyClaims", () => {
      * strips both from every claim before this cell is consulted
      * (`internal/utils/normalise-claims.ts`), so a raw door handed `cnf: null`
      * or `cnf: undefined` signs a token that states no confirmation — a bearer
-     * token — on both wires, where the same door refuses `cnf: {}` above. The structured doors
-     * are read off the raw wire by the independent inspector; the opaque doors
-     * serialise an object payload as JSON, which that inspector does not read as
-     * a claims map, so their payload is read back through the door's own
-     * verify — which translates nothing, so a carried `cnf: null` would come
-     * back as a present key.
+     * token — on both wires, where the table above refuses `cnf: {}` at the same
+     * doors. The structured doors are read off the raw wire by the independent
+     * inspector; the opaque doors serialise an object payload as JSON, which that
+     * inspector does not read as a claims map, so their payload is read back
+     * through the door's own verify — which translates nothing, so a carried
+     * `cnf: null` would come back as a present key.
      */
     test.each([
       { absence: "null", cnf: null },
@@ -219,7 +180,7 @@ describe("refuseEmptyClaims", () => {
         if (cwt.wire !== "cose") throw new Error("expected a COSE token");
         if (!cwt.payload.readable) throw new Error(cwt.payload.reason);
 
-        // RFC 8747 §7.1.1 keys `cnf` at integer label 8.
+        // RFC 8747 §7.1.1
         expect(cwt.payload.value.has(8)).toBe(false);
         expect(cwt.payload.value.has("cnf")).toBe(false);
 
