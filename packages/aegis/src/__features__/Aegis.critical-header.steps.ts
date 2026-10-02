@@ -101,7 +101,7 @@ export class AegisCriticalHeaderSteps extends AegisStepsBase {
     this.ctx.foreignHeaders.kidPlacement = placement;
   }
 
-  // the recipient's declaration, forwarded by every reading door
+  // the recipient's declaration
 
   @Given("the recipient declares the critical parameter {string}")
   theRecipientDeclaresTheCriticalParameter(name: string): void {

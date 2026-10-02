@@ -53,8 +53,9 @@ type CritFormatTag = TokenFormatTag | "dpop";
  *     on JOSE; on COSE it is aegis deriving the consequence of the same duty.
  *
  * ⚠ THE KEYLESS PARSE NEVER REACHES THIS FUNCTION — `internal/wire/jose-token-wire.ts`
- * and `internal/wire/cose-token-wire.ts` run `validateCrit` alone, because reading
- * a token asserts nothing about UNDERSTANDING it. Both doors still call
+ * and `internal/wire/cose-token-wire.ts` run only the shape gates — `validateCrit`,
+ * and on COSE `assertCoseCritCarried` before it — because reading a token asserts
+ * nothing about UNDERSTANDING it. Both doors still call
  * {@link writtenHeader} first, as this function does; without it a parse refuses a
  * `crit`-carrying token a mint had just produced. ⇒ "aegis refuses an
  * unrecognised crit" is about VERIFY and DECRYPT, never about `aegis.parse`.

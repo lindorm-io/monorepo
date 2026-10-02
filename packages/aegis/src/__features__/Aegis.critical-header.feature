@@ -3,9 +3,10 @@ Feature: Critical header parameters
   `crit` is a producer's statement that a recipient must understand a header
   parameter before acting on the token (RFC 7515 §4.1.11, RFC 9052 §3.1).
   aegis is never the final recipient — it verifies on an application's behalf —
-  so every reading door refuses a critical parameter until the caller declares
-  it, and every writing door refuses a `crit` the specifications forbid a
-  producer to write.
+  so verify and decrypt refuse a critical parameter until the caller declares
+  it; the keyless read, which takes no declaration, refuses a `crit` only when
+  it is malformed; and no writing door emits a `crit` the specifications
+  forbid a producer to write.
 
   Background:
     Given the clock reads "2024-01-01T08:00:00.000Z"
@@ -230,8 +231,8 @@ Feature: Critical header parameters
     `crit`. A verdict decided on the merged header and reported off the typed
     bag would hand the caller no crit at all for a token refused because of
     its `crit`. The keyless door is the one that reads a header without a key,
-    and it judges a `crit` exactly as verify does. Judging a text-labelled
-    list as a crit at all is aegis policy. The jose wire has no scenario: a
+    and it judges whether a `crit` is malformed exactly as verify does.
+    Judging a text-labelled list as a crit at all is aegis policy. The jose wire has no scenario: a
     JOSE header has one JSON name-space (RFC 7515 §4), so `crit` always
     resolves to the typed bag and the two spellings cannot come apart.
 
@@ -253,6 +254,43 @@ Feature: Critical header parameters
       And the refusal's data is exactly
         | crit      | ["x-shadow"] |
         | parameter | "x-shadow"   |
+
+  Rule: the keyless read refuses a critical-parameter list that is malformed
+
+    The keyless read takes no declaration, so it never asks whether anything
+    behind the caller understands a critical parameter; that question belongs
+    to verify and decrypt. Whether the list itself is well-formed needs no
+    one's understanding, so a reader taking no declaration can still answer
+    it. The empty list is the shape: on JOSE a producer may not write it and a
+    recipient may treat a token that does as invalid (RFC 7515 §4.1.11), and
+    aegis takes that recipient option; on COSE the array must hold at least
+    one value (RFC 9052 §3.1). aegis's own writer drops an empty `crit`, so
+    the token is a foreign producer's. The refusal reports the list it judged.
+
+    Background:
+      Given the wire claims
+        | iss | "https://test.lindorm.io/" |
+        | sub | "user-1"                   |
+        | aud | ["https://rs.lindorm.io/"] |
+        | jti | "token-1"                  |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+      And the foreign protected header carries
+        | crit | [] |
+
+    @RFC-7515
+    Scenario: jose: the empty list is refused as a malformed JWT crit, reporting the list it read (RFC-7515 §4.1.11)
+      When a third party signs the wire claims on the jose wire
+      And I read the token without a key
+      Then the keyless read is refused as a JWT error "jwt_invalid_crit"
+      And the refusal reports the critical list []
+
+    @RFC-9052
+    Scenario: cose: the empty list is refused as a malformed CWT crit, reporting the list it read (RFC-9052 §3.1)
+      When a third party signs the wire claims on the cose wire
+      And I read the token without a key
+      Then the keyless read is refused as a CWT error "cwt_invalid_crit"
+      And the refusal reports the critical list []
 
   Rule: a token this library signs can be read back by its own keyless reader
 
