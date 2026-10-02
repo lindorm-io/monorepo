@@ -744,6 +744,165 @@ Feature: Critical header parameters
       Then verification is refused as a CWT error "cwt_unsupported_crit_param"
       And the refusal names the undeclared parameter "oid"
 
+  Rule: a sealed signed token marking the library's own extension critical on any layer verifies for a caller that declares it once
+
+    A signed token sealed in an encrypting envelope has a header on each
+    layer, and an issuer may mark a parameter critical on either: the
+    envelope's is judged when it is opened, the inner token's when its
+    signature is checked. The inner header is readable only once the
+    envelope is opened, so a caller cannot tell in advance which layer marks
+    the parameter, and the domain verify takes one declaration for every
+    layer it opens; a declaration reaching one layer alone would accept or
+    refuse the same caller by where the producer put the parameter, not by
+    what the caller understands. The declaration is in domain names, as the
+    domain door takes it. The envelope's header is stated in wire names,
+    which is what the mint's sealing option takes, and the inner token's in
+    domain names. The verified header is the inner token's, so a scenario
+    reads a critical list off it only where the inner token carries one.
+
+    Background:
+      Given the vault also holds an ECDH-ES encryption key
+      And the vault also holds a dir encryption key
+      And the content to mint
+        | subject | user-1 |
+      And an audience list whose only member is "client-1"
+      And no access token is co-issued
+      And the mint is asked to seal the token
+      And the recipient declares the critical parameter "objectId"
+
+    Scenario Outline: <wire>: a token whose envelope marks the parameter critical verifies through the envelope
+      Given the mint seals the token under the wire header
+        | crit | ["oid"]   |
+        | oid  | "1.2.3.4" |
+      When I mint the content under the "id_token" profile on the <wire> wire
+      And I verify the token under the "id_token" profile as the audience "client-1"
+      Then the verified token reports the wrapper "<wrapper>"
+
+      Examples:
+        | wire | wrapper |
+        | jose | jwe     |
+        | cose | cwe     |
+
+    Scenario Outline: <wire>: a token whose inner token marks the parameter critical verifies through the envelope, reporting the inner critical list
+      Given the domain header
+        | critical | ["objectId"] |
+        | objectId | "1.2.3.4"    |
+      When I mint the content under the "id_token" profile on the <wire> wire
+      And I verify the token under the "id_token" profile as the audience "client-1"
+      Then the verified token reports the wrapper "<wrapper>"
+      And the verified header includes
+        | critical | ["objectId"] |
+        | objectId | "1.2.3.4"    |
+
+      Examples:
+        | wire | wrapper |
+        | jose | jwe     |
+        | cose | cwe     |
+
+    Scenario Outline: <wire>: a token marking the parameter critical on both layers verifies through the envelope, reporting the inner critical list
+      Given the mint seals the token under the wire header
+        | crit | ["oid"]   |
+        | oid  | "1.2.3.4" |
+      And the domain header
+        | critical | ["objectId"] |
+        | objectId | "1.2.3.4"    |
+      When I mint the content under the "id_token" profile on the <wire> wire
+      And I verify the token under the "id_token" profile as the audience "client-1"
+      Then the verified token reports the wrapper "<wrapper>"
+      And the verified header includes
+        | critical | ["objectId"] |
+        | objectId | "1.2.3.4"    |
+
+      Examples:
+        | wire | wrapper |
+        | jose | jwe     |
+        | cose | cwe     |
+
+  Rule: a sealed signed token marking the library's own extension critical is refused from a verifier that has not claimed it, by the outermost layer marking it
+
+    A JWS whose `crit` lists an extension the recipient does not understand
+    and support is invalid (RFC 7515 §4.1.11), and a JWE's `crit` has the
+    same processing rules (RFC 7516 §4.1.13). The inner token is the
+    envelope's plaintext, so it is read only once the envelope is accepted
+    (RFC 7519 §7.2, RFC 8392 §7.2): where both layers mark the parameter, the
+    refusal is the envelope's. The same refusals on COSE are aegis policy,
+    not a citation: RFC 9052 §3.1 attaches no such consequence.
+
+    Background:
+      Given the vault also holds an ECDH-ES encryption key
+      And the vault also holds a dir encryption key
+      And the content to mint
+        | subject | user-1 |
+      And an audience list whose only member is "client-1"
+      And no access token is co-issued
+      And the mint is asked to seal the token
+
+    @RFC-7516
+    @RFC-7515
+    Scenario: jose: a token whose envelope marks the parameter critical is refused by the envelope, naming it (RFC-7516 §4.1.13) (RFC-7515 §4.1.11)
+      Given the mint seals the token under the wire header
+        | crit | ["oid"]   |
+        | oid  | "1.2.3.4" |
+      When I mint the content under the "id_token" profile on the jose wire
+      And I verify the token under the "id_token" profile as the audience "client-1"
+      Then verification is refused as a JWE error "jwe_unsupported_crit_param"
+      And the refusal names the undeclared parameter "oid"
+
+    Scenario: cose: a token whose envelope marks the parameter critical is refused by the envelope, naming it
+      Given the mint seals the token under the wire header
+        | crit | ["oid"]   |
+        | oid  | "1.2.3.4" |
+      When I mint the content under the "id_token" profile on the cose wire
+      And I verify the token under the "id_token" profile as the audience "client-1"
+      Then verification is refused as a CWE error "cwe_unsupported_crit_param"
+      And the refusal names the undeclared parameter "oid"
+
+    @RFC-7515
+    Scenario: jose: a token whose inner token marks the parameter critical is refused by the inner token, naming it (RFC-7515 §4.1.11)
+      Given the domain header
+        | critical | ["objectId"] |
+        | objectId | "1.2.3.4"    |
+      When I mint the content under the "id_token" profile on the jose wire
+      And I verify the token under the "id_token" profile as the audience "client-1"
+      Then verification is refused as a JWT error "jwt_unsupported_crit_param"
+      And the refusal names the undeclared parameter "oid"
+
+    Scenario: cose: a token whose inner token marks the parameter critical is refused by the inner token, naming it
+      Given the domain header
+        | critical | ["objectId"] |
+        | objectId | "1.2.3.4"    |
+      When I mint the content under the "id_token" profile on the cose wire
+      And I verify the token under the "id_token" profile as the audience "client-1"
+      Then verification is refused as a CWT error "cwt_unsupported_crit_param"
+      And the refusal names the undeclared parameter "oid"
+
+    @RFC-7516
+    @RFC-7515
+    @RFC-7519
+    Scenario: jose: a token marking the parameter critical on both layers is refused by the envelope, naming it (RFC-7516 §4.1.13) (RFC-7515 §4.1.11) (RFC-7519 §7.2)
+      Given the mint seals the token under the wire header
+        | crit | ["oid"]   |
+        | oid  | "1.2.3.4" |
+      And the domain header
+        | critical | ["objectId"] |
+        | objectId | "1.2.3.4"    |
+      When I mint the content under the "id_token" profile on the jose wire
+      And I verify the token under the "id_token" profile as the audience "client-1"
+      Then verification is refused as a JWE error "jwe_unsupported_crit_param"
+      And the refusal names the undeclared parameter "oid"
+
+    Scenario: cose: a token marking the parameter critical on both layers is refused by the envelope, naming it
+      Given the mint seals the token under the wire header
+        | crit | ["oid"]   |
+        | oid  | "1.2.3.4" |
+      And the domain header
+        | critical | ["objectId"] |
+        | objectId | "1.2.3.4"    |
+      When I mint the content under the "id_token" profile on the cose wire
+      And I verify the token under the "id_token" profile as the audience "client-1"
+      Then verification is refused as a CWE error "cwe_unsupported_crit_param"
+      And the refusal names the undeclared parameter "oid"
+
   Rule: the raw wire verify door claims the library's own extension under the name the header carries
 
     A wire door speaks the wire's vocabulary in every direction — the header

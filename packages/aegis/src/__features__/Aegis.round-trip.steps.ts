@@ -4,6 +4,7 @@ import { expect } from "vitest";
 import { AegisKeyError } from "../errors/index.js";
 import type { ProfileClaimName } from "../types/index.js";
 import { AegisStepsBase } from "../__fixtures__/aegis-steps-base.js";
+import { jsonCells } from "../__fixtures__/json-cells.js";
 import type { Wire, WireKey } from "../__fixtures__/raw-bucket.js";
 import { SIGNED_FORMAT } from "../__fixtures__/wire-formats.js";
 
@@ -61,6 +62,14 @@ export class AegisRoundTripSteps extends AegisStepsBase {
   @Given("the mint is asked to seal the token")
   theMintIsAskedToSealTheToken(): void {
     this.ctx.mintOptions.encrypt = {};
+  }
+
+  @Given("the mint seals the token under the wire header")
+  theMintSealsTheTokenUnderTheWireHeader(table: DataTable): void {
+    this.ctx.mintOptions.encrypt = {
+      ...this.ctx.mintOptions.encrypt,
+      header: jsonCells(table),
+    };
   }
 
   @Given("no access token is co-issued")
