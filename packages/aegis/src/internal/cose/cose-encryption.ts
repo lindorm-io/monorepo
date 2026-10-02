@@ -120,7 +120,7 @@ export const decodeEncryptedCoseKid = (token: Buffer): string | undefined => {
   //
   // A slot this reader cannot index holds no kid — the same answer a conformant
   // bucket without one gives. The malformedness verdict belongs to
-  // `CweKit.decrypt`, which reads the whole structure.
+  // `CweKit.decode`, which both callers run before this read.
   const kid = readProtectedFirst({ label: coseByJose("kid"), protectedMap, unprotected });
 
   return kid instanceof Uint8Array ? Buffer.from(kid).toString("utf8") : undefined;

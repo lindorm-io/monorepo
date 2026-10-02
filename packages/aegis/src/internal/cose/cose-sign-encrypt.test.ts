@@ -15,7 +15,7 @@ import {
   TEST_OCT_KEY_ENC_GCM128,
 } from "../../__fixtures__/keys.js";
 import { spliceCoseSlot } from "../../__fixtures__/splice-cose-slot.js";
-import { CweError } from "../../errors/index.js";
+import { CoseError, CweError } from "../../errors/index.js";
 import {
   decodeEncryptedCoseKid,
   decryptCose,
@@ -153,9 +153,9 @@ describe("a COSE_Encrypt0 whose unprotected bucket is not a map", () => {
  * (RFC 9052 §3), which the unprotected bucket is not — so consulting it puts a
  * CBOR decode inside the unauthenticated read above. `decodeProtectedHeader`
  * (`structures.ts`) refuses a byte string holding no map and `decodeCbor` refuses
- * bytes holding no CBOR at all; either refusal escaping THIS read would be a
- * malformedness verdict raised before the AEAD, which is `CweKit.decrypt`'s to
- * raise on the whole structure.
+ * bytes holding no CBOR at all; neither refusal escapes THIS read, because the
+ * malformedness verdict is `CweKit.decode`'s, which both callers run before it
+ * ("a malformed COSE_Encrypt0", below).
  */
 describe("a COSE_Encrypt0 whose kid rides the protected bucket", () => {
   // CBOR `a2 04 41 61 04 41 62` — the map `{4: h'61', 4: h'62'}`, one label twice,
@@ -302,6 +302,25 @@ describe("the recipient key a foreign COSE_Encrypt0 names", () => {
       code: "decrypt_key_missing_kid",
     });
     await expect(aegis.decrypt(foreign("protected-null"))).rejects.toMatchObject({
+      code: "decrypt_key_missing_kid",
+    });
+  });
+
+  test("a protected kid held as a text string is refused rather than resolved", async () => {
+    const token = foreignEncrypt0(
+      TEST_OCT_KEY_ENC,
+      new Map<CoseLabel, unknown>([
+        [coseByJose("alg"), encToCoseLabel("A256GCM")],
+        [coseByJose("kid"), TEST_OCT_KEY_ENC.id], // RFC 9052 §3.1
+      ]),
+      PLAINTEXT,
+      "unprotected",
+    ).toString("base64url");
+
+    await expect(aegis.cwe.decrypt(token)).rejects.toMatchObject({
+      code: "decrypt_key_missing_kid",
+    });
+    await expect(aegis.decrypt(token)).rejects.toMatchObject({
       code: "decrypt_key_missing_kid",
     });
   });
@@ -469,5 +488,117 @@ describe("the IV a foreign COSE_Encrypt0 carries", () => {
         await expect(open(token)).rejects.toMatchObject({ code: "cose_malformed" });
       },
     );
+  });
+});
+
+/**
+ * A malformed COSE_Encrypt0 answers one structural verdict at every door that
+ * opens it. No token needs to decrypt, because each is refused before any key is
+ * used.
+ */
+describe("a malformed COSE_Encrypt0", () => {
+  const VAULT_ISSUER = "https://test.lindorm.io/";
+  const ALG = coseByJose("alg");
+
+  let aegis: Aegis;
+
+  beforeEach(async () => {
+    const amphora: IAmphora = new Amphora({ internal: { issuer: VAULT_ISSUER }, logger });
+
+    aegis = new Aegis({ amphora, logger });
+
+    await amphora.setup();
+  });
+
+  const DOORS: ReadonlyArray<[door: string, open: (token: Buffer) => Promise<unknown>]> =
+    [
+      ["aegis.decrypt", (token) => aegis.decrypt(token.toString("base64url"))],
+      ["aegis.verify", (token) => aegis.verify(token.toString("base64url"))],
+      ["aegis.cwe.decrypt", (token) => aegis.cwe.decrypt(token.toString("base64url"))],
+    ];
+
+  // ⭐ THE STRUCTURE IS READ BEFORE THE KEY. These tokens name no key, and the kid
+  // read reads a malformed header slot as no kid (above), so a door resolving the
+  // key first refuses them `decrypt_key_missing_kid` instead.
+  //
+  // ⚠ Matched on `constructor`: `CweError` extends `CoseError`, so
+  // `toBeInstanceOf(CoseError)` passes either class.
+  describe.each([
+    [
+      "a protected byte string holding no CBOR",
+      "cbor_decode_failed",
+      CoseError,
+      encrypt0(Buffer.from([0xff]), IV_ONLY),
+    ],
+    [
+      "a protected byte string holding an integer",
+      "cose_malformed",
+      CoseError,
+      encrypt0(encodeCbor(1), IV_ONLY),
+    ],
+    [
+      "a protected slot that is not a byte string",
+      "cose_malformed",
+      CweError,
+      encrypt0(7, IV_ONLY),
+    ],
+    [
+      "two elements",
+      "cose_malformed",
+      CweError,
+      encodeCbor(new Tag(COSE_TAG.encrypt0, [ALG_ONLY, IV_ONLY])),
+    ],
+    [
+      "a content-encryption label no algorithm answers to",
+      "cose_encryption_not_supported",
+      CoseError,
+      encrypt0(encodeProtectedHeader(new Map<number, unknown>([[ALG, 9999]])), IV_ONLY),
+    ],
+    [
+      "a typ that is not a text string",
+      "cose_header_typ_invalid",
+      CoseError,
+      encrypt0(
+        encodeProtectedHeader(
+          new Map<number, unknown>([
+            [ALG, 1],
+            [coseByJose("typ"), 0],
+          ]),
+        ),
+        IV_ONLY,
+      ),
+    ],
+  ])("naming no key, with %s, is refused as %s", (_shape, code, errorClass, token) => {
+    test.each(DOORS)("by %s", async (_door, open) => {
+      await expect(open(token)).rejects.toMatchObject({ constructor: errorClass, code });
+    });
+  });
+
+  // The decrypt doors are handed the key, so neither resolves one. The IV is
+  // absent, so a door reaching the kit's IV read before any read of the protected
+  // bucket answers `cose_malformed` instead.
+  describe("carrying no IV, with a protected byte string holding no CBOR, is refused as cbor_decode_failed", () => {
+    const KEY = { kryptos: TEST_OCT_KEY_ENC };
+    const TOKEN = encrypt0(Buffer.from([0xff]), new Map());
+
+    test.each([
+      [
+        "aegis.decrypt, its key supplied",
+        () => aegis.decrypt(TOKEN.toString("base64url"), { key: KEY }),
+      ],
+      [
+        "aegis.verify, whose outer read takes no key",
+        () => aegis.verify(TOKEN.toString("base64url")),
+      ],
+      [
+        "aegis.cwe.decrypt, its key supplied",
+        () => aegis.cwe.decrypt(TOKEN.toString("base64url"), { key: KEY }),
+      ],
+    ])("by %s", async (_door, open) => {
+      await expect(open()).rejects.toMatchObject({
+        constructor: CoseError,
+        code: "cbor_decode_failed",
+      });
+    });
   });
 });
