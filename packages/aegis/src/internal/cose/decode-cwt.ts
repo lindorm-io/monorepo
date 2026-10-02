@@ -8,6 +8,7 @@ import { assertKidOneBucket } from "./assert-kid-one-bucket.js";
 import { decodeCbor } from "./cbor.js";
 import { decodeCwtClaims } from "./cwt-claims.js";
 import type { CwtDecoded } from "./cwt-format.js";
+import { readProtectedFirst } from "./read-protected-first.js";
 import { requireBstr } from "./require-bstr.js";
 import { requireCose } from "./require-cose.js";
 import { decodeProtectedHeader } from "./structures.js";
@@ -73,18 +74,19 @@ export const decodeCwt = (token: Buffer): CwtDecoded => {
   // a malformed one.
   assertKidOneBucket({ protectedMap, unprotected, error: CoseError });
 
-  // ⚠ THE PROTECTED BUCKET FIRST — the unprotected one answers only where the
-  // protected states no `kid` (RFC 9052 §3). The guard above is what makes the
-  // fallback unambiguous: no token reaching it states the label in both.
+  // ⚠ THE PROTECTED BUCKET FIRST, ON PRESENCE (`read-protected-first.ts`) — the
+  // read stands without the guard above, which is aegis policy
+  // (`assert-kid-one-bucket.ts`). pinned: read-protected-first.test.ts
   //
   // ⚠ NARROWED, NOT CAST — the same narrowing `splitSigned` and `CweKit` apply to
   // this slot. A bucket this reader cannot index states no hint, and a hint is all
   // it is: the key it names is proven by the signature, so an unreadable bucket
   // reads as absent and the missing-kid refusal stays `resolve-key.ts`'s to make.
-  const kidLabel = coseByJose("kid");
-  const kidValue =
-    protectedMap.get(kidLabel) ??
-    (unprotected instanceof Map ? unprotected.get(kidLabel) : undefined);
+  const kidValue = readProtectedFirst({
+    label: coseByJose("kid"),
+    protectedMap,
+    unprotected,
+  });
   const algLabel = protectedMap.get(coseByJose("alg"));
 
   return {

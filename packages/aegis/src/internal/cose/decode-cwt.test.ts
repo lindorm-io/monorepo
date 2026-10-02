@@ -133,6 +133,41 @@ describe("decodeCwt", () => {
     expect(decodeCwt(token).typ).toBe("application/at+cwt");
   });
 
+  test.each([
+    ["the CBOR null", null],
+    ["the CBOR undefined", undefined],
+  ])(
+    "refuses a protected kid held as %s beside an unprotected kid as stated twice",
+    (_name, stated) => {
+      const protectedHeader = encodeProtectedHeader(
+        new Map<number, unknown>([
+          [coseByJose("alg"), -7],
+          [coseByJose("kid"), stated],
+        ]),
+      );
+      const unprotected = new Map<number, unknown>([
+        [coseByJose("kid"), Buffer.from("unprotected-kid", "utf8")],
+      ]);
+
+      const token = encodeCbor(
+        new Tag(
+          COSE_TAG.cwt,
+          new Tag(COSE_TAG.sign1, [
+            protectedHeader,
+            unprotected,
+            Buffer.alloc(0),
+            Buffer.alloc(8),
+          ]),
+        ),
+      );
+
+      expect(() => decodeCwt(token)).toThrow(CoseError);
+      expect(() => decodeCwt(token)).toThrow(
+        expect.objectContaining({ code: "cose_duplicate_kid" }),
+      );
+    },
+  );
+
   // The same decode serves the OPAQUE CWS path, whose payload is arbitrary bytes,
   // so unreadable bytes report "no claims" rather than a malformed token.
   test("reports no claims for an OPAQUE payload that is not a CBOR claims map", () => {

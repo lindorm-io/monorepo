@@ -8,6 +8,7 @@ import type {
 } from "../../types/index.js";
 import { coseByJose } from "../header/header-registry.js";
 import { decodeCbor } from "./cbor.js";
+import { readProtectedFirst } from "./read-protected-first.js";
 import { COSE_TAG, readProtectedHeader } from "./structures.js";
 import { coseStructure } from "./unwrap-cose.js";
 
@@ -102,16 +103,12 @@ export const decodeEncryptedCoseKid = (token: Buffer): string | undefined => {
   const contents: Array<unknown> | undefined = Array.isArray(cose?.contents)
     ? cose.contents
     : undefined;
-  const kidLabel = coseByJose("kid");
   const protectedMap = readProtectedHeader(contents?.[0]);
   const unprotected = contents?.[1];
 
-  // ⚠ THE PROTECTED BUCKET FIRST, AND ON `has` — the unprotected one answers only
-  // where the attribute is NOT FOUND in the protected one (RFC 9052 §3), which is
-  // presence and not usability, so `Map.get` answering `null` for the CBOR null or
-  // `undefined` for the CBOR undefined is a kid the producer STATED. Deciding on
-  // the value instead would let the rewritable bucket choose the recipient key.
-  // pinned: cose-sign-encrypt.test.ts
+  // ⚠ THE PROTECTED BUCKET FIRST, ON PRESENCE (`read-protected-first.ts`), so the
+  // rewritable bucket never overrides a kid the protected bucket states. pinned:
+  // cose-sign-encrypt.test.ts
   //
   // ⚠ Both slots are TYPE-CHECKED, not cast, and the protected one through the
   // NEVER-THROWING `readProtectedHeader`. This runs BEFORE the recipient key is
@@ -124,10 +121,7 @@ export const decodeEncryptedCoseKid = (token: Buffer): string | undefined => {
   // A slot this reader cannot index holds no kid — the same answer a conformant
   // bucket without one gives. The malformedness verdict belongs to
   // `CweKit.decrypt`, which reads the whole structure.
-  const unprotectedKid =
-    unprotected instanceof Map ? unprotected.get(kidLabel) : undefined;
-
-  const kid = protectedMap?.has(kidLabel) ? protectedMap.get(kidLabel) : unprotectedKid;
+  const kid = readProtectedFirst({ label: coseByJose("kid"), protectedMap, unprotected });
 
   return kid instanceof Uint8Array ? Buffer.from(kid).toString("utf8") : undefined;
 };
