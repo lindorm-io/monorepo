@@ -16,9 +16,9 @@ export type Encrypt0Segments = {
   protectedBstr: Buffer;
   /**
    * The unprotected bucket AS CBOR DECODED IT. ⚠ `unknown` on purpose: nothing has
-   * checked it is a map, and the two read paths answer that differently — `decode`
-   * narrows with `instanceof Map`, `decrypt` reads the IV off the narrowed value.
-   * Typing it as a `Map` would only move the unchecked assertion.
+   * checked it is a map, so every reader narrows it with `instanceof Map` and a
+   * slot that is not one reads as an empty bucket. Typing it as a `Map` would only
+   * move the unchecked assertion.
    */
   unprotected: unknown;
   /**

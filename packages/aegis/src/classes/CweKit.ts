@@ -4,7 +4,7 @@ import type { ILogger } from "@lindorm/logger";
 import { CweError } from "../errors/index.js";
 import type { ICweKit } from "../interfaces/index.js";
 import { encodeCbor, Tag } from "../internal/cose/cbor.js";
-import type { CoseLabel } from "../internal/cose/cose-label.js";
+import { readProtectedFirst } from "../internal/cose/read-protected-first.js";
 import { assertCoseRegistered } from "../internal/cose/assert-cose-registered.js";
 import { COSE_THUMBPRINT_SHA1 } from "../internal/cose/cose-thumbprint-sha1.js";
 import {
@@ -233,21 +233,22 @@ export class CweKit implements ICweKit {
     // JweKit.decrypt). The outer CWT tag (61) is stripped by `splitEncrypt0`.
     const segments = splitEncrypt0(token);
     const { protectedBstr } = segments;
-    // ⚠ NARROWED, NOT CAST. `splitEncrypt0` types this slot `unknown` because a
-    // producer writes whatever it likes there, so a cast would put `.get` on a
-    // value this door has not authenticated yet.
-    const unprotected =
-      segments.unprotected instanceof Map
-        ? (segments.unprotected as Map<CoseLabel, unknown>)
-        : undefined;
+    const decodedProtected = decodeProtectedHeader(protectedBstr);
 
-    // An unindexable bucket carries no IV, so the guard below is the only verdict.
-    const ivValue = unprotected?.get(coseByJose("iv"));
+    // ⚠ PROTECTED FIRST, ON PRESENCE (`read-protected-first.ts`), so the IV the
+    // AEAD runs with is the IV `aegis.decrypt` reports. pinned:
+    // cose-sign-encrypt.test.ts
+    const ivValue = readProtectedFirst({
+      label: coseByJose("iv"),
+      protectedMap: decodedProtected,
+      unprotected: segments.unprotected,
+    });
     if (!(ivValue instanceof Uint8Array)) {
       throw new CweError("COSE_Encrypt0 is missing its IV", {
         code: "cose_malformed",
         title: "Malformed COSE_Encrypt0",
-        details: "The unprotected header has no IV (label 5).",
+        details:
+          "The COSE_Encrypt0 has no byte-string IV (label 5), read from the protected header when it states one and from the unprotected header otherwise.",
       });
     }
 
@@ -263,11 +264,15 @@ export class CweKit implements ICweKit {
         "The COSE_Encrypt0 ciphertext slot is not a byte string, so there is nothing to decrypt.",
     });
 
-    const decodedProtected = decodeProtectedHeader(protectedBstr);
-
     const protectedWire = coseWireHeader(decodedProtected, "enc");
     const protectedHeader = protectedWire.header;
-    const unprotectedWire = coseWireHeader(unprotected, "enc");
+    // ⚠ NARROWED, NOT CAST. `splitEncrypt0` types this slot `unknown` because a
+    // producer writes whatever it likes there, and `coseWireHeader` iterates
+    // whatever it is handed.
+    const unprotectedWire = coseWireHeader(
+      segments.unprotected instanceof Map ? segments.unprotected : undefined,
+      "enc",
+    );
 
     // A typ-LESS COSE_Encrypt0 is accepted here; a PRESENT typ must be this
     // family's. It rides the protected bucket, which is the AEAD's AAD, so nothing

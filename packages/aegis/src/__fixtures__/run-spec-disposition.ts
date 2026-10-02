@@ -280,11 +280,10 @@ const openDoor = async (door: SpecDoor, input: DoorInput): Promise<unknown> => {
  * Produce the artifact a `notSuppliable` observation names and report the bucket
  * its parameter would ride, plus WHICH VOCABULARY that bucket is keyed in.
  *
- * ⚠ The two are not interchangeable. The domain read surface reports a decrypted
- * token's PROTECTED header only, so a COSE_Encrypt0's IV — which rides the
- * UNPROTECTED bucket at label 5 (RFC 9052 §3.1) — is invisible there; the kit
- * door reports both buckets but in the WIRE vocabulary. An observation that read
- * the domain bucket alone would report such a parameter as absent, which is a
+ * ⚠ The two are not interchangeable. The domain read surface reports ONE header,
+ * keyed by domain name and merged under the header registry's `placement`
+ * allowlist; the kit door reports both buckets apart, keyed by wire name. A
+ * lookup in the wrong vocabulary reports the parameter absent, which is a
  * statement about the reader and not about the token.
  */
 const observeHeader = async (

@@ -1,9 +1,11 @@
+import { AesError } from "@lindorm/aes";
 import { Amphora, type IAmphora } from "@lindorm/amphora";
 import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import MockDate from "mockdate";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import {
+  type ForeignNonceBucket,
   type ForeignRecipientKid,
   foreignEncrypt0,
 } from "../../__fixtures__/foreign-encrypt0.js";
@@ -12,6 +14,8 @@ import {
   TEST_OCT_KEY_ENC,
   TEST_OCT_KEY_ENC_GCM128,
 } from "../../__fixtures__/keys.js";
+import { spliceCoseSlot } from "../../__fixtures__/splice-cose-slot.js";
+import { CweError } from "../../errors/index.js";
 import {
   decodeEncryptedCoseKid,
   decryptCose,
@@ -23,10 +27,10 @@ import { CwtKit } from "../../classes/CwtKit.js";
 import { coseName } from "../claims/claims-registry.js";
 import { domainToWire, wireToDomain } from "../claims/translate.js";
 import { coseByJose } from "../header/header-registry.js";
-import { encodeCbor, Tag } from "./cbor.js";
+import { decodeCbor, encodeCbor, Tag } from "./cbor.js";
 import type { CoseLabel } from "./cose-label.js";
 import { encToCoseLabel } from "./enc-labels.js";
-import { COSE_TAG, encodeProtectedHeader } from "./structures.js";
+import { COSE_TAG, decodeProtectedHeader, encodeProtectedHeader } from "./structures.js";
 
 // Between the fixture's issuedAt and expiresAt, so the in-kit temporal check
 // accepts the round-tripped CWT.
@@ -309,5 +313,161 @@ describe("the recipient key a foreign COSE_Encrypt0 names", () => {
     await expect(aegis.decrypt(foreign("neither"))).rejects.toMatchObject({
       code: "decrypt_key_missing_kid",
     });
+  });
+});
+
+/**
+ * ⭐ THE AEAD'S IV IS READ PROTECTED-FIRST, ON PRESENCE (RFC 9052 §3), so the IV
+ * `aegis.decrypt` reports is the one the token decrypted with. aegis writes its IV
+ * unprotected and accepts one in either bucket (RFC 9052 §3.1).
+ *
+ * Every token seals a signed CWT, so `aegis.verify` opens the same bytes as the
+ * two decrypt doors. It reports the inner token's header, so it is pinned on its
+ * verdict alone.
+ */
+describe("the IV a foreign COSE_Encrypt0 carries", () => {
+  const VAULT_ISSUER = "https://test.lindorm.io/";
+  const DECOY = Buffer.from("decoy-nonce!", "utf8");
+  const IV = coseByJose("iv");
+
+  const SIGNED_CWT = new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger }).sign(
+    domainToWire({ ...common, issuer: VAULT_ISSUER }, coseName),
+  );
+
+  let aegis: Aegis;
+
+  const sealed = (
+    ivEntries: ReadonlyArray<[CoseLabel, unknown]>,
+    nonceBucket: ForeignNonceBucket,
+  ): Buffer =>
+    foreignEncrypt0(
+      TEST_OCT_KEY_ENC,
+      new Map<CoseLabel, unknown>([
+        [coseByJose("alg"), encToCoseLabel("A256GCM")],
+        [coseByJose("cty"), "application/cwt"],
+        ...ivEntries,
+      ]),
+      SIGNED_CWT,
+      "unprotected",
+      nonceBucket,
+    );
+
+  /** No AEAD covers the unprotected bucket (RFC 9052 §3), so the token stays valid. */
+  const withUnprotectedIv = (token: Buffer, iv: Buffer): Buffer => {
+    const [, unprotected] = decodeCbor<Tag>(token).contents as [unknown, unknown];
+    const bucket = new Map(unprotected as Map<CoseLabel, unknown>);
+
+    bucket.set(IV, iv);
+
+    return spliceCoseSlot(token, 1, bucket);
+  };
+
+  /** The IV the protected bucket states, spelled as the domain header spells it. */
+  const protectedIv = (token: Buffer): string => {
+    const [protectedBstr] = decodeCbor<Tag>(token).contents as [Uint8Array];
+
+    return Buffer.from(
+      decodeProtectedHeader(protectedBstr).get(IV) as Uint8Array,
+    ).toString("base64url");
+  };
+
+  const DOORS: ReadonlyArray<
+    [door: string, open: (token: Buffer) => Promise<unknown>, accepted: object]
+  > = [
+    [
+      "aegis.decrypt",
+      (token) => aegis.decrypt(token.toString("base64url")),
+      { payload: SIGNED_CWT },
+    ],
+    [
+      "aegis.cwe.decrypt",
+      (token) => aegis.cwe.decrypt(token.toString("base64url")),
+      { payload: SIGNED_CWT },
+    ],
+    [
+      "aegis.verify",
+      (token) => aegis.verify(token.toString("base64url")),
+      { format: "cwt", wrapper: "cwe", claims: { subject: common.subject } },
+    ],
+  ];
+
+  beforeEach(async () => {
+    const amphora: IAmphora = new Amphora({ internal: { issuer: VAULT_ISSUER }, logger });
+
+    aegis = new Aegis({ amphora, logger });
+
+    await amphora.setup();
+
+    amphora.add(TEST_OCT_KEY_ENC);
+    amphora.add(TEST_EC_KEY_SIG);
+  });
+
+  test.each(DOORS)(
+    "%s opens a token whose IV rides the unprotected bucket alone",
+    async (_door, open, accepted) => {
+      await expect(open(sealed([], "unprotected"))).resolves.toMatchObject(accepted);
+    },
+  );
+
+  test.each(DOORS)(
+    "%s opens a token whose IV rides the protected bucket alone",
+    async (_door, open, accepted) => {
+      await expect(open(sealed([], "protected"))).resolves.toMatchObject(accepted);
+    },
+  );
+
+  test.each(DOORS)(
+    "%s opens a token with its protected IV where the unprotected bucket carries a decoy",
+    async (_door, open, accepted) => {
+      const token = withUnprotectedIv(sealed([], "protected"), DECOY);
+
+      await expect(open(token)).resolves.toMatchObject(accepted);
+    },
+  );
+
+  test.each([
+    ["the protected bucket alone", () => sealed([], "protected")],
+    [
+      "the protected bucket beside an unprotected decoy",
+      () => withUnprotectedIv(sealed([], "protected"), DECOY),
+    ],
+  ])(
+    "aegis.decrypt reports the IV it decrypted with when that IV rides %s",
+    async (_name, mint) => {
+      const token = mint();
+
+      const { header } = await aegis.decrypt(token.toString("base64url"));
+
+      expect(header.initialisationVector).toBe(protectedIv(token));
+    },
+  );
+
+  // The AEAD runs on the decoy, so authentication fails — the verdict
+  // "rejects tampered ciphertext" in `CweKit.test.ts` pins for the kit.
+  test.each(DOORS)(
+    "%s refuses a token whose protected IV is a decoy the AEAD never ran with",
+    async (_door, open) => {
+      const token = sealed([[IV, DECOY]], "unprotected");
+
+      await expect(open(token)).rejects.toBeInstanceOf(AesError);
+      await expect(open(token)).rejects.toMatchObject({ code: "decryption_failed" });
+    },
+  );
+
+  // `Map.get` answers `null` for the CBOR null and `undefined` for the CBOR
+  // undefined, both values the producer stated in the protected bucket.
+  describe.each([
+    ["the CBOR null", null],
+    ["the CBOR undefined", undefined],
+  ])("a protected IV stated as %s beside a real unprotected IV", (_name, iv) => {
+    test.each(DOORS)(
+      "%s refuses it rather than decrypting with the unprotected IV",
+      async (_door, open) => {
+        const token = sealed([[IV, iv]], "unprotected");
+
+        await expect(open(token)).rejects.toBeInstanceOf(CweError);
+        await expect(open(token)).rejects.toMatchObject({ code: "cose_malformed" });
+      },
+    );
   });
 });

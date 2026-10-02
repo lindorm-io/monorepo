@@ -242,9 +242,9 @@ describe("CweKit (COSE_Encrypt0)", () => {
       expect(kit.decrypt(kit.encrypt(payload, {})).payload).toEqual(payload);
     });
 
-    // The ORDER, and it is the SAME on every door that has both gates: typ answers
-    // before crit (`JweKit`/`JwsKit`/`JwtKit`, and the CWT wire in
-    // `internal/wire/cose-token-wire.ts`).
+    // The ORDER on this door: typ answers before crit, as on `JweKit`/`JwsKit`/
+    // `JwtKit` and the CWT wire in `internal/wire/cose-token-wire.ts`. `CwsKit` is
+    // the exception and answers crit first (pinned in `CwsKit.test.ts`).
     test("answers the typ refusal for a token failing typ and crit together", () => {
       const map = foreignProtected("application/at+cwt");
       map.set(coseByJose("crit"), ["oid"]);
@@ -834,11 +834,12 @@ describe("CweKit — a slot holding something other than a byte string", () => {
     expect(kit.decrypt(kit.encrypt(Buffer.alloc(0))).payload).toHaveLength(0);
   });
 
-  // ⚠ Slot 1 is NOT a byte-string slot — it is the unprotected bucket, and on a
-  // COSE_Encrypt0 it carries the IV, so narrowing it to a `Map` costs the IV and
-  // `decrypt` refuses (pinned by "CweKit — a COSE_Encrypt0 whose unprotected
-  // bucket is not a map" above). `decode` needs nothing from it, and the protected
-  // bucket it does read is unaffected.
+  // ⚠ Slot 1 is NOT a byte-string slot — it is the unprotected bucket, and this
+  // kit writes the IV there, so a slot that is not a map costs that IV and
+  // `decrypt` refuses a token whose protected bucket states none (pinned by
+  // "CweKit — a COSE_Encrypt0 whose unprotected bucket is not a map" above).
+  // `decode` needs nothing from it, and the protected bucket it does read is
+  // unaffected.
   test.each(NOT_BSTR)(
     "decode still reads the protected header when the unprotected bucket is %s",
     (_name, value) => {

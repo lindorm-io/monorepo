@@ -107,8 +107,10 @@ export type JoseDecodedEncryptedToken = JoseHeaderBuckets & {
 
 /**
  * The `decode` result for a COSE_Encrypt0 — the two COSE header buckets ONLY. It
- * carries only `enc`, no key-management `alg` (direct AEAD), and its IV and `kid`
- * ride the UNPROTECTED bucket (RFC 9052 §3.1).
+ * carries only `enc`, no key-management `alg` (direct AEAD). aegis writes the IV and
+ * `kid` in the unprotected bucket; a foreign token may state either in the protected
+ * one, which is read first (RFC 9052 §3), so each bucket is reported as written.
+ * pinned: cose-sign-encrypt.test.ts
  */
 export type CoseDecodedEncryptedToken = CoseHeaderBuckets & {
   token: Buffer;

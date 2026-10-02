@@ -413,7 +413,7 @@ export const HEADER_DISPOSITIONS: Readonly<Record<string, SpecDisposition>> = {
         disposition: "notSuppliable",
         observe: "encrypt",
         reason:
-          "COSE_Encrypt0 carries the IV as header parameter label 5 (RFC 9052 §3.1), in the UNPROTECTED bucket, so it IS observable on that wire — through the kit door, which reports both buckets.",
+          "A COSE_Encrypt0 written by aegis carries the IV as header parameter label 5 (RFC 9052 §3.1), in the UNPROTECTED bucket, so it IS observable on that wire — through the kit door, which reports both buckets.",
       },
     },
   },

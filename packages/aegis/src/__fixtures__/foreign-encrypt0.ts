@@ -1,3 +1,4 @@
+import { randomBytes } from "crypto";
 import { AesKit } from "@lindorm/aes";
 import type { IKryptos } from "@lindorm/kryptos";
 import { Tag, encodeCbor } from "../internal/cose/cbor.js";
@@ -28,6 +29,14 @@ export type ForeignRecipientKid =
   | "protected-null";
 
 /**
+ * Which bucket the producer writes the nonce the AEAD ran with into
+ * (RFC 9052 §3.1). Under `"unprotected"` an `iv` among the caller's protected
+ * entries is written verbatim, a value the AEAD never used; under `"protected"`
+ * the nonce replaces it.
+ */
+export type ForeignNonceBucket = "protected" | "unprotected";
+
+/**
  * Mint a COSE_Encrypt0 the way a FOREIGN producer would — from a protected
  * header this caller chooses outright.
  *
@@ -47,6 +56,7 @@ export const foreignEncrypt0 = (
   protectedEntries: Map<CoseLabel, unknown>,
   plaintext: Buffer,
   recipientKid: ForeignRecipientKid = "unprotected",
+  nonceBucket: ForeignNonceBucket = "unprotected",
 ): Buffer => {
   const declared = coseLabelToEnc(protectedEntries.get(coseByJose("alg")));
   const sealed = resolveContentEncryption(kryptos, undefined);
@@ -61,10 +71,20 @@ export const foreignEncrypt0 = (
     );
   }
 
-  const kid = Buffer.from(kryptos.id, "utf8");
+  // A protected nonce is drawn before the AAD exists, at the AES-GCM size
+  // (RFC 9053 §4.1) — the only size drawn here.
+  if (nonceBucket === "protected" && !sealed.endsWith("GCM")) {
+    throw new Error(
+      `foreignEncrypt0: a protected nonce is drawn at the 96 bits AES-GCM takes, key seals with ${sealed} — pass a kryptos whose encryption is AES-GCM`,
+    );
+  }
 
-  // The caller's bucket, plus the key id when it rides here — written BEFORE the
-  // encoding, so a protected `kid` is inside the AAD the AEAD covers.
+  const kid = Buffer.from(kryptos.id, "utf8");
+  const nonce = nonceBucket === "protected" ? randomBytes(12) : undefined;
+
+  // The caller's bucket, plus the key id and the nonce when they ride here —
+  // written BEFORE the encoding, so a protected one is inside the AAD the AEAD
+  // covers.
   const protectedMap = new Map(protectedEntries);
 
   if (recipientKid === "protected") protectedMap.set(coseByJose("kid"), kid);
@@ -74,13 +94,18 @@ export const foreignEncrypt0 = (
   // reaches the unprotected bucket below and resolves the sealing key anyway.
   if (recipientKid === "protected-null") protectedMap.set(coseByJose("kid"), null);
 
+  if (nonce) protectedMap.set(coseByJose("iv"), nonce);
+
   const protectedHeader = encodeProtectedHeader(protectedMap);
 
   const { ciphertext, iv, tag } = new AesKit({ kryptos }).encryptContent(plaintext, {
     aad: buildEncStructure(protectedHeader),
+    iv: nonce,
   });
 
-  const unprotectedMap = new Map<CoseLabel, unknown>([[coseByJose("iv"), iv]]);
+  const unprotectedMap = new Map<CoseLabel, unknown>();
+
+  if (nonceBucket === "unprotected") unprotectedMap.set(coseByJose("iv"), iv);
 
   if (recipientKid === "unprotected" || recipientKid === "protected-null") {
     unprotectedMap.set(coseByJose("kid"), kid);
