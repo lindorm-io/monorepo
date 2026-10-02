@@ -31,6 +31,10 @@ export type AssertOptions = {
   verifyNotBefore?: boolean;
   /** Range-check `issuedAt`. Default `true`. */
   verifyIssuedAt?: boolean;
-  /** Range-check `authTime`. Default `true`. */
+  /**
+   * Range-check `authTime`. Default `true`: an `authTime` later than now is
+   * refused — an upper bound like `issuedAt`, never a freshness bound. Aegis
+   * policy, not an OpenID Connect Core requirement.
+   */
   verifyAuthTime?: boolean;
 };

@@ -72,7 +72,12 @@ export type VerifyStructuredTokenOptions = {
   verifyNotBefore?: boolean;
   /** Range-check `iat`. Default `true`. `false` ⇒ the `iat` upper bound is skipped. */
   verifyIssuedAt?: boolean;
-  /** Range-check `auth_time`. Default `true`. `false` ⇒ the `auth_time` bound is skipped. */
+  /**
+   * Range-check `auth_time`. Default `true`: an `auth_time` later than now is
+   * refused — an upper bound like `iat`, never a freshness bound. Aegis policy,
+   * not an OpenID Connect Core requirement. `false` ⇒ the `auth_time` bound is
+   * skipped.
+   */
   verifyAuthTime?: boolean;
   /**
    * Assert the header `typ` equals the media type the kit builds from this bare

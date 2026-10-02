@@ -451,13 +451,19 @@ Feature: The static claim matcher
       When I check the claims without a signature
       Then the claims are accepted
 
-  Rule: a claim set whose authentication time lies in the future is refused when the caller asks for that bound
+  Rule: a claim set whose authentication time lies in the future is refused even when the caller asserts nothing about time
 
     `auth_time` is the time the End-User authentication occurred (OpenID
     Connect Core 1.0 §2), so a value in the future describes an authentication
-    that has not happened — a claim set no honest issuer produces. The caller
-    states the bound explicitly, and the refusal names the authentication-time
-    claim, so it is attributable to that bound and to nothing else.
+    that has not happened. Refusing it is aegis policy, not an OpenID Connect
+    Core requirement: a future `auth_time` would defeat every `max_age` check
+    built on it, because the elapsed time since authentication reads as
+    negative until that instant passes. The bound is an upper bound, like the
+    one on `iat`, and refuses only an `auth_time` later than now — it is not a
+    freshness bound, so an old authentication time passes. It applies by
+    default, and the caller waives it by leaving the authentication time
+    unchecked. The refusal names the authentication-time claim, so it is
+    attributable to that bound rather than to the matcher the caller did state.
 
     Background:
       Given the claims to check
@@ -468,12 +474,58 @@ Feature: The static claim matcher
         """json
         { "subject": "user-1" }
         """
-      And the verifier bounds the authentication time
 
     Scenario: the claim set authenticated in the future is refused under the authentication-time claim
       When I check the claims without a signature
       Then the claims are refused as a domain error "claims_invalid"
       And the refusal lists the invalid claims "authTime"
+
+  Rule: a claim set whose authentication time lies in the past passes the temporal window
+
+    The authentication-time bound is an upper bound: it refuses an `auth_time`
+    later than now and nothing earlier. How long ago the authentication
+    happened is the caller's own question — a `max_age` check against the
+    elapsed time — and not this check's, so a claim set authenticated a year
+    ago passes. A bound that also refused an old `auth_time` would turn a
+    policy against impossible values into a freshness requirement no caller
+    asked for.
+
+    Background:
+      Given the claims to check
+        | subject | "user-1" |
+      And the claims expire at "2024-01-01T09:00:00.000Z"
+      And the claims record the authentication at "2023-01-01T08:00:00.000Z"
+      And the verifier asserts
+        """json
+        { "subject": "user-1" }
+        """
+
+    Scenario: the claim set authenticated a year ago is accepted
+      When I check the claims without a signature
+      Then the claims are accepted
+
+  Rule: a claim set whose authentication time lies in the future is accepted when the caller waives that bound
+
+    The waiver names the authentication-time bound alone, so it has to be read
+    on its own: a caller who leaves the authentication time unchecked is not
+    trusting that claim, and the refusal the bound would otherwise raise does
+    not apply. An option accepted and dropped leaves the bound standing, and
+    the caller sees a refusal naming a claim it thought it had excused.
+
+    Background:
+      Given the claims to check
+        | subject | "user-1" |
+      And the claims expire at "2024-01-01T09:00:00.000Z"
+      And the claims record the authentication at "2024-01-01T08:30:00.000Z"
+      And the verifier asserts
+        """json
+        { "subject": "user-1" }
+        """
+      And the verifier leaves the authentication time unchecked
+
+    Scenario: the claim set authenticated in the future is accepted under the waiver
+      When I check the claims without a signature
+      Then the claims are accepted
 
   Rule: a claim set issued longer ago than the caller allows is refused
 

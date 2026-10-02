@@ -38,9 +38,9 @@ export class AegisClaimMatcherSteps extends AegisStepsBase {
     this.ctx.verifyOptions.verifyNotBefore = false;
   }
 
-  @Given("the verifier bounds the authentication time")
-  theVerifierBoundsTheAuthenticationTime(): void {
-    this.ctx.verifyOptions.verifyAuthTime = true;
+  @Given("the verifier leaves the authentication time unchecked")
+  theVerifierLeavesTheAuthenticationTimeUnchecked(): void {
+    this.ctx.verifyOptions.verifyAuthTime = false;
   }
 
   @Given("the verifier allows a clock tolerance of {int} seconds")

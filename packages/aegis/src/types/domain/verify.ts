@@ -101,9 +101,10 @@ export type VerifyOptions = {
    */
   verifyIssuedAt?: boolean;
   /**
-   * Range-check `auth_time`. Default `true`. `false` ⇒ `auth_time` is not
-   * bounded. `auth_time` is a "past" claim so it never blocks a historical
-   * token; the flag exists for symmetry with the other temporal claims.
+   * Range-check `auth_time`. Default `true`: an `auth_time` later than now is
+   * refused — an upper bound like `iat`, never a freshness bound, so a
+   * historical token is not blocked. Aegis policy, not an OpenID Connect Core
+   * requirement. `false` ⇒ `auth_time` is not bounded.
    */
   verifyAuthTime?: boolean;
   dpopProof?: string;

@@ -421,7 +421,7 @@ export const VERIFY_KNOB_PROBES = {
 
   verifyAuthTime: {
     rationale:
-      "aegis range-checks `auth_time` like every other temporal claim. The waiver exists so the four temporal claims are individually controllable; a flag that only works for three of them is a surface that lies about its own shape. OIDC Core §2.",
+      "aegis POLICY, not an OIDC Core requirement: it refuses an `auth_time` later than now by default, because a future value would defeat every `max_age` check built on it. The bound is an upper bound, never a freshness bound. The waiver exists so the four temporal claims are individually controllable; a flag that only works for three of them is a surface that lies about its own shape.",
     value: false,
     given: [
       {
