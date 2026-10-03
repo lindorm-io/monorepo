@@ -2,6 +2,7 @@ import { Amphora, type IAmphora } from "@lindorm/amphora";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import MockDate from "mockdate";
 import { beforeEach, describe, expect, test } from "vitest";
+import { foreignEncrypt0 } from "../__fixtures__/foreign-encrypt0.js";
 import {
   TEST_EC_KEY_ENC,
   TEST_EC_KEY_SIG,
@@ -9,11 +10,28 @@ import {
   TEST_OCT_KEY_SIG,
 } from "../__fixtures__/keys.js";
 import { Aegis } from "../classes/Aegis.js";
+import type { CoseLabel } from "../internal/cose/cose-label.js";
+import { encToCoseLabel } from "../internal/cose/enc-labels.js";
+import { coseByJose } from "../internal/header/header-registry.js";
 import { isClaimsBearingToken } from "./is-claims-bearing-token.js";
 
 MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
 
 const ISSUER = "https://test.lindorm.io/";
+
+/**
+ * A COSE_Encrypt0 a foreign producer sealed, stating `cty` as given. The
+ * predicate is keyless, so the plaintext is never read.
+ */
+const foreignCwe = (cty: unknown): string =>
+  foreignEncrypt0(
+    TEST_OCT_KEY_ENC,
+    new Map<CoseLabel, unknown>([
+      [coseByJose("alg"), encToCoseLabel("A256GCM")],
+      [coseByJose("cty"), cty],
+    ]),
+    Buffer.from("sealed", "utf8"),
+  ).toString("base64url");
 
 /**
  * The predicate that decides VERIFY-LOCALLY vs INTROSPECT, proved against REAL
@@ -116,6 +134,28 @@ describe("isClaimsBearingToken", () => {
       );
 
       expect(isClaimsBearingToken(token)).toBe(true);
+    });
+
+    test("true for a CWE whose cty is the CoAP Content-Format 61 (application/cwt)", () => {
+      expect(isClaimsBearingToken(foreignCwe(61))).toBe(true);
+    });
+
+    test("false for a CWE whose cty is the CoAP Content-Format 0 (text/plain)", () => {
+      expect(isClaimsBearingToken(foreignCwe(0))).toBe(false);
+    });
+
+    test.each<[shape: string, cty: unknown]>([
+      ["a registered ID that carries a content coding", 11050],
+      ["an unregistered integer", 1],
+      ["a negative integer", -1],
+      ["a byte string", Buffer.from("application/cwt", "utf8")],
+      ["an array", ["application/cwt"]],
+      ["a map", new Map([[1, "application/cwt"]])],
+      ["null", null],
+      ["false", false],
+      ["a uint beyond the safe integers", 18446744073709551615n],
+    ])("false, and no throw, for a CWE whose cty is %s", (_shape, cty) => {
+      expect(isClaimsBearingToken(foreignCwe(cty))).toBe(false);
     });
 
     test("true when the declared cty carries RFC 2045 parameters", async () => {

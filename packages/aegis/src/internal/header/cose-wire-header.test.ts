@@ -6,6 +6,7 @@ import { type CoseAlgKind, coseWireHeader } from "./cose-wire-header.js";
 import { coseByJose } from "./header-registry.js";
 
 const TYP = coseByJose("typ");
+const CTY = coseByJose("cty");
 
 /**
  * Every CBOR shape a producer can write under label 16 other than a text string,
@@ -56,9 +57,7 @@ describe.each<[CoseAlgKind]>([["sig"], ["enc"]])(
       expect((thrown as CoseError).data).toStrictEqual({});
     });
 
-    // The empty string included: the read reports what a producer wrote, and the
-    // per-family typ gate is what refuses an empty one (`CwsKit.test.ts`).
-    test.each([["application/at+cwt"], ["application/cws"], [""]])(
+    test.each([["application/at+cwt"], ["application/cws"]])(
       "passes the text typ %j through unchanged",
       (typ) => {
         expect(
@@ -66,5 +65,89 @@ describe.each<[CoseAlgKind]>([["sig"], ["enc"]])(
         ).toBe(typ);
       },
     );
+
+    test("reports an empty typ as written, leaving its refusal to the per-family typ gate", () => {
+      expect(
+        coseWireHeader(new Map<CoseLabel, unknown>([[TYP, ""]]), algKind).header.typ,
+      ).toBe("");
+    });
+  },
+);
+
+/**
+ * IANA "CoAP Content-Formats" rows, each beside its `Content Type` cell as the
+ * registry writes it — parameters included.
+ */
+const REGISTERED: ReadonlyArray<[id: number, mediaType: string]> = [
+  [0, "text/plain; charset=utf-8"],
+  [16, 'application/cose; cose-type="cose-encrypt0"'],
+  [50, "application/json"],
+  [60, "application/cbor"],
+  [61, "application/cwt"],
+  [30000, "image/svg+xml"],
+];
+
+/** Every shape under label 3 the read refuses: integers outside the table, then every other CBOR type. */
+const NOT_A_CONTENT_TYPE: ReadonlyArray<[shape: string, value: unknown]> = [
+  ["the deflate-coded ID 11050", 11050],
+  ["the deflate-coded ID 11060", 11060],
+  ["the zstd-coded ID 12000", 12000],
+  ["the zstd-coded ID 12041", 12041],
+  ["the zstd-coded ID 12050", 12050],
+  ["an ID the registry lists as Unassigned on its own row", 20],
+  ["an ID inside an Unassigned range", 1],
+  ["an ID reserved for experimental use", 65000],
+  ["a uint beyond the safe integers", 18446744073709551615n],
+  ["a negative integer", -1],
+  ["a float", 1.5],
+  ["false", false],
+  ["true", true],
+  ["null", null],
+  ["undefined", undefined],
+  ["a byte string", Buffer.from("application/cwt", "utf8")],
+  ["an array", ["application/cwt"]],
+  ["a map", new Map<CoseLabel, unknown>([[1, "application/cwt"]])],
+  ["a tagged text string", new Tag(32, "application/cwt")],
+];
+
+describe.each<[CoseAlgKind]>([["sig"], ["enc"]])(
+  "coseWireHeader — the cty parameter (label 3) on a %s bucket",
+  (algKind) => {
+    test.each(REGISTERED)(
+      "reads the CoAP Content-Format %j as the registry's %j",
+      (id, mediaType) => {
+        expect(
+          coseWireHeader(new Map<CoseLabel, unknown>([[CTY, id]]), algKind).header.cty,
+        ).toBe(mediaType);
+      },
+    );
+
+    test.each(NOT_A_CONTENT_TYPE)("refuses a cty that is %s", (_shape, cty) => {
+      const thrown = refusalOf(() =>
+        coseWireHeader(new Map<CoseLabel, unknown>([[CTY, cty]]), algKind),
+      );
+
+      expect(thrown).toBeInstanceOf(CoseError);
+      expect(thrown).toMatchObject({
+        code: "cose_header_cty_invalid",
+        title: "COSE Header Cty Invalid",
+      });
+      expect((thrown as CoseError).data).toStrictEqual({});
+    });
+
+    test.each([["application/cwt"], ["text/plain; charset=utf-8"], ["1"]])(
+      "passes the text cty %j through unchanged",
+      (cty) => {
+        expect(
+          coseWireHeader(new Map<CoseLabel, unknown>([[CTY, cty]]), algKind).header.cty,
+        ).toBe(cty);
+      },
+    );
+
+    test("reports an empty cty as written", () => {
+      expect(
+        coseWireHeader(new Map<CoseLabel, unknown>([[CTY, ""]]), algKind).header.cty,
+      ).toBe("");
+    });
   },
 );

@@ -24,6 +24,11 @@ export class AegisHeaderProvenanceSteps extends AegisStepsBase {
     this.carriesNoneOf("protectedHeader", keys);
   }
 
+  @Then("the raw protected header carries {wireKey} as the integer {int}")
+  theRawProtectedHeaderCarriesAsTheInteger(key: WireKey, value: number): void {
+    expect(this.raw("protectedHeader").get(key)).toBe(value);
+  }
+
   @Then("the raw unprotected header carries {wireKey} {string}")
   theRawUnprotectedHeaderCarries(key: WireKey, value: string): void {
     expect(this.raw("unprotectedHeader").get(key)).toBe(value);
@@ -59,6 +64,11 @@ export class AegisHeaderProvenanceSteps extends AegisStepsBase {
   @Then("the verified header reports the header type {string}")
   theVerifiedHeaderReportsTheHeaderType(headerType: string): void {
     expect(this.verified().header.headerType).toBe(headerType);
+  }
+
+  @Then("the verified header reports the content type {string}")
+  theVerifiedHeaderReportsTheContentType(contentType: string): void {
+    expect(this.verified().header.contentType).toBe(contentType);
   }
 
   @Then("the verified header reports the key id of the ES512 signing key")

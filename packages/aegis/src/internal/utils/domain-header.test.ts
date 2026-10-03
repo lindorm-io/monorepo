@@ -89,16 +89,28 @@ describe("the domain header a result reports", () => {
       expect(parsed.header.certificateChain).toHaveLength(1);
     });
 
-    test("aegis.parse reports a byte-string content type as the bytes it carried", () => {
-      const parsed = aegis.parse(foreign([coseByJose("cty"), new Uint8Array([1, 2])]));
-
-      expect(parsed.header.contentType).toStrictEqual(Buffer.from([1, 2]));
+    test("aegis.parse refuses a byte-string content type", () => {
+      expect(() =>
+        aegis.parse(foreign([coseByJose("cty"), new Uint8Array([1, 2])])),
+      ).toThrow(expect.objectContaining({ code: "cose_header_cty_invalid" }));
     });
 
-    test("aegis.parse reports a map content type as the map it carried", () => {
-      const parsed = aegis.parse(foreign([coseByJose("cty"), new Map([[1, "a"]])]));
+    test("aegis.parse refuses a map content type", () => {
+      expect(() =>
+        aegis.parse(foreign([coseByJose("cty"), new Map([[1, "a"]])])),
+      ).toThrow(expect.objectContaining({ code: "cose_header_cty_invalid" }));
+    });
 
-      expect(parsed.header.contentType).toStrictEqual(new Map([[1, "a"]]));
+    test("aegis.parse reports a byte-string certificate URL as the bytes it carried", () => {
+      const parsed = aegis.parse(foreign([coseByJose("x5u"), new Uint8Array([1, 2])]));
+
+      expect(parsed.header.certificateUrl).toStrictEqual(Buffer.from([1, 2]));
+    });
+
+    test("aegis.parse reports a map certificate URL as the map it carried", () => {
+      const parsed = aegis.parse(foreign([coseByJose("x5u"), new Map([[1, "a"]])]));
+
+      expect(parsed.header.certificateUrl).toStrictEqual(new Map([[1, "a"]]));
     });
   });
 

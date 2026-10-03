@@ -280,7 +280,10 @@ Feature: Header provenance, empty header parameters and the asserted token type
     declared protected that arrives unauthenticated is dropped before the
     domain header is built. A type header that is not text is refused in
     either bucket instead, as aegis policy: the error contract's rule for a
-    COSE type header that is not a text string. Every parameter is
+    COSE type header that is not a text string. So is a content type aegis
+    cannot read as a media type, such as an integer the CoAP Content-Formats
+    registry does not assign: the error contract's rule for an unprotected
+    content type stated as an unassigned integer. Every parameter is
     hand-placed by a foreign producer at the label aegis reads, and each
     scenario reads its label back off the raw bytes before asserting the
     domain header does not believe it.
@@ -541,6 +544,36 @@ Feature: Header provenance, empty header parameters and the asserted token type
         | wire | format |
         | jose | jwe    |
         | cose | cwe    |
+
+  Rule: a COSE content type stated as a CoAP Content-Format is read as the media type that format registers
+
+    The jose wire has no scenario: the integer form is one RFC 9052 §3.1
+    gives the COSE content type alone, and a JOSE content type declares a
+    media type (RFC 7515 §4.1.10). A COSE content type is a text string or an
+    unsigned integer, and an integer names a row of the IANA CoAP
+    Content-Formats registry (RFC 9052 §3.1). aegis reads the integer as the
+    media type that row registers and rebuilds the payload by it, so a token
+    reports one content type, and one payload, whichever form its producer
+    chose. The third party signs a CBOR payload under the Content-Format
+    that registers CBOR, the raw bytes show the integer is what it wrote, and
+    the payload comes back as the map the bytes encode.
+
+    Background:
+      Given the payload to sign
+        | tid | at_abc |
+        | sec | s3cr3t |
+      And the foreign protected header carries
+        | cty | 60 |
+
+    @RFC-9052
+    Scenario: cose: a content type stated as the CoAP Content-Format 60 is read as application/cbor, and the payload decodes as CBOR (RFC-9052 §3.1)
+      When a third party signs the payload as CBOR content on the cose wire, typed "application/cws"
+      And I verify the token
+      Then the raw protected header carries label 3 as the integer 60
+      And the verified header reports the content type "application/cbor"
+      And the verified opaque payload includes
+        | tid | at_abc |
+        | sec | s3cr3t |
 
   Rule: a token of another type is refused when the caller asserts an id token
 

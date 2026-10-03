@@ -236,7 +236,7 @@ const signCompactByHand = async (
 };
 
 const signJose = async (
-  claims: Dict,
+  payload: Buffer,
   typ: string | undefined,
   kryptos: IKryptos,
   headers: ForeignHeaders,
@@ -269,7 +269,6 @@ const signJose = async (
     ...(typ === undefined ? {} : { typ }),
     ...headers.protectedHeader,
   };
-  const payload = Buffer.from(JSON.stringify(claims), "utf8");
 
   if (headers.protectedHeader !== undefined) {
     return signCompactByHand(header, payload, kryptos);
@@ -280,8 +279,20 @@ const signJose = async (
   return new CompactSign(payload).setProtectedHeader(header).sign(key);
 };
 
+/**
+ * How a COSE producer wraps the structure: a claims set rides the CWT tag
+ * (RFC 8392 §6), opaque content goes without it.
+ */
+type CoseEnvelope = "cwt" | "bare";
+
+const enveloped = (envelope: CoseEnvelope, structure: Tag): string =>
+  Buffer.from(
+    encode(envelope === "cwt" ? new Tag(CBOR_TAG.cwt, structure) : structure),
+  ).toString("base64url");
+
 const signCose = async (
-  claims: Dict,
+  payload: Buffer,
+  envelope: CoseEnvelope,
   typ: string | undefined,
   kryptos: IKryptos,
   headers: ForeignHeaders,
@@ -313,8 +324,6 @@ const signCose = async (
     ...(headers.integerLabelledUnprotected ?? []),
   ];
 
-  const payload = Buffer.from(encode(cwtClaimsOf(claims)));
-
   // A shared secret has two holders, so it authenticates a COSE_Mac0 and never
   // signs a COSE_Sign1 (RFC 9052 §6.2, RFC 9052 §4.2): the producer emits the
   // structure the key admits.
@@ -326,9 +335,7 @@ const signCose = async (
       await COSEKey.fromJWK({ kty, k } as never).toKeyLike(),
     );
 
-    return Buffer.from(
-      encode(new Tag(CBOR_TAG.cwt, new Tag(CBOR_TAG.mac0, mac0.getContentForEncoding()))),
-    ).toString("base64url");
+    return enveloped(envelope, new Tag(CBOR_TAG.mac0, mac0.getContentForEncoding()));
   }
 
   const sign1 = await Sign1.sign(
@@ -338,9 +345,7 @@ const signCose = async (
     await COSEKey.fromJWK({ kty, crv, x, y, d } as never).toKeyLike(),
   );
 
-  return Buffer.from(
-    encode(new Tag(CBOR_TAG.cwt, new Tag(CBOR_TAG.sign1, sign1.getContentForEncoding()))),
-  ).toString("base64url");
+  return enveloped(envelope, new Tag(CBOR_TAG.sign1, sign1.getContentForEncoding()));
 };
 
 /**
@@ -355,5 +360,21 @@ export const signAsThirdParty = (
   headers: ForeignHeaders = {},
 ): Promise<string> =>
   wire === "cose"
-    ? signCose(claims, typ, kryptos, headers)
-    : signJose(claims, typ, kryptos, headers);
+    ? signCose(Buffer.from(encode(cwtClaimsOf(claims))), "cwt", typ, kryptos, headers)
+    : signJose(Buffer.from(JSON.stringify(claims), "utf8"), typ, kryptos, headers);
+
+/**
+ * Sign `content` — opaque bytes, not a claims set — as a third party would on
+ * `wire`: a compact JWS on JOSE, a COSE_Sign1 (or COSE_Mac0) without the CWT tag on COSE.
+ * `typ` and `headers` are written as {@link signAsThirdParty} writes them.
+ */
+export const signContentAsThirdParty = (
+  wire: Wire,
+  content: Buffer,
+  typ: string | undefined,
+  kryptos: IKryptos,
+  headers: ForeignHeaders = {},
+): Promise<string> =>
+  wire === "cose"
+    ? signCose(content, "bare", typ, kryptos, headers)
+    : signJose(content, typ, kryptos, headers);

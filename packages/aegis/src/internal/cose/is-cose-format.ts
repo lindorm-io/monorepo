@@ -3,6 +3,7 @@ import { CoseError } from "../../errors/index.js";
 import { coseByJose } from "../header/header-registry.js";
 import type { Tag } from "./cbor.js";
 import { decodeCbor } from "./cbor.js";
+import { decodeCoseContentType } from "./cose-content-type.js";
 import { COSE_TAG, decodeProtectedHeader } from "./structures.js";
 import { coseStructure } from "./unwrap-cose.js";
 
@@ -28,30 +29,34 @@ const structureTag = (bytes: Buffer): Tag["tag"] | undefined => {
   }
 };
 
-// A string-valued COSE PROTECTED header parameter, read by its JOSE name. Keyless
+// A COSE PROTECTED header parameter's raw value, read by its JOSE name. Keyless
 // and never throws: the protected header is cleartext CBOR on every COSE
 // structure, encrypted ones included.
-const coseProtected = (bytes: Buffer, jose: string): string | undefined => {
+const coseProtected = (bytes: Buffer, jose: string): unknown => {
   try {
     const contents = coseStructure(decodeCbor(bytes))?.contents;
     const protectedBstr = Array.isArray(contents) ? contents[0] : undefined;
     if (!(protectedBstr instanceof Uint8Array)) return undefined;
-    const value = decodeProtectedHeader(protectedBstr, CoseError).get(coseByJose(jose));
-    return isString(value) ? value : undefined;
+    return decodeProtectedHeader(protectedBstr, CoseError).get(coseByJose(jose));
   } catch {
     return undefined;
   }
 };
 
 // The COSE `typ` media type off the protected header. RFC 9596.
-const coseTyp = (bytes: Buffer): string | undefined => coseProtected(bytes, "typ");
+const coseTyp = (bytes: Buffer): string | undefined => {
+  const typ = coseProtected(bytes, "typ");
+  return isString(typ) ? typ : undefined;
+};
 
 /**
  * The COSE `cty` — the DECLARED content type of the structure's payload. On a CWE
  * that declares what the CIPHERTEXT holds, readable without the decryption key
- * because the protected header is cleartext and AAD-covered.
+ * because the protected header is cleartext and AAD-covered. A value the reader
+ * refuses is no declaration: `undefined`.
  */
-export const coseCty = (bytes: Buffer): string | undefined => coseProtected(bytes, "cty");
+export const coseCty = (bytes: Buffer): string | undefined =>
+  decodeCoseContentType(coseProtected(bytes, "cty"));
 
 const SIGNED_STRUCTURE = (bytes: Buffer): boolean => {
   const tag = structureTag(bytes);

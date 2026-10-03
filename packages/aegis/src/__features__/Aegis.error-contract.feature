@@ -192,3 +192,59 @@ Feature: The error contract at every door
       When a third party signs the wire claims on the cose wire
       And I verify the token as opaque content on the cose wire
       Then verification is refused as a COSE error "cose_header_typ_invalid"
+
+  Rule: a COSE content type stated as a CoAP Content-Format with a content coding is refused as a COSE error
+
+    The jose wire has no scenario: the integer form is one RFC 9052 §3.1
+    gives the COSE content type alone. RFC 9052 §3.1 lets a COSE content type
+    be an unsigned integer from the CoAP Content-Formats registry, and some
+    of that registry's rows pair a media type with a content coding: the
+    bytes they describe are compressed. aegis cannot undo a content coding,
+    and reading the bare media type would hand compressed bytes to a JSON,
+    CBOR or text reader. So such an integer is refused where the header is
+    read, as an error the consumer's guard catches rather than a failure that
+    falls through it. That is aegis policy, not a requirement of RFC 9052,
+    which registers the parameter as a text string or an unsigned integer.
+
+    Background:
+      Given the wire claims
+        | iss | "https://test.lindorm.io/" |
+        | sub | "user-1"                   |
+        | aud | ["https://rs.lindorm.io/"] |
+        | jti | "token-1"                  |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+      And the foreign protected header carries
+        | cty | 11050 |
+
+    Scenario: cose: the domain verify refuses a content type stated as the deflate-coded CoAP Content-Format 11050
+      When a third party signs the wire claims on the cose wire
+      And I verify the token
+      Then verification is refused as a COSE error "cose_header_cty_invalid"
+
+  Rule: a COSE content type stated as an unassigned integer is refused in the unprotected bucket too
+
+    The jose wire has no scenario: the JOSE compact serialisation has no
+    unprotected bucket (RFC 7515 §7.1). An integer the CoAP Content-Formats
+    registry does not assign names no media type, so aegis refuses it as a
+    content type where the header is read. aegis reads a content type the
+    same way in either bucket, so the bucket the signature does not cover is
+    no way past the refusal. That is aegis policy, not a requirement of
+    RFC 9052, which registers the parameter as a text string or an unsigned
+    integer.
+
+    Background:
+      Given the wire claims
+        | iss | "https://test.lindorm.io/" |
+        | sub | "user-1"                   |
+        | aud | ["https://rs.lindorm.io/"] |
+        | jti | "token-1"                  |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+      And the foreign unprotected header carries
+        | cty | 1 |
+
+    Scenario: cose: the domain verify refuses an unprotected content type stated as an unassigned integer
+      When a third party signs the wire claims on the cose wire
+      And I verify the token
+      Then verification is refused as a COSE error "cose_header_cty_invalid"

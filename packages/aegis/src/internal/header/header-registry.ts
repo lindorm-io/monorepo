@@ -167,7 +167,11 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     },
     wire: { jose: wireName("cty"), cose: wireLabel(3, "cty") },
     codec: { kind: "string" },
-    cose: { kind: "passthrough" },
+    // AEGIS POLICY, not RFC 9052 §3.1, where the read refuses an INTEGER: one that
+    // is not an un-coded CoAP Content-Format (`cose/coap-content-formats.ts`) is
+    // refused, in either bucket. Any other non-text value: RFC 9052 §3.1.
+    // pinned: `cose/non-text-cty.test.ts`.
+    cose: { kind: "contentFormat" },
     sample: "application/json",
     // PRUNE: `""` is not a media type, and it is worse than noise —
     // `serialiseContent` prefers it over the inferred type (`??` passes `""`

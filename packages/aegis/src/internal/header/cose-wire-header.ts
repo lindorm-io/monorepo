@@ -6,6 +6,7 @@ import type { WireTokenHeader } from "../../types/index.js";
 import { B64U } from "../constants/format.js";
 import { coseLabelToAlg } from "../cose/alg-labels.js";
 import { decodeCoseCertHash } from "../cose/cose-cert-hash.js";
+import { decodeCoseContentType } from "../cose/cose-content-type.js";
 import type { CoseLabel } from "../cose/cose-label.js";
 import { decodeCoseX509 } from "../cose/cose-x509.js";
 import { coseLabelToEnc } from "../cose/enc-labels.js";
@@ -100,6 +101,20 @@ const coseValueToWire = (
         title: `COSE Header ${jose.charAt(0).toUpperCase()}${jose.slice(1)} Invalid`,
         details: `The decoded COSE header ${jose} is present but is not a text string, so aegis cannot read it.`,
       });
+    }
+    case "contentFormat": {
+      const mediaType = decodeCoseContentType(value);
+
+      if (mediaType !== undefined) return { jose, value: mediaType };
+
+      throw new CoseError(
+        `Invalid token header: ${jose} must be a text string or a CoAP Content-Format aegis reads`,
+        {
+          code: `cose_header_${jose}_invalid`,
+          title: `COSE Header ${jose.charAt(0).toUpperCase()}${jose.slice(1)} Invalid`,
+          details: `The decoded COSE header ${jose} is present but is neither a text string nor a CoAP Content-Format without a content coding, so aegis cannot read it as a media type.`,
+        },
+      );
     }
     default: {
       // `noImplicitReturns` is off repo-wide, so without this a new codec kind

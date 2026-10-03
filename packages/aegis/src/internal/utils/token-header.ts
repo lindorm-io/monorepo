@@ -228,8 +228,8 @@ const setHeaderMember = <K extends keyof DomainTokenHeader>(
  * ⚠ An `undefined` is dropped even though {@link parseTokenHeader} reports what the
  * producer wrote, because `DomainTokenHeader` promises a member only where the
  * header has one; the guard is `isObject`, never `isObjectLike`, which would have
- * `omitUndefined` rebuild a foreign `cty` byte string or map from `Object.entries`
- * into a plain object.
+ * `omitUndefined` rebuild a byte string or map a foreign COSE token carries under a
+ * `passthrough` parameter (`x5u`) from `Object.entries` into a plain object.
  * pinned: token-header.test.ts, domain-header.test.ts.
  */
 const withoutUndefined = (value: unknown): unknown => {
@@ -330,6 +330,7 @@ const encodeCoseHeaderValue = (
     case "base64Bytes":
     case "passthrough":
     case "textString":
+    case "contentFormat":
       return value;
     default: {
       // See `encodeHeaderValue`: the reported fact is the string discriminant.

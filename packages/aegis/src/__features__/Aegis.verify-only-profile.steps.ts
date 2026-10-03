@@ -1,10 +1,14 @@
 import { Binding, Given, ParameterType, Then, When } from "@lindorm/gherkin";
+import { encode } from "cbor2";
 import { expect } from "vitest";
 import { AegisStepsBase } from "../__fixtures__/aegis-steps-base.js";
 import { alternationOf } from "../__fixtures__/alternation-of.js";
 import { TEST_EC_KEY_SIG } from "../__fixtures__/keys.js";
 import type { Wire, WireKey } from "../__fixtures__/raw-bucket.js";
-import { signAsThirdParty } from "../__fixtures__/third-party-producer.js";
+import {
+  signAsThirdParty,
+  signContentAsThirdParty,
+} from "../__fixtures__/third-party-producer.js";
 import { WIRE_ERROR, type WireError } from "../__fixtures__/wire-errors.js";
 
 @Binding()
@@ -54,6 +58,20 @@ export class AegisVerifyOnlyProfileSteps extends AegisStepsBase {
     this.ctx.token = await signAsThirdParty(
       wire,
       this.ctx.wireClaims,
+      typ,
+      TEST_EC_KEY_SIG,
+      this.ctx.foreignHeaders,
+    );
+  }
+
+  @When(
+    "a third party signs the payload as CBOR content on the {wire} wire, typed {string}",
+  )
+  async aThirdPartySignsThePayloadAsCborContent(wire: Wire, typ: string): Promise<void> {
+    this.assertScenarioWire(wire);
+    this.ctx.token = await signContentAsThirdParty(
+      wire,
+      Buffer.from(encode(this.ctx.claims)),
       typ,
       TEST_EC_KEY_SIG,
       this.ctx.foreignHeaders,
