@@ -131,6 +131,27 @@ Feature: The static claim matcher
       Then the claims are refused as a domain error "claims_invalid"
       And the refusal lists the invalid claims "scope"
 
+  Rule: a caller asserting several values of a list-valued claim is answered by a claim carrying them and more
+
+    Asserting a list asks the claim to contain every listed value. A claim
+    carrying more still answers, and that tells containment from equality:
+    the pair above passes under a whole-list equality test too, because its
+    accepted list matches the asserted one exactly and its refused list is a
+    strict subset. The difference is whether a token holding an extra scope
+    is refused for it. This is aegis policy, not a specification requirement.
+
+    Background:
+      Given the claims to check
+        | scope | ["openid", "profile", "email"] |
+      And the verifier asserts
+        """json
+        { "scope": ["openid", "profile"] }
+        """
+
+    Scenario: the list carrying every asserted value and more is accepted
+      When I check the claims without a signature
+      Then the claims are accepted
+
   Rule: a caller bounding a numeric claim with a comparison is refused by a value below the bound
 
     A bare value is sugar for a condition, so the condition itself must pass
