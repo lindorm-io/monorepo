@@ -2,7 +2,6 @@ import type { DataTable } from "@lindorm/gherkin";
 import { Binding, Given, Then, When } from "@lindorm/gherkin";
 import type { KryptosAlgClass } from "@lindorm/kryptos";
 import { expect } from "vitest";
-import { AegisKeyError } from "../errors/index.js";
 import { AegisStepsBase } from "../__fixtures__/aegis-steps-base.js";
 import type { Wire } from "../__fixtures__/raw-bucket.js";
 import { OPAQUE_FORMAT } from "../__fixtures__/wire-formats.js";
@@ -88,10 +87,7 @@ export class AegisOpaqueAndRawDoorsSteps extends AegisStepsBase {
 
   @Then("verification is refused as a key error {string}")
   verificationIsRefusedAsAKeyErrorUnder(code: string): void {
-    const refusal = this.refusal();
-
-    expect(refusal).toBeInstanceOf(AegisKeyError);
-    expect(refusal).toMatchObject({ code });
+    this.refusedAsAKeyError(code);
   }
 
   // helpers

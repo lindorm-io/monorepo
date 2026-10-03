@@ -73,7 +73,10 @@ export class AegisConfidentialitySteps extends AegisStepsBase {
     const token = this.token();
 
     this.ctx.decrypted = await this.attempt(() =>
-      this.ctx.aegis.decrypt(token, { critical: this.ctx.verifyOptions.critical }),
+      this.ctx.aegis.decrypt(token, {
+        critical: this.ctx.verifyOptions.critical,
+        key: this.ctx.decryptKey,
+      }),
     );
   }
 

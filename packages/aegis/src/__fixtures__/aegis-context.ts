@@ -1,10 +1,12 @@
 import type { IAmphora } from "@lindorm/amphora";
 import { Context } from "@lindorm/gherkin";
+import type { IKryptos } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
 import MockDate from "mockdate";
 import type { Aegis } from "../classes/Aegis.js";
 import type { TokenType } from "../constants/token-type.js";
 import type {
+  AegisDecryptKey,
   CoseHeaderBuckets,
   DecryptedToken,
   DomainProtectedHeader,
@@ -61,6 +63,10 @@ export class AegisContext {
   mintOptions: ProfileMintOptions = {};
   /** What a verify is asked beyond the profile, the token and the audience. */
   verifyOptions: Omit<ProfileVerifyOptions, "audience"> = {};
+  /** The key a decrypt is handed outright, when the scenario supplies one. */
+  decryptKey?: AegisDecryptKey;
+  /** The key a producer outside this deployment signs or seals with — never a vault resident. */
+  producerKey?: IKryptos;
   /** What the presenter signs into a proof of possession, before the token it commits to exists. */
   proofStatement?: DpopProofStatement;
   /** What the presenter writes in the proof's header beside the parameters it derives. */
@@ -83,6 +89,8 @@ export class AegisContext {
   parsed?: ParsedToken;
   /** A raw door's result: the header buckets and the payload as the kit reports them. */
   rawVerified?: RawDoorResult;
+  /** A raw decrypt door's result, in the same shape. */
+  rawDecrypted?: RawDoorResult;
 
   /** What the last act threw, when it threw. */
   refusal?: unknown;

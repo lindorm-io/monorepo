@@ -452,15 +452,28 @@ describe("JwtKit", () => {
     throw new Error("the call was expected to refuse and did not");
   };
 
-  describe("kid fail-fast", () => {
-    test("throws before the signature cycle when the token kid differs from the key", () => {
-      // Sign with a DIFFERENT key so the token carries the other key's kid.
-      const other = new JwtKit({ logger, kryptos: TEST_RSA_KEY_SIG });
+  describe("the key id is a hint", () => {
+    test("verifies a token whose kid names another key when the configured key signed it", () => {
+      const signer = new JwtKit({
+        logger,
+        kryptos: KryptosKit.clone(TEST_EC_KEY_SIG, { id: "the-signers-own-key-id" }),
+      });
+      const token = signer.sign({ iss: issuer, sub: "s", exp: 1704099600 });
+
+      expect(JwtKit.decode(token).header.kid).toBe("the-signers-own-key-id");
+      expect(kit.verify(token).payload.sub).toBe("s");
+    });
+
+    test("refuses a token signed by another key of the configured algorithm at the signature", () => {
+      const other = new JwtKit({
+        logger,
+        kryptos: KryptosKit.generate.sig.ec({ algorithm: "ES512" }),
+      });
       const token = other.sign({ iss: issuer, sub: "s", exp: 1704099600 });
 
       expect(refusalOf(() => kit.verify(token))).toEqual({
-        code: "jwt_kid_mismatch",
-        title: "JWT Kid Mismatch",
+        code: "jwt_signature_invalid",
+        title: "JWT Signature Invalid",
       });
     });
 
@@ -1039,18 +1052,13 @@ describe("JwtKit", () => {
  */
 describe("JwtKit — the algorithm-match gate answers under the jwt tag", () => {
   test("refuses a token whose header alg is not the configured key's", () => {
-    // ⚠ The two keys SHARE an id on purpose: the kid fail-fast runs first, so two
-    // independently generated keys would answer `jwt_kid_mismatch` and the
-    // algorithm gate would never be reached.
-    const id = "key_algorithm_match_jwt";
-
     const signer = new JwtKit({
       logger: createMockLogger(),
-      kryptos: KryptosKit.generate.sig.ec({ algorithm: "ES256", id }),
+      kryptos: KryptosKit.generate.sig.ec({ algorithm: "ES256" }),
     });
     const verifier = new JwtKit({
       logger: createMockLogger(),
-      kryptos: KryptosKit.generate.sig.ec({ algorithm: "ES512", id }),
+      kryptos: KryptosKit.generate.sig.ec({ algorithm: "ES512" }),
     });
 
     const token = signer.sign({ iss: "https://test.lindorm.io/", sub: "user-1" });

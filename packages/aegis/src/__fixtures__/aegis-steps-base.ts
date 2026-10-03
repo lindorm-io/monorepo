@@ -2,7 +2,7 @@ import { AbstractSteps, Inject, ScenarioInfo } from "@lindorm/gherkin";
 import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
 import { expect } from "vitest";
-import { AegisDomainError, AegisError } from "../errors/index.js";
+import { AegisDomainError, AegisError, AegisKeyError } from "../errors/index.js";
 import type {
   AegisVerifyKey,
   CoseWireTokenEnvelope,
@@ -76,6 +76,14 @@ export abstract class AegisStepsBase {
     expect(refusal).toMatchObject({ code });
   }
 
+  /** The refusal is aegis's key error, under `code`. */
+  protected refusedAsAKeyError(code: string): void {
+    const refusal = this.refusal();
+
+    expect(refusal).toBeInstanceOf(AegisKeyError);
+    expect(refusal).toMatchObject({ code });
+  }
+
   protected signed(): SignedToken {
     return this.produced(this.ctx.signed, "signed");
   }
@@ -98,6 +106,10 @@ export abstract class AegisStepsBase {
 
   protected rawVerified(): RawDoorResult {
     return this.produced(this.ctx.rawVerified, "verified at the raw door");
+  }
+
+  protected rawDecrypted(): RawDoorResult {
+    return this.produced(this.ctx.rawDecrypted, "decrypted at the raw door");
   }
 
   /**

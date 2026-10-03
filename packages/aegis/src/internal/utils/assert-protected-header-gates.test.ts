@@ -31,9 +31,7 @@ MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
  * a count of files loses it entirely.
  *
  * The `alg` mismatch comes from minting with one key and verifying with a second
- * of the same class and a different algorithm. ⚠ Both keys in a pair share an
- * `id`, so the `kid` fail-fast on `JwtKit`/`verifyCwt` cannot answer first — the
- * token has to reach the pair being pinned.
+ * of the same class and a different algorithm.
  *
  * ⚠ THE HOSTILE `crit` IS INJECTED AFTER THE MINT, and it has to be, because
  * AEGIS CANNOT PRODUCE ONE. The mint gate
@@ -132,36 +130,31 @@ describe("the protected-header gates, on a token that trips BOTH", () => {
     throw new Error("the token was ACCEPTED — the gate under test never fired");
   };
 
-  /** A signing pair: same key id, same algClass, different algorithm. */
-  const signPair = (id: string) => ({
-    minted: KryptosKit.generate.sig.ec({ algorithm: "ES512", id }),
-    reader: KryptosKit.generate.sig.ec({ algorithm: "ES256", id }),
+  /** A signing pair: same algClass, different algorithm. */
+  const signPair = () => ({
+    minted: KryptosKit.generate.sig.ec({ algorithm: "ES512" }),
+    reader: KryptosKit.generate.sig.ec({ algorithm: "ES256" }),
   });
 
   /**
-   * A MAC pair: same key id, both symmetric, different algorithm.
+   * A MAC pair: both symmetric, different algorithm.
    *
    * ⚠ `oct` on purpose. `CwmKit` gates its key's `algClass` in the constructor, and
    * the structure tag follows the key — a symmetric key is a COSE_Mac0 (tag 17),
    * which is the whole reason `cwm` is a read path of its own rather than a
    * spelling of `cwt`.
    */
-  const macPair = (id: string) => ({
-    minted: KryptosKit.generate.sig.oct({ algorithm: "HS512", id }),
-    reader: KryptosKit.generate.sig.oct({ algorithm: "HS256", id }),
+  const macPair = () => ({
+    minted: KryptosKit.generate.sig.oct({ algorithm: "HS512" }),
+    reader: KryptosKit.generate.sig.oct({ algorithm: "HS256" }),
   });
 
-  /** An encryption pair: same key id, same key type, different key management. */
-  const encryptPair = (id: string) => ({
-    minted: KryptosKit.generate.enc.ec({
-      algorithm: "ECDH-ES",
-      encryption: "A256GCM",
-      id,
-    }),
+  /** An encryption pair: same key type, different key management. */
+  const encryptPair = () => ({
+    minted: KryptosKit.generate.enc.ec({ algorithm: "ECDH-ES", encryption: "A256GCM" }),
     reader: KryptosKit.generate.enc.ec({
       algorithm: "ECDH-ES+A256KW",
       encryption: "A256GCM",
-      id,
     }),
   });
 
@@ -178,7 +171,7 @@ describe("the protected-header gates, on a token that trips BOTH", () => {
     {
       format: "jws",
       refuse: (hostile) => {
-        const { minted, reader } = signPair("key_hostile_jws");
+        const { minted, reader } = signPair();
         const token = new JwsKit({ kryptos: minted, logger }).sign("hostile");
 
         return thrownBy(() =>
@@ -189,7 +182,7 @@ describe("the protected-header gates, on a token that trips BOTH", () => {
     {
       format: "jwt",
       refuse: (hostile) => {
-        const { minted, reader } = signPair("key_hostile_jwt");
+        const { minted, reader } = signPair();
         const token = new JwtKit({ kryptos: minted, logger }).sign(WIRE_CLAIMS);
 
         return thrownBy(() =>
@@ -200,7 +193,7 @@ describe("the protected-header gates, on a token that trips BOTH", () => {
     {
       format: "jwe",
       refuse: (hostile) => {
-        const { minted, reader } = encryptPair("key_hostile_jwe");
+        const { minted, reader } = encryptPair();
         const token = new JweKit({ kryptos: minted, logger }).encrypt("hostile");
 
         return thrownBy(() =>
@@ -211,7 +204,7 @@ describe("the protected-header gates, on a token that trips BOTH", () => {
     {
       format: "cws",
       refuse: (hostile) => {
-        const { minted, reader } = signPair("key_hostile_cws");
+        const { minted, reader } = signPair();
         const token = new CwsKit({ kryptos: minted, logger }).sign(
           Buffer.from("hostile"),
         );
@@ -224,7 +217,7 @@ describe("the protected-header gates, on a token that trips BOTH", () => {
     {
       format: "cwt",
       refuse: (hostile) => {
-        const { minted, reader } = signPair("key_hostile_cwt");
+        const { minted, reader } = signPair();
         const token = new CwtKit({ kryptos: minted, logger }).sign(WIRE_CLAIMS);
 
         return thrownBy(() =>
@@ -239,7 +232,7 @@ describe("the protected-header gates, on a token that trips BOTH", () => {
       // which `CwtKit` also uses — so counting call sites or files loses it.
       format: "cwm",
       refuse: (hostile) => {
-        const { minted, reader } = macPair("key_hostile_cwm");
+        const { minted, reader } = macPair();
         const token = new CwmKit({ kryptos: minted, logger }).sign(WIRE_CLAIMS);
 
         return thrownBy(() =>
@@ -257,11 +250,11 @@ describe("the protected-header gates, on a token that trips BOTH", () => {
       // trips only ONE produces the same snapshot, so nothing in a lone snapshot
       // says the alg gate was ever in the running. Drive an identically
       // CONFIGURED pair — the helpers generate fresh material per call, so it is
-      // the same algorithms and the same shared id, not the same bytes — with no
-      // crit injected first: the alg gate must fire on its own. If a future
-      // edit stops `signPair`/`encryptPair` producing a real mismatch, this goes
-      // red here rather than leaving the snapshots below pinning an order the
-      // file no longer observes.
+      // the same algorithms, not the same bytes — with no crit injected first:
+      // the alg gate must fire on its own. If a future edit stops
+      // `signPair`/`encryptPair` producing a real mismatch, this goes red here
+      // rather than leaving the snapshots below pinning an order the file no
+      // longer observes.
       expect(
         refuse(false).code,
         "the key pair no longer produces an algorithm mismatch, so the snapshot below proves nothing about ORDER",

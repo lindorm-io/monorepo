@@ -115,7 +115,7 @@ describe("aegis error tree", () => {
   test("a thrown leaf is caught at every level of its chain (graduated catch)", () => {
     const caughtBy = (Cls: typeof LindormError): boolean => {
       try {
-        throw new CwtError("boom", { code: "cwt_kid_mismatch" });
+        throw new CwtError("boom", { code: "cwt_invalid_typ" });
       } catch (error) {
         return error instanceof Cls;
       }
@@ -165,7 +165,7 @@ describe("aegis error tree — serialised lineage", () => {
 
   test("a thrown leaf carries its lineage through a catch", () => {
     try {
-      throw new CwtError("boom", { code: "cwt_kid_mismatch" });
+      throw new CwtError("boom", { code: "cwt_invalid_typ" });
     } catch (error) {
       expect((error as CwtError).lineage).toEqual([
         "CwtError",
@@ -209,18 +209,16 @@ describe("aegis error tree — real throw-site routing", () => {
     expect((caught as CwmError).code).toBe("cwm_requires_symmetric_key");
   });
 
-  // --- <fmt>_kid_mismatch (kid fail-fast) -> the leaf format class ---
+  // --- <fmt>_algorithm_mismatch -> the leaf format class ---
 
-  test("CwtKit kid fail-fast surfaces cwt_kid_mismatch on CwtError", () => {
-    const signer = new CwtKit({ logger, kryptos: TEST_EC_KEY_SIG });
+  test("CwtKit refuses a token under another algorithm as cwt_algorithm_mismatch on CwtError", () => {
+    const signer = new CwtKit({
+      logger,
+      kryptos: KryptosKit.generate.sig.ec({ algorithm: "ES256" }),
+    });
     const token = signer.sign({ sub: "user-1" }, { tokenType: "at" });
 
-    // A verifier whose configured key has a different id than the token's kid
-    // must fail fast, before the signature cycle, with the leaf error.
-    const other = KryptosKit.clone(TEST_EC_KEY_SIG, {
-      id: "00000000-0000-0000-0000-000000000000",
-    });
-    const verifier = new CwtKit({ logger, kryptos: other });
+    const verifier = new CwtKit({ logger, kryptos: TEST_EC_KEY_SIG });
 
     let caught: unknown;
     try {
@@ -231,7 +229,7 @@ describe("aegis error tree — real throw-site routing", () => {
     expect(caught).toBeInstanceOf(CwtError);
     expect(caught).toBeInstanceOf(CoseError);
     expect(caught).not.toBeInstanceOf(JoseError);
-    expect((caught as CwtError).code).toBe("cwt_kid_mismatch");
+    expect((caught as CwtError).code).toBe("cwt_algorithm_mismatch");
   });
 
   // --- key resolution -> AegisKeyError ---

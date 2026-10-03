@@ -82,11 +82,23 @@ describe("CwmKit (COSE_Mac0, symmetric)", () => {
     });
   });
 
-  test("kid fail-fast — a token naming a different kid throws cwm_kid_mismatch", () => {
+  test("verifies a token whose kid names another key when the configured key MACed it", () => {
+    const token = new CwmKit({
+      logger: createMockLogger(),
+      kryptos: KryptosKit.clone(kryptos, { id: "the-signers-own-key-id" }),
+    }).sign(wire);
+
+    const { unprotectedHeader, payload } = kit.verify(token);
+
+    expect(unprotectedHeader.kid).toBe("the-signers-own-key-id");
+    expect(payload.sub).toBe("user-1");
+  });
+
+  test("refuses a token MACed by another key of the configured algorithm at the MAC", () => {
     const token = kit.sign(wire);
     const otherKit = new CwmKit({
       logger: createMockLogger(),
-      kryptos: KryptosKit.generate.sig.oct({ algorithm: "HS256" }), // different id
+      kryptos: KryptosKit.generate.sig.oct({ algorithm: "HS256" }),
     });
 
     const error = (() => {
@@ -97,12 +109,9 @@ describe("CwmKit (COSE_Mac0, symmetric)", () => {
       }
     })();
 
-    expect(error?.code).toBe("cwm_kid_mismatch");
-    // ⚠ THE TITLE, and specifically the `CWM` in it. The refusal is built from
-    // the format tag, exactly as the algorithm-match refusal is, so a COSE_Mac0
-    // never reports itself as a CWT. Nothing else in the package asserts either
-    // title, which is why the spelling could change unobserved.
-    expect(error?.title).toBe("CWM Kid Mismatch");
+    expect(error).toBeInstanceOf(CwsError);
+    expect(error?.code).toBe("cose_mac_invalid");
+    expect(error?.title).toBe("Invalid COSE MAC");
   });
 
   test("typ mismatch — the refusal names CWM, not CWT", () => {
@@ -209,17 +218,13 @@ describe("CwmKit — the COSE_Mac0 it builds and the refusal only a MAC can rais
  */
 describe("CwmKit — the algorithm-match gate answers under the cwm tag", () => {
   test("refuses a token whose protected alg is not the configured key's", () => {
-    // ⚠ Shared id: the kid fail-fast runs first and would otherwise answer
-    // `cwm_kid_mismatch` before the algorithm gate is reached.
-    const id = "key_algorithm_match_cwm";
-
     const signer = new CwmKit({
       logger: createMockLogger(),
-      kryptos: KryptosKit.generate.sig.oct({ algorithm: "HS256", id }),
+      kryptos: KryptosKit.generate.sig.oct({ algorithm: "HS256" }),
     });
     const verifier = new CwmKit({
       logger: createMockLogger(),
-      kryptos: KryptosKit.generate.sig.oct({ algorithm: "HS512", id }),
+      kryptos: KryptosKit.generate.sig.oct({ algorithm: "HS512" }),
     });
 
     const token = signer.sign(wire, { tokenType: "at" });

@@ -17,8 +17,8 @@ export type AesEncryptOptions = {
 
 export type AesDecryptOptions = {
   /**
-   * Per-call decryption key policy — a CHECK (plus injectable `kryptos`) on the
-   * key the ciphertext names. Consumed by `Aegis`, which resolves the key.
+   * Per-call decryption key policy — a CHECK on the key the ciphertext names, or a
+   * key supplied outright. Consumed by `Aegis`, which resolves the key.
    */
   key?: AegisDecryptKey;
 };

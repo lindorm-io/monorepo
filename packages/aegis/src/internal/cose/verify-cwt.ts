@@ -2,7 +2,6 @@ import type { Condition } from "@lindorm/match";
 import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import type { Dict } from "@lindorm/types";
-import { assertKidMatch } from "../utils/assert-kid-match.js";
 import { assertTokenTypeMatch } from "../utils/assert-token-type-match.js";
 import { assertWireTyp } from "../utils/assert-wire-typ.js";
 import { validateWireClaims } from "../utils/validate-wire-claims.js";
@@ -21,10 +20,11 @@ import { resolveWideCertBinding } from "./cose-wide-cert-binding.js";
 import { verifyCoseStructure } from "./verify-cose-structure.js";
 
 /**
- * WIRE verify: kid fail-fast, typ well-formedness and typ match off the cheap
- * header decode; then the structural gates and the signature/MAC over the
- * structure the key's `algClass` implies; then the temporal range (validated IF
- * PRESENT) and the caller `assert`, in one pass over the WIRE claims.
+ * WIRE verify: typ well-formedness and typ match off the cheap header decode;
+ * then the structural gates and the signature/MAC over the structure the key's
+ * `algClass` implies; then the temporal range (validated IF PRESENT) and the
+ * caller `assert`, in one pass over the WIRE claims. The token's `kid` is a hint
+ * and is never compared with the key.
  *
  * ⚠ It returns the native WIRE payload. No named matchers, no exp presence, no
  * domain translation — those belong to the Aegis verify path.
@@ -47,15 +47,6 @@ export const verifyCwt = <C extends Dict = Dict>(
   logger.debug("Verifying CWT", { options });
 
   const decoded = decodeCwt(token);
-
-  // kid fail-fast, before the expensive signature cycle. The JOSE claims kit runs
-  // the same one; the OPAQUE and ENCRYPTED doors run none.
-  assertKidMatch({
-    actual: decoded.kid,
-    expected: kryptos.id,
-    format,
-    error: ERROR_BY_FORMAT[format],
-  });
 
   // typ well-formedness: a PRESENT typ must be `application/cwt` or a structured
   // `<type>+cwt`, so a COSE object of another shape cannot pass as a claims CWT.

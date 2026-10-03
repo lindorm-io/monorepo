@@ -370,9 +370,9 @@ await aegis.aes.encrypt(data, { key: { condition: { purpose: "cookie" } } });
 
 A key supplied outright is the one case the vault cannot serve on the way back, so
 **decrypt takes a `kryptos` too** — encrypting with a detached key and being unable to
-decrypt it again would otherwise be a silent one-way trip. The floor still applies, and a
-supplied key that is not the one the ciphertext names throws (`decrypt_key_mismatch`)
-rather than being quietly ignored.
+decrypt it again would otherwise be a silent one-way trip. The floor still applies. The
+supplied key is used as given, whatever key id the ciphertext names: the key id is a
+hint, and decryption fails unless the supplied key sealed it.
 
 ```typescript
 const encoded = await aegis.aes.encrypt(data, { key: { kryptos: detached } });

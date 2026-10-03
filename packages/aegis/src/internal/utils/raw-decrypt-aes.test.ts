@@ -20,9 +20,9 @@ const PLAINTEXT = "cookie-session-payload";
  * A sealed record names its OWN key, so the read resolves by that id through
  * `findById` — deliberately unfiltered, so a key that has since expired or been
  * un-published still opens what it sealed. The one case that lookup cannot serve
- * is a key the vault never held, which is what the per-call injected key is for;
- * every other option here exists to make the failure modes LOUD, because
- * silently decrypting with a different key would be worse than not decrypting.
+ * is a key the vault never held, which is what the per-call injected key is for.
+ * A supplied key is used as given, whatever id the record names: decryption
+ * fails unless the supplied key sealed it.
  *
  * ⚠ Beside the function rather than in the feature files: an AES record is
  * neither a JOSE nor a COSE token, so there is no wire to state it on.
@@ -147,10 +147,22 @@ describe("rawDecryptAes — the AES read side", () => {
       expect((error as AegisError).data).toMatchObject({ kid: DETACHED_KEY.id });
     });
 
-    // Silently ignoring the supplied key would send the read to a vault key that
-    // cannot open this record; preferring it would decrypt with the wrong key
-    // material. Both are worse than saying so.
-    test("refuses a supplied key that is not the one the record names", async () => {
+    test("decrypts with the sealing key's material supplied under another key id", async () => {
+      const encoded = await aegis.aes.encrypt(PLAINTEXT, "cbor", {
+        key: { kryptos: DETACHED_KEY },
+      });
+
+      const renamed = KryptosKit.clone(DETACHED_KEY, {
+        id: "f1a2b3c4-0005-5aaa-9bbb-0123456789ab",
+      });
+
+      expect(AesKit.parse(encoded).keyId).toBe(DETACHED_KEY.id);
+      await expect(
+        aegis.aes.decrypt(encoded, { key: { kryptos: renamed } }),
+      ).resolves.toBe(PLAINTEXT);
+    });
+
+    test("fails to decrypt with a supplied key that did not seal the record", async () => {
       const encoded = await aegis.aes.encrypt(PLAINTEXT, "cbor", {
         key: { kryptos: DETACHED_KEY },
       });
@@ -159,13 +171,7 @@ describe("rawDecryptAes — the AES read side", () => {
         .decrypt(encoded, { key: { kryptos: VAULT_KEY } })
         .catch((err: Error) => err);
 
-      expect(error).toBeInstanceOf(AegisError);
-      expect((error as AegisError).code).toBe("decrypt_key_mismatch");
-      expect((error as AegisError).data).toMatchObject({
-        kid: DETACHED_KEY.id,
-        suppliedKid: VAULT_KEY.id,
-        operation: "decrypt",
-      });
+      expect(error).toMatchObject({ code: "decryption_failed" });
     });
 
     // `hasPrivateKey` IS the decrypt floor, and it applies to a supplied key
@@ -176,10 +182,7 @@ describe("rawDecryptAes — the AES read side", () => {
         key: { kryptos: DETACHED_KEY },
       });
 
-      const publicOnly = KryptosKit.from.jwk({
-        ...TEST_EC_KEY_ENC.toJWK("public"),
-        kid: AesKit.parse(encoded).keyId,
-      });
+      const publicOnly = KryptosKit.from.jwk(TEST_EC_KEY_ENC.toJWK("public"));
 
       const error = await aegis.aes
         .decrypt(encoded, { key: { kryptos: publicOnly } })

@@ -9,7 +9,6 @@ import { JwtError } from "../errors/index.js";
 import type { IJwtKit } from "../interfaces/index.js";
 import { B64U } from "../internal/constants/format.js";
 import { normaliseClaims } from "../internal/utils/normalise-claims.js";
-import { assertKidMatch } from "../internal/utils/assert-kid-match.js";
 import { assertTokenTypeMatch } from "../internal/utils/assert-token-type-match.js";
 import { assertWireTyp } from "../internal/utils/assert-wire-typ.js";
 import { buildJoseHeader } from "../internal/header/build-jose-header.js";
@@ -140,9 +139,10 @@ export class JwtKit implements IJwtKit {
   /**
    * WIRE verify: crit + typ well-formedness + algorithm-match + signature +
    * cert-binding + temporal range (validated-if-present) + the caller
-   * `assert` predicate. A kid fail-fast short-circuits before the signature
-   * cycle. Returns the native WIRE payload; NO named matchers, NO exp presence,
-   * NO actor/DPoP — those are the Aegis verify path's job.
+   * `assert` predicate, all under the configured key: the token's `kid` is a
+   * hint and is never compared with it. Returns the native WIRE payload; NO
+   * named matchers, NO exp presence, NO actor/DPoP — those are the Aegis verify
+   * path's job.
    */
   verify<C extends Dict = Dict>(
     token: string,
@@ -157,16 +157,6 @@ export class JwtKit implements IJwtKit {
     const decoded = JwtKit.decode<C>(token);
 
     const decodedHeader = decoded.header;
-
-    // kid fail-fast, before the (expensive) signature cycle. The COSE claims
-    // path runs the same one; the OPAQUE and ENCRYPTED doors deliberately run
-    // none.
-    assertKidMatch({
-      actual: decodedHeader.kid,
-      expected: this.kryptos.id,
-      format: "jwt",
-      error: JwtError,
-    });
 
     // typ well-formedness (folded from the removed `parse`): a PRESENT typ must
     // be a JWT media type so a JWS/JWE cannot be verified as a JWT. A typ-LESS

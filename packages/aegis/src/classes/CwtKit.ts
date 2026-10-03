@@ -21,9 +21,9 @@ import type {
  * CWT (RFC 8392) as a COSE_Sign1 — the asymmetric, signature-bearing claims kit,
  * the COSE analogue of `JwtKit`. It speaks ONLY the wire: `sign` serializes an
  * already-COSE-keyed `CwtWireClaims` dict verbatim and secures it with a
- * COSE_Sign1; `verify` runs the structural + prudent SECURITY invariants (kid,
- * typ well-formedness, algorithm-match, signature, temporal range) plus a
- * caller `assert`, returning the native WIRE payload (`cti`/`exp`, not
+ * COSE_Sign1; `verify` runs the structural + prudent SECURITY invariants (typ
+ * well-formedness, algorithm-match, signature, temporal range) plus a caller
+ * `assert`, returning the native WIRE payload (`cti`/`exp`, not
  * `tokenId`/`expiresAt`). All DOMAIN policy lives on the Aegis verify path.
  *
  * INTEGRITY GATE: `CwtKit` is COSE_Sign1 and requires an ASYMMETRIC key —

@@ -77,11 +77,9 @@ export type AegisEncKey = AmphoraKeySelector<AegisEncCondition>;
  * This is NOT the header-embedded-key attack class — that is about trusting
  * `jwk` / `jku` / `x5u` FROM THE TOKEN. A key handed over by trusted application
  * code is not token-controlled; the verifier's only header input remains `kid`,
- * used as a lookup into the vault, never as a key itself. When the token DOES
- * name a `kid`, a supplied key that names a different one is a caller error, not
- * a silent fallback (`resolveKey` throws `verify_key_mismatch`). A kid-less
- * assertion — the usual `client_secret_jwt` shape — is verified by the injected
- * key alone.
+ * used as a lookup into the vault, never as a key itself. A supplied key is used
+ * as given, whatever `kid` the token names or whether it names one at all: the
+ * signature decides whether that key secured the token.
  */
 export type AegisVerifyKey = AmphoraKeySelector<AegisSignCondition>;
 
@@ -93,9 +91,7 @@ export type AegisVerifyKey = AmphoraKeySelector<AegisSignCondition>;
  * encrypted with an injected key, which could otherwise be encrypted and never
  * decrypted again. The vault is skipped; the FLOOR is not.
  *
- * Selection here is still driven by the ciphertext's own key id, so a supplied
- * key is honoured only when it IS the key the ciphertext names. One that names
- * something else is a caller error, not a silent fallback: ciphertext can only
- * be read by the key it was written to.
+ * A supplied key is used as given, whatever key id the ciphertext names:
+ * decryption fails unless the supplied key sealed it.
  */
 export type AegisDecryptKey = AmphoraKeySelector<AegisEncCondition>;

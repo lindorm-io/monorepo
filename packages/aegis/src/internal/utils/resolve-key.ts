@@ -44,9 +44,11 @@ export type ResolveKeyOptions = {
    * below narrows WHICH key that id may name; it does not reintroduce a time or
    * publish filter, so the expired-key rationale is untouched.
    *
-   * An injected `kryptos` takes the vault out of the picture — but it does NOT
-   * override an `id`: on the read side the artifact names the one key that can
-   * read it, so a supplied key that names another is a caller error (below).
+   * An injected `kryptos` wins over an `id`: the vault is not consulted and the
+   * two ids are never compared — the signature or MAC decides whether the injected
+   * key secured the artifact, and decryption fails unless the injected key sealed
+   * it. RFC 7515 §4.1.4, RFC 9052 §3.1.
+   * pinned: Aegis.caller-supplied-key-policy.feature
    */
   id?: string;
 
@@ -106,22 +108,6 @@ export const resolveKey = async (options: ResolveKeyOptions): Promise<IKryptos> 
 
   const copy = describeKeyOperation(operation);
 
-  // An injected key and an `id` are both "use THIS key", and when they disagree
-  // there is no silent winner: an artifact names the one key that can read or
-  // check it, so a supplied key naming another is a caller error. Ignoring the
-  // supplied key would send the caller to a vault key that cannot possibly
-  // work; preferring it would decrypt with the wrong key material.
-  if (options.kryptos && id && options.kryptos.id !== id) {
-    throw new AegisKeyError("Supplied key is not the key the artifact names", {
-      code: `${operation}_key_mismatch`,
-      data: { kid: id, suppliedKid: options.kryptos.id, operation },
-      debug: { kryptos: options.kryptos.toJSON() },
-      title: "Key Mismatch",
-      details:
-        "A key was supplied for an operation whose key is named by the artifact itself, and the two do not match. The artifact can only be read with the key it was written to; supply the key it names, or supply none and let it resolve from the vault.",
-    });
-  }
-
   // The selector applies to the vault query alone. An injected key and a key
   // named by a token's kid both come from outside it. The floor is applied LAST
   // so it always wins the merge — a selector duck-typed from config/JSON can
@@ -133,8 +119,8 @@ export const resolveKey = async (options: ResolveKeyOptions): Promise<IKryptos> 
   // selector is the token's OWN declared `alg` — aegis would fetch the newest
   // vault key of the class the artifact chose for itself, letting an artifact
   // steer key selection by class (RFC 8725 §3.1). So a missing kid is a throw on
-  // the read side. The escape hatch is an injected `kryptos`, honoured above this
-  // gate. The WRITE side (sign/encrypt) is legitimately selector-driven.
+  // the read side. The escape hatch is an injected `kryptos`, which this gate
+  // lets through. The WRITE side (sign/encrypt) is legitimately selector-driven.
   const isReadOp = operation === "verify" || operation === "decrypt";
 
   if (!options.kryptos && !id && isReadOp) {

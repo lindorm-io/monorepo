@@ -4,11 +4,7 @@ import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import MockDate from "mockdate";
 import { beforeEach, describe, expect, test } from "vitest";
 import { AegisError, CoseError, CwmError, CwsError, CwtError } from "../errors/index.js";
-import {
-  TEST_EC_KEY_SIG,
-  TEST_OCT_KEY_SIG,
-  TEST_OKP_KEY_SIG,
-} from "../__fixtures__/keys.js";
+import { TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG } from "../__fixtures__/keys.js";
 import { algToCoseLabel } from "../internal/cose/alg-labels.js";
 import { Tag, decodeCbor, encodeCbor } from "../internal/cose/cbor.js";
 import type { CoseLabel } from "../internal/cose/cose-label.js";
@@ -103,37 +99,45 @@ describe("CwtKit (COSE_Sign1, asymmetric)", () => {
     });
   });
 
-  test("kid fail-fast — a token naming a different kid throws cwt_kid_mismatch", () => {
-    const token = kit.sign(wire);
-    const otherKit = new CwtKit({
+  test("verifies a token whose kid names another key when the configured key signed it", () => {
+    const token = new CwtKit({
       logger: createMockLogger(),
-      kryptos: TEST_OKP_KEY_SIG, // asymmetric, different id
-    });
+      kryptos: KryptosKit.clone(TEST_EC_KEY_SIG, { id: "the-signers-own-key-id" }),
+    }).sign(wire);
+
+    const { unprotectedHeader, payload } = kit.verify(token);
+
+    expect(unprotectedHeader.kid).toBe("the-signers-own-key-id");
+    expect(payload.sub).toBe("user-1");
+  });
+
+  test("refuses a token signed by another key of the configured algorithm at the signature", () => {
+    const token = new CwtKit({
+      logger: createMockLogger(),
+      kryptos: KryptosKit.generate.sig.ec({ algorithm: "ES512" }),
+    }).sign(wire);
 
     const error = (() => {
       try {
-        otherKit.verify(token);
+        kit.verify(token);
       } catch (err) {
         return err as AegisError;
       }
     })();
 
-    expect(error?.code).toBe("cwt_kid_mismatch");
-    // The title is derived from the format tag; `CwmKit` asserts its own, which
-    // is the pair that says the derivation distinguishes the two structures.
-    expect(error?.title).toBe("CWT Kid Mismatch");
+    expect(error).toBeInstanceOf(CwsError);
+    expect(error?.code).toBe("cose_signature_invalid");
   });
 
-  // The same fail-fast over a hint the SIGNATURE covers, which the row above cannot
-  // state: aegis writes `kid` unprotected, so only a foreign producer puts one in
-  // the protected bucket.
+  // The hint in the bucket the SIGNATURE covers: aegis writes `kid` unprotected,
+  // so only a foreign producer puts one in the protected bucket.
   //
   // ⚠ SLOT 1 IS EMPTIED ON PURPOSE. `foreignSignedCose` writes `kid` unprotected
   // too, and a token stating it in both buckets answers `cose_duplicate_kid`
   // instead — a different gate. The unprotected bucket is outside the
   // `Sig_structure` (RFC 9052 §4.4), so emptying it after sealing leaves the hint in
   // the protected bucket alone over a signature this kit's own key really made.
-  test("kid fail-fast — a signed kid naming a different key throws cwt_kid_mismatch", () => {
+  test("verifies a token whose signed kid names a key the kit does not hold when the kit's key signed it", () => {
     // A CWT Claims Set at the registered keys (RFC 8392 §4), temporally valid under
     // the mocked clock, so the token is one this kit would otherwise verify.
     const claims = encodeCbor(
@@ -157,18 +161,10 @@ describe("CwtKit (COSE_Sign1, asymmetric)", () => {
       new Map<CoseLabel, unknown>(),
     );
 
-    const error = (() => {
-      try {
-        kit.verify(token);
-      } catch (err) {
-        return err as AegisError;
-      }
-    })();
+    const { protectedHeader, payload } = kit.verify(token);
 
-    expect(error?.code).toBe("cwt_kid_mismatch");
-    // The PROTECTED value is the one reported, which is what says the read reached
-    // that bucket rather than merely refusing the token for some other reason.
-    expect(error?.data).toEqual({ kid: "a-key-the-vault-does-not-hold" });
+    expect(protectedHeader.kid).toBe("a-key-the-vault-does-not-hold");
+    expect(payload.sub).toBe("user-1");
   });
 
   describe("ML-DSA is official COSE (RFC 9964)", () => {
@@ -380,18 +376,16 @@ describe("CwtKit — the COSE_Sign1 it builds and the header rules it enforces",
   });
 
   test("verify refuses a COSE_Mac0 — the structure the key implies is the only one read", () => {
-    // ⚠ Shared id, so the kid fail-fast does not answer first. A symmetric token
-    // handed to a Sign1 kit is refused as MALFORMED, before any signature cycle
-    // it could never satisfy.
-    const id = "key_structure_mismatch_cwt";
+    // A symmetric token handed to a Sign1 kit is refused as MALFORMED, before any
+    // signature cycle it could never satisfy.
     const mac0 = new CwmKit({
       logger: createMockLogger(),
-      kryptos: KryptosKit.generate.sig.oct({ algorithm: "HS256", id }),
+      kryptos: KryptosKit.generate.sig.oct({ algorithm: "HS256" }),
     }).sign(wire);
 
     const sign1Kit = new CwtKit({
       logger: createMockLogger(),
-      kryptos: KryptosKit.generate.sig.ec({ algorithm: "ES512", id }),
+      kryptos: KryptosKit.generate.sig.ec({ algorithm: "ES512" }),
     });
 
     // ⚠ The refusal is a TRACKED leaf: the structural verdict on the claims
@@ -485,18 +479,13 @@ describe("CwtKit — the COSE_Sign1 it builds and the header rules it enforces",
  */
 describe("CwtKit — the algorithm-match gate answers under the cwt tag", () => {
   test("refuses a token whose protected alg is not the configured key's", () => {
-    // ⚠ The two keys SHARE an id on purpose. The kid fail-fast runs first, so
-    // two independently generated keys would answer `cwt_kid_mismatch` and the
-    // algorithm gate would never be reached.
-    const id = "key_algorithm_match_cwt";
-
     const signer = new CwtKit({
       logger: createMockLogger(),
-      kryptos: KryptosKit.generate.sig.ec({ algorithm: "ES256", id }),
+      kryptos: KryptosKit.generate.sig.ec({ algorithm: "ES256" }),
     });
     const verifier = new CwtKit({
       logger: createMockLogger(),
-      kryptos: KryptosKit.generate.sig.ec({ algorithm: "ES512", id }),
+      kryptos: KryptosKit.generate.sig.ec({ algorithm: "ES512" }),
     });
 
     const token = signer.sign(wire, { tokenType: "at" });
@@ -524,10 +513,10 @@ describe("CwtKit — the algorithm-match gate answers under the cwt tag", () => 
  * `Buffer.from` throws a raw `TypeError` outside the `AegisError` contract, so a
  * caller discriminating on that contract answers a server fault where it should
  * answer a rejected token. The token costs an attacker nothing: a legal
- * 4-element COSE_Sign1 with a matching `kid` and `alg` clears the kid fail-fast,
- * the typ gates, the arity, the algorithm match and the crit check before
- * reaching the crash. `CwtKit.decode` answers `cose_malformed` for the same
- * bytes, and the two verbs must not disagree about it.
+ * 4-element COSE_Sign1 with a matching `alg` clears the typ gates, the arity, the
+ * algorithm match and the crit check before reaching the crash. `CwtKit.decode`
+ * answers `cose_malformed` for the same bytes, and the two verbs must not
+ * disagree about it.
  */
 describe("CwtKit — a DETACHED (nil) payload is refused under the error contract", () => {
   const kit = new CwtKit({ logger: createMockLogger(), kryptos: TEST_EC_KEY_SIG });
@@ -773,8 +762,7 @@ describe("CwtKit — verify logs at entry, so a refusal is traceable", () => {
  * the token is a REAL foreign COSE object: `CwsKit` signs opaque content and
  * stamps `application/cws`, `typ` declares what the whole COSE object IS
  * (RFC 9596 §2), and a COSE object of another shape must not pass as a claims
- * CWT. Signed with the SAME key, so the kid fail-fast is cleared and the
- * typ is the only thing that refuses it.
+ * CWT. Signed with the SAME key, so the typ is the only thing that refuses it.
  */
 describe("CwtKit — the typ gate refuses a COSE object of another shape", () => {
   test("refuses an opaque COSE_Sign1 presented as a CWT", () => {

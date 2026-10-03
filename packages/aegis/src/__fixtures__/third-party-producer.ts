@@ -103,10 +103,9 @@ export type ForeignHeaders = {
   /**
    * COSE only: which bucket the producer's OWN `kid` rides in, `"unprotected"`
    * when unstated. It is always the signing key's id and never a value a caller
-   * chooses — a reader resolves the key the hint names and then compares the two
-   * (`src/internal/utils/assert-kid-match.ts#export const assertKidMatch`), so a
-   * literal would be refused for naming another key rather than answer the
-   * placement under test.
+   * chooses — a reader with no key supplied resolves the key the hint names from
+   * its vault, so a literal naming a key the vault does not hold would be refused
+   * at key resolution rather than answer the placement under test.
    */
   kidPlacement?: ForeignKidPlacement;
   /**

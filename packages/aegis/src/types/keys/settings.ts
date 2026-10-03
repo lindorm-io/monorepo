@@ -39,6 +39,6 @@ export type AegisSettings = {
   encrypt?: AegisEncKey;
   /** Deployment verification policy — a CHECK on the key the token names, or a key supplied outright. */
   verify?: AegisVerifyKey;
-  /** Deployment decryption policy — a CHECK on the key the token names. */
+  /** Deployment decryption policy — a CHECK on the key the token names, or a key supplied outright. */
   decrypt?: AegisDecryptKey;
 };

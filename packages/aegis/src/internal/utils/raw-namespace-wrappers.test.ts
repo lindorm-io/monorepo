@@ -317,7 +317,7 @@ describe("the raw namespace wrappers", () => {
    * exists to prevent.
    *
    * ⚠ The resolver's own rules — floor versus selector, injection, the issuer
-   * scope, kid mismatch — are stated once beside it in `resolve-key.test.ts`.
+   * scope — are stated once beside it in `resolve-key.test.ts`.
    * What is here is only that each namespace REACHES it.
    */
   describe("a wrapper applies the caller's key selector", () => {
