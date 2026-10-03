@@ -24,7 +24,7 @@ const ISSUER = "https://test.lindorm.io/";
 /**
  * THE POST-VERIFY CERTIFICATE BINDING CHECK.
  *
- * It runs AFTER the signature has been verified with the amphora-sourced key and
+ * It runs AFTER the signature has been verified with the configured kryptos and
  * it is NOT a key-selection step: a header-supplied certificate is never a key
  * source. What it answers is narrower — does the certificate the token NAMES
  * match the certificate the verifying key actually holds.

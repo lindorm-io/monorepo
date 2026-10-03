@@ -145,9 +145,9 @@ export class JwsKit implements IJwsKit {
     }
 
     // Content tamper check: runs AFTER signature verification has succeeded
-    // with the amphora-sourced kryptos. NOT a key selection step. Header
+    // with the configured kryptos. NOT a key selection step. Header
     // cert fields remain forbidden as key sources — see the SECURITY
-    // INVARIANT in Aegis.kryptosSig.
+    // INVARIANT in Aegis.ts.
     verifyCertBinding({
       header: {
         certificateThumbprint: decoded.header["x5t#S256"],

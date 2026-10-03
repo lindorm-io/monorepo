@@ -50,9 +50,9 @@ type VerifyCertBindingOptions = {
  * POST-VERIFY CONTENT TAMPER CHECK.
  *
  * This runs AFTER the signature/MAC/AEAD has already been verified with the
- * amphora-sourced kryptos. It is NOT a key selection step. Header cert fields
+ * configured kryptos. It is NOT a key selection step. Header cert fields
  * remain forbidden as key sources — see the SECURITY INVARIANT in
- * `Aegis.kryptosSig`.
+ * `Aegis.ts`.
  *
  * WHAT EACH MODE DOES WITH WHAT THE HEADER CARRIES:
  *

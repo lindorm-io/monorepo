@@ -27,6 +27,14 @@ export class AegisCertificateBindingSteps extends AegisStepsBase {
     };
   }
 
+  @Given("the mint is handed the certificate-bearing ES256 signing key outright")
+  theMintIsHandedTheCertificateBearingSigningKeyOutright(): void {
+    this.ctx.mintOptions.sign = {
+      ...this.ctx.mintOptions.sign,
+      key: { kryptos: TEST_EC_KEY_SIG_CERT },
+    };
+  }
+
   @Given("the mint is asked for the certificate binding {string}")
   theMintIsAskedForTheCertificateBinding(mode: string): void {
     if (!isBindCertificateMode(mode)) {
@@ -44,5 +52,12 @@ export class AegisCertificateBindingSteps extends AegisStepsBase {
 
     expect(refusal).toBeInstanceOf(AegisKeyError);
     expect(refusal).toMatchObject({ code });
+  }
+
+  @Then(
+    "the refusal names the key id of the certificate-bearing signing key, under the issuer {string}",
+  )
+  theRefusalNamesTheKeyIdOfTheCertificateBearingSigningKey(issuer: string): void {
+    expect(this.refusalData()).toEqual({ kid: TEST_EC_KEY_SIG_CERT.id, issuer });
   }
 }

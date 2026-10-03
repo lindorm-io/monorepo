@@ -90,7 +90,7 @@ export const verifyCwt = <C extends Dict = Dict>(
     });
 
   // Content tamper check, AFTER the signature/MAC has been verified with the
-  // resolved kryptos, as `JwtKit.verify` does. ⚠ NOT a key selection step — header
+  // configured kryptos, as `JwtKit.verify` does. ⚠ NOT a key selection step — header
   // cert fields stay forbidden as key sources.
   //
   // Off the PROTECTED bucket alone: any holder could rewrite a binding the

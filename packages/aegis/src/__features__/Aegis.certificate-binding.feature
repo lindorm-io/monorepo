@@ -132,3 +132,67 @@ Feature: Certificate binding
         | wire |
         | jose |
         | cose |
+
+  Rule: with no key supplied, a verify takes its key from the vault, never from the certificate chain the token carries
+
+    A chain travels inside the token it vouches for, so whoever wrote the
+    token chose it. Taking the leaf certificate's public key as the
+    verification key would let any signer present a key of its own and have
+    the token verify against it. On JOSE the recipient must validate the
+    chain according to RFC 5280 (RFC 7515 §4.1.6); on COSE a party relying
+    on a certificate needs to validate it, by the PKIX rules or by another
+    trust structure (RFC 9360 §2) — and aegis validates no certificate by
+    either means. JOSE lists the chain among the places a key may be found
+    (RFC 7515 §6, RFC 7515 Appendix D), so never consulting it is aegis
+    policy. The refusal stays conformant on both wires: a signature whose
+    key cannot be determined fails validation (RFC 7515 §6), and the public
+    key in a certificate the application cannot establish trust in cannot be
+    used for cryptographic operations (RFC 9360 §2). Neither the call nor
+    the deployment supplies a verify key, so the key can come from the vault
+    alone. The token is signed by the certificate-bearing key and carries
+    that key's own chain, so the leaf certificate holds exactly the public
+    key the signature needs. The mint is handed that key outright, so it
+    signs while the vault holds the baseline ES512 key alone; the token
+    verifies once a scenario adds the certificate-bearing key, so the
+    refusal is the vault's answer and not the chain's.
+
+    Background:
+      Given the content to mint
+        | subject | user-1 |
+      And an audience list whose only member is "client-1"
+      And no access token is co-issued
+      And the mint is handed the certificate-bearing ES256 signing key outright
+      And the mint is asked for the certificate binding "chain"
+
+    Scenario Outline: <wire>: the token carries a certificate chain in its protected header
+      When I mint the content under the "id_token" profile on the <wire> wire
+      Then the raw protected header carries all of <chain>
+
+      Examples:
+        | wire | chain    |
+        | jose | "x5c"    |
+        | cose | label 33 |
+
+    Scenario Outline: <wire>: a vault that does not hold the signing key refuses the token at key resolution
+      When I mint the content under the "id_token" profile on the <wire> wire
+      And I verify the token
+      Then verification is refused as a key error "verify_key_not_found"
+      And the refusal names the key id of the certificate-bearing signing key, under the issuer "https://test.lindorm.io/"
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
+    Scenario Outline: <wire>: the token verifies once the vault holds the signing key
+      Given the vault also holds a certificate-bearing ES256 signing key
+      When I mint the content under the "id_token" profile on the <wire> wire
+      And I verify the token
+      Then the verified token is a "<format>"
+      And the verified header includes
+        | algorithm | "ES256" |
+
+      Examples:
+        | wire | format |
+        | jose | jwt    |
+        | cose | cwt    |

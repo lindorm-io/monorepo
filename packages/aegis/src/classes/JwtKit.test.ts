@@ -841,12 +841,10 @@ describe("JwtKit", () => {
     });
   });
 
-  describe("header-embedded key source rejection", () => {
-    // These tests lock in the invariant that aegis NEVER uses header-embedded
-    // key material (jwk, x5c, x5u) for verification. The kit verifies against
-    // its configured kryptos only.
+  describe("a key parameter written into the header after signing", () => {
+    // x5c / x5chain as a key source: pinned in Aegis.certificate-binding.feature
 
-    test("a malicious jwk in the header must not be usable to verify the token", () => {
+    test("a jwk written into the header after signing fails verification", () => {
       const token = signDefault(kit, issuer, {
         expires: "1h",
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
@@ -873,7 +871,7 @@ describe("JwtKit", () => {
       expect(() => kit.verify(modifiedToken)).toThrow();
     });
 
-    test("a malicious x5c in the header must not be usable to verify the token", () => {
+    test("an x5c written into the header after signing fails verification", () => {
       const token = signDefault(kit, issuer, {
         expires: "1h",
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
@@ -895,7 +893,7 @@ describe("JwtKit", () => {
       expect(() => kit.verify(modifiedToken)).toThrow();
     });
 
-    test("a malicious x5u in the header must not be fetched or used to verify the token", () => {
+    test("an x5u written into the header after signing fails verification", () => {
       const token = signDefault(kit, issuer, {
         expires: "1h",
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
@@ -914,8 +912,6 @@ describe("JwtKit", () => {
         .replace(/=/g, "");
       const modifiedToken = [modifiedHeader, parts[1], parts[2]].join(".");
 
-      // Aegis must not make any HTTP request here; x5u is ignored outright.
-      // The verify throws because the header change broke the signature.
       expect(() => kit.verify(modifiedToken)).toThrow();
     });
   });

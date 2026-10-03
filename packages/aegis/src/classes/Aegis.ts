@@ -720,6 +720,7 @@ export class Aegis implements IAegis {
   // "header-embedded key" attack class that has hit multiple other JOSE
   // libraries. The only header input the verifier accepts is `kid`, used as a
   // lookup key into Amphora — never as a key itself.
+  // pinned for `x5c` / `x5chain`: Aegis.certificate-binding.feature
 
   private resolveSignKey(
     options: { key?: AegisSignKey },

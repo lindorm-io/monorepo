@@ -270,7 +270,7 @@ export class JweKit implements IJweKit {
     // Content tamper check: runs AFTER decryption has succeeded (AES-GCM
     // authenticated decryption validates AAD over the header). NOT a key
     // selection step — header cert fields remain forbidden as key sources.
-    // See the SECURITY INVARIANT in Aegis.kryptosSig.
+    // See the SECURITY INVARIANT in Aegis.ts.
     verifyCertBinding({
       header: {
         certificateThumbprint: header.certificateThumbprint,
