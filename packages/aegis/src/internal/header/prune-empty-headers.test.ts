@@ -53,9 +53,10 @@ describe("pruneEmptyHeaders", () => {
   /**
    * Rule 2: an UNREGISTERED key has no cell, so it has answered nothing and this
    * function has no verdict to apply. The closed-set rule disposes of it instead —
-   * DROPPED by the two JOSE passes, REFUSED with `header_no_cose_label` by the COSE
-   * one. Pruning it here would make an empty-valued unregistered parameter vanish
-   * before it reached the refusal a COSE caller must hear.
+   * REFUSED by the domain pass before it normalises, DROPPED by the wire-keyed JOSE
+   * pass, REFUSED with `header_no_cose_label` by the COSE one. Pruning it here would
+   * make an empty-valued unregistered parameter vanish before it reached the
+   * refusal a COSE caller must hear.
    */
   test("never touches an unregistered key, empty or not", () => {
     expect(

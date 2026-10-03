@@ -17,12 +17,16 @@ import { headerByJose } from "./header-registry.js";
  * mints a binding no certificate can satisfy (RFC 7515 §4.1.8). Both are silent, so
  * the only answer left is to fail at the WRITE.
  *
- * ⚠ IT GUARDS A BOUNDARY, not a path aegis walks. `DomainProtectedHeader` and
- * `WireProtectedHeader` both Omit the parameter, `mapTokenHeader` overwrites it
- * with the cert tier's value, and `Kryptos.certificateThumbprint` answers `null`
- * or a real digest — never `""`. `IKryptos` is an interface aegis does not own,
- * and a foreign implementation returning `""` for a key reporting
- * `hasCertificate` is the one live producer of this shape.
+ * ⚠ IT GUARDS A BOUNDARY, not a path a typed caller walks.
+ * `DomainProtectedHeader` and `WireProtectedHeader` both Omit the parameter, and
+ * `Kryptos.certificateThumbprint` answers `null` or a real digest — never `""`.
+ * Two producers reach it: an untyped caller naming the parameter in a header bag
+ * — `"x5t#S256"` in a wire-named bag, or `certificateThumbprint` in a
+ * domain-named one, which `mapTokenHeader` translates with no cert tier beside
+ * it (`domain-header-to-wire.ts`), so the caller's value reaches the wire bag —
+ * and a foreign `IKryptos`, an interface aegis does not own, returning `""` for a
+ * key reporting `hasCertificate`.
+ * pinned: sign-token.test.ts.
  *
  * ⚠ WRITE SIDE ONLY, like the prune. A FOREIGN token carrying `x5t#S256: ""`
  * still parses and is still refused by `verify-cert-binding.ts`, which finds no

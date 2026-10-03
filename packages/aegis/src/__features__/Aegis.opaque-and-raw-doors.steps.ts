@@ -4,7 +4,7 @@ import type { KryptosAlgClass } from "@lindorm/kryptos";
 import { expect } from "vitest";
 import { AegisStepsBase } from "../__fixtures__/aegis-steps-base.js";
 import type { Wire } from "../__fixtures__/raw-bucket.js";
-import { OPAQUE_FORMAT } from "../__fixtures__/wire-formats.js";
+import { OPAQUE_FORMAT, SEALED_FORMAT } from "../__fixtures__/wire-formats.js";
 
 @Binding()
 export class AegisOpaqueAndRawDoorsSteps extends AegisStepsBase {
@@ -51,6 +51,22 @@ export class AegisOpaqueAndRawDoorsSteps extends AegisStepsBase {
 
     this.ctx.signed = signed;
     this.ctx.token = signed.token;
+  }
+
+  @When("I seal the signed token on the {wire} wire")
+  async iSealTheSignedToken(wire: Wire): Promise<void> {
+    this.assertScenarioWire(wire);
+    const format = SEALED_FORMAT[wire];
+    const { token } = this.signed();
+
+    const encrypted = await this.attempt(() => this.ctx.aegis.encrypt(token, { format }));
+
+    if (encrypted === undefined) return;
+
+    expect(encrypted.format).toBe(format);
+
+    this.ctx.encrypted = encrypted;
+    this.ctx.token = encrypted.token;
   }
 
   // the domain result

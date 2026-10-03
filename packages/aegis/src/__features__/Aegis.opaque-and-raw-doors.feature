@@ -318,6 +318,230 @@ Feature: The opaque signed artifact and the raw wire doors
         | jose | "typ"    | application/at+jws |
         | cose | label 16 | application/at+cws |
 
+  Rule: a caller asserting a token type is refused by an opaque signed token of another type
+
+    An opaque signature declares its type in the same header parameter a
+    claims token does (RFC 7515 §4.1.9, RFC 9596 §2), so a caller asserting
+    the type of the token it verifies is asserting on that header whichever
+    kind of token arrives. The asserted type is spelled in the family of the
+    token's own format, the spelling the opaque mint stamps: an access token is
+    `application/at+jws` as an opaque JOSE signature and `application/at+cws`
+    as an opaque COSE one. A verify that ignored the assertion would accept a
+    refresh handle where the caller demanded an access handle, while the
+    caller believed the type had been checked. The refusal reports the type
+    header it read, so it is attributable to the type comparison. The
+    comparison on the whole media type is aegis policy.
+
+    Background:
+      Given the payload to sign
+        | tid | at_abc |
+      And the opaque signature carries the type prefix "at"
+      And the verifier asserts
+        """
+        { "tokenType": "refresh_token" }
+        """
+
+    Scenario Outline: <wire>: the assertion is refused on the whole media type the opaque token carries
+      When I sign the payload as opaque content on the <wire> wire
+      And I verify the token
+      Then verification is refused as a domain error "token_type_mismatch"
+      And the refusal's data is exactly
+        | typ    | "<typ>"    |
+        | format | "<format>" |
+
+      Examples:
+        | wire | typ                | format |
+        | jose | application/at+jws | jws    |
+        | cose | application/at+cws | cws    |
+
+  Rule: a caller asserting a token type is answered by an opaque signed token of that type
+
+    The type assertion must refuse exactly the opaque tokens of another type
+    and no others. Spelled in the claims family, an access-token assertion
+    would expect `application/at+jwt`, which no opaque signature carries, and
+    every typed handle aegis mints would be refused. The media type the
+    assertion matched is read off the raw bytes, not reconstructed by aegis on
+    the way out. Aegis policy.
+
+    Background:
+      Given the payload to sign
+        | tid | at_abc |
+      And the opaque signature carries the type prefix "at"
+      And the verifier asserts
+        """
+        { "tokenType": "access_token" }
+        """
+
+    Scenario Outline: <wire>: the opaque token verifies under the assertion
+      When I sign the payload as opaque content on the <wire> wire
+      And I verify the token
+      Then the verified token is a "<format>"
+
+      Examples:
+        | wire | format |
+        | jose | jws    |
+        | cose | cws    |
+
+    Scenario Outline: <wire>: the type header the assertion matched is the opaque family's
+      When I sign the payload as opaque content on the <wire> wire
+      And I verify the token
+      Then the raw protected header carries <type key> "<media type>"
+
+      Examples:
+        | wire | type key | media type         |
+        | jose | "typ"    | application/at+jws |
+        | cose | label 16 | application/at+cws |
+
+  Rule: a caller's token type assertion reaches an opaque signed token sealed in an encrypting outer
+
+    The cose wire has no scenario: a COSE encrypting outer admits only a
+    claims token as its plaintext, so no opaque COSE signature reaches the
+    verify sealed. A verify peels the encrypting outer and verifies the
+    plaintext under the same assertion, so an opaque JOSE signature sealed in
+    a JWE is held to the caller's type exactly as a bare one is. The refusal
+    reports the sealed token's own type and format, which is what the caller
+    asserted on. Aegis policy.
+
+    Background:
+      Given the vault also holds an ECDH-ES encryption key
+      And the payload to sign
+        | tid | at_abc |
+      And the opaque signature carries the type prefix "at"
+
+    Scenario: jose: a sealed opaque token of another type is refused on the type it carries
+      Given the verifier asserts
+        """
+        { "tokenType": "refresh_token" }
+        """
+      When I sign the payload as opaque content on the jose wire
+      And I seal the signed token on the jose wire
+      And I verify the token
+      Then verification is refused as a domain error "token_type_mismatch"
+      And the refusal's data is exactly
+        | typ    | "application/at+jws" |
+        | format | "jws"                |
+
+    Scenario: jose: a sealed opaque token of the asserted type verifies through its outer
+      Given the verifier asserts
+        """
+        { "tokenType": "access_token" }
+        """
+      When I sign the payload as opaque content on the jose wire
+      And I seal the signed token on the jose wire
+      And I verify the token
+      Then the verified token is a "jws"
+      And the verified token reports the wrapper "jwe"
+
+  Rule: a caller asserting a claim is refused by an opaque signed token, which makes none
+
+    An opaque signature makes no claims, so its claim set is empty, and a
+    claim matcher stated against it asks about a claim the token does not
+    carry. Judged against the empty set, a matcher requiring a value fails
+    exactly as it would against a claims token lacking the claim; a verify
+    that skipped it would accept a handle under a condition the caller
+    believes was checked. The refusal names the matcher in the caller's
+    vocabulary. `subject` is a registered claim, so the refusal can only be
+    about the claim being absent; a raw access token is hashed with the
+    signature's own algorithm before it is compared, so its refusal shows the
+    hash is derived on this token too. Aegis policy.
+
+    Background:
+      Given the payload to sign
+        | tid | at_abc |
+
+    Scenario Outline: <wire>: a claim matcher is refused under the claim the caller named
+      Given the verifier asserts
+        """
+        { "subject": "user-1" }
+        """
+      When I sign the payload as opaque content on the <wire> wire
+      And I verify the token
+      Then verification is refused as a domain error "claims_invalid"
+      And the refusal's data is exactly
+        | invalid | ["subject"] |
+        | format  | "<format>"  |
+
+      Examples:
+        | wire | format |
+        | jose | jws    |
+        | cose | cws    |
+
+    Scenario Outline: <wire>: a raw access token is refused under the source the caller presented
+      Given the verifier asserts
+        """
+        { "accessToken": "the-presented-access-token" }
+        """
+      When I sign the payload as opaque content on the <wire> wire
+      And I verify the token
+      Then verification is refused as a domain error "claims_invalid"
+      And the refusal's data is exactly
+        | invalid | ["accessToken"] |
+        | format  | "<format>"      |
+
+      Examples:
+        | wire | format |
+        | jose | jws    |
+        | cose | cws    |
+
+  Rule: a caller nesting a token type assertion inside a condition operator is refused at an opaque signed token
+
+    `tokenType` asserts the token's type, which lives in a header rather than
+    in a claim, so it means something only as a top-level entry of the
+    matcher argument. Inside `$and`, `$or` or `$not` it would name a claim no
+    token carries, so the key is refused by name rather than evaluated as a
+    condition the caller did not mean — on an opaque signature exactly as on
+    a claims token. Aegis policy.
+
+    Background:
+      Given the payload to sign
+        | tid | at_abc |
+      And the opaque signature carries the type prefix "at"
+
+    Scenario Outline: <wire>: the token type nested in a conjunction is refused, naming the key
+      Given the verifier asserts
+        """
+        { "$and": [{ "tokenType": "access_token" }] }
+        """
+      When I sign the payload as opaque content on the <wire> wire
+      And I verify the token
+      Then verification is refused as a domain error "jwt_verify_unsupported_key"
+      And the refusal names the matcher "tokenType"
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
+    Scenario Outline: <wire>: the token type nested in a disjunction is refused, naming the key
+      Given the verifier asserts
+        """
+        { "$or": [{ "tokenType": "access_token" }] }
+        """
+      When I sign the payload as opaque content on the <wire> wire
+      And I verify the token
+      Then verification is refused as a domain error "jwt_verify_unsupported_key"
+      And the refusal names the matcher "tokenType"
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
+    Scenario Outline: <wire>: the token type nested in a negation is refused, naming the key
+      Given the verifier asserts
+        """
+        { "$not": { "tokenType": "refresh_token" } }
+        """
+      When I sign the payload as opaque content on the <wire> wire
+      And I verify the token
+      Then verification is refused as a domain error "jwt_verify_unsupported_key"
+      And the refusal names the matcher "tokenType"
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
   Rule: the raw claims verify accepts a token that carries no type header
 
     `typ` is OPTIONAL, and processing it belongs to the application rather

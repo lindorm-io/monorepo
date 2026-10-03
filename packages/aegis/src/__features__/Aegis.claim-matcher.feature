@@ -231,6 +231,68 @@ Feature: The claim matcher a verify is asked beyond the floor
         | jose |
         | cose |
 
+  Rule: a caller nesting a token type assertion inside a condition operator is refused as an unsupported key
+
+    `tokenType` asserts the token's type, which both wires carry in a header
+    rather than in a claim, so it means something only as a top-level entry
+    of the matcher argument, where it is checked against the type header. The
+    members of `$and`, `$or` and `$not` are conditions over claims, and inside
+    one `tokenType` would name a claim no token carries: evaluated, the
+    caller's type assertion would quietly become a test of an absent claim.
+    The key is refused by name instead, so the caller learns the assertion
+    belongs at the top level. Aegis policy.
+
+    Background:
+      Given the content to mint
+        | subject | user-1 |
+      And the token type "test_token"
+      And the content expires in "1h"
+
+    Scenario Outline: <wire>: the token type nested in a conjunction is refused, naming the key
+      Given the verifier asserts
+        """json
+        { "$and": [{ "tokenType": "test_token" }] }
+        """
+      When I mint the content under the "default" profile on the <wire> wire
+      And I verify the token
+      Then verification is refused as a domain error "jwt_verify_unsupported_key"
+      And the refusal names the matcher "tokenType"
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
+    Scenario Outline: <wire>: the token type nested in a disjunction is refused, naming the key
+      Given the verifier asserts
+        """json
+        { "$or": [{ "tokenType": "test_token" }] }
+        """
+      When I mint the content under the "default" profile on the <wire> wire
+      And I verify the token
+      Then verification is refused as a domain error "jwt_verify_unsupported_key"
+      And the refusal names the matcher "tokenType"
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
+    Scenario Outline: <wire>: the token type nested in a negation is refused, naming the key
+      Given the verifier asserts
+        """json
+        { "$not": { "tokenType": "access_token" } }
+        """
+      When I mint the content under the "default" profile on the <wire> wire
+      And I verify the token
+      Then verification is refused as a domain error "jwt_verify_unsupported_key"
+      And the refusal names the matcher "tokenType"
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
   Rule: a caller bounding the issuer with a condition is refused by a token naming another issuer
 
     An issuer bound is rarely a bare equality: a client accepting tokens from

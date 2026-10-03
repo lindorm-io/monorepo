@@ -13,6 +13,8 @@ import { declaredCritToWire } from "../header/declared-crit-to-wire.js";
 import { tokenWireFor } from "../wire/token-wire-for.js";
 import type { AegisDeps } from "./aegis-deps.js";
 import { applyVerifyPolicy } from "./apply-verify-policy.js";
+import { assertCallerTokenType } from "./assert-caller-token-type.js";
+import { assertClaimMatchers } from "./assert-claim-matchers.js";
 import { buildTokenResult } from "./build-token-result.js";
 import { decryptOuter } from "./decrypt-outer.js";
 import { detectTokenFormat } from "./detect-token-format.js";
@@ -224,8 +226,9 @@ export const verifyToken = async <C extends Dict = Dict>({
   }
 
   // `tokenType` asserts the token's TYPE, which BOTH wires carry in a HEADER
-  // rather than a claim — so the kit enforces it and it must NOT reach the claim
-  // predicate. The rest of `assert` is claim matchers.
+  // rather than a claim — so it is asserted against the type header on both
+  // branches below and must NOT reach the claim predicate. The rest of `assert`
+  // is claim matchers.
   const { tokenType, ...claimMatchers } = assert ?? {};
 
   // ---- an opaque signed token ---------------------------------------------
@@ -241,12 +244,27 @@ export const verifyToken = async <C extends Dict = Dict>({
       });
     }
 
-    // ⚠ `tokenType` is NOT asserted on this branch: the opaque kit verify has no
-    // typ hook at all — `VerifyUnstructuredTokenOptions` declares
-    // `certBindingMode` and `crit` and nothing else — so there is nothing to
-    // thread it to. Recorded rather than silently dropped; giving it one is a kit
-    // change.
     const verified = await wire.verifyOpaque({ token, deps, options, crit });
+
+    assertCallerTokenType({
+      wire,
+      tokenType,
+      typ: verified.protectedHeader.typ,
+      format,
+    });
+
+    // ⚠ An opaque token makes no claims, so its claim set is EMPTY — and the
+    // caller's matchers are judged against it rather than skipped, or a matcher
+    // stated here would be dropped unheard. pinned:
+    // `Aegis.opaque-and-raw-doors.feature` "a caller asserting a claim is refused
+    // by an opaque signed token, which makes none".
+    assertClaimMatchers({
+      wireClaims: {},
+      algorithm: verified.algorithm,
+      assert: claimMatchers,
+      format,
+      nameOf: wire.nameOf,
+    });
 
     return {
       format,
@@ -273,26 +291,12 @@ export const verifyToken = async <C extends Dict = Dict>({
     issuer: issuer ?? floor?.expectedIssuer,
   });
 
-  // The caller's own type assertion, ONE implementation for both wires.
-  //
-  // ⚠ It compares the whole media type, not the bare prefix the kits take. A type
-  // whose short name IS the conventional form — `id_token` reduces to `JWT` —
-  // yields no prefix, and the kits gate their check on the prefix being defined,
-  // so a kit-side assertion silently does not run for it.
-  if (tokenType !== undefined) {
-    const expected = wire.assertedTyp(tokenType);
-
-    if (read.protectedHeader.typ !== expected) {
-      throw new AegisDomainError("Invalid token", {
-        code: "token_type_mismatch",
-        data: { typ: read.protectedHeader.typ, format: read.format },
-        debug: { expected, tokenType },
-        title: "Token Type Mismatch",
-        details:
-          "The token's type header does not match the tokenType asserted for this verification.",
-      });
-    }
-  }
+  assertCallerTokenType({
+    wire,
+    tokenType,
+    typ: read.protectedHeader.typ,
+    format: read.format,
+  });
 
   const result = buildTokenResult<C>({
     format: read.format,

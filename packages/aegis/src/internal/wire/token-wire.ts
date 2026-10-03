@@ -98,6 +98,8 @@ export type OpaqueVerified = {
   payload: TokenContent;
   protectedHeader: WireTokenHeader;
   unprotectedHeader: Partial<WireTokenHeader>;
+  /** The algorithm the signature was ACTUALLY verified under — see {@link ClaimsVerified}. */
+  algorithm: KryptosAlgorithm;
 };
 
 /**
@@ -295,14 +297,16 @@ export type TokenWire = {
    */
   profileTyp(typ: TokenProfileTyp): string | undefined;
   /**
-   * The FULL type header a caller's `assert.tokenType` expects on this wire.
+   * The FULL type header a caller's `assert.tokenType` expects on a token of
+   * `format` — the family of that format, so a JWS and a JWT asserted as the same
+   * type expect `+jws` and `+jwt` respectively.
    *
    * ⚠ Full, not the bare prefix the kits take. A type whose short name is the bare
    * conventional form (`id_token` reduces to `JWT`) has NO prefix, and the kit gate
    * is `if (options.tokenType !== undefined)` — so a prefix would leave the
    * assertion unenforced for exactly that type.
    */
-  assertedTyp(tokenType: string): string | undefined;
+  assertedTyp(tokenType: string, format: TokenFormat): string;
 
   /** Decode a claims token WITHOUT a key and WITHOUT checking its signature. */
   decodeClaims(token: string): ClaimsRead;

@@ -963,6 +963,119 @@ Feature: Critical header parameters
         | jose |
         | cose |
 
+  Rule: a domain-named write refuses a header parameter spelled in wire names
+
+    The domain tier exists so a caller never has to learn either encoding's
+    vocabulary, and the header bag of an unprofiled signature, of an
+    unprofiled encryption and of a mint's signature takes every parameter by
+    its aegis name. A wire spelling there is a parameter the caller meant to send under
+    a name the bag does not speak: carrying it would make the bag speak two
+    vocabularies, and dropping it would produce a token without a parameter
+    the caller stated, which the caller would never hear about. So the write
+    is refused, and the refusal names the spelling the bag expects. `oid` is
+    a parameter a caller may set, so the spelling is the only thing wrong
+    with the header. The refusal mirrors the domain verify door's refusal of
+    a wire-spelled critical declaration, and it is aegis policy.
+
+    Background:
+      Given the domain header
+        | oid | "1.2.3.4" |
+
+    Scenario Outline: <wire>: an unprofiled signature is refused, naming the domain spelling it expects
+      Given the claims to sign
+        | subject | user-1 |
+      When I sign the claims without a profile on the <wire> wire
+      Then signing is refused as a domain error "header_not_domain_named"
+      And the refusal names the parameter "oid" and expects the domain spelling "objectId"
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
+    Scenario Outline: <wire>: a profiled mint is refused, naming the domain spelling it expects
+      Given the content to mint
+        | subject | user-1 |
+      And the token type "test_token"
+      And the content expires in "1h"
+      When I mint the content under the "default" profile on the <wire> wire
+      Then minting is refused as a domain error "header_not_domain_named"
+      And the refusal names the parameter "oid" and expects the domain spelling "objectId"
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
+    Scenario Outline: <wire>: an encryption is refused, naming the domain spelling it expects
+      Given the vault also holds an ECDH-ES encryption key
+      And the vault also holds a dir encryption key
+      And the data to encrypt
+        | subject | user-1 |
+      When I encrypt the data on the <wire> wire
+      Then encryption is refused as a domain error "header_not_domain_named"
+      And the refusal names the parameter "oid" and expects the domain spelling "objectId"
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
+  Rule: a domain-named write refuses a header parameter the library does not know
+
+    The domain header bag is a closed set: every parameter in it has a row in
+    the header registry, which is what gives it a domain name and tells each
+    wire how to carry it. A parameter with no row has no domain name, so no
+    domain-named bag can carry it, and dropping it would produce a token
+    without a parameter the caller stated, which the caller would never hear
+    about. So the write is refused, and the refusal names the parameter. The
+    name is one no specification defines, so the refusal can only be about
+    the closed set. Aegis policy.
+
+    Background:
+      Given the domain header
+        | x-lindorm-hint | "carried" |
+
+    Scenario Outline: <wire>: an unprofiled signature is refused, naming the parameter
+      Given the claims to sign
+        | subject | user-1 |
+      When I sign the claims without a profile on the <wire> wire
+      Then signing is refused as a domain error "header_unknown_parameter"
+      And the refusal names the parameter "x-lindorm-hint"
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
+    Scenario Outline: <wire>: a profiled mint is refused, naming the parameter
+      Given the content to mint
+        | subject | user-1 |
+      And the token type "test_token"
+      And the content expires in "1h"
+      When I mint the content under the "default" profile on the <wire> wire
+      Then minting is refused as a domain error "header_unknown_parameter"
+      And the refusal names the parameter "x-lindorm-hint"
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
+    Scenario Outline: <wire>: an encryption is refused, naming the parameter
+      Given the vault also holds an ECDH-ES encryption key
+      And the vault also holds a dir encryption key
+      And the data to encrypt
+        | subject | user-1 |
+      When I encrypt the data on the <wire> wire
+      Then encryption is refused as a domain error "header_unknown_parameter"
+      And the refusal names the parameter "x-lindorm-hint"
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
   Rule: a mint refuses a critical-parameter list naming a parameter the specification itself defines
 
     A producer may not name a specification-defined parameter in `crit`, and a

@@ -52,7 +52,7 @@ export const createIdentityMatchers = (
 
     return (key, value) => {
       // The wire name comes from `matcherWireName`, the same registry resolution
-      // `applyVerifyPolicy` inverts to report a refusal in the caller's vocabulary.
+      // `assertClaimMatchers` inverts to report a refusal in the caller's vocabulary.
       // The hash-derive matchers name a SOURCE value rather than a claim, so the
       // hash branch below still needs which domain claim they land in; an unmapped
       // key throws.

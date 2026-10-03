@@ -3,7 +3,7 @@ import { HASH_MATCHERS } from "./hash-matchers.js";
 
 /**
  * ONE resolution, both directions: `createIdentityMatchers` keys its predicate by
- * this, and `applyVerifyPolicy` maps the failing predicate keys back to the
+ * this, and `assertClaimMatchers` maps the failing predicate keys back to the
  * caller's vocabulary. A second copy would diverge on the hash matchers, whose
  * key (`accessToken`) is not the claim it lands in (`accessTokenHash`), and the
  * refusal would then name a key the caller never wrote.

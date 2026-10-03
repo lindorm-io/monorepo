@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, test } from "vitest";
 import { CBOR_TAG, inspectToken } from "../../__fixtures__/inspect-token.js";
 import { TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG } from "../../__fixtures__/keys.js";
 import { Aegis } from "../../classes/Aegis.js";
+import { CwtError, JwtError } from "../../errors/index.js";
 import { coseWireKey } from "../header/header-registry.js";
 import type { TokenType } from "../../constants/token-type.js";
 import type { ClaimsTokenFormat } from "../../types/index.js";
@@ -397,4 +398,58 @@ describe("aegis.sign", () => {
     expect(compactHeader).toMatchObject({ [compactKey]: "obj-1" });
     expect(compactHeader).not.toHaveProperty(String(interoperableKey));
   });
+
+  test.each(["jwt", "cwt"] as const)(
+    "%s: a domain header field left undefined is an unset field, signed without it and never refused",
+    async (format) => {
+      const signed = await aegis.sign({
+        format,
+        payload: { subject: "u1" },
+        header: { objectId: undefined, notAHeader: undefined } as never,
+        key: { kryptos: keyFor(format) },
+      });
+
+      const header = asDict(inspectToken(signed.token).protectedHeader);
+
+      expect(header).not.toHaveProperty("oid");
+      expect(header).not.toHaveProperty("notAHeader");
+    },
+  );
+
+  test.each([
+    ["jwt", JwtError, "jose_reserved_header", { parameter: "x5c" }],
+    ["cwt", CwtError, "cose_reserved_header", { parameter: "x5c", bucket: "header" }],
+  ] as const)(
+    "%s: a certificate chain a caller states in the domain header is refused by the kit, never overwritten",
+    async (format, error, code, data) => {
+      const signing = aegis.sign({
+        format,
+        payload: { subject: "u1" },
+        header: { certificateChain: ["MIIB"] } as never,
+        key: { kryptos: keyFor(format) },
+      });
+
+      await expect(signing).rejects.toThrow(error);
+      await expect(signing).rejects.toThrow(expect.objectContaining({ code, data }));
+    },
+  );
+
+  test.each(["jwt", "cwt"] as const)(
+    "%s: an empty certificate thumbprint a caller states in the domain header is refused, never dropped",
+    async (format) => {
+      await expect(
+        aegis.sign({
+          format,
+          payload: { subject: "u1" },
+          header: { certificateThumbprint: "" } as never,
+          key: { kryptos: keyFor(format) },
+        }),
+      ).rejects.toThrow(
+        expect.objectContaining({
+          code: "header_empty_parameter",
+          data: { parameter: "x5t#S256", whenEmpty: "refuse" },
+        }),
+      );
+    },
+  );
 });

@@ -1,7 +1,7 @@
 import { isArray, isFinite, isObject, isString, isUrlLike } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
-import { JoseError } from "../../errors/index.js";
+import { AegisDomainError, JoseError } from "../../errors/index.js";
 import { normaliseHeaders } from "../header/normalise-headers.js";
 import type {
   CertificateHeaderFields,
@@ -133,6 +133,42 @@ const decodeHeaderValue = (spec: HeaderSpec, decoded: Dict): unknown => {
 };
 
 /**
+ * The refusal for a key in a DOMAIN header bag that no registry row spells that
+ * way: a registered parameter named by its wire spelling, or a name the registry
+ * does not know at all.
+ *
+ * ⚠ `jwk` is spelled the same at both tiers, so it resolves through
+ * `headerByDomain` and never reaches this. pinned: token-header.test.ts.
+ */
+const notDomainHeaderParameter = (key: string): AegisDomainError => {
+  const spec = headerByJose(key);
+
+  if (spec !== undefined) {
+    return new AegisDomainError(
+      `Header parameter "${key}" is named in the wire vocabulary`,
+      {
+        code: "header_not_domain_named",
+        data: { parameter: key, expected: spec.domain },
+        title: "Header Not Domain Named",
+        details:
+          "This header bag — `header` at the domain sign and encrypt doors, `sign.header` at a mint — takes header parameters by their DOMAIN names only, and this name is a wire spelling. A parameter the caller may set is stated in this bag by its domain spelling; one the kit writes itself cannot be stated in this bag under either spelling.",
+      },
+    );
+  }
+
+  return new AegisDomainError(
+    `Header parameter "${key}" is not a domain header parameter`,
+    {
+      code: "header_unknown_parameter",
+      data: { parameter: key },
+      title: "Header Unknown Parameter",
+      details:
+        "This header bag — `header` at the domain sign and encrypt doors, `sign.header` at a mint — takes a closed set of header parameters, each by its domain name, and this name is none of them. A parameter the header registry does not define has no domain name, so no domain-named bag can carry it.",
+    },
+  );
+};
+
+/**
  * Map domain header options (+ the kit-resolved cert fields) to the raw JOSE wire
  * header. The cert fields (`certificateChain`/`certificateThumbprint`/
  * `certificateThumbprintSha1`) are derived by the kit from the kryptos rather
@@ -153,19 +189,23 @@ export const mapTokenHeader = (
   options: DomainTokenHeaderOptions,
   cert: CertificateHeaderFields = {},
 ): WireTokenHeaderOptions => {
-  const source: Dict = {
-    ...options,
-    certificateChain: cert.certificateChain,
-    certificateThumbprint: cert.certificateThumbprint,
-    certificateThumbprintSha1: cert.certificateThumbprintSha1,
-  };
+  // ⚠ The cert tier is SPREAD, never written field by field: a field the kit did
+  // not derive would overwrite a caller's kit-owned cert field with `undefined`,
+  // and the kit's reserved-header refusal would never see it.
+  // pinned: sign-token.test.ts.
+  const source: Dict = { ...options, ...cert };
 
-  // Single pass over the domain-keyed source; an unregistered key is dropped
-  // (headers are a closed set), and so is a value the registry's guard rejects.
+  // Single pass over the domain-keyed source; a key no registry row spells this
+  // way is refused by name, and a value the registry's guard rejects is dropped.
   const raw: Dict = {};
   for (const key of Object.keys(source)) {
+    // ⚠ An `undefined` is an unset optional field a door spread into the bag, not
+    // a parameter, so it is skipped before the refusal below can answer it.
+    // pinned: token-header.test.ts, sign-token.test.ts.
+    if (source[key] === undefined) continue;
+
     const spec = headerByDomain(key);
-    if (!spec) continue;
+    if (!spec) throw notDomainHeaderParameter(key);
 
     const encoded = encodeHeaderValue(spec, source[key]);
     if (encoded !== undefined) raw[headerJoseName(spec)] = encoded;
@@ -373,7 +413,7 @@ export const wireHeaderToCoseMap = (
   if (!bag) return map;
 
   for (const [jose, value] of Object.entries(normaliseHeaders(bag as Dict))) {
-    // ⚠ An UNREGISTERED wire key is NOT dropped here, unlike the two JOSE passes:
+    // ⚠ An UNREGISTERED wire key is NOT dropped here, unlike the wire-keyed JOSE pass:
     // `coseWireKey` refuses it with `header_no_cose_label`, so a caller naming a
     // parameter COSE cannot carry hears about it. Hence no registry lookup first —
     // registered and unregistered take the same call.

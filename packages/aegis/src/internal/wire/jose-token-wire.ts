@@ -101,7 +101,7 @@ export const JOSE_TOKEN_WIRE: TokenWire = {
 
   profileTyp: (typ: TokenProfileTyp) => (typ.presence === "none" ? undefined : typ.value),
 
-  assertedTyp: (tokenType) => computeTypHeader(tokenType, "jwt"),
+  assertedTyp: (tokenType, format) => computeTypHeader(tokenType, format),
 
   decodeClaims: (token) => {
     const decoded = JwtKit.decode(token);
@@ -207,6 +207,9 @@ export const JOSE_TOKEN_WIRE: TokenWire = {
       payload: verified.payload,
       protectedHeader: verified.header,
       unprotectedHeader: {},
+      // The header alg `JwsKit.verify` already refuses unless it equals the
+      // resolved key's own (`assert-protected-header-gates.ts`).
+      algorithm: verified.header.alg,
     };
   },
 

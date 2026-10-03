@@ -249,6 +249,11 @@ export class AegisProfileLessSteps extends AegisStepsBase {
     this.refusedAsADomainError(undefined);
   }
 
+  @Then("encryption is refused as a domain error {string}")
+  encryptionIsRefusedAsADomainErrorUnder(code: string): void {
+    this.refusedAsADomainError(code);
+  }
+
   @Then("the refusal names the claim {string} and locates the fault at {string}: {}")
   theRefusalNamesTheClaim(claim: string, key: string, message: string): void {
     expect(this.refusalData()).toEqual({ claim, invalid: [{ key, message }] });

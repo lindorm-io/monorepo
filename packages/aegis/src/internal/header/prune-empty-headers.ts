@@ -8,9 +8,9 @@ import { headerByJose } from "./header-registry.js";
  * `internal/claims/prune-empty-claims.ts`.
  *
  * ⚠ AN UNREGISTERED KEY IS NEVER PRUNED: there is no cell to read, so it has not
- * answered. The closed-set rule disposes of it instead — DROPPED by the two JOSE
- * passes, REFUSED with `header_no_cose_label` by the COSE one
- * (`internal/utils/token-header.ts`).
+ * answered. The closed-set rule disposes of it instead — REFUSED by the domain
+ * pass before it normalises, DROPPED by the wire-keyed JOSE pass, REFUSED with
+ * `header_no_cose_label` by the COSE one (`internal/utils/token-header.ts`).
  *
  * ⚠ ON COSE THAT COMPOSES INTO AN ASYMMETRY that reads like one inconsistent rule
  * and is two rules meeting: through `buildCoseHeaders`, `{ apu: "x" }` and

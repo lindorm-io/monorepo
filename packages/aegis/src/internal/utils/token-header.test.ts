@@ -1,4 +1,5 @@
 import type { WireTokenHeader, DomainTokenHeaderOptions } from "../../types/index.js";
+import { AegisDomainError } from "../../errors/index.js";
 import { headerCoseLabel, headerByJose } from "../header/header-registry.js";
 import {
   mapTokenHeader,
@@ -58,27 +59,108 @@ describe("data-driven header codec", () => {
 
   /**
    * ⛔ COMPRESSION CROSSES NEITHER PASS, in either vocabulary. aegis compresses no
-   * payload, so no registry row answers for `zip` and the closed-set rule disposes
-   * of it at the domain crossing as well as at the emission boundary.
-   * RFC 7516 §4.1.3.
+   * payload, so no registry row answers for `zip`: the domain crossing refuses it
+   * by name and the emission boundary disposes of it. RFC 7516 §4.1.3.
    */
-  test("compression is not a parameter either pass carries", () => {
-    expect(mapTokenHeader({ zip: "DEF" } as never)).toEqual({});
+  test("compression is refused by name at the domain crossing", () => {
+    expect(() => mapTokenHeader({ zip: "DEF" } as never)).toThrow(
+      expect.objectContaining({
+        code: "header_unknown_parameter",
+        data: { parameter: "zip" },
+      }),
+    );
+  });
+
+  test("compression is not a parameter the emission boundary carries", () => {
     expect(shapeWireHeader({ zip: "DEF" } as never)).toEqual({});
   });
 
-  test("an unregistered domain key is dropped on write (headers are a closed set)", () => {
+  test("an unregistered domain key is refused by name on write, as an aegis domain error", () => {
     const options = {
       algorithm: "ES512",
       headerType: "JWS",
       keyId: "test-key-id",
-      notAHeader: "should-be-dropped",
+      notAHeader: "stated",
     } as DomainTokenHeaderOptions;
 
-    const raw = mapTokenHeader(options) as Record<string, unknown>;
+    expect(() => mapTokenHeader(options)).toThrow(AegisDomainError);
+    expect(() => mapTokenHeader(options)).toThrow(
+      expect.objectContaining({
+        code: "header_unknown_parameter",
+        data: { parameter: "notAHeader" },
+      }),
+    );
+  });
 
-    expect(raw.notAHeader).toBeUndefined();
-    expect("notAHeader" in raw).toBe(false);
+  test("an unregistered domain key is refused even when its value is empty", () => {
+    expect(() => mapTokenHeader({ notAHeader: "" } as never)).toThrow(
+      expect.objectContaining({
+        code: "header_unknown_parameter",
+        data: { parameter: "notAHeader" },
+      }),
+    );
+  });
+
+  test("a __proto__ key is refused by name like any other unknown parameter", () => {
+    const options = JSON.parse('{ "__proto__": "stated" }') as DomainTokenHeaderOptions;
+
+    expect(() => mapTokenHeader(options)).toThrow(
+      expect.objectContaining({
+        code: "header_unknown_parameter",
+        data: { parameter: "__proto__" },
+      }),
+    );
+  });
+
+  test("a registered parameter named by its wire spelling is refused, naming its domain spelling", () => {
+    expect(() => mapTokenHeader({ oid: "1.2.3.4" } as never)).toThrow(AegisDomainError);
+    expect(() => mapTokenHeader({ oid: "1.2.3.4" } as never)).toThrow(
+      expect.objectContaining({
+        code: "header_not_domain_named",
+        data: { parameter: "oid", expected: "objectId" },
+      }),
+    );
+  });
+
+  test("a wire-spelled parameter is refused even when its value is empty", () => {
+    expect(() => mapTokenHeader({ cty: "" } as never)).toThrow(
+      expect.objectContaining({
+        code: "header_not_domain_named",
+        data: { parameter: "cty", expected: "contentType" },
+      }),
+    );
+  });
+
+  test("the one parameter spelled alike at both tiers is carried, not refused", () => {
+    const jwk = { kty: "EC", crv: "P-256", x: "eA", y: "eQ" };
+
+    expect(mapTokenHeader({ jwk } as never)).toEqual({ jwk });
+  });
+
+  test("an undefined value is an unset field, never refused, under any name", () => {
+    expect(
+      mapTokenHeader({
+        objectId: undefined,
+        notAHeader: undefined,
+        oid: undefined,
+        keyId: "key_test",
+      } as never),
+    ).toEqual({ kid: "key_test" });
+  });
+
+  test("a kit-owned certificate field a caller states reaches the wire bag for the kit to refuse", () => {
+    expect(mapTokenHeader({ certificateChain: ["MIIB"] } as never)).toEqual({
+      x5c: ["MIIB"],
+    });
+  });
+
+  test("the kit-derived certificate fields are carried under their wire names", () => {
+    expect(
+      mapTokenHeader(
+        { keyId: "key_test" },
+        { certificateChain: ["MIIB"], certificateThumbprint: "dGh1bWI" },
+      ),
+    ).toEqual({ kid: "key_test", x5c: ["MIIB"], "x5t#S256": "dGh1bWI" });
   });
 
   test("the DOMAIN crossing removes an empty value the registry says carries nothing", () => {
@@ -500,8 +582,8 @@ describe("wireHeaderToCoseMap (the COSE write pass)", () => {
   });
 
   test("REFUSES an unregistered wire key whose value is EMPTY, too", () => {
-    // The prune must not reach an unregistered key, on this pass above all: it is
-    // the one place the closed-set rule REFUSES instead of dropping, so a prune
+    // The prune must not reach an unregistered key, on this pass above all: the
+    // closed-set rule REFUSES here only AFTER the bag is normalised, so a prune
     // taking the key first would turn a refusal a caller must hear into silence.
     expect(() => wireHeaderToCoseMap({ nonsense: "" } as never, false)).toThrow(
       expect.objectContaining({ code: "header_no_cose_label" }),

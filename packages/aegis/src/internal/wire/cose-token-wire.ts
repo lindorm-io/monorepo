@@ -117,8 +117,7 @@ export const COSE_TOKEN_WIRE: TokenWire = {
 
   profileTyp: (typ: TokenProfileTyp) => coseTyp(typ),
 
-  assertedTyp: (tokenType) =>
-    coseTyp({ presence: "required", value: computeTypHeader(tokenType, "jwt") }),
+  assertedTyp: (tokenType, format) => computeTypHeader(tokenType, format),
 
   decodeClaims: (token) => {
     const bytes = Buffer.from(token, "base64url");
@@ -236,6 +235,9 @@ export const COSE_TOKEN_WIRE: TokenWire = {
       payload: verified.payload,
       protectedHeader: verified.protectedHeader,
       unprotectedHeader: verified.unprotectedHeader,
+      // The protected-header alg `CwsKit.verify` already refuses unless it equals
+      // the resolved key's own (`verify-cose-structure.ts`).
+      algorithm: verified.protectedHeader.alg,
     };
   },
 
