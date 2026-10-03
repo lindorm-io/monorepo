@@ -191,8 +191,9 @@ const walkConfirmation = (
 
     // `undefined` is how absence is spelled throughout this package, so a member a
     // caller assembled from an optional it did not have is ABSENT rather than
-    // malformed. Neither JSON nor CBOR can express it, so on the read side it can
-    // only come from a caller's own dict at the vocabulary door.
+    // malformed. JSON has none, and `decodeCnf` (`internal/cose/cose-key.ts`) omits
+    // a CBOR `undefined` (RFC 8949 §3.3) before this runs, so on the read side it
+    // can only come from a caller's own dict at the vocabulary door.
     //
     // ⛔⛔ `null` IS **NOT** ABSENCE HERE, AND `cnf` IS THE ONE CLAIM EXEMPT FROM
     // THAT RULING. Everywhere else a null member is omitted ({@link isNotStated});
@@ -1653,12 +1654,15 @@ export const wireToDomain = (
     consumed.add(key);
 
     // ⚠⚠ A WIRE `null` IS NOT STATED — the read half of the same ruling the write
-    // core states above, and the half a token can actually exercise: JSON and
-    // CBOR both express `null` and neither expresses `undefined`, so this is the
-    // only spelling of absence a stranger's payload can carry. It runs BEFORE the
-    // codec so `cnf: null` is read as "no confirmation" rather than refused as an
-    // unreadable one, and so a `bool` claim's permissive arm cannot report
-    // `emailVerified: null` in a field typed `boolean`.
+    // core states above, and the half a token can actually exercise: `null` is the
+    // one spelling of absence a JSON payload can carry, and CBOR has a second, its
+    // `undefined` (simple value 23, RFC 8949 §3.3). On COSE `decodeCwtClaims`
+    // (`internal/cose/cwt-claims.ts`) drops either at a registered claim key before
+    // the wire reaches this read; {@link isNotStated} reads both for a wire that did
+    // not pass through it. The guard runs BEFORE the codec so `cnf: null` is read as
+    // "no confirmation" rather than refused as an unreadable one, and so a `bool`
+    // claim's permissive arm cannot report `emailVerified: null` in a field typed
+    // `boolean`.
     if (isNotStated(wire[key])) continue;
 
     const decoded = decodeClaim(spec, wire[key], nameOf);

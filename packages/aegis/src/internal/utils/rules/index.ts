@@ -26,10 +26,14 @@
  * ⚠ `isClaimOmitted` is `=== undefined`, NOT `Object.hasOwn`, and does not
  * contravene `enforce-policy.ts`'s hasOwn-never-`in` doctrine: that governs a
  * MEMBERSHIP test on a caller-supplied KEY, this is a VALUE test. The two states
- * `Object.hasOwn` would separate cannot differ, and what establishes that is
- * `assemble-common-claims.ts` on mint and `internal/claims/translate.ts` on
- * verify — ⛔ NOT `normalise-claims.ts`, whose absence strip runs at
- * serialisation, after `mint-token.ts` has already enforced the policy.
+ * `Object.hasOwn` would separate cannot differ on mint, which
+ * `assemble-common-claims.ts` establishes for every key, nor on verify for a
+ * registered claim, which `internal/claims/translate.ts` and
+ * `internal/cose/cwt-claims.ts` establish — ⛔ NOT `normalise-claims.ts`, whose
+ * absence strip runs at serialisation, after `mint-token.ts` has already
+ * enforced the policy. An unregistered key rides verbatim on verify, so a CBOR
+ * `undefined` there (RFC 8949 §3.3) is an own key holding `undefined`, and
+ * `=== undefined` reads it as omitted, as it reads an absent key.
  *
  * ⚠ EVERY DEPTH, not just the top level: a format's REQUIRED member is a demand
  * (`subjectId.id` of `""` identifies nobody), a validate-it-when-present member is

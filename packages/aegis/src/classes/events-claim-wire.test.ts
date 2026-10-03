@@ -344,9 +344,9 @@ describe("the events claim on the wire", () => {
   });
 
   // ⚠ `null` IS ABSENCE, NOT A CONTRADICTION — the sibling of the row above and
-  // the only spelling of absence a JSON or CBOR payload can carry. An issuer
-  // writing `events: null` states no events, and that is reported rather than
-  // refused.
+  // the one spelling of absence both a JSON and a CBOR payload can carry (CBOR
+  // also has an `undefined`, RFC 8949 §3.3). An issuer writing `events: null`
+  // states no events, and that is reported rather than refused.
   test("a null `events` is a token stating none, on either wire", () => {
     expect(Aegis.toDomain({ events: null } as Dict).claims.events).toBeUndefined();
 

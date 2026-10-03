@@ -557,17 +557,18 @@ Feature: The confidentiality gate at the verify door
 
   Rule: a claim carrying null on the wire is read as one the token does not state
 
-    `null` is the only spelling of absence a JSON or CBOR payload can carry —
-    neither encoding can express `undefined` — so it is the form an issuer's
-    empty optional actually arrives in. It is not a value contradicting the
-    claim's declared shape and must not be refused as one: an issuer writing
-    `null` is stating nothing. The distinction is the whole boundary — a
-    structured claim carrying a scalar is refused, the same claim carrying
-    `null` was never stated. Aegis policy at the read. No aegis door writes a
-    wire null at a claim key, so the token is a third party's, and the first
-    scenario reads the nulls off the wire so the read is the thing judged.
-    `email_verified` is a second claim of a different codec kind, so the rule
-    is about the read and not about one structured claim.
+    `null` is the one spelling of absence a JSON payload can carry and one of
+    the two a CBOR payload can — the other, `undefined`, is simple value 23
+    (RFC 8949 §3.3), and aegis reads it the same way at a registered claim key.
+    A `null` is not a value contradicting the claim's declared shape and must
+    not be refused as one: an issuer writing `null` is stating nothing. The
+    distinction is the whole boundary — a structured claim carrying a scalar is
+    refused, the same claim carrying `null` was never stated. Aegis policy at
+    the read. No aegis door writes a wire null at a claim key, so the token is
+    a third party's, and the first scenario reads the nulls off the wire so the
+    read is the thing judged. `email_verified` is a second claim of a different
+    codec kind, so the rule is about the read and not about one structured
+    claim.
 
     Background:
       Given the wire claims

@@ -295,9 +295,9 @@ describe("the address claim on the wire", () => {
 
   test("a null member is not reported when a foreign token carries one", async () => {
     // The READ direction of the same rule, and the direction a real token
-    // exercises: JSON and CBOR can both express `null` and neither can express
-    // `undefined`, so this is the only spelling of absence a stranger's payload
-    // has. `toEqual`, not a subset match — the whole point is that the member is
+    // exercises: JSON and CBOR can both express `null` (CBOR also has an
+    // `undefined`, RFC 8949 §3.3), so it is the one spelling of absence both wires
+    // share. `toEqual`, not a subset match — the whole point is that the member is
     // ABSENT from the reported address rather than present holding `null`.
     expect(
       Aegis.toDomain({

@@ -1227,9 +1227,10 @@ describe("wireToFloorClaims — the verify-floor read mode", () => {
   });
 
   // ⚠ `null` IS NOT A CONTRADICTION, IT IS AN ABSENCE — the sibling of the row
-  // above, and the whole of the boundary between them. A wire `null` is the ONLY
-  // spelling of absence JSON and CBOR can carry, so this is the case a stranger's
-  // token actually exercises.
+  // above, and the whole of the boundary between them. A wire `null` is the one
+  // spelling of absence both JSON and CBOR can carry (CBOR also has an
+  // `undefined`, RFC 8949 §3.3), so this is the case a stranger's token actually
+  // exercises.
   test("reads a null sub_id as a claim the token does not state", () => {
     const { claims, custom } = wireToFloorClaims({ sub_id: null }, joseName);
 

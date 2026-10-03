@@ -3,10 +3,15 @@
  * `forbidden` and every shape rule's entry guard.
  *
  * `forbidden` reads presence STRICTLY, and the reason differs per direction:
- *   - verify — `=== undefined` is EXACT. Neither JSON nor CBOR can express
- *     `undefined`, so every key a token carries has a non-`undefined` value, and
- *     no emission prune runs on a token being read. "The token carries this key"
- *     is precisely what `forbidden` asks.
+ *   - verify — `=== undefined` is EXACT for a registered claim. JSON has no
+ *     `undefined`, and a CBOR `undefined` (RFC 8949 §3.3) at a registered claim
+ *     key is read as not stated (`internal/cose/cwt-claims.ts`), so every
+ *     registered claim a token carries has a non-`undefined` value, and no
+ *     emission prune runs on a token being read. For a registered claim, "the
+ *     token carries this key" is precisely what `forbidden` asks. An unregistered
+ *     key a rule names (`token_introspection`) rides verbatim, so a CBOR
+ *     `undefined` there is an own key holding `undefined`, which `forbidden`
+ *     reads as omitted: `undefined` is absence throughout this package.
  *   - mint — `forbidden` is a ceiling on the ISSUER'S VOCABULARY, not on wire
  *     bytes. An issuer writing `nonce: ""` onto a logout token is stating a
  *     nonce; that the emission prune would have swept that particular claim up

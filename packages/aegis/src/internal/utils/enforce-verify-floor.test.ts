@@ -375,11 +375,9 @@ describe("enforceVerifyFloor", () => {
     });
 
     /**
-     * A prohibition asks whether the TOKEN CARRIES THE KEY, and at verify that
-     * question is exact: neither JSON nor CBOR can express `undefined`, so a key
-     * present in the decoded payload always holds a real value and no emission
-     * prune runs on a token being read. An empty one is a claim the issuer made
-     * badly, not a claim it did not make.
+     * A prohibition asks whether the TOKEN CARRIES THE KEY (`rules/is-claim-omitted.ts`
+     * states when that question is exact at verify). An empty value is a claim the
+     * issuer made badly, not a claim it did not make.
      *
      * ⚠ Letting `""` and `null` pass is a fail-open on the profile whose
      * `forbidden` list carries the whole weight: `external_access_token` mandates
