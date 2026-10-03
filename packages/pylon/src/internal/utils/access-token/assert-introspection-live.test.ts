@@ -47,16 +47,10 @@ describe("assertIntrospectionLive", () => {
     );
   });
 
-  // ⚠ EXPECTATION FLIPPED. The boundary used to be exclusive (`exp > now`, from
-  // a hand-rolled comparison here) and is now INCLUSIVE: the shared window
-  // bounds a `"future"` claim with `$gte: now - clockTolerance`, so a token
-  // expiring exactly now still clears it. That is the point of dropping the
-  // hand-rolled check — the structured arm has always used this bound, and two
-  // arms serving one mount must not disagree about the instant of expiry.
-  test("accepts an exp exactly equal to now", () => {
+  test("refuses an exp exactly equal to now", () => {
     expect(() =>
       assertIntrospectionLive(introspectionAnswer({ expiresAt: NOW })),
-    ).not.toThrow();
+    ).toThrow(expect.objectContaining({ code: "token_not_active" }));
   });
 
   test("accepts an nbf in the past", () => {
