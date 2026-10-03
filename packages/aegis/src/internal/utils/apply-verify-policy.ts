@@ -9,7 +9,7 @@ import type {
   VerifyOptions,
 } from "../../types/index.js";
 import type { NameSelector } from "../claims/claims-registry.js";
-import type { DomainClaims } from "../../types/claims/domain/domain-claims.js";
+import type { TokenClaims } from "../../types/claims/domain/domain-claims.js";
 import { assertClaimMatchers } from "./assert-claim-matchers.js";
 import { isClaimOmitted } from "./rules/is-claim-omitted.js";
 import { isClaimSatisfied } from "./rules/is-claim-satisfied.js";
@@ -76,7 +76,7 @@ export const applyVerifyPolicy = ({
    */
   wireClaims: Dict;
   /** The DOMAIN claims — read for the `cnf` thumbprint the DPoP check binds to. */
-  claims: DomainClaims;
+  claims: TokenClaims;
   /**
    * The act-chain summary. ⚠ REQUIRED, not optional: `extractTokenDelegation`
    * always returns one, and an optional field here lets a caller omit it, so the

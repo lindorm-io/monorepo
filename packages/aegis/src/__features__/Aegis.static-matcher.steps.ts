@@ -1,8 +1,8 @@
-import type { DataTable } from "@lindorm/gherkin";
+import type { DataTable, DocString } from "@lindorm/gherkin";
 import { Binding, Given, Then, When } from "@lindorm/gherkin";
 import { expect } from "vitest";
 import { Aegis } from "../classes/Aegis.js";
-import type { VerifyAssert } from "../types/index.js";
+import type { DomainAssert, VerifyAssert } from "../types/index.js";
 import { AegisStepsBase } from "../__fixtures__/aegis-steps-base.js";
 import { jsonCells } from "../__fixtures__/json-cells.js";
 
@@ -30,7 +30,7 @@ export class AegisStaticMatcherSteps extends AegisStepsBase {
     this.ctx.claims.authTime = new Date(instant);
   }
 
-  // the act
+  // the acts
 
   @When("I check the claims without a signature")
   async iCheckTheClaimsWithoutASignature(): Promise<void> {
@@ -39,6 +39,17 @@ export class AegisStaticMatcherSteps extends AegisStepsBase {
 
     // Both forms of the door answer the same question: the boolean one is read
     // here, the throwing one is left for a Then to judge.
+    this.ctx.matched = Aegis.matches(claims, assert, verifyOptions);
+
+    await this.attempt(async () => Aegis.assert(claims, assert, verifyOptions));
+  }
+
+  @When("I check the verified claims without a signature, asserting")
+  async iCheckTheVerifiedClaimsWithoutASignature(matcher: DocString): Promise<void> {
+    const { claims } = this.verified();
+    const { verifyOptions } = this.ctx;
+    const assert = JSON.parse(matcher.content) as DomainAssert;
+
     this.ctx.matched = Aegis.matches(claims, assert, verifyOptions);
 
     await this.attempt(async () => Aegis.assert(claims, assert, verifyOptions));

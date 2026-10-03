@@ -1,13 +1,13 @@
 import type { Condition, ConditionOperator } from "@lindorm/match";
 import type { TokenType } from "../../constants/token-type.js";
-import type { DomainClaims } from "../claims/domain/domain-claims.js";
+import type { TokenClaims } from "../claims/domain/domain-claims.js";
 
 /**
- * The trimmed domain matcher set — the `assert` matcher vocabulary consumed by
+ * The named domain matcher set — the `assert` matcher vocabulary consumed by
  * `aegis.verify(token, assert, options)`.
  *
  * Only the eight claims that earn a NAMED slot through NON-equality semantics
- * survive as matchers:
+ * are named matchers:
  *
  * - `audience` — the token `aud` (string OR array) must CONTAIN this single
  *   identity string (contains-self, not equals). Scalar BY DESIGN.
@@ -19,12 +19,8 @@ import type { DomainClaims } from "../claims/domain/domain-claims.js";
  *   array-contains: a bare `string`/`Array<string>` requires ALL listed values
  *   present; a `ConditionOperator` (`{ $in }`) matches any.
  *
- * The other 14 former matchers (`authContextClassReference`, `authorizedParty`,
- * `grantType`, `nonce`, `levelOfAssurance`, `vectorOfTrust`, `vectorTrustMark`,
- * `authTime`, `clientId`, `subject`, `subjectHint`, `tenantId`,
- * `authFactorReference`, `sessionHint`) are plain-equality claims and fold into
- * the free {@link DomainAssert} predicate — each is a `keyof DomainClaims`, so
- * `Condition<Omit<DomainClaims, keyof DomainClaimMatchers>>` types them.
+ * Every other claim the token read returns folds into the free
+ * {@link DomainAssert} predicate.
  */
 export type DomainClaimMatchers = {
   audience?: string;
@@ -84,13 +80,13 @@ export type DerivedHashClaim = "accessTokenHash" | "codeHash" | "stateHash";
 /**
  * The domain `assert` argument — the domain twin of the raw kit's
  * `Condition<WireClaims>`: the eight named {@link DomainClaimMatchers},
- * {@link DomainTokenMatchers}, PLUS a plain predicate over every OTHER domain
- * claim (the folded-in equality claims). This is the vocabulary BOTH surfaces
+ * {@link DomainTokenMatchers}, PLUS a plain predicate over every OTHER claim the
+ * token read returns ({@link TokenClaims}). This is the vocabulary BOTH surfaces
  * share, and the whole argument `Aegis.assert` / `Aegis.matches` take.
  */
 export type DomainAssert = DomainClaimMatchers &
   DomainTokenMatchers &
-  Condition<Omit<DomainClaims, keyof DomainClaimMatchers>>;
+  Condition<Omit<TokenClaims, keyof DomainClaimMatchers>>;
 
 /**
  * The positional `assert` argument of `aegis.verify` — {@link DomainAssert}

@@ -53,9 +53,9 @@ export type InvalidEntry = {
  *
  * ⚠ Widening this to `keyof TokenClaims` would admit `transactionId`, which the
  * floor payload spells `txn`: `wireToFloorClaims` keys an unresolved claim by its
- * wire name (translate.ts:1501-1505) and `requirePresent` looks the rule's own
- * key up in that payload, so a `required` rule naming it would report a present
- * claim missing.
+ * wire name (the `"floor"` arm of `claimReadRules`, `internal/claims/translate.ts`)
+ * and `requirePresent` looks the rule's own key up in that payload, so a
+ * `required` rule naming it would report a present claim missing.
  * pinned: translate.test.ts#the domain mode extracts txn/events that the floor mode leaves in custom
  */
 export type ProfileClaimName = keyof DomainClaims | "events" | "token_introspection";
@@ -101,8 +101,10 @@ type BoundRule<T> = T & {
  * - `required`     — every named claim must be SATISFIED.
  * - `forbidden`    — no named claim may be NAMED.
  * - `atLeastOneOf` — at least one of the named claims must be SATISFIED.
- * - `match`        — a flat `Condition` over the DOMAIN-keyed claim layer, the
- *                    same predicate vocabulary `assert` / `Aegis.assert` use.
+ * - `match`        — a flat `Condition` over the DOMAIN-keyed claim layer, in
+ *                    the operators `assert` / `Aegis.assert` use but over the
+ *                    floor's names: the floor spells `txn` where `assert` names
+ *                    `transactionId`.
  * - `shape`        — a named structural validator (recursive / cross-field).
  * - `requiredWhen` — a claim is required when a predicate over the claims AND the
  *                    mint context holds. The only context-reading rule, hence the
@@ -135,6 +137,7 @@ export type PolicyRule =
   | FreeRule<{ rule: "required"; claims: ReadonlyArray<ProfileClaimName> }>
   | FreeRule<{ rule: "forbidden"; claims: ReadonlyArray<ProfileClaimName> }>
   | FreeRule<{ rule: "atLeastOneOf"; claims: ReadonlyArray<ProfileClaimName> }>
+  // Floor-side: verify runs `match` on the floor payload, `internal/utils/enforce-verify-floor.ts`.
   | FreeRule<{ rule: "match"; condition: Condition<DomainClaims> }>
   | FreeRule<{ rule: "shape"; shape: ShapeRuleName }>
   | BoundRule<{

@@ -397,6 +397,49 @@ Feature: The profile floor, applied to a token that arrived
         | jose |
         | cose |
 
+  Rule: a security event's transaction identifier is written and read back as `transactionId` while the wire keeps `txn`
+
+    A security event token may carry a transaction identifier, which
+    correlates the related tokens of one transaction (RFC 8417 §2.2). The
+    domain surface spells it `transactionId`, so a caller states it and reads
+    it back in one vocabulary; a token read that left it under its wire
+    spelling would hand back a claim the caller cannot name. The JWT keeps the
+    registered `txn`, because a receiver of a security event token is not a
+    lindorm consumer. The CWT carries the same text key — no CWT label is
+    registered for it, and a three-character key encodes shorter than a
+    private-use label — which is aegis policy rather than a requirement of
+    RFC 8417 or RFC 8392.
+
+    Background:
+      Given the content to mint
+        | transactionId | txn_abc |
+      And an audience list whose only member is "https://receiver.lindorm.io/"
+      And the subject identifier
+        | format  | iss_sub                  |
+        | issuer  | https://test.lindorm.io/ |
+        | subject | user-1                   |
+      And an events map whose only event is "urn:lindorm:event:test"
+
+    Scenario Outline: <wire>: the caller reads the transaction identifier back under the name it wrote it in
+      When I mint the content under the "security_event" profile on the <wire> wire
+      And I verify the token under the "security_event" profile as the audience "https://receiver.lindorm.io/"
+      Then the verified claims include
+        | transactionId | txn_abc |
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
+    @RFC-8417
+    Scenario: jose: the wire spells the transaction identifier as the registered SET claim (RFC-8417 §2.2)
+      When I mint the content under the "security_event" profile on the jose wire
+      Then the raw payload carries "txn" "txn_abc"
+
+    Scenario: cose: the wire spells the transaction identifier under the same text key
+      When I mint the content under the "security_event" profile on the cose wire
+      Then the raw payload carries "txn" "txn_abc"
+
   Rule: a security event token another producer wrote is read back with its subject identifier's `iss` and `sub` as `issuer` and `subject`
 
     A subject identifier reaches a verifier in RFC 9493's own spelling — `iss`

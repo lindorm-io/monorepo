@@ -1,0 +1,24 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`DomainClaimMatchers / DomainAssert (type witness) > DomainAssert names events, conditioned per event URI 1`] = `
+{
+  "events": {
+    "urn:lindorm:event:test": {
+      "$exists": true,
+    },
+  },
+}
+`;
+
+exports[`DomainClaimMatchers / DomainAssert (type witness) > DomainAssert names transactionId, a claim the token read returns beyond the floor set 1`] = `
+{
+  "transactionId": "txn_abc",
+}
+`;
+
+exports[`DomainClaimMatchers / DomainAssert (type witness) > VerifyAssert names transactionId beside the hash-derive inputs 1`] = `
+{
+  "accessToken": "an-access-token",
+  "transactionId": "txn_abc",
+}
+`;

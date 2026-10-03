@@ -1,6 +1,6 @@
 import type { Dict } from "@lindorm/types";
 import type { TokenType } from "../../constants/token-type.js";
-import type { DomainClaims } from "../claims/domain/domain-claims.js";
+import type { TokenClaims } from "../claims/domain/domain-claims.js";
 import type { AegisDecryptKey, AegisEncKey } from "../keys/key-selectors.js";
 import type { DomainTokenEnvelope } from "./domain-envelope.js";
 
@@ -18,7 +18,7 @@ import type { DomainTokenEnvelope } from "./domain-envelope.js";
  * authorship, so renaming a recovered key into a registered vocabulary would
  * assert on the caller's behalf something only a signature can carry.
  */
-export type EncryptData = (DomainClaims & Dict) | Buffer | string;
+export type EncryptData = (TokenClaims & Dict) | Buffer | string;
 
 /**
  * The `aegis.encrypt` options — the mirror of the `sign` option family,

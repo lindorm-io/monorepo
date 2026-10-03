@@ -627,7 +627,7 @@ policy: [
 ];
 ```
 
-`required` / `forbidden` / `atLeastOneOf` are presence rules; `match` is a flat `Condition` over the domain-keyed claims (the same predicate vocabulary as `assert`); `shape` names a structural validator (`actChain`, `confirmation`, `crossField`, `events`, `subjectId`).
+`required` / `forbidden` / `atLeastOneOf` are presence rules; `match` is a flat `Condition` over the domain-keyed claims, in `assert`'s operators but the floor's names (the floor spells `txn` where `assert` names `transactionId`); `shape` names a structural validator (`actChain`, `confirmation`, `crossField`, `events`, `subjectId`).
 
 **The presence rules read presence two different ways, and the difference is deliberate.** Both predicates are exported, so a profile you register reads the claims the same way the floor does:
 

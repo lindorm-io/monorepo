@@ -285,6 +285,88 @@ Feature: The static claim matcher
       Then the claims are refused as a domain error "claims_invalid"
       And the refusal lists the invalid claims "accessToken"
 
+  Rule: a caller holding a verified security event's claims asserts its transaction identifier and its events by name
+
+    A security event token may carry a transaction identifier that correlates
+    the related tokens of one transaction, beside its events map keyed by
+    event URI (RFC 8417 §2.2). The token read returns both under their domain
+    names, beside every other registered claim, so a caller checking that
+    claim set names them the way it names any other claim. A vocabulary
+    narrower than the read leaves exactly these two unassertable, and the
+    caller falls back to a hand-rolled comparison that disagrees with the
+    matcher at the boundary. The claims checked are the ones the verify
+    returned rather than the content that was minted, so the answer is about
+    what the token carried, not about what the caller wrote.
+
+    Background:
+      Given a deployment at "https://test.lindorm.io/" whose vault holds an ES512 signing key
+      And the content to mint
+        | transactionId | txn_abc |
+      And an audience list whose only member is "https://receiver.lindorm.io/"
+      And the subject identifier
+        | format  | iss_sub                  |
+        | issuer  | https://test.lindorm.io/ |
+        | subject | user-1                   |
+      And an events map whose only event is "urn:lindorm:event:test"
+
+    Scenario Outline: <wire>: the transaction identifier the verified claims carry is accepted under its name
+      When I mint the content under the "security_event" profile on the <wire> wire
+      And I verify the token under the "security_event" profile as the audience "https://receiver.lindorm.io/"
+      And I check the verified claims without a signature, asserting
+        """json
+        { "transactionId": "txn_abc" }
+        """
+      Then the claims are accepted
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
+    Scenario Outline: <wire>: a transaction identifier the verified claims do not carry is refused under its name
+      When I mint the content under the "security_event" profile on the <wire> wire
+      And I verify the token under the "security_event" profile as the audience "https://receiver.lindorm.io/"
+      And I check the verified claims without a signature, asserting
+        """json
+        { "transactionId": "txn_other" }
+        """
+      Then the claims are refused as a domain error "claims_invalid"
+      And the refusal lists the invalid claims "transactionId"
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
+    Scenario Outline: <wire>: the event the verified claims carry is accepted under its URI
+      When I mint the content under the "security_event" profile on the <wire> wire
+      And I verify the token under the "security_event" profile as the audience "https://receiver.lindorm.io/"
+      And I check the verified claims without a signature, asserting
+        """json
+        { "events": { "urn:lindorm:event:test": { "$exists": true } } }
+        """
+      Then the claims are accepted
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
+    Scenario Outline: <wire>: an event the verified claims do not carry is refused under the events claim
+      When I mint the content under the "security_event" profile on the <wire> wire
+      And I verify the token under the "security_event" profile as the audience "https://receiver.lindorm.io/"
+      And I check the verified claims without a signature, asserting
+        """json
+        { "events": { "urn:lindorm:event:other": { "$exists": true } } }
+        """
+      Then the claims are refused as a domain error "claims_invalid"
+      And the refusal lists the invalid claims "events"
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
   Rule: an expired claim set is refused even when the caller asserts nothing about time
 
     `exp` is the instant on or after which a token must not be accepted for

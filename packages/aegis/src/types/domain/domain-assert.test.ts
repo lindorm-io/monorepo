@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
-import type { DomainAssert, DomainClaimMatchers } from "./domain-assert.js";
+import type { DomainAssert, DomainClaimMatchers, VerifyAssert } from "./domain-assert.js";
 
 describe("DomainClaimMatchers / DomainAssert (type witness)", () => {
-  test("the eight kept matchers accept string / array / operator forms", () => {
+  test("the eight named matchers accept string / array / operator forms", () => {
     const matchers: DomainClaimMatchers = {
       audience: "https://rs.lindorm.io/", // single identity, contains-self
       issuer: "https://idp.lindorm.io/", // identity
@@ -31,5 +31,28 @@ describe("DomainClaimMatchers / DomainAssert (type witness)", () => {
 
     expect(assert.subject).toBe("user_1");
     expect(assert.authorizedParty).toBe("client_1");
+  });
+
+  test("DomainAssert names transactionId, a claim the token read returns beyond the floor set", () => {
+    const assert: DomainAssert = { transactionId: "txn_abc" };
+
+    expect(assert).toMatchSnapshot();
+  });
+
+  test("DomainAssert names events, conditioned per event URI", () => {
+    const assert: DomainAssert = {
+      events: { "urn:lindorm:event:test": { $exists: true } },
+    };
+
+    expect(assert).toMatchSnapshot();
+  });
+
+  test("VerifyAssert names transactionId beside the hash-derive inputs", () => {
+    const assert: VerifyAssert = {
+      accessToken: "an-access-token",
+      transactionId: "txn_abc",
+    };
+
+    expect(assert).toMatchSnapshot();
   });
 });
