@@ -43,9 +43,9 @@ const toCadenceIndependent = (pattern: string): string =>
  * family collectable, never the current mode's own derived includes
  * (limitation tracked in the workspace TODO-MONOREPO.md).
  * `test.exclude` is never consulted: a lane exclusion prunes files the
- * include still names, and a feature that must never be collected is listed
- * in BOTH include and exclude (this package's own vitest.config.ts does so
- * for its meta fixtures) — a visible decision, not this failure.
+ * include still names, and a feature that must never be collected is named
+ * by the `exclude` setting, whose files never reach this guard
+ * (gherkin-plugin.ts) — a visible decision, not this failure.
  */
 export const assertFeaturesCollected = ({
   features,
@@ -103,7 +103,7 @@ export const assertFeaturesCollected = ({
     {
       code: "feature_not_collected",
       details:
-        "A .feature file matches the configured `features` patterns but no `test.include` pattern, so vitest never collects it — the coverage check passes, the counts stay green, and the feature silently never runs. Append the feature globs to `test.include` by spreading the existing array — never overwrite it. A feature that must never be collected belongs in BOTH `test.include` and `test.exclude`.",
+        "A .feature file matches the configured `features` patterns but no `test.include` pattern, so vitest never collects it — the coverage check passes, the counts stay green, and the feature silently never runs. Append the feature globs to `test.include` by spreading the existing array — never overwrite it. A feature that must never be collected belongs in the gherkin `exclude` setting.",
       data: { features, include: resolvedInclude, root, uncollected },
     },
   );

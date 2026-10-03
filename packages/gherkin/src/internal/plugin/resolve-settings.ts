@@ -5,13 +5,14 @@ import type { GherkinSettings } from "../../types/gherkin-settings.js";
 import type { TagMatcher } from "../registry/compile-tag-expression.js";
 
 export type ResolvedGherkinSettings = {
+  exclude: Array<string>;
   features: Array<string>;
   steps: Array<string>;
   /** Always callable — without a `tags` setting it retains every pickle. */
   tagFilter: TagMatcher;
 };
 
-const KNOWN_KEYS: Array<string> = ["features", "steps", "tags"];
+const KNOWN_KEYS: Array<string> = ["exclude", "features", "steps", "tags"];
 
 /**
  * Unknown keys FAIL, never no-op: the type only guards TypeScript consumers,
@@ -27,7 +28,7 @@ const assertKnownKeys = (settings: GherkinSettings): void => {
     throw new GherkinError(`Unknown gherkin setting "${key}"`, {
       code: "unknown_setting",
       details:
-        "GherkinSettings carries `features`, `steps` and `tags` only. An accepted-but-unimplemented key would be a silent no-op, so an unknown one fails at config time instead. Remove the key, or fix its spelling.",
+        "GherkinSettings carries `exclude`, `features`, `steps` and `tags` only. An accepted-but-unimplemented key would be a silent no-op, so an unknown one fails at config time instead. Remove the key, or fix its spelling.",
       data: { key, known: [...KNOWN_KEYS] },
     });
   }
@@ -68,6 +69,7 @@ export const resolveSettings = (
   assertKnownKeys(settings);
 
   return {
+    exclude: isUndefined(settings.exclude) ? [] : settings.exclude,
     features: isUndefined(settings.features) ? ["src/**/*.feature"] : settings.features,
     steps: isUndefined(settings.steps) ? ["src/**/*.steps.ts"] : settings.steps,
     tagFilter: toTagFilter(settings.tags),

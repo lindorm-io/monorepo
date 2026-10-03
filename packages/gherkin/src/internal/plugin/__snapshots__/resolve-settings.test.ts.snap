@@ -6,12 +6,13 @@ exports[`resolveSettings > should reject an unknown key, naming it 1`] = `
   "data": {
     "key": "featurs",
     "known": [
+      "exclude",
       "features",
       "steps",
       "tags",
     ],
   },
-  "details": "GherkinSettings carries \`features\`, \`steps\` and \`tags\` only. An accepted-but-unimplemented key would be a silent no-op, so an unknown one fails at config time instead. Remove the key, or fix its spelling.",
+  "details": "GherkinSettings carries \`exclude\`, \`features\`, \`steps\` and \`tags\` only. An accepted-but-unimplemented key would be a silent no-op, so an unknown one fails at config time instead. Remove the key, or fix its spelling.",
   "message": "Unknown gherkin setting "featurs"",
 }
 `;

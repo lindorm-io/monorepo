@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { captureAsync } from "../../__fixtures__/test-helpers.js";
 import { scanTagDeclarations } from "./scan-tag-declarations.js";
+import { walkFeatureFiles } from "./walk-feature-files.js";
 
 describe("scanTagDeclarations", () => {
   let root: string;
@@ -40,7 +41,12 @@ describe("scanTagDeclarations", () => {
 
   test("should return the union across files, stripped and deduplicated across files", async () => {
     await expect(
-      scanTagDeclarations({ declared: [], features: ["src/**/*.feature"], root }),
+      scanTagDeclarations({
+        declared: [],
+        features: ["src/**/*.feature"],
+        files: await walkFeatureFiles(root),
+        root,
+      }),
     ).resolves.toEqual([{ name: "lane" }, { name: "smoke" }, { name: "slow" }]);
   });
 
@@ -49,6 +55,7 @@ describe("scanTagDeclarations", () => {
       scanTagDeclarations({
         declared: ["lane", "unrelated"],
         features: ["src/**/*.feature"],
+        files: await walkFeatureFiles(root),
         root,
       }),
     ).resolves.toEqual([{ name: "smoke" }, { name: "slow" }]);
@@ -56,7 +63,12 @@ describe("scanTagDeclarations", () => {
 
   test("should scan only files the features patterns cover", async () => {
     const names = (
-      await scanTagDeclarations({ declared: [], features: ["src/**/*.feature"], root })
+      await scanTagDeclarations({
+        declared: [],
+        features: ["src/**/*.feature"],
+        files: await walkFeatureFiles(root),
+        root,
+      })
     ).map((tag) => tag.name);
 
     expect(names).not.toContain("never-scanned");
@@ -64,7 +76,12 @@ describe("scanTagDeclarations", () => {
 
   test("should return nothing for a root whose features carry no tags", async () => {
     await expect(
-      scanTagDeclarations({ declared: [], features: ["outside/none/*.feature"], root }),
+      scanTagDeclarations({
+        declared: [],
+        features: ["outside/none/*.feature"],
+        files: await walkFeatureFiles(root),
+        root,
+      }),
     ).resolves.toEqual([]);
   });
 
@@ -86,8 +103,14 @@ describe("scanTagDeclarations", () => {
     );
 
     try {
+      const files = await walkFeatureFiles(root);
       const error = await captureAsync(() =>
-        scanTagDeclarations({ declared: [], features: ["src/**/*.feature"], root }),
+        scanTagDeclarations({
+          declared: [],
+          features: ["src/**/*.feature"],
+          files,
+          root,
+        }),
       );
 
       expect(error.code).toBe("invalid_tag_name");
@@ -96,6 +119,36 @@ describe("scanTagDeclarations", () => {
       expect(error.message).toContain("at src/invalid-name.feature:3:3");
     } finally {
       await rm(invalid, { force: true });
+    }
+  });
+
+  test("should read only the files it is handed — a file left out is neither validated nor declared", async () => {
+    const parked = join(root, "src", "parked.feature");
+
+    await writeFile(
+      parked,
+      [
+        "@issue(154) @parked",
+        "Feature: parked",
+        "",
+        "  Scenario: s",
+        "    Given a step",
+      ].join("\n"),
+    );
+
+    try {
+      const files = (await walkFeatureFiles(root)).filter((file) => file !== parked);
+
+      await expect(
+        scanTagDeclarations({
+          declared: [],
+          features: ["src/**/*.feature"],
+          files,
+          root,
+        }),
+      ).resolves.toEqual([{ name: "lane" }, { name: "smoke" }, { name: "slow" }]);
+    } finally {
+      await rm(parked, { force: true });
     }
   });
 });

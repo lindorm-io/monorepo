@@ -12,6 +12,16 @@ describe("resolveSettings", () => {
     });
   });
 
+  test("should default exclude to no pattern at all", () => {
+    expect(resolveSettings().exclude).toEqual([]);
+  });
+
+  test("should keep an explicit exclude list as written", () => {
+    expect(
+      resolveSettings({ exclude: ["src/**/*.wip.feature", "src/a.feature"] }).exclude,
+    ).toEqual(["src/**/*.wip.feature", "src/a.feature"]);
+  });
+
   test("should default each key independently", () => {
     expect(resolveSettings({ features: ["features/**/*.feature"] })).toMatchObject({
       features: ["features/**/*.feature"],
@@ -37,21 +47,34 @@ describe("resolveSettings", () => {
 
     expect(error).toEqual(expect.any(GherkinError));
     expect(error.code).toEqual("unknown_setting");
-    expect(error.data).toEqual({ key: "featurs", known: ["features", "steps", "tags"] });
+    expect(error.data).toEqual({
+      key: "featurs",
+      known: ["exclude", "features", "steps", "tags"],
+    });
     expect(errorShape(error)).toMatchSnapshot();
   });
 
-  test("should reject an unknown key even when the known keys are present", () => {
-    expect(
-      capture(() =>
-        resolveSettings({
-          features: ["a/*.feature"],
-          steps: ["b/*.steps.ts"],
-          tags: "@wip",
-          extra: true,
-        } as GherkinSettings),
-      ).code,
-    ).toEqual("unknown_setting");
+  test("should name every known key in the unknown_setting details", () => {
+    const error = capture(() => resolveSettings({ extra: true } as GherkinSettings));
+
+    for (const key of error.data.known) {
+      expect(error.details).toContain(`\`${key}\``);
+    }
+  });
+
+  test("should reject an unknown key even when every known key is present", () => {
+    const error = capture(() =>
+      resolveSettings({
+        exclude: ["a/*.wip.feature"],
+        features: ["a/*.feature"],
+        steps: ["b/*.steps.ts"],
+        tags: "@wip",
+        extra: true,
+      } as GherkinSettings),
+    );
+
+    expect(error.code).toEqual("unknown_setting");
+    expect(error.data.key).toEqual("extra");
   });
 
   describe("tagFilter", () => {

@@ -14,31 +14,17 @@ const config = createVitestConfig({
 
 config.plugins.unshift(
   ...gherkinPlugin({
-    // meta-fixtures features are covered (buildStart walks the package root
-    // and dies on any orphan .feature) but NOT collected — only the child
-    // processes spawned by src/e2e run them.
-    features: [
-      "src/__fixtures__/features/**/*.feature",
-      "meta-fixtures/**/*.feature",
-      "example/**/*.feature",
-    ],
+    // Only the child processes spawned by src/e2e run these features; this
+    // run never collects them.
+    exclude: ["meta-fixtures/**", "example/**"],
+    features: ["src/__fixtures__/features/**/*.feature"],
     steps: ["src/__fixtures__/*.steps.ts"],
   }),
 );
 
 // Copy, never push: test.include IS the base's shared INCLUDES_BY_MODE array
 // (pinned by src/base-config.test.ts, which imports this module).
-// meta-fixture and example features are include-listed AND exclude-pruned:
-// buildStart's collection guard requires every features-matched file to match
-// test.include (assert-features-collected.ts), and the exclusion keeps them
-// out of THIS run — only the child processes spawned by src/e2e execute them.
-config.test.include = [
-  ...config.test.include,
-  "src/__fixtures__/features/**/*.feature",
-  "meta-fixtures/**/*.feature",
-  "example/**/*.feature",
-];
-config.test.exclude = [...config.test.exclude, "meta-fixtures/**", "example/**"];
+config.test.include = [...config.test.include, "src/__fixtures__/features/**/*.feature"];
 
 // The emitted module imports the published runtime subpath; aliasing it to
 // src makes the in-package run execute (and coverage-instrument) source

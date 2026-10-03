@@ -1,5 +1,21 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`gherkinPlugin > exclude > buildStart > should stop with exclude_unmatched naming every literal path that matches no feature file 1`] = `
+{
+  "code": "exclude_unmatched",
+  "data": {
+    "unmatched": [
+      "src/missing.feature",
+      "src/gone.feature",
+    ],
+  },
+  "details": "An \`exclude\` entry without a glob character is a literal path to one feature file. One that names no feature file is a typo or a stale entry, and whatever it was meant to keep out of the suite still runs. Fix or remove the path; a glob that matches nothing is not an error.",
+  "message": "Literal \`exclude\` path(s) matching no feature file — a mistyped path excludes nothing:
+  src/missing.feature
+  src/gone.feature",
+}
+`;
+
 exports[`gherkinPlugin > transform > should transform a feature id and carry no source map 1`] = `
 "import { runFeature } from "@lindorm/gherkin/runtime";
 

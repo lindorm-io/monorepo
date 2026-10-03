@@ -39,6 +39,7 @@ export default defineConfig({
       features: ["src/**/*.feature"], // default
       steps: ["src/**/*.steps.ts"], // default
       // tags: "not @slow", // optional transform-time selection — see Tags
+      // exclude: ["src/**/*.wip.feature"], // optional — see Excluding feature files
     }),
     // Step classes use stage-3 decorators; the config must lower them.
     swc.vite({
@@ -279,6 +280,22 @@ The plugin **declares every tag it finds at config time**: vitest's `strictTags`
 
 There is deliberately **no skip tag**: a per-scenario skip is a hide-a-red-row escape hatch at the point of temptation; the config `tags` expression is a centralized, reviewable lane decision. For the same reason, authoring errors (a zero-row `Examples:`, a zero-step scenario) stay RED even when a `tags` expression excludes their tags — an excludable authoring error would be a skip tag by the back door. A fully excluded file reports as a skipped suite; a Rule or outline whose every scenario is excluded is omitted quietly.
 
+## Excluding feature files
+
+`exclude` takes feature files out of the suite:
+
+```ts
+...gherkinPlugin({
+  exclude: ["src/**/*.wip.feature", "src/checkout/spike.feature"],
+}),
+```
+
+- **Any glob, resolved to feature files.** At startup each pattern is matched against the `.feature` files under the root, and exactly those files are excluded: vitest never collects them, neither startup guard reports them, and their tags are neither validated nor declared. `fixtures/**` excludes the feature files under `fixtures/` and nothing else — a `.test.ts` there is untouched.
+- **Your `test.exclude` is kept.** The excluded files are appended to it, each anchored where vitest anchors `test.exclude`: at `test.dir` when you set one, at the root otherwise. When you set none, vitest's default list (`**/node_modules/**`, `**/.git/**`) goes first, because vitest drops its defaults for any list it is handed.
+- **A literal path must name a feature file.** An entry with none of `* ? [ ] { } ( ) ! | "` is a literal path; one that names no feature file fails the run at startup (`exclude_unmatched`). A glob that matches nothing is not an error, so a standing `src/**/*.wip.feature` stays valid while no such file exists.
+- **Patterns match as written — no lane expansion.** `src/**/*.wip.feature` excludes `a.wip.feature`, not `a.wip.integration.feature`; `src/**/*.wip*.feature` covers every lane.
+- ⚠ **Resolved once at startup.** A matching feature file created during watch mode runs until vitest restarts.
+
 ## The failure contract
 
 No scenario can silently pass. Undefined, ambiguous, pending and conversion failures are all RED in the printed counts, anchored to the `.feature` file and line:
@@ -309,7 +326,7 @@ The remaining 1 step in this scenario was skipped.
 
 The runner's OWN failures — undefined, ambiguous, pending, conversion, disposal, authoring errors — are `GherkinError`s carrying a stable `code`. A failing step or hook rethrows YOUR error with the anchor prepended, so assertion diffs survive intact. Gherkin syntax errors, empty scenarios and zero-row `Examples:` tables are authoring errors and fail red at the offending line.
 
-The plugin also fails the whole run at startup if a `.feature` file on disk matches none of the configured `features` patterns (`feature_not_included`), or matches one but no `test.include` pattern (`feature_not_collected`) — a feature file nobody collects would otherwise be a silent pass at file granularity. The collection guard strips a `.integration.` / `.weekly.` suffix from the include globs before matching, so a suffixed glob satisfies it for the unsuffixed family too.
+The plugin also fails the whole run at startup if a `.feature` file on disk matches none of the configured `features` patterns (`feature_not_included`), or matches one but no `test.include` pattern (`feature_not_collected`) — a feature file nobody collects would otherwise be a silent pass at file granularity. A file the `exclude` setting names is exempt from both; a literal `exclude` path that names no feature file fails the run instead (`exclude_unmatched`). The collection guard strips a `.integration.` / `.weekly.` suffix from the include globs before matching, so a suffixed glob satisfies it for the unsuffixed family too.
 
 And it fails a step module whose transformed code could never have run — one that still carries a stage-3 decorator (`step_module_not_lowered`) or does not parse as JavaScript at all (`step_module_not_compiled`) — naming the missing transform instead of letting a bare `SyntaxError` escape with `Tests no tests`.
 

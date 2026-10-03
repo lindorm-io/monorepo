@@ -4,7 +4,10 @@ import { toRootUri } from "./to-root-uri.js";
 
 export type AssertFeaturesCoveredOptions = {
   features: Array<string>;
-  /** The buildStart walk's `.feature` files, absolute (walk-feature-files.ts). */
+  /**
+   * The buildStart walk's `.feature` files minus the excluded ones, absolute
+   * (gherkin-plugin.ts).
+   */
   files: Array<string>;
   root: string;
 };
