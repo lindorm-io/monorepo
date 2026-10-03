@@ -56,11 +56,11 @@ const validateThumbprint = (thumbprint: unknown, invalid: Array<InvalidEntry>): 
  * confirmation member to be ignored, and RFC 7800 §6.2 makes the set extensible
  * by registration, so an allowlist refuses members RFC 7800 itself defines.
  *
- * ⚠ AN EMPTY CONFIRMATION IS NOT THIS RULE'S BUSINESS. The translator refuses it
- * on the way out and the verify policy gate on the way in
- * (`internal/claims/translate.ts`, `internal/utils/apply-verify-policy.ts`), both
- * without a profile having to opt in — a shape rule runs only for the profiles
- * that name it.
+ * ⚠ AN EMPTY CONFIRMATION IS NOT THIS RULE'S BUSINESS. The emission boundary
+ * refuses it on the way out and the verify policy gate on the way in
+ * (`internal/claims/refuse-empty-claims.ts`, `internal/utils/apply-verify-policy.ts`),
+ * both without a profile having to opt in — a shape rule runs only for the
+ * profiles that name it.
  */
 export const cnfShape = (claims: Dict): Array<InvalidEntry> => {
   const value = claims.confirmation;

@@ -125,15 +125,13 @@ describe("domainToJose — content -> wire mapping", () => {
   });
 
   // ⚠⚠ COLLAPSING IT TO NO `cnf` AT ALL SILENTLY HANDS THE AUDIENCE A BEARER
-  // TOKEN where the caller asked for a bound one (RFC 7800 §3), which is what the
-  // `cnf` registry entry's "an empty one confirms no key and is refused" means.
-  test("an all-empty confirmation is refused rather than minted as a bearer token", () => {
+  // TOKEN where the caller asked for a bound one (RFC 7800 §3): the emission
+  // boundary refuses only the `cnf` it is handed (`refuse-empty-claims.ts`).
+  test("an all-empty confirmation is written as the empty object for the emission boundary to refuse, never dropped", () => {
     const content: Dict = { subject: "s", confirmation: {} };
     const common = assembleCommonClaims(assembleCtx, permissiveProfile, content, {});
 
-    expect(() => domainToJose(common)).toThrow(
-      expect.objectContaining({ code: "claim_structure_invalid" }),
-    );
+    expect(domainToJose(common)).toMatchSnapshot();
   });
 
   test("no expires ⇒ no exp; explicit envelope honoured, never invented", () => {

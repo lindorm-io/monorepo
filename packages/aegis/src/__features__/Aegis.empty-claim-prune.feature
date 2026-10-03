@@ -165,6 +165,119 @@ Feature: The empty-claim prune
         | jose |
         | cose |
 
+  Rule: a confirmation carrying no member is refused at the mint rather than written or dropped
+
+    `cnf` declares that the presenter holds a key the recipient can confirm
+    (RFC 7800 §3, RFC 8747 §3), and the set of members a valid one must
+    carry is context dependent and outside either specification's scope
+    (RFC 7800 §3.1, RFC 8747 §3.1). A confirmation with no member names no
+    key: written, it mints a binding nothing satisfies; dropped, it hands
+    the audience a bearer token where the issuer asked for a bound one.
+    Aegis policy at mint refuses it on both wires under the same
+    empty-value ruling the raw signing doors give it, so the verdict does
+    not depend on the door the value entered. That holds wherever the
+    profile floor finds no fault first: a profile demanding a confirmation,
+    for one, answers first, reporting it as missing, because the first
+    fault wins at mint.
+
+    Background:
+      Given the content to mint
+        | subject | user-1 |
+      And the content expires in "1h"
+      And the confirmation claim is the object
+        """json
+        {}
+        """
+
+    Scenario Outline: <wire>: the mint is refused under the empty-value ruling, naming the confirmation claim
+      When I mint the content under the "default" profile on the <wire> wire
+      Then minting is refused as a domain error "claim_empty_value"
+      And the refusal names the claim "confirmation" under the empty-value ruling "refuse"
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
+  Rule: a confirmation carrying no member is refused at a MAC-authenticated mint, under the signed mint's verdict
+
+    A shared secret makes the COSE claims token a COSE_Mac0 rather than a
+    COSE_Sign1 (RFC 9052 §6.2, RFC 9052 §4.2), a different structure written
+    by a different kit, and the empty confirmation gets the same verdict on
+    it as on the signed one. Aegis policy at mint. The vault also holds the
+    baseline ES512 key, so the selector is what puts the shared secret in
+    front of the mint. The jose wire has no scenario: JOSE has one
+    structure for digital signatures and MACs alike (RFC 7515 §1), so a
+    MAC-authenticated JOSE claims token is a JWT, the structure the jose row
+    of the mint rule above already covers.
+
+    Background:
+      Given the vault also holds an HS256 signing key
+      And the content to mint
+        | subject | user-1 |
+      And the content expires in "1h"
+      And the confirmation claim is the object
+        """json
+        {}
+        """
+      And the mint selects a signing key of the symmetric class
+
+    Scenario: cose: the MAC-authenticated mint is refused under the empty-value ruling, naming the confirmation claim
+      When I mint the content under the "default" profile as a MAC-authenticated claims token
+      Then minting is refused as a domain error "claim_empty_value"
+      And the refusal names the claim "confirmation" under the empty-value ruling "refuse"
+
+  Rule: a confirmation carrying no member is refused at a signature made without a profile, under the mint's verdict
+
+    The profile-less domain verb writes its claims through the same
+    emission boundary as the mint, with no profile above it, so the empty
+    confirmation gets the one verdict there too, on both wires. Aegis
+    policy at the domain door.
+
+    Background:
+      Given the claims to sign
+        | subject | user-1 |
+      And the confirmation claim is the object
+        """json
+        {}
+        """
+
+    Scenario Outline: <wire>: the signature is refused under the empty-value ruling, naming the confirmation claim
+      When I sign the claims without a profile on the <wire> wire
+      Then signing is refused as a domain error "claim_empty_value"
+      And the refusal names the claim "confirmation" under the empty-value ruling "refuse"
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
+  Rule: a confirmation carrying no member is refused at the raw claims door rather than written or dropped
+
+    The raw claims doors sign the caller's wire claims as written and run no
+    structure walk, so the emission boundary is the only layer that can
+    speak there. It gives the empty `cnf` the same empty-value ruling the
+    domain doors give `confirmation: {}`, naming the claim by its domain
+    name rather than by the wire key the door was handed, on both wires.
+    Aegis policy at the raw door.
+
+    Background:
+      Given the wire claims
+        | iss | "https://test.lindorm.io/" |
+        | sub | "user-1"                   |
+        | cnf | {}                         |
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+
+    Scenario Outline: <wire>: the claims signature is refused under the empty-value ruling, naming the confirmation by its domain name
+      When I sign the wire claims as a claims token on the <wire> wire
+      Then signing is refused as a domain error "claim_empty_value"
+      And the refusal names the claim "confirmation" under the empty-value ruling "refuse"
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
   Rule: an actor claim carrying no member is refused at the mint rather than written or dropped
 
     `act` says a delegation occurred and names the party acting

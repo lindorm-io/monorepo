@@ -371,8 +371,10 @@ Feature: Proof-of-possession bindings
     can confirm (RFC 7800 §3, RFC 8747 §3). A confirmation naming no key
     declares one nobody can confirm, so neither disposal is a token anyone
     asked for: dropping it hands the audience a bearer token where the issuer
-    asked for a bound one, and emitting it puts a binding on the wire that a
-    conformant verifier must reject. The issuer is the one party that can
+    asked for a bound one, and emitting it puts a binding on the wire that
+    aegis policy at verify refuses. No specification requires that refusal:
+    the members a valid confirmation must carry are context dependent
+    (RFC 7800 §3.1, RFC 8747 §3.1). The issuer is the one party that can
     still repair the request, so the refusal is aegis policy at the mint.
 
     Background:
@@ -385,10 +387,10 @@ Feature: Proof-of-possession bindings
         {}
         """
 
-    Scenario Outline: <wire>: the mint is refused, locating the fault at the confirmation that names nothing
+    Scenario Outline: <wire>: the mint is refused under the empty-value ruling, naming the confirmation that names nothing
       When I mint the content under the "access_token" profile on the <wire> wire
-      Then minting is refused as a domain error "claim_structure_invalid"
-      And the refusal names the claim "confirmation" and locates the fault at "confirmation": Claim "confirmation" names no key to confirm
+      Then minting is refused as a domain error "claim_empty_value"
+      And the refusal names the claim "confirmation" under the empty-value ruling "refuse"
 
       Examples:
         | wire |

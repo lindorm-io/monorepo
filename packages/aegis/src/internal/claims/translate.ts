@@ -93,8 +93,13 @@ const toAudience = (value: unknown): Array<string> | undefined => {
  * A binding the issuer STATED and this package cannot read cannot be honoured,
  * and the only safe disposal of one is a refusal.
  *
- * ⚠ AN EMPTY CONFIRMATION IS REFUSED TOO — see {@link cnfBinding}. Collapsing it
- * to `undefined` mints the same silent bearer token.
+ * ⚠ AN EMPTY CONFIRMATION IS HANDED ON AS `{}`, NEVER COLLAPSED TO `undefined`.
+ * `domainToWire` leaves an `undefined` claim off the wire, so the emission
+ * boundary that refuses an empty one (`internal/claims/refuse-empty-claims.ts`)
+ * would never see it, and the token would mint as the same silent bearer token.
+ * See {@link cnfBinding}.
+ * pinned: translate.test.ts, "an all-empty confirmation is written as the empty
+ * object for the emission boundary to refuse, never dropped".
  */
 const cnfValueMatches = (member: CnfMemberSpec, value: unknown): boolean =>
   member.value === "jwk" ? isObject(value) : isString(value);
@@ -235,18 +240,20 @@ const walkConfirmation = (
 };
 
 /**
- * THE VERDICT AN EMPTY CONFIRMATION GETS (RFC 7800 §3), asked at the emission side
- * so a caller hears it before anything is signed. Neither alternative disposal is
- * a token anyone asked for: dropping it hands the audience a BEARER token where
- * the issuer asked for a bound one, and emitting it puts a binding on the wire
- * that no verifier can honour.
+ * A confirmation that its OWN MEMBER FAULTS left naming no key gets a second
+ * entry beside them, so the refusal says that deleting the faulty member is no
+ * repair: nothing would be left to confirm.
  *
- * ⚠ The same verdict is taken again at VERIFY
- * (`internal/utils/apply-verify-policy.ts`), on a token this package did not
- * mint. One rule, two doors — not two rules.
+ * ⚠⚠ A CONFIRMATION NAMING NO MEMBER WITH NO MEMBER FAULT — `{}`,
+ * `{ keyId: undefined }` — IS NOT REFUSED HERE. It rides on as `{}` to the
+ * emission boundary (`internal/claims/refuse-empty-claims.ts`, the registry's
+ * `whenEmpty: "refuse"`), which every sign door runs, the raw doors that walk
+ * nothing included. Refusing it here as well answers the domain doors with a
+ * different code from the raw doors for one empty value.
+ * pinned: Aegis.empty-claim-prune.feature.
  */
-const cnfBinding = (cnf: Dict, context: WalkContext): Dict => {
-  if (!isClaimSatisfied(cnf)) {
+const cnfBinding = (cnf: Dict, memberFaulted: boolean, context: WalkContext): Dict => {
+  if (memberFaulted && !isClaimSatisfied(cnf)) {
     context.invalid.push({
       key: context.path,
       message: `Claim "${context.claim}" names no key to confirm`,
@@ -314,6 +321,7 @@ const encodeBespoke = (
 ): unknown => {
   switch (bespoke) {
     case "confirmation": {
+      const faultsBefore = context.invalid.length;
       const cnf = walkConfirmation(
         value,
         cnfMemberByDomain,
@@ -321,7 +329,9 @@ const encodeBespoke = (
         context,
       );
 
-      return cnf === undefined ? undefined : cnfBinding(cnf, context);
+      if (cnf === undefined) return undefined;
+
+      return cnfBinding(cnf, context.invalid.length > faultsBefore, context);
     }
     case "events":
       // ⚠ One guard for both directions — see {@link eventsMap}.

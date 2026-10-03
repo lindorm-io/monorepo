@@ -1,0 +1,7 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`the confirmation claim on the wire > an empty confirmation is translated as written at the vocabulary door, for a sign door to refuse 1`] = `
+{
+  "cnf": {},
+}
+`;

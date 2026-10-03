@@ -33,7 +33,7 @@ describe("cnfShape", () => {
 
   /**
    * ⚠ THE EMPTY CONFIRMATION stays unrefused HERE: it is refused by the
-   * translator on the way out and by the verify policy gate on the way in,
+   * emission boundary on the way out and by the verify policy gate on the way in,
    * neither of which a profile has to opt into. A
    * third refusal in a rule three profiles name would be the weakest of the
    * three and would say the same thing.

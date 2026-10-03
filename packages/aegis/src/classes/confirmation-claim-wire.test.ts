@@ -197,10 +197,24 @@ describe("the confirmation claim on the wire", () => {
     // the likely mistake, not an exotic one — and `ConfirmationClaim` is
     // `ConfirmationClaimMembers & Dict`, so it compiles clean.
     //
-    // ⚠ ALONE is the whole point. The declared `thumbprint` is absent here.
+    // ⚠ ALONE is the whole point. The declared `thumbprint` is absent here, so
+    // the collision leaves the bag naming no key and the second entry says so.
     await expect(mint("jwt", { jkt: "abc" })).rejects.toMatchObject({
       code: "claim_structure_invalid",
-      data: { claim: "confirmation" },
+      data: {
+        claim: "confirmation",
+        invalid: [
+          {
+            key: "confirmation.jkt",
+            message:
+              'Members "jkt" and "thumbprint" both resolve to "jkt" in "confirmation"',
+          },
+          {
+            key: "confirmation",
+            message: 'Claim "confirmation" names no key to confirm',
+          },
+        ],
+      },
     });
   });
 
@@ -500,6 +514,13 @@ describe("the confirmation claim on the wire", () => {
     );
   });
 
+  test("an empty confirmation is translated as written at the vocabulary door, for a sign door to refuse", () => {
+    // The vocabulary door writes no token, so it runs no emission boundary: the
+    // empty confirmation crosses as the empty object, never dropped into a
+    // bearer bag.
+    expect(Aegis.toWire({ confirmation: {} } as Dict)).toMatchSnapshot();
+  });
+
   test("an undefined confirmation is not stated either, and the domain door mints a bearer token on both wires", async () => {
     // The other spelling of absence at the claim key, at the door a profiled
     // mint goes through: a caller assembling content from optionals hands
@@ -518,5 +539,22 @@ describe("the confirmation claim on the wire", () => {
     if (!cwt.payload.readable) throw new Error(cwt.payload.reason);
 
     expect(cwt.payload.value.has(CNF_COSE_CLAIM_LABEL)).toBe(false);
+  });
+
+  test("a confirmation whose every member is absent is refused under the empty-value ruling on both wires, as the empty one is", async () => {
+    // `undefined` is the one absence a confirmation member recognises, so a
+    // confirmation assembled from optionals the caller did not have names no key
+    // and carries no member fault — declared member and open tail alike.
+    const refusal = {
+      code: "claim_empty_value",
+      data: { claim: "confirmation", whenEmpty: "refuse" },
+    };
+
+    for (const format of ["jwt", "cwt"] as const) {
+      await expect(mint(format, { keyId: undefined })).rejects.toMatchObject(refusal);
+      await expect(mint(format, { tlsClientAuth: undefined })).rejects.toMatchObject(
+        refusal,
+      );
+    }
   });
 });

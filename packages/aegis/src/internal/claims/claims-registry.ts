@@ -267,9 +267,9 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     bucket: "claims",
     // REFUSE: RFC 7800 §3.1 `cnf` IS the proof-of-possession requirement, so
     // pruning it hands the audience a BEARER token, and an empty one names no key
-    // to confirm, so keeping it emits a binding nothing can satisfy. Refused at
-    // every door: the translator (`internal/claims/translate.ts`), the emission
-    // boundary (`refuse-empty-claims.ts`) and the verify policy gate
+    // to confirm, so keeping it emits a binding nothing can satisfy. Refused on
+    // the way out by the emission boundary every sign door runs
+    // (`refuse-empty-claims.ts`) and at verify by the verify policy gate
     // (`internal/utils/apply-verify-policy.ts`).
     whenEmpty: "refuse",
     domainClaim: true,

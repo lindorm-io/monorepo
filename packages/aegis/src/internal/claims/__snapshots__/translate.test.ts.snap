@@ -1,5 +1,12 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`domainToJose — content -> wire mapping > an all-empty confirmation is written as the empty object for the emission boundary to refuse, never dropped 1`] = `
+{
+  "cnf": {},
+  "sub": "s",
+}
+`;
+
 exports[`domainToJose — content -> wire mapping > the full domain vocabulary maps to the expected wire dict 1`] = `
 {
   "aal": 2,
