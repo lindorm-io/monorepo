@@ -27,7 +27,7 @@ export const requirePresent = (
 
     if (isClaimSatisfied(claims[key])) continue;
 
-    invalid.push({ key, message: `Required claim "${key}" is missing` });
+    invalid.push({ key, message: `Required claim "${key}" is missing or empty` });
   }
 
   return invalid;

@@ -23,6 +23,17 @@ describe("requirePresent", () => {
     expect(requirePresent({ [key]: value }, [key], new Set())).toMatchSnapshot();
   });
 
+  test.each([
+    ["the empty string", ""],
+    ["undefined", undefined],
+    ["null", null],
+  ])("a required claim held as %s gets the entry an absent one gets", (_label, value) => {
+    const held = requirePresent({ subject: value }, ["subject"], new Set());
+
+    expect(held).toEqual(requirePresent({}, ["subject"], new Set()));
+    expect(held).toMatchSnapshot();
+  });
+
   test("a claim the writer would leave off the wire is reported as not of its declared type", () => {
     expect(requirePresent({ subject: 42 }, ["subject"], new Set(["subject"]))).toEqual([
       { key: "subject", message: 'Required claim "subject" is not of its declared type' },
@@ -33,7 +44,7 @@ describe("requirePresent", () => {
     expect(
       requirePresent({ subject: 42 }, ["issuer", "subject"], new Set(["subject"])),
     ).toEqual([
-      { key: "issuer", message: 'Required claim "issuer" is missing' },
+      { key: "issuer", message: 'Required claim "issuer" is missing or empty' },
       { key: "subject", message: 'Required claim "subject" is not of its declared type' },
     ]);
   });

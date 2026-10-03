@@ -158,13 +158,13 @@ Feature: The profile floor, applied to a token that arrived
       When I sign the wire claims as a claims token on the jose wire
       And I verify the token under the "access_token" profile as the audience "https://rs.lindorm.io/"
       Then verification is refused as a domain error "profile_policy_invalid"
-      And the refusal reports the format "jwt", the direction "verify" and locates the fault at "issuedAt": Required claim "issuedAt" is missing
+      And the refusal reports the format "jwt", the direction "verify" and locates the fault at "issuedAt": Required claim "issuedAt" is missing or empty
 
     Scenario: cose: the issue instant the access token profile requires is demanded on arrival
       When I sign the wire claims as a claims token on the cose wire
       And I verify the token under the "access_token" profile as the audience "https://rs.lindorm.io/"
       Then verification is refused as a domain error "profile_policy_invalid"
-      And the refusal reports the format "cwt", the direction "verify" and locates the fault at "issuedAt": Required claim "issuedAt" is missing
+      And the refusal reports the format "cwt", the direction "verify" and locates the fault at "issuedAt": Required claim "issuedAt" is missing or empty
 
   Rule: a token missing a claim its profile does not require verifies
 
@@ -206,13 +206,17 @@ Feature: The profile floor, applied to a token that arrived
         | subject | client-1 |
         | tokenId | token-1  |
 
-  Rule: a token whose required claim is an empty string is refused when it is verified
+  Rule: an empty identifier handed to the raw signing door is left off the token, and the token is refused without it when it is verified
 
-    Presence has to mean the same thing at issue and on arrival. `jti` is the
-    identifier a replay check keys on (RFC 7519 §4.1.7), and an identifier of
-    `""` identifies nothing — every token carrying one collides with every
-    other. A presence rule satisfied by an empty value guarantees nothing while
-    reporting that it does; aegis policy at verify.
+    The raw signing door prunes an empty `jti` — `cti` on the COSE wire — so
+    the token it signs carries no identifier at all, and what the verifier
+    judges is a claim that is absent, never one that is empty. The `delegation` profile requires the
+    identifier, so the floor refuses the token on arrival for the claim it
+    lacks: aegis policy at verify, because no specification defines that
+    profile. The first scenario on each wire reads the absence off the wire,
+    so the verdict judges a token that never carried the claim. The Rule
+    below presents the empty value itself, on a token another producer
+    wrote.
 
     Background:
       Given the wire claims
@@ -225,16 +229,69 @@ Feature: The profile floor, applied to a token that arrived
       And the claims token carries the type prefix "delegation"
       And the verifier expects the issuer "client-1"
 
-    Scenario Outline: <wire>: a presence rule is not satisfied by an empty identifier
+    Scenario: jose: the empty identifier is left off the signed token
+      When I sign the wire claims as a claims token on the jose wire
+      Then the raw payload carries no "jti"
+
+    Scenario: cose: the empty identifier is left off the signed token
+      When I sign the wire claims as a claims token on the cose wire
+      Then the raw payload carries no claim key 7
+
+    Scenario Outline: <wire>: the token signed without its identifier is refused for the claim its profile requires
       When I sign the wire claims as a claims token on the <wire> wire
       And I verify the token under the "delegation" profile as the audience "https://test.lindorm.io/"
       Then verification is refused as a domain error "profile_policy_invalid"
-      And the refusal reports the format "<format>", the direction "verify" and locates the fault at "tokenId": Required claim "tokenId" is missing
+      And the refusal reports the format "<format>", the direction "verify" and locates the fault at "tokenId": Required claim "tokenId" is missing or empty
 
       Examples:
         | wire | format |
         | jose | jwt    |
         | cose | cwt    |
+
+  Rule: a third party's token whose required identifier is the empty string is refused on arrival, as one without it is
+
+    `jti` — `cti` on the COSE wire — is the token's identifier
+    (RFC 7519 §4.1.7, RFC 8392 §3.1.7), the value a replay check keys on,
+    and an identifier of `""` identifies nothing — every token carrying one
+    collides with every other. A presence rule satisfied by an empty value
+    guarantees nothing while reporting that it does, so the floor gives the
+    empty identifier the refusal it gives an absent one: the same code, and
+    one message naming both. Aegis's raw signing door leaves an empty
+    identifier off the token, as the Rule above shows, so the token here is
+    a third party's; on the COSE wire the third party writes the empty byte
+    string at claim key 7. The first scenario on each wire reads the empty
+    value off the wire, so the second judges the floor. Requiring the
+    identifier is aegis policy at verify: no specification defines the
+    `delegation` profile.
+
+    Background:
+      Given the wire claims
+        | iss | "client-1"                   |
+        | sub | "client-1"                   |
+        | aud | ["https://test.lindorm.io/"] |
+        | jti | ""                           |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+      And the wire claims expire at "2024-01-01T08:02:00.000Z"
+      And the verifier expects the issuer "client-1"
+
+    Scenario: jose: the empty identifier reaches the wire as the empty string
+      When a third party signs the wire claims on the jose wire, typed "application/delegation+jwt"
+      Then the raw payload carries "jti" ""
+
+    Scenario: cose: the empty identifier reaches the wire as the empty byte string under claim key 7
+      When a third party signs the wire claims on the cose wire, typed "application/delegation+cwt"
+      Then the raw payload carries claim key 7 as the byte string ""
+
+    Scenario Outline: <wire>: the empty identifier is refused as an absent one is
+      When a third party signs the wire claims on the <wire> wire, typed "<typ>"
+      And I verify the token under the "delegation" profile as the audience "https://test.lindorm.io/"
+      Then verification is refused as a domain error "profile_policy_invalid"
+      And the refusal reports the format "<format>", the direction "verify" and locates the fault at "tokenId": Required claim "tokenId" is missing or empty
+
+      Examples:
+        | wire | typ                        | format |
+        | jose | application/delegation+jwt | jwt    |
+        | cose | application/delegation+cwt | cwt    |
 
   Rule: a token whose issuer is stated per call round-trips under the issuer the caller named
 

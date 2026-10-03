@@ -1,10 +1,37 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`requirePresent > a required claim held as null gets the entry an absent one gets 1`] = `
+[
+  {
+    "key": "subject",
+    "message": "Required claim "subject" is missing or empty",
+  },
+]
+`;
+
+exports[`requirePresent > a required claim held as the empty string gets the entry an absent one gets 1`] = `
+[
+  {
+    "key": "subject",
+    "message": "Required claim "subject" is missing or empty",
+  },
+]
+`;
+
+exports[`requirePresent > a required claim held as undefined gets the entry an absent one gets 1`] = `
+[
+  {
+    "key": "subject",
+    "message": "Required claim "subject" is missing or empty",
+  },
+]
+`;
+
 exports[`requirePresent > an empty act does not satisfy a demand for it 1`] = `
 [
   {
     "key": "act",
-    "message": "Required claim "act" is missing",
+    "message": "Required claim "act" is missing or empty",
   },
 ]
 `;
@@ -13,7 +40,7 @@ exports[`requirePresent > an empty audience does not satisfy a demand for it 1`]
 [
   {
     "key": "audience",
-    "message": "Required claim "audience" is missing",
+    "message": "Required claim "audience" is missing or empty",
   },
 ]
 `;
@@ -22,7 +49,7 @@ exports[`requirePresent > an empty authorizationDetails does not satisfy a deman
 [
   {
     "key": "authorizationDetails",
-    "message": "Required claim "authorizationDetails" is missing",
+    "message": "Required claim "authorizationDetails" is missing or empty",
   },
 ]
 `;
@@ -31,7 +58,7 @@ exports[`requirePresent > an empty confirmation does not satisfy a demand for it
 [
   {
     "key": "confirmation",
-    "message": "Required claim "confirmation" is missing",
+    "message": "Required claim "confirmation" is missing or empty",
   },
 ]
 `;
@@ -40,7 +67,7 @@ exports[`requirePresent > an empty mayAct does not satisfy a demand for it 1`] =
 [
   {
     "key": "mayAct",
-    "message": "Required claim "mayAct" is missing",
+    "message": "Required claim "mayAct" is missing or empty",
   },
 ]
 `;
@@ -49,7 +76,7 @@ exports[`requirePresent > an empty scope does not satisfy a demand for it 1`] = 
 [
   {
     "key": "scope",
-    "message": "Required claim "scope" is missing",
+    "message": "Required claim "scope" is missing or empty",
   },
 ]
 `;
@@ -58,11 +85,11 @@ exports[`requirePresent > returns an entry per missing claim 1`] = `
 [
   {
     "key": "exp",
-    "message": "Required claim "exp" is missing",
+    "message": "Required claim "exp" is missing or empty",
   },
   {
     "key": "iss",
-    "message": "Required claim "iss" is missing",
+    "message": "Required claim "iss" is missing or empty",
   },
 ]
 `;

@@ -226,8 +226,8 @@ describe("enforcePolicy", () => {
             direction: "mint",
             format: "jwt",
             invalid: [
-              { key: "issuer", message: 'Required claim "issuer" is missing' },
-              { key: "tokenId", message: 'Required claim "tokenId" is missing' },
+              { key: "issuer", message: 'Required claim "issuer" is missing or empty' },
+              { key: "tokenId", message: 'Required claim "tokenId" is missing or empty' },
             ],
           }),
         }),
@@ -352,7 +352,8 @@ describe("enforcePolicy", () => {
             invalid: [
               {
                 key: "accessTokenHash",
-                message: 'Conditionally required claim "accessTokenHash" is missing',
+                message:
+                  'Conditionally required claim "accessTokenHash" is missing or empty',
               },
             ],
           }),
@@ -381,7 +382,7 @@ describe("enforcePolicy", () => {
       expect.objectContaining({
         data: expect.objectContaining({
           invalid: [
-            { key: "subject", message: 'Required claim "subject" is missing' },
+            { key: "subject", message: 'Required claim "subject" is missing or empty' },
             { key: "nonce", message: 'Forbidden claim "nonce" is present' },
           ],
         }),
@@ -435,7 +436,7 @@ describe("enforcePolicy", () => {
         direction: "mint",
         format: "jwt",
         invalid: [
-          { key: "subject", message: 'Required claim "subject" is missing' },
+          { key: "subject", message: 'Required claim "subject" is missing or empty' },
           { key: "nonce", message: 'Forbidden claim "nonce" is present' },
           {
             key: "sessionId|clientId",
@@ -448,7 +449,7 @@ describe("enforcePolicy", () => {
           { key: "events", message: "events must be an object" },
           {
             key: "accessTokenHash",
-            message: 'Conditionally required claim "accessTokenHash" is missing',
+            message: 'Conditionally required claim "accessTokenHash" is missing or empty',
           },
         ],
       });
@@ -461,7 +462,7 @@ describe("enforcePolicy", () => {
         invalid: [
           {
             key: "subject",
-            message: 'Required claim "subject" is missing',
+            message: 'Required claim "subject" is missing or empty',
             rule: "required",
           },
           {
@@ -487,7 +488,7 @@ describe("enforcePolicy", () => {
           },
           {
             key: "accessTokenHash",
-            message: 'Conditionally required claim "accessTokenHash" is missing',
+            message: 'Conditionally required claim "accessTokenHash" is missing or empty',
             rule: "requiredWhen",
           },
         ],
@@ -575,7 +576,10 @@ describe("enforcePolicy", () => {
           code: "profile_policy_invalid",
           data: expect.objectContaining({
             invalid: expect.arrayContaining([
-              { key: "audience", message: 'Required claim "audience" is missing' },
+              {
+                key: "audience",
+                message: 'Required claim "audience" is missing or empty',
+              },
             ]),
           }),
         }),
@@ -637,7 +641,8 @@ describe("enforcePolicy", () => {
                 invalid: [
                   {
                     key: "accessTokenHash",
-                    message: 'Conditionally required claim "accessTokenHash" is missing',
+                    message:
+                      'Conditionally required claim "accessTokenHash" is missing or empty',
                   },
                 ],
               }),

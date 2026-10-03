@@ -33,7 +33,7 @@ export const requiredWhen = (
       key: rule.claim,
       message: unreadable.has(rule.claim)
         ? `Conditionally required claim "${rule.claim}" is not of its declared type`
-        : `Conditionally required claim "${rule.claim}" is missing`,
+        : `Conditionally required claim "${rule.claim}" is missing or empty`,
     },
   ];
 };

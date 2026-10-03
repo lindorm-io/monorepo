@@ -244,8 +244,11 @@ describe("enforceVerifyFloor", () => {
           data: expect.objectContaining({
             direction: "verify",
             invalid: [
-              { key: "clientId", message: 'Required claim "clientId" is missing' },
-              { key: "tokenId", message: 'Required claim "tokenId" is missing' },
+              {
+                key: "clientId",
+                message: 'Required claim "clientId" is missing or empty',
+              },
+              { key: "tokenId", message: 'Required claim "tokenId" is missing or empty' },
             ],
           }),
         }),
@@ -262,7 +265,9 @@ describe("enforceVerifyFloor", () => {
         expect.objectContaining({
           code: "profile_policy_invalid",
           data: expect.objectContaining({
-            invalid: [{ key: "tokenId", message: 'Required claim "tokenId" is missing' }],
+            invalid: [
+              { key: "tokenId", message: 'Required claim "tokenId" is missing or empty' },
+            ],
           }),
         }),
       );
@@ -278,7 +283,9 @@ describe("enforceVerifyFloor", () => {
         expect.objectContaining({
           code: "profile_policy_invalid",
           data: expect.objectContaining({
-            invalid: [{ key: "subject", message: 'Required claim "subject" is missing' }],
+            invalid: [
+              { key: "subject", message: 'Required claim "subject" is missing or empty' },
+            ],
           }),
         }),
       );
@@ -313,7 +320,9 @@ describe("enforceVerifyFloor", () => {
         expect.objectContaining({
           code: "profile_policy_invalid",
           data: expect.objectContaining({
-            invalid: [{ key: "tokenId", message: 'Required claim "tokenId" is missing' }],
+            invalid: [
+              { key: "tokenId", message: 'Required claim "tokenId" is missing or empty' },
+            ],
           }),
         }),
       );

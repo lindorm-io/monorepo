@@ -252,14 +252,14 @@ describe("Aegis", () => {
           direction: "mint",
           format: "jwt",
           invalid: [
-            { key: "events", message: 'Required claim "events" is missing' },
+            { key: "events", message: 'Required claim "events" is missing or empty' },
             { key: "events", message: "events must contain at least one event type" },
           ],
         },
         debugInvalid: [
           {
             key: "events",
-            message: 'Required claim "events" is missing',
+            message: 'Required claim "events" is missing or empty',
             rule: "required",
           },
           {

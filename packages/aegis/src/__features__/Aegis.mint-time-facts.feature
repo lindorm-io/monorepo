@@ -86,7 +86,7 @@ Feature: Mint-time facts a token's claims do not carry
     Scenario Outline: <wire>: the mint is refused, reporting the claim as missing
       When I mint the content under the "userinfo" profile on the <wire> wire
       Then minting is refused as a domain error "profile_policy_invalid"
-      And the refusal reports the format "<format>", the direction "mint" and locates the fault at "subject": Required claim "subject" is missing
+      And the refusal reports the format "<format>", the direction "mint" and locates the fault at "subject": Required claim "subject" is missing or empty
 
       Examples:
         | wire | format |
@@ -111,7 +111,7 @@ Feature: Mint-time facts a token's claims do not carry
     Scenario Outline: <wire>: the mint is refused, reporting the claim as missing
       When I mint the content under the "userinfo" profile on the <wire> wire
       Then minting is refused as a domain error "profile_policy_invalid"
-      And the refusal reports the format "<format>", the direction "mint" and locates the fault at "audience": Required claim "audience" is missing
+      And the refusal reports the format "<format>", the direction "mint" and locates the fault at "audience": Required claim "audience" is missing or empty
 
       Examples:
         | wire | format |
@@ -171,7 +171,7 @@ Feature: Mint-time facts a token's claims do not carry
     Scenario Outline: <wire>: the mint is refused, reporting the confirmation as missing
       When I mint the content under the "sender_constrained" profile on the <wire> wire
       Then minting is refused as a domain error "profile_policy_invalid"
-      And the refusal reports the format "<format>", the direction "mint" and locates the fault at "confirmation": Required claim "confirmation" is missing
+      And the refusal reports the format "<format>", the direction "mint" and locates the fault at "confirmation": Required claim "confirmation" is missing or empty
 
       Examples:
         | wire | format |

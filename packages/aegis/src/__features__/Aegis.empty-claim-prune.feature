@@ -524,7 +524,7 @@ Feature: The empty-claim prune
       Then minting is refused as a domain error "profile_policy_invalid"
       And the refusal reports the format "<format>", the direction "mint" and lists the faults
         | key    | message                                      |
-        | events | Required claim "events" is missing           |
+        | events | Required claim "events" is missing or empty  |
         | events | events must contain at least one event type  |
 
       Examples:
