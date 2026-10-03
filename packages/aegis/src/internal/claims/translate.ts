@@ -57,12 +57,6 @@ const toDate = (value: unknown): Date | undefined => {
   return undefined;
 };
 
-const toStringArray = (value: unknown): Array<string> | undefined => {
-  if (isArray(value)) return value as Array<string>;
-  if (isString(value)) return value.split(" ").filter(Boolean);
-  return undefined;
-};
-
 const toAudience = (value: unknown): Array<string> | undefined => {
   if (isArray(value)) return value as Array<string>;
   if (isString(value)) return [value];
@@ -836,7 +830,9 @@ const walkObject = (
  * THAT RESOLVE TO ONE KEY, a member the structure's CLOSED member set does not
  * declare, a claim value that is not the COLLECTION its codec declares, an
  * ELEMENT of that collection that is not a structure, and a MEMBER of a
- * space-delimited list that is not a string or contains a space. Those share one
+ * space-delimited list that is not a `scope-token` — not a string, empty, or
+ * carrying a space or another character the production does not admit — whether
+ * a caller's list or the members a wire string's spaces delimit. Those share one
  * repair — the claim's shape — and each entry's own `message` says which it is.
  *
  * ⚠ AND ONE THAT IS A DIFFERENT REPAIR UNDER THE SAME CODE: a claim the dict door
@@ -852,7 +848,7 @@ const refuseInvalidStructure = (claim: string, invalid: Array<InvalidEntry>): ne
     debug: { claim, invalid },
     title: "Invalid Claim Structure",
     details:
-      "A claim does not have the structure the registry declares for it: a member its specification makes mandatory is absent or empty, two members resolve to the same key so neither can be honoured, a member is not one the claim's closed member set declares, the value is not the collection the claim is defined as, an element of that collection is not a structure, or a member of a space-delimited list is not a string or contains a space. A claim stated under its domain name where the door reads wire names is refused the same way, and is repaired by spelling it as the entry says. Each entry in `invalid` names the offending position and what is wrong with it.",
+      "A claim does not have the structure the registry declares for it: a member its specification makes mandatory is absent or empty, two members resolve to the same key so neither can be honoured, a member is not one the claim's closed member set declares, the value is not the collection the claim is defined as, an element of that collection is not a structure, or a member of a space-delimited list is not a scope-token: not a string, empty, or carrying a space or another character the scope-token production does not admit. A claim stated under its domain name where the door reads wire names is refused the same way, and is repaired by spelling it as the entry says. Each entry in `invalid` names the offending position and what is wrong with it.",
   });
 };
 
@@ -1060,6 +1056,59 @@ const encodeIfReadable = (
 // RFC 6749 §3.3
 const SCOPE_TOKEN = /^[\x21\x23-\x5B\x5D-\x7E]+$/;
 
+/** Why ONE member of a space-delimited list is not a `scope-token` — the first check it fails. */
+const scopeTokenFault = (member: unknown): string | undefined => {
+  if (!isString(member)) return "must be a string";
+  if (member === "") return "must not be empty";
+  if (member.includes(" ")) return "must not contain a space";
+  if (!SCOPE_TOKEN.test(member)) {
+    return "must contain only scope-token characters (RFC 6749 §3.3)";
+  }
+
+  return undefined;
+};
+
+/** One entry per member that is not a `scope-token`, at its own index; `true` when none is. */
+const holdScopeTokens = (
+  members: ReadonlyArray<unknown>,
+  context: WalkContext,
+): boolean => {
+  const faults = context.invalid.length;
+
+  members.forEach((member, index) => {
+    const fault = scopeTokenFault(member);
+    if (fault === undefined) return;
+
+    const at = elementPath(context, index);
+    context.invalid.push({ key: at.path, message: `Member "${at.path}" ${fault}` });
+  });
+
+  return context.invalid.length === faults;
+};
+
+/**
+ * The members of a space-delimited string, each held to {@link SCOPE_TOKEN}
+ * (RFC 8693 §4.2) — on read, and on write for a string handed over in place of
+ * the list. Refusing a string outside the grammar is aegis policy.
+ *
+ * ⚠ `""` IS OUTSIDE THE GRAMMAR AND READS AS `[]` — aegis policy, because it is
+ * the spelling {@link encodeArray} gives an explicitly empty list, which the
+ * registry keeps (`claims-registry.ts`, `scope`).
+ *
+ * ⚠ THE SPLIT IS NOT FILTERED. A doubled, leading or trailing SP delimits an
+ * empty member, and that member is the fault reported at its own index; filtering
+ * it out reads the string as a list the grammar would have spelled differently.
+ * pinned: translate.test.ts, "the spaced read — a scope string is held to the
+ * scope-token grammar".
+ */
+const splitSpaced = (value: string, context: WalkContext): Array<string> | undefined => {
+  if (value === "") return [];
+
+  const members = value.split(" ");
+
+  return holdScopeTokens(members, context) ? members : undefined;
+};
+
 // How an array claim reaches the JOSE-shaped wire, per the codec's own policy —
 // the write twin of {@link decodeArray}, and the ONE place the spaced join
 // happens.
@@ -1085,13 +1134,19 @@ const SCOPE_TOKEN = /^[\x21\x23-\x5B\x5D-\x7E]+$/;
 // empty spaced member, translate.test.ts#refuses %x22 — the gap between %x21
 // and %x23.
 //
-// ⚠ A NON-ARRAY VALUE RIDES UNTOUCHED, like every scalar encode arm:
-// `encodeIfReadable`'s probe decides whether the read side would keep it, so an
-// already-joined string survives and a shape the decoder refuses walks to
-// `undefined` — the caller's own disposal for that ({@link walkObject},
-// {@link unreadableClaims}) is what differs by depth.
-// pinned: translate.test.ts#should carry a scalar for a top-level array claim
-// whose codec tolerates one.
+// ⚠ A STRING IS HELD TO THE GRAMMAR HERE, NOT LEFT TO THE PROBE. The read
+// side refuses a string outside it ({@link splitSpaced}), and
+// `encodeIfReadable`'s probe discards the violations it finds, so asking the
+// probe would leave the claim off the wire in silence — a token stating less
+// than the caller wrote. A string inside the grammar rides as written.
+// pinned: translate.test.ts#should refuse a scalar scope string outside the
+// scope-token grammar rather than leave it off, translate.test.ts#should carry
+// a scalar for a top-level array claim whose codec tolerates one.
+//
+// ⚠ ANY OTHER NON-ARRAY VALUE RIDES UNTOUCHED, like every scalar encode arm:
+// the probe decides whether the read side would keep it, and a shape the
+// decoder refuses walks to `undefined` — the caller's own disposal for that
+// ({@link walkObject}, {@link unreadableClaims}) is what differs by depth.
 const encodeArray = (
   spec: WalkedSpec,
   scalar: ArrayScalar,
@@ -1100,49 +1155,15 @@ const encodeArray = (
 ): unknown => {
   switch (scalar) {
     case "spaced": {
-      if (!isArray(value)) return value;
+      if (isArray(value)) {
+        return holdScopeTokens(value, context) ? value.join(" ") : undefined;
+      }
 
-      const faults = context.invalid.length;
+      if (isString(value)) {
+        return splitSpaced(value, context) === undefined ? undefined : value;
+      }
 
-      value.forEach((member, index) => {
-        const at = elementPath(context, index);
-
-        if (!isString(member)) {
-          context.invalid.push({
-            key: at.path,
-            message: `Member "${at.path}" must be a string`,
-          });
-
-          return;
-        }
-
-        if (member === "") {
-          context.invalid.push({
-            key: at.path,
-            message: `Member "${at.path}" must not be empty`,
-          });
-
-          return;
-        }
-
-        if (member.includes(" ")) {
-          context.invalid.push({
-            key: at.path,
-            message: `Member "${at.path}" must not contain a space`,
-          });
-
-          return;
-        }
-
-        if (SCOPE_TOKEN.test(member)) return;
-
-        context.invalid.push({
-          key: at.path,
-          message: `Member "${at.path}" must contain only scope-token characters (RFC 6749 §3.3)`,
-        });
-      });
-
-      return context.invalid.length === faults ? value.join(" ") : undefined;
+      return value;
     }
     case "strict":
     case "wrap":
@@ -1334,19 +1355,27 @@ const decodeBespoke = (
   }
 };
 
-// How an array claim tolerates a SCALAR on read, per the codec's own policy.
+// How an array claim reads its wire value, per the codec's own policy: `wrap`
+// and `strict` decide whether a SCALAR stands in for the array, and `spaced`
+// reads the string that is its wire form ({@link splitSpaced}).
 //
 // ⚠ The `default` is NOT redundant: the declared return type is `unknown`, so
 // falling off the end is legal and a new {@link ArrayScalar} member would compile
 // clean and DROP the claim on read. The `never` binding is what makes the
 // compiler bite instead (the house exhaustive-switch idiom, as in
 // `encodeBespoke`/`decodeBespoke`).
-const decodeArray = (spec: WalkedSpec, scalar: ArrayScalar, value: unknown): unknown => {
+const decodeArray = (
+  spec: WalkedSpec,
+  scalar: ArrayScalar,
+  value: unknown,
+  context: WalkContext,
+): unknown => {
   switch (scalar) {
     case "wrap":
       return toAudience(value); // RFC 7519 §4.1.3
     case "spaced":
-      return toStringArray(value); // scope — the wire form (RFC 8693 §4.2)
+      if (isString(value)) return splitSpaced(value, context);
+      return isArray(value) ? value : undefined;
     case "strict":
       return isArray(value) ? value : undefined; // membership pinned: claims-registry.test.ts
     default: {
@@ -1391,7 +1420,7 @@ const decodeValue = (
       return isString(value) ? value : undefined; // the JOSE string form
     case "array":
       return codec.of === undefined
-        ? decodeArray(spec, codec.scalar, value)
+        ? decodeArray(spec, codec.scalar, value, context)
         : walkElements(codec.of, value, readDirection(nameOf), context);
     case "object":
       return walkObject(codec, value, readDirection(nameOf), context);

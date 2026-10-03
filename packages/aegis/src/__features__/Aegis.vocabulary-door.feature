@@ -81,3 +81,54 @@ Feature: The claim vocabulary door
         | subject | "user-1" |
       And the custom claims are
         | expiresAt | 1704099600 |
+
+  Rule: a scope string outside the scope-token grammar is refused rather than split
+
+    The door reads `scope` as a token read does: one string of scope-tokens
+    separated by single spaces, the grammar RFC 8693 §4.2 takes from
+    RFC 6749 §3.3. A string outside it has no single reading, and splitting it
+    anyway hands the consumer a grant nobody stated. The refusal is aegis
+    policy, and it locates the fault at the member the spaces delimit.
+
+    Scenario: the scope string carrying a double quote is refused at the member that carries it
+      Given the claim dict
+        | scope | "a\"b c" |
+      When I read the claim dict into the domain vocabulary
+      Then the read is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "scope" and locates the fault at "scope[0]": Member "scope[0]" must contain only scope-token characters (RFC 6749 §3.3)
+
+    Scenario: the scope string carrying two spaces in a row is refused at the empty member between them
+      Given the claim dict
+        | scope | "openid  profile" |
+      When I read the claim dict into the domain vocabulary
+      Then the read is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "scope" and locates the fault at "scope[1]": Member "scope[1]" must not be empty
+
+    Scenario: the scope string opening with a space is refused at the empty first member
+      Given the claim dict
+        | scope | " openid" |
+      When I read the claim dict into the domain vocabulary
+      Then the read is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "scope" and locates the fault at "scope[0]": Member "scope[0]" must not be empty
+
+    Scenario: the scope string ending with a space is refused at the empty last member
+      Given the claim dict
+        | scope | "openid " |
+      When I read the claim dict into the domain vocabulary
+      Then the read is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "scope" and locates the fault at "scope[1]": Member "scope[1]" must not be empty
+
+  Rule: the empty scope string is read as the empty list
+
+    The empty string is outside the grammar, which has no empty scope-token, but
+    it is the one spelling the wire form has for a grant of nothing, and aegis
+    writes it for an explicitly empty list. The door reads it as that list, as
+    aegis policy.
+
+    Scenario: the empty scope string is read as the empty list
+      Given the claim dict
+        | scope | "" |
+      When I read the claim dict into the domain vocabulary
+      Then the domain claims are
+        | scope | [] |
+      And the custom bucket is empty

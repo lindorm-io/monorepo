@@ -553,7 +553,8 @@ describe("CLAIM_REGISTRY", () => {
     // `groups` — are deliberately NOT here: they are our own vocabulary, and the
     // only issuer that mints them (tyr's access-token mint) emits an empty list as
     // absence. `scope` IS here and splits from them as AEGIS POLICY — see its
-    // registry entry, and ⛔ do not attach RFC 6749 §3.3 to it.
+    // registry entry: the `""` it emits for `[]` is outside the RFC 6749 §3.3
+    // grammar, so no specification is the basis.
     expect(keep).toEqual(["audience", "scope", "authorizationDetails"]);
   });
 

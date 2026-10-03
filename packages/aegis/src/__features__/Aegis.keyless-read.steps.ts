@@ -4,6 +4,9 @@ import { expect } from "vitest";
 import { AegisStepsBase } from "../__fixtures__/aegis-steps-base.js";
 import { jsonCells } from "../__fixtures__/json-cells.js";
 
+/** The claims the domain states as a list, in the same spelling as the JSON literal type. */
+type ListClaim = "audience" | "scope" | "roles";
+
 @Binding()
 export class AegisKeylessReadSteps extends AegisStepsBase {
   // the keyless result
@@ -26,6 +29,16 @@ export class AegisKeylessReadSteps extends AegisStepsBase {
   @Then("the parsed token carries no sensitive bucket")
   theParsedTokenCarriesNoSensitiveBucket(): void {
     expect(this.parsed().sensitive).toBeUndefined();
+  }
+
+  @Then("the parsed claims list the {listClaim} {stringList}")
+  theParsedClaimsListThe(claim: ListClaim, members: Array<string>): void {
+    expect(this.parsed().claims[claim]).toEqual(members);
+  }
+
+  @Then("the parsed claims list an empty {listClaim}")
+  theParsedClaimsListAnEmpty(claim: ListClaim): void {
+    expect(this.parsed().claims[claim]).toEqual([]);
   }
 
   @Then("the parsed claims carry no {string}")

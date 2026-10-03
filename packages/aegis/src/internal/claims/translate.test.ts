@@ -295,7 +295,8 @@ describe("domainToJose — content -> wire mapping", () => {
 
   // The CONTRAST that keeps the two rows above from being read as "a scalar is
   // dropped": an array claim whose codec DOES tolerate one keeps it, because the
-  // read side keeps it. `aud` wraps (RFC 7519 §4.1.3) and `scope` splits.
+  // read side keeps it. `aud` wraps (RFC 7519 §4.1.3) and `scope` splits a
+  // string inside its grammar.
   test("should carry a scalar for a top-level array claim whose codec tolerates one", () => {
     expect(domainToJose({ audience: "a" as unknown as Array<string> })).toEqual({
       aud: "a",
@@ -306,6 +307,26 @@ describe("domainToJose — content -> wire mapping", () => {
       scope: "a b",
     });
     expect(joseToDomain({ scope: "a b" }).claims.scope).toEqual(["a", "b"]);
+  });
+
+  test("should refuse a scalar scope string outside the scope-token grammar rather than leave it off", () => {
+    expect(() =>
+      domainToJose({ scope: "read  write" as unknown as Array<string> }),
+    ).toThrow(
+      expect.objectContaining({
+        code: "claim_structure_invalid",
+        data: {
+          claim: "scope",
+          invalid: [{ key: "scope[1]", message: 'Member "scope[1]" must not be empty' }],
+        },
+      }) as unknown as Error,
+    );
+  });
+
+  test("should carry the empty scalar scope string as written", () => {
+    expect(domainToJose({ scope: "" as unknown as Array<string> })).toEqual({
+      scope: "",
+    });
   });
 
   // The WRITE half of the spaced policy: `spaced` states the WIRE FORM — the
@@ -323,8 +344,8 @@ describe("domainToJose — content -> wire mapping", () => {
 
   // A member containing a space joins to bytes identical to two members, so the
   // write side REFUSES it rather than sign a list its own reader reports
-  // differently — aegis policy at mint (RFC 6749 §3.3). The read side splits: a
-  // foreign wire string is read as the members it delimits.
+  // differently — aegis policy at mint (RFC 6749 §3.3). The read side splits a
+  // foreign wire string inside the grammar into the members it delimits.
   test("should refuse a spaced member containing a space rather than join it into two members", () => {
     expect(() => domainToJose({ scope: ["read write"] })).toThrow(
       expect.objectContaining({
@@ -681,6 +702,78 @@ describe("domainToJose — content -> wire mapping", () => {
     };
 
     expect(joseToDomain(domainToJose({ events })).claims.events).toEqual(events);
+  });
+});
+
+describe("the spaced read — a scope string is held to the scope-token grammar", () => {
+  const refusal = (invalid: Array<{ key: string; message: string }>): Error =>
+    expect.objectContaining({
+      code: "claim_structure_invalid",
+      data: { claim: "scope", invalid },
+    }) as unknown as Error;
+
+  const empty = (index: number) => ({
+    key: `scope[${index}]`,
+    message: `Member "scope[${index}]" must not be empty`,
+  });
+
+  const character = (index: number) => ({
+    key: `scope[${index}]`,
+    message: `Member "scope[${index}]" must contain only scope-token characters (RFC 6749 §3.3)`,
+  });
+
+  test("reads single-space-delimited scope-tokens as the list they spell", () => {
+    expect(joseToDomain({ scope: "read write:all a!#[]~" }).claims.scope).toEqual([
+      "read",
+      "write:all",
+      "a!#[]~",
+    ]);
+  });
+
+  test("reads the empty string as the empty list", () => {
+    expect(joseToDomain({ scope: "" }).claims.scope).toEqual([]);
+  });
+
+  test("refuses a member carrying a character outside the scope-token production", () => {
+    expect(() => joseToDomain({ scope: 'a"b c' })).toThrow(refusal([character(0)]));
+  });
+
+  test("refuses two spaces in a row at the empty member between them rather than filtering it", () => {
+    expect(() => joseToDomain({ scope: "a  b" })).toThrow(refusal([empty(1)]));
+  });
+
+  test("refuses a leading space at the empty first member", () => {
+    expect(() => joseToDomain({ scope: " a" })).toThrow(refusal([empty(0)]));
+  });
+
+  test("refuses a trailing space at the empty last member", () => {
+    expect(() => joseToDomain({ scope: "a " })).toThrow(refusal([empty(1)]));
+  });
+
+  test("refuses a lone space as two empty members", () => {
+    expect(() => joseToDomain({ scope: " " })).toThrow(refusal([empty(0), empty(1)]));
+  });
+
+  test("refuses a tab as a character, not as a delimiter", () => {
+    expect(() => joseToDomain({ scope: "a\tb" })).toThrow(refusal([character(0)]));
+  });
+
+  test("lists every faulty member in delimited order", () => {
+    expect(() => joseToDomain({ scope: ' a"b  c ' })).toThrow(
+      refusal([empty(0), character(1), empty(2), empty(4)]),
+    );
+  });
+
+  test("refuses under the COSE selector, the floor read and the dict read alike", () => {
+    expect(() => wireToDomain({ scope: "a  b" }, coseName, "token")).toThrow(
+      refusal([empty(1)]),
+    );
+    expect(() => wireToFloorClaims({ scope: "a  b" }, joseName)).toThrow(
+      refusal([empty(1)]),
+    );
+    expect(() => wireToDomain({ scope: "a  b" }, joseName, "dict")).toThrow(
+      refusal([empty(1)]),
+    );
   });
 });
 
@@ -1774,6 +1867,12 @@ describe("unreadableClaims — the top-level claims the mint writer leaves off t
   // its declared type" ahead of the structure refusal that names the member.
   test("unreadableClaims omits a spaced claim refused for a member containing a space", () => {
     expect(unreadableClaims({ scope: ["read write"], subject: 42 })).toEqual(
+      new Set(["subject"]),
+    );
+  });
+
+  test("unreadableClaims omits a scalar scope string refused for its grammar", () => {
+    expect(unreadableClaims({ scope: "a  b", subject: 42 })).toEqual(
       new Set(["subject"]),
     );
   });

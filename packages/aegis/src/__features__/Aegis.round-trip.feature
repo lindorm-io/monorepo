@@ -207,6 +207,43 @@ Feature: The domain round trip
         | jose |
         | cose |
 
+  Rule: a scope stated as a string outside the scope-token grammar is refused by the domain signing doors rather than left off
+
+    A caller without the type checker can hand `scope` over as its wire string
+    instead of the list. Every read door refuses a string outside the grammar,
+    so a writer that only asked whether the reader would keep it would leave the
+    claim off and sign a token stating less than the caller wrote, with nothing
+    said. Aegis policy on write: the string is held to the grammar the read
+    holds it to, and the refusal locates the fault at the empty member two
+    spaces in a row delimit.
+
+    Background:
+      Given the content to mint
+        | subject  | user-1   |
+        | clientId | client-1 |
+      And an audience list whose only member is "https://rs.lindorm.io/"
+      And the scope is stated as the string "read  write" rather than a list
+
+    Scenario Outline: <wire>: the mint is refused, locating the fault at the empty member
+      When I mint the content under the "access_token" profile on the <wire> wire
+      Then minting is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "scope" and locates the fault at "scope[1]": Member "scope[1]" must not be empty
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
+    Scenario Outline: <wire>: the profile-less sign is refused, locating the fault at the empty member
+      When I sign the claims without a profile on the <wire> wire
+      Then signing is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "scope" and locates the fault at "scope[1]": Member "scope[1]" must not be empty
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
   Rule: a minted scope list whose members span the scope-token ranges is read back unchanged
 
     Every character the `scope-token` production admits must ride: a member

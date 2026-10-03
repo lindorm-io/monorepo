@@ -874,6 +874,241 @@ Feature: The profile floor, applied to a token that arrived
       Then verification is refused as a domain error "claim_structure_invalid"
       And the refusal names the claim "authorizationDetails" and locates the fault at "authorizationDetails": Claim "authorizationDetails" must be an array
 
+  Rule: a scope string another producer wrote in the scope-token grammar is read as the list it spells
+
+    The wire form of `scope` is one string of scope-tokens separated by single
+    spaces, the grammar RFC 8693 §4.2 takes from RFC 6749 §3.3, while the
+    domain speaks the list. A string inside that grammar has exactly one
+    reading, so both read doors report the members its spaces delimit.
+
+    Background:
+      Given the wire claims
+        | iss   | "https://test.lindorm.io/" |
+        | sub   | "user-1"                   |
+        | aud   | ["https://rs.lindorm.io/"] |
+        | jti   | "token-1"                  |
+        | scope | "openid profile"           |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+
+    Scenario Outline: <wire>: the verify reads the string as the list it spells
+      When a third party signs the wire claims on the <wire> wire, typed "<typ>"
+      And I verify the token
+      Then the verified claims list the scope "openid", "profile"
+
+      Examples:
+        | wire | typ             |
+        | jose | JWT             |
+        | cose | application/cwt |
+
+    Scenario Outline: <wire>: the keyless read reads the string as the list it spells
+      When a third party signs the wire claims on the <wire> wire, typed "<typ>"
+      And I read the token without a key
+      Then the parsed claims list the scope "openid", "profile"
+
+      Examples:
+        | wire | typ             |
+        | jose | JWT             |
+        | cose | application/cwt |
+
+  Rule: a scope another producer wrote as the empty string is read as the empty list
+
+    The grammar has no empty scope-token, so the empty string sits outside it,
+    yet it is the only spelling the wire form has for a grant of nothing, and
+    aegis writes it for an explicitly empty list. Reading it as the empty list
+    is aegis policy: refusing it would refuse aegis's own empty grant, and
+    dropping it would erase the one statement that tells an empty grant apart
+    from an absent one.
+
+    Background:
+      Given the wire claims
+        | iss   | "https://test.lindorm.io/" |
+        | sub   | "user-1"                   |
+        | aud   | ["https://rs.lindorm.io/"] |
+        | jti   | "token-1"                  |
+        | scope | ""                         |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+
+    Scenario Outline: <wire>: the verify reads the empty string as the empty list
+      When a third party signs the wire claims on the <wire> wire, typed "<typ>"
+      And I verify the token
+      Then the verified claims list an empty scope
+
+      Examples:
+        | wire | typ             |
+        | jose | JWT             |
+        | cose | application/cwt |
+
+    Scenario Outline: <wire>: the keyless read reads the empty string as the empty list
+      When a third party signs the wire claims on the <wire> wire, typed "<typ>"
+      And I read the token without a key
+      Then the parsed claims list an empty scope
+
+      Examples:
+        | wire | typ             |
+        | jose | JWT             |
+        | cose | application/cwt |
+
+  Rule: a token whose scope string carries a character outside the scope-token grammar is refused on read
+
+    A scope-token admits no double quote, so this string is outside the grammar
+    RFC 8693 §4.2 takes from RFC 6749 §3.3. That grammar binds the server that
+    issues a scope and tells a recipient nothing, so the refusal is aegis
+    policy. Splitting the string anyway reports a grant the grammar cannot
+    state; dropping the claim reports a token granting nothing where its issuer
+    signed a grant. The refusal locates the fault at the member the spaces
+    delimit.
+
+    Background:
+      Given the wire claims
+        | iss   | "https://test.lindorm.io/" |
+        | sub   | "user-1"                   |
+        | aud   | ["https://rs.lindorm.io/"] |
+        | jti   | "token-1"                  |
+        | scope | "a\"b c"                   |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+
+    Scenario Outline: <wire>: the verify is refused, locating the fault at the member
+      When a third party signs the wire claims on the <wire> wire, typed "<typ>"
+      And I verify the token
+      Then verification is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "scope" and locates the fault at "scope[0]": Member "scope[0]" must contain only scope-token characters (RFC 6749 §3.3)
+
+      Examples:
+        | wire | typ             |
+        | jose | JWT             |
+        | cose | application/cwt |
+
+    Scenario Outline: <wire>: the keyless read is refused, locating the fault at the member
+      When a third party signs the wire claims on the <wire> wire, typed "<typ>"
+      And I read the token without a key
+      Then the keyless read is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "scope" and locates the fault at "scope[0]": Member "scope[0]" must contain only scope-token characters (RFC 6749 §3.3)
+
+      Examples:
+        | wire | typ             |
+        | jose | JWT             |
+        | cose | application/cwt |
+
+  Rule: a token whose scope string carries two spaces in a row is refused on read, not read past
+
+    Two spaces in a row delimit an empty member, and the grammar has no empty
+    scope-token. Filtering the empty member out reads the string as a list the
+    grammar would have spelled differently, and the reader cannot tell a
+    careless join from a member that was lost. Aegis policy, as for every
+    string outside the grammar: the refusal locates the fault at the empty
+    member.
+
+    Background:
+      Given the wire claims
+        | iss   | "https://test.lindorm.io/" |
+        | sub   | "user-1"                   |
+        | aud   | ["https://rs.lindorm.io/"] |
+        | jti   | "token-1"                  |
+        | scope | "openid  profile"          |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+
+    Scenario Outline: <wire>: the verify is refused, locating the fault at the empty member
+      When a third party signs the wire claims on the <wire> wire, typed "<typ>"
+      And I verify the token
+      Then verification is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "scope" and locates the fault at "scope[1]": Member "scope[1]" must not be empty
+
+      Examples:
+        | wire | typ             |
+        | jose | JWT             |
+        | cose | application/cwt |
+
+    Scenario Outline: <wire>: the keyless read is refused, locating the fault at the empty member
+      When a third party signs the wire claims on the <wire> wire, typed "<typ>"
+      And I read the token without a key
+      Then the keyless read is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "scope" and locates the fault at "scope[1]": Member "scope[1]" must not be empty
+
+      Examples:
+        | wire | typ             |
+        | jose | JWT             |
+        | cose | application/cwt |
+
+  Rule: a token whose scope string opens with a space is refused on read
+
+    A leading space delimits an empty first member, which the grammar has no
+    scope-token for. Aegis policy, as for every string outside the grammar: the
+    refusal locates the fault at the empty member.
+
+    Background:
+      Given the wire claims
+        | iss   | "https://test.lindorm.io/" |
+        | sub   | "user-1"                   |
+        | aud   | ["https://rs.lindorm.io/"] |
+        | jti   | "token-1"                  |
+        | scope | " openid"                  |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+
+    Scenario Outline: <wire>: the verify is refused, locating the fault at the empty first member
+      When a third party signs the wire claims on the <wire> wire, typed "<typ>"
+      And I verify the token
+      Then verification is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "scope" and locates the fault at "scope[0]": Member "scope[0]" must not be empty
+
+      Examples:
+        | wire | typ             |
+        | jose | JWT             |
+        | cose | application/cwt |
+
+    Scenario Outline: <wire>: the keyless read is refused, locating the fault at the empty first member
+      When a third party signs the wire claims on the <wire> wire, typed "<typ>"
+      And I read the token without a key
+      Then the keyless read is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "scope" and locates the fault at "scope[0]": Member "scope[0]" must not be empty
+
+      Examples:
+        | wire | typ             |
+        | jose | JWT             |
+        | cose | application/cwt |
+
+  Rule: a token whose scope string ends with a space is refused on read
+
+    A trailing space delimits an empty last member, which the grammar has no
+    scope-token for. Aegis policy, as for every string outside the grammar: the
+    refusal locates the fault at the empty member.
+
+    Background:
+      Given the wire claims
+        | iss   | "https://test.lindorm.io/" |
+        | sub   | "user-1"                   |
+        | aud   | ["https://rs.lindorm.io/"] |
+        | jti   | "token-1"                  |
+        | scope | "openid "                  |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+
+    Scenario Outline: <wire>: the verify is refused, locating the fault at the empty last member
+      When a third party signs the wire claims on the <wire> wire, typed "<typ>"
+      And I verify the token
+      Then verification is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "scope" and locates the fault at "scope[1]": Member "scope[1]" must not be empty
+
+      Examples:
+        | wire | typ             |
+        | jose | JWT             |
+        | cose | application/cwt |
+
+    Scenario Outline: <wire>: the keyless read is refused, locating the fault at the empty last member
+      When a third party signs the wire claims on the <wire> wire, typed "<typ>"
+      And I read the token without a key
+      Then the keyless read is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "scope" and locates the fault at "scope[1]": Member "scope[1]" must not be empty
+
+      Examples:
+        | wire | typ             |
+        | jose | JWT             |
+        | cose | application/cwt |
+
   Rule: a security event token carrying no expiry verifies under the profile that issues it
 
     `exp` is NOT RECOMMENDED in a security event token, so a conformant SET

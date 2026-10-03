@@ -35,6 +35,11 @@ export class AegisRoundTripSteps extends AegisStepsBase {
     this.ctx.claims[claim] = members;
   }
 
+  @Given("the scope is stated as the string {string} rather than a list")
+  theScopeIsStatedAsTheString(scope: string): void {
+    this.ctx.claims.scope = scope;
+  }
+
   @Given("the content expires in {string}")
   theContentExpiresIn(expiry: string): void {
     this.ctx.claims.expires = expiry;

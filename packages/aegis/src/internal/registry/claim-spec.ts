@@ -19,7 +19,9 @@ export type Sensitivity = "public" | "sensitive";
  *   - `"spaced"` the WIRE FORM is one space-delimited STRING, in BOTH
  *                directions: the write side JOINS (`["a","b"]` -> `"a b"`,
  *                `[]` -> `""`) and the read side SPLITS — the RFC 6749 §3.3
- *                spelling. `scope` alone (RFC 8693 §4.2).
+ *                spelling. A string outside that grammar is refused on read
+ *                and on write, and `""` reads as `[]` — aegis policy both.
+ *                `scope` alone (RFC 8693 §4.2).
  *   - `"strict"` the wire carries the array itself; a scalar on read decodes
  *                to `undefined`.
  *   - `"wrap"`   the wire carries the array; a scalar on read WRAPS to a

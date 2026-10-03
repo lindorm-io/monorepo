@@ -288,9 +288,12 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     sensitivity: "public",
     sample: ["openid", "profile"],
     bucket: "claims",
-    // KEEP. ⛔ THIS IS AEGIS POLICY, NOT A CITATION — do not attach RFC 6749 §3.3
-    // to it, which governs an AUTHORIZATION SERVER handling a request, not a
-    // recipient reading a claim.
+    // KEEP. ⛔ THIS IS AEGIS POLICY, NOT A CITATION. The wire value is in the
+    // RFC 6749 §3.3 format (RFC 8693 §4.2), and both directions refuse a string
+    // outside it — also aegis policy (`translate.ts`, `splitSpaced`). `""` is the
+    // one string outside that grammar the claim accepts: an explicit `[]` is
+    // emitted as `""` and `""` reads back as `[]`; no specification states either
+    // half.
     //
     // The policy: `scope` is only a SHOULD on an access token (RFC 9068 §2.2.3),
     // so a verifier cannot tell an absent `scope` from a grant that never had one

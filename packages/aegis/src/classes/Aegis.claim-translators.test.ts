@@ -169,4 +169,20 @@ describe("Aegis — the public claim translators", () => {
       }) as unknown as Error,
     );
   });
+
+  test("refuses a scope string outside the scope-token grammar rather than leave it off — aegis policy on write", () => {
+    const write = () =>
+      Aegis.toWire({ scope: "read  write" as unknown as Array<string> });
+
+    expect(write).toThrow(AegisDomainError);
+    expect(write).toThrow(
+      expect.objectContaining({
+        code: "claim_structure_invalid",
+        data: {
+          claim: "scope",
+          invalid: [{ key: "scope[1]", message: 'Member "scope[1]" must not be empty' }],
+        },
+      }) as unknown as Error,
+    );
+  });
 });
