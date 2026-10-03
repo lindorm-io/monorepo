@@ -1,4 +1,3 @@
-import { EcError } from "@lindorm/ec";
 import { type IKryptos, KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { describe, expect, test } from "vitest";
@@ -387,17 +386,11 @@ describe("CwsKit — a NIL signature is refused under the error contract", () =>
   });
 
   // A zero-length signature is PRESENT, not nil: the producer wrote a byte string
-  // and it holds no bytes. It must reach the SIGNATURE CYCLE — a different
-  // verdict from a malformed structure — or the guard would be rejecting on
-  // emptiness rather than on absence, and `decode` must hand the empty signature
-  // back as it found it.
-  //
-  // ⚠ FLAGGED, NOT FIXED: for an EC key that cycle answers `EcError
-  // invalid_raw_signature_length` from `@lindorm/ec`, which is NOT an
-  // `AegisError` — the signature cycle's own escape, a separate defect from this
-  // guard's. Asserted rather than merely "not cose_malformed", so closing that
-  // escape reddens this row and names what changed.
-  test("an EMPTY signature is a signature — it reaches the signature cycle", () => {
+  // and it holds no bytes. The slot gate passes it — `decode` hands it back as it
+  // found it, or the gate would be rejecting on emptiness rather than on absence —
+  // and the SIGNATURE CYCLE refuses its length: the nil slot's code from a
+  // different gate, which is why the details are asserted.
+  test("an EMPTY signature is a signature — the signature cycle refuses its length as cose_malformed", () => {
     const empty = encodeCbor(
       new Tag(COSE_TAG.sign1, [
         encodeProtectedHeader(new Map<number, unknown>([[coseByJose("alg"), -36]])),
@@ -411,8 +404,11 @@ describe("CwsKit — a NIL signature is refused under the error contract", () =>
 
     const thrown = thrownBy(() => kit.verify(empty));
 
-    expect(thrown).toBeInstanceOf(EcError);
-    expect((thrown as EcError).code).toBe("invalid_raw_signature_length");
+    expect(thrown).toBeInstanceOf(CwsError);
+    expect((thrown as CwsError).code).toBe("cose_malformed");
+    expect((thrown as CwsError).details).toBe(
+      "The COSE_Sign1 signature is not the length the key's curve defines for an ECDSA signature, so there is nothing to verify.",
+    );
     expect(CwsKit.decode(empty).signature).toHaveLength(0);
   });
 });
@@ -422,13 +418,9 @@ describe("CwsKit — a NIL signature is refused under the error contract", () =>
 // 500 for a token that should simply have been rejected. RFC 9052 §4.2,
 // RFC 9052 §6.2.
 //
-// ⚠ ONE structural fault is OUTSIDE that contract and stays flagged: a signature of
-// the WRONG LENGTH is still a byte string, so ANY of them — zero-length, 2 bytes,
-// 10 — clears these gates and reaches the signature cycle, which for an EC key
-// answers `EcError invalid_raw_signature_length` (pinned by "an EMPTY signature is
-// a signature — it reaches the signature cycle" above, which is one instance of the
-// class, not its boundary). Closing it needs a length the ALGORITHM knows; a slot
-// gate that reaches only the CBOR type cannot state one.
+// A signature of the WRONG LENGTH is a byte string and clears these gates: a slot
+// gate reaches only the CBOR type, and the length is the KEY's, refused in the
+// signature cycle. pinned: `verify-cose-structure.test.ts`.
 describe("CwsKit — a slot holding something other than a byte string", () => {
   const kit = new CwsKit({ kryptos: TEST_EC_KEY_SIG, logger: createMockLogger() });
   const CONTENT = Buffer.from("the content bytes");

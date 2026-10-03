@@ -1,3 +1,4 @@
+import { EcError } from "@lindorm/ec";
 import type { IKryptos } from "@lindorm/kryptos";
 import { SignatureKit } from "../../classes/SignatureKit.js";
 import { CwsError } from "../../errors/index.js";
@@ -133,10 +134,30 @@ export const verifyCoseStructure = ({
     details: `The ${label} ${sign1 ? "signature" : "authentication tag"} slot is not a byte string, so there is nothing to verify.`,
   });
 
-  const valid = new SignatureKit({ kryptos, raw: sign1 }).verify(
-    buildSecuredStructure(tag, protectedBstr, content),
-    secured,
-  );
+  // ⚠ The length an EC signature must have lives in ONE place, `@lindorm/ec`, so its
+  // refusal is translated here rather than the per-curve sizes restated. Refusing
+  // is RFC 9053 §2.1; answering `cose_malformed` rather than the signature verdict
+  // is AEGIS POLICY. pinned: verify-cose-structure.test.ts.
+  let valid: boolean;
+
+  try {
+    valid = new SignatureKit({ kryptos, raw: sign1 }).verify(
+      buildSecuredStructure(tag, protectedBstr, content),
+      secured,
+    );
+  } catch (error) {
+    if (!(error instanceof EcError) || error.code !== "invalid_raw_signature_length") {
+      throw error;
+    }
+
+    throw new CwsError("Malformed COSE_Sign1", {
+      code: "cose_malformed",
+      debug: { actual: secured.length, expected: error.data.expected },
+      title: "Malformed COSE_Sign1",
+      details:
+        "The COSE_Sign1 signature is not the length the key's curve defines for an ECDSA signature, so there is nothing to verify.",
+    });
+  }
 
   if (!valid) {
     throw sign1
