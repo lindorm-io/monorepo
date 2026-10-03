@@ -13,6 +13,10 @@ export default defineConfig(
       "**/dist/**",
       "**/node_modules/**",
       "**/__fixtures__/**",
+      // `**/__fixtures__/**` also ignores the directories, and nothing inside an ignored
+      // directory can be re-included, so the step-file negation below needs this one first.
+      "!**/__fixtures__/**/",
+      "!**/__fixtures__/**/*.steps.ts",
       "**/__mocks__/**",
       "**/__snapshots__/**",
       "packages/create-pylon/templates/**",

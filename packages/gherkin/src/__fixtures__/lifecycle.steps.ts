@@ -79,7 +79,7 @@ export class LifecycleAlphaSteps extends LifecycleBase {
 
   @AfterStep("@lifecycle")
   @Priority(1)
-  afterEach(step: StepInfo, result: StepResult): void {
+  afterEach(_step: StepInfo, result: StepResult): void {
     log.push(`${this.shared.info.scenarioName}:after-step:alpha:${result.status}`);
   }
 
@@ -116,7 +116,7 @@ export class LifecycleBetaSteps extends LifecycleBase {
 
   @AfterStep("@lifecycle")
   @Priority(2)
-  afterEach(step: StepInfo, result: StepResult): void {
+  afterEach(_step: StepInfo, result: StepResult): void {
     log.push(`${this.shared.info.scenarioName}:after-step:beta:${result.status}`);
   }
 
