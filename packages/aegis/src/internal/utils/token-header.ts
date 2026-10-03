@@ -107,11 +107,16 @@ const decodeHeaderValue = (spec: HeaderSpec, decoded: Dict): unknown => {
   switch (codec.kind) {
     case "critical":
       return criticalToDomain(decoded.crit);
+    // ⚠ The domain header types a byte parameter `string`, so anything else reads
+    // as absent. pinned: token-header.test.ts.
+    case "buffer": {
+      const value = decoded[headerJoseName(spec)];
+      return isString(value) ? value : undefined;
+    }
     case "string":
     case "url":
     case "number":
     case "jwk":
-    case "buffer":
     case "array":
       return decoded[headerJoseName(spec)];
     default: {
@@ -251,8 +256,8 @@ export const shapeWireHeader = (
 
 /**
  * ⚠ AN UNCHECKED NARROWING of the value alone — `member` is typed by the registry
- * row's `domain` — because the read reports what the producer wrote, unguarded
- * ({@link decodeHeaderValue}).
+ * row's `domain` — because the read reports what the producer wrote, and
+ * {@link decodeHeaderValue} guards only `crit` and the byte parameters.
  */
 const setHeaderMember = <K extends keyof DomainTokenHeader>(
   header: DomainTokenHeader,
@@ -288,7 +293,9 @@ const withoutUndefined = (value: unknown): unknown => {
  * foreign token's `cty: ""` as absent. `JweKit.decrypt` refuses on what this
  * returns (`encryption`, `partyRecipient`, and the thumbprints it hands
  * `verify-cert-binding.ts`), so the report is what the producer wrote, less the
- * `undefined` values {@link withoutUndefined} drops.
+ * `undefined` values {@link withoutUndefined} drops and the two guards
+ * {@link decodeHeaderValue} applies: a `crit` that is not a list reads as `[]`, and
+ * a byte parameter that is not a string reads as absent.
  */
 export const parseTokenHeader = (decoded: WireTokenHeader): DomainTokenHeader => {
   // An absent `crit` reads as `[]`.

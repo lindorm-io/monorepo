@@ -9,7 +9,6 @@ import {
 } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { ILogger } from "@lindorm/logger";
-import type { Dict } from "@lindorm/types";
 import MockDate from "mockdate";
 import {
   TEST_EC_KEY_ENC,
@@ -17,22 +16,13 @@ import {
   TEST_OKP_KEY_ENC,
   TEST_RSA_KEY_ENC,
 } from "../__fixtures__/keys.js";
+import { craftJwe } from "../__fixtures__/craft-jwe.js";
 import { refusalOf } from "../__fixtures__/refusal-of.js";
 import { JweKit } from "./JweKit.js";
 import { beforeEach, describe, expect, test } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
-
-/** A five-segment JWE whose header is ours and whose body is junk. */
-const craftJwe = (header: Dict): string =>
-  [
-    Buffer.from(JSON.stringify(header)).toString("base64url"),
-    "junk",
-    "junk",
-    "junk",
-    "junk",
-  ].join(".");
 
 /** The `code` of the refusal a call produces; a call that does NOT refuse fails. */
 const codeOf = (fn: () => unknown): string | undefined => {

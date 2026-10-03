@@ -1,0 +1,1333 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`a JWE header parameter the key-management algorithm consumes > a kit holding a key no key-management algorithm names refuses the token by that algorithm 1`] = `
+{
+  "code": "jwe_unhandled_key_management_algorithm",
+  "data": {},
+  "debug": {
+    "algorithm": "ES512",
+  },
+  "message": "Unhandled key-management algorithm",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > leaves the iv of a PBES2 token that is the number 5 to the key unwrap and the AEAD 1`] = `
+{
+  "code": "decryption_failed",
+  "data": {},
+  "debug": {},
+  "message": "AES decryption failed",
+  "name": "AesError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > leaves the iv of an A256KW token that is not base64url to the key unwrap and the AEAD 1`] = `
+{
+  "code": "decryption_failed",
+  "data": {},
+  "debug": {},
+  "message": "AES decryption failed",
+  "name": "AesError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > leaves the iv of an A256KW token that is the number 5 to the key unwrap and the AEAD 1`] = `
+{
+  "code": "decryption_failed",
+  "data": {},
+  "debug": {},
+  "message": "AES decryption failed",
+  "name": "AesError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > leaves the p2s of an A256GCMKW token that is the number 5 to the key unwrap and the AEAD 1`] = `
+{
+  "code": "decryption_failed",
+  "data": {},
+  "debug": {},
+  "message": "AES decryption failed",
+  "name": "AesError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > leaves the p2s of an A256KW token that is the number 5 to the key unwrap and the AEAD 1`] = `
+{
+  "code": "decryption_failed",
+  "data": {},
+  "debug": {},
+  "message": "AES decryption failed",
+  "name": "AesError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > leaves the tag of an A256KW token that is the number 5 to the key unwrap and the AEAD 1`] = `
+{
+  "code": "decryption_failed",
+  "data": {},
+  "debug": {},
+  "message": "AES decryption failed",
+  "name": "AesError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > leaves the zero-octet iv of an A256GCMKW token to the key unwrap and the AEAD 1`] = `
+{
+  "code": "invalid_key_wrap_iv_length",
+  "data": {},
+  "debug": {},
+  "message": "Invalid GCM key wrap IV length",
+  "name": "AesError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > refuses a PBES2 token whose p2s is absent 1`] = `
+{
+  "code": "jwe_header_p2s_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: p2s must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > refuses a PBES2 token whose p2s is false 1`] = `
+{
+  "code": "jwe_header_p2s_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: p2s must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > refuses a PBES2 token whose p2s is not base64url 1`] = `
+{
+  "code": "jwe_header_p2s_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: p2s must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > refuses a PBES2 token whose p2s is null 1`] = `
+{
+  "code": "jwe_header_p2s_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: p2s must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > refuses a PBES2 token whose p2s is the number 0 1`] = `
+{
+  "code": "jwe_header_p2s_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: p2s must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > refuses a PBES2 token whose p2s is the number 5 1`] = `
+{
+  "code": "jwe_header_p2s_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: p2s must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > refuses an A256GCMKW token whose iv carries a plus sign, which only the standard alphabet has 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > refuses an A256GCMKW token whose iv carries a slash, which only the standard alphabet has 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > refuses an A256GCMKW token whose iv carries whitespace 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > refuses an A256GCMKW token whose iv is a length no octets encode to 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > refuses an A256GCMKW token whose iv is absent 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > refuses an A256GCMKW token whose iv is an array 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > refuses an A256GCMKW token whose iv is an object 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > refuses an A256GCMKW token whose iv is false 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > refuses an A256GCMKW token whose iv is not base64url 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > refuses an A256GCMKW token whose iv is null 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > refuses an A256GCMKW token whose iv is padded 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > refuses an A256GCMKW token whose iv is the number 0 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > refuses an A256GCMKW token whose iv is the number 5 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > refuses an A256GCMKW token whose iv is true 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > refuses an A256GCMKW token whose tag is absent 1`] = `
+{
+  "code": "jwe_header_tag_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: tag must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > refuses an A256GCMKW token whose tag is not base64url 1`] = `
+{
+  "code": "jwe_header_tag_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: tag must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > refuses an A256GCMKW token whose tag is null 1`] = `
+{
+  "code": "jwe_header_tag_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: tag must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > refuses an A256GCMKW token whose tag is the number 5 1`] = `
+{
+  "code": "jwe_header_tag_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: tag must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > refuses an ECDH-ES+A256GCMKW token whose iv is the number 5 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at JweKit.decrypt > refuses an ECDH-ES+A256GCMKW token whose tag is absent 1`] = `
+{
+  "code": "jwe_header_tag_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: tag must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > leaves the iv of a PBES2 token that is the number 5 to the key unwrap and the AEAD 1`] = `
+{
+  "code": "decryption_failed",
+  "data": {},
+  "debug": {},
+  "message": "AES decryption failed",
+  "name": "AesError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > leaves the iv of an A256KW token that is not base64url to the key unwrap and the AEAD 1`] = `
+{
+  "code": "decryption_failed",
+  "data": {},
+  "debug": {},
+  "message": "AES decryption failed",
+  "name": "AesError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > leaves the iv of an A256KW token that is the number 5 to the key unwrap and the AEAD 1`] = `
+{
+  "code": "decryption_failed",
+  "data": {},
+  "debug": {},
+  "message": "AES decryption failed",
+  "name": "AesError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > leaves the p2s of an A256GCMKW token that is the number 5 to the key unwrap and the AEAD 1`] = `
+{
+  "code": "decryption_failed",
+  "data": {},
+  "debug": {},
+  "message": "AES decryption failed",
+  "name": "AesError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > leaves the p2s of an A256KW token that is the number 5 to the key unwrap and the AEAD 1`] = `
+{
+  "code": "decryption_failed",
+  "data": {},
+  "debug": {},
+  "message": "AES decryption failed",
+  "name": "AesError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > leaves the tag of an A256KW token that is the number 5 to the key unwrap and the AEAD 1`] = `
+{
+  "code": "decryption_failed",
+  "data": {},
+  "debug": {},
+  "message": "AES decryption failed",
+  "name": "AesError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > leaves the zero-octet iv of an A256GCMKW token to the key unwrap and the AEAD 1`] = `
+{
+  "code": "invalid_key_wrap_iv_length",
+  "data": {},
+  "debug": {},
+  "message": "Invalid GCM key wrap IV length",
+  "name": "AesError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > refuses a PBES2 token whose p2s is absent 1`] = `
+{
+  "code": "jwe_header_p2s_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: p2s must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > refuses a PBES2 token whose p2s is false 1`] = `
+{
+  "code": "jwe_header_p2s_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: p2s must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > refuses a PBES2 token whose p2s is not base64url 1`] = `
+{
+  "code": "jwe_header_p2s_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: p2s must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > refuses a PBES2 token whose p2s is null 1`] = `
+{
+  "code": "jwe_header_p2s_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: p2s must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > refuses a PBES2 token whose p2s is the number 0 1`] = `
+{
+  "code": "jwe_header_p2s_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: p2s must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > refuses a PBES2 token whose p2s is the number 5 1`] = `
+{
+  "code": "jwe_header_p2s_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: p2s must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > refuses an A256GCMKW token whose iv carries a plus sign, which only the standard alphabet has 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > refuses an A256GCMKW token whose iv carries a slash, which only the standard alphabet has 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > refuses an A256GCMKW token whose iv carries whitespace 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > refuses an A256GCMKW token whose iv is a length no octets encode to 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > refuses an A256GCMKW token whose iv is absent 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > refuses an A256GCMKW token whose iv is an array 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > refuses an A256GCMKW token whose iv is an object 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > refuses an A256GCMKW token whose iv is false 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > refuses an A256GCMKW token whose iv is not base64url 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > refuses an A256GCMKW token whose iv is null 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > refuses an A256GCMKW token whose iv is padded 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > refuses an A256GCMKW token whose iv is the number 0 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > refuses an A256GCMKW token whose iv is the number 5 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > refuses an A256GCMKW token whose iv is true 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > refuses an A256GCMKW token whose tag is absent 1`] = `
+{
+  "code": "jwe_header_tag_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: tag must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > refuses an A256GCMKW token whose tag is not base64url 1`] = `
+{
+  "code": "jwe_header_tag_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: tag must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > refuses an A256GCMKW token whose tag is null 1`] = `
+{
+  "code": "jwe_header_tag_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: tag must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > refuses an A256GCMKW token whose tag is the number 5 1`] = `
+{
+  "code": "jwe_header_tag_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: tag must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > refuses an ECDH-ES+A256GCMKW token whose iv is the number 5 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.decrypt > refuses an ECDH-ES+A256GCMKW token whose tag is absent 1`] = `
+{
+  "code": "jwe_header_tag_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: tag must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > leaves the iv of a PBES2 token that is the number 5 to the key unwrap and the AEAD 1`] = `
+{
+  "code": "decryption_failed",
+  "data": {},
+  "debug": {},
+  "message": "AES decryption failed",
+  "name": "AesError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > leaves the iv of an A256KW token that is not base64url to the key unwrap and the AEAD 1`] = `
+{
+  "code": "decryption_failed",
+  "data": {},
+  "debug": {},
+  "message": "AES decryption failed",
+  "name": "AesError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > leaves the iv of an A256KW token that is the number 5 to the key unwrap and the AEAD 1`] = `
+{
+  "code": "decryption_failed",
+  "data": {},
+  "debug": {},
+  "message": "AES decryption failed",
+  "name": "AesError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > leaves the p2s of an A256GCMKW token that is the number 5 to the key unwrap and the AEAD 1`] = `
+{
+  "code": "decryption_failed",
+  "data": {},
+  "debug": {},
+  "message": "AES decryption failed",
+  "name": "AesError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > leaves the p2s of an A256KW token that is the number 5 to the key unwrap and the AEAD 1`] = `
+{
+  "code": "decryption_failed",
+  "data": {},
+  "debug": {},
+  "message": "AES decryption failed",
+  "name": "AesError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > leaves the tag of an A256KW token that is the number 5 to the key unwrap and the AEAD 1`] = `
+{
+  "code": "decryption_failed",
+  "data": {},
+  "debug": {},
+  "message": "AES decryption failed",
+  "name": "AesError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > leaves the zero-octet iv of an A256GCMKW token to the key unwrap and the AEAD 1`] = `
+{
+  "code": "invalid_key_wrap_iv_length",
+  "data": {},
+  "debug": {},
+  "message": "Invalid GCM key wrap IV length",
+  "name": "AesError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > refuses a PBES2 token whose p2s is absent 1`] = `
+{
+  "code": "jwe_header_p2s_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: p2s must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > refuses a PBES2 token whose p2s is false 1`] = `
+{
+  "code": "jwe_header_p2s_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: p2s must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > refuses a PBES2 token whose p2s is not base64url 1`] = `
+{
+  "code": "jwe_header_p2s_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: p2s must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > refuses a PBES2 token whose p2s is null 1`] = `
+{
+  "code": "jwe_header_p2s_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: p2s must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > refuses a PBES2 token whose p2s is the number 0 1`] = `
+{
+  "code": "jwe_header_p2s_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: p2s must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > refuses a PBES2 token whose p2s is the number 5 1`] = `
+{
+  "code": "jwe_header_p2s_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: p2s must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > refuses an A256GCMKW token whose iv carries a plus sign, which only the standard alphabet has 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > refuses an A256GCMKW token whose iv carries a slash, which only the standard alphabet has 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > refuses an A256GCMKW token whose iv carries whitespace 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > refuses an A256GCMKW token whose iv is a length no octets encode to 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > refuses an A256GCMKW token whose iv is absent 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > refuses an A256GCMKW token whose iv is an array 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > refuses an A256GCMKW token whose iv is an object 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > refuses an A256GCMKW token whose iv is false 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > refuses an A256GCMKW token whose iv is not base64url 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > refuses an A256GCMKW token whose iv is null 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > refuses an A256GCMKW token whose iv is padded 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > refuses an A256GCMKW token whose iv is the number 0 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > refuses an A256GCMKW token whose iv is the number 5 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > refuses an A256GCMKW token whose iv is true 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > refuses an A256GCMKW token whose tag is absent 1`] = `
+{
+  "code": "jwe_header_tag_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: tag must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > refuses an A256GCMKW token whose tag is not base64url 1`] = `
+{
+  "code": "jwe_header_tag_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: tag must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > refuses an A256GCMKW token whose tag is null 1`] = `
+{
+  "code": "jwe_header_tag_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: tag must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > refuses an A256GCMKW token whose tag is the number 5 1`] = `
+{
+  "code": "jwe_header_tag_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: tag must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > refuses an ECDH-ES+A256GCMKW token whose iv is the number 5 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.jwe.decrypt > refuses an ECDH-ES+A256GCMKW token whose tag is absent 1`] = `
+{
+  "code": "jwe_header_tag_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: tag must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > leaves the iv of a PBES2 token that is the number 5 to the key unwrap and the AEAD 1`] = `
+{
+  "code": "decryption_failed",
+  "data": {},
+  "debug": {},
+  "message": "AES decryption failed",
+  "name": "AesError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > leaves the iv of an A256KW token that is not base64url to the key unwrap and the AEAD 1`] = `
+{
+  "code": "decryption_failed",
+  "data": {},
+  "debug": {},
+  "message": "AES decryption failed",
+  "name": "AesError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > leaves the iv of an A256KW token that is the number 5 to the key unwrap and the AEAD 1`] = `
+{
+  "code": "decryption_failed",
+  "data": {},
+  "debug": {},
+  "message": "AES decryption failed",
+  "name": "AesError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > leaves the p2s of an A256GCMKW token that is the number 5 to the key unwrap and the AEAD 1`] = `
+{
+  "code": "decryption_failed",
+  "data": {},
+  "debug": {},
+  "message": "AES decryption failed",
+  "name": "AesError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > leaves the p2s of an A256KW token that is the number 5 to the key unwrap and the AEAD 1`] = `
+{
+  "code": "decryption_failed",
+  "data": {},
+  "debug": {},
+  "message": "AES decryption failed",
+  "name": "AesError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > leaves the tag of an A256KW token that is the number 5 to the key unwrap and the AEAD 1`] = `
+{
+  "code": "decryption_failed",
+  "data": {},
+  "debug": {},
+  "message": "AES decryption failed",
+  "name": "AesError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > leaves the zero-octet iv of an A256GCMKW token to the key unwrap and the AEAD 1`] = `
+{
+  "code": "invalid_key_wrap_iv_length",
+  "data": {},
+  "debug": {},
+  "message": "Invalid GCM key wrap IV length",
+  "name": "AesError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > refuses a PBES2 token whose p2s is absent 1`] = `
+{
+  "code": "jwe_header_p2s_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: p2s must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > refuses a PBES2 token whose p2s is false 1`] = `
+{
+  "code": "jwe_header_p2s_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: p2s must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > refuses a PBES2 token whose p2s is not base64url 1`] = `
+{
+  "code": "jwe_header_p2s_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: p2s must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > refuses a PBES2 token whose p2s is null 1`] = `
+{
+  "code": "jwe_header_p2s_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: p2s must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > refuses a PBES2 token whose p2s is the number 0 1`] = `
+{
+  "code": "jwe_header_p2s_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: p2s must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > refuses a PBES2 token whose p2s is the number 5 1`] = `
+{
+  "code": "jwe_header_p2s_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: p2s must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > refuses an A256GCMKW token whose iv carries a plus sign, which only the standard alphabet has 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > refuses an A256GCMKW token whose iv carries a slash, which only the standard alphabet has 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > refuses an A256GCMKW token whose iv carries whitespace 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > refuses an A256GCMKW token whose iv is a length no octets encode to 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > refuses an A256GCMKW token whose iv is absent 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > refuses an A256GCMKW token whose iv is an array 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > refuses an A256GCMKW token whose iv is an object 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > refuses an A256GCMKW token whose iv is false 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > refuses an A256GCMKW token whose iv is not base64url 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > refuses an A256GCMKW token whose iv is null 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > refuses an A256GCMKW token whose iv is padded 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > refuses an A256GCMKW token whose iv is the number 0 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > refuses an A256GCMKW token whose iv is the number 5 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > refuses an A256GCMKW token whose iv is true 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > refuses an A256GCMKW token whose tag is absent 1`] = `
+{
+  "code": "jwe_header_tag_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: tag must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > refuses an A256GCMKW token whose tag is not base64url 1`] = `
+{
+  "code": "jwe_header_tag_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: tag must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > refuses an A256GCMKW token whose tag is null 1`] = `
+{
+  "code": "jwe_header_tag_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: tag must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > refuses an A256GCMKW token whose tag is the number 5 1`] = `
+{
+  "code": "jwe_header_tag_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: tag must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > refuses an ECDH-ES+A256GCMKW token whose iv is the number 5 1`] = `
+{
+  "code": "jwe_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be base64url",
+  "name": "JweError",
+}
+`;
+
+exports[`a JWE header parameter the key-management algorithm consumes > at aegis.verify > refuses an ECDH-ES+A256GCMKW token whose tag is absent 1`] = `
+{
+  "code": "jwe_header_tag_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: tag must be base64url",
+  "name": "JweError",
+}
+`;

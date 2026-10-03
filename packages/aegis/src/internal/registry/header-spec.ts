@@ -9,8 +9,9 @@ import type { CoseHeaderCodec } from "./cose-header-codec.js";
 import type { ParamSpec, WhenEmpty } from "./param-spec.js";
 
 /**
- * How a header parameter's VALUE is shaped, and (on the WRITE side) the defensive
- * guard the encoder applies before putting it on the wire.
+ * How a header parameter's VALUE is shaped, and the defensive guard applied to
+ * it: on the WRITE side for every kind but `"buffer"`, on the READ side for
+ * `"buffer"` and `"critical"` alone.
  *
  * A CLOSED union, kept separate from {@link ClaimCodec} so both translators keep an
  * exhaustive `switch` with a `never` default.
@@ -19,10 +20,10 @@ import type { ParamSpec, WhenEmpty } from "./param-spec.js";
  *   - `"number"`   finite number, guarded `isFinite`
  *   - `"jwk"`      JWK object, guarded `isObject`
  *   - `"buffer"`   Buffer passthrough on the raw side, base64url-encoded
- *                  downstream in `encodeJoseHeader`
+ *                  downstream in `encodeJoseHeader`; read guarded `isString`
  *   - `"array"`    Array<string> passthrough, guarded `Array.isArray`
  *   - `"critical"` the `crit` array whose MEMBERS are themselves domain<->wire
- *                  remapped
+ *                  remapped, guarded `Array.isArray` (`[]` on read)
  */
 export type HeaderCodec =
   | { kind: "string" }

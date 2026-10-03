@@ -240,12 +240,15 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     },
     wire: { jose: wireName("iv"), cose: wireLabel(5, "iv") },
     codec: { kind: "buffer" },
+    // The read refuses a value that is not a byte string, in either bucket:
+    // RFC 9052 §3.1. pinned: `cose/non-bstr-iv.test.ts`.
     cose: { kind: "base64Bytes" },
     sample: Buffer.alloc(12),
     // PRUNE. ⚠ It does NOT govern a zero-length Buffer: `isEmpty` treats a Buffer
     // as non-empty, and a zero-length nonce must fail in the AEAD rather than be
-    // pruned into "no IV". What it governs is the non-Buffer empty the guardless
-    // `buffer` arm lets through (`token-header.ts`) — `""`, `null`, `{}`, `[]`.
+    // pruned into "no IV". What it governs is the non-Buffer empty the write pass's
+    // guardless `buffer` arm lets through (`token-header.ts#encodeHeaderValue`) —
+    // `""`, `null`, `{}`, `[]`.
     whenEmpty: "prune",
     // JOSE carries it on the protected header; a COSE_Encrypt0 puts it in the
     // unprotected bucket (RFC 9052 §3.1).
@@ -427,7 +430,8 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     cose: null,
     sample: Buffer.alloc(16),
     // PRUNE, on the `iv` argument. The key-wrap authentication tag is bytes or
-    // absent; the non-Buffer empties the guardless `buffer` arm admits are neither.
+    // absent; the non-Buffer empties the write pass's guardless `buffer` arm admits
+    // are neither.
     whenEmpty: "prune",
     placement: "protected",
     critEligible: false,

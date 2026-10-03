@@ -56,29 +56,32 @@ describe("buildJweDecryptionRecord", () => {
     ).toBeUndefined();
   });
 
-  test("decodes the HEADER parameters — the PBKDF pair and the public material", () => {
+  const KEY_MANAGEMENT_BYTES = {
+    pbkdfIterations: 4096,
+    pbkdfSalt: b64u("salt"),
+    initialisationVector: b64u("kw-iv"),
+    publicEncryptionTag: b64u("kw-tag"),
+  };
+
+  test.each([
+    ["A256GCMKW", "the key-wrap iv and tag"],
+    ["PBES2-HS512+A256KW", "the PBKDF salt"],
+    ["A256KW", "none of them"],
+  ])("decodes, under %s, %s", (algorithm) => {
     const record = build({
-      header: header({
-        pbkdfIterations: 4096,
-        pbkdfSalt: b64u("salt"),
-        initialisationVector: b64u("kw-iv"),
-        publicEncryptionTag: b64u("kw-tag"),
-      }),
+      header: header({ algorithm: algorithm as never, ...KEY_MANAGEMENT_BYTES }),
     });
 
-    expect(record.pbkdfIterations).toBe(4096);
-    expect(record.pbkdfSalt?.toString("utf8")).toBe("salt");
-    expect(record.publicEncryptionIv?.toString("utf8")).toBe("kw-iv");
-    expect(record.publicEncryptionTag?.toString("utf8")).toBe("kw-tag");
+    expect({
+      pbkdfIterations: record.pbkdfIterations,
+      pbkdfSalt: record.pbkdfSalt?.toString("utf8"),
+      publicEncryptionIv: record.publicEncryptionIv?.toString("utf8"),
+      publicEncryptionTag: record.publicEncryptionTag?.toString("utf8"),
+    }).toMatchSnapshot();
   });
 
-  test("an absent header parameter stays undefined rather than an empty buffer", () => {
-    const record = build();
-
-    expect(record.pbkdfSalt).toBeUndefined();
-    expect(record.publicEncryptionIv).toBeUndefined();
-    expect(record.publicEncryptionTag).toBeUndefined();
-    expect(record.pbkdfIterations).toBeUndefined();
+  test("an absent p2c reports no PBKDF iteration count", () => {
+    expect(build().pbkdfIterations).toBeUndefined();
   });
 
   test("the header's kid wins; the configured key's id is the fallback", () => {

@@ -1,0 +1,912 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`the COSE IV (label 5) > a COSE_Encrypt0 > at aegis.cwe.decrypt > refuses a protected IV that is a text string beside a byte-string unprotected one 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Encrypt0 > at aegis.cwe.decrypt > refuses a protected IV that is an integer beside a byte-string unprotected one 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Encrypt0 > at aegis.cwe.decrypt > refuses a protected IV that is null beside a byte-string unprotected one 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Encrypt0 > at aegis.cwe.decrypt > refuses a protected IV that is the CBOR undefined beside a byte-string unprotected one 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Encrypt0 > at aegis.cwe.decrypt > refuses an unprotected IV that is a text string in place of the nonce 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Encrypt0 > at aegis.cwe.decrypt > refuses an unprotected IV that is an integer in place of the nonce 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Encrypt0 > at aegis.cwe.decrypt > refuses an unprotected IV that is null in place of the nonce 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Encrypt0 > at aegis.cwe.decrypt > refuses an unprotected IV that is the CBOR undefined in place of the nonce 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Encrypt0 > at aegis.decrypt > refuses a protected IV that is a text string beside a byte-string unprotected one 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Encrypt0 > at aegis.decrypt > refuses a protected IV that is an integer beside a byte-string unprotected one 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Encrypt0 > at aegis.decrypt > refuses a protected IV that is null beside a byte-string unprotected one 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Encrypt0 > at aegis.decrypt > refuses a protected IV that is the CBOR undefined beside a byte-string unprotected one 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Encrypt0 > at aegis.decrypt > refuses an unprotected IV that is a text string in place of the nonce 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Encrypt0 > at aegis.decrypt > refuses an unprotected IV that is an integer in place of the nonce 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Encrypt0 > at aegis.decrypt > refuses an unprotected IV that is null in place of the nonce 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Encrypt0 > at aegis.decrypt > refuses an unprotected IV that is the CBOR undefined in place of the nonce 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Encrypt0 > at aegis.verify > refuses a protected IV that is a text string beside a byte-string unprotected one 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Encrypt0 > at aegis.verify > refuses a protected IV that is an integer beside a byte-string unprotected one 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Encrypt0 > at aegis.verify > refuses a protected IV that is null beside a byte-string unprotected one 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Encrypt0 > at aegis.verify > refuses a protected IV that is the CBOR undefined beside a byte-string unprotected one 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Encrypt0 > at aegis.verify > refuses an unprotected IV that is a text string in place of the nonce 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Encrypt0 > at aegis.verify > refuses an unprotected IV that is an integer in place of the nonce 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Encrypt0 > at aegis.verify > refuses an unprotected IV that is null in place of the nonce 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Encrypt0 > at aegis.verify > refuses an unprotected IV that is the CBOR undefined in place of the nonce 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Mac0 typed application/cwt > at aegis.cwm.verify > refuses a protected IV that is a text string 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Mac0 typed application/cwt > at aegis.cwm.verify > refuses a protected IV that is an integer 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Mac0 typed application/cwt > at aegis.cwm.verify > refuses a protected IV that is null 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Mac0 typed application/cwt > at aegis.cwm.verify > refuses a protected IV that is the CBOR undefined 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Mac0 typed application/cwt > at aegis.cwm.verify > refuses an unprotected IV that is a text string 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Mac0 typed application/cwt > at aegis.cwm.verify > refuses an unprotected IV that is an integer 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Mac0 typed application/cwt > at aegis.cwm.verify > refuses an unprotected IV that is null 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Mac0 typed application/cwt > at aegis.cwm.verify > refuses an unprotected IV that is the CBOR undefined 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Mac0 typed application/cwt > at aegis.parse > refuses a protected IV that is a text string 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Mac0 typed application/cwt > at aegis.parse > refuses a protected IV that is an integer 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Mac0 typed application/cwt > at aegis.parse > refuses a protected IV that is null 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Mac0 typed application/cwt > at aegis.parse > refuses a protected IV that is the CBOR undefined 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Mac0 typed application/cwt > at aegis.parse > refuses an unprotected IV that is a text string 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Mac0 typed application/cwt > at aegis.parse > refuses an unprotected IV that is an integer 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Mac0 typed application/cwt > at aegis.parse > refuses an unprotected IV that is null 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Mac0 typed application/cwt > at aegis.parse > refuses an unprotected IV that is the CBOR undefined 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Mac0 typed application/cwt > at aegis.verify > refuses a protected IV that is a text string 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Mac0 typed application/cwt > at aegis.verify > refuses a protected IV that is an integer 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Mac0 typed application/cwt > at aegis.verify > refuses a protected IV that is null 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Mac0 typed application/cwt > at aegis.verify > refuses a protected IV that is the CBOR undefined 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Mac0 typed application/cwt > at aegis.verify > refuses an unprotected IV that is a text string 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Mac0 typed application/cwt > at aegis.verify > refuses an unprotected IV that is an integer 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Mac0 typed application/cwt > at aegis.verify > refuses an unprotected IV that is null 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Mac0 typed application/cwt > at aegis.verify > refuses an unprotected IV that is the CBOR undefined 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cws > at aegis.cws.verify > refuses a protected IV that is a text string 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cws > at aegis.cws.verify > refuses a protected IV that is an integer 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cws > at aegis.cws.verify > refuses a protected IV that is null 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cws > at aegis.cws.verify > refuses a protected IV that is the CBOR undefined 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cws > at aegis.cws.verify > refuses an unprotected IV that is a text string 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cws > at aegis.cws.verify > refuses an unprotected IV that is an integer 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cws > at aegis.cws.verify > refuses an unprotected IV that is null 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cws > at aegis.cws.verify > refuses an unprotected IV that is the CBOR undefined 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cws > at aegis.verify > refuses a protected IV that is a text string 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cws > at aegis.verify > refuses a protected IV that is an integer 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cws > at aegis.verify > refuses a protected IV that is null 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cws > at aegis.verify > refuses a protected IV that is the CBOR undefined 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cws > at aegis.verify > refuses an unprotected IV that is a text string 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cws > at aegis.verify > refuses an unprotected IV that is an integer 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cws > at aegis.verify > refuses an unprotected IV that is null 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cws > at aegis.verify > refuses an unprotected IV that is the CBOR undefined 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cwt > at aegis.cwt.verify > refuses a protected IV that is a text string 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cwt > at aegis.cwt.verify > refuses a protected IV that is an integer 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cwt > at aegis.cwt.verify > refuses a protected IV that is null 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cwt > at aegis.cwt.verify > refuses a protected IV that is the CBOR undefined 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cwt > at aegis.cwt.verify > refuses an unprotected IV that is a text string 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cwt > at aegis.cwt.verify > refuses an unprotected IV that is an integer 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cwt > at aegis.cwt.verify > refuses an unprotected IV that is null 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cwt > at aegis.cwt.verify > refuses an unprotected IV that is the CBOR undefined 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cwt > at aegis.parse > refuses a protected IV that is a text string 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cwt > at aegis.parse > refuses a protected IV that is an integer 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cwt > at aegis.parse > refuses a protected IV that is null 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cwt > at aegis.parse > refuses a protected IV that is the CBOR undefined 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cwt > at aegis.parse > refuses an unprotected IV that is a text string 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cwt > at aegis.parse > refuses an unprotected IV that is an integer 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cwt > at aegis.parse > refuses an unprotected IV that is null 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cwt > at aegis.parse > refuses an unprotected IV that is the CBOR undefined 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cwt > at aegis.verify > refuses a protected IV that is a text string 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cwt > at aegis.verify > refuses a protected IV that is an integer 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cwt > at aegis.verify > refuses a protected IV that is null 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cwt > at aegis.verify > refuses a protected IV that is the CBOR undefined 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cwt > at aegis.verify > refuses an unprotected IV that is a text string 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cwt > at aegis.verify > refuses an unprotected IV that is an integer 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cwt > at aegis.verify > refuses an unprotected IV that is null 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cwt > at aegis.verify > refuses an unprotected IV that is the CBOR undefined 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cwt reports a byte-string IV in the domain header > as base64url when it rides the protected bucket 1`] = `"-_v7-_v7-_v7-_v7"`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cwt reports a byte-string IV in the domain header > as base64url when it rides the unprotected bucket 1`] = `"-_v7-_v7-_v7-_v7"`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cwt reports a byte-string IV in the raw buckets > as base64url when it rides the protected bucket 1`] = `
+{
+  "protected": "-_v7-_v7-_v7-_v7",
+  "unprotected": undefined,
+}
+`;
+
+exports[`the COSE IV (label 5) > a COSE_Sign1 typed application/cwt reports a byte-string IV in the raw buckets > as base64url when it rides the unprotected bucket 1`] = `
+{
+  "protected": undefined,
+  "unprotected": "-_v7-_v7-_v7-_v7",
+}
+`;
+
+exports[`the COSE IV (label 5) > a caller's IV is refused by name at the COSE encrypt door, before any value reaches the wire 1`] = `
+{
+  "code": "cose_reserved_header",
+  "data": {
+    "bucket": "header",
+    "parameter": "iv",
+  },
+  "debug": {},
+  "message": "Header parameter "iv" is key-derived and cannot be set",
+  "name": "CweError",
+}
+`;

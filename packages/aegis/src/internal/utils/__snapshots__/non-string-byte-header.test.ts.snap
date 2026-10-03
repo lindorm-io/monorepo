@@ -1,0 +1,428 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.jws.verify > reports a byte parameter that is an array as the producer wrote it 1`] = `
+{
+  "alg": "ES512",
+  "iv": [
+    "AAAA",
+  ],
+  "kid": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+  "p2s": [
+    "AAAA",
+  ],
+  "tag": [
+    "AAAA",
+  ],
+  "typ": "JWS",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.jws.verify > reports a byte parameter that is an object as the producer wrote it 1`] = `
+{
+  "alg": "ES512",
+  "iv": {
+    "bytes": "AAAA",
+  },
+  "kid": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+  "p2s": {
+    "bytes": "AAAA",
+  },
+  "tag": {
+    "bytes": "AAAA",
+  },
+  "typ": "JWS",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.jws.verify > reports a byte parameter that is false as the producer wrote it 1`] = `
+{
+  "alg": "ES512",
+  "iv": false,
+  "kid": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+  "p2s": false,
+  "tag": false,
+  "typ": "JWS",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.jws.verify > reports a byte parameter that is null as the producer wrote it 1`] = `
+{
+  "alg": "ES512",
+  "iv": null,
+  "kid": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+  "p2s": null,
+  "tag": null,
+  "typ": "JWS",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.jws.verify > reports a byte parameter that is the number 0 as the producer wrote it 1`] = `
+{
+  "alg": "ES512",
+  "iv": 0,
+  "kid": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+  "p2s": 0,
+  "tag": 0,
+  "typ": "JWS",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.jws.verify > reports a byte parameter that is the number 5 as the producer wrote it 1`] = `
+{
+  "alg": "ES512",
+  "iv": 5,
+  "kid": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+  "p2s": 5,
+  "tag": 5,
+  "typ": "JWS",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.jws.verify > reports a byte parameter that is true as the producer wrote it 1`] = `
+{
+  "alg": "ES512",
+  "iv": true,
+  "kid": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+  "p2s": true,
+  "tag": true,
+  "typ": "JWS",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.jwt.verify > reports a byte parameter that is an array as the producer wrote it 1`] = `
+{
+  "alg": "ES512",
+  "iv": [
+    "AAAA",
+  ],
+  "kid": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+  "p2s": [
+    "AAAA",
+  ],
+  "tag": [
+    "AAAA",
+  ],
+  "typ": "JWT",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.jwt.verify > reports a byte parameter that is an object as the producer wrote it 1`] = `
+{
+  "alg": "ES512",
+  "iv": {
+    "bytes": "AAAA",
+  },
+  "kid": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+  "p2s": {
+    "bytes": "AAAA",
+  },
+  "tag": {
+    "bytes": "AAAA",
+  },
+  "typ": "JWT",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.jwt.verify > reports a byte parameter that is false as the producer wrote it 1`] = `
+{
+  "alg": "ES512",
+  "iv": false,
+  "kid": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+  "p2s": false,
+  "tag": false,
+  "typ": "JWT",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.jwt.verify > reports a byte parameter that is null as the producer wrote it 1`] = `
+{
+  "alg": "ES512",
+  "iv": null,
+  "kid": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+  "p2s": null,
+  "tag": null,
+  "typ": "JWT",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.jwt.verify > reports a byte parameter that is the number 0 as the producer wrote it 1`] = `
+{
+  "alg": "ES512",
+  "iv": 0,
+  "kid": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+  "p2s": 0,
+  "tag": 0,
+  "typ": "JWT",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.jwt.verify > reports a byte parameter that is the number 5 as the producer wrote it 1`] = `
+{
+  "alg": "ES512",
+  "iv": 5,
+  "kid": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+  "p2s": 5,
+  "tag": 5,
+  "typ": "JWT",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.jwt.verify > reports a byte parameter that is true as the producer wrote it 1`] = `
+{
+  "alg": "ES512",
+  "iv": true,
+  "kid": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+  "p2s": true,
+  "tag": true,
+  "typ": "JWT",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.parse of a JWT > reports a byte parameter that is a string 1`] = `
+{
+  "algorithm": "ES512",
+  "baseFormat": "JWT",
+  "critical": [],
+  "headerType": "JWT",
+  "initialisationVector": "AAAAAAAAAAAAAAAA",
+  "keyId": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+  "pbkdfSalt": "AAAAAAAAAAAAAAAA",
+  "publicEncryptionTag": "AAAAAAAAAAAAAAAA",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.parse of a JWT > reports no byte parameter that is an array 1`] = `
+{
+  "algorithm": "ES512",
+  "baseFormat": "JWT",
+  "critical": [],
+  "headerType": "JWT",
+  "keyId": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.parse of a JWT > reports no byte parameter that is an object 1`] = `
+{
+  "algorithm": "ES512",
+  "baseFormat": "JWT",
+  "critical": [],
+  "headerType": "JWT",
+  "keyId": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.parse of a JWT > reports no byte parameter that is false 1`] = `
+{
+  "algorithm": "ES512",
+  "baseFormat": "JWT",
+  "critical": [],
+  "headerType": "JWT",
+  "keyId": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.parse of a JWT > reports no byte parameter that is null 1`] = `
+{
+  "algorithm": "ES512",
+  "baseFormat": "JWT",
+  "critical": [],
+  "headerType": "JWT",
+  "keyId": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.parse of a JWT > reports no byte parameter that is the number 0 1`] = `
+{
+  "algorithm": "ES512",
+  "baseFormat": "JWT",
+  "critical": [],
+  "headerType": "JWT",
+  "keyId": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.parse of a JWT > reports no byte parameter that is the number 5 1`] = `
+{
+  "algorithm": "ES512",
+  "baseFormat": "JWT",
+  "critical": [],
+  "headerType": "JWT",
+  "keyId": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.parse of a JWT > reports no byte parameter that is true 1`] = `
+{
+  "algorithm": "ES512",
+  "baseFormat": "JWT",
+  "critical": [],
+  "headerType": "JWT",
+  "keyId": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.verify of a JWS > reports a byte parameter that is a string 1`] = `
+{
+  "algorithm": "ES512",
+  "baseFormat": "JWS",
+  "critical": [],
+  "headerType": "JWS",
+  "initialisationVector": "AAAAAAAAAAAAAAAA",
+  "keyId": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+  "pbkdfSalt": "AAAAAAAAAAAAAAAA",
+  "publicEncryptionTag": "AAAAAAAAAAAAAAAA",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.verify of a JWS > reports no byte parameter that is an array 1`] = `
+{
+  "algorithm": "ES512",
+  "baseFormat": "JWS",
+  "critical": [],
+  "headerType": "JWS",
+  "keyId": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.verify of a JWS > reports no byte parameter that is an object 1`] = `
+{
+  "algorithm": "ES512",
+  "baseFormat": "JWS",
+  "critical": [],
+  "headerType": "JWS",
+  "keyId": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.verify of a JWS > reports no byte parameter that is false 1`] = `
+{
+  "algorithm": "ES512",
+  "baseFormat": "JWS",
+  "critical": [],
+  "headerType": "JWS",
+  "keyId": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.verify of a JWS > reports no byte parameter that is null 1`] = `
+{
+  "algorithm": "ES512",
+  "baseFormat": "JWS",
+  "critical": [],
+  "headerType": "JWS",
+  "keyId": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.verify of a JWS > reports no byte parameter that is the number 0 1`] = `
+{
+  "algorithm": "ES512",
+  "baseFormat": "JWS",
+  "critical": [],
+  "headerType": "JWS",
+  "keyId": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.verify of a JWS > reports no byte parameter that is the number 5 1`] = `
+{
+  "algorithm": "ES512",
+  "baseFormat": "JWS",
+  "critical": [],
+  "headerType": "JWS",
+  "keyId": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.verify of a JWS > reports no byte parameter that is true 1`] = `
+{
+  "algorithm": "ES512",
+  "baseFormat": "JWS",
+  "critical": [],
+  "headerType": "JWS",
+  "keyId": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.verify of a JWT > reports a byte parameter that is a string 1`] = `
+{
+  "algorithm": "ES512",
+  "baseFormat": "JWT",
+  "critical": [],
+  "headerType": "JWT",
+  "initialisationVector": "AAAAAAAAAAAAAAAA",
+  "keyId": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+  "pbkdfSalt": "AAAAAAAAAAAAAAAA",
+  "publicEncryptionTag": "AAAAAAAAAAAAAAAA",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.verify of a JWT > reports no byte parameter that is an array 1`] = `
+{
+  "algorithm": "ES512",
+  "baseFormat": "JWT",
+  "critical": [],
+  "headerType": "JWT",
+  "keyId": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.verify of a JWT > reports no byte parameter that is an object 1`] = `
+{
+  "algorithm": "ES512",
+  "baseFormat": "JWT",
+  "critical": [],
+  "headerType": "JWT",
+  "keyId": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.verify of a JWT > reports no byte parameter that is false 1`] = `
+{
+  "algorithm": "ES512",
+  "baseFormat": "JWT",
+  "critical": [],
+  "headerType": "JWT",
+  "keyId": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.verify of a JWT > reports no byte parameter that is null 1`] = `
+{
+  "algorithm": "ES512",
+  "baseFormat": "JWT",
+  "critical": [],
+  "headerType": "JWT",
+  "keyId": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.verify of a JWT > reports no byte parameter that is the number 0 1`] = `
+{
+  "algorithm": "ES512",
+  "baseFormat": "JWT",
+  "critical": [],
+  "headerType": "JWT",
+  "keyId": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.verify of a JWT > reports no byte parameter that is the number 5 1`] = `
+{
+  "algorithm": "ES512",
+  "baseFormat": "JWT",
+  "critical": [],
+  "headerType": "JWT",
+  "keyId": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+}
+`;
+
+exports[`a signed JOSE token carrying byte header parameters that are not strings > at aegis.verify of a JWT > reports no byte parameter that is true 1`] = `
+{
+  "algorithm": "ES512",
+  "baseFormat": "JWT",
+  "critical": [],
+  "headerType": "JWT",
+  "keyId": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+}
+`;

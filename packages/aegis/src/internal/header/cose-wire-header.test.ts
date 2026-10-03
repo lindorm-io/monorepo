@@ -151,3 +151,49 @@ describe.each<[CoseAlgKind]>([["sig"], ["enc"]])(
     });
   },
 );
+
+const IV = coseByJose("iv");
+
+/** Every CBOR shape a producer can write under label 5 other than a byte string. */
+const NOT_BYTES: ReadonlyArray<[shape: string, value: unknown]> = [
+  ["the uint 0", 0],
+  ["a negative integer", -1],
+  ["a uint beyond the safe integers", 18446744073709551615n],
+  ["a float", 1.5],
+  ["false", false],
+  ["true", true],
+  ["null", null],
+  ["undefined", undefined],
+  ["a text string", "AAAAAAAAAAAAAAAA"],
+  ["an empty text string", ""],
+  ["an array", [Buffer.alloc(12)]],
+  ["a map", new Map<CoseLabel, unknown>([[1, Buffer.alloc(12)]])],
+  ["a tagged byte string", new Tag(64, Buffer.alloc(12))],
+];
+
+describe.each<[CoseAlgKind]>([["sig"], ["enc"]])(
+  "coseWireHeader — the IV parameter (label 5) on a %s bucket",
+  (algKind) => {
+    test.each(NOT_BYTES)("refuses an IV that is %s", (_shape, iv) => {
+      const thrown = refusalOf(() =>
+        coseWireHeader(new Map<CoseLabel, unknown>([[IV, iv]]), algKind),
+      );
+
+      expect(thrown).toBeInstanceOf(CoseError);
+
+      const { name, code, title, details, data, debug, message } = thrown as CoseError;
+
+      expect({ name, code, title, details, data, debug, message }).toMatchSnapshot();
+    });
+
+    test.each([
+      ["a twelve-octet nonce", Buffer.alloc(12, 0xfb)],
+      ["an empty byte string", Buffer.alloc(0)],
+      ["a Uint8Array", new Uint8Array([0xfb, 0xff])],
+    ])("reads %s as its base64url", (_shape, iv) => {
+      expect(
+        coseWireHeader(new Map<CoseLabel, unknown>([[IV, iv]]), algKind).header.iv,
+      ).toMatchSnapshot();
+    });
+  },
+);

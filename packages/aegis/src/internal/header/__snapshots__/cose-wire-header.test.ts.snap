@@ -1,0 +1,325 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`coseWireHeader — the IV parameter (label 5) on a enc bucket > reads a Uint8Array as its base64url 1`] = `"-_8"`;
+
+exports[`coseWireHeader — the IV parameter (label 5) on a enc bucket > reads a twelve-octet nonce as its base64url 1`] = `"-_v7-_v7-_v7-_v7"`;
+
+exports[`coseWireHeader — the IV parameter (label 5) on a enc bucket > reads an empty byte string as its base64url 1`] = `""`;
+
+exports[`coseWireHeader — the IV parameter (label 5) on a enc bucket > refuses an IV that is a float 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "details": "The decoded COSE header iv is present but is not a byte string, so aegis cannot read it.",
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+  "title": "COSE Header Iv Invalid",
+}
+`;
+
+exports[`coseWireHeader — the IV parameter (label 5) on a enc bucket > refuses an IV that is a map 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "details": "The decoded COSE header iv is present but is not a byte string, so aegis cannot read it.",
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+  "title": "COSE Header Iv Invalid",
+}
+`;
+
+exports[`coseWireHeader — the IV parameter (label 5) on a enc bucket > refuses an IV that is a negative integer 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "details": "The decoded COSE header iv is present but is not a byte string, so aegis cannot read it.",
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+  "title": "COSE Header Iv Invalid",
+}
+`;
+
+exports[`coseWireHeader — the IV parameter (label 5) on a enc bucket > refuses an IV that is a tagged byte string 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "details": "The decoded COSE header iv is present but is not a byte string, so aegis cannot read it.",
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+  "title": "COSE Header Iv Invalid",
+}
+`;
+
+exports[`coseWireHeader — the IV parameter (label 5) on a enc bucket > refuses an IV that is a text string 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "details": "The decoded COSE header iv is present but is not a byte string, so aegis cannot read it.",
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+  "title": "COSE Header Iv Invalid",
+}
+`;
+
+exports[`coseWireHeader — the IV parameter (label 5) on a enc bucket > refuses an IV that is a uint beyond the safe integers 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "details": "The decoded COSE header iv is present but is not a byte string, so aegis cannot read it.",
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+  "title": "COSE Header Iv Invalid",
+}
+`;
+
+exports[`coseWireHeader — the IV parameter (label 5) on a enc bucket > refuses an IV that is an array 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "details": "The decoded COSE header iv is present but is not a byte string, so aegis cannot read it.",
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+  "title": "COSE Header Iv Invalid",
+}
+`;
+
+exports[`coseWireHeader — the IV parameter (label 5) on a enc bucket > refuses an IV that is an empty text string 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "details": "The decoded COSE header iv is present but is not a byte string, so aegis cannot read it.",
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+  "title": "COSE Header Iv Invalid",
+}
+`;
+
+exports[`coseWireHeader — the IV parameter (label 5) on a enc bucket > refuses an IV that is false 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "details": "The decoded COSE header iv is present but is not a byte string, so aegis cannot read it.",
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+  "title": "COSE Header Iv Invalid",
+}
+`;
+
+exports[`coseWireHeader — the IV parameter (label 5) on a enc bucket > refuses an IV that is null 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "details": "The decoded COSE header iv is present but is not a byte string, so aegis cannot read it.",
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+  "title": "COSE Header Iv Invalid",
+}
+`;
+
+exports[`coseWireHeader — the IV parameter (label 5) on a enc bucket > refuses an IV that is the uint 0 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "details": "The decoded COSE header iv is present but is not a byte string, so aegis cannot read it.",
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+  "title": "COSE Header Iv Invalid",
+}
+`;
+
+exports[`coseWireHeader — the IV parameter (label 5) on a enc bucket > refuses an IV that is true 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "details": "The decoded COSE header iv is present but is not a byte string, so aegis cannot read it.",
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+  "title": "COSE Header Iv Invalid",
+}
+`;
+
+exports[`coseWireHeader — the IV parameter (label 5) on a enc bucket > refuses an IV that is undefined 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "details": "The decoded COSE header iv is present but is not a byte string, so aegis cannot read it.",
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+  "title": "COSE Header Iv Invalid",
+}
+`;
+
+exports[`coseWireHeader — the IV parameter (label 5) on a sig bucket > reads a Uint8Array as its base64url 1`] = `"-_8"`;
+
+exports[`coseWireHeader — the IV parameter (label 5) on a sig bucket > reads a twelve-octet nonce as its base64url 1`] = `"-_v7-_v7-_v7-_v7"`;
+
+exports[`coseWireHeader — the IV parameter (label 5) on a sig bucket > reads an empty byte string as its base64url 1`] = `""`;
+
+exports[`coseWireHeader — the IV parameter (label 5) on a sig bucket > refuses an IV that is a float 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "details": "The decoded COSE header iv is present but is not a byte string, so aegis cannot read it.",
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+  "title": "COSE Header Iv Invalid",
+}
+`;
+
+exports[`coseWireHeader — the IV parameter (label 5) on a sig bucket > refuses an IV that is a map 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "details": "The decoded COSE header iv is present but is not a byte string, so aegis cannot read it.",
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+  "title": "COSE Header Iv Invalid",
+}
+`;
+
+exports[`coseWireHeader — the IV parameter (label 5) on a sig bucket > refuses an IV that is a negative integer 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "details": "The decoded COSE header iv is present but is not a byte string, so aegis cannot read it.",
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+  "title": "COSE Header Iv Invalid",
+}
+`;
+
+exports[`coseWireHeader — the IV parameter (label 5) on a sig bucket > refuses an IV that is a tagged byte string 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "details": "The decoded COSE header iv is present but is not a byte string, so aegis cannot read it.",
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+  "title": "COSE Header Iv Invalid",
+}
+`;
+
+exports[`coseWireHeader — the IV parameter (label 5) on a sig bucket > refuses an IV that is a text string 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "details": "The decoded COSE header iv is present but is not a byte string, so aegis cannot read it.",
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+  "title": "COSE Header Iv Invalid",
+}
+`;
+
+exports[`coseWireHeader — the IV parameter (label 5) on a sig bucket > refuses an IV that is a uint beyond the safe integers 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "details": "The decoded COSE header iv is present but is not a byte string, so aegis cannot read it.",
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+  "title": "COSE Header Iv Invalid",
+}
+`;
+
+exports[`coseWireHeader — the IV parameter (label 5) on a sig bucket > refuses an IV that is an array 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "details": "The decoded COSE header iv is present but is not a byte string, so aegis cannot read it.",
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+  "title": "COSE Header Iv Invalid",
+}
+`;
+
+exports[`coseWireHeader — the IV parameter (label 5) on a sig bucket > refuses an IV that is an empty text string 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "details": "The decoded COSE header iv is present but is not a byte string, so aegis cannot read it.",
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+  "title": "COSE Header Iv Invalid",
+}
+`;
+
+exports[`coseWireHeader — the IV parameter (label 5) on a sig bucket > refuses an IV that is false 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "details": "The decoded COSE header iv is present but is not a byte string, so aegis cannot read it.",
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+  "title": "COSE Header Iv Invalid",
+}
+`;
+
+exports[`coseWireHeader — the IV parameter (label 5) on a sig bucket > refuses an IV that is null 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "details": "The decoded COSE header iv is present but is not a byte string, so aegis cannot read it.",
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+  "title": "COSE Header Iv Invalid",
+}
+`;
+
+exports[`coseWireHeader — the IV parameter (label 5) on a sig bucket > refuses an IV that is the uint 0 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "details": "The decoded COSE header iv is present but is not a byte string, so aegis cannot read it.",
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+  "title": "COSE Header Iv Invalid",
+}
+`;
+
+exports[`coseWireHeader — the IV parameter (label 5) on a sig bucket > refuses an IV that is true 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "details": "The decoded COSE header iv is present but is not a byte string, so aegis cannot read it.",
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+  "title": "COSE Header Iv Invalid",
+}
+`;
+
+exports[`coseWireHeader — the IV parameter (label 5) on a sig bucket > refuses an IV that is undefined 1`] = `
+{
+  "code": "cose_header_iv_invalid",
+  "data": {},
+  "debug": {},
+  "details": "The decoded COSE header iv is present but is not a byte string, so aegis cannot read it.",
+  "message": "Invalid token header: iv must be a byte string",
+  "name": "CoseError",
+  "title": "COSE Header Iv Invalid",
+}
+`;

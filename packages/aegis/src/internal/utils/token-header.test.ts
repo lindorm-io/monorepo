@@ -285,6 +285,31 @@ describe("parseTokenHeader", () => {
       expect(header.contentType).toBe(map);
     });
 
+    test.each([
+      ["the number 5", 5],
+      ["the number 0", 0],
+      ["true", true],
+      ["false", false],
+      ["null", null],
+      ["an object", { bytes: "AAAA" }],
+      ["an array", ["AAAA"]],
+    ])("a byte parameter that is %s reports no member", (_shape, value) => {
+      const decoded = { alg: "A256GCMKW", iv: value, tag: value, p2s: value } as never;
+
+      expect(parseTokenHeader(decoded)).toMatchSnapshot();
+    });
+
+    test("a byte parameter that is a string is reported verbatim, base64url or not", () => {
+      const decoded: WireTokenHeader = {
+        alg: "A256GCMKW",
+        iv: "AAAAAAAAAAAAAAAA",
+        tag: "!!!",
+        p2s: "",
+      };
+
+      expect(parseTokenHeader(decoded)).toMatchSnapshot();
+    });
+
     test("derives the JOSE family from a typ that names one", () => {
       expect(parseTokenHeader({ alg: "HS256", typ: "JWT" })).toStrictEqual({
         algorithm: "HS256",

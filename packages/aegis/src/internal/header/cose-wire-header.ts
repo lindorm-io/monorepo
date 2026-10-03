@@ -78,11 +78,17 @@ const coseValueToWire = (
         jose,
         value: value instanceof Uint8Array ? Buffer.from(value).toString("utf8") : value,
       };
-    case "base64Bytes":
-      return {
-        jose,
-        value: value instanceof Uint8Array ? B64.encode(Buffer.from(value), B64U) : value,
-      };
+    case "base64Bytes": {
+      if (value instanceof Uint8Array) {
+        return { jose, value: B64.encode(Buffer.from(value), B64U) };
+      }
+
+      throw new CoseError(`Invalid token header: ${jose} must be a byte string`, {
+        code: `cose_header_${jose}_invalid`,
+        title: `COSE Header ${jose.charAt(0).toUpperCase()}${jose.slice(1)} Invalid`,
+        details: `The decoded COSE header ${jose} is present but is not a byte string, so aegis cannot read it.`,
+      });
+    }
     case "critical":
       return { jose, value: coseCritToWire(value) };
     case "certChain":

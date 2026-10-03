@@ -1,8 +1,8 @@
 import type { AesDecryptionRecord } from "@lindorm/aes";
 import { B64 } from "@lindorm/b64";
 import type { KryptosEncAlgorithm, KryptosEncryption } from "@lindorm/kryptos";
-import { B64U } from "../constants/format.js";
 import type { DomainTokenHeader } from "../../types/index.js";
+import { readKeyManagementBytes } from "./read-key-management-bytes.js";
 import type { JweCompactSegments } from "./split-jwe-compact.js";
 
 /**
@@ -12,10 +12,11 @@ import type { JweCompactSegments } from "./split-jwe-compact.js";
  *
  * Which segment each value comes from is the point: the ciphertext, the IV, the
  * auth tag and the encrypted key are TOKEN SEGMENTS, while the PBKDF pair and
- * the ECDH-ES/key-wrap public material are HEADER parameters. The content type
- * is pinned to `application/octet-stream` because the AES layer only ever sees
- * OPAQUE bytes here — the JOSE `cty`, not the AES one, drives reconstruction
- * after the AEAD has verified.
+ * the ECDH-ES/key-wrap public material are HEADER parameters, the header bytes
+ * read only where the algorithm consumes them ({@link readKeyManagementBytes}).
+ * The content type is pinned to `application/octet-stream` because the AES layer
+ * only ever sees OPAQUE bytes here — the JOSE `cty`, not the AES one, drives
+ * reconstruction after the AEAD has verified.
  */
 export const buildJweDecryptionRecord = ({
   segments,
@@ -34,27 +35,31 @@ export const buildJweDecryptionRecord = ({
   apv: Buffer | undefined;
   /** The configured key's id, used when the header names none. */
   keyId: string;
-}): AesDecryptionRecord => ({
-  algorithm: header.algorithm as KryptosEncAlgorithm,
-  apu,
-  apv,
-  authTag: B64.toBuffer(segments.authTag),
-  content: B64.toBuffer(segments.content),
-  contentType: "application/octet-stream",
-  encryption,
-  initialisationVector: B64.toBuffer(segments.initialisationVector),
-  keyId: header.keyId ?? keyId,
-  pbkdfIterations: header.pbkdfIterations,
-  pbkdfSalt: header.pbkdfSalt ? B64.toBuffer(header.pbkdfSalt, B64U) : undefined,
-  publicEncryptionIv: header.initialisationVector
-    ? B64.toBuffer(header.initialisationVector)
-    : undefined,
-  publicEncryptionJwk: header.publicEncryptionJwk,
-  publicEncryptionKey: segments.publicEncryptionKey
-    ? B64.toBuffer(segments.publicEncryptionKey)
-    : undefined,
-  publicEncryptionTag: header.publicEncryptionTag
-    ? B64.toBuffer(header.publicEncryptionTag)
-    : undefined,
-  version: "1.0",
-});
+}): AesDecryptionRecord => {
+  const algorithm = header.algorithm as KryptosEncAlgorithm;
+  const { pbkdfSalt, publicEncryptionIv, publicEncryptionTag } = readKeyManagementBytes(
+    algorithm,
+    header,
+  );
+
+  return {
+    algorithm,
+    apu,
+    apv,
+    authTag: B64.toBuffer(segments.authTag),
+    content: B64.toBuffer(segments.content),
+    contentType: "application/octet-stream",
+    encryption,
+    initialisationVector: B64.toBuffer(segments.initialisationVector),
+    keyId: header.keyId ?? keyId,
+    pbkdfIterations: header.pbkdfIterations,
+    pbkdfSalt,
+    publicEncryptionIv,
+    publicEncryptionJwk: header.publicEncryptionJwk,
+    publicEncryptionKey: segments.publicEncryptionKey
+      ? B64.toBuffer(segments.publicEncryptionKey)
+      : undefined,
+    publicEncryptionTag,
+    version: "1.0",
+  };
+};

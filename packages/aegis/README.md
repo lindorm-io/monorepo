@@ -398,6 +398,8 @@ result.header.tokenType; // domain-keyed; the two wire buckets merged, protected
 
 `header.tokenType` names the TYPE, not the spelling it arrived in: a token typed `application/AT+jwt` reads back as `access_token`, and a subtype aegis has no name for is reported ASCII case-folded, because the type and subtype of a media type carry no case (RFC 7515 §4.1.9). `header.headerType` is the `typ` exactly as the token wrote it.
 
+On a JOSE token, `header.initialisationVector`, `header.publicEncryptionTag` and `header.pbkdfSalt` are reported only when the token states each as a string: a foreign JWT's `iv: 5` reads as absent. The JOSE wire namespaces (`aegis.jwt.verify`, `aegis.jws.verify`) report the header as the producer wrote it. A COSE `iv` is reported as the base64url of its bytes, and one that is not a byte string is refused (see [the COSE `iv` rule](#typ-and-proprietary-encoding)).
+
 ### Encryption
 
 ⚠ **`"jwe"` is a legitimate `format` in its own right, so the PRESENCE of `wrapper` is the whole discriminator.** A bare `aegis.encrypt` result reports `{ format: "jwe" }` with no `wrapper` — its own kind IS `jwe`, and nothing encloses it. A signed token in an envelope reports `{ format: "jwt", wrapper: "jwe" }`. Reading `format === "jwe"` alone therefore never means "a signed token is inside"; check `wrapper`.
@@ -574,6 +576,8 @@ JweKit.decode(token);
 
 Compressed payloads (`zip` header) are explicitly rejected.
 
+The key-wrap `iv` and `tag` and the PBES2 `p2s` are read only where the key-management algorithm uses them: `iv` and `tag` for `A*GCMKW` (RFC 7518 §4.7.1) and for `ECDH-ES+A*GCMKW`, a kryptos algorithm RFC 7518 does not define, whose key wrap `@lindorm/aes` runs as the same AES GCM key wrap, and `p2s` for PBES2 (RFC 7518 §4.8.1). One the algorithm uses that is absent or not base64url (RFC 7515 §2) is refused with `jwe_header_iv_invalid`, `jwe_header_tag_invalid` or `jwe_header_p2s_invalid` (a `JweError`), at `decrypt` and at `aegis.jwe.decrypt`, `aegis.decrypt` and `aegis.verify` alike. One the algorithm does not use is ignored (RFC 7515 §4).
+
 ## SignatureKit
 
 Low-level signature primitives over raw bytes. Dispatches to the appropriate driver kit based on `kryptos.type` (AKP / EC / OKP / RSA / oct).
@@ -738,6 +742,8 @@ The COSE `typ` header carries the CWT media type — `application/at+cwt`, `appl
 ⚠ **On read, a COSE `typ` must be a text string.** One that is not — a CoAP Content-Format `uint` included — is refused at every COSE door, in either header bucket, with `cose_header_typ_invalid` (a `CoseError`). That is **aegis policy**, not RFC 9596 §4.1, which registers `typ` as `uint / tstr`: aegis routes a token and applies a profile's floor by the `typ`'s media type, and an integer names none it can compare.
 
 ⚠ **On read, a COSE `cty` integer must be a CoAP Content-Format aegis reads.** A registered ID without a content coding is read as its media type (RFC 9052 §3.1); a coded ID, an unassigned integer and any other value that is not a text string are refused at every COSE door, in either header bucket, with `cose_header_cty_invalid` (a `CoseError`) — **aegis policy** for the integers. See [Content-type negotiation](#content-type-negotiation).
+
+⚠ **On read, a COSE `iv` must be a byte string** (RFC 9052 §3.1). Any other value, a text string included, is refused at every COSE door, in either header bucket, with `cose_header_iv_invalid` (a `CoseError`).
 
 By default the whole token is fully interoperable — a string-keyed payload that a stock COSE/CWT verifier reads, the same for any header parameter with no IANA COSE label (`objectId` → the text label `oid`, a legal COSE label — RFC 9052 §1.5), and the strict alg/enc interop gate ON. Pass `proprietary: true` for the lindorm-native compact encodings (integer-keyed `act` / `sub_id`, private-use integer labels for lindorm-only claims and header parameters, gate off), at the benefit of smaller tokens:
 

@@ -16,7 +16,9 @@
  *   - `"algorithmLabel"` an integer COSE algorithm label against the JOSE
  *                        algorithm NAME (alg, RFC 9052 §3.1).
  *   - `"textBytes"` a CBOR `bstr` against utf-8 text (kid).
- *   - `"base64Bytes"` a CBOR `bstr` against a base64url string (iv).
+ *   - `"base64Bytes"` a CBOR `bstr` against a base64url string, and the read
+ *                     refuses any other CBOR type (iv — RFC 9052 §3.1, on its
+ *                     registry row).
  *   - `"critical"` the `crit` array whose MEMBERS are labels in their own right
  *                  (RFC 9052 §1.5), remapped in both directions.
  *   - `"certChain"` RFC 9360 §2 `COSE_X509` — `bstr / [ 2*certs: bstr ]` of DER

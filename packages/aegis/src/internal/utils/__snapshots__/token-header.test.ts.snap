@@ -35,3 +35,62 @@ exports[`data-driven header codec > compression is refused at the domain crossin
   "name": "AegisDomainError",
 }
 `;
+
+exports[`parseTokenHeader > the members it reports > a byte parameter that is a string is reported verbatim, base64url or not 1`] = `
+{
+  "algorithm": "A256GCMKW",
+  "critical": [],
+  "initialisationVector": "AAAAAAAAAAAAAAAA",
+  "pbkdfSalt": "",
+  "publicEncryptionTag": "!!!",
+}
+`;
+
+exports[`parseTokenHeader > the members it reports > a byte parameter that is an array reports no member 1`] = `
+{
+  "algorithm": "A256GCMKW",
+  "critical": [],
+}
+`;
+
+exports[`parseTokenHeader > the members it reports > a byte parameter that is an object reports no member 1`] = `
+{
+  "algorithm": "A256GCMKW",
+  "critical": [],
+}
+`;
+
+exports[`parseTokenHeader > the members it reports > a byte parameter that is false reports no member 1`] = `
+{
+  "algorithm": "A256GCMKW",
+  "critical": [],
+}
+`;
+
+exports[`parseTokenHeader > the members it reports > a byte parameter that is null reports no member 1`] = `
+{
+  "algorithm": "A256GCMKW",
+  "critical": [],
+}
+`;
+
+exports[`parseTokenHeader > the members it reports > a byte parameter that is the number 0 reports no member 1`] = `
+{
+  "algorithm": "A256GCMKW",
+  "critical": [],
+}
+`;
+
+exports[`parseTokenHeader > the members it reports > a byte parameter that is the number 5 reports no member 1`] = `
+{
+  "algorithm": "A256GCMKW",
+  "critical": [],
+}
+`;
+
+exports[`parseTokenHeader > the members it reports > a byte parameter that is true reports no member 1`] = `
+{
+  "algorithm": "A256GCMKW",
+  "critical": [],
+}
+`;

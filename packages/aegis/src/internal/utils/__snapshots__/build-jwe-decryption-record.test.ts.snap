@@ -1,0 +1,28 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`buildJweDecryptionRecord > decodes, under A256GCMKW, the key-wrap iv and tag 1`] = `
+{
+  "pbkdfIterations": 4096,
+  "pbkdfSalt": undefined,
+  "publicEncryptionIv": "kw-iv",
+  "publicEncryptionTag": "kw-tag",
+}
+`;
+
+exports[`buildJweDecryptionRecord > decodes, under A256KW, none of them 1`] = `
+{
+  "pbkdfIterations": 4096,
+  "pbkdfSalt": undefined,
+  "publicEncryptionIv": undefined,
+  "publicEncryptionTag": undefined,
+}
+`;
+
+exports[`buildJweDecryptionRecord > decodes, under PBES2-HS512+A256KW, the PBKDF salt 1`] = `
+{
+  "pbkdfIterations": 4096,
+  "pbkdfSalt": "salt",
+  "publicEncryptionIv": undefined,
+  "publicEncryptionTag": undefined,
+}
+`;

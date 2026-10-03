@@ -481,12 +481,14 @@ describe("the IV a foreign COSE_Encrypt0 carries", () => {
     ["the CBOR undefined", undefined],
   ])("a protected IV stated as %s beside a real unprotected IV", (_name, iv) => {
     test.each(DOORS)(
-      "%s refuses it rather than decrypting with the unprotected IV",
+      "%s refuses it as an IV that is not a byte string rather than decrypting with the unprotected IV",
       async (_door, open) => {
         const token = sealed([[IV, iv]], "unprotected");
 
-        await expect(open(token)).rejects.toBeInstanceOf(CweError);
-        await expect(open(token)).rejects.toMatchObject({ code: "cose_malformed" });
+        await expect(open(token)).rejects.toMatchObject({
+          constructor: CoseError,
+          code: "cose_header_iv_invalid",
+        });
       },
     );
   });

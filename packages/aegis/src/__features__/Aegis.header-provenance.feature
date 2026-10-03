@@ -575,6 +575,68 @@ Feature: Header provenance, empty header parameters and the asserted token type
         | tid | at_abc |
         | sec | s3cr3t |
 
+  Rule: a COSE initialisation vector that is not a byte string is refused as a COSE error, in either bucket
+
+    The jose wire has no scenario: a JOSE initialisation vector is the AES
+    GCM key-wrap parameter of an encrypted token (RFC 7518 §4.7.1.1), read
+    only where the key-management algorithm wraps with it, and on a signed
+    JOSE token it is a parameter no reader understands (RFC 7515 §4). A COSE
+    initialisation vector is a byte string (RFC 9052 §3.1), and aegis reports
+    one as the base64url of its bytes. A text string carrying that same
+    base64url would read back identical to a byte string, so a value of any
+    other type is refused where the header is read rather than reported as
+    if it were one. Each scenario states a text string, and the bucket the
+    signature does not cover is no way past the refusal.
+
+    Background:
+      Given the wire claims
+        | iss | "https://test.lindorm.io/" |
+        | sub | "user-1"                   |
+        | aud | ["https://rs.lindorm.io/"] |
+        | jti | "token-1"                  |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+
+    @RFC-9052
+    Scenario: cose: the domain verify refuses a protected initialisation vector stated as a text string (RFC-9052 §3.1)
+      Given the foreign protected header carries, at the integer labels
+        | 5 | "AAAAAAAAAAAAAAAA" |
+      When a third party signs the wire claims on the cose wire
+      And I verify the token
+      Then verification is refused as a COSE error "cose_header_iv_invalid"
+
+    @RFC-9052
+    Scenario: cose: the keyless read refuses a protected initialisation vector stated as a text string (RFC-9052 §3.1)
+      Given the foreign protected header carries, at the integer labels
+        | 5 | "AAAAAAAAAAAAAAAA" |
+      When a third party signs the wire claims on the cose wire
+      And I read the token without a key
+      Then the keyless read is refused as a COSE error "cose_header_iv_invalid"
+
+    @RFC-9052
+    Scenario: cose: the raw claims door refuses a protected initialisation vector stated as a text string (RFC-9052 §3.1)
+      Given the foreign protected header carries, at the integer labels
+        | 5 | "AAAAAAAAAAAAAAAA" |
+      When a third party signs the wire claims on the cose wire
+      And I verify the token as a claims token on the cose wire
+      Then verification is refused as a COSE error "cose_header_iv_invalid"
+
+    @RFC-9052
+    Scenario: cose: the domain verify refuses an unprotected initialisation vector stated as a text string (RFC-9052 §3.1)
+      Given the foreign unprotected header carries, at the integer labels
+        | 5 | "AAAAAAAAAAAAAAAA" |
+      When a third party signs the wire claims on the cose wire
+      And I verify the token
+      Then verification is refused as a COSE error "cose_header_iv_invalid"
+
+    @RFC-9052
+    Scenario: cose: the raw claims door refuses an unprotected initialisation vector stated as a text string (RFC-9052 §3.1)
+      Given the foreign unprotected header carries, at the integer labels
+        | 5 | "AAAAAAAAAAAAAAAA" |
+      When a third party signs the wire claims on the cose wire
+      And I verify the token as a claims token on the cose wire
+      Then verification is refused as a COSE error "cose_header_iv_invalid"
+
   Rule: a token of another type is refused when the caller asserts an id token
 
     The `typ` header parameter declares the media type of the complete token

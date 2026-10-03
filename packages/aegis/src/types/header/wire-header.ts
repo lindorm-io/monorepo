@@ -17,8 +17,11 @@ export type TokenHeaderType = BaseTokenFormat | (string & {});
 
 /**
  * THE wire type: the serialized JOSE protected header (RFC 7515 §4.1). Byte
- * fields (iv/p2s/tag) are base64url strings and `alg` is fixed — this is the
- * shape actually decoded off the wire.
+ * fields (iv/p2s/tag) are base64url strings and `alg` is fixed.
+ *
+ * ⚠ A raw JOSE read reports the header as the producer wrote it, without
+ * checking each member against this type: a foreign `iv: 5` on a signed token
+ * arrives as the number.
  */
 export type WireTokenHeader = {
   alg: TokenHeaderAlgorithm; // algorithm
