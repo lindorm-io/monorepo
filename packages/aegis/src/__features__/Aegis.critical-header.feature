@@ -1143,6 +1143,394 @@ Feature: Critical header parameters
         | jose |
         | cose |
 
+  Rule: every door to a header bag refuses compression, a parameter the specification defines and the library cannot emit
+
+    `zip` names the compression applied to a JWE plaintext (RFC 7516 §4.1.3),
+    and aegis compresses nothing. A caller naming it in a header bag asks for
+    a transform no aegis write performs, and dropping the name would mint a
+    token without what the caller asked for, without telling them. So every
+    door that reaches a header bag refuses it by name, and on the jose wire
+    the refusal says the parameter cannot be emitted rather than that it is
+    unknown: under the kit's own error at a wire door, including the mint's
+    sealing header, and under a domain error at a domain door. A domain
+    door's refusal reads nothing wire-specific, so its cose rows give the
+    same verdict. A cose wire door, the mint's sealing header included,
+    refuses the name as one the wire has no label for. The refusal is aegis
+    policy: no specification requires a producer to refuse a parameter it is
+    asked to write.
+
+    Background:
+      Given the vault also holds an ECDH-ES encryption key
+      And the vault also holds a dir encryption key
+
+    Scenario: jose: a claims token at the wire door is refused as a parameter that cannot be emitted
+      Given the wire claims
+        | iss | "https://test.lindorm.io/" |
+        | sub | "user-1"                   |
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+      And the wire header
+        | zip | "DEF" |
+      When I sign the wire claims as a claims token on the jose wire
+      Then signing is refused as a JWT error "header_not_emittable"
+      And the refusal names the parameter "zip"
+
+    Scenario: cose: a claims token at the wire door is refused as a parameter the wire has no label for
+      Given the wire claims
+        | iss | "https://test.lindorm.io/" |
+        | sub | "user-1"                   |
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+      And the wire header
+        | zip | "DEF" |
+      When I sign the wire claims as a claims token on the cose wire
+      Then signing is refused as a COSE error "header_no_cose_label"
+      And the refusal's data is exactly
+        | jose | "zip" |
+
+    Scenario: jose: an opaque signature at the wire door is refused as a parameter that cannot be emitted
+      Given the payload to sign
+        | subject | user-1 |
+      And the wire header
+        | zip | "DEF" |
+      When I sign the payload as opaque content on the jose wire
+      Then signing is refused as a JWS error "header_not_emittable"
+      And the refusal names the parameter "zip"
+
+    Scenario: cose: an opaque signature at the wire door is refused as a parameter the wire has no label for
+      Given the payload to sign
+        | subject | user-1 |
+      And the wire header
+        | zip | "DEF" |
+      When I sign the payload as opaque content on the cose wire
+      Then signing is refused as a COSE error "header_no_cose_label"
+      And the refusal's data is exactly
+        | jose | "zip" |
+
+    Scenario: jose: an encryption at the wire door is refused as a parameter that cannot be emitted
+      Given the data to encrypt
+        | subject | user-1 |
+      And the wire header
+        | zip | "DEF" |
+      When I encrypt the data as sealed content on the jose wire
+      Then encryption is refused as a JWE error "header_not_emittable"
+      And the refusal names the parameter "zip"
+
+    Scenario: cose: an encryption at the wire door is refused as a parameter the wire has no label for
+      Given the data to encrypt
+        | subject | user-1 |
+      And the wire header
+        | zip | "DEF" |
+      When I encrypt the data as sealed content on the cose wire
+      Then encryption is refused as a COSE error "header_no_cose_label"
+      And the refusal's data is exactly
+        | jose | "zip" |
+
+    Scenario: jose: a mint sealing its token under the parameter is refused as a parameter that cannot be emitted
+      Given the content to mint
+        | subject | user-1 |
+      And an audience list whose only member is "client-1"
+      And no access token is co-issued
+      And the mint seals the token under the wire header
+        | zip | "DEF" |
+      When I mint the content under the "id_token" profile on the jose wire
+      Then minting is refused as a JWE error "header_not_emittable"
+      And the refusal names the parameter "zip"
+
+    Scenario: cose: a mint sealing its token under the parameter is refused as a parameter the wire has no label for
+      Given the content to mint
+        | subject | user-1 |
+      And an audience list whose only member is "client-1"
+      And no access token is co-issued
+      And the mint seals the token under the wire header
+        | zip | "DEF" |
+      When I mint the content under the "id_token" profile on the cose wire
+      Then minting is refused as a COSE error "header_no_cose_label"
+      And the refusal's data is exactly
+        | jose | "zip" |
+
+    Scenario Outline: <wire>: an unprofiled signature is refused as a parameter that cannot be emitted
+      Given the claims to sign
+        | subject | user-1 |
+      And the domain header
+        | zip | "DEF" |
+      When I sign the claims without a profile on the <wire> wire
+      Then signing is refused as a domain error "header_not_emittable"
+      And the refusal names the parameter "zip"
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
+    Scenario Outline: <wire>: a profiled mint is refused as a parameter that cannot be emitted
+      Given the content to mint
+        | subject | user-1 |
+      And the token type "test_token"
+      And the content expires in "1h"
+      And the domain header
+        | zip | "DEF" |
+      When I mint the content under the "default" profile on the <wire> wire
+      Then minting is refused as a domain error "header_not_emittable"
+      And the refusal names the parameter "zip"
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
+    Scenario Outline: <wire>: an encryption is refused as a parameter that cannot be emitted
+      Given the data to encrypt
+        | subject | user-1 |
+      And the domain header
+        | zip | "DEF" |
+      When I encrypt the data on the <wire> wire
+      Then encryption is refused as a domain error "header_not_emittable"
+      And the refusal names the parameter "zip"
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
+  Rule: a wire-named header bag refuses a parameter the library does not know
+
+    A wire-named header bag, `header` at a wire door and the header a mint
+    seals its token under, takes the parameters aegis's header registry
+    defines, and `x-lindorm-hint` is none of them. A caller who writes it
+    there means to send it, and dropping it would mint a token without a
+    parameter the caller stated, without telling them. So the write is
+    refused: on the jose wire under the kit's own error, naming the
+    parameter, and on the cose wire as a parameter the wire has no label
+    for. A caller's own extension parameter has a bag of its own, the custom
+    header, which carries it verbatim, and the contrast scenarios show the
+    same name riding it on both wires. The domain-named bags refuse the same
+    name under the domain-named write's own Rule. The refusal is aegis
+    policy: a recipient ignores a header parameter it does not understand
+    unless it is marked critical (RFC 7515 §4), a producer and a consumer may
+    agree on names of their own (RFC 7515 §4.3), and no specification
+    requires a producer to refuse one.
+
+    Background:
+      Given the vault also holds an ECDH-ES encryption key
+      And the vault also holds a dir encryption key
+
+    Scenario: jose: a claims token at the wire door is refused, naming the parameter
+      Given the wire claims
+        | iss | "https://test.lindorm.io/" |
+        | sub | "user-1"                   |
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+      And the wire header
+        | x-lindorm-hint | "carried" |
+      When I sign the wire claims as a claims token on the jose wire
+      Then signing is refused as a JWT error "header_unknown_parameter"
+      And the refusal names the parameter "x-lindorm-hint"
+
+    Scenario: cose: a claims token at the wire door is refused as a parameter the wire has no label for
+      Given the wire claims
+        | iss | "https://test.lindorm.io/" |
+        | sub | "user-1"                   |
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+      And the wire header
+        | x-lindorm-hint | "carried" |
+      When I sign the wire claims as a claims token on the cose wire
+      Then signing is refused as a COSE error "header_no_cose_label"
+      And the refusal's data is exactly
+        | jose | "x-lindorm-hint" |
+
+    Scenario: jose: an opaque signature at the wire door is refused, naming the parameter
+      Given the payload to sign
+        | subject | user-1 |
+      And the wire header
+        | x-lindorm-hint | "carried" |
+      When I sign the payload as opaque content on the jose wire
+      Then signing is refused as a JWS error "header_unknown_parameter"
+      And the refusal names the parameter "x-lindorm-hint"
+
+    Scenario: cose: an opaque signature at the wire door is refused as a parameter the wire has no label for
+      Given the payload to sign
+        | subject | user-1 |
+      And the wire header
+        | x-lindorm-hint | "carried" |
+      When I sign the payload as opaque content on the cose wire
+      Then signing is refused as a COSE error "header_no_cose_label"
+      And the refusal's data is exactly
+        | jose | "x-lindorm-hint" |
+
+    Scenario: jose: an encryption at the wire door is refused, naming the parameter
+      Given the data to encrypt
+        | subject | user-1 |
+      And the wire header
+        | x-lindorm-hint | "carried" |
+      When I encrypt the data as sealed content on the jose wire
+      Then encryption is refused as a JWE error "header_unknown_parameter"
+      And the refusal names the parameter "x-lindorm-hint"
+
+    Scenario: cose: an encryption at the wire door is refused as a parameter the wire has no label for
+      Given the data to encrypt
+        | subject | user-1 |
+      And the wire header
+        | x-lindorm-hint | "carried" |
+      When I encrypt the data as sealed content on the cose wire
+      Then encryption is refused as a COSE error "header_no_cose_label"
+      And the refusal's data is exactly
+        | jose | "x-lindorm-hint" |
+
+    Scenario: jose: a mint sealing its token under the parameter is refused, naming the parameter
+      Given the content to mint
+        | subject | user-1 |
+      And an audience list whose only member is "client-1"
+      And no access token is co-issued
+      And the mint seals the token under the wire header
+        | x-lindorm-hint | "carried" |
+      When I mint the content under the "id_token" profile on the jose wire
+      Then minting is refused as a JWE error "header_unknown_parameter"
+      And the refusal names the parameter "x-lindorm-hint"
+
+    Scenario: cose: a mint sealing its token under the parameter is refused as a parameter the wire has no label for
+      Given the content to mint
+        | subject | user-1 |
+      And an audience list whose only member is "client-1"
+      And no access token is co-issued
+      And the mint seals the token under the wire header
+        | x-lindorm-hint | "carried" |
+      When I mint the content under the "id_token" profile on the cose wire
+      Then minting is refused as a COSE error "header_no_cose_label"
+      And the refusal's data is exactly
+        | jose | "x-lindorm-hint" |
+
+    Scenario Outline: <wire>: the same parameter in the custom header rides the protected header
+      Given the wire claims
+        | iss | "https://test.lindorm.io/" |
+        | sub | "user-1"                   |
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+      And the custom header
+        | x-lindorm-hint | "carried" |
+      When I sign the wire claims as a claims token on the <wire> wire
+      Then the raw protected header carries "x-lindorm-hint" "carried"
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
+  Rule: a wire-named header bag refuses a parameter spelled in domain vocabulary
+
+    A wire door speaks the wire's vocabulary, and so does the header a mint
+    seals its token under, which is handed to the sealing kit in wire names,
+    untranslated. `objectId` is the domain spelling of `oid`, a parameter a
+    caller may set. Dropping it would mint a token without the parameter the
+    caller stated, without telling them, and sending the caller to the
+    custom header would mint a parameter named `objectId` that no reader
+    takes for `oid`. So the write is refused: on the jose wire under the
+    kit's own error, naming the wire spelling the bag expects, and on the
+    cose wire as a parameter the wire has no label for. The contrast
+    scenarios show `oid` carried on both wires. The refusal mirrors a
+    domain-named bag refusing a wire spelling, and it is aegis policy: on
+    the wire `objectId` is a name a producer and a consumer may agree on
+    (RFC 7515 §4.3), and no specification requires a producer to refuse it.
+
+    Background:
+      Given the vault also holds an ECDH-ES encryption key
+      And the vault also holds a dir encryption key
+
+    Scenario: jose: a claims token at the wire door is refused, naming the wire spelling it expects
+      Given the wire claims
+        | iss | "https://test.lindorm.io/" |
+        | sub | "user-1"                   |
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+      And the wire header
+        | objectId | "1.2.3.4" |
+      When I sign the wire claims as a claims token on the jose wire
+      Then signing is refused as a JWT error "header_not_wire_named"
+      And the refusal names the parameter "objectId" and expects the wire spelling "oid"
+
+    Scenario: cose: a claims token at the wire door is refused as a parameter the wire has no label for
+      Given the wire claims
+        | iss | "https://test.lindorm.io/" |
+        | sub | "user-1"                   |
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+      And the wire header
+        | objectId | "1.2.3.4" |
+      When I sign the wire claims as a claims token on the cose wire
+      Then signing is refused as a COSE error "header_no_cose_label"
+      And the refusal's data is exactly
+        | jose | "objectId" |
+
+    Scenario: jose: an opaque signature at the wire door is refused, naming the wire spelling it expects
+      Given the payload to sign
+        | subject | user-1 |
+      And the wire header
+        | objectId | "1.2.3.4" |
+      When I sign the payload as opaque content on the jose wire
+      Then signing is refused as a JWS error "header_not_wire_named"
+      And the refusal names the parameter "objectId" and expects the wire spelling "oid"
+
+    Scenario: cose: an opaque signature at the wire door is refused as a parameter the wire has no label for
+      Given the payload to sign
+        | subject | user-1 |
+      And the wire header
+        | objectId | "1.2.3.4" |
+      When I sign the payload as opaque content on the cose wire
+      Then signing is refused as a COSE error "header_no_cose_label"
+      And the refusal's data is exactly
+        | jose | "objectId" |
+
+    Scenario: jose: an encryption at the wire door is refused, naming the wire spelling it expects
+      Given the data to encrypt
+        | subject | user-1 |
+      And the wire header
+        | objectId | "1.2.3.4" |
+      When I encrypt the data as sealed content on the jose wire
+      Then encryption is refused as a JWE error "header_not_wire_named"
+      And the refusal names the parameter "objectId" and expects the wire spelling "oid"
+
+    Scenario: cose: an encryption at the wire door is refused as a parameter the wire has no label for
+      Given the data to encrypt
+        | subject | user-1 |
+      And the wire header
+        | objectId | "1.2.3.4" |
+      When I encrypt the data as sealed content on the cose wire
+      Then encryption is refused as a COSE error "header_no_cose_label"
+      And the refusal's data is exactly
+        | jose | "objectId" |
+
+    Scenario: jose: a mint sealing its token under the parameter is refused, naming the wire spelling it expects
+      Given the content to mint
+        | subject | user-1 |
+      And an audience list whose only member is "client-1"
+      And no access token is co-issued
+      And the mint seals the token under the wire header
+        | objectId | "1.2.3.4" |
+      When I mint the content under the "id_token" profile on the jose wire
+      Then minting is refused as a JWE error "header_not_wire_named"
+      And the refusal names the parameter "objectId" and expects the wire spelling "oid"
+
+    Scenario: cose: a mint sealing its token under the parameter is refused as a parameter the wire has no label for
+      Given the content to mint
+        | subject | user-1 |
+      And an audience list whose only member is "client-1"
+      And no access token is co-issued
+      And the mint seals the token under the wire header
+        | objectId | "1.2.3.4" |
+      When I mint the content under the "id_token" profile on the cose wire
+      Then minting is refused as a COSE error "header_no_cose_label"
+      And the refusal's data is exactly
+        | jose | "objectId" |
+
+    Scenario Outline: <wire>: the same parameter in its wire spelling rides the protected header
+      Given the wire claims
+        | iss | "https://test.lindorm.io/" |
+        | sub | "user-1"                   |
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+      And the wire header
+        | oid | "1.2.3.4" |
+      When I sign the wire claims as a claims token on the <wire> wire
+      Then the raw protected header carries "oid" "1.2.3.4"
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
   Rule: a mint refuses a critical-parameter list naming a parameter the specification itself defines
 
     A producer may not name a specification-defined parameter in `crit`, and a

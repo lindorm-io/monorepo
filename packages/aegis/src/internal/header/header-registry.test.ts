@@ -336,10 +336,10 @@ describe("HEADER_SPECS", () => {
   /**
    * ⛔ NO ROW IS WHAT MAKES THE PARAMETER UNWRITABLE. A row is the only thing
    * either write pass resolves a name through, so compression has none on either
-   * wire: the JOSE passes drop the name as unregistered and the COSE one refuses
-   * it with `header_no_cose_label`. It stays spec-defined through
+   * wire: the JOSE door refuses the name as not emittable and the COSE pass
+   * refuses it with `header_no_cose_label`. It stays spec-defined through
    * `is-spec-defined-header-param.ts`, which is what keeps it out of `custom` and
-   * out of `crit`. RFC 7516 §4.1.3.
+   * out of `crit` and names the JOSE refusal. RFC 7516 §4.1.3.
    */
   test("compression has no registry row on either wire", () => {
     expect(headerByJose("zip")).toBeUndefined();

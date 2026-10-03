@@ -1,0 +1,157 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`buildJoseHeader > the caller's bag is closed and loud > a crit naming an unknown name the caller put in header hears the refusal of the name 1`] = `
+{
+  "code": "header_unknown_parameter",
+  "data": {
+    "parameter": "x-a",
+  },
+  "debug": {
+    "bucket": "header",
+    "format": "jwt",
+  },
+  "message": "Header parameter "x-a" is not a header parameter aegis writes; a caller's own extension parameter belongs in custom.header, which the wire namespaces and kits take and aegis.mint does not",
+  "name": "JoseError",
+}
+`;
+
+exports[`buildJoseHeader > the caller's bag is closed and loud > a domain spelling is refused, naming the wire spelling the bag takes 1`] = `
+{
+  "code": "header_not_wire_named",
+  "data": {
+    "expected": "oid",
+    "parameter": "objectId",
+  },
+  "debug": {
+    "bucket": "header",
+    "format": "jwt",
+  },
+  "message": "Header parameter "objectId" is named in the domain vocabulary",
+  "name": "JoseError",
+}
+`;
+
+exports[`buildJoseHeader > the caller's bag is closed and loud > an own __proto__ key is refused by name like any other unknown name 1`] = `
+{
+  "code": "header_unknown_parameter",
+  "data": {
+    "parameter": "__proto__",
+  },
+  "debug": {
+    "bucket": "header",
+    "format": "jwt",
+  },
+  "message": "Header parameter "__proto__" is not a header parameter aegis writes; a caller's own extension parameter belongs in custom.header, which the wire namespaces and kits take and aegis.mint does not",
+  "name": "JoseError",
+}
+`;
+
+exports[`buildJoseHeader > the caller's bag is closed and loud > an unknown name is refused even when its value is empty 1`] = `
+{
+  "code": "header_unknown_parameter",
+  "data": {
+    "parameter": "nonsense",
+  },
+  "debug": {
+    "bucket": "header",
+    "format": "jwt",
+  },
+  "message": "Header parameter "nonsense" is not a header parameter aegis writes; a caller's own extension parameter belongs in custom.header, which the wire namespaces and kits take and aegis.mint does not",
+  "name": "JoseError",
+}
+`;
+
+exports[`buildJoseHeader > the caller's bag is closed and loud > an unknown name is refused under the kit's class, pointing to custom.header 1`] = `
+{
+  "code": "header_unknown_parameter",
+  "data": {
+    "parameter": "nonsense",
+  },
+  "debug": {
+    "bucket": "header",
+    "format": "jwt",
+  },
+  "message": "Header parameter "nonsense" is not a header parameter aegis writes; a caller's own extension parameter belongs in custom.header, which the wire namespaces and kits take and aegis.mint does not",
+  "name": "JoseError",
+}
+`;
+
+exports[`buildJoseHeader > the caller's bag is closed and loud > an unknown name with an undefined value is an unset field, not a refusal 1`] = `
+{
+  "alg": "ES512",
+  "kid": "key_test",
+  "typ": "JWT",
+}
+`;
+
+exports[`buildJoseHeader > the caller's bag is closed and loud > compression is refused as a parameter aegis cannot emit 1`] = `
+{
+  "code": "header_not_emittable",
+  "data": {
+    "parameter": "zip",
+  },
+  "debug": {
+    "bucket": "header",
+    "format": "jwt",
+  },
+  "message": "Header parameter "zip" is defined by a specification, and aegis does not implement it, so it cannot be emitted",
+  "name": "JoseError",
+}
+`;
+
+exports[`buildJoseHeader > the caller's bag is closed and loud > compression is refused as not emittable even when its value is empty 1`] = `
+{
+  "code": "header_not_emittable",
+  "data": {
+    "parameter": "zip",
+  },
+  "debug": {
+    "bucket": "header",
+    "format": "jwt",
+  },
+  "message": "Header parameter "zip" is defined by a specification, and aegis does not implement it, so it cannot be emitted",
+  "name": "JoseError",
+}
+`;
+
+exports[`buildJoseHeader > the caller's bag is closed and loud > the domain spelling of a kit-owned parameter is refused as a spelling, naming the wire one 1`] = `
+{
+  "code": "header_not_wire_named",
+  "data": {
+    "expected": "kid",
+    "parameter": "keyId",
+  },
+  "debug": {
+    "bucket": "header",
+    "format": "jwt",
+  },
+  "message": "Header parameter "keyId" is named in the domain vocabulary",
+  "name": "JoseError",
+}
+`;
+
+exports[`buildJoseHeader > the caller's bag is closed and loud > the one parameter spelled alike at both tiers is carried, not refused 1`] = `
+{
+  "alg": "ES512",
+  "jwk": {
+    "crv": "P-256",
+    "kty": "EC",
+    "x": "eA",
+    "y": "eQ",
+  },
+  "kid": "key_test",
+  "typ": "JWT",
+}
+`;
+
+exports[`buildJoseHeader > the caller's bag is closed and loud > the same crit and name in custom.header are carried 1`] = `
+{
+  "alg": "ES512",
+  "crit": [
+    "x-a",
+  ],
+  "kid": "key_test",
+  "typ": "JWT",
+  "x-a": "v",
+}
+`;

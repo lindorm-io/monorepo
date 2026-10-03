@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { refusalOf } from "../../__fixtures__/refusal-of.js";
 import { CoseError } from "../../errors/index.js";
 import { buildCoseHeaders } from "./build-cose-headers.js";
 
@@ -249,6 +250,14 @@ describe("buildCoseHeaders", () => {
           data: { crit: ["objectId"], parameter: "objectId" },
         }),
       );
+    });
+
+    // The JOSE builder refuses the same bag for the name itself
+    // (`build-jose-header.test.ts`).
+    test("a crit naming an unknown name the caller put in header is refused by the crit gate, before its label is resolved", () => {
+      expect(
+        refusalOf(() => build({ header: { crit: ["ext"], ext: "x" } as never })),
+      ).toMatchSnapshot();
     });
   });
 });

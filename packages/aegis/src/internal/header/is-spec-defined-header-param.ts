@@ -15,9 +15,10 @@ import { HEADER_SPECS, headerByJose, headerJoseName } from "./header-registry.js
  * implementing — or an entry typed by hand — fails the test rather than silently
  * opening a hole.
  *
- * ⛔ MEMBERSHIP HERE IS NOT SUPPORT. Each name is refused from `custom` and from
- * `crit`, and none is emittable; a forged `iss`/`sub`/`aud` header is a confusion
- * attack rather than an inert hint (RFC 7519 §5.3).
+ * ⛔ MEMBERSHIP HERE IS NOT SUPPORT. Each name is refused from `custom`, from
+ * `crit` and from the header bag, and none is emittable; a forged
+ * `iss`/`sub`/`aud` header is a confusion attack rather than an inert hint
+ * (RFC 7519 §5.3).
  */
 const UNIMPLEMENTED_SPEC_PARAMS: ReadonlySet<string> = new Set([
   // RFC 7516 §4.1.3 — compression algorithm.
@@ -48,12 +49,14 @@ const UNIMPLEMENTED_SPEC_PARAMS: ReadonlySet<string> = new Set([
 
 /**
  * Is this name a header parameter a public specification defines, rather than one
- * a producer may invent? The ONE answer, read by both sides that ask it:
+ * a producer may invent? The ONE answer, read by every side that asks it:
  *
  *   - `internal/utils/validate-crit.ts` — `crit` may not name one (RFC 7515
  *     §4.1.11).
  *   - `internal/header/build-custom-header.ts` — the `custom` bag carries
  *     UNREGISTERED parameters, and a spec-defined name is not one.
+ *   - `internal/header/unregistered-header-parameter.ts` — the header bag refuses
+ *     a name with no registry row, and a spec-defined one as not emittable.
  *
  * ⛔ ONE PREDICATE, NEVER TWO LISTS. Split the question — a hand-written IANA set
  * beside the header registry — and the halves answer differently: the one `custom`

@@ -1,0 +1,13 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`assertCritEligible > through the seven public mint doors > an unknown name written in header and marked critical is refused by name on JOSE and by the crit gate on COSE 1`] = `
+{
+  "cwe": "cwe_crit_param_not_permitted",
+  "cwm": "cwm_crit_param_not_permitted",
+  "cws": "cws_crit_param_not_permitted",
+  "cwt": "cwt_crit_param_not_permitted",
+  "jwe": "header_unknown_parameter",
+  "jws": "header_unknown_parameter",
+  "jwt": "header_unknown_parameter",
+}
+`;

@@ -1,0 +1,37 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`data-driven header codec > a spec-defined name aegis cannot emit is refused as such even when its value is empty 1`] = `
+{
+  "code": "header_not_emittable",
+  "data": {
+    "parameter": "zip",
+  },
+  "debug": {},
+  "message": "Header parameter "zip" is defined by a specification, and aegis does not implement it, so it cannot be emitted",
+  "name": "AegisDomainError",
+}
+`;
+
+exports[`data-driven header codec > an unknown name is refused at the domain crossing without pointing to a custom bag 1`] = `
+{
+  "code": "header_unknown_parameter",
+  "data": {
+    "parameter": "x-lindorm-hint",
+  },
+  "debug": {},
+  "message": "Header parameter "x-lindorm-hint" is not a header parameter aegis writes",
+  "name": "AegisDomainError",
+}
+`;
+
+exports[`data-driven header codec > compression is refused at the domain crossing as a parameter aegis cannot emit 1`] = `
+{
+  "code": "header_not_emittable",
+  "data": {
+    "parameter": "zip",
+  },
+  "debug": {},
+  "message": "Header parameter "zip" is defined by a specification, and aegis does not implement it, so it cannot be emitted",
+  "name": "AegisDomainError",
+}
+`;

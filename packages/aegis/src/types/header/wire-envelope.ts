@@ -37,7 +37,11 @@ export type KitOwnedHeaderParam =
  * unregistered parameter. An unregistered parameter is expressible — under its
  * own option key, `custom` ({@link JoseWireTokenEnvelope} /
  * {@link CoseWireTokenEnvelope}) — so widening this bag buys nothing and costs
- * the typo check.
+ * the typo check. An untyped caller naming a key the header registry does not
+ * spell this way, with any value but `undefined`, is refused at runtime, never
+ * dropped: `header_unknown_parameter`, `header_not_wire_named` or
+ * `header_not_emittable` on JOSE; `header_no_cose_label` on COSE, unless a
+ * `crit` naming the key is refused first.
  *
  * PLACEMENT is the registry's, never the caller's: every param here whose
  * `placement` cell reads `"protected"` travels protected on COSE, and the two

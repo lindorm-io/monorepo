@@ -1,4 +1,5 @@
 import type { WireTokenHeader, DomainTokenHeaderOptions } from "../../types/index.js";
+import { refusalOf } from "../../__fixtures__/refusal-of.js";
 import { AegisDomainError } from "../../errors/index.js";
 import { headerCoseLabel, headerByJose } from "../header/header-registry.js";
 import {
@@ -60,15 +61,21 @@ describe("data-driven header codec", () => {
   /**
    * ⛔ COMPRESSION CROSSES NEITHER PASS, in either vocabulary. aegis compresses no
    * payload, so no registry row answers for `zip`: the domain crossing refuses it
-   * by name and the emission boundary disposes of it. RFC 7516 §4.1.3.
+   * as a parameter aegis cannot emit, and the emission boundary disposes of it.
+   * RFC 7516 §4.1.3.
    */
-  test("compression is refused by name at the domain crossing", () => {
-    expect(() => mapTokenHeader({ zip: "DEF" } as never)).toThrow(
-      expect.objectContaining({
-        code: "header_unknown_parameter",
-        data: { parameter: "zip" },
-      }),
-    );
+  test("compression is refused at the domain crossing as a parameter aegis cannot emit", () => {
+    expect(refusalOf(() => mapTokenHeader({ zip: "DEF" } as never))).toMatchSnapshot();
+  });
+
+  test("a spec-defined name aegis cannot emit is refused as such even when its value is empty", () => {
+    expect(refusalOf(() => mapTokenHeader({ zip: "" } as never))).toMatchSnapshot();
+  });
+
+  test("an unknown name is refused at the domain crossing without pointing to a custom bag", () => {
+    expect(
+      refusalOf(() => mapTokenHeader({ "x-lindorm-hint": "carried" } as never)),
+    ).toMatchSnapshot();
   });
 
   test("compression is not a parameter the emission boundary carries", () => {

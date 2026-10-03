@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { refusalOf } from "../../__fixtures__/refusal-of.js";
 import { JoseError } from "../../errors/index.js";
 import { buildJoseHeader } from "./build-jose-header.js";
 
@@ -383,23 +384,87 @@ describe("buildJoseHeader", () => {
     ]);
   });
 
-  describe("the registry shapes every tier", () => {
-    test("an unregistered parameter is dropped — headers are a closed set", () => {
-      expect(build({ header: { nonsense: "value" } as never }).alg).toBe("ES512");
-      expect("nonsense" in build({ header: { nonsense: "value" } as never })).toBe(false);
+  describe("the caller's bag is closed and loud", () => {
+    test("an unknown name is refused under the kit's class, pointing to custom.header", () => {
+      expect(
+        refusalOf(() => build({ header: { nonsense: "value" } as never })),
+      ).toMatchSnapshot();
+    });
+
+    test("an unknown name is refused even when its value is empty", () => {
+      expect(
+        refusalOf(() => build({ header: { nonsense: "" } as never })),
+      ).toMatchSnapshot();
+    });
+
+    test("an unknown name with an undefined value is an unset field, not a refusal", () => {
+      expect(build({ header: { nonsense: undefined } as never })).toMatchSnapshot();
     });
 
     /**
      * ⛔ COMPRESSION IS NOT A PARAMETER THIS BUILDER WRITES. aegis compresses no
-     * payload, so `zip` has no registry row and the closed-set rule disposes of
-     * it here — `JweKit.decrypt` refuses a token carrying it, so a header bag
-     * that could still put it on the wire would mint a token aegis cannot read.
-     * RFC 7516 §4.1.3.
+     * payload, so `zip` has no registry row, and `JweKit.decrypt` refuses a token
+     * carrying it. RFC 7516 §4.1.3 defines it, so the refusal says it cannot be
+     * emitted rather than that it is unknown.
      */
-    test("compression is not a parameter the header bag can write", () => {
-      expect("zip" in build({ header: { zip: "DEF" } as never })).toBe(false);
+    test("compression is refused as a parameter aegis cannot emit", () => {
+      expect(
+        refusalOf(() => build({ header: { zip: "DEF" } as never })),
+      ).toMatchSnapshot();
     });
 
+    test("compression is refused as not emittable even when its value is empty", () => {
+      expect(refusalOf(() => build({ header: { zip: "" } as never }))).toMatchSnapshot();
+    });
+
+    test("a domain spelling is refused, naming the wire spelling the bag takes", () => {
+      expect(
+        refusalOf(() => build({ header: { objectId: "1.2.3.4" } as never })),
+      ).toMatchSnapshot();
+    });
+
+    test("the domain spelling of a kit-owned parameter is refused as a spelling, naming the wire one", () => {
+      expect(
+        refusalOf(() => build({ header: { keyId: "attacker-key" } as never })),
+      ).toMatchSnapshot();
+    });
+
+    test("the one parameter spelled alike at both tiers is carried, not refused", () => {
+      const jwk = { kty: "EC", crv: "P-256", x: "eA", y: "eQ" };
+
+      expect(build({ header: { jwk } as never })).toMatchSnapshot();
+    });
+
+    test("an own __proto__ key is refused by name like any other unknown name", () => {
+      expect(
+        refusalOf(() =>
+          build({ header: JSON.parse('{ "__proto__": { "cty": "text/plain" } }') }),
+        ),
+      ).toMatchSnapshot();
+    });
+
+    /**
+     * ⚠ THE NAME IS JUDGED BEFORE THE `crit` THAT NAMES IT: the caller loop runs
+     * ahead of the crit gate, so the refusal names the misplaced key and the door
+     * it belongs in, `custom.header`, rather than the `crit` member.
+     */
+    test("a crit naming an unknown name the caller put in header hears the refusal of the name", () => {
+      expect(
+        refusalOf(() => build({ header: { crit: ["x-a"], "x-a": "v" } as never })),
+      ).toMatchSnapshot();
+    });
+
+    test("the same crit and name in custom.header are carried", () => {
+      expect(
+        build({
+          header: { crit: ["x-a"] } as never,
+          custom: { header: { "x-a": "v" } },
+        }),
+      ).toMatchSnapshot();
+    });
+  });
+
+  describe("the registry shapes every tier", () => {
     test("a value of the wrong shape is dropped by the registry's guard", () => {
       // `jku` is codec `url`, so a bare word is not a jwks uri — dropping it here is
       // what stops the caller's bag reaching the wire unguarded.

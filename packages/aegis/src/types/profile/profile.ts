@@ -100,10 +100,12 @@ export type TokenProfile<
  * wire the outer is emitted on and the caller cannot know it here.
  *
  * ⛔ MINUS `custom`, and the `Omit` is the tier rule made structural. `aegis.mint`
- * is a DOMAIN verb: a caller reaches it without learning either wire's
- * vocabulary, and an UNREGISTERED header parameter has no domain name by
- * definition. Custom parameters are a KIT-tier capability: `aegis.jwe.encrypt` /
- * `aegis.cwe.encrypt` take them. Pinned in `types/header/wire-envelope.test.ts`.
+ * takes no custom parameter on either layer: its `sign.header` is domain-named,
+ * and an UNREGISTERED header parameter has no domain name by definition; this
+ * `header` is handed to the sealing kit in wire names, untranslated, and the bag
+ * that would carry a custom parameter beside it is the one omitted here. Custom
+ * parameters are a KIT-tier capability: `aegis.jwe.encrypt` / `aegis.cwe.encrypt`
+ * take them. Pinned in `types/header/wire-envelope.test.ts`.
  */
 export type MintEncryptOptions = Omit<JweEncryptOptions & CweEncryptOptions, "custom"> & {
   key?: AegisEncKey;

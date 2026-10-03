@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`JweKit > zip (compression) rejection > the header bag refuses zip as a parameter aegis cannot emit 1`] = `
+{
+  "code": "header_not_emittable",
+  "data": {
+    "parameter": "zip",
+  },
+  "debug": {
+    "bucket": "header",
+    "format": "jwe",
+  },
+  "message": "Header parameter "zip" is defined by a specification, and aegis does not implement it, so it cannot be emitted",
+  "name": "JweError",
+}
+`;

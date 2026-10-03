@@ -1,5 +1,5 @@
 import type { Dict } from "@lindorm/types";
-import type { JoseError } from "../../errors/index.js";
+import type { AegisError, JoseError } from "../../errors/index.js";
 import type {
   CertificateHeaderFields,
   JoseWireTokenEnvelope,
@@ -12,7 +12,55 @@ import { assertCritEligible } from "./assert-crit-eligible.js";
 import { buildCustomHeader } from "./build-custom-header.js";
 import { assertCritSatisfied } from "./assert-crit-satisfied.js";
 import { canonicalWireHeader } from "./canonical-wire-header.js";
+import { headerByDomain, headerByJose, headerJoseName } from "./header-registry.js";
 import { normaliseHeaders } from "./normalise-headers.js";
+import { unregisteredHeaderParameter } from "./unregistered-header-parameter.js";
+
+/**
+ * The refusal for a key in a WIRE header bag that no registry row spells that
+ * way: a registered parameter named by its domain spelling, or a name the registry
+ * does not know at all ({@link unregisteredHeaderParameter}). The mirror of the
+ * domain crossing's `notDomainHeaderParameter` (`internal/utils/token-header.ts`).
+ *
+ * ⚠ The remedy is one message for every door reaching this bag, `aegis.mint`'s
+ * `encrypt.header` included — handed to the sealing kit in wire names,
+ * untranslated (`encrypt-outer.ts`), with no `custom` bag beside it — so the
+ * remedy names the doors that have one.
+ *
+ * ⚠ `jwk` is spelled the same at both tiers, so it resolves through
+ * `headerByJose` and never reaches this.
+ */
+const notWireHeaderParameter = ({
+  key,
+  format,
+  error,
+}: {
+  key: string;
+  format: TokenFormatTag;
+  error: typeof JoseError;
+}): AegisError => {
+  const debug = { bucket: "header", format };
+  const spec = headerByDomain(key);
+
+  if (spec !== undefined) {
+    return new error(`Header parameter "${key}" is named in the domain vocabulary`, {
+      code: "header_not_wire_named",
+      data: { parameter: key, expected: headerJoseName(spec) },
+      debug,
+      title: "Header Not Wire Named",
+      details:
+        "This header bag — `header` at a wire namespace or kit, `encrypt.header` at a mint — takes header parameters by their WIRE names only, and this name is a domain spelling. A parameter the caller may set is stated in this bag by its wire spelling; one the kit writes itself cannot be stated in this bag under either spelling.",
+    });
+  }
+
+  return unregisteredHeaderParameter({
+    parameter: key,
+    error,
+    remedy:
+      "a caller's own extension parameter belongs in custom.header, which the wire namespaces and kits take and aegis.mint does not",
+    debug,
+  });
+};
 
 /**
  * Assemble the JOSE protected header — the twin of {@link buildCoseHeaders}, and
@@ -34,15 +82,21 @@ import { normaliseHeaders } from "./normalise-headers.js";
  * `reserved` is the kit's own `KitCapabilities.reserved` row, the same column
  * `buildCoseHeaders` refuses on.
  *
- * ⚠ TWO DIFFERENT RULES, and only one of them drops:
+ * ⚠ THE CALLER'S BAG IS CLOSED AND LOUD: every name in it is honoured or refused
+ * by name, never dropped.
  *
  *  - a RESERVED parameter THROWS `jose_reserved_header`, as the COSE twin throws
  *    `cose_reserved_header`. A caller naming a kit-owned parameter is asking the
  *    header to describe crypto that did not happen, and both wires answer with one
  *    verdict rather than one of them dropping it silently.
- *  - an UNREGISTERED parameter in `header` is DROPPED by the shaping — the
- *    closed-set rule for THAT bag, which keeps a typo a compile error. An
- *    unregistered parameter has its own door, `custom.header`.
+ *  - a name no registry row spells this way THROWS
+ *    ({@link notWireHeaderParameter}), under a code naming why: a domain spelling,
+ *    a name a specification defines and aegis cannot emit (`zip`), or a name aegis
+ *    does not know — which belongs in `custom.header`.
+ *
+ * Both run before the custom bag and the `crit` gate read anything, so a `crit`
+ * naming a key the caller put in `header` unregistered hears the refusal of the
+ * key, not of the `crit`.
  *
  * ⚠ A PARAMETER THAT EMITS NOTHING IS NOT A PARAMETER: the caller's bag is
  * NORMALISED ONCE at the top and the reserved check runs over the normalised bag.
@@ -118,18 +172,21 @@ export const buildJoseHeader = ({
   // spreads into an ordinary object, so nothing downstream sees the null prototype.
   const caller: Dict = Object.create(null);
   for (const [jose, value] of Object.entries(normaliseHeaders(header ?? {}))) {
-    if (!owned.has(jose)) {
-      caller[jose] = value;
-      continue;
+    if (owned.has(jose)) {
+      throw new error(`Header parameter "${jose}" is key-derived and cannot be set`, {
+        code: "jose_reserved_header",
+        data: { parameter: jose },
+        title: "JOSE Reserved Header Parameter",
+        details:
+          "This header parameter is derived from the signing/encrypting key or computed by the crypto operation, so the kit always sets it; it cannot be supplied in the header bag.",
+      });
     }
 
-    throw new error(`Header parameter "${jose}" is key-derived and cannot be set`, {
-      code: "jose_reserved_header",
-      data: { parameter: jose },
-      title: "JOSE Reserved Header Parameter",
-      details:
-        "This header parameter is derived from the signing/encrypting key or computed by the crypto operation, so the kit always sets it; it cannot be supplied in the header bag.",
-    });
+    if (headerByJose(jose) === undefined) {
+      throw notWireHeaderParameter({ key: jose, format, error });
+    }
+
+    caller[jose] = value;
   }
 
   // The NAME-side crit gate, on the caller's bag and BEFORE the shaping

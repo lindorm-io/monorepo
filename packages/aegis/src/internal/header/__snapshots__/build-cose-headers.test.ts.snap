@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`buildCoseHeaders > nothing that emits bytes stops being guarded > a crit naming an unknown name the caller put in header is refused by the crit gate, before its label is resolved 1`] = `
+{
+  "code": "cwt_crit_param_not_permitted",
+  "data": {
+    "crit": [
+      "ext",
+    ],
+    "parameter": "ext",
+  },
+  "debug": {},
+  "message": "Header parameter "ext" cannot be marked critical",
+  "name": "CoseError",
+}
+`;

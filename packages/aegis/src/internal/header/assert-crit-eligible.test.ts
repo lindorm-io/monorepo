@@ -94,11 +94,26 @@ describe("assertCritEligible", () => {
       // list, inverted": a name aegis has never heard of is not a critical
       // extension aegis implements either, so it is refused by the same cell
       // rather than by a second rule.
+      //
+      // ⚠ `ext` stands in `crit` alone. Written into `header` too, the JOSE doors
+      // refuse it as an unknown name before this gate reads the `crit`
+      // (`build-jose-header.ts`), and the row would stop reaching the gate there.
       for (const format of Object.keys(MINTERS)) {
-        expect(
-          verdict(format, { crit: ["ext"], ext: "x" } as unknown as WireProtectedHeader),
-        ).toBe(`${format}_crit_param_not_permitted`);
+        expect(verdict(format, { crit: ["ext"] } as WireProtectedHeader)).toBe(
+          `${format}_crit_param_not_permitted`,
+        );
       }
+    });
+
+    test("an unknown name written in header and marked critical is refused by name on JOSE and by the crit gate on COSE", () => {
+      expect(
+        Object.fromEntries(
+          Object.keys(MINTERS).map((format) => [
+            format,
+            verdict(format, { crit: ["ext"], ext: "x" } as never),
+          ]),
+        ),
+      ).toMatchSnapshot();
     });
 
     /**

@@ -217,6 +217,11 @@ export class AegisCriticalHeaderSteps extends AegisStepsBase {
     this.refusedAsAWireError(error, code);
   }
 
+  @Then("encryption is refused as a {wireError} error {string}")
+  encryptionIsRefusedAsAWireErrorUnder(error: WireError, code: string): void {
+    this.refusedAsAWireError(error, code);
+  }
+
   @Then("verification is refused as a {wireError} error {string}")
   verificationIsRefusedAsAWireErrorUnder(error: WireError, code: string): void {
     this.refusedAsAWireError(error, code);
@@ -246,6 +251,14 @@ export class AegisCriticalHeaderSteps extends AegisStepsBase {
     "the refusal names the parameter {string} and expects the domain spelling {string}",
   )
   theRefusalNamesTheParameterAndExpectsTheDomainSpelling(
+    parameter: string,
+    expected: string,
+  ): void {
+    expect(this.refusalData()).toEqual({ parameter, expected });
+  }
+
+  @Then("the refusal names the parameter {string} and expects the wire spelling {string}")
+  theRefusalNamesTheParameterAndExpectsTheWireSpelling(
     parameter: string,
     expected: string,
   ): void {

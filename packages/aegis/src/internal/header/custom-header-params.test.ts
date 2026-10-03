@@ -5,6 +5,7 @@ import type { ILogger } from "@lindorm/logger";
 import MockDate from "mockdate";
 import { beforeEach, describe, expect, test } from "vitest";
 import { TEST_EC_KEY_ENC, TEST_EC_KEY_SIG } from "../../__fixtures__/keys.js";
+import { refusalOf } from "../../__fixtures__/refusal-of.js";
 import { Aegis } from "../../classes/Aegis.js";
 import { CweKit } from "../../classes/CweKit.js";
 import { CwsKit } from "../../classes/CwsKit.js";
@@ -156,46 +157,45 @@ describe("custom header parameters", () => {
       expect(({} as Record<string, unknown>).carried).toBeUndefined();
     });
     /**
-     * ⛔ THE REGISTERED BAG HAS THE SAME ASSIGNMENT HAZARD, and it bites HARDER:
-     * `build-jose-header.ts` copies the caller's header into a plain `{}` and then
-     * reads `caller.crit` off it, so an own `__proto__` carrying a `crit` refuses a
-     * token whose caller never wrote one. `pruneEmptyHeaders` copies the same way.
+     * ⛔ THE REGISTERED BAG HAS THE SAME ASSIGNMENT HAZARD. `pruneEmptyHeaders`
+     * copies the caller's header and the kits read the copy by property —
+     * `JwsKit.sign` its `cty`, `build-cose-headers.ts` its `crit`. A copy that
+     * ASSIGNED an own `__proto__` would make it the copy's prototype: no own key
+     * left to refuse, and the kit reading what the prototype said as the
+     * caller's own — a signed `cty`, a `crit` verdict.
      *
      * ⚠ The bag is TYPED closed, so this arrives only from an untyped path. The
      * type is not the guard here; the copy is.
      */
-    test("an own `__proto__` in the REGISTERED bag does not forge a `cty`", () => {
+    test("an own `__proto__` in the REGISTERED bag is refused by name, never read as a forged `cty`", () => {
       // `JwsKit.sign` reads `callerHeader.cty` off the normalised bag, so a
       // prototype that answers puts a content type the caller never wrote on the
       // SIGNED bytes.
       const kit = new JwsKit({ kryptos: TEST_EC_KEY_SIG, logger });
 
-      const token = kit.sign({ a: 1 }, { header: poisoned('{"cty":"text/plain"}') });
-
-      expect(JwsKit.decode(token).header.cty).toBe("application/json");
+      expect(
+        refusalOf(() => kit.sign({ a: 1 }, { header: poisoned('{"cty":"text/plain"}') })),
+      ).toMatchSnapshot();
       expect(({} as Record<string, unknown>).cty).toBeUndefined();
     });
 
-    test("an own `__proto__` in the REGISTERED bag does not forge a `crit`", () => {
-      // ⚠ IT STILL THROWS, and the CODE is the whole assertion: `__proto__` is an
-      // ordinary own key of the registered bag, so it is refused as the UNREGISTERED
-      // name it is — a verdict about what the CALLER wrote. A `crit` verdict here
-      // would be a verdict about what the prototype said (`build-cose-headers.ts`
-      // reads `headerBag.crit`).
+    test("an own `__proto__` in the REGISTERED bag is refused by name on both wires, never read as a forged `crit`", () => {
+      // ⚠ THE CODE IS THE WHOLE ASSERTION: `__proto__` is an ordinary own key of
+      // the registered bag, so it is refused as the UNREGISTERED name it is — a
+      // verdict about what the CALLER wrote. A `crit` verdict here would be a
+      // verdict about what the prototype said (`build-cose-headers.ts` reads
+      // `headerBag.crit`).
       const cwt = new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger });
+      const jwt = new JwtKit({ kryptos: TEST_EC_KEY_SIG, logger });
 
-      expect(
-        codeOf(() =>
+      expect({
+        cose: codeOf(() =>
           cwt.sign(WIRE_CLAIMS, { header: poisoned('{"crit":["injected"]}') }),
         ),
-      ).toBe("header_no_cose_label");
-
-      // JOSE drops an unregistered key from the registered bag rather than
-      // refusing it, so there the mint succeeds and carries no forged `crit`.
-      const jwt = new JwtKit({ kryptos: TEST_EC_KEY_SIG, logger });
-      const token = jwt.sign(WIRE_CLAIMS, { header: poisoned('{"crit":["injected"]}') });
-
-      expect(JwtKit.decode(token).header.crit).toBeUndefined();
+        jose: codeOf(() =>
+          jwt.sign(WIRE_CLAIMS, { header: poisoned('{"crit":["injected"]}') }),
+        ),
+      }).toMatchSnapshot();
       expect(({} as Record<string, unknown>).crit).toBeUndefined();
     });
   });

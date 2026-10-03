@@ -1,8 +1,9 @@
 import { isArray, isFinite, isObject, isString, isUrlLike } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
-import { AegisDomainError, JoseError } from "../../errors/index.js";
+import { AegisDomainError, type AegisError, JoseError } from "../../errors/index.js";
 import { normaliseHeaders } from "../header/normalise-headers.js";
+import { unregisteredHeaderParameter } from "../header/unregistered-header-parameter.js";
 import type {
   CertificateHeaderFields,
   WireTokenHeader,
@@ -135,12 +136,15 @@ const decodeHeaderValue = (spec: HeaderSpec, decoded: Dict): unknown => {
 /**
  * The refusal for a key in a DOMAIN header bag that no registry row spells that
  * way: a registered parameter named by its wire spelling, or a name the registry
- * does not know at all.
+ * does not know at all ({@link unregisteredHeaderParameter}). The wire door's
+ * mirror is in `build-jose-header.ts`.
+ *
+ * ⚠ The unknown name's message offers no `custom` bag: no domain verb takes one.
  *
  * ⚠ `jwk` is spelled the same at both tiers, so it resolves through
  * `headerByDomain` and never reaches this. pinned: token-header.test.ts.
  */
-const notDomainHeaderParameter = (key: string): AegisDomainError => {
+const notDomainHeaderParameter = (key: string): AegisError => {
   const spec = headerByJose(key);
 
   if (spec !== undefined) {
@@ -156,16 +160,7 @@ const notDomainHeaderParameter = (key: string): AegisDomainError => {
     );
   }
 
-  return new AegisDomainError(
-    `Header parameter "${key}" is not a domain header parameter`,
-    {
-      code: "header_unknown_parameter",
-      data: { parameter: key },
-      title: "Header Unknown Parameter",
-      details:
-        "This header bag — `header` at the domain sign and encrypt doors, `sign.header` at a mint — takes a closed set of header parameters, each by its domain name, and this name is none of them. A parameter the header registry does not define has no domain name, so no domain-named bag can carry it.",
-    },
-  );
+  return unregisteredHeaderParameter({ parameter: key, error: AegisDomainError });
 };
 
 /**
@@ -220,6 +215,9 @@ export const mapTokenHeader = (
  * closed-set drop for an unregistered key, and the `HeaderCodec` guard for a value
  * of the wrong shape. This is what lets the JOSE kits stay in wire vocabulary end
  * to end.
+ *
+ * ⚠ The drop answers the kit's OWN tiers only. A caller's unregistered key never
+ * arrives: {@link buildJoseHeader} refuses it by name before the shaping.
  *
  * ⚠ Key order is NOT canonicalised here: a shaped bag is a MERGE INPUT
  * ({@link buildJoseHeader}), and only the finished header is sorted. Empty values
@@ -413,10 +411,11 @@ export const wireHeaderToCoseMap = (
   if (!bag) return map;
 
   for (const [jose, value] of Object.entries(normaliseHeaders(bag as Dict))) {
-    // ⚠ An UNREGISTERED wire key is NOT dropped here, unlike the wire-keyed JOSE pass:
-    // `coseWireKey` refuses it with `header_no_cose_label`, so a caller naming a
-    // parameter COSE cannot carry hears about it. Hence no registry lookup first —
-    // registered and unregistered take the same call.
+    // ⚠ An UNREGISTERED wire key is refused here, by `coseWireKey`, with
+    // `header_no_cose_label`, so a caller naming a parameter COSE cannot carry hears
+    // about it. Hence no registry lookup first — registered and unregistered take the
+    // same call. The JOSE door refuses the same key before its shaping
+    // (`build-jose-header.ts`).
     const label = coseWireKey(jose, proprietary);
 
     map.set(label, encodeCoseHeaderValue(jose, value, proprietary));

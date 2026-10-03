@@ -1,0 +1,23 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`custom header parameters > carriage > an own \`__proto__\` in the REGISTERED bag is refused by name on both wires, never read as a forged \`crit\` 1`] = `
+{
+  "cose": "header_no_cose_label",
+  "jose": "header_unknown_parameter",
+}
+`;
+
+exports[`custom header parameters > carriage > an own \`__proto__\` in the REGISTERED bag is refused by name, never read as a forged \`cty\` 1`] = `
+{
+  "code": "header_unknown_parameter",
+  "data": {
+    "parameter": "__proto__",
+  },
+  "debug": {
+    "bucket": "header",
+    "format": "jws",
+  },
+  "message": "Header parameter "__proto__" is not a header parameter aegis writes; a caller's own extension parameter belongs in custom.header, which the wire namespaces and kits take and aegis.mint does not",
+  "name": "JwsError",
+}
+`;

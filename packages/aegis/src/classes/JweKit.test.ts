@@ -17,6 +17,7 @@ import {
   TEST_OKP_KEY_ENC,
   TEST_RSA_KEY_ENC,
 } from "../__fixtures__/keys.js";
+import { refusalOf } from "../__fixtures__/refusal-of.js";
 import { JweKit } from "./JweKit.js";
 import { beforeEach, describe, expect, test } from "vitest";
 
@@ -420,22 +421,17 @@ describe("JweKit", () => {
   });
 
   describe("zip (compression) rejection", () => {
-    // ⭐ THE PAIR IS THE CLAIM: the write door cannot put the parameter on the
-    // wire, so the guard below can only ever fire on a token somebody else wrote.
-    // A door that emitted it would mint a token this kit refuses to open.
-    // RFC 7516 §4.1.3.
-    test("the header bag cannot put zip on the wire, so the token still decrypts", () => {
-      const token = kit.encrypt("data", {
-        header: { oid: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03", zip: "DEF" } as never,
-      });
-
-      // BOTH buckets: the keyless read splits a header the producer did not, so the
-      // typed bag alone would answer "absent" for a parameter riding `custom`.
-      const decoded = JweKit.decode(token);
-
-      expect(decoded.header).not.toHaveProperty("zip");
-      expect(decoded.custom.header).not.toHaveProperty("zip");
-      expect(() => kit.decrypt(token)).not.toThrow();
+    // ⭐ THE PAIR IS THE CLAIM: the write door refuses the parameter, so the guard
+    // below can only ever fire on a token somebody else wrote. A door that emitted
+    // it would mint a token this kit refuses to open. RFC 7516 §4.1.3.
+    test("the header bag refuses zip as a parameter aegis cannot emit", () => {
+      expect(
+        refusalOf(() =>
+          kit.encrypt("data", {
+            header: { oid: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03", zip: "DEF" } as never,
+          }),
+        ),
+      ).toMatchSnapshot();
     });
 
     /**
