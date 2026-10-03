@@ -1,0 +1,190 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`stripSensitiveClaims on the claims carrier > keeps the non-sensitive neighbour of a claim it strips 1`] = `
+{
+  "claims": {
+    "tenant": "acme",
+  },
+  "subject": "user-1",
+}
+`;
+
+exports[`stripSensitiveClaims on the claims carrier > passes a carrier holding a string through unchanged 1`] = `
+{
+  "claims": "abc",
+  "subject": "user-1",
+}
+`;
+
+exports[`stripSensitiveClaims on the claims carrier > passes a carrier holding an array through unchanged 1`] = `
+{
+  "claims": [
+    "x",
+  ],
+  "subject": "user-1",
+}
+`;
+
+exports[`stripSensitiveClaims on the claims carrier > passes a carrier holding an empty array through unchanged 1`] = `
+{
+  "claims": [],
+  "subject": "user-1",
+}
+`;
+
+exports[`stripSensitiveClaims on the claims carrier > passes a carrier holding null through unchanged 1`] = `
+{
+  "claims": null,
+  "subject": "user-1",
+}
+`;
+
+exports[`stripSensitiveClaims on the claims carrier > removes the carrier when the caller wrote it as {} 1`] = `
+{
+  "subject": "user-1",
+}
+`;
+
+exports[`stripSensitiveClaims on the claims carrier > removes the carrier when the caller wrote only a key holding undefined 1`] = `
+{
+  "subject": "user-1",
+}
+`;
+
+exports[`stripSensitiveClaims on the claims carrier > removes the carrier when the strip leaves it empty 1`] = `
+{
+  "subject": "user-1",
+}
+`;
+
+exports[`stripSensitiveClaims on the claims carrier > removes the carrier when the strip leaves only a key holding undefined 1`] = `
+{
+  "subject": "user-1",
+}
+`;
+
+exports[`stripSensitiveClaims on the profile carrier > keeps the non-sensitive neighbour of a claim it strips 1`] = `
+{
+  "profile": {
+    "tenant": "acme",
+  },
+  "subject": "user-1",
+}
+`;
+
+exports[`stripSensitiveClaims on the profile carrier > passes a carrier holding a string through unchanged 1`] = `
+{
+  "profile": "abc",
+  "subject": "user-1",
+}
+`;
+
+exports[`stripSensitiveClaims on the profile carrier > passes a carrier holding an array through unchanged 1`] = `
+{
+  "profile": [
+    "x",
+  ],
+  "subject": "user-1",
+}
+`;
+
+exports[`stripSensitiveClaims on the profile carrier > passes a carrier holding an empty array through unchanged 1`] = `
+{
+  "profile": [],
+  "subject": "user-1",
+}
+`;
+
+exports[`stripSensitiveClaims on the profile carrier > passes a carrier holding null through unchanged 1`] = `
+{
+  "profile": null,
+  "subject": "user-1",
+}
+`;
+
+exports[`stripSensitiveClaims on the profile carrier > removes the carrier when the caller wrote it as {} 1`] = `
+{
+  "subject": "user-1",
+}
+`;
+
+exports[`stripSensitiveClaims on the profile carrier > removes the carrier when the caller wrote only a key holding undefined 1`] = `
+{
+  "subject": "user-1",
+}
+`;
+
+exports[`stripSensitiveClaims on the profile carrier > removes the carrier when the strip leaves it empty 1`] = `
+{
+  "subject": "user-1",
+}
+`;
+
+exports[`stripSensitiveClaims on the profile carrier > removes the carrier when the strip leaves only a key holding undefined 1`] = `
+{
+  "subject": "user-1",
+}
+`;
+
+exports[`stripSensitiveClaims on the sensitive carrier > keeps the non-sensitive neighbour of a claim it strips 1`] = `
+{
+  "sensitive": {
+    "tenant": "acme",
+  },
+  "subject": "user-1",
+}
+`;
+
+exports[`stripSensitiveClaims on the sensitive carrier > passes a carrier holding a string through unchanged 1`] = `
+{
+  "sensitive": "abc",
+  "subject": "user-1",
+}
+`;
+
+exports[`stripSensitiveClaims on the sensitive carrier > passes a carrier holding an array through unchanged 1`] = `
+{
+  "sensitive": [
+    "x",
+  ],
+  "subject": "user-1",
+}
+`;
+
+exports[`stripSensitiveClaims on the sensitive carrier > passes a carrier holding an empty array through unchanged 1`] = `
+{
+  "sensitive": [],
+  "subject": "user-1",
+}
+`;
+
+exports[`stripSensitiveClaims on the sensitive carrier > passes a carrier holding null through unchanged 1`] = `
+{
+  "sensitive": null,
+  "subject": "user-1",
+}
+`;
+
+exports[`stripSensitiveClaims on the sensitive carrier > removes the carrier when the caller wrote it as {} 1`] = `
+{
+  "subject": "user-1",
+}
+`;
+
+exports[`stripSensitiveClaims on the sensitive carrier > removes the carrier when the caller wrote only a key holding undefined 1`] = `
+{
+  "subject": "user-1",
+}
+`;
+
+exports[`stripSensitiveClaims on the sensitive carrier > removes the carrier when the strip leaves it empty 1`] = `
+{
+  "subject": "user-1",
+}
+`;
+
+exports[`stripSensitiveClaims on the sensitive carrier > removes the carrier when the strip leaves only a key holding undefined 1`] = `
+{
+  "subject": "user-1",
+}
+`;

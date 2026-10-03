@@ -12,7 +12,7 @@ import { isClaimSatisfied } from "./rules/is-claim-satisfied.js";
  * `sensitivity: "public"` claims from it, so a sensitive value written there is
  * dropped before it can be emitted.
  */
-const CARRIERS = ["claims", "profile", "sensitive"] as const;
+export const CARRIERS = ["claims", "profile", "sensitive"] as const;
 
 const carrierOf = (content: SignContent, key: (typeof CARRIERS)[number]): Dict =>
   isObject((content as Dict)[key]) ? ((content as Dict)[key] as Dict) : {};
@@ -59,13 +59,14 @@ export const stripSensitiveClaims = (
 ): SignContent => {
   const stripped: Dict = { ...(content as Dict) };
 
-  // Both emptiness tests read the named predicate: a carrier bag and a claim value
-  // are the same question asked of the same caller data.
   for (const carrier of CARRIERS) {
-    const values = carrierOf(content, carrier);
-    if (!isClaimSatisfied(values)) continue;
+    const values = (content as Dict)[carrier];
+    // Bag-ness, not emptiness: a carrier written `{}` must reach the removal below. pinned: sensitive-content.test.ts
+    if (!isObject(values)) continue;
 
-    const kept: Dict = { ...values };
+    // Pruned before the emptiness test: the closing `omitUndefined` would leave a
+    // carrier holding only `undefined` behind as `{}`.
+    const kept: Dict = omitUndefined(values);
     for (const claim of claims) delete kept[claim];
 
     stripped[carrier] = isClaimSatisfied(kept) ? kept : undefined;
