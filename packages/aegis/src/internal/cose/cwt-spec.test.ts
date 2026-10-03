@@ -508,7 +508,6 @@ describe("a foreign CWT whose cti is not a byte string", () => {
     ["a text string", "not-a-bstr"],
     ["an array", [1, 2]],
     ["a map", new Map<number, unknown>([[1, 2]])],
-    ["null", null],
   ])("a cti carried as %s is refused as a CoseError", (_name, cti) => {
     let thrown: unknown;
     try {
@@ -520,6 +519,13 @@ describe("a foreign CWT whose cti is not a byte string", () => {
     expect(thrown).toBeInstanceOf(CoseError);
     expect((thrown as CoseError).code).toBe("cose_malformed");
     expect((thrown as CoseError).data).toEqual({ claim: "cti", label: 7 });
+  });
+
+  test.each([
+    ["the CBOR null", null],
+    ["the CBOR undefined", undefined],
+  ])("a cti carried as %s is not stated", (_name, cti) => {
+    expect(Object.hasOwn(CwtKit.decode(foreignCwt(cti)).payload, "cti")).toBe(false);
   });
 
   test("a conformant byte-string cti still reads back as its UTF-8 string", () => {

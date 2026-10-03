@@ -136,9 +136,9 @@ export const applyVerifyPolicy = ({
   // `exp` PRESENCE is policy (default "required"), surfaced under its own code
   // ahead of the generic matcher pass. The exp RANGE was already checked by the
   // kit. ⚠ `wireClaims` is the MATCHER bag, not the raw wire — `withJoseDates`
-  // has lifted a falsy `exp` to `undefined` and the COSE codec decoded its
-  // temporal claims — so this gate and the profile floor's see the same
-  // `Date | undefined`.
+  // has lifted an absent or `null` `exp` to `undefined` and a NumericDate, `0`
+  // included, to a `Date`, and the COSE codec decoded its temporal claims — so
+  // this gate and the profile floor's see the same `Date | undefined`.
   if (options.expPresence !== "optional" && !isClaimSatisfied(wireClaims.exp)) {
     throw new AegisDomainError("Missing claim: exp", {
       code: "missing_claim_exp",

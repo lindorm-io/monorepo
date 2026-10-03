@@ -381,8 +381,8 @@ export class Aegis implements IAegis {
           // ⚠ `expPresence` is DERIVED here rather than stood down to "optional"
           // like `typPresence`. Standing it down changes no outcome — both gates
           // resolve `exp` to `Date | undefined` before asking (`withJoseDates`
-          // on JOSE, the claim codec on COSE, `toDate` at the floor), so every
-          // degenerate `exp` is refused either way — while moving the refusal
+          // on JOSE, the claim codec on COSE, `toDate` at the floor), so an
+          // absent or `null` `exp` is refused either way — while moving the refusal
           // BEHIND the caller's `assert` matchers, the actor check and the DPoP
           // checks, so an exp-less token that also fails an `assert` would report
           // `claims_invalid` instead of `missing_claim_exp`.

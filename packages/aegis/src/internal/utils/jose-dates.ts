@@ -1,4 +1,15 @@
 import type { Dict } from "@lindorm/types";
+import { JwtError } from "../../errors/index.js";
+import { CLAIM_SPECS, claimsWith, joseName } from "../claims/claims-registry.js";
+import { isNotStated } from "../claims/is-not-stated.js";
+import { isNumericDate } from "../claims/is-numeric-date.js";
+import { codecFor } from "../registry/param-spec.js";
+
+const NUMERIC_DATE_SPECS = CLAIM_SPECS.filter(
+  (spec) => codecFor(spec, "jose").kind === "date",
+);
+
+const TEMPORAL_SPECS = claimsWith("temporal");
 
 /**
  * Convert a JOSE wire payload's NumericDate temporal claims to `Date`s for the
@@ -7,15 +18,38 @@ import type { Dict } from "@lindorm/types";
  * matcher pass — and it is deliberately NOT applied to the payload a result
  * reports, which stays exactly as the wire carried it.
  *
- * A claim that is absent — or a falsy `0`, which is not a date any token means —
- * lifts to `undefined`, so the matchers see "not present" rather than the epoch.
+ * Every NumericDate claim the registry declares is checked, and one stated as
+ * anything but a number of seconds since the epoch that a date can hold is
+ * refused; only the temporal claims are lifted. An absent or `null` temporal
+ * claim lifts to `undefined`, so the matchers see "not present"; `0` is the
+ * epoch (RFC 7519 §2).
  */
-export const withJoseDates = (payload: Dict): Dict => ({
-  ...payload,
-  exp: payload.exp ? new Date((payload.exp as number) * 1000) : undefined,
-  iat: payload.iat ? new Date((payload.iat as number) * 1000) : undefined,
-  nbf: payload.nbf ? new Date((payload.nbf as number) * 1000) : undefined,
-  auth_time: payload.auth_time
-    ? new Date((payload.auth_time as number) * 1000)
-    : undefined,
-});
+export const withJoseDates = (payload: Dict): Dict => {
+  const invalid = NUMERIC_DATE_SPECS.map(joseName).filter(
+    (name) => !isNotStated(payload[name]) && !isNumericDate(payload[name]),
+  );
+
+  if (invalid.length > 0) {
+    throw new JwtError("Malformed NumericDate claim", {
+      code: "jwt_claims_invalid",
+      data: { invalid },
+      title: "Malformed NumericDate Claim",
+      details:
+        "One or more NumericDate claims hold something other than a number of seconds since the epoch that a date can hold, so the instant cannot be read (RFC 7519 §2); see the invalid list for the claim keys.",
+    });
+  }
+
+  return {
+    ...payload,
+    ...Object.fromEntries(
+      TEMPORAL_SPECS.map((spec) => {
+        const value = payload[joseName(spec)];
+
+        return [
+          joseName(spec),
+          isNumericDate(value) ? new Date(value * 1000) : undefined,
+        ];
+      }),
+    ),
+  };
+};

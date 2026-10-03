@@ -7,7 +7,10 @@ Feature: The temporal policy a verify applies
   check it names, a leeway is an inclusive width in seconds and not a switch,
   and a deployment-wide leeway reaches every call that states none. A range
   refusal is the wire kit's own, so it carries that wire's leaf class; a
-  presence refusal is the domain's, under one wire-neutral code.
+  presence refusal is the domain's, under one wire-neutral code. Both
+  questions are asked of a NumericDate, a number of seconds since the epoch:
+  a claim stated as `null` states no instant, and a claim stated as anything
+  else is refused by the wire kit before either question is asked.
 
   Background:
     Given the clock reads "2024-01-01T08:00:00.000Z"
@@ -326,3 +329,155 @@ Feature: The temporal policy a verify applies
         | wire | family | code               |
         | jose | JWT    | jwt_claims_invalid |
         | cose | CWT    | cwt_claims_invalid |
+
+  Rule: a not-before instant stated as null is not read as the epoch
+
+    `null` is how a payload states nothing at a claim key, on both wires, so
+    an `nbf` holding it is a token that names no not-before instant. Read as
+    a count of seconds it would be 1970-01-01 — an instant every not-before
+    check passes, reported to the caller as though the issuer had chosen it.
+    That `null` is absence is aegis policy at the read, so no scenario carries
+    a tag. No aegis door writes a wire null at a claim key, so the token is a
+    third party's, and the first scenario reads the null off the wire so the
+    read is the thing judged.
+
+    Background:
+      Given the wire claims
+        | iss | "https://test.lindorm.io/" |
+        | sub | "user-1"                   |
+        | aud | ["https://rs.lindorm.io/"] |
+        | jti | "token-1"                  |
+        | nbf | null                       |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+
+    Scenario Outline: <wire>: the null reaches the wire, so it is the read that is judged
+      When a third party signs the wire claims on the <wire> wire, typed "<typ>"
+      Then the raw payload carries <key> as null
+
+      Examples:
+        | wire | typ             | key         |
+        | jose | JWT             | "nbf"       |
+        | cose | application/cwt | claim key 5 |
+
+    Scenario Outline: <wire>: the token verifies and reports no not-before instant
+      When a third party signs the wire claims on the <wire> wire, typed "<typ>"
+      And I verify the token
+      Then the verified claims carry no "notBefore"
+
+      Examples:
+        | wire | typ             |
+        | jose | JWT             |
+        | cose | application/cwt |
+
+  Rule: an expiry stated as a numeric string is refused rather than read as the instant it spells
+
+    `exp` holds a number containing a NumericDate (RFC 7519 §4.1.4), and on
+    the COSE wire a NumericDate as RFC 8392 §2 defines it (RFC 8392 §3.1.4).
+    A text string is neither, even one whose digits spell an instant still
+    ahead, and reading it as that instant would accept a lifetime written in
+    a type the claim does not allow. The refusal is the wire kit's own, under
+    that wire's code, and names the claim.
+
+    Background:
+      Given the wire claims
+        | iss | "https://test.lindorm.io/" |
+        | sub | "user-1"                   |
+        | aud | ["https://rs.lindorm.io/"] |
+        | jti | "token-1"                  |
+        | exp | "1704099600"               |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+
+    @RFC-7519
+    Scenario: jose: the numeric string is refused as a malformed claim (RFC-7519 §4.1.4)
+      When a third party signs the wire claims on the jose wire, typed "JWT"
+      And I verify the token
+      Then verification is refused as a JWT error "jwt_claims_invalid"
+      And the refusal lists the invalid claims "exp"
+
+    @RFC-8392
+    Scenario: cose: the numeric text string is refused as a malformed claim (RFC-8392 §3.1.4)
+      When a third party signs the wire claims on the cose wire, typed "application/cwt"
+      And I verify the token
+      Then verification is refused as a COSE error "cose_malformed"
+      And the refusal's data is exactly
+        | claim | "exp" |
+        | label | 4     |
+
+  Rule: an expiry written under the CBOR epoch-based date tag is refused
+
+    A CWT NumericDate is the CBOR numeric date with its leading tag 1 omitted
+    (RFC 8392 §2), so an `exp` carrying the tag is not one, whatever instant
+    the tag wraps. Reading it as that instant would accept an encoding the
+    specification forbids a producer to write. The jose wire has no scenario:
+    JSON has no tags, so the encoding cannot be written there.
+
+    Background:
+      Given the wire claims
+        | iss | "https://test.lindorm.io/" |
+        | sub | "user-1"                   |
+        | aud | ["https://rs.lindorm.io/"] |
+        | jti | "token-1"                  |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+      And the wire claims state the expiry "2024-01-01T09:00:00.000Z" under the CBOR epoch-based date tag
+
+    Scenario: cose: the tagged expiry reaches the wire, so it is the read that is judged
+      When a third party signs the wire claims on the cose wire, typed "application/cwt"
+      Then the raw payload carries claim key 4 as the tagged date "2024-01-01T09:00:00.000Z"
+
+    @RFC-8392
+    Scenario: cose: the tagged expiry is refused as a malformed claim (RFC-8392 §2)
+      When a third party signs the wire claims on the cose wire, typed "application/cwt"
+      And I verify the token
+      Then verification is refused as a COSE error "cose_malformed"
+      And the refusal's data is exactly
+        | claim | "exp" |
+        | label | 4     |
+
+  Rule: an expiry of zero is the epoch, so the token is refused as expired
+
+    A NumericDate counts seconds from 1970-01-01T00:00:00Z (RFC 7519 §2), so
+    `exp: 0` states a lifetime that ended at that instant, not a token with no
+    lifetime. The current time is not before it, so the range check refuses
+    the token under the wire kit's own code, naming the claim, and the
+    presence gate never answers as though `exp` were absent. A verifier that
+    leaves the expiry unchecked gets the token back with that instant as its
+    expiry, which is what tells the expiry refusal from a refusal of the
+    value itself. The cose scenarios carry no tag: the processing rule and
+    the NumericDate are the JWT document's, and RFC 8392 §3.1.4 gives the CWT
+    expiry claim the same processing rules by reference to it.
+
+    Background:
+      Given the wire claims
+        | iss | "https://test.lindorm.io/" |
+        | sub | "user-1"                   |
+        | aud | ["https://rs.lindorm.io/"] |
+        | jti | "token-1"                  |
+        | exp | 0                          |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+
+    @RFC-7519
+    Scenario: jose: the zero expiry is refused as expired (RFC-7519 §4.1.4)
+      When a third party signs the wire claims on the jose wire, typed "JWT"
+      And I verify the token
+      Then verification is refused as a JWT error "jwt_claims_invalid"
+      And the refusal lists the invalid claims "exp"
+
+    Scenario: cose: the zero expiry is refused as expired
+      When a third party signs the wire claims on the cose wire, typed "application/cwt"
+      And I verify the token
+      Then verification is refused as a CWT error "cwt_claims_invalid"
+      And the refusal lists the invalid claims "exp"
+
+    @RFC-7519
+    Scenario: jose: with the expiry unchecked, the token reports the epoch as its expiry (RFC-7519 §2)
+      Given the verifier leaves the expiry unchecked
+      When a third party signs the wire claims on the jose wire, typed "JWT"
+      And I verify the token
+      Then the verified claims carry "expiresAt" as the instant "1970-01-01T00:00:00.000Z"
+
+    Scenario: cose: with the expiry unchecked, the token reports the epoch as its expiry
+      Given the verifier leaves the expiry unchecked
+      When a third party signs the wire claims on the cose wire, typed "application/cwt"
+      And I verify the token
+      Then the verified claims carry "expiresAt" as the instant "1970-01-01T00:00:00.000Z"

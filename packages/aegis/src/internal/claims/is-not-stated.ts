@@ -7,7 +7,8 @@ import { isNull, isUndefined } from "@lindorm/is";
  * the emission boundary every sign door runs, through one helper
  * (`omit-not-stated.ts`; `domainToWire` in `internal/claims/translate.ts`,
  * `internal/utils/normalise-claims.ts`); a wire `null` under a registered name
- * is read as a claim the token does not state (`wireToDomain`); a structure
+ * is read as a claim the token does not state (`wireToDomain`, and on COSE
+ * before the claim codec runs, `internal/cose/cwt-claims.ts`); a structure
  * MEMBER is omitted by the walker under the member's own cell.
  *
  * ⚠ `null` IS ABSENCE. `AegisProfileAddress` declares every member

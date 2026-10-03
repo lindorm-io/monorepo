@@ -43,9 +43,10 @@ export const buildTokenResult = <C extends Dict = Dict>({
    */
   format: TokenFormat;
   /**
-   * The wire-keyed claim payload, EXACTLY as the wire carried it — NumericDate
-   * integers on JOSE, `Date`s on COSE (its claim codec decodes them inside the
-   * kit). The claim decoders accept both, and the matcher pass gets its own
+   * The wire-keyed claim payload: on JOSE exactly as the wire carried it,
+   * NumericDates as numbers; on COSE the claim codec's decoded view, NumericDates
+   * as `Date`s and a registered claim stated as null or undefined dropped. The
+   * claim decoders accept both, and the matcher pass gets its own
    * Date-normalised copy; this one is what the result reports verbatim.
    */
   wire: Dict;

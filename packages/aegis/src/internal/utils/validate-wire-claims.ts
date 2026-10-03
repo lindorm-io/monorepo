@@ -12,9 +12,9 @@ import { validate } from "./validate.js";
  * rather than at whichever check happened to run first.
  *
  * ⚠ The claims arrive ALREADY DATE-LIFTED, and that is the honest divergence
- * this does not absorb: `JwtKit` lifts a JOSE NumericDate integer through
+ * this does not absorb: `JwtKit` lifts a JOSE NumericDate through
  * `withJoseDates`, while the CBOR claims codec yields `Date`s on the way out of
- * `decodeCwtMessage`. Integer-vs-CBOR is encoding, so it stays wire-side; what
+ * `decodeCwtMessage`. JSON-vs-CBOR is encoding, so it stays wire-side; what
  * the matchers then do to a `Date` is the same on both wires.
  *
  * ⚠ `clockTolerance` is already RESOLVED. Each kit settles its own precedence —

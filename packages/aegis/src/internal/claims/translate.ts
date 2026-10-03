@@ -1,6 +1,6 @@
 import { camelCase, camelKeys, snakeCase, snakeKeys } from "@lindorm/case";
 import { getUnixTime } from "@lindorm/date";
-import { isArray, isFinite, isObject, isString } from "@lindorm/is";
+import { isArray, isDate, isFinite, isObject, isString } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
 import { AegisDomainError } from "../../errors/index.js";
@@ -22,6 +22,7 @@ import {
   type NameSelector,
 } from "./claims-registry.js";
 import { isNotStated } from "./is-not-stated.js";
+import { isNumericDate } from "./is-numeric-date.js";
 import { omitNotStated } from "./omit-not-stated.js";
 
 /**
@@ -51,9 +52,17 @@ import { omitNotStated } from "./omit-not-stated.js";
 
 // --- Value decoders (read side) ----------------------------------------------
 
-const toDate = (value: unknown): Date | undefined => {
-  if (value instanceof Date) return value;
-  if (isFinite(value)) return new Date(value * 1000);
+// A valid `Date` is what the COSE claim codec hands over; a NumericDate is the
+// JOSE wire's and a caller's dict's.
+const toDate = (value: unknown, context: WalkContext): Date | undefined => {
+  if (isDate(value)) return value;
+  if (isNumericDate(value)) return new Date(value * 1000);
+
+  context.invalid.push({
+    key: context.path,
+    message: `Claim "${context.claim}" must be a NumericDate`,
+  });
+
   return undefined;
 };
 
@@ -829,11 +838,13 @@ const walkObject = (
  * to know what to repair: a MANDATORY MEMBER that is absent or empty, TWO MEMBERS
  * THAT RESOLVE TO ONE KEY, a member the structure's CLOSED member set does not
  * declare, a claim value that is not the COLLECTION its codec declares, an
- * ELEMENT of that collection that is not a structure, and a MEMBER of a
+ * ELEMENT of that collection that is not a structure, a MEMBER of a
  * space-delimited list that is not a `scope-token` — not a string, empty, or
  * carrying a space or another character the production does not admit — whether
- * a caller's list or the members a wire string's spaces delimit. Those share one
- * repair — the claim's shape — and each entry's own `message` says which it is.
+ * a caller's list or the members a wire string's spaces delimit, and a
+ * NumericDate claim read as anything but a number of seconds since the epoch or
+ * a valid `Date`. Those share one repair — the claim's shape — and each entry's
+ * own `message` says which it is.
  *
  * ⚠ AND ONE THAT IS A DIFFERENT REPAIR UNDER THE SAME CODE: a claim the dict door
  * was handed under its DOMAIN name ({@link refuseDomainSpellings}), whose repair is
@@ -848,7 +859,7 @@ const refuseInvalidStructure = (claim: string, invalid: Array<InvalidEntry>): ne
     debug: { claim, invalid },
     title: "Invalid Claim Structure",
     details:
-      "A claim does not have the structure the registry declares for it: a member its specification makes mandatory is absent or empty, two members resolve to the same key so neither can be honoured, a member is not one the claim's closed member set declares, the value is not the collection the claim is defined as, an element of that collection is not a structure, or a member of a space-delimited list is not a scope-token: not a string, empty, or carrying a space or another character the scope-token production does not admit. A claim stated under its domain name where the door reads wire names is refused the same way, and is repaired by spelling it as the entry says. Each entry in `invalid` names the offending position and what is wrong with it.",
+      "A claim does not have the structure the registry declares for it: a member its specification makes mandatory is absent or empty, two members resolve to the same key so neither can be honoured, a member is not one the claim's closed member set declares, the value is not the collection the claim is defined as, an element of that collection is not a structure, a member of a space-delimited list is not a scope-token: not a string, empty, or carrying a space or another character the scope-token production does not admit, or a NumericDate claim holds something other than a number of seconds since the epoch. A claim stated under its domain name where the door reads wire names is refused the same way, and is repaired by spelling it as the entry says. Each entry in `invalid` names the offending position and what is wrong with it.",
   });
 };
 
@@ -1413,7 +1424,7 @@ const decodeValue = (
     case "int":
       return isFinite(value) ? value : undefined;
     case "date":
-      return toDate(value);
+      return toDate(value, context);
     case "bool":
       return value;
     case "bstr":

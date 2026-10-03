@@ -14,8 +14,6 @@ describe("withJoseDates", () => {
   });
 
   test("leaves every non-temporal claim exactly as the wire carried it", () => {
-    // The matcher payload is a LIFTED VIEW, never a rewrite: a claim this does not
-    // name must survive byte-for-byte, including one that merely looks temporal.
     expect(
       withJoseDates({ sub: "user-1", aud: ["a", "b"], updated_at: 1600000000 }),
     ).toMatchSnapshot();
@@ -27,9 +25,7 @@ describe("withJoseDates", () => {
     expect(withJoseDates({ sub: "user-1" })).toMatchSnapshot();
   });
 
-  test("reports a ZERO temporal claim as undefined, the same as an absent one", () => {
-    // `0` is a legal NumericDate but never a date a token means; both wires have
-    // always treated it as "not present".
+  test("lifts a ZERO temporal claim to the epoch rather than reporting it absent", () => {
     expect(withJoseDates({ exp: 0, iat: 0, nbf: 0, auth_time: 0 })).toMatchSnapshot();
   });
 

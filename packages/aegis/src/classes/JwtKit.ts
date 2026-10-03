@@ -233,7 +233,7 @@ export class JwtKit implements IJwtKit {
 
     // Temporal range — every temporal claim validated IF PRESENT — plus
     // the caller's wire `assert` predicate, in one pass over the Date-lifted
-    // wire payload. The JOSE lift happens HERE: a NumericDate is an integer on
+    // wire payload. The JOSE lift happens HERE: a NumericDate is a number on
     // this wire and a `Date` on the COSE one, which is encoding, not policy.
     validateWireClaims({
       claims: withJoseDates(decoded.payload),

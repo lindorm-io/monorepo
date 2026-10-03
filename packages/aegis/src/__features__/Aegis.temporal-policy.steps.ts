@@ -1,7 +1,13 @@
-import { Binding, Given, When } from "@lindorm/gherkin";
+import { Binding, Given, Then, When } from "@lindorm/gherkin";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import { Tag } from "cbor2";
+import { expect } from "vitest";
 import { Aegis } from "../classes/Aegis.js";
 import { AegisStepsBase } from "../__fixtures__/aegis-steps-base.js";
+import type { WireKey } from "../__fixtures__/raw-bucket.js";
+
+/** RFC 8949 §3.4.2: the epoch-based date/time tag. */
+const EPOCH_DATE_TAG = 1;
 
 @Binding()
 export class AegisTemporalPolicySteps extends AegisStepsBase {
@@ -16,6 +22,16 @@ export class AegisTemporalPolicySteps extends AegisStepsBase {
       logger: createMockLogger(),
       clockTolerance: seconds,
     });
+  }
+
+  // the wire claims, stated in the wire's own vocabulary
+
+  @Given("the wire claims state the expiry {string} under the CBOR epoch-based date tag")
+  theWireClaimsStateTheExpiryUnderTheEpochBasedDateTag(instant: string): void {
+    this.ctx.wireClaims.exp = new Tag(
+      EPOCH_DATE_TAG,
+      Math.floor(new Date(instant).getTime() / 1000),
+    );
   }
 
   // the acts
@@ -33,5 +49,19 @@ export class AegisTemporalPolicySteps extends AegisStepsBase {
     this.ctx.verified = await this.attempt(() =>
       this.ctx.aegis.verify(token, undefined, {}),
     );
+  }
+
+  // the domain result
+
+  @Then("the verified claims carry {string} as the instant {string}")
+  theVerifiedClaimsCarryAsTheInstant(claim: string, instant: string): void {
+    expect(this.verified().claims).toHaveProperty(claim, new Date(instant));
+  }
+
+  // the raw wire, read off the bytes
+
+  @Then("the raw payload carries {wireKey} as the tagged date {string}")
+  theRawPayloadCarriesAsTheTaggedDate(key: WireKey, instant: string): void {
+    expect(this.raw("payload").get(key)).toEqual(new Date(instant));
   }
 }

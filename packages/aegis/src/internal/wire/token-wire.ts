@@ -30,12 +30,15 @@ export type ClaimsRead = {
   /** The CLAIMS format actually read: `jwt`, `cwt` (COSE_Sign1) or `cwm` (COSE_Mac0). */
   format: StructuredFormat;
   /**
-   * The wire-keyed claim payload EXACTLY as the wire carried it — what
-   * `VerifiedToken.wire.payload` reports for pass-through and re-emit.
+   * The wire-keyed claim payload — what `VerifiedToken.wire.payload` reports for
+   * pass-through and re-emit: on JOSE exactly as the wire carried it, on COSE the
+   * claim codec's decoded view.
    *
    * ⚠ JOSE hands back NumericDates and COSE hands back `Date`s, because the COSE
-   * claim codec decodes them on the way out of the kit. That difference is visible
-   * to a consumer, so it is preserved rather than normalised here.
+   * claim codec decodes them on the way out of the kit, and the COSE read drops a
+   * registered claim stated as null or undefined before the codec runs. That
+   * difference is visible to a consumer, so it is preserved rather than
+   * normalised here.
    */
   wire: Dict;
   /**
