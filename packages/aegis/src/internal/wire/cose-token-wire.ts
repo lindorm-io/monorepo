@@ -282,7 +282,6 @@ export const COSE_TOKEN_WIRE: TokenWire = {
   // `nestedTokenCty` above the seam by whichever entry point sealed the token.
   encryptContent: ({ kryptos, deps, content, ...options }) =>
     encryptCose({
-      certBindingMode: deps.certBindingMode,
       kryptos,
       logger: deps.logger,
       defaultEncryption: deps.defaultEncryption,

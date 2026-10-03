@@ -71,6 +71,7 @@ describe("COSE sign-then-encrypt", () => {
     expect(decodeEncryptedCoseKid(encrypted)).toBe(enc.id); // recipient kid, no decrypt
 
     const decrypted = decryptCose({
+      certBindingMode: "strict",
       kryptos: enc,
       logger,
       token: encrypted,

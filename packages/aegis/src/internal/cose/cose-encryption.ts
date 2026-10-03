@@ -25,15 +25,12 @@ import { coseStructure } from "./unwrap-cose.js";
  * serialise and stamp. `proprietary` threads the interop encryption gate.
  */
 export const encryptCose = ({
-  certBindingMode,
   kryptos,
   logger,
   content,
   options,
   defaultEncryption,
 }: {
-  /** The deployment cert-binding mode, for the DECRYPT twin's read-side check. */
-  certBindingMode?: CertificateBindingMode;
   kryptos: IKryptos;
   logger: ILogger;
   content: TokenContent;
@@ -53,10 +50,7 @@ export const encryptCose = ({
    */
   defaultEncryption: KryptosEncryption | undefined;
 }): Buffer =>
-  new CweKit({ certBindingMode, kryptos, logger, defaultEncryption }).encrypt(
-    content,
-    options,
-  );
+  new CweKit({ kryptos, logger, defaultEncryption }).encrypt(content, options);
 
 /**
  * Decrypt a COSE_Encrypt0 to its plaintext, RECONSTRUCTED by the cty its own
@@ -71,7 +65,11 @@ export const decryptCose = <T extends TokenContent = Buffer>({
   logger,
   token,
 }: {
-  certBindingMode?: CertificateBindingMode;
+  /**
+   * Required-but-undefined so a dropped forward is a compile error; `CweKit` reads
+   * `undefined` as `"strict"`.
+   */
+  certBindingMode: CertificateBindingMode | undefined;
   /** The caller's `crit` declaration, handed to the kit's crit gate. */
   crit?: Array<string>;
   /**
