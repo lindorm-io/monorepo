@@ -478,14 +478,17 @@ Feature: The profile floor, applied to a token that arrived
 
     The domain surface spells the `iss_sub` pair `issuer` and `subject`; `iss`
     and `sub` are the wire's names (RFC 9493 §3.2.3), and inside a domain bag
-    they are undeclared members. The member set is open (RFC 9493 §3), so an
-    undeclared member is carried under its own spelling rather than dropped —
-    and these two land on the keys the declared members own. On
-    `security_event` the profile's shape rule reads the bag before any wire is
-    assembled and answers first, in the vocabulary the caller writes in, with
-    both halves of RFC 9493 §3's sentence at once: the members the format
-    requires are absent, and the two it carries instead are members that
-    format does not describe.
+    they are undeclared members. The set of Identifier Formats is open — a
+    format is named in the IANA registry or by a Collision-Resistant Name
+    (RFC 9493 §3) — so a member aegis does not declare may belong to a
+    format aegis does not know. Carrying such a member under its own
+    spelling rather than dropping it is aegis policy, and these two land on
+    the keys the declared members own. On `security_event` the profile's
+    shape rule reads the bag before any wire is assembled and answers first,
+    in the vocabulary the caller writes in, with both halves of
+    RFC 9493 §3's sentence on a Subject Identifier's members at once: the
+    members the format requires are absent, and the two it carries instead
+    are members that format does not describe.
 
     Background:
       Given an audience list whose only member is "https://receiver.lindorm.io/"
@@ -512,9 +515,11 @@ Feature: The profile floor, applied to a token that arrived
 
   Rule: minting a token whose subject identifier spells its issuer and subject as `iss` and `sub` is refused under a profile that states no shape rule
 
-    The subject identifier's member set is open (RFC 9493 §3), so a member
-    aegis does not declare is carried under the producer's own spelling rather
-    than dropped. `iss` and `sub` are the wire spellings of the declared
+    The set of Identifier Formats is open — a format is named in the IANA
+    registry or by a Collision-Resistant Name (RFC 9493 §3) — so a member
+    aegis does not declare may belong to a format aegis does not know, and
+    aegis policy carries it under the producer's own spelling rather than
+    dropping it. `iss` and `sub` are the wire spellings of the declared
     `issuer` and `subject` (RFC 9493 §3.2.3): in a domain bag they are
     undeclared, and their outgoing keys are the ones the declared members own.
     Two members meeting on one key are refused in every open structure rather
@@ -543,6 +548,97 @@ Feature: The profile floor, applied to a token that arrived
         | wire |
         | jose |
         | cose |
+
+  Rule: a token another producer wrote whose subject identifier spells its issuer and subject as `issuer` and `subject` is refused on read
+
+    On the wire the `iss_sub` pair is `iss` and `sub` (RFC 9493 §3.2.3), so a
+    wire `issuer` or `subject` is a member aegis does not declare. The set of
+    Identifier Formats is open — a format is named in the IANA registry or by
+    a Collision-Resistant Name (RFC 9493 §3) — so such a member may belong to
+    a format aegis does not know, and aegis policy carries it rather than
+    dropping it. These two would be carried onto the very names the declared
+    members are read back under, so a token no RFC 9493 receiver reads as
+    naming a subject would be read as naming one here. Each arrives alone,
+    with no declared member beside it to collide with, so the refusal rests
+    on the declared members' names being reserved whether or not those
+    members are present, and it names each pair at its position. The rule is
+    the structure's own and holds under every profile, so the token is
+    verified under none; the keyless read refuses it too, since that is the
+    door a stranger's payload reaches before any signature is checked. Aegis
+    policy on read.
+
+    Background:
+      Given the wire claims
+        | iss | "https://test.lindorm.io/" |
+        | sub | "user-1"                   |
+        | aud | ["https://rs.lindorm.io/"] |
+        | jti | "token-1"                  |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+      And the wire claim "sub_id" is the object
+        """json
+        { "format": "iss_sub", "issuer": "https://rogue.example/", "subject": "rogue-subject" }
+        """
+
+    Scenario Outline: <wire>: the verify is refused, naming each pair at its position
+      When a third party signs the wire claims on the <wire> wire
+      And I verify the token
+      Then verification is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "subjectId" and lists the faults
+        | key               | message                                                              |
+        | subjectId.issuer  | Members "iss" and "issuer" both resolve to "issuer" in "subjectId"   |
+        | subjectId.subject | Members "sub" and "subject" both resolve to "subject" in "subjectId" |
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
+    Scenario Outline: <wire>: the keyless read is refused on the same faults
+      When a third party signs the wire claims on the <wire> wire
+      And I read the token without a key
+      Then the keyless read is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "subjectId" and lists the faults
+        | key               | message                                                              |
+        | subjectId.issuer  | Members "iss" and "issuer" both resolve to "issuer" in "subjectId"   |
+        | subjectId.subject | Members "sub" and "subject" both resolve to "subject" in "subjectId" |
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
+  Rule: a subject identifier rides the compact COSE encoding at its private-use claim key, its members at their labels
+
+    The compact encoding is a size decision: it keys the claim at a claim key
+    below -65536, which is private use (RFC 8392 §9.1.1), and each declared
+    member at an integer label, so a verifier holding aegis's registry reads
+    the same identifier from fewer bytes and no other reader reads it at all.
+    The `iss_sub` pair takes labels 1 and 2, the claim keys `iss` and `sub`
+    have in a CWT (RFC 8392 §4), and the format takes label 0. The raw map is
+    compared as a map, so an integer label cannot pass for its own text
+    spelling. Aegis policy at mint. The jose wire has no scenario: the
+    compact label map is a COSE encoding, and a JSON object has one kind of
+    key (RFC 8259 §4), so a JOSE member has one spelling and no second
+    encoding.
+
+    Background:
+      Given the content to mint
+        | subject | user-1 |
+      And the content expires in "1h"
+      And the subject identifier
+        | format  | iss_sub                  |
+        | issuer  | https://idp.lindorm.test |
+        | subject | subject-1                |
+      And the mint is asked for the compact COSE encoding
+
+    Scenario: cose: the identifier rides at claim key -65549 as a map keyed by the labels 0, 1 and 2
+      When I mint the content under the "default" profile on the cose wire
+      Then the raw payload carries claim key -65549 as the map
+        | key | keyed by | value                      |
+        | 0   | label    | "iss_sub"                  |
+        | 1   | label    | "https://idp.lindorm.test" |
+        | 2   | label    | "subject-1"                |
 
   Rule: a security event token whose subject identifier names an unmodelled Identifier Format is minted and verified
 

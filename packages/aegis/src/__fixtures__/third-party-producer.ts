@@ -1,6 +1,8 @@
 import {
   Algorithms,
   COSEKey,
+  Encrypt0,
+  EncryptionAlgorithms,
   Mac0,
   MacAlgorithms,
   ProtectedHeaders,
@@ -11,7 +13,7 @@ import type { IKryptos } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
 import { encode, Tag } from "cbor2";
 import { registerEncoder, writeUint8Array } from "cbor2/encoder";
-import { CompactSign, importJWK } from "jose";
+import { CompactEncrypt, CompactSign, importJWK } from "jose";
 import { subtle } from "node:crypto";
 import type { Wire } from "./raw-bucket.js";
 
@@ -25,6 +27,8 @@ import type { Wire } from "./raw-bucket.js";
  * A shared secret authenticates the token rather than signing it: a JWS
  * carrying an HMAC `alg` on JOSE (RFC 7515 §1), a COSE_Mac0 on COSE
  * (RFC 9052 §6.2) — the structure the key admits, never the signature one.
+ * A `dir` key the recipient shares seals a token instead
+ * ({@link sealAsThirdParty}).
  *
  * A producer may also write header parameters beside the `alg` and `kid` it
  * derives from its key ({@link ForeignHeaders}) — the shapes aegis's own writers
@@ -78,8 +82,8 @@ const COSE_HEADER_LABEL: ReadonlyMap<string, number> = new Map([
   ["x5u", 35],
 ]);
 
-/** RFC 8392 §6 for the CWT tag; RFC 9052 §2 for the COSE_Sign1 and COSE_Mac0 tags. */
-const CBOR_TAG = { cwt: 61, sign1: 18, mac0: 17 } as const;
+/** RFC 8392 §6 for the CWT tag; RFC 9052 §2 for the COSE_Sign1, COSE_Mac0 and COSE_Encrypt0 tags. */
+const CBOR_TAG = { cwt: 61, sign1: 18, mac0: 17, encrypt0: 16 } as const;
 
 /** Entries the caller keys itself, so the label is the map key rather than a name to resolve. */
 export type IntegerLabelledEntries = ReadonlyMap<number, unknown>;
@@ -122,6 +126,13 @@ export type ForeignHeaders = {
    * and no registry it is allowed to ask.
    */
   integerLabelledUnprotected?: IntegerLabelledEntries;
+  /**
+   * COSE only: protected entries at the INTEGER label the CALLER names, beside
+   * the ones the producer resolves. A text label and an integer label of the same
+   * numeral are different keys (RFC 9052 §1.5), so the entries arrive keyed by
+   * number and are never routed through a name.
+   */
+  integerLabelledProtected?: IntegerLabelledEntries;
 };
 
 const coseAlgorithmOf = (kryptos: IKryptos): number => {
@@ -213,7 +224,7 @@ const b64u = (value: Buffer | string): string =>
  * RFC 7515 §7.1). The signature is real, so a verdict on such a token is the
  * header's and never the signature's.
  */
-const signCompactByHand = async (
+export const signCompactByHand = async (
   header: Dict,
   payload: Buffer,
   kryptos: IKryptos,
@@ -249,7 +260,10 @@ const signJose = async (
     );
   }
 
-  if (headers.textLabelledProtected !== undefined) {
+  if (
+    headers.textLabelledProtected !== undefined ||
+    headers.integerLabelledProtected !== undefined
+  ) {
     throw new Error(
       "a JOSE header is a JSON object with one kind of member name (RFC 7515 §4): there is no second label form for a producer to write",
     );
@@ -313,6 +327,7 @@ const signCose = async (
   protectedEntries.push(...coseEntriesOf(headers.protectedHeader));
   // Verbatim under the text label, whatever the registrations say.
   protectedEntries.push(...Object.entries(headers.textLabelledProtected ?? {}));
+  protectedEntries.push(...(headers.integerLabelledProtected ?? []));
 
   // The producer's own `kid` first, so a stated one is written beside it, never
   // in place of it: it is the routing hint a reader resolves the key by. WHICH
@@ -377,3 +392,45 @@ export const signContentAsThirdParty = (
   wire === "cose"
     ? signCose(content, "bare", typ, kryptos, headers)
     : signJose(content, typ, kryptos, headers);
+
+/**
+ * Seal `content` as a third party sharing the recipient's `dir` key would on
+ * `wire`, stamping `typ` only when one is given: a compact JWE with `alg: "dir"`
+ * on JOSE (RFC 7518 §4.5), a COSE_Encrypt0 on COSE (RFC 9052 §5.2) with the key
+ * id in the unprotected bucket. The producer chooses AES-256-GCM itself
+ * (RFC 7518 §5.3, RFC 9053 §4.1) rather than reading what the key declares.
+ */
+export const sealAsThirdParty = async (
+  wire: Wire,
+  content: Buffer,
+  typ: string | undefined,
+  kryptos: IKryptos,
+): Promise<string> => {
+  const secret = Buffer.from(String((kryptos.export("jwk") as Dict).k), "base64url");
+
+  if (wire === "jose") {
+    return new CompactEncrypt(content)
+      .setProtectedHeader({
+        alg: "dir",
+        enc: "A256GCM",
+        kid: kryptos.id,
+        ...(typ === undefined ? {} : { typ }),
+      })
+      .encrypt(secret);
+  }
+
+  const protectedEntries: Array<[CoseLabel, unknown]> = [
+    [coseLabelOf("alg"), EncryptionAlgorithms.A256GCM],
+  ];
+
+  if (typ !== undefined) protectedEntries.push([coseLabelOf("typ"), typ]);
+
+  const encrypt0 = await Encrypt0.encrypt(
+    protectedEntries as never,
+    [[coseLabelOf("kid"), Buffer.from(kryptos.id, "utf8")]] as never,
+    content,
+    secret,
+  );
+
+  return enveloped("bare", new Tag(CBOR_TAG.encrypt0, encrypt0.getContentForEncoding()));
+};

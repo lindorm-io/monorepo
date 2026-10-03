@@ -381,18 +381,6 @@ describe("custom header parameters, on read", () => {
       });
     });
 
-    test("a TSTR crit member is not satisfied by an INTEGER parameter of the same numeral", () => {
-      const token = reprotected(kit.sign(WIRE_CLAIMS), [
-        [2, ["7"]],
-        [7, "v"],
-      ]);
-
-      expect(refusalOf(() => kit.verify(token, undefined, { crit: ["7"] }))).toEqual({
-        code: "cwt_invalid_crit",
-        parameter: "7",
-      });
-    });
-
     test("an INTEGER crit member is satisfied by the INTEGER-labelled parameter", () => {
       const token = reprotected(kit.sign(WIRE_CLAIMS), [
         [2, [7]],

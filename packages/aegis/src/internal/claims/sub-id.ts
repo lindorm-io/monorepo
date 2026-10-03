@@ -42,9 +42,11 @@ export type SubjectIdentifierMembers = {
 };
 
 /**
- * ⚠ OPEN BY CONSTRUCTION (`& Dict`), matching the cell that decides behaviour:
- * `internal/claims/sub-id-members.ts` declares the members above with
- * `open: "verbatim"` (RFC 9493 §3), so an undeclared member travels under the
+ * ⚠ OPEN BY CONSTRUCTION (`& Dict`), matching the cells that decide behaviour:
+ * the claim's codec and its element codec both declare the members above with
+ * `open: "verbatim"` (see the `internal/claims/sub-id-members.ts` docstring) —
+ * aegis's choice, because a member it does not declare may belong to a format
+ * it does not know (RFC 9493 §3) — so an undeclared member travels under the
  * producer's own spelling.
  */
 export type SubjectIdentifier = SubjectIdentifierMembers & Dict;

@@ -11,6 +11,7 @@ import type {
   DecryptedToken,
   DomainProtectedHeader,
   EncryptedToken,
+  EncryptOptions,
   JoseHeaderBuckets,
   ParsedToken,
   ProfileMintOptions,
@@ -61,6 +62,8 @@ export class AegisContext {
   foreignHeaders: ForeignHeaders = {};
   /** What a mint is asked beyond its content and its wire. */
   mintOptions: ProfileMintOptions = {};
+  /** What an encrypt is asked beyond its data, its wire and its envelope. */
+  encryptOptions: Pick<EncryptOptions, "proprietary"> = {};
   /** What a verify is asked beyond the profile, the token and the audience. */
   verifyOptions: Omit<ProfileVerifyOptions, "audience"> = {};
   /** The key a decrypt is handed outright, when the scenario supplies one. */

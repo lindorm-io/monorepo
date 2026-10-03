@@ -521,26 +521,6 @@ describe("the confirmation claim on the wire", () => {
     expect(Aegis.toWire({ confirmation: {} } as Dict)).toMatchSnapshot();
   });
 
-  test("an undefined confirmation is not stated either, and the domain door mints a bearer token on both wires", async () => {
-    // The other spelling of absence at the claim key, at the door a profiled
-    // mint goes through: a caller assembling content from optionals hands
-    // `confirmation: undefined` in, and the token is the bearer token
-    // a `cnf`-less mint always is — where `confirmation: {}` is refused. Read
-    // off the bytes by the independent inspector; `Object.hasOwn` / `has`, so a
-    // present key holding nothing cannot pass for an absent claim.
-    const jwt = inspectToken(await mint("jwt", undefined as unknown as Dict));
-    if (jwt.wire !== "jose") throw new Error("expected a JOSE token");
-    if (!jwt.payload.readable) throw new Error(jwt.payload.reason);
-
-    expect(Object.hasOwn(jwt.payload.value, "cnf")).toBe(false);
-
-    const cwt = inspectToken(await mint("cwt", undefined as unknown as Dict));
-    if (cwt.wire !== "cose") throw new Error("expected a COSE token");
-    if (!cwt.payload.readable) throw new Error(cwt.payload.reason);
-
-    expect(cwt.payload.value.has(CNF_COSE_CLAIM_LABEL)).toBe(false);
-  });
-
   test("a confirmation whose every member is absent is refused under the empty-value ruling on both wires, as the empty one is", async () => {
     // `undefined` is the one absence a confirmation member recognises, so a
     // confirmation assembled from optionals the caller did not have names no key

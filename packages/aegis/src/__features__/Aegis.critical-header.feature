@@ -221,6 +221,73 @@ Feature: Critical header parameters
         | crit      | [-5885] |
         | parameter | -5885   |
 
+  Rule: a crit member naming a text label is not satisfied by the integer label of the same numeral
+
+    The converse of the rule above, so the rule is not that an integer member
+    is special. A `crit` member that is the text "7" names the text label
+    "7", and a parameter at the integer label 7 beside it sits under a
+    different kind of map key (RFC 9052 §1.5) — so the list names a
+    parameter the protected bucket does not carry, which is fatal
+    (RFC 9052 §3.1), and the verifier declaring "7" changes nothing. The
+    integer 7 is the counter signature label of RFC 8152 (RFC 9052 §3.1);
+    the scenarios use it as an opaque numeral. The first scenario reads the
+    bucket off the wire, so the others judge the read. The same token with
+    the parameter at the text label verifies, so the refusal is attributable
+    to the kind of label alone. The refusal names the member as its own
+    label space spells it, at the domain verify and at the raw claims door
+    alike. The jose wire has no scenario: a JOSE header is a JSON object with one
+    kind of member name (RFC 7515 §4), so there is no integer label for a
+    parameter to stand at.
+
+    Background:
+      Given the wire claims
+        | iss | "https://test.lindorm.io/" |
+        | sub | "user-1"                   |
+        | aud | ["https://rs.lindorm.io/"] |
+        | jti | "token-1"                  |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+      And the foreign protected header carries
+        | crit | ["7"] |
+      And the recipient declares the critical parameter "7"
+
+    Scenario: cose: the list names the text label and the parameter rides the integer label alone
+      Given the foreign protected header carries, at the integer labels
+        | 7 | "v" |
+      When a third party signs the wire claims on the cose wire
+      Then the raw protected header carries label 2 as the list "7"
+      And the raw protected header carries label 7 "v"
+      And the raw protected header carries no "7"
+
+    @RFC-9052
+    Scenario: cose: the verify refuses the token, naming the text label the protected header does not carry (RFC-9052 §1.5) (RFC-9052 §3.1)
+      Given the foreign protected header carries, at the integer labels
+        | 7 | "v" |
+      When a third party signs the wire claims on the cose wire
+      And I verify the token
+      Then verification is refused as a CWT error "cwt_invalid_crit"
+      And the refusal's data is exactly
+        | crit      | ["7"] |
+        | parameter | "7"   |
+
+    @RFC-9052
+    Scenario: cose: the raw claims door refuses the token on the same verdict (RFC-9052 §1.5) (RFC-9052 §3.1)
+      Given the foreign protected header carries, at the integer labels
+        | 7 | "v" |
+      When a third party signs the wire claims on the cose wire
+      And I verify the token as a claims token on the cose wire
+      Then verification is refused as a CWT error "cwt_invalid_crit"
+      And the refusal's data is exactly
+        | crit      | ["7"] |
+        | parameter | "7"   |
+
+    Scenario: cose: the same token verifies when the parameter rides the text label the list names
+      Given the foreign protected header carries, under text labels
+        | 7 | "v" |
+      When a third party signs the wire claims on the cose wire
+      And I verify the token
+      Then the verified token is a "cwt"
+
   Rule: the crit a refusal reports is the one the reader actually judged, not the typed bag beside it
 
     A refusal is only actionable if its data describes the thing refused. The

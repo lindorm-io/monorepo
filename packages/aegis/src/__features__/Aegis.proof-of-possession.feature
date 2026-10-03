@@ -643,3 +643,74 @@ Feature: Proof-of-possession bindings
       And I verify the token under the "access_token" profile as the audience "https://rs.lindorm.io/"
       Then verification is refused as a domain error "dpop_unsupported_crit_param"
       And the refusal names the undeclared parameter "x-lindorm-hint"
+
+  Rule: a bound token is refused when its proof's crit is malformed, even where the verifier declares the extension it names
+
+    A DPoP proof is a JWS (RFC 9449 §4.2), and a JWS `crit` is a list of the
+    extension parameters its header carries: a producer may not write the
+    empty list, a name the specification defines, or a name the header does
+    not carry, and a recipient may treat a header that breaks any of these
+    as invalid (RFC 7515 §4.1.11); aegis takes that recipient option. The
+    verifier declares `x-lindorm-hint`, so a list naming it is never refused
+    as undeclared, and every refusal is asserted under the shape code, never
+    the undeclared one. The refusal reports the list it judged. The token is
+    bound to the key that signs the proof, so nothing else about the
+    presentation is wrong. The presenter signs by hand, because the jose
+    library refuses three of the four shapes at sign time. The cose wire has
+    no scenario: a DPoP proof is a JWS, and a JWK thumbprint confirmation has
+    no CWT counterpart (RFC 9679 §5.5), so no bound token can be built on
+    that wire to present.
+
+    Background:
+      Given the content to mint
+        | subject  | user-1   |
+        | clientId | client-1 |
+      And an audience list whose only member is "https://rs.lindorm.io/"
+      And the content binds the token to the ES512 presenter key
+      And a proof identified "dpop-proof-1" for the request "GET" "https://rs.lindorm.io/resource"
+      And the recipient declares the critical parameter "x-lindorm-hint"
+
+    @RFC-7515
+    @RFC-9449
+    Scenario: jose: a proof whose crit is not a list is refused, reporting what it read (RFC-7515 §4.1.11) (RFC-9449 §4.2)
+      Given the proof header carries
+        | crit           | "x-lindorm-hint" |
+        | x-lindorm-hint | "carried"        |
+      When I mint the content under the "access_token" profile on the jose wire
+      And the presenter signs the proof by hand with the ES512 presenter key over the presented token
+      And I verify the token under the "access_token" profile as the audience "https://rs.lindorm.io/"
+      Then verification is refused as a domain error "dpop_invalid_crit"
+      And the refusal reports the critical list "x-lindorm-hint"
+
+    @RFC-7515
+    @RFC-9449
+    Scenario: jose: a proof whose crit is the empty list is refused, reporting the list it read (RFC-7515 §4.1.11) (RFC-9449 §4.2)
+      Given the proof header carries
+        | crit | [] |
+      When I mint the content under the "access_token" profile on the jose wire
+      And the presenter signs the proof by hand with the ES512 presenter key over the presented token
+      And I verify the token under the "access_token" profile as the audience "https://rs.lindorm.io/"
+      Then verification is refused as a domain error "dpop_invalid_crit"
+      And the refusal reports the critical list []
+
+    @RFC-7515
+    @RFC-9449
+    Scenario: jose: a proof whose crit names a parameter its header does not carry is refused, reporting the list it read (RFC-7515 §4.1.11) (RFC-9449 §4.2)
+      Given the proof header carries
+        | crit | ["x-lindorm-hint"] |
+      When I mint the content under the "access_token" profile on the jose wire
+      And the presenter signs the proof by hand with the ES512 presenter key over the presented token
+      And I verify the token under the "access_token" profile as the audience "https://rs.lindorm.io/"
+      Then verification is refused as a domain error "dpop_invalid_crit"
+      And the refusal reports the critical list ["x-lindorm-hint"]
+
+    @RFC-7515
+    @RFC-9449
+    Scenario: jose: a proof whose crit names a parameter the specification defines is refused, reporting the list it read (RFC-7515 §4.1.11) (RFC-9449 §4.2)
+      Given the proof header carries
+        | crit | ["typ"] |
+      When I mint the content under the "access_token" profile on the jose wire
+      And the presenter signs the proof by hand with the ES512 presenter key over the presented token
+      And I verify the token under the "access_token" profile as the audience "https://rs.lindorm.io/"
+      Then verification is refused as a domain error "dpop_invalid_crit"
+      And the refusal reports the critical list ["typ"]

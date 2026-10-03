@@ -9,8 +9,8 @@ import { assertCoseCritCarried } from "./assert-cose-crit-carried.js";
  * (RFC 9052 §1.5, RFC 9052 §3.1).
  *
  * The doors that run it are pinned where they live:
- * `custom-header-params.read.test.ts` (verify), `cose-token-wire.test.ts` (parse)
- * and `CweKit.test.ts` (decrypt).
+ * `custom-header-params.read.test.ts` and `Aegis.critical-header.feature`
+ * (verify), `cose-token-wire.test.ts` (parse) and `CweKit.test.ts` (decrypt).
  */
 describe("assertCoseCritCarried", () => {
   const bucket = (entries: Array<[CoseLabel, unknown]>): Map<CoseLabel, unknown> =>

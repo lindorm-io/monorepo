@@ -200,3 +200,84 @@ Feature: The confidentiality verb
         | wire |
         | jose |
         | cose |
+
+  Rule: a token sealed under one deployment's default content encryption is refused by a deployment whose default differs
+
+    A `dir` key that declares no content encryption takes the deployment's
+    default, so the default is part of what the two ends agreed. The
+    encryption a token names says what its producer used; it is not
+    authority for what this recipient accepts. One `dir` secret is the length
+    an AES-256-GCM key and an A128CBC-HS256 key pair both take, so honouring
+    the label would run a cipher, a tag length and a key split the decrypting
+    deployment never configured. The deployment that sealed the token
+    decrypts it, so the refusal is attributable to the disagreement alone.
+    A128CBC-HS256 is not among the content encryptions RFC 9053 §4 defines,
+    so the encrypt admits it explicitly; on JOSE the admission changes
+    nothing. Aegis policy at decrypt.
+
+    Background:
+      Given the vault also holds a dir encryption key
+      And the data to encrypt
+        | subject | user-1 |
+      And the deployment's default content encryption is "A128CBC-HS256"
+      And the encrypt admits a content encryption COSE does not define
+
+    Scenario Outline: <wire>: the deployment that sealed the token decrypts it
+      When I encrypt the data on the <wire> wire
+      And I decrypt the token
+      Then the decrypted payload carries "subject" "user-1"
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
+    Scenario Outline: <wire>: a deployment whose default content encryption differs refuses the token
+      When I encrypt the data on the <wire> wire
+      And the deployment's default content encryption is changed to "A256GCM"
+      And I decrypt the token
+      Then decryption is refused as a <error> error "<code>"
+
+      Examples:
+        | wire | error | code                    |
+        | jose | JWE   | jwe_encryption_mismatch |
+        | cose | CWE   | cwe_encryption_mismatch |
+
+  Rule: a decrypt refuses a foreign encrypted token typed as a signed one
+
+    The type header names the kind of object a producer sealed, and an
+    encrypted token is typed as one: `JWE` or a `+jwe` media type on JOSE,
+    `application/cwe` or a `+cwe` media type on COSE. A token typed as an
+    access token reaching the decrypt door was produced for another reading,
+    and opening it here would hand the caller a payload under a statement its
+    producer did not make. No aegis writer types an encrypted token that way,
+    so a third party seals it with the `dir` key the deployment shares; the
+    same producer's token typed as an encrypted one decrypts, so the refusal
+    is attributable to the type alone. The refusal reports the type header
+    it read. Aegis policy at decrypt.
+
+    Background:
+      Given the vault also holds a dir encryption key
+      And the data to encrypt
+        | subject | user-1 |
+
+    Scenario Outline: <wire>: the token typed as a signed one is refused, reporting the type it read
+      When a third party seals the data on the <wire> wire, typed "<typ>"
+      And I decrypt the token
+      Then decryption is refused as a <error> error "<code>"
+      And the refusal reports the type header it read "<typ>"
+
+      Examples:
+        | wire | typ                | error | code            |
+        | jose | application/at+jwt | JWE   | jwe_invalid_typ |
+        | cose | application/at+cwt | CWE   | cwe_invalid_typ |
+
+    Scenario Outline: <wire>: the same producer's token typed as an encrypted one decrypts
+      When a third party seals the data on the <wire> wire, typed "<typ>"
+      And I decrypt the token
+      Then the decrypted token is a "<format>"
+
+      Examples:
+        | wire | typ                | format |
+        | jose | application/at+jwe | jwe    |
+        | cose | application/at+cwe | cwe    |

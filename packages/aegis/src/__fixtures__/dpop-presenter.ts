@@ -4,14 +4,16 @@ import type { Dict } from "@lindorm/types";
 import { omitUndefined } from "@lindorm/utils";
 import { calculateJwkThumbprint, CompactSign, importJWK, type JWK } from "jose";
 import { createHash } from "node:crypto";
+import { signCompactByHand } from "./third-party-producer.js";
 
 /**
- * A DPoP proof written by SOMETHING THAT IS NOT AEGIS — the `jose` library — at
- * run time, over the access token it is presented with: `ath` commits to that
- * token (RFC 9449 §4.2), so no proof can exist before the token does. The
- * presenter's public key rides in the header as `jwk`; the private half never
- * leaves this module. A presenter is by definition not the verifier, so a proof
- * aegis both wrote and read would show only that the two agree.
+ * A DPoP proof written by SOMETHING THAT IS NOT AEGIS — the `jose` library, or
+ * WebCrypto by hand where `jose` refuses the header — at run time, over the
+ * access token it is presented with: `ath` commits to that token
+ * (RFC 9449 §4.2), so no proof can exist before the token does. The presenter's
+ * public key rides in the header as `jwk`; the private half never leaves this
+ * module. A presenter is by definition not the verifier, so a proof aegis both
+ * wrote and read would show only that the two agree.
  *
  * ⛔ Imports nothing from `src/internal/` or `src/classes/`.
  */
@@ -42,21 +44,29 @@ export const jwkThumbprintOf = (kryptos: IKryptos): Promise<string> =>
 export const accessTokenHashOf = (token: string): string =>
   createHash("sha256").update(token, "ascii").digest("base64url");
 
+type DpopProof = {
+  protectedHeader: Dict & { alg: string };
+  payload: Buffer;
+};
+
 /**
- * Sign a proof with `kryptos` over `accessToken`, writing `header` beside the
+ * The proof `kryptos` signs over `accessToken`: `header` is written beside the
  * three parameters RFC 9449 §4.2 requires — last, so a stated parameter can
- * restate a derived one. A `crit` the header carries is declared to the library
- * as implemented, because a presenter's own extension is one it understands.
+ * restate a derived one.
  */
-export const signDpopProofAsPresenter = async (
+const proofOf = (
   kryptos: IKryptos,
   statement: DpopProofStatement,
   accessToken: string,
-  header: Dict = {},
-): Promise<string> => {
-  const key = await importJWK(kryptos.export("jwk") as never, kryptos.algorithm);
-
-  const payload = Buffer.from(
+  header: Dict,
+): DpopProof => ({
+  protectedHeader: {
+    alg: kryptos.algorithm,
+    typ: "dpop+jwt",
+    jwk: publicJwkOf(kryptos),
+    ...header,
+  },
+  payload: Buffer.from(
     JSON.stringify({
       jti: statement.tokenId,
       htm: statement.httpMethod,
@@ -65,14 +75,22 @@ export const signDpopProofAsPresenter = async (
       ath: accessTokenHashOf(accessToken),
     }),
     "utf8",
-  );
+  ),
+});
 
-  const protectedHeader: Dict & { alg: string } = {
-    alg: kryptos.algorithm,
-    typ: "dpop+jwt",
-    jwk: publicJwkOf(kryptos),
-    ...header,
-  };
+/**
+ * Sign a proof with `kryptos` over `accessToken` through `jose`. A `crit` the
+ * header carries is declared to the library as implemented, because a
+ * presenter's own extension is one it understands.
+ */
+export const signDpopProofAsPresenter = async (
+  kryptos: IKryptos,
+  statement: DpopProofStatement,
+  accessToken: string,
+  header: Dict = {},
+): Promise<string> => {
+  const { protectedHeader, payload } = proofOf(kryptos, statement, accessToken, header);
+  const key = await importJWK(kryptos.export("jwk") as never, kryptos.algorithm);
 
   const crit = isArray(protectedHeader.crit)
     ? Object.fromEntries(protectedHeader.crit.map((member) => [String(member), true]))
@@ -81,4 +99,21 @@ export const signDpopProofAsPresenter = async (
   return new CompactSign(payload)
     .setProtectedHeader(protectedHeader as never)
     .sign(key, crit === undefined ? undefined : { crit });
+};
+
+/**
+ * Sign the same proof by hand, for a header `jose` refuses to write: a `crit`
+ * that is not a list, is the empty list, or names a parameter the header lacks
+ * (RFC 7515 §4.1.11). A careless presenter checks none of them, so a verifier
+ * has to be shown refusing each.
+ */
+export const signDpopProofByHand = (
+  kryptos: IKryptos,
+  statement: DpopProofStatement,
+  accessToken: string,
+  header: Dict = {},
+): Promise<string> => {
+  const { protectedHeader, payload } = proofOf(kryptos, statement, accessToken, header);
+
+  return signCompactByHand(protectedHeader, payload, kryptos);
 };

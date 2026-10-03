@@ -453,9 +453,10 @@ describe("the sub_id claim on the wire", () => {
     // ⛔⛔ THE LOOK-ALIKE THE WALKER REFUSES. Left unrefused, a caller-supplied
     // `phone_number` is an undeclared member riding the `"verbatim"` tail straight
     // onto the declared member's own outgoing key, so `{ phone_number: … }` and
-    // `{ phoneNumber: … }` produce IDENTICAL bytes. An unknown member may be
-    // carried (RFC 9493 §3); nothing says a member may be written INTO ANOTHER
-    // MEMBER'S SLOT, which is what makes the two indistinguishable downstream.
+    // `{ phoneNumber: … }` produce IDENTICAL bytes. A member aegis does not know
+    // may belong to a format aegis does not know (RFC 9493 §3), so aegis carries
+    // it; nothing says a member may be written INTO ANOTHER MEMBER'S SLOT, which
+    // is what makes the two indistinguishable downstream.
     //
     // ⭐ Accepting the wire spelling would also SOFTEN the camelisation into a
     // break no caller notices — it would just silently stop being enforceable by
@@ -523,46 +524,6 @@ describe("the sub_id claim on the wire", () => {
         },
       });
     }
-  });
-
-  test("a foreign token spelling the pair in the DOMAIN vocabulary is refused, not read as the pair", () => {
-    // The read direction of the look-alike rule. On the wire the `iss_sub` pair
-    // is `iss` and `sub` (RFC 9493 §3.2.3), so a wire `issuer` or `subject` is an
-    // undeclared member — and the verbatim tail would carry each onto the very
-    // key the declared member's read resolves to, making a token no RFC 9493
-    // receiver reads as naming a subject read as naming one here. The look-alike
-    // arrives ALONE: with nothing to collide against, a refusal built from the
-    // members that arrived would let it take the declared slot uncontested.
-    // Refused at `parse`, the unauthenticated door a stranger's payload reaches.
-    const header = Buffer.from(
-      JSON.stringify({ alg: "ES512", typ: "JWT" }),
-      "utf8",
-    ).toString("base64url");
-    const payload = Buffer.from(
-      '{"iss":"https://test.lindorm.io/","sub":"u","exp":9999999999,"sub_id":{"format":"iss_sub","issuer":"https://rogue.example/","subject":"rogue-subject"}}',
-      "utf8",
-    ).toString("base64url");
-
-    expect(() => aegis.parse(`${header}.${payload}.AAAA`)).toThrow(
-      expect.objectContaining({
-        code: "claim_structure_invalid",
-        data: {
-          claim: "subjectId",
-          invalid: [
-            {
-              key: "subjectId.issuer",
-              message:
-                'Members "iss" and "issuer" both resolve to "issuer" in "subjectId"',
-            },
-            {
-              key: "subjectId.subject",
-              message:
-                'Members "sub" and "subject" both resolve to "subject" in "subjectId"',
-            },
-          ],
-        },
-      }) as unknown as Error,
-    );
   });
 
   // ---------------------------------------------------------------------------

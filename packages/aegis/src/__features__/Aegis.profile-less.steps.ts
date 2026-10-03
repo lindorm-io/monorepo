@@ -308,6 +308,7 @@ export class AegisProfileLessSteps extends AegisStepsBase {
         format,
         partyProducer,
         type: this.ctx.tokenType,
+        ...this.ctx.encryptOptions,
         ...this.domainEnvelope(),
       }),
     );

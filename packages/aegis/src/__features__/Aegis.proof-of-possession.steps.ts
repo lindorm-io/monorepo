@@ -11,6 +11,7 @@ import {
   accessTokenHashOf,
   jwkThumbprintOf,
   signDpopProofAsPresenter,
+  signDpopProofByHand,
   type DpopProofStatement,
 } from "../__fixtures__/dpop-presenter.js";
 import { jsonCells } from "../__fixtures__/json-cells.js";
@@ -92,6 +93,20 @@ export class AegisProofOfPossessionSteps extends AegisStepsBase {
     key: PresenterKey,
   ): Promise<void> {
     await this.presentProof(key, ANOTHER_ACCESS_TOKEN);
+  }
+
+  @When(
+    "the presenter signs the proof by hand with the {presenterKey} presenter key over the presented token",
+  )
+  async thePresenterSignsTheProofByHandOverThePresentedToken(
+    key: PresenterKey,
+  ): Promise<void> {
+    this.ctx.verifyOptions.dpopProof = await signDpopProofByHand(
+      PRESENTER_KEYS[key],
+      this.statedProof(),
+      this.token(),
+      this.ctx.proofHeader,
+    );
   }
 
   // the domain result

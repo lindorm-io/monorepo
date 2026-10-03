@@ -47,6 +47,16 @@ export class AegisEmptyClaimPruneSteps extends AegisStepsBase {
     this.ctx.claims[claim] = null;
   }
 
+  @Given("the {nullableClaim} claim is stated as undefined")
+  theClaimIsStatedAsUndefined(claim: NullableClaim): void {
+    this.ctx.claims[claim] = undefined;
+  }
+
+  @Given("the wire claim {string} is stated as undefined")
+  theWireClaimIsStatedAsUndefined(name: string): void {
+    this.ctx.wireClaims[name] = undefined;
+  }
+
   @Given("the content's claims container is the object")
   theContentsClaimsContainerIsTheObject(object: DocString): void {
     this.ctx.claims.claims = JSON.parse(object.content) as Dict;

@@ -678,7 +678,7 @@ describe("CLAIM_REGISTRY", () => {
     // THE MINT DOOR rather than an OIDC Core §5.1.1 requirement — a profile value
     // arrives from a stored row and `""` states nothing a relying party can act
     // on. See `address-members.ts`; the wire is pinned in
-    // `classes/address-claim-wire.test.ts`.
+    // `Aegis.empty-claim-prune.feature`.
     expect(pruning).toEqual([
       "authorizationDetails[].type",
       "subjectId.format",

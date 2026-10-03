@@ -383,7 +383,8 @@ describe("verifyDpopProof", () => {
    * it (RFC 7515 §4.1.11), and aegis is never the final recipient, so it refuses
    * until the caller declares the parameter — the gate every JOSE verify door
    * runs, under this door's own code family. The MALFORMED half is pinned here at
-   * the public door; the feature files state the declared/undeclared pair.
+   * this door, with its title; `Aegis.proof-of-possession.feature` states it at
+   * `aegis.verify`, beside the declared/undeclared pair.
    */
   describe("Aegis.verifyDpopProof — the crit gate", () => {
     test("should refuse a proof marking a carried extension critical when nothing is declared", () => {

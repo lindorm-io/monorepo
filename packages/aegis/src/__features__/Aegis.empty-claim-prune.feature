@@ -658,6 +658,79 @@ Feature: The empty-claim prune
         { "https://schemas.lindorm.test/event/accountRecovery": {} }
         """
 
+  Rule: an address member handed the empty string is left out, and the rest of the address is written
+
+    OIDC Core §5.1.1 defines `address` by its members, every one of them a
+    string, and a profile value is usually pushed through from a stored row,
+    where an unset column arrives as the empty string. An empty member
+    states nothing a relying party can act on, so the mint leaves it out and
+    writes the rest of the address as given. A member the mint left out and
+    one the caller never wrote read back the same, so the address is read
+    off the raw wire. The members are spelled the same on both wires, and
+    the claim keeps its name on both in the interoperable encoding. Aegis
+    policy at mint.
+
+    Background:
+      Given the content to mint
+        | subject | user-1 |
+      And the content expires in "1h"
+      And the profile claims are the object
+        """json
+        { "address": { "streetAddress": "Sample 1", "region": "" } }
+        """
+
+    Scenario Outline: <wire>: the address carries the street address alone
+      When I mint the content under the "default" profile on the <wire> wire
+      Then the raw payload carries "address" as the object
+        """json
+        { "street_address": "Sample 1" }
+        """
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
+  Rule: an address whose every member is the empty string is not emitted at all
+
+    The members prune first, and the claim's own emptiness cell then prunes
+    the empty object they leave behind: `address: {}` would assert an address
+    with no part known. The token still carries its subject, so a claims set
+    the mint emptied cannot pass for a pruned claim. On COSE the claim has
+    two keys — its name, and the private-use claim key aegis's proprietary
+    encoding writes — and it is absent under both, since absence under one
+    alone is satisfied by a claim that merely moved to the other. Aegis
+    policy at mint.
+
+    Background:
+      Given the content to mint
+        | subject | user-1 |
+      And the content expires in "1h"
+      And the profile claims are the object
+        """json
+        {
+          "address": {
+            "formatted": "",
+            "streetAddress": "",
+            "locality": "",
+            "region": "",
+            "postalCode": "",
+            "country": "",
+            "careOf": ""
+          }
+        }
+        """
+
+    Scenario: jose: the token carries its subject and no address
+      When I mint the content under the "default" profile on the jose wire
+      Then the raw payload carries "sub" "user-1"
+      And the raw payload carries no "address"
+
+    Scenario: cose: the token carries its subject and no address under either key
+      When I mint the content under the "default" profile on the cose wire
+      Then the raw payload carries claim key 2 "user-1"
+      And the raw payload carries none of claim key -65557, "address"
+
   Rule: a confirmation supplied as null through the domain door states no binding, and the token is minted without one
 
     `null` and `undefined` are absence, never a value: the emission boundary
@@ -709,6 +782,53 @@ Feature: The empty-claim prune
       Then the raw payload carries no "cnf"
 
     Scenario: cose: the token is signed as a bearer token, carrying no confirmation
+      When I sign the wire claims as a claims token on the cose wire
+      Then the raw payload carries no claim key 8
+
+  Rule: a confirmation supplied as undefined through the domain door states no binding, and the token is minted without one
+
+    `undefined` is the other spelling of absence a caller assembling content
+    from optionals hands in. The key is present in the caller's content and
+    holds nothing, so a confirmation stated as `undefined` is absent from
+    the wire, and the token is the bearer token a `cnf`-less mint always is
+    — where the empty confirmation is refused. Aegis policy at mint.
+    RFC 8747 §7.1.1 keys `cnf` at claim key 8.
+
+    Background:
+      Given the content to mint
+        | subject | user-1 |
+      And the content expires in "1h"
+      And the confirmation claim is stated as undefined
+
+    Scenario: jose: the undefined confirmation leaves the token carrying no confirmation
+      When I mint the content under the "default" profile on the jose wire
+      Then the raw payload carries no "cnf"
+
+    Scenario: cose: the undefined confirmation leaves the token carrying no confirmation
+      When I mint the content under the "default" profile on the cose wire
+      Then the raw payload carries no claim key 8
+
+  Rule: a confirmation supplied as undefined through a raw door states no binding, and the token is signed without one
+
+    The raw doors run no translation, so the caller's own wire-named bag
+    reaches the emission boundary as written, and `undefined` is stripped
+    there with `null`. CBOR has an `undefined` of its own (RFC 8949 §3.3), so
+    a COSE encoder handed the member would write it under claim key 8. The
+    jose wire has no scenario: JSON has no `undefined` (RFC 8259 §3), so the
+    serialiser drops the member whatever aegis does, and a scenario there
+    could not fail.
+
+    Background:
+      Given the wire claims
+        | iss | "https://test.lindorm.io/" |
+        | sub | "user-1"                   |
+        | aud | ["https://rs.lindorm.io/"] |
+        | jti | "token-1"                  |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+      And the wire claim "cnf" is stated as undefined
+
+    Scenario: cose: the undefined confirmation leaves the signed token carrying no confirmation
       When I sign the wire claims as a claims token on the cose wire
       Then the raw payload carries no claim key 8
 
@@ -798,11 +918,10 @@ Feature: The empty-claim prune
     audience, so the only safe answer is the refusal the floor gives a token
     that omits `aud`. Aegis policy at verify: the claim is optional and the
     specification scopes its mandated rejection to a token that carries it
-    (RFC 7519 §4.1.3). The first scenario reads the null off the wire, so
-    the second judges the read. The cose wire has no scenario: no
-    specification excuses it — CBOR has a null of its own (RFC 8949 §3.3), and
-    a third party can write one under claim key 3 — so that leg is a gap this
-    suite leaves visible, not a fact about the wire.
+    (RFC 7519 §4.1.3). CBOR has a null of its own (RFC 8949 §3.3), and
+    RFC 8392 §3.1.3 keys `aud` at claim key 3, so a third party writes the
+    null on both wires. The first scenario on each wire reads the null off
+    the wire, so the second judges the read.
 
     Background:
       Given the wire claims
@@ -819,6 +938,15 @@ Feature: The empty-claim prune
 
     Scenario: jose: the verify asserting an audience is refused, as it is for a token that omits the claim
       When a third party signs the wire claims on the jose wire
+      And I verify the token under the "default" profile as the audience "https://rs.lindorm.io/"
+      Then verification is refused as a domain error "audience_mismatch"
+
+    Scenario: cose: the null reaches the wire under claim key 3, so it is the read that is judged
+      When a third party signs the wire claims on the cose wire
+      Then the raw payload carries claim key 3 as null
+
+    Scenario: cose: the verify asserting an audience is refused, as it is for a token that omits the claim
+      When a third party signs the wire claims on the cose wire
       And I verify the token under the "default" profile as the audience "https://rs.lindorm.io/"
       Then verification is refused as a domain error "audience_mismatch"
 

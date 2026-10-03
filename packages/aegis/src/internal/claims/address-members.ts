@@ -40,7 +40,9 @@ const sameOnBothWires = (name: string): Record<Wire, WireKey> => ({
  * party can act on. The READ door is unaffected: a foreign token's empty member
  * is reported as its producer wrote it.
  *
- * pinned: classes/address-claim-wire.test.ts
+ * pinned: `Aegis.empty-claim-prune.feature` "an address member handed the empty
+ * string is left out, and the rest of the address is written", "an address whose
+ * every member is the empty string is not emitted at all".
  */
 const PRUNE = "prune" as const;
 

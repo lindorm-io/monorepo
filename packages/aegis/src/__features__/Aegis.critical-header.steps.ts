@@ -91,6 +91,11 @@ export class AegisCriticalHeaderSteps extends AegisStepsBase {
     this.ctx.foreignHeaders.textLabelledProtected = jsonCells(table);
   }
 
+  @Given("the foreign protected header carries, at the integer labels")
+  theForeignProtectedHeaderCarriesAtTheIntegerLabels(table: DataTable): void {
+    this.ctx.foreignHeaders.integerLabelledProtected = integerLabelCells(table);
+  }
+
   @Given("the foreign unprotected header carries, at the integer labels")
   theForeignUnprotectedHeaderCarriesAtTheIntegerLabels(table: DataTable): void {
     this.ctx.foreignHeaders.integerLabelledUnprotected = integerLabelCells(table);
