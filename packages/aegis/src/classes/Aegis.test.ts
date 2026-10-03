@@ -206,6 +206,73 @@ describe("Aegis", () => {
     });
   });
 
+  describe("the invalid list a refusal reports", () => {
+    const refusalOf = async (act: Promise<unknown>): Promise<AegisError> => {
+      try {
+        await act;
+      } catch (error) {
+        if (error instanceof AegisError) return error;
+
+        throw error;
+      }
+
+      throw new Error("expected the act to be refused");
+    };
+
+    test("claims_invalid carries keys and profile_policy_invalid carries entries", async () => {
+      const { token } = await aegis.mint("default", {
+        subject: "user-1",
+        expires: "1h",
+        tokenType: "test_token",
+      });
+
+      const claimsInvalid = await refusalOf(aegis.verify(token, { subject: "other" }));
+      const policyInvalid = await refusalOf(
+        aegis.mint("logout_token", {
+          subject: "user-1",
+          audience: ["client-1"],
+          events: {},
+        }),
+      );
+
+      expect({
+        code: claimsInvalid.code,
+        dataInvalid: claimsInvalid.data.invalid,
+      }).toStrictEqual({
+        code: "claims_invalid",
+        dataInvalid: ["subject"],
+      });
+      expect({
+        code: policyInvalid.code,
+        data: policyInvalid.data,
+        debugInvalid: policyInvalid.debug.invalid,
+      }).toStrictEqual({
+        code: "profile_policy_invalid",
+        data: {
+          direction: "mint",
+          format: "jwt",
+          invalid: [
+            { key: "events", message: 'Required claim "events" is missing' },
+            { key: "events", message: "events must contain at least one event type" },
+          ],
+        },
+        debugInvalid: [
+          {
+            key: "events",
+            message: 'Required claim "events" is missing',
+            rule: "required",
+          },
+          {
+            key: "events",
+            message: "events must contain at least one event type",
+            rule: "shape",
+            shape: "events",
+          },
+        ],
+      });
+    });
+  });
+
   // The issuer aegis STAMPS is the service's own — amphora's `internal` scope,
   // which is the one reader of that setting. A verify-only deployment declares
   // none, and stamps none.

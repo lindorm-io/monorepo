@@ -28,7 +28,9 @@ describe("assertAlgorithmMatch", () => {
   test("refuses a header naming NO algorithm at all", () => {
     // An absent alg is a mismatch, not a pass: the gate exists so a signature
     // cycle is never spent on a structure whose declared algorithm is unknown.
-    expect(() =>
+    let thrown: { code?: string; data?: unknown; debug?: unknown } = {};
+
+    try {
       assertAlgorithmMatch({
         actual: undefined,
         expected: "ES512",
@@ -36,45 +38,43 @@ describe("assertAlgorithmMatch", () => {
         error: CwsError,
         details:
           "The protected header alg does not match the algorithm of the configured kryptos key.",
-      }),
-    ).toThrow(
-      expect.objectContaining({
-        code: "cws_algorithm_mismatch",
-        data: { algorithm: undefined },
-      }),
-    );
+      });
+    } catch (caught) {
+      thrown = caught as typeof thrown;
+    }
+
+    expect({ code: thrown.code, data: thrown.data, debug: thrown.debug }).toStrictEqual({
+      code: "cws_algorithm_mismatch",
+      data: {},
+      debug: { actual: undefined, expected: "ES512" },
+    });
   });
 
   describe("each wire refuses under its OWN code, title and words", () => {
     test.each([
-      ["jwt", JwtError, JOSE_DETAILS, undefined],
-      ["jws", JwsError, JOSE_DETAILS, undefined],
+      ["jwt", JwtError, JOSE_DETAILS],
+      ["jws", JwsError, JOSE_DETAILS],
       [
         "jwe",
         JweError,
         "The header alg does not match the key-management algorithm of the configured kryptos key.",
-        // ⚠ The JWE wire reports the value under `alg`, not `algorithm`.
-        { alg: "RSA-OAEP" },
       ],
       [
         "cws",
         CwsError,
         "The protected header alg does not match the algorithm of the configured kryptos key.",
-        undefined,
       ],
       [
         "cwt",
         CwtError,
         "The protected header alg does not match the algorithm of the configured kryptos key.",
-        undefined,
       ],
       [
         "cwm",
         CwmError,
         "The protected header alg does not match the algorithm of the configured kryptos key.",
-        undefined,
       ],
-    ] as const)("%s", (format, error, details, data) => {
+    ] as const)("%s", (format, error, details) => {
       let thrown: {
         code?: string;
         title?: string;
@@ -90,7 +90,6 @@ describe("assertAlgorithmMatch", () => {
           format,
           error,
           details,
-          data,
         });
       } catch (caught) {
         thrown = caught as typeof thrown;
@@ -118,9 +117,7 @@ describe("assertAlgorithmMatch", () => {
     ).toThrow(JwsError);
   });
 
-  test("the expected algorithm rides `debug`, never `data`", () => {
-    // `data` is caller-facing and reports what the TOKEN said; what THIS
-    // deployment holds is operator detail and stays in debug.
+  test("neither algorithm rides `data`; the header's and the configured key's ride `debug`", () => {
     expect(() =>
       assertAlgorithmMatch({
         actual: "RS256",
@@ -131,8 +128,8 @@ describe("assertAlgorithmMatch", () => {
       }),
     ).toThrow(
       expect.objectContaining({
-        data: { algorithm: "RS256" },
-        debug: { expected: "ES512" },
+        data: {},
+        debug: { actual: "RS256", expected: "ES512" },
       }),
     );
   });

@@ -212,8 +212,6 @@ export class JweKit implements IJweKit {
       error: JweError,
       algDetails:
         "The header alg does not match the key-management algorithm of the configured kryptos key.",
-      // ⚠ This wire reports the offending value under `alg`, not `algorithm`.
-      algData: { alg: decoded.header.alg },
     });
 
     // Parse to the DOMAIN header for the decryption crypto (algorithm, enc,

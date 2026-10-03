@@ -3,6 +3,8 @@ import { AegisDomainError } from "../../errors/index.js";
 import type {
   Direction,
   InvalidEntry,
+  PolicyRule,
+  ShapeRuleName,
   SignContext,
   TokenFormatTag,
   TokenProfile,
@@ -28,6 +30,12 @@ export type EnforcePolicyInput = {
   /** The keys the mint writer would leave off the wire; verify passes an empty set. */
   unreadable: ReadonlySet<string>;
 };
+
+type FiredRule =
+  | { rule: Exclude<PolicyRule["rule"], "shape"> }
+  | { rule: "shape"; shape: ShapeRuleName };
+
+type FiredEntry = InvalidEntry & FiredRule;
 
 /**
  * THE profile-policy enforcer — one implementation, both directions.
@@ -56,30 +64,34 @@ export const enforcePolicy = ({
   profile,
   unreadable,
 }: EnforcePolicyInput): void => {
-  const invalid: Array<InvalidEntry> = [];
+  const invalid: Array<FiredEntry> = [];
+
+  const record = (entries: ReadonlyArray<InvalidEntry>, fired: FiredRule): void => {
+    for (const entry of entries) invalid.push({ ...entry, ...fired });
+  };
 
   for (const rule of profile.policy) {
     if (!runsIn(rule.on, direction)) continue;
 
     switch (rule.rule) {
       case "required":
-        invalid.push(...requirePresent(claims, rule.claims, unreadable));
+        record(requirePresent(claims, rule.claims, unreadable), { rule: rule.rule });
         break;
 
       case "forbidden":
-        invalid.push(...forbidPresent(claims, rule.claims));
+        record(forbidPresent(claims, rule.claims), { rule: rule.rule });
         break;
 
       case "atLeastOneOf":
-        invalid.push(...atLeastOneOf(claims, rule.claims, unreadable));
+        record(atLeastOneOf(claims, rule.claims, unreadable), { rule: rule.rule });
         break;
 
       case "match":
-        invalid.push(...matchCondition(claims, rule.condition));
+        record(matchCondition(claims, rule.condition), { rule: rule.rule });
         break;
 
       case "shape":
-        invalid.push(...SHAPE_RULES[rule.shape](claims));
+        record(SHAPE_RULES[rule.shape](claims), { rule: rule.rule, shape: rule.shape });
         break;
 
       case "requiredWhen": {
@@ -106,7 +118,7 @@ export const enforcePolicy = ({
           });
         }
 
-        invalid.push(...requiredWhen(claims, context, rule, unreadable));
+        record(requiredWhen(claims, context, rule, unreadable), { rule: rule.rule });
         break;
       }
 
@@ -127,7 +139,13 @@ export const enforcePolicy = ({
   if (invalid.length > 0) {
     throw new AegisDomainError("Invalid token", {
       code: "profile_policy_invalid",
-      data: { direction, invalid, format },
+      // ⚠ `data` reaches the client, so it gets copies without the rule that fired.
+      // pinned: enforce-policy.test.ts#data names each failure by key and message alone, never by the rule that refused it
+      data: {
+        direction,
+        invalid: invalid.map(({ key, message }) => ({ key, message })),
+        format,
+      },
       debug: { direction, invalid, profile: profile.name },
       title: "Profile Policy Invalid",
       details:

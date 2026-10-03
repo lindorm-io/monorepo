@@ -1,4 +1,3 @@
-import type { Dict } from "@lindorm/types";
 import type { AegisError } from "../../errors/index.js";
 import type { TokenFormatTag } from "../../types/index.js";
 
@@ -17,7 +16,6 @@ export const assertAlgorithmMatch = ({
   format,
   error,
   details,
-  data,
 }: {
   /** The algorithm the header names. */
   actual: string | undefined;
@@ -27,18 +25,12 @@ export const assertAlgorithmMatch = ({
   format: TokenFormatTag;
   error: typeof AegisError;
   details: string;
-  /**
-   * The error `data` bag. Defaults to `{ algorithm: actual }`; the JWE kit
-   * overrides it to report the value under `alg`.
-   */
-  data?: Dict;
 }): void => {
   if (actual === expected) return;
 
   throw new error("Invalid token", {
     code: `${format}_algorithm_mismatch`,
-    data: data ?? { algorithm: actual },
-    debug: { expected },
+    debug: { actual, expected },
     title: `${format.toUpperCase()} Algorithm Mismatch`,
     details,
   });

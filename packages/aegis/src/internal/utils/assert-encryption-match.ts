@@ -35,7 +35,7 @@ export const assertEncryptionMatch = ({
 
   throw new error("Unexpected encryption", {
     code: `${format}_encryption_mismatch`,
-    debug: { actual, encryption: expected },
+    debug: { actual, expected },
     title: `${format.toUpperCase()} Encryption Mismatch`,
     details,
   });

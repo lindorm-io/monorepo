@@ -389,6 +389,112 @@ describe("enforcePolicy", () => {
     );
   });
 
+  describe("what the refusal reports", () => {
+    const ONE_PER_RULE: {
+      [R in PolicyRule["rule"]]: Extract<PolicyRule, { rule: R }>;
+    } = {
+      required: { rule: "required", on: ["mint"], claims: ["subject"] },
+      forbidden: { rule: "forbidden", on: ["mint"], claims: ["nonce"] },
+      atLeastOneOf: {
+        rule: "atLeastOneOf",
+        on: ["mint"],
+        claims: ["sessionId", "clientId"],
+      },
+      match: {
+        rule: "match",
+        on: ["mint"],
+        condition: { issuer: { $eq: "https://issuer.test" } },
+      },
+      shape: { rule: "shape", on: ["mint"], shape: "events" },
+      requiredWhen: {
+        rule: "requiredWhen",
+        on: ["mint"],
+        needs: ["accessTokenIssued"],
+        claim: "accessTokenHash",
+        when: (_claims, context) => context.accessTokenIssued === true,
+      },
+    };
+
+    const refusalOf = (): AegisDomainError => {
+      try {
+        run(
+          Object.values(ONE_PER_RULE),
+          { nonce: "n", issuer: "https://other.test", events: "not-an-object" },
+          "mint",
+          { accessTokenIssued: true },
+        );
+      } catch (error) {
+        return error as AegisDomainError;
+      }
+
+      throw new Error("expected the enforcer to refuse");
+    };
+
+    test("data names each failure by key and message alone, never by the rule that refused it", () => {
+      expect(refusalOf().data).toStrictEqual({
+        direction: "mint",
+        format: "jwt",
+        invalid: [
+          { key: "subject", message: 'Required claim "subject" is missing' },
+          { key: "nonce", message: 'Forbidden claim "nonce" is present' },
+          {
+            key: "sessionId|clientId",
+            message: "At least one of [sessionId, clientId] is required",
+          },
+          {
+            key: "issuer",
+            message: 'Claim "issuer" did not satisfy the profile rule predicate',
+          },
+          { key: "events", message: "events must be an object" },
+          {
+            key: "accessTokenHash",
+            message: 'Conditionally required claim "accessTokenHash" is missing',
+          },
+        ],
+      });
+    });
+
+    test("debug names the rule that refused each failure, and a shape rule's validator", () => {
+      expect(refusalOf().debug).toStrictEqual({
+        direction: "mint",
+        profile: "test_profile",
+        invalid: [
+          {
+            key: "subject",
+            message: 'Required claim "subject" is missing',
+            rule: "required",
+          },
+          {
+            key: "nonce",
+            message: 'Forbidden claim "nonce" is present',
+            rule: "forbidden",
+          },
+          {
+            key: "sessionId|clientId",
+            message: "At least one of [sessionId, clientId] is required",
+            rule: "atLeastOneOf",
+          },
+          {
+            key: "issuer",
+            message: 'Claim "issuer" did not satisfy the profile rule predicate',
+            rule: "match",
+          },
+          {
+            key: "events",
+            message: "events must be an object",
+            rule: "shape",
+            shape: "events",
+          },
+          {
+            key: "accessTokenHash",
+            message: 'Conditionally required claim "accessTokenHash" is missing',
+            rule: "requiredWhen",
+          },
+        ],
+      });
+    });
+  });
+
   test("an empty policy accepts anything", () => {
     expect(() => run([], {}, "mint")).not.toThrow();
     expect(() => run([], {}, "verify")).not.toThrow();

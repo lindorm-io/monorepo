@@ -692,6 +692,7 @@ describe("JweKit", () => {
         code?: string;
         title?: string;
         details?: string;
+        data?: unknown;
         debug?: unknown;
       } = {};
 
@@ -706,7 +707,8 @@ describe("JweKit", () => {
       expect(thrown.details).toBe(
         "The header enc does not match the content-encryption algorithm this kit is configured to accept.",
       );
-      expect(thrown.debug).toEqual({ actual: "A128GCM", encryption: "A256GCM" });
+      expect(thrown.data).toEqual({});
+      expect(thrown.debug).toEqual({ actual: "A128GCM", expected: "A256GCM" });
     });
 
     // The CONTRAST: the configured enc gets PAST this gate and dies on the junk
@@ -720,12 +722,8 @@ describe("JweKit", () => {
       ).not.toBe("jwe_encryption_mismatch");
     });
 
-    test("⚠ an algorithm mismatch reports the offending value under `alg`", () => {
-      // This wire answers with `data: { alg }`; JWT/JWS/CWT answer with
-      // `data: { algorithm }`. The difference is a deliberate override at the
-      // call site, and `data` is a consumer-facing contract — so the key is
-      // asserted exactly, not merely its value.
-      let thrown: { code?: string; data?: unknown } = {};
+    test("an algorithm mismatch reports no data, and the header's and the key's algorithm in debug", () => {
+      let thrown: { code?: string; data?: unknown; debug?: unknown } = {};
 
       try {
         kwKit.decrypt(craftJwe({ alg: "A128KW", enc: "A256GCM", typ: "JWE" }));
@@ -734,7 +732,8 @@ describe("JweKit", () => {
       }
 
       expect(thrown.code).toBe("jwe_algorithm_mismatch");
-      expect(thrown.data).toEqual({ alg: "A128KW" });
+      expect(thrown.data).toEqual({});
+      expect(thrown.debug).toEqual({ actual: "A128KW", expected: "A256KW" });
     });
   });
 

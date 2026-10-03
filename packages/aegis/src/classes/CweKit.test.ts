@@ -102,13 +102,15 @@ describe("CweKit (COSE_Encrypt0)", () => {
         code: (thrown as CweError).code,
         title: (thrown as CweError).title,
         details: (thrown as CweError).details,
+        data: (thrown as CweError).data,
         debug: (thrown as CweError).debug,
       }).toEqual({
         code: "cwe_encryption_mismatch",
         title: "CWE Encryption Mismatch",
         details:
           "The protected header's content-encryption label does not match the content-encryption algorithm this kit is configured to accept.",
-        debug: { actual: "A128CBC-HS256", encryption: "A256GCM" },
+        data: {},
+        debug: { actual: "A128CBC-HS256", expected: "A256GCM" },
       });
     });
 

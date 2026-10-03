@@ -240,6 +240,7 @@ describe("CwmKit — the algorithm-match gate answers under the cwm tag", () => 
     expect(thrown).toBeInstanceOf(CwmError);
     expect(thrown?.code).toBe("cwm_algorithm_mismatch");
     expect(thrown?.title).toBe("CWM Algorithm Mismatch");
-    expect(thrown?.data).toEqual({ algorithm: "HS256" });
+    expect(thrown?.data).toEqual({});
+    expect(thrown?.debug).toEqual({ actual: "HS256", expected: "HS512" });
   });
 });

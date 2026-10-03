@@ -31,7 +31,6 @@ export const assertProtectedHeaderGates = ({
   format,
   error,
   algDetails,
-  algData,
 }: {
   protectedHeader: { crit?: unknown; alg?: unknown } & Dict;
   /**
@@ -56,11 +55,6 @@ export const assertProtectedHeaderGates = ({
    * header's. The three are different facts, so they keep different wording.
    */
   algDetails: string;
-  /**
-   * The algorithm refusal's `data` bag. Defaults to `{ algorithm: actual }`; the
-   * JWE wire overrides it to report the value under `alg`.
-   */
-  algData?: Dict;
 }): void => {
   rejectUnknownCritical({ header: protectedHeader, custom, declared, format, error });
 
@@ -70,6 +64,5 @@ export const assertProtectedHeaderGates = ({
     format,
     error,
     details: algDetails,
-    data: algData,
   });
 };

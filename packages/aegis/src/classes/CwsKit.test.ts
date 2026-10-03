@@ -231,7 +231,7 @@ describe("CwsKit — ML-DSA is official COSE (RFC 9964)", () => {
 describe("CwsKit — the algorithm-match gate answers under the cws tag", () => {
   test("refuses a structure whose protected alg is not the configured key's", () => {
     // The gate runs BEFORE the signature cycle, so two unrelated keys suffice —
-    // the point is the reported algorithm, not a forged signature.
+    // the point is the gate's refusal, not a forged signature.
     const signer = new CwsKit({
       kryptos: KryptosKit.generate.sig.ec({ algorithm: "ES256" }),
       logger: createMockLogger(),
@@ -254,7 +254,8 @@ describe("CwsKit — the algorithm-match gate answers under the cws tag", () => 
     expect(thrown).toBeInstanceOf(CwsError);
     expect(thrown?.code).toBe("cws_algorithm_mismatch");
     expect(thrown?.title).toBe("CWS Algorithm Mismatch");
-    expect(thrown?.data).toEqual({ algorithm: "ES256" });
+    expect(thrown?.data).toEqual({});
+    expect(thrown?.debug).toEqual({ actual: "ES256", expected: "ES512" });
   });
 });
 

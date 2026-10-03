@@ -1074,6 +1074,7 @@ describe("JwtKit — the algorithm-match gate answers under the jwt tag", () => 
     expect(thrown).toBeInstanceOf(JwtError);
     expect(thrown?.code).toBe("jwt_algorithm_mismatch");
     expect(thrown?.title).toBe("JWT Algorithm Mismatch");
-    expect(thrown?.data).toEqual({ algorithm: "ES256" });
+    expect(thrown?.data).toEqual({});
+    expect(thrown?.debug).toEqual({ actual: "ES256", expected: "ES512" });
   });
 });

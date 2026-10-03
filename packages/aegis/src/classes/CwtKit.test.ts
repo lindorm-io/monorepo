@@ -501,7 +501,8 @@ describe("CwtKit — the algorithm-match gate answers under the cwt tag", () => 
     expect(thrown).toBeInstanceOf(CwtError);
     expect(thrown?.code).toBe("cwt_algorithm_mismatch");
     expect(thrown?.title).toBe("CWT Algorithm Mismatch");
-    expect(thrown?.data).toEqual({ algorithm: "ES256" });
+    expect(thrown?.data).toEqual({});
+    expect(thrown?.debug).toEqual({ actual: "ES256", expected: "ES512" });
   });
 });
 
