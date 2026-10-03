@@ -19,9 +19,12 @@ describe("meta-suite: no decorator lowering", () => {
     tests = result.summary.tests;
   }, 180_000);
 
-  test("should refuse by naming the surviving decorator instead of letting a bare SyntaxError escape", () => {
+  test("should refuse with a GherkinError naming the surviving decorator instead of letting a bare SyntaxError escape", () => {
     expect(output).toContain(
       "Step module steps/no-lowering.steps.ts still carries a stage-3 decorator after the transform pipeline ran.",
+    );
+    expect(output).toContain(
+      "GherkinError: Step module steps/no-lowering.steps.ts still carries a stage-3 decorator",
     );
     expect(output).not.toContain("SyntaxError: Invalid or unexpected token");
   });

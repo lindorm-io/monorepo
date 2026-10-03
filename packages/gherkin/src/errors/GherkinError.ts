@@ -12,9 +12,10 @@ export class GherkinError extends Error {
   readonly code: string;
   readonly data: Dict;
   readonly details: string | null;
+  readonly file: string | null;
   /**
-   * The file, under the name vitest's error printer reads: it renders `err.id`
-   * as `File:`, so a field named `file` would never be printed. Pinned by
+   * The same value as `file`, under the name vitest prints as `File:` for a
+   * transform-hook throw. Pinned by
    * src/internal/plugin/assert-step-module-lowered.test.ts and
    * src/e2e/meta-no-lowering.test.ts.
    */
@@ -27,6 +28,7 @@ export class GherkinError extends Error {
     this.code = options.code;
     this.data = options.data ?? {};
     this.details = options.details ?? null;
-    this.id = options.file ?? null;
+    this.file = options.file ?? null;
+    this.id = this.file;
   }
 }

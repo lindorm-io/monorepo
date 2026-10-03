@@ -15,13 +15,14 @@ describe("GherkinError", () => {
     );
   });
 
-  test("should carry exactly code, data, details, id, message, name and stack", () => {
+  test("should carry exactly code, data, details, file, id, message, name and stack", () => {
     const error = new GherkinError("message", { code: "scope_violation" });
 
     expect(Object.getOwnPropertyNames(error).sort()).toEqual([
       "code",
       "data",
       "details",
+      "file",
       "id",
       "message",
       "name",
@@ -29,18 +30,19 @@ describe("GherkinError", () => {
     ]);
   });
 
-  test("should carry code, data, details and the file as id", () => {
+  test("should carry code, data, details and the file as both file and id", () => {
     const error = new GherkinError("message", {
       code: "custom_code",
       data: { value: "data" },
       details: "details",
-      file: "src/greeting.steps.ts",
+      file: "steps/a.steps.ts",
     });
 
     expect({
       code: error.code,
       data: error.data,
       details: error.details,
+      file: error.file,
       id: error.id,
       message: error.message,
     }).toMatchSnapshot();
@@ -54,8 +56,11 @@ describe("GherkinError", () => {
     expect(new GherkinError("message", { code: "scope_violation" }).details).toBeNull();
   });
 
-  test("should default id to null", () => {
-    expect(new GherkinError("message", { code: "scope_violation" }).id).toBeNull();
+  test("should default file and id to null when no file is given", () => {
+    const error = new GherkinError("message", { code: "scope_violation" });
+
+    expect(error.file).toBeNull();
+    expect(error.id).toBeNull();
   });
 
   test("should retain the wrapped error as the ES cause", () => {

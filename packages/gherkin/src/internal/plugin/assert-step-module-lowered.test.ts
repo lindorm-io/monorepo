@@ -104,7 +104,7 @@ describe("assertStepModuleLowered", () => {
       expect(error.code).toBe("step_module_not_lowered");
     });
 
-    test("should name the step module and carry it as the id vitest prints as File", () => {
+    test("should name the step module and carry it as file and as the id vitest prints as File", () => {
       const error = capture(() =>
         assertStepModuleLowered({
           code: '@Binding() export class GreetingSteps { @Given("a step") step() {} }',
@@ -114,6 +114,7 @@ describe("assertStepModuleLowered", () => {
 
       expect(error.message).toContain(URI);
       expect(error.data).toEqual({ uri: URI });
+      expect(error.file).toBe(URI);
       expect(error.id).toBe(URI);
     });
   });
@@ -135,7 +136,7 @@ describe("assertStepModuleLowered", () => {
       expect(errorShape(error)).toMatchSnapshot();
     });
 
-    test("should keep the parser's own message as the cause and carry the uri as the id", () => {
+    test("should keep the parser's own message as the cause and carry the uri as file and id", () => {
       const error = capture(() =>
         assertStepModuleLowered({
           code: "export const greeting: string = 'hello';\n",
@@ -145,6 +146,7 @@ describe("assertStepModuleLowered", () => {
 
       expect(error.code).toBe("step_module_not_compiled");
       expect((error.cause as Error).message).toContain("Parse failed");
+      expect(error.file).toBe(URI);
       expect(error.id).toBe(URI);
     });
   });
