@@ -109,7 +109,7 @@ const labelled = (jose: string, label: number, cose = jose): Record<Wire, WireKe
  * The two representative NumericDate samples, split by {@link ClaimSpec.temporal}.
  *
  * ⚠ ONE sample cannot serve both marks. A `temporal: "past"` claim must not be in
- * the future and a `temporal: "future"` claim must not be in the past
+ * the future and a `temporal: "future"` claim must be in the future
  * (`jwt-temporal-matchers.ts`), so one instant given to both leaves at least one
  * unverifiable at any clock — and a consumer of these samples has to be able to
  * build a token that VERIFIES, or the column proves nothing.

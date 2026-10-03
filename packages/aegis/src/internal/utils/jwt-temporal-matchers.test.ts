@@ -91,7 +91,7 @@ describe("temporal matchers — wire and domain namespaces", () => {
     const domain = createDomainTemporalMatchers({ clockTolerance: 0, currentDate: NOW });
 
     expect(domain.expiresAt).toEqual({
-      $or: [{ $exists: false }, { $gte: NOW }],
+      $or: [{ $exists: false }, { $gt: NOW }],
     });
   });
 });

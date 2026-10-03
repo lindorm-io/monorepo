@@ -257,9 +257,8 @@ describe("Aegis — per-spec matrix", () => {
 
   // Every claim sample must be USABLE, and a NumericDate sample is usable only
   // relative to the clock a token is verified at. `temporal: "past"` must not be
-  // in the future and `temporal: "future"` must not be in the past, so ONE
-  // instant cannot serve both marks — which is what the registry had, two years
-  // ahead of any plausible verification, refusing every `iat` sample on sight.
+  // in the future and `temporal: "future"` must be in the future, so ONE instant
+  // cannot serve both marks.
   test("should keep every past-temporal sample behind every future-temporal one", () => {
     const at = (temporal: "past" | "future"): ReadonlyArray<number> =>
       CLAIM_SPECS.filter((spec) => spec.temporal === temporal).map((spec) =>

@@ -18,7 +18,7 @@ const TEMPORAL_SPECS = claimsWith("temporal");
  * The clock-tolerant range bound for a temporal direction (exhaustive; an
  * unhandled direction is a registry/matcher drift and throws). A `"past"` claim
  * (iat/nbf/auth_time) must not be in the future — `value <= now + tolerance`; a
- * `"future"` claim (exp) must not be in the past — `value >= now - tolerance`.
+ * `"future"` claim (exp) must be in the future — `value > now - tolerance`.
  * `now` is the effective clock — the caller's `currentDate` override or the
  * real wall-clock when none is supplied.
  */
@@ -31,7 +31,7 @@ const temporalBound = (
     case "past":
       return { $lte: addSeconds(now, clockTolerance) };
     case "future":
-      return { $gte: subSeconds(now, clockTolerance) };
+      return { $gt: subSeconds(now, clockTolerance) };
     default: {
       const exhaustive: never = direction;
       throw new AegisError("Unhandled temporal direction", {

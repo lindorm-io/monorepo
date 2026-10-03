@@ -41,9 +41,10 @@ export type VerifyOptions = {
   actor?: VerifyActorOptions;
   /**
    * Widen the temporal range checks by this many seconds in BOTH directions, to
-   * absorb clock skew between the issuer and this verifier: a `"past"` claim
-   * (`iat`/`nbf`/`auth_time`) may sit this far in the future, a `"future"` claim
-   * (`exp`) this far in the past. Overrides the deployment-wide
+   * absorb clock skew between the issuer and this verifier: `nbf` — and, by
+   * aegis policy, `iat` and `auth_time` — may sit up to this far in the future;
+   * `exp` must lie less than this far in the past, so an `exp` exactly this far
+   * in the past is refused. Overrides the deployment-wide
    * `AegisSettings.clockTolerance` (default `0`) for this call only.
    */
   clockTolerance?: number;

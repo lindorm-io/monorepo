@@ -311,6 +311,29 @@ Feature: The static claim matcher
       Then the claims are refused as a domain error "claims_invalid"
       And the refusal lists the invalid claims "expiresAt"
 
+  Rule: a claim set is refused at the instant it expires
+
+    `exp` is the instant on or after which a token must not be accepted for
+    processing (RFC 7519 §4.1.4), so the instant itself already lies outside
+    the window. With no leeway the expiry and the judging instant are the
+    same, the one instant where the window could disagree with the
+    hand-rolled `exp > now` it retires.
+
+    Background:
+      Given the claims to check
+        | subject | "user-1" |
+      And the claims expire at "2024-01-01T08:00:00.000Z"
+      And the verifier asserts
+        """json
+        { "subject": "user-1" }
+        """
+      And the verifier allows a clock tolerance of 0 seconds
+
+    Scenario: the claim set whose expiry is the judging instant is refused under the expiry claim
+      When I check the claims without a signature
+      Then the claims are refused as a domain error "claims_invalid"
+      And the refusal lists the invalid claims "expiresAt"
+
   Rule: a claim set carrying no expiry passes the temporal window
 
     `exp` is OPTIONAL (RFC 7519 §4.1.4), and a whole class of conformant

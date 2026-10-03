@@ -169,7 +169,7 @@ export type ClaimSpec<D = unknown> = ParamSpec<D, ClaimCodec, WhenEmpty> & {
    * matcher set. ⚠ NOT every `date` claim: `updatedAt` is a date but a profile
    * timestamp, not validation-temporal, so it carries no mark.
    *   - `"past"`    must not be in the future (value <= now + tolerance).
-   *   - `"future"`  must not be in the past (value >= now - tolerance).
+   *   - `"future"`  must be in the future (value > now - tolerance).
    */
   temporal?: "past" | "future";
   /**

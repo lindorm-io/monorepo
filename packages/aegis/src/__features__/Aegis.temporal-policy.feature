@@ -4,8 +4,9 @@ Feature: The temporal policy a verify applies
   whether the issuer stated one (presence, a domain policy) and whether it
   has run out (range, the wire kit's temporal predicate with the leeway the
   caller or the deployment allows). Each verify option waives exactly the
-  check it names, a leeway is an inclusive width in seconds and not a switch,
-  and a deployment-wide leeway reaches every call that states none. A range
+  check it names, a leeway is a width in seconds and not a switch — a token
+  is live while the clock is before its expiry plus the leeway — and a
+  deployment-wide leeway reaches every call that states none. A range
   refusal is the wire kit's own, so it carries that wire's leaf class; a
   presence refusal is the domain's, under one wire-neutral code. Both
   questions are asked of a NumericDate, a number of seconds since the epoch:
@@ -201,17 +202,90 @@ Feature: The temporal policy a verify applies
         | jose | JWT    | jwt_claims_invalid |
         | cose | CWT    | cwt_claims_invalid |
 
-  Rule: a profiled verify accepts a token that expired exactly as long ago as the leeway the caller allows
+  Rule: a token is refused at the instant it expires
+
+    `exp` is the instant on or after which a token must not be accepted, so
+    the current time must be before it (RFC 7519 §4.1.4). With no leeway the
+    clock and the expiry are the same instant here, which is the one instant
+    that tells a strict comparison from an inclusive one. A third party signs
+    the token, so its expiry reaches the verifier exactly as written. The
+    refusal is the wire kit's own, under that wire's code, and names the
+    claim. The cose scenario carries no tag: the processing rule is the JWT
+    document's, and RFC 8392 §3.1.4 gives the CWT expiry claim the same
+    processing rules by reference to it.
+
+    Background:
+      Given the wire claims
+        | iss | "https://test.lindorm.io/" |
+        | sub | "user-1"                   |
+        | aud | ["https://rs.lindorm.io/"] |
+        | jti | "token-1"                  |
+      And the wire claims were issued at "2024-01-01T07:00:00.000Z"
+      And the wire claims expire at "2024-01-01T08:00:00.000Z"
+      And the verifier allows a clock tolerance of 0 seconds
+
+    @RFC-7519
+    Scenario: jose: the token is refused at the instant it expires (RFC-7519 §4.1.4)
+      When a third party signs the wire claims on the jose wire, typed "JWT"
+      And I verify the token
+      Then verification is refused as a JWT error "jwt_claims_invalid"
+      And the refusal lists the invalid claims "exp"
+
+    Scenario: cose: the token is refused at the instant it expires
+      When a third party signs the wire claims on the cose wire, typed "application/cwt"
+      And I verify the token
+      Then verification is refused as a CWT error "cwt_claims_invalid"
+      And the refusal lists the invalid claims "exp"
+
+  Rule: a profiled verify accepts a token that expired one second inside the leeway the caller allows
 
     A small leeway for clock skew is allowed when checking `exp`
     (RFC 7519 §4.1.4). The profiled call and the profile-less one are separate
     forwards of the same bag, so a leeway honoured by one and dropped by the
     other would make the identical token verify or fail depending only on
-    whether the caller named a profile. The token sits on the boundary rather
-    than comfortably inside it, so the allowance is stated as an inclusive
-    width. The cose scenario carries no tag: the leeway is the JWT document's,
-    and RFC 8392 §3.1.4 gives the CWT expiry claim the same processing rules
-    by reference to it.
+    whether the caller named a profile. A token is accepted while the clock is
+    before its expiry plus the leeway, and this one sits one second inside
+    that bound rather than comfortably within it, so the window is shown to
+    reach as far as the caller asked. The cose scenario carries no tag: the
+    leeway is the JWT document's, and RFC 8392 §3.1.4 gives the CWT expiry
+    claim the same processing rules by reference to it.
+
+    Background:
+      Given the wire claims
+        | iss | "https://test.lindorm.io/" |
+        | sub | "user-1"                   |
+        | aud | ["https://rs.lindorm.io/"] |
+        | jti | "token-1"                  |
+      And the wire claims were issued at "2024-01-01T07:00:00.000Z"
+      And the wire claims expire at "2024-01-01T07:59:56.000Z"
+      And the verifier allows a clock tolerance of 5 seconds
+
+    @RFC-7519
+    Scenario: jose: the token one second inside the leeway verifies under the profile (RFC-7519 §4.1.4)
+      When I sign the wire claims as a claims token on the jose wire
+      And I verify the token under the "default" profile as the audience "https://rs.lindorm.io/"
+      Then the verified token is a "jwt"
+
+    Scenario: cose: the token one second inside the leeway verifies under the profile
+      When I sign the wire claims as a claims token on the cose wire
+      And I verify the token under the "default" profile as the audience "https://rs.lindorm.io/"
+      Then the verified token is a "cwt"
+
+  Rule: a verify refuses a token that expired exactly as long ago as the leeway the caller allows
+
+    The leeway allowed for clock skew is a bounded allowance and not a
+    suspension of the expiry check (RFC 7519 §4.1.4). The current time must
+    be before the expiry, and the leeway moves that instant without changing
+    the comparison, so a token that expired exactly the leeway ago is outside
+    the window. The magnitude is the rule: a leeway applied in a unit other
+    than the one the caller stated, or scaled on the way in, still accepts
+    every token an honest one would and is invisible to any test that only
+    widens the window. This rule and its accepting twin sit one second apart
+    around the same stated tolerance, so the window has exactly the width the
+    caller asked for. The refusal is the wire kit's temporal predicate, so it
+    carries that wire's leaf class. The cose scenario carries no tag: the
+    leeway is the JWT document's, and RFC 8392 §3.1.4 gives the CWT expiry
+    claim the same processing rules by reference to it.
 
     Background:
       Given the wire claims
@@ -224,47 +298,12 @@ Feature: The temporal policy a verify applies
       And the verifier allows a clock tolerance of 5 seconds
 
     @RFC-7519
-    Scenario: jose: the token on the leeway's boundary verifies under the profile (RFC-7519 §4.1.4)
-      When I sign the wire claims as a claims token on the jose wire
-      And I verify the token under the "default" profile as the audience "https://rs.lindorm.io/"
-      Then the verified token is a "jwt"
-
-    Scenario: cose: the token on the leeway's boundary verifies under the profile
-      When I sign the wire claims as a claims token on the cose wire
-      And I verify the token under the "default" profile as the audience "https://rs.lindorm.io/"
-      Then the verified token is a "cwt"
-
-  Rule: a verify refuses a token that expired one second beyond the leeway the caller allows
-
-    The leeway allowed for clock skew is a bounded allowance and not a
-    suspension of the expiry check (RFC 7519 §4.1.4). The magnitude is the
-    rule: a leeway applied in a unit other than the one the caller stated, or
-    scaled on the way in, still accepts every token an honest one would and is
-    invisible to any test that only widens the window. This rule and its
-    accepting twin sit one second apart around the same stated tolerance, so
-    the window has exactly the width the caller asked for. The refusal is the
-    wire kit's temporal predicate, so it carries that wire's leaf class. The
-    cose scenario carries no tag: the leeway is the JWT document's, and
-    RFC 8392 §3.1.4 gives the CWT expiry claim the same processing rules by
-    reference to it.
-
-    Background:
-      Given the wire claims
-        | iss | "https://test.lindorm.io/" |
-        | sub | "user-1"                   |
-        | aud | ["https://rs.lindorm.io/"] |
-        | jti | "token-1"                  |
-      And the wire claims were issued at "2024-01-01T07:00:00.000Z"
-      And the wire claims expire at "2024-01-01T07:59:54.000Z"
-      And the verifier allows a clock tolerance of 5 seconds
-
-    @RFC-7519
-    Scenario: jose: the token one second past the leeway is refused as the wire kit's own error (RFC-7519 §4.1.4)
+    Scenario: jose: the token expired exactly the leeway ago is refused as the wire kit's own error (RFC-7519 §4.1.4)
       When I sign the wire claims as a claims token on the jose wire
       And I verify the token under the "default" profile as the audience "https://rs.lindorm.io/"
       Then verification is refused as a JWT error "jwt_claims_invalid"
 
-    Scenario: cose: the token one second past the leeway is refused as the wire kit's own error
+    Scenario: cose: the token expired exactly the leeway ago is refused as the wire kit's own error
       When I sign the wire claims as a claims token on the cose wire
       And I verify the token under the "default" profile as the audience "https://rs.lindorm.io/"
       Then verification is refused as a CWT error "cwt_claims_invalid"
@@ -287,9 +326,9 @@ Feature: The temporal policy a verify applies
         | aud | ["https://rs.lindorm.io/"] |
         | jti | "token-1"                  |
       And the wire claims were issued at "2024-01-01T07:00:00.000Z"
-      And the wire claims expire at "2024-01-01T07:59:55.000Z"
+      And the wire claims expire at "2024-01-01T07:59:56.000Z"
 
-    Scenario Outline: <wire>: the token on the deployment's boundary verifies
+    Scenario Outline: <wire>: the token one second inside the deployment's leeway verifies
       When I sign the wire claims as a claims token on the <wire> wire
       And I verify the token
       Then the verified token is a "<format>"
@@ -299,7 +338,7 @@ Feature: The temporal policy a verify applies
         | jose | jwt    |
         | cose | cwt    |
 
-  Rule: a deployment configured with a clock tolerance refuses a token that expired one second beyond it
+  Rule: a deployment configured with a clock tolerance refuses a token that expired exactly that long ago
 
     A deployment-wide allowance is a width, not a switch, and the width is the
     whole safety property: an operator who configures a minute of skew has
@@ -318,9 +357,9 @@ Feature: The temporal policy a verify applies
         | aud | ["https://rs.lindorm.io/"] |
         | jti | "token-1"                  |
       And the wire claims were issued at "2024-01-01T07:00:00.000Z"
-      And the wire claims expire at "2024-01-01T07:59:54.000Z"
+      And the wire claims expire at "2024-01-01T07:59:55.000Z"
 
-    Scenario Outline: <wire>: the token one second past the deployment's boundary is refused as the wire kit's own error
+    Scenario Outline: <wire>: the token expired exactly the deployment's leeway ago is refused as the wire kit's own error
       When I sign the wire claims as a claims token on the <wire> wire
       And I verify the token
       Then verification is refused as a <family> error "<code>"
