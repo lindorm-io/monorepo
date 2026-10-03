@@ -457,7 +457,16 @@ describe("CweKit (COSE_Encrypt0) — AES-CCM", () => {
     tampered[0] ^= 0xff;
     arr[2] = tampered;
 
-    expect(() => kit.decrypt(encodeCbor(encrypt0))).toThrow();
+    let thrown: unknown;
+
+    try {
+      kit.decrypt(encodeCbor(encrypt0));
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(AesError);
+    expect((thrown as AesError).code).toBe("decryption_failed");
   });
 });
 
@@ -669,8 +678,8 @@ describe("CweKit — a COSE_Encrypt0 whose unprotected bucket is not a map", () 
 //
 // ⚠ The AEAD VERDICT is deliberately NOT in that contract: a ciphertext of legal
 // length that fails to authenticate answers `AesError decryption_failed`, pinned
-// by "rejects tampered ciphertext" above. This describe covers only what is
-// refused before the AEAD runs.
+// by "rejects tampered ciphertext" and "rejects a tampered CCM ciphertext" above.
+// This describe covers only what is refused before the AEAD runs.
 describe("CweKit — a slot holding something other than a byte string", () => {
   const kryptos = KryptosKit.generate.enc.oct({
     algorithm: "dir",
