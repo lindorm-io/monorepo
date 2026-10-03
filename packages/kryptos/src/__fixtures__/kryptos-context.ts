@@ -8,4 +8,5 @@ export class KryptosContext {
   ca!: IKryptos;
   root!: IKryptos;
   serialised!: string;
+  caught: unknown;
 }

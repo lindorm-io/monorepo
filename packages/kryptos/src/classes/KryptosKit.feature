@@ -3,7 +3,8 @@ Feature: Kryptos key facade
   Rule: every JOSE algorithm mints a key of its type
 
     Scenario Outline: <algorithm> mints an asymmetric <type> signing key
-      When I generate a signing key of type "<type>" with algorithm "<algorithm>"
+      Given the algorithm "<algorithm>"
+      When I generate a signing key of type "<type>" with it
       Then the key has type "<type>" and use "sig"
       And the key's algorithm is "<algorithm>"
       And the key's curve is <curve>
@@ -26,7 +27,8 @@ Feature: Kryptos key facade
         | RSA  | PS512     | null      |
 
     Scenario Outline: <algorithm> mints a symmetric signing key
-      When I generate a signing key of type "oct" with algorithm "<algorithm>"
+      Given the algorithm "<algorithm>"
+      When I generate a signing key of type "oct" with it
       Then the key has type "oct" and use "sig"
       And the key's algorithm is "<algorithm>"
       And the key's curve is null
@@ -39,7 +41,8 @@ Feature: Kryptos key facade
         | HS512     |
 
     Scenario Outline: <algorithm> mints an asymmetric <type> encryption key
-      When I generate an encryption key of type "<type>" with algorithm "<algorithm>"
+      Given the algorithm "<algorithm>"
+      When I generate an encryption key of type "<type>" with it
       Then the key has type "<type>" and use "enc"
       And the key's algorithm is "<algorithm>"
       And the key's curve is <curve>
@@ -67,7 +70,8 @@ Feature: Kryptos key facade
         | RSA  | RSA-OAEP-512      | null     |
 
     Scenario Outline: <algorithm> mints a symmetric encryption key
-      When I generate an encryption key of type "oct" with algorithm "<algorithm>"
+      Given the algorithm "<algorithm>"
+      When I generate an encryption key of type "oct" with it
       Then the key has type "oct" and use "enc"
       And the key's algorithm is "<algorithm>"
       And the key's curve is null
@@ -87,7 +91,8 @@ Feature: Kryptos key facade
         | PBES2-HS512+A256KW |
 
     Scenario Outline: <curve> is honoured when an OKP key asks for it
-      When I generate a "<use>" key of type "OKP" with algorithm "<algorithm>" on curve "<curve>"
+      Given the algorithm "<algorithm>" on curve "<curve>"
+      When I generate a "<use>" key of type "OKP" with it
       Then the key's curve is "<curve>"
       And the key's algorithm is "<algorithm>"
 
@@ -98,7 +103,8 @@ Feature: Kryptos key facade
         | enc | ECDH-ES+A256KW | X25519  |
 
     Scenario Outline: <algorithm> resolves to type <type> automatically
-      When I generate a key automatically for algorithm "<algorithm>"
+      Given the algorithm "<algorithm>"
+      When I generate a key automatically for it
       Then the key has type "<type>" and use "<use>"
       And the key's curve is <curve>
       And the key's encryption is <encryption>
@@ -145,7 +151,8 @@ Feature: Kryptos key facade
         | RSA-OAEP-512       | RSA  | enc | null      | "A256GCM"  |
 
     Scenario Outline: <algorithm> mints the same <type> key asynchronously
-      When I asynchronously generate a signing key of type "<type>" with algorithm "<algorithm>"
+      Given the algorithm "<algorithm>"
+      When I asynchronously generate a signing key of type "<type>" with it
       Then the key has type "<type>" and use "sig"
       And the key's algorithm is "<algorithm>"
       And the key's curve is <curve>
@@ -159,7 +166,8 @@ Feature: Kryptos key facade
         | RSA  | RS256     | null      |
 
     Scenario Outline: <algorithm> mints the same <type> encryption key asynchronously
-      When I asynchronously generate an encryption key of type "<type>" with algorithm "<algorithm>"
+      Given the algorithm "<algorithm>"
+      When I asynchronously generate an encryption key of type "<type>" with it
       Then the key has type "<type>" and use "enc"
       And the key's algorithm is "<algorithm>"
       And the key's curve is <curve>
@@ -173,7 +181,8 @@ Feature: Kryptos key facade
         | RSA  | RSA-OAEP-256 | null     |
 
     Example: automatic generation resolves the type asynchronously too
-      When I asynchronously generate a key automatically for algorithm "ECDH-ES"
+      Given the algorithm "ECDH-ES"
+      When I asynchronously generate a key automatically for it
       Then the key has type "OKP" and use "enc"
       And the key's curve is "X25519"
       And the key's encryption is "A256GCM"
@@ -181,19 +190,23 @@ Feature: Kryptos key facade
   Rule: generation applies documented defaults
 
     Example: a key expires 25 years after it becomes valid
-      When I generate an "ES256" key valid from "2026-01-01T00:00:00.000Z"
+      Given the generation options
+        | notBefore | 2026-01-01T00:00:00.000Z |
+      When I generate an "ES256" key with those options
       Then the key expires at "2051-01-01T00:00:00.000Z"
 
     Example: an encryption key without a content encryption takes A256GCM
-      When I generate an encryption key of type "oct" with algorithm "A256KW"
+      Given the algorithm "A256KW"
+      When I generate an encryption key of type "oct" with it
       Then the key's encryption is "A256GCM"
 
     Example: a signing key carries no content encryption
-      When I generate a signing key of type "EC" with algorithm "ES256"
+      Given the algorithm "ES256"
+      When I generate a signing key of type "EC" with it
       Then the key's encryption is null
 
     Example: every explicit option is carried on the key
-      When I generate an "A256KW" key with the options
+      Given the generation options
         | id         | key_explicit0000          |
         | createdAt  | 2025-12-31T00:00:00.000Z  |
         | notBefore  | 2026-01-01T00:00:00.000Z  |
@@ -204,21 +217,30 @@ Feature: Kryptos key facade
         | purpose    | kek                       |
         | encryption | A128GCM                   |
         | publish    | true                      |
+      When I generate an "A256KW" key with those options
       Then the key carries those options
 
   Rule: a key refuses an algorithm it cannot carry
 
     Example: an EC key refuses an algorithm without an EC curve
-      Then generating an EC signing key with the algorithm "RS256" is refused as "unsupported_ec_curve"
+      Given the algorithm "RS256"
+      When I try to generate an EC signing key with it
+      Then it is refused as "unsupported_ec_curve"
 
     Example: an AKP key refuses an algorithm that is not ML-DSA
-      Then generating an AKP signing key with the algorithm "ES256" is refused as "unsupported_akp_algorithm"
+      Given the algorithm "ES256"
+      When I try to generate an AKP signing key with it
+      Then it is refused as "unsupported_akp_algorithm"
 
     Example: automatic generation refuses an unknown algorithm
-      Then generating a key automatically for the unknown algorithm "XS256" is refused as "unsupported_algorithm"
+      Given the unknown algorithm "XS256"
+      When I try to generate a key automatically for it
+      Then it is refused as "unsupported_algorithm"
 
     Example: resolving the type of an unknown algorithm is refused
-      Then resolving the key type for the unknown algorithm "XS256" is refused as "unsupported_algorithm"
+      Given the unknown algorithm "XS256"
+      When I try to resolve the key type for it
+      Then it is refused as "unsupported_algorithm"
 
   Rule: a key imports from every format and exports back unchanged
 
@@ -289,20 +311,23 @@ Feature: Kryptos key facade
         | RSA  |
 
     Example: an oct key imports from a UTF-8 secret
-      When I import the oct fixture secret as UTF-8
+      Given the oct fixture secret
+      When I import it as UTF-8
       Then the key has type "oct" and use "sig"
       And the key's algorithm is "HS512"
       And the key carries only a private half
 
     Example: the same passphrase, path and algorithm derive the same key
-      When I derive an "HS256" key from the passphrase "correct horse" along the path "urn:lindorm:test:kek:v1"
-      And I derive another "HS256" key from the passphrase "correct horse" along the path "urn:lindorm:test:kek:v1"
+      Given the passphrase "correct horse"
+      When I derive an "HS256" key from the passphrase along the path "urn:lindorm:test:kek:v1"
+      And I derive another "HS256" key from the passphrase along the path "urn:lindorm:test:kek:v1"
       Then both keys have identical private material
       And both keys have the same id
 
     Example: a different derivation path derives a different key
-      When I derive an "HS256" key from the passphrase "correct horse" along the path "urn:lindorm:test:kek:v1"
-      And I derive another "HS256" key from the passphrase "correct horse" along the path "urn:lindorm:test:kek:v2"
+      Given the passphrase "correct horse"
+      When I derive an "HS256" key from the passphrase along the path "urn:lindorm:test:kek:v1"
+      And I derive another "HS256" key from the passphrase along the path "urn:lindorm:test:kek:v2"
       Then both keys have different private material
       And both keys have different ids
 
@@ -312,7 +337,8 @@ Feature: Kryptos key facade
       Then deriving again from it along the path "urn:lindorm:test:kek:v1" reproduces the derived key
 
     Example: an explicit id wins over the derived id
-      When I derive an "HS256" key from the passphrase "correct horse" along the path "urn:lindorm:test:kek:v1" with id "key_explicit0000"
+      Given the passphrase "correct horse"
+      When I derive an "HS256" key from the passphrase along the path "urn:lindorm:test:kek:v1" with id "key_explicit0000"
       Then the key's id is "key_explicit0000"
 
     Example: a stored key restores from its database row
@@ -322,16 +348,24 @@ Feature: Kryptos key facade
       And both keys export the same private JWK
 
     Example: a value in no known format is refused
-      Then importing "not a key" by detection is refused as "unknown_key_format"
+      Given the string "not a key"
+      When I try to import it by detection
+      Then it is refused as "unknown_key_format"
 
     Example: a PEM import without an algorithm is refused
-      Then importing the EC fixture PEM without its algorithm is refused as "missing_algorithm"
+      Given the EC fixture PEM without its algorithm
+      When I try to import it from PEM
+      Then it is refused as "missing_algorithm"
 
     Example: a PEM import without a use is refused
-      Then importing the EC fixture PEM without its use is refused as "missing_key_use"
+      Given the EC fixture PEM without its use
+      When I try to import it from PEM
+      Then it is refused as "missing_key_use"
 
     Example: a PEM import without a type is refused
-      Then importing the EC fixture PEM without its type is refused as "invalid_key_format"
+      Given the EC fixture PEM without its type
+      When I try to import it from PEM
+      Then it is refused as "invalid_key_format"
 
   Rule: provenance is decided by the import path, never by the payload
 
@@ -366,11 +400,13 @@ Feature: Kryptos key facade
       Then the key is internal
 
     Example: a derived key is internal
-      When I derive an "HS256" key from the passphrase "correct horse" along the path "urn:lindorm:test:kek:v1"
+      Given the passphrase "correct horse"
+      When I derive an "HS256" key from the passphrase along the path "urn:lindorm:test:kek:v1"
       Then the key is internal
 
     Example: a key imported from a UTF-8 secret is internal
-      When I import the oct fixture secret as UTF-8
+      Given the oct fixture secret
+      When I import it as UTF-8
       Then the key is internal
 
     Example: a JWK without a publish member imports unpublished
@@ -414,16 +450,24 @@ Feature: Kryptos key facade
         | json   | a JSON object | unpublished |
 
     Example: a string without the kryptos prefix is refused
-      Then importing the env string "kryptoz:AAAA" is refused as "invalid_kryptos_string"
+      Given the env string "kryptoz:AAAA"
+      When I try to import the env string
+      Then it is refused as "invalid_kryptos_string"
 
     Example: a prefixed payload that is neither JSON nor a CBOR map is refused
-      Then importing a prefixed env string with an opaque payload is refused as "invalid_kryptos_string"
+      Given a prefixed env string with an opaque payload
+      When I try to import the env string
+      Then it is refused as "invalid_kryptos_string"
 
     Example: a CBOR env string of an unknown version is refused
-      Then importing a CBOR env string declaring version 99 is refused as "invalid_cbor_env"
+      Given a CBOR env string declaring version 99
+      When I try to import the env string
+      Then it is refused as "invalid_cbor_env"
 
     Example: a CBOR env string with an unknown label is refused
-      Then importing a CBOR env string carrying the unknown label 7 is refused as "invalid_cbor_env"
+      Given a CBOR env string carrying the unknown label 7
+      When I try to import the env string
+      Then it is refused as "invalid_cbor_env"
 
   Rule: a key id is stable and never guessable from a secret
 
@@ -441,8 +485,9 @@ Feature: Kryptos key facade
         | ML-DSA-44 |
 
     Example: an explicit id wins at generation
-      When I generate an "ES256" key with the options
+      Given the generation options
         | id | key_explicit0000 |
+      When I generate an "ES256" key with those options
       Then the key's id is "key_explicit0000"
 
     Example: a JWK kid wins on import
@@ -508,11 +553,13 @@ Feature: Kryptos key facade
       Then the key is recognised as a Kryptos key
 
     Example: an unbranded object shaped like a key is not recognised
-      Then an unbranded object shaped like a key is not recognised as a Kryptos key
+      Given an unbranded object shaped like a key
+      Then it is not recognised as a Kryptos key
       And it does not narrow as an oct key
 
     Scenario Outline: <value> is not recognised
-      Then <value> is not recognised as a Kryptos key
+      Given a candidate that is <value>
+      Then it is not recognised as a Kryptos key
 
       Examples:
         | value     |
@@ -523,11 +570,13 @@ Feature: Kryptos key facade
         | an array  |
 
     Example: a key branded by a foreign copy of the library is recognised
-      Then a key branded by a foreign copy of the library is recognised as a Kryptos key
+      Given a key branded by a foreign copy of the library
+      Then it is recognised as a Kryptos key
       And it narrows as an oct key and not as an EC key
 
     Scenario Outline: <type> narrows to exactly its own type
-      When I generate a signing key of type "<type>" with algorithm "<algorithm>"
+      Given the algorithm "<algorithm>"
+      When I generate a signing key of type "<type>" with it
       Then the guards answer akp <akp>, ec <ec>, oct <oct>, okp <okp> and rsa <rsa>
 
       Examples:
@@ -541,7 +590,8 @@ Feature: Kryptos key facade
   Rule: an asymmetric key can be stamped with an X.509 certificate
 
     Example: a self-signed leaf carries its own certificate
-      When I generate an "ES256" key with a self-signed certificate for subject "leaf"
+      Given the algorithm "ES256"
+      When I generate a key with it and a self-signed certificate for subject "leaf"
       Then the key has a certificate
       And the certificate thumbprint is present
       And the certificate's subject and issuer are both "leaf"
@@ -567,12 +617,15 @@ Feature: Kryptos key facade
       And the certificate verifies against the root
 
     Example: asynchronous generation stamps a certificate alike
-      When I asynchronously generate an "ES256" key with a self-signed certificate for subject "leaf"
+      Given the algorithm "ES256"
+      When I asynchronously generate a key with it and a self-signed certificate for subject "leaf"
       Then the key has a certificate
       And the certificate's subject and issuer are both "leaf"
 
     Example: a symmetric key cannot carry a certificate
-      Then generating an "HS256" key with a self-signed certificate is refused as "symmetric_key_certificate_unsupported"
+      Given the algorithm "HS256"
+      When I try to generate a key with it and a self-signed certificate
+      Then it is refused as "symmetric_key_certificate_unsupported"
 
     Example: a CA without a certificate cannot sign
       Given a generated "ES256" key as the CA
@@ -595,5 +648,6 @@ Feature: Kryptos key facade
       Then generating an "ES256" key signed by the CA in the "production" environment is refused as "cross_environment_certificate_signing"
 
     Example: a JWK whose certificate thumbprint disagrees with its chain is refused
-      When I generate an "ES256" key with a self-signed certificate for subject "leaf"
-      Then importing its public JWK with a tampered certificate thumbprint is refused as "certificate_thumbprint_mismatch"
+      Given a generated "ES256" key with a self-signed certificate for subject "leaf"
+      When I try to import its public JWK with a tampered certificate thumbprint
+      Then it is refused as "certificate_thumbprint_mismatch"

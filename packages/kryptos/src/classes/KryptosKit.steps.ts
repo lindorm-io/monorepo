@@ -14,8 +14,6 @@ import {
   EC_ENC_ALGORITHMS,
   EC_SIG_ALGORITHMS,
   KRYPTOS_ALGORITHMS,
-  KRYPTOS_ENC_ALGORITHMS,
-  KRYPTOS_SIG_ALGORITHMS,
   OCT_ENC_DIR_ALGORITHMS,
   OCT_ENC_STD_ALGORITHMS,
   OCT_SIG_ALGORITHMS,
@@ -30,7 +28,6 @@ import {
 import type {
   KryptosAlgorithm,
   KryptosCurve,
-  KryptosEncAlgorithm,
   KryptosEncryption,
   KryptosEnvFormat,
   KryptosFrom,
@@ -38,7 +35,6 @@ import type {
   KryptosFromJwk,
   KryptosFromString,
   KryptosLike,
-  KryptosSigAlgorithm,
   KryptosType,
   KryptosUse,
 } from "../types/index.js";
@@ -195,6 +191,10 @@ export class KryptosKitSteps extends KryptosStepsBase {
   private fixture!: Fixture;
   private input!: KryptosFrom;
   private options!: GenerateOptions;
+  private requestedAlgorithm!: KryptosAlgorithm;
+  private requestedCurve!: KryptosCurve;
+  private passphrase!: string;
+  private secret!: KryptosFromString;
   private snapshot!: ReturnType<IKryptos["toDB"]>;
   private candidate!: unknown;
 
@@ -263,38 +263,59 @@ export class KryptosKitSteps extends KryptosStepsBase {
     });
   }
 
-  @When('I generate a signing key of type "{keyType}" with algorithm "{sigAlgorithm}"')
-  iGenerateASigningKey(type: KryptosType, algorithm: KryptosSigAlgorithm): void {
-    this.ctx.kryptos = this.generateSig(type, algorithm);
+  @Given('the algorithm "{algorithm}"')
+  theAlgorithm(algorithm: KryptosAlgorithm): void {
+    this.requestedAlgorithm = algorithm;
   }
 
-  @When(
-    'I generate an encryption key of type "{keyType}" with algorithm "{encAlgorithm}"',
-  )
-  iGenerateAnEncryptionKey(type: KryptosType, algorithm: KryptosEncAlgorithm): void {
-    this.ctx.kryptos = this.generateEnc(type, algorithm);
+  @Given('the algorithm "{algorithm}" on curve "{curve}"')
+  theAlgorithmOnCurve(algorithm: KryptosAlgorithm, curve: KryptosCurve): void {
+    this.requestedAlgorithm = algorithm;
+    this.requestedCurve = curve;
   }
 
-  @When(
-    'I generate a "{use}" key of type "OKP" with algorithm "{algorithm}" on curve "{curve}"',
-  )
-  iGenerateAnOkpKeyOnCurve(
-    use: KryptosUse,
-    algorithm: KryptosAlgorithm,
-    curve: KryptosCurve,
-  ): void {
+  @Given("the unknown algorithm {string}")
+  theUnknownAlgorithm(algorithm: string): void {
+    this.requestedAlgorithm = algorithm as KryptosAlgorithm;
+  }
+
+  @Given("the generation options")
+  theGenerationOptions(table: DataTable): void {
+    this.options = readOptions(table);
+  }
+
+  @When('I generate a signing key of type "{keyType}" with it')
+  iGenerateASigningKeyWithIt(type: KryptosType): void {
+    this.ctx.kryptos = this.generateSig(type, this.requestedAlgorithm);
+  }
+
+  @When('I generate an encryption key of type "{keyType}" with it')
+  iGenerateAnEncryptionKeyWithIt(type: KryptosType): void {
+    this.ctx.kryptos = this.generateEnc(type, this.requestedAlgorithm);
+  }
+
+  @When('I generate a "{use}" key of type "OKP" with it')
+  iGenerateAnOkpKeyWithIt(use: KryptosUse): void {
     switch (use) {
       case "sig":
         this.ctx.kryptos = KryptosKit.generate.sig.okp({
-          algorithm: pick(OKP_SIG_ALGORITHMS, algorithm, "OKP signing algorithm"),
-          curve: pick(OKP_SIG_CURVES, curve, "OKP signing curve"),
+          algorithm: pick(
+            OKP_SIG_ALGORITHMS,
+            this.requestedAlgorithm,
+            "OKP signing algorithm",
+          ),
+          curve: pick(OKP_SIG_CURVES, this.requestedCurve, "OKP signing curve"),
         });
         break;
 
       case "enc":
         this.ctx.kryptos = KryptosKit.generate.enc.okp({
-          algorithm: pick(OKP_ENC_ALGORITHMS, algorithm, "OKP encryption algorithm"),
-          curve: pick(OKP_ENC_CURVES, curve, "OKP encryption curve"),
+          algorithm: pick(
+            OKP_ENC_ALGORITHMS,
+            this.requestedAlgorithm,
+            "OKP encryption algorithm",
+          ),
+          curve: pick(OKP_ENC_CURVES, this.requestedCurve, "OKP encryption curve"),
         });
         break;
 
@@ -305,97 +326,59 @@ export class KryptosKitSteps extends KryptosStepsBase {
     }
   }
 
-  @When('I generate a key automatically for algorithm "{algorithm}"')
-  iGenerateAKeyAutomatically(algorithm: KryptosAlgorithm): void {
-    this.ctx.kryptos = KryptosKit.generate.auto({ algorithm });
+  @When("I generate a key automatically for it")
+  iGenerateAKeyAutomaticallyForIt(): void {
+    this.ctx.kryptos = KryptosKit.generate.auto({ algorithm: this.requestedAlgorithm });
   }
 
-  @When('I asynchronously generate a key automatically for algorithm "{algorithm}"')
-  async iAsynchronouslyGenerateAKeyAutomatically(
-    algorithm: KryptosAlgorithm,
-  ): Promise<void> {
-    this.ctx.kryptos = await KryptosKit.generateAsync.auto({ algorithm });
-  }
-
-  @When(
-    'I asynchronously generate a signing key of type "{keyType}" with algorithm "{sigAlgorithm}"',
-  )
-  async iAsynchronouslyGenerateASigningKey(
-    type: KryptosType,
-    algorithm: KryptosSigAlgorithm,
-  ): Promise<void> {
-    this.ctx.kryptos = await this.generateSigAsync(type, algorithm);
-  }
-
-  @When(
-    'I asynchronously generate an encryption key of type "{keyType}" with algorithm "{encAlgorithm}"',
-  )
-  async iAsynchronouslyGenerateAnEncryptionKey(
-    type: KryptosType,
-    algorithm: KryptosEncAlgorithm,
-  ): Promise<void> {
-    this.ctx.kryptos = await this.generateEncAsync(type, algorithm);
-  }
-
-  @When('I generate an "{algorithm}" key valid from {string}')
-  iGenerateAKeyValidFrom(algorithm: KryptosAlgorithm, notBefore: string): void {
-    this.ctx.kryptos = KryptosKit.generate.auto({
-      algorithm,
-      notBefore: new Date(notBefore),
+  @When("I asynchronously generate a key automatically for it")
+  async iAsynchronouslyGenerateAKeyAutomaticallyForIt(): Promise<void> {
+    this.ctx.kryptos = await KryptosKit.generateAsync.auto({
+      algorithm: this.requestedAlgorithm,
     });
   }
 
-  @When('I generate an "{algorithm}" key with the options')
-  iGenerateAKeyWithTheOptions(algorithm: KryptosAlgorithm, table: DataTable): void {
-    this.options = readOptions(table);
+  @When('I asynchronously generate a signing key of type "{keyType}" with it')
+  async iAsynchronouslyGenerateASigningKeyWithIt(type: KryptosType): Promise<void> {
+    this.ctx.kryptos = await this.generateSigAsync(type, this.requestedAlgorithm);
+  }
+
+  @When('I asynchronously generate an encryption key of type "{keyType}" with it')
+  async iAsynchronouslyGenerateAnEncryptionKeyWithIt(type: KryptosType): Promise<void> {
+    this.ctx.kryptos = await this.generateEncAsync(type, this.requestedAlgorithm);
+  }
+
+  @When('I generate an "{algorithm}" key with those options')
+  iGenerateAKeyWithThoseOptions(algorithm: KryptosAlgorithm): void {
     this.ctx.kryptos = KryptosKit.generate.auto({ algorithm, ...this.options });
   }
 
   // generate: refusals
 
-  @Then("generating an EC signing key with the algorithm {string} is refused as {string}")
-  generatingAnEcSigningKeyWithTheAlgorithmIsRefused(
-    algorithm: string,
-    code: string,
-  ): void {
+  @When("I try to generate an EC signing key with it")
+  iTryToGenerateAnEcSigningKeyWithIt(): void {
     // The cast smuggles a non-EC algorithm past the option types so it reaches
     // the runtime curve resolution (ec/get-curve.ts default branch).
-    this.refused(code, () =>
-      KryptosKit.generate.sig.ec({ algorithm: algorithm as "ES256" }),
+    this.attempt(() =>
+      KryptosKit.generate.sig.ec({ algorithm: this.requestedAlgorithm as "ES256" }),
     );
   }
 
-  @Then(
-    "generating an AKP signing key with the algorithm {string} is refused as {string}",
-  )
-  generatingAnAkpSigningKeyWithTheAlgorithmIsRefused(
-    algorithm: string,
-    code: string,
-  ): void {
-    this.refused(code, () =>
-      KryptosKit.generate.sig.akp({ algorithm: algorithm as "ML-DSA-44" }),
+  @When("I try to generate an AKP signing key with it")
+  iTryToGenerateAnAkpSigningKeyWithIt(): void {
+    this.attempt(() =>
+      KryptosKit.generate.sig.akp({ algorithm: this.requestedAlgorithm as "ML-DSA-44" }),
     );
   }
 
-  @Then(
-    "generating a key automatically for the unknown algorithm {string} is refused as {string}",
-  )
-  generatingAutomaticallyForUnknownAlgorithmIsRefused(
-    algorithm: string,
-    code: string,
-  ): void {
-    this.refused(code, () =>
-      KryptosKit.generate.auto({ algorithm: algorithm as KryptosAlgorithm }),
-    );
+  @When("I try to generate a key automatically for it")
+  iTryToGenerateAKeyAutomaticallyForIt(): void {
+    this.attempt(() => KryptosKit.generate.auto({ algorithm: this.requestedAlgorithm }));
   }
 
-  @Then(
-    "resolving the key type for the unknown algorithm {string} is refused as {string}",
-  )
-  resolvingTheKeyTypeForUnknownAlgorithmIsRefused(algorithm: string, code: string): void {
-    this.refused(code, () =>
-      KryptosKit.getTypeForAlgorithm(algorithm as KryptosAlgorithm),
-    );
+  @When("I try to resolve the key type for it")
+  iTryToResolveTheKeyTypeForIt(): void {
+    this.attempt(() => KryptosKit.getTypeForAlgorithm(this.requestedAlgorithm));
   }
 
   // import
@@ -410,6 +393,30 @@ export class KryptosKitSteps extends KryptosStepsBase {
     const fixture = FIXTURES[type];
 
     this.fixture = { ...fixture, b64: withoutId(fixture.b64) };
+  }
+
+  @Given("the EC fixture PEM without its {member}")
+  theEcFixturePemWithout(member: "algorithm" | "type" | "use"): void {
+    const pem: Partial<KryptosFromString> = { ...TEST_EC_KEY_PEM };
+
+    delete pem[member];
+
+    this.fixture = { ...FIXTURES.EC, pem: pem as KryptosFromString };
+  }
+
+  @Given("the oct fixture secret")
+  theOctFixtureSecret(): void {
+    this.secret = TEST_OCT_KEY_UTF;
+  }
+
+  @Given("the passphrase {string}")
+  thePassphrase(passphrase: string): void {
+    this.passphrase = passphrase;
+  }
+
+  @Given("the string {string}")
+  theString(value: string): void {
+    this.input = value;
   }
 
   @When("I import it with from.{format}")
@@ -472,39 +479,27 @@ export class KryptosKitSteps extends KryptosStepsBase {
     this.ctx.other = KryptosKit.from.auto(this.input);
   }
 
-  @When("I import the oct fixture secret as UTF-8")
-  iImportTheOctFixtureSecretAsUtf8(): void {
-    this.ctx.kryptos = KryptosKit.from.utf(TEST_OCT_KEY_UTF);
+  @When("I import it as UTF-8")
+  iImportItAsUtf8(): void {
+    this.ctx.kryptos = KryptosKit.from.utf(this.secret);
   }
 
-  @When(
-    'I derive an "{algorithm}" key from the passphrase {string} along the path {string}',
-  )
-  iDeriveAKeyFromThePassphrase(
-    algorithm: KryptosAlgorithm,
-    passphrase: string,
-    path: string,
-  ): void {
+  @When('I derive an "{algorithm}" key from the passphrase along the path {string}')
+  iDeriveAKeyFromThePassphrase(algorithm: KryptosAlgorithm, path: string): void {
     this.ctx.kryptos = KryptosKit.from.derive({
       algorithm,
-      deriveFrom: passphrase,
+      deriveFrom: this.passphrase,
       path,
       type: "oct",
       use: "sig",
     });
   }
 
-  @When(
-    'I derive another "{algorithm}" key from the passphrase {string} along the path {string}',
-  )
-  iDeriveAnotherKeyFromThePassphrase(
-    algorithm: KryptosAlgorithm,
-    passphrase: string,
-    path: string,
-  ): void {
+  @When('I derive another "{algorithm}" key from the passphrase along the path {string}')
+  iDeriveAnotherKeyFromThePassphrase(algorithm: KryptosAlgorithm, path: string): void {
     this.ctx.other = KryptosKit.from.derive({
       algorithm,
-      deriveFrom: passphrase,
+      deriveFrom: this.passphrase,
       path,
       type: "oct",
       use: "sig",
@@ -512,17 +507,16 @@ export class KryptosKitSteps extends KryptosStepsBase {
   }
 
   @When(
-    'I derive an "{algorithm}" key from the passphrase {string} along the path {string} with id {string}',
+    'I derive an "{algorithm}" key from the passphrase along the path {string} with id {string}',
   )
   iDeriveAKeyFromThePassphraseWithId(
     algorithm: KryptosAlgorithm,
-    passphrase: string,
     path: string,
     id: string,
   ): void {
     this.ctx.kryptos = KryptosKit.from.derive({
       algorithm,
-      deriveFrom: passphrase,
+      deriveFrom: this.passphrase,
       id,
       path,
       type: "oct",
@@ -646,36 +640,48 @@ export class KryptosKitSteps extends KryptosStepsBase {
     expect(again.id).not.toBe(this.ctx.other.id);
   }
 
-  @Then("importing {string} by detection is refused as {string}")
-  importingByDetectionIsRefused(value: string, code: string): void {
-    this.refused(code, () => KryptosKit.from.auto(value));
+  @When("I try to import it by detection")
+  iTryToImportItByDetection(): void {
+    this.attempt(() => KryptosKit.from.auto(this.input));
   }
 
-  @Then("importing the EC fixture PEM without its {member} is refused as {string}")
-  importingTheEcFixturePemWithoutIsRefused(
-    member: "algorithm" | "type" | "use",
-    code: string,
-  ): void {
-    const pem: Partial<KryptosFromString> = { ...TEST_EC_KEY_PEM };
-
-    delete pem[member];
-
-    this.refused(code, () => KryptosKit.from.pem(pem as KryptosFromString));
+  @When("I try to import it from PEM")
+  iTryToImportItFromPem(): void {
+    this.attempt(() => KryptosKit.from.pem(this.fixture.pem));
   }
 
-  @Then(
-    "importing its public JWK with a tampered certificate thumbprint is refused as {string}",
-  )
-  importingItsPublicJwkWithATamperedCertificateThumbprintIsRefused(code: string): void {
+  @When("I try to import its public JWK with a tampered certificate thumbprint")
+  iTryToImportItsPublicJwkWithATamperedCertificateThumbprint(): void {
     const tampered = {
       ...this.ctx.kryptos.toJWK("public"),
       "x5t#S256": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
     };
 
-    this.refused(code, () => KryptosKit.from.jwk(tampered));
+    this.attempt(() => KryptosKit.from.jwk(tampered));
   }
 
   // env
+
+  @Given("the env string {string}")
+  theEnvString(value: string): void {
+    this.ctx.serialised = value;
+  }
+
+  @Given("a prefixed env string with an opaque payload")
+  aPrefixedEnvStringWithAnOpaquePayload(): void {
+    this.ctx.serialised =
+      "kryptos:" + B64.encode(Buffer.from([0x01, 0x02, 0x03]), "b64u");
+  }
+
+  @Given("a CBOR env string declaring version {int}")
+  aCborEnvStringDeclaringVersion(version: number): void {
+    this.ctx.serialised = this.tamperedCborEnv(0, version);
+  }
+
+  @Given("a CBOR env string carrying the unknown label {int}")
+  aCborEnvStringCarryingTheUnknownLabel(label: number): void {
+    this.ctx.serialised = this.tamperedCborEnv(label, "x");
+  }
 
   @When("I export it as an env string")
   iExportItAsAnEnvString(): void {
@@ -690,6 +696,11 @@ export class KryptosKitSteps extends KryptosStepsBase {
   @When("I import the env string")
   iImportTheEnvString(): void {
     this.ctx.other = KryptosKit.env.import(this.ctx.serialised);
+  }
+
+  @When("I try to import the env string")
+  iTryToImportTheEnvString(): void {
+    this.attempt(() => KryptosKit.env.import(this.ctx.serialised));
   }
 
   @Then("the env string payload is {payload}")
@@ -712,33 +723,6 @@ export class KryptosKitSteps extends KryptosStepsBase {
       thumbprint: this.ctx.kryptos.thumbprint,
       publish: this.ctx.kryptos.publish,
     });
-  }
-
-  @Then("importing the env string {string} is refused as {string}")
-  importingTheEnvStringIsRefused(value: string, code: string): void {
-    this.refused(code, () => KryptosKit.env.import(value));
-  }
-
-  @Then("importing a prefixed env string with an opaque payload is refused as {string}")
-  importingAPrefixedEnvStringWithAnOpaquePayloadIsRefused(code: string): void {
-    const opaque = "kryptos:" + B64.encode(Buffer.from([0x01, 0x02, 0x03]), "b64u");
-
-    this.refused(code, () => KryptosKit.env.import(opaque));
-  }
-
-  @Then("importing a CBOR env string declaring version {int} is refused as {string}")
-  importingACborEnvStringDeclaringVersionIsRefused(version: number, code: string): void {
-    this.refused(code, () => KryptosKit.env.import(this.tamperedCborEnv(0, version)));
-  }
-
-  @Then(
-    "importing a CBOR env string carrying the unknown label {int} is refused as {string}",
-  )
-  importingACborEnvStringCarryingTheUnknownLabelIsRefused(
-    label: number,
-    code: string,
-  ): void {
-    this.refused(code, () => KryptosKit.env.import(this.tamperedCborEnv(label, "x")));
   }
 
   // clone
@@ -805,10 +789,10 @@ export class KryptosKitSteps extends KryptosStepsBase {
     });
   }
 
-  @When(
-    'I generate an "{algorithm}" key with a self-signed certificate for subject {string}',
+  @Given(
+    'a generated "{algorithm}" key with a self-signed certificate for subject {string}',
   )
-  iGenerateAKeyWithASelfSignedCertificate(
+  aGeneratedKeyWithASelfSignedCertificate(
     algorithm: KryptosAlgorithm,
     subject: string,
   ): void {
@@ -818,17 +802,34 @@ export class KryptosKitSteps extends KryptosStepsBase {
     });
   }
 
+  @When("I generate a key with it and a self-signed certificate for subject {string}")
+  iGenerateAKeyWithItAndASelfSignedCertificate(subject: string): void {
+    this.ctx.kryptos = KryptosKit.generate.auto({
+      algorithm: this.requestedAlgorithm,
+      certificate: { mode: "self-signed", subject },
+    });
+  }
+
   @When(
-    'I asynchronously generate an "{algorithm}" key with a self-signed certificate for subject {string}',
+    "I asynchronously generate a key with it and a self-signed certificate for subject {string}",
   )
-  async iAsynchronouslyGenerateAKeyWithASelfSignedCertificate(
-    algorithm: KryptosAlgorithm,
+  async iAsynchronouslyGenerateAKeyWithItAndASelfSignedCertificate(
     subject: string,
   ): Promise<void> {
     this.ctx.kryptos = await KryptosKit.generateAsync.auto({
-      algorithm,
+      algorithm: this.requestedAlgorithm,
       certificate: { mode: "self-signed", subject },
     });
+  }
+
+  @When("I try to generate a key with it and a self-signed certificate")
+  iTryToGenerateAKeyWithItAndASelfSignedCertificate(): void {
+    this.attempt(() =>
+      KryptosKit.generate.auto({
+        algorithm: this.requestedAlgorithm,
+        certificate: { mode: "self-signed" },
+      }),
+    );
   }
 
   @When('I generate an "{algorithm}" key signed by the CA with subject {string}')
@@ -885,18 +886,6 @@ export class KryptosKitSteps extends KryptosStepsBase {
   @Then("the certificate verifies against the root")
   theCertificateVerifiesAgainstTheRoot(): void {
     this.ctx.kryptos.verifyCertificate({ trustAnchors: this.anchor(this.ctx.root) });
-  }
-
-  @Then(
-    'generating an "{algorithm}" key with a self-signed certificate is refused as {string}',
-  )
-  generatingAKeyWithASelfSignedCertificateIsRefused(
-    algorithm: KryptosAlgorithm,
-    code: string,
-  ): void {
-    this.refused(code, () =>
-      KryptosKit.generate.auto({ algorithm, certificate: { mode: "self-signed" } }),
-    );
   }
 
   @Then('generating an "{algorithm}" key signed by the CA is refused as {string}')
@@ -968,26 +957,32 @@ export class KryptosKitSteps extends KryptosStepsBase {
     expect(KryptosKit.isKryptos(this.ctx.kryptos)).toBe(true);
   }
 
-  @Then("an unbranded object shaped like a key is not recognised as a Kryptos key")
-  anUnbrandedObjectShapedLikeAKeyIsNotRecognised(): void {
+  @Given("an unbranded object shaped like a key")
+  anUnbrandedObjectShapedLikeAKey(): void {
     this.candidate = { type: "oct", curve: null };
-
-    expect(KryptosKit.isKryptos(this.candidate)).toBe(false);
   }
 
-  @Then("{nonKey} is not recognised as a Kryptos key")
-  isNotRecognisedAsAKryptosKey(value: NonKey): void {
-    expect(KryptosKit.isKryptos(value)).toBe(false);
+  @Given("a candidate that is {nonKey}")
+  aCandidateThatIs(value: NonKey): void {
+    this.candidate = value;
   }
 
-  @Then("a key branded by a foreign copy of the library is recognised as a Kryptos key")
-  aKeyBrandedByAForeignCopyIsRecognised(): void {
+  @Given("a key branded by a foreign copy of the library")
+  aKeyBrandedByAForeignCopyOfTheLibrary(): void {
     this.candidate = {
       type: "oct",
       curve: null,
       constructor: { [Symbol.for("urn:lindorm:kryptos:brand:kryptos")]: true },
     };
+  }
 
+  @Then("it is not recognised as a Kryptos key")
+  itIsNotRecognisedAsAKryptosKey(): void {
+    expect(KryptosKit.isKryptos(this.candidate)).toBe(false);
+  }
+
+  @Then("it is recognised as a Kryptos key")
+  itIsRecognisedAsAKryptosKey(): void {
     expect(KryptosKit.isKryptos(this.candidate)).toBe(true);
   }
 
@@ -1022,6 +1017,13 @@ export class KryptosKitSteps extends KryptosStepsBase {
       okp: KryptosKit.isOkp(this.ctx.kryptos),
       rsa: KryptosKit.isRsa(this.ctx.kryptos),
     }).toEqual({ akp, ec, oct, okp, rsa });
+  }
+
+  // refusals
+
+  @Then("it is refused as {string}")
+  itIsRefusedAs(code: string): void {
+    this.expectRefusal(code, this.ctx.caught);
   }
 
   // key assertions
@@ -1257,7 +1259,7 @@ export class KryptosKitSteps extends KryptosStepsBase {
     return "kryptos:" + B64.encode(encode(map, { cde: true }), "b64u");
   }
 
-  private generateSig(type: KryptosType, algorithm: KryptosSigAlgorithm): IKryptos {
+  private generateSig(type: KryptosType, algorithm: KryptosAlgorithm): IKryptos {
     switch (type) {
       case "AKP":
         return KryptosKit.generate.sig.akp({
@@ -1293,7 +1295,7 @@ export class KryptosKitSteps extends KryptosStepsBase {
 
   private async generateSigAsync(
     type: KryptosType,
-    algorithm: KryptosSigAlgorithm,
+    algorithm: KryptosAlgorithm,
   ): Promise<IKryptos> {
     switch (type) {
       case "AKP":
@@ -1328,7 +1330,7 @@ export class KryptosKitSteps extends KryptosStepsBase {
     }
   }
 
-  private generateEnc(type: KryptosType, algorithm: KryptosEncAlgorithm): IKryptos {
+  private generateEnc(type: KryptosType, algorithm: KryptosAlgorithm): IKryptos {
     switch (type) {
       case "EC":
         return KryptosKit.generate.enc.ec({
@@ -1366,7 +1368,7 @@ export class KryptosKitSteps extends KryptosStepsBase {
 
   private async generateEncAsync(
     type: KryptosType,
-    algorithm: KryptosEncAlgorithm,
+    algorithm: KryptosAlgorithm,
   ): Promise<IKryptos> {
     switch (type) {
       case "EC":
@@ -1408,16 +1410,6 @@ export class KryptosKitSteps extends KryptosStepsBase {
   @ParameterType("algorithm", /[A-Za-z0-9+-]+/)
   static algorithm(raw: string): KryptosAlgorithm {
     return pick(KRYPTOS_ALGORITHMS, raw, "algorithm");
-  }
-
-  @ParameterType("sigAlgorithm", /[A-Za-z0-9+-]+/)
-  static sigAlgorithm(raw: string): KryptosSigAlgorithm {
-    return pick(KRYPTOS_SIG_ALGORITHMS, raw, "signing algorithm");
-  }
-
-  @ParameterType("encAlgorithm", /[A-Za-z0-9+-]+/)
-  static encAlgorithm(raw: string): KryptosEncAlgorithm {
-    return pick(KRYPTOS_ENC_ALGORITHMS, raw, "encryption algorithm");
   }
 
   @ParameterType("curve", /[A-Za-z0-9-]+/)

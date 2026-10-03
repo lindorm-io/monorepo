@@ -45,10 +45,11 @@ Feature: Kryptos key
         | OKP  | EdDSA     |
 
     Example: a key reports the timestamps it was minted with
-      When I generate an "ES256" key with the options
+      Given the generation options
         | createdAt | 2026-01-01T00:00:00.000Z |
         | notBefore | 2026-01-02T00:00:00.000Z |
         | expiresAt | 2036-01-02T00:00:00.000Z |
+      When I generate an "ES256" key with those options
       Then the key was created at "2026-01-01T00:00:00.000Z"
       And the key is valid from "2026-01-02T00:00:00.000Z"
       And the key expires at "2036-01-02T00:00:00.000Z"
@@ -94,51 +95,58 @@ Feature: Kryptos key
 
     Example: a key is pending until its first valid instant
       Given the clock reads "2026-08-05T12:00:00.000Z"
-      When I generate an "ES256" key with the options
+      And the generation options
         | notBefore | 2026-08-05T12:00:00.001Z |
         | expiresAt | 2026-08-05T13:00:00.000Z |
+      When I generate an "ES256" key with those options
       Then the key is pending
 
     Example: a key is active at the exact instant it becomes valid
       Given the clock reads "2026-08-05T12:00:00.000Z"
-      When I generate an "ES256" key with the options
+      And the generation options
         | notBefore | 2026-08-05T12:00:00.000Z |
         | expiresAt | 2026-08-05T13:00:00.000Z |
+      When I generate an "ES256" key with those options
       Then the key is active
 
     Example: a key is still active one millisecond before it expires
       Given the clock reads "2026-08-05T12:00:00.000Z"
-      When I generate an "ES256" key with the options
+      And the generation options
         | notBefore | 2026-08-05T11:00:00.000Z |
         | expiresAt | 2026-08-05T12:00:00.001Z |
+      When I generate an "ES256" key with those options
       Then the key is active
 
     Example: a key is expired at the exact instant it expires
       Given the clock reads "2026-08-05T12:00:00.000Z"
-      When I generate an "ES256" key with the options
+      And the generation options
         | notBefore | 2026-08-05T11:00:00.000Z |
         | expiresAt | 2026-08-05T12:00:00.000Z |
+      When I generate an "ES256" key with those options
       Then the key is expired
 
     Example: a window that collapses onto now is expired, never active
       Given the clock reads "2026-08-05T12:00:00.000Z"
-      When I generate an "ES256" key with the options
+      And the generation options
         | notBefore | 2026-08-05T12:00:00.000Z |
         | expiresAt | 2026-08-05T12:00:00.000Z |
+      When I generate an "ES256" key with those options
       Then the key is expired
 
     Example: a key counts down the seconds until it expires
       Given the clock reads "2026-08-05T12:00:00.000Z"
-      When I generate an "ES256" key with the options
+      And the generation options
         | notBefore | 2026-08-05T11:00:00.000Z |
         | expiresAt | 2026-08-05T12:01:30.000Z |
+      When I generate an "ES256" key with those options
       Then the key expires in 90 seconds
 
     Example: an expired key has no seconds left
       Given the clock reads "2026-08-05T12:00:00.000Z"
-      When I generate an "ES256" key with the options
+      And the generation options
         | notBefore | 2026-08-05T11:00:00.000Z |
         | expiresAt | 2026-08-05T11:59:59.000Z |
+      When I generate an "ES256" key with those options
       Then the key expires in 0 seconds
 
   Rule: every export format round-trips
@@ -453,7 +461,11 @@ Feature: Kryptos key
   Rule: a key cannot exist without its material
 
     Example: a key needs at least one half
-      Then constructing an EC key without any key material is refused as "missing_key_material"
+      Given an EC key's attributes without any key material
+      When I try to construct a key from them
+      Then it is refused as "missing_key_material"
 
     Example: a certificate chain needs a public half
-      Then constructing a symmetric key with a certificate chain is refused as "missing_public_key"
+      Given a symmetric key's secret with a certificate chain
+      When I try to construct a key from them
+      Then it is refused as "missing_public_key"

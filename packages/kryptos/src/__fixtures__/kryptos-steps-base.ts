@@ -7,19 +7,29 @@ export type KeyFormat = "b64" | "der" | "jwk" | "pem";
 
 export type Subject = "kryptos" | "other";
 
+const caughtBy = (act: () => unknown): unknown => {
+  try {
+    act();
+  } catch (error) {
+    return error;
+  }
+
+  return undefined;
+};
+
 @AbstractSteps()
 export abstract class KryptosStepsBase {
   @Inject(KryptosContext) protected readonly ctx!: KryptosContext;
 
+  protected attempt(act: () => unknown): void {
+    this.ctx.caught = caughtBy(act);
+  }
+
   protected refused(code: string, act: () => unknown): void {
-    let caught: unknown;
+    this.expectRefusal(code, caughtBy(act));
+  }
 
-    try {
-      act();
-    } catch (error) {
-      caught = error;
-    }
-
+  protected expectRefusal(code: string, caught: unknown): void {
     expect(caught).toBeInstanceOf(KryptosError);
     expect(caught).toMatchObject({ code });
   }

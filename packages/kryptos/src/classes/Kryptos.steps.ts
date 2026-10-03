@@ -15,6 +15,7 @@ import type {
   KryptosEnvFormat,
   KryptosExportMode,
   KryptosJwk,
+  KryptosSettings,
   LindormJwk,
 } from "../types/index.js";
 import type { KeyFormat, Subject } from "../__fixtures__/kryptos-steps-base.js";
@@ -62,6 +63,8 @@ const digest = (algorithm: "sha1" | "sha256", data: Buffer | string): string =>
 
 @Binding()
 export class KryptosSteps extends KryptosStepsBase {
+  private settings!: KryptosSettings;
+
   @AfterScenario()
   restoreClock(): void {
     vi.useRealTimers();
@@ -563,27 +566,25 @@ export class KryptosSteps extends KryptosStepsBase {
 
   // construction
 
-  @Then("constructing an EC key without any key material is refused as {string}")
-  constructingAnEcKeyWithoutAnyKeyMaterialIsRefused(code: string): void {
-    this.refused(
-      code,
-      () => new Kryptos({ algorithm: "ES256", curve: "P-256", type: "EC", use: "sig" }),
-    );
+  @Given("an EC key's attributes without any key material")
+  anEcKeysAttributesWithoutAnyKeyMaterial(): void {
+    this.settings = { algorithm: "ES256", curve: "P-256", type: "EC", use: "sig" };
   }
 
-  @Then("constructing a symmetric key with a certificate chain is refused as {string}")
-  constructingASymmetricKeyWithACertificateChainIsRefused(code: string): void {
-    this.refused(
-      code,
-      () =>
-        new Kryptos({
-          algorithm: "HS256",
-          type: "oct",
-          use: "sig",
-          privateKey: Buffer.alloc(32, 1),
-          certificateChain: [TEST_X509_LEAF_PEM],
-        }),
-    );
+  @Given("a symmetric key's secret with a certificate chain")
+  aSymmetricKeysSecretWithACertificateChain(): void {
+    this.settings = {
+      algorithm: "HS256",
+      type: "oct",
+      use: "sig",
+      privateKey: Buffer.alloc(32, 1),
+      certificateChain: [TEST_X509_LEAF_PEM],
+    };
+  }
+
+  @When("I try to construct a key from them")
+  iTryToConstructAKeyFromThem(): void {
+    this.attempt(() => new Kryptos(this.settings));
   }
 
   // helpers
