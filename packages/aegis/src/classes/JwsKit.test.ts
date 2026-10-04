@@ -229,9 +229,9 @@ describe("JwsKit", () => {
       };
 
       const parts = token.split(".");
-      const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit))
-        .toString("base64url")
-        .replace(/=/g, "");
+      const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit)).toString(
+        "base64url",
+      );
       const modifiedToken = [modifiedHeader, parts[1], parts[2]].join(".");
 
       expect(() => kit.verify(modifiedToken)).toThrow(
@@ -253,9 +253,9 @@ describe("JwsKit", () => {
       };
 
       const parts = token.split(".");
-      const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit))
-        .toString("base64url")
-        .replace(/=/g, "");
+      const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit)).toString(
+        "base64url",
+      );
       const modifiedToken = [modifiedHeader, parts[1], parts[2]].join(".");
 
       expect(() => kit.verify(modifiedToken)).toThrow(/not present/);
@@ -271,9 +271,9 @@ describe("JwsKit", () => {
       const headerWithCrit = { ...decoded.header, crit: ["alg"] };
 
       const parts = token.split(".");
-      const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit))
-        .toString("base64url")
-        .replace(/=/g, "");
+      const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit)).toString(
+        "base64url",
+      );
       const modifiedToken = [modifiedHeader, parts[1], parts[2]].join(".");
 
       expect(() => kit.verify(modifiedToken)).toThrow(/specification-defined/);
@@ -288,9 +288,9 @@ describe("JwsKit", () => {
       const headerWithCrit = { ...decoded.header, crit: [] };
 
       const parts = token.split(".");
-      const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit))
-        .toString("base64url")
-        .replace(/=/g, "");
+      const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit)).toString(
+        "base64url",
+      );
       const modifiedToken = [modifiedHeader, parts[1], parts[2]].join(".");
 
       expect(() => kit.verify(modifiedToken)).toThrow(/empty/);

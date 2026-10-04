@@ -506,9 +506,7 @@ describe("JwtKit", () => {
       const parts = token.split(".");
       const modifiedHeader = Buffer.from(
         JSON.stringify({ ...decoded.header, typ: "not-a-jwt-typ" }),
-      )
-        .toString("base64url")
-        .replace(/=/g, "");
+      ).toString("base64url");
       const modifiedToken = [modifiedHeader, parts[1], parts[2]].join(".");
 
       expect(codeOf(() => kit.verify(modifiedToken))).toBe("jwt_invalid_typ");
@@ -524,9 +522,9 @@ describe("JwtKit", () => {
       const parts = token.split(".");
 
       for (const typ of [123, null]) {
-        const modifiedHeader = Buffer.from(JSON.stringify({ ...decoded.header, typ }))
-          .toString("base64url")
-          .replace(/=/g, "");
+        const modifiedHeader = Buffer.from(
+          JSON.stringify({ ...decoded.header, typ }),
+        ).toString("base64url");
 
         expect(
           codeOf(() => kit.verify([modifiedHeader, parts[1], parts[2]].join("."))),
@@ -541,9 +539,9 @@ describe("JwtKit", () => {
       const decoded = JwtKit.decode(token);
       const { typ: _typ, ...headerNoTyp } = decoded.header;
       const parts = token.split(".");
-      const modifiedHeader = Buffer.from(JSON.stringify(headerNoTyp))
-        .toString("base64url")
-        .replace(/=/g, "");
+      const modifiedHeader = Buffer.from(JSON.stringify(headerNoTyp)).toString(
+        "base64url",
+      );
       const modifiedToken = [modifiedHeader, parts[1], parts[2]].join(".");
 
       // Signature is broken by the header edit, but the point is that a typ-less
@@ -763,9 +761,9 @@ describe("JwtKit", () => {
       };
 
       const parts = token.split(".");
-      const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit))
-        .toString("base64url")
-        .replace(/=/g, "");
+      const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit)).toString(
+        "base64url",
+      );
       const modifiedToken = [modifiedHeader, parts[1], parts[2]].join(".");
 
       expect(() => kit.verify(modifiedToken)).toThrow(
@@ -784,9 +782,9 @@ describe("JwtKit", () => {
       const headerWithCrit = { ...decoded.header, crit: ["missing_ext"] };
 
       const parts = token.split(".");
-      const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit))
-        .toString("base64url")
-        .replace(/=/g, "");
+      const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit)).toString(
+        "base64url",
+      );
       const modifiedToken = [modifiedHeader, parts[1], parts[2]].join(".");
 
       expect(() => kit.verify(modifiedToken)).toThrow(/not present/);
@@ -803,9 +801,9 @@ describe("JwtKit", () => {
       const headerWithCrit = { ...decoded.header, crit: ["alg"] };
 
       const parts = token.split(".");
-      const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit))
-        .toString("base64url")
-        .replace(/=/g, "");
+      const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit)).toString(
+        "base64url",
+      );
       const modifiedToken = [modifiedHeader, parts[1], parts[2]].join(".");
 
       expect(() => kit.verify(modifiedToken)).toThrow(/specification-defined/);
@@ -822,9 +820,9 @@ describe("JwtKit", () => {
       const headerWithCrit = { ...decoded.header, crit: [] };
 
       const parts = token.split(".");
-      const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit))
-        .toString("base64url")
-        .replace(/=/g, "");
+      const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit)).toString(
+        "base64url",
+      );
       const modifiedToken = [modifiedHeader, parts[1], parts[2]].join(".");
 
       expect(() => kit.verify(modifiedToken)).toThrow(/empty/);
@@ -863,9 +861,9 @@ describe("JwtKit", () => {
       };
 
       const parts = token.split(".");
-      const modifiedHeader = Buffer.from(JSON.stringify(headerWithJwk))
-        .toString("base64url")
-        .replace(/=/g, "");
+      const modifiedHeader = Buffer.from(JSON.stringify(headerWithJwk)).toString(
+        "base64url",
+      );
       const modifiedToken = [modifiedHeader, parts[1], parts[2]].join(".");
 
       expect(() => kit.verify(modifiedToken)).toThrow();
@@ -885,9 +883,9 @@ describe("JwtKit", () => {
       };
 
       const parts = token.split(".");
-      const modifiedHeader = Buffer.from(JSON.stringify(headerWithX5c))
-        .toString("base64url")
-        .replace(/=/g, "");
+      const modifiedHeader = Buffer.from(JSON.stringify(headerWithX5c)).toString(
+        "base64url",
+      );
       const modifiedToken = [modifiedHeader, parts[1], parts[2]].join(".");
 
       expect(() => kit.verify(modifiedToken)).toThrow();
@@ -907,9 +905,9 @@ describe("JwtKit", () => {
       };
 
       const parts = token.split(".");
-      const modifiedHeader = Buffer.from(JSON.stringify(headerWithX5u))
-        .toString("base64url")
-        .replace(/=/g, "");
+      const modifiedHeader = Buffer.from(JSON.stringify(headerWithX5u)).toString(
+        "base64url",
+      );
       const modifiedToken = [modifiedHeader, parts[1], parts[2]].join(".");
 
       expect(() => kit.verify(modifiedToken)).toThrow();

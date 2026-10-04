@@ -18,6 +18,7 @@ import {
 } from "../__fixtures__/keys.js";
 import { craftJwe } from "../__fixtures__/craft-jwe.js";
 import { refusalOf } from "../__fixtures__/refusal-of.js";
+import { withForgedHeader } from "../__fixtures__/with-forged-header.js";
 import { JweKit } from "./JweKit.js";
 import { beforeEach, describe, expect, test } from "vitest";
 
@@ -333,17 +334,7 @@ describe("JweKit", () => {
       // Well-formed header with a non-registered crit parameter that is
       // present. Aegis should still reject — it doesn't implement any
       // extension parameters.
-      const decoded = JweKit.decode(token);
-      const headerWithCrit = {
-        ...decoded.header,
-        crit: ["typ"],
-      };
-
-      const parts = token.split(".");
-      const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit))
-        .toString("base64url")
-        .replace(/=/g, "");
-      const modifiedToken = [modifiedHeader, ...parts.slice(1)].join(".");
+      const modifiedToken = withForgedHeader(token, { crit: ["typ"] });
 
       expect(() => kit.decrypt(modifiedToken)).toThrow(
         /crit must not contain the specification-defined header parameter "typ"/,
@@ -355,14 +346,7 @@ describe("JweKit", () => {
         header: { oid: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03" },
       });
 
-      const decoded = JweKit.decode(token);
-      const headerWithCrit = { ...decoded.header, crit: ["missing_ext"] };
-
-      const parts = token.split(".");
-      const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit))
-        .toString("base64url")
-        .replace(/=/g, "");
-      const modifiedToken = [modifiedHeader, ...parts.slice(1)].join(".");
+      const modifiedToken = withForgedHeader(token, { crit: ["missing_ext"] });
 
       expect(() => kit.decrypt(modifiedToken)).toThrow(/not present/);
     });
@@ -372,14 +356,7 @@ describe("JweKit", () => {
         header: { oid: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03" },
       });
 
-      const decoded = JweKit.decode(token);
-      const headerWithCrit = { ...decoded.header, crit: ["enc"] };
-
-      const parts = token.split(".");
-      const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit))
-        .toString("base64url")
-        .replace(/=/g, "");
-      const modifiedToken = [modifiedHeader, ...parts.slice(1)].join(".");
+      const modifiedToken = withForgedHeader(token, { crit: ["enc"] });
 
       expect(() => kit.decrypt(modifiedToken)).toThrow(/specification-defined/);
     });
@@ -389,14 +366,7 @@ describe("JweKit", () => {
         header: { oid: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03" },
       });
 
-      const decoded = JweKit.decode(token);
-      const headerWithCrit = { ...decoded.header, crit: [] };
-
-      const parts = token.split(".");
-      const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit))
-        .toString("base64url")
-        .replace(/=/g, "");
-      const modifiedToken = [modifiedHeader, ...parts.slice(1)].join(".");
+      const modifiedToken = withForgedHeader(token, { crit: [] });
 
       expect(() => kit.decrypt(modifiedToken)).toThrow(/empty/);
     });
@@ -435,12 +405,7 @@ describe("JweKit", () => {
         header: { oid: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03" },
       });
 
-      const headerWithZip = { ...JweKit.decode(token).header, zip: "DEF" };
-      const parts = token.split(".");
-      const modifiedHeader = Buffer.from(JSON.stringify(headerWithZip))
-        .toString("base64url")
-        .replace(/=/g, "");
-      const modifiedToken = [modifiedHeader, ...parts.slice(1)].join(".");
+      const modifiedToken = withForgedHeader(token, { zip: "DEF" });
 
       const decoded = JweKit.decode(modifiedToken);
 
@@ -462,14 +427,7 @@ describe("JweKit", () => {
 
       // Splice zip: "DEF" into the protected header to simulate an attacker
       // attempting to compress-then-encrypt. Aegis must reject this outright.
-      const decoded = JweKit.decode(token);
-      const headerWithZip = { ...decoded.header, zip: "DEF" };
-
-      const parts = token.split(".");
-      const modifiedHeader = Buffer.from(JSON.stringify(headerWithZip))
-        .toString("base64url")
-        .replace(/=/g, "");
-      const modifiedToken = [modifiedHeader, ...parts.slice(1)].join(".");
+      const modifiedToken = withForgedHeader(token, { zip: "DEF" });
 
       expect(() => kit.decrypt(modifiedToken)).toThrow(
         "Compressed JWE payloads are not supported",
