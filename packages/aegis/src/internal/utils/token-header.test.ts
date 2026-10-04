@@ -489,11 +489,6 @@ describe("shapeWireHeader (the wire-keyed write pass)", () => {
   });
 });
 
-/**
- * The COSE write pass, folded into this translator from the separate
- * `wire-header-to-cose-map.ts`. It had no test of its own there — which is part
- * of how the COSE header path drifted from the JOSE one.
- */
 describe("wireHeaderToCoseMap (the COSE write pass)", () => {
   test("resolves each wire name to the registry's COSE label", () => {
     const map = wireHeaderToCoseMap({ typ: "application/at+jwt", cty: "JWT" }, false);

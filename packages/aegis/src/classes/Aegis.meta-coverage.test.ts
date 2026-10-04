@@ -437,7 +437,7 @@ describe("Aegis — meta coverage", () => {
     const SOURCE_PATH = /src\/[\w./-]+\.ts/g;
     const LINE_NUMBER = /[\w./-]+\.ts:\d+/g;
     // A source file named WITHOUT the `src/` prefix and WITHOUT a `:N` suffix —
-    // `cwt-token.ts`, `internal/header/cose-wire-header.ts` — which is neither a
+    // `cwt-claims.ts`, `internal/header/cose-wire-header.ts` — which is neither a
     // `SOURCE_PATH` nor a `LINE_NUMBER` and so escaped both. Not hypothetical:
     // three sat in the tables, one naming a predicate (`contents.length < 3`)
     // that had not existed in the file it named for two refactors. A citation

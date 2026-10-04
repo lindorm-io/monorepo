@@ -124,7 +124,7 @@ describe("COSE typ integrity", () => {
   // is not an instance of.
   //
   // ⚠ It stays the BROAD class: narrowing pins WHICH check happens to notice
-  // (`assert-cose-token-type.ts` or `enforce-verify-floor.ts`), and the rule is
+  // (`assert-caller-token-type.ts` or `enforce-verify-floor.ts`), and the rule is
   // that an unsigned text typ answers nothing. ⚠ Scope that to `typ` alone — a
   // broad "no kit-derived header in an unsigned bag" is false here, because
   // `CwsKit.buildHeaders` puts the kit-derived `kid` in the UNPROTECTED map on
