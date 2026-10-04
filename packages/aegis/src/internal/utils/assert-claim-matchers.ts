@@ -5,8 +5,8 @@ import { AegisDomainError } from "../../errors/index.js";
 import type { TokenFormatTag, VerifyAssert } from "../../types/index.js";
 import type { NameSelector } from "../claims/claims-registry.js";
 import { createIdentityMatchers } from "./jwt-identity-matchers.js";
+import { withLiftedArrays } from "./lifted-arrays.js";
 import { matcherWireName } from "./matcher-wire-name.js";
-import { withSpacedArrays } from "./spaced-wire-arrays.js";
 import { validate } from "./validate.js";
 
 /**
@@ -24,7 +24,7 @@ export const assertClaimMatchers = ({
   /**
    * The WIRE-keyed claim dict the matcher pass reads, with temporal claims as
    * `Date`s; a list claim's string form is lifted off it per call
-   * ({@link withSpacedArrays}). Only the key spelling differs between the wires,
+   * ({@link withLiftedArrays}). Only the key spelling differs between the wires,
    * which is what `nameOf` accounts for.
    */
   wireClaims: Dict;
@@ -70,10 +70,10 @@ export const assertClaimMatchers = ({
   try {
     // ⚠ A list claim's string form — a spaced `scope`, a lone `aud` — is lifted
     // to the list it stands for before the predicate runs
-    // ({@link withSpacedArrays}): the caller's containment matcher compiles to a
+    // ({@link withLiftedArrays}): the caller's containment matcher compiles to a
     // `$all` (`lift-claim-matcher.ts`), which no string satisfies.
     validate(
-      withSpacedArrays(wireClaims, nameOf),
+      withLiftedArrays(wireClaims, nameOf),
       predicate as never,
       AegisDomainError,
       "claims_invalid",
@@ -96,7 +96,7 @@ export const assertClaimMatchers = ({
       // throws on one it cannot map. The `?? key` is the Map's `| undefined`.
       data: { invalid: invalid?.map((key) => domainByWire.get(key) ?? key) },
       // `debug` stays WIRE-spelled and carries the values. A lifted claim's
-      // value is the list ({@link withSpacedArrays}), not the token's own
+      // value is the list ({@link withLiftedArrays}), not the token's own
       // string.
       debug: { format, invalid: err.debug?.invalid },
       title: "Claims Invalid",

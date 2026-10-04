@@ -1,28 +1,28 @@
 import { describe, expect, test } from "vitest";
 import { CLAIM_SPECS, coseName, joseName } from "../claims/claims-registry.js";
-import { withSpacedArrays } from "./spaced-wire-arrays.js";
+import { withLiftedArrays } from "./lifted-arrays.js";
 
-describe("withSpacedArrays", () => {
+describe("withLiftedArrays", () => {
   test("lifts a spaced wire string to the list it spells, under either selector", () => {
-    expect(withSpacedArrays({ scope: "read write" }, joseName)).toEqual({
+    expect(withLiftedArrays({ scope: "read write" }, joseName)).toEqual({
       scope: ["read", "write"],
     });
-    expect(withSpacedArrays({ scope: "read write" }, coseName)).toEqual({
+    expect(withLiftedArrays({ scope: "read write" }, coseName)).toEqual({
       scope: ["read", "write"],
     });
   });
 
   test("lifts the empty string to the empty list", () => {
-    expect(withSpacedArrays({ scope: "" }, joseName)).toEqual({ scope: [] });
+    expect(withLiftedArrays({ scope: "" }, joseName)).toEqual({ scope: [] });
   });
 
   // RFC 7519 §4.1.3 — the wire form is a string OR an array, and the string
   // names one audience.
   test("lifts a lone audience string to the one-element list it names, under either selector", () => {
-    expect(withSpacedArrays({ aud: "https://rs.lindorm.io/" }, joseName)).toEqual({
+    expect(withLiftedArrays({ aud: "https://rs.lindorm.io/" }, joseName)).toEqual({
       aud: ["https://rs.lindorm.io/"],
     });
-    expect(withSpacedArrays({ aud: "https://rs.lindorm.io/" }, coseName)).toEqual({
+    expect(withLiftedArrays({ aud: "https://rs.lindorm.io/" }, coseName)).toEqual({
       aud: ["https://rs.lindorm.io/"],
     });
   });
@@ -37,13 +37,13 @@ describe("withSpacedArrays", () => {
       sub: "user-1",
     };
 
-    expect(withSpacedArrays(payload, joseName)).toEqual(payload);
+    expect(withLiftedArrays(payload, joseName)).toEqual(payload);
   });
 
   test("carries an audience that is neither a string nor a list untouched", () => {
-    expect(withSpacedArrays({ aud: 42 }, joseName)).toEqual({ aud: 42 });
+    expect(withLiftedArrays({ aud: 42 }, joseName)).toEqual({ aud: 42 });
     expect(
-      withSpacedArrays({ aud: { "0": "https://rs.lindorm.io/" } }, joseName),
+      withLiftedArrays({ aud: { "0": "https://rs.lindorm.io/" } }, joseName),
     ).toEqual({
       aud: { "0": "https://rs.lindorm.io/" },
     });
@@ -56,7 +56,7 @@ describe("withSpacedArrays", () => {
       CLAIM_SPECS.map((spec) => [joseName(spec), "one two"]),
     );
 
-    const lifted = withSpacedArrays(payload, joseName);
+    const lifted = withLiftedArrays(payload, joseName);
 
     expect(
       Object.keys(payload)
@@ -72,7 +72,7 @@ describe("withSpacedArrays", () => {
     const payload = { aud: "https://rs.lindorm.io/", scope: "read write", sub: "user-1" };
     const before = structuredClone(payload);
 
-    withSpacedArrays(payload, joseName);
+    withLiftedArrays(payload, joseName);
 
     expect(payload).toEqual(before);
   });

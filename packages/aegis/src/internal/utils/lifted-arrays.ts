@@ -21,15 +21,16 @@ const LIFTED: Readonly<Record<ArrayScalar, boolean>> = {
 };
 
 /**
- * Lift every array claim of a WIRE payload whose string form stands for a list
- * — `scope`'s space-delimited string (RFC 8693 §4.2) to the list it spells, a
- * lone `aud` (RFC 7519 §4.1.3) to the one-element list it names — the sibling of
- * `withJoseDates` (`internal/utils/jose-dates.ts`): that helper puts both wires'
- * temporal claims in one shape for the matcher pass, and this one does the same
- * for the lists, so a caller's containment matcher (`{ scope: "read" }`,
+ * Lift every list claim of a WIRE payload whose string form stands for a list, so a
+ * caller's containment matcher (`{ scope: "read" }`,
  * `{ audience: "https://rs.lindorm.io/" }`, lifted to a `$all` by
  * `lift-claim-matcher.ts`) is answered against the LIST rather than against one
- * string no list operator matches.
+ * string no list operator matches. The sibling of `withJoseDates`
+ * (`internal/utils/jose-dates.ts`), which puts both wires' temporal claims in one
+ * shape for the same matcher pass.
+ *
+ * `scope`'s space-delimited string (RFC 8693 §4.2) lifts to the list it spells and
+ * a lone `aud` (RFC 7519 §4.1.3) to the one-element list it names.
  *
  * ⚠ Registry-driven in both halves: WHICH claims lift comes from the codec cell
  * ({@link LIFTED}), and the lift IS the read side's own decoder
@@ -39,7 +40,7 @@ const LIFTED: Readonly<Record<ArrayScalar, boolean>> = {
  * ⚠ A value that is not a string is carried untouched: an array is already the
  * matcher's shape, and anything else must keep failing the matchers as itself.
  */
-export const withSpacedArrays = (payload: Dict, nameOf: NameSelector): Dict => {
+export const withLiftedArrays = (payload: Dict, nameOf: NameSelector): Dict => {
   const out: Dict = { ...payload };
 
   for (const spec of CLAIM_SPECS) {
