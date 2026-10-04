@@ -59,6 +59,16 @@ export class AegisHeaderProvenanceSteps extends AegisStepsBase {
     this.carriesTheByteString("unprotectedHeader", key, base64url);
   }
 
+  @Then(
+    "the raw unprotected header carries {wireKey} as the byte string of the text {string}",
+  )
+  theRawUnprotectedHeaderCarriesAsTheByteStringOfTheText(
+    key: WireKey,
+    text: string,
+  ): void {
+    expect(this.byteStringAt("unprotectedHeader", key).toString("utf8")).toBe(text);
+  }
+
   @Then("the raw unprotected header carries all of {wireKeys}")
   theRawUnprotectedHeaderCarriesAllOf(keys: Array<WireKey>): void {
     this.carriesAllOf("unprotectedHeader", keys);
@@ -130,10 +140,15 @@ export class AegisHeaderProvenanceSteps extends AegisStepsBase {
   }
 
   private carriesTheByteString(part: RawPart, key: WireKey, base64url: string): void {
+    expect(this.byteStringAt(part, key).toString("base64url")).toBe(base64url);
+  }
+
+  private byteStringAt(part: RawPart, key: WireKey): Buffer {
     const value = this.raw(part).get(key);
 
     expect(value).toBeInstanceOf(Uint8Array);
-    expect(Buffer.from(value as Uint8Array).toString("base64url")).toBe(base64url);
+
+    return Buffer.from(value as Uint8Array);
   }
 
   private carriesNoneOf(part: RawPart, keys: Array<WireKey>): void {

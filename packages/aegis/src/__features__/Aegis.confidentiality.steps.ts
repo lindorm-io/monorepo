@@ -91,15 +91,16 @@ export class AegisConfidentialitySteps extends AegisStepsBase {
     this.ctx.token = signed.token;
   }
 
+  @When("a third party seals the data on the {wire} wire")
+  async aThirdPartySealsTheDataUntyped(wire: Wire): Promise<void> {
+    this.assertScenarioWire(wire);
+    this.ctx.token = await this.sealedByAThirdParty(wire, undefined);
+  }
+
   @When("a third party seals the data on the {wire} wire, typed {string}")
   async aThirdPartySealsTheData(wire: Wire, typ: string): Promise<void> {
     this.assertScenarioWire(wire);
-    this.ctx.token = await sealAsThirdParty(
-      wire,
-      Buffer.from(JSON.stringify(this.ctx.claims), "utf8"),
-      typ,
-      TEST_OCT_KEY_ENC,
-    );
+    this.ctx.token = await this.sealedByAThirdParty(wire, typ);
   }
 
   @When("I decrypt the token")
@@ -151,6 +152,11 @@ export class AegisConfidentialitySteps extends AegisStepsBase {
     expect(this.decrypted().header.tokenType).toBe(tokenType);
   }
 
+  @Then("the decrypted header reports the key id of the dir encryption key")
+  theDecryptedHeaderReportsTheKeyIdOfTheDirEncryptionKey(): void {
+    expect(this.decrypted().header.keyId).toBe(TEST_OCT_KEY_ENC.id);
+  }
+
   // the refusals
 
   @Then("decryption is refused as an aegis error")
@@ -182,6 +188,16 @@ export class AegisConfidentialitySteps extends AegisStepsBase {
       logger: createMockLogger(),
       defaultEncryption,
     });
+  }
+
+  private sealedByAThirdParty(wire: Wire, typ: string | undefined): Promise<string> {
+    return sealAsThirdParty(
+      wire,
+      Buffer.from(JSON.stringify(this.ctx.claims), "utf8"),
+      typ,
+      TEST_OCT_KEY_ENC,
+      this.ctx.foreignHeaders,
+    );
   }
 
   /** The decrypted payload, which the sentence expects to be an object. */

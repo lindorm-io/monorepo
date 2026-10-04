@@ -18,9 +18,11 @@ import { isProtectedOnly } from "./is-protected-only.js";
  * nothing for a write-side refusal to refuse (`build-cose-headers.ts`).
  *
  * The protected bucket wins a collision — it is applied second. pinned:
- * `Aegis.header-provenance.feature` "a header parameter stated in both COSE
- * buckets is read from the protected one". A reader who needs the two apart
- * reads the KIT result ({@link CoseHeaderBuckets}).
+ * `Aegis.header-provenance.feature` "an initialisation vector a signed COSE
+ * token states in both buckets is read from the protected one" and "a recipient
+ * reads a COSE_Encrypt0's key identifier from the protected bucket, and from the
+ * unprotected one only where the protected states none". A reader who needs the
+ * two apart reads the KIT result ({@link CoseHeaderBuckets}).
  *
  * ⚠ NOT `Object.assign` and not a whole-bucket spread: an explicitly `undefined`
  * value is an ABSENT parameter, and copying one would let the protected bucket

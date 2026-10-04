@@ -1,0 +1,10 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`sealAsThirdParty on the jose wire > writes a stated protected header beside the parameters it derives from its key 1`] = `
+{
+  "alg": "dir",
+  "cty": "application/json",
+  "enc": "A256GCM",
+  "kid": "ae26175f-961d-5947-8318-6299e4576b83",
+}
+`;

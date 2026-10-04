@@ -152,7 +152,10 @@ Feature: Header provenance, empty header parameters and the asserted token type
     accepting scenario reads both raw buckets off the bytes before asserting
     what the verify reported, so a reader that relocated the parameter cannot
     satisfy it. A token naming no key in either bucket is refused rather than
-    searched for, because nothing a token declares may steer key selection.
+    searched for, as aegis policy wherever the vault would resolve the key: a
+    search would pick a key the token never named, and where the search is
+    filtered by the algorithm the token declares, the token would choose the
+    class of that key.
     The jose wire has no scenario: the JOSE compact serialisation has one
     header and no second bucket to read a parameter from (RFC 7515 §7.1), so
     there is no order for a reader to get right.
@@ -190,6 +193,79 @@ Feature: Header provenance, empty header parameters and the asserted token type
       When a third party signs the wire claims on the cose wire
       And I verify the token
       Then verification is refused as a key error "verify_key_missing_kid"
+
+  Rule: a recipient reads a COSE_Encrypt0's key identifier from the protected bucket, and from the unprotected one only where the protected states none
+
+    The jose wire has no scenario: a compact JWE has one header and no syntax
+    for an unprotected one (RFC 7516 §7.1), so there is no second bucket for a
+    recipient to read a key identifier from. A COSE_Encrypt0 may name its key
+    in either bucket, though the structure assumes its recipient already
+    knows which key to use (RFC 9052 §5.2), and the protected bucket is
+    authoritative (RFC 9052 §3): it is part of the additional authenticated
+    data the AEAD covers (RFC 9052 §5.3), while whoever last held the token
+    can rewrite the unprotected one. Every token here is a foreign producer's,
+    since aegis writes `kid` in the unprotected bucket alone, and the producer
+    places the id of the `dir` key it seals with. Each scenario reads both raw
+    buckets off the bytes: an accepting one before asserting what the decrypt
+    reported, so a reader that relocated the parameter cannot satisfy it, and
+    the refused one before the decrypt it is refused at. A token naming no
+    key in either bucket is refused rather than searched for, as aegis policy
+    wherever the vault would resolve the key: a search would pick a key the
+    token never named, and where the search is filtered by the algorithm the
+    token declares, the token would choose the class of that key. A `kid`
+    stated in both buckets is read protected-first on this arm rather than
+    refused: as aegis policy the read does not take up the check RFC 9052 §3
+    recommends for a label in both buckets, and it reads the `kid` as
+    RFC 9052 §3 requires of a message not rejected as malformed, from the
+    protected bucket the AEAD covers, ignoring the unprotected one. A signed
+    token stating `kid` in both buckets is refused instead, as aegis policy.
+    The unprotected `kid` in the scenario stating both names a key the vault
+    does not hold, so a reader consulting that bucket first refuses the token
+    at key resolution instead.
+
+    Background:
+      Given the vault also holds a dir encryption key
+      And the data to encrypt
+        | subject | user-1 |
+
+    @RFC-9052
+    Scenario: cose: a key identifier the AEAD covers resolves the recipient key (RFC-9052 §3)
+      Given the third party writes its key identifier in the protected bucket
+      When a third party seals the data on the cose wire
+      And I decrypt the token
+      Then the raw protected header carries all of label 4
+      And the raw unprotected header carries none of label 4
+      And the decrypted token is a "cwe"
+      And the decrypted header reports the key id of the dir encryption key
+
+    Scenario: cose: a key identifier in the unprotected bucket alone resolves the recipient key
+      Given the third party writes its key identifier in the unprotected bucket
+      When a third party seals the data on the cose wire
+      And I decrypt the token
+      Then the raw unprotected header carries all of label 4
+      And the raw protected header carries none of label 4
+      And the decrypted token is a "cwe"
+      And the decrypted header reports the key id of the dir encryption key
+
+    Scenario: cose: a token naming no key in either bucket is refused rather than searched for
+      Given the third party writes its key identifier in neither bucket
+      When a third party seals the data on the cose wire
+      Then the raw protected header carries none of label 4
+      And the raw unprotected header carries none of label 4
+      When I decrypt the token
+      Then decryption is refused as a key error "decrypt_key_missing_kid"
+
+    @RFC-9052
+    Scenario: cose: the protected key identifier resolves the recipient key where the unprotected bucket names another (RFC-9052 §3)
+      Given the third party writes its key identifier in the protected bucket
+      And the foreign unprotected header carries
+        | kid | "a-key-the-vault-does-not-hold" |
+      When a third party seals the data on the cose wire
+      And I decrypt the token
+      Then the raw protected header carries all of label 4
+      And the raw unprotected header carries label 4 as the byte string of the text "a-key-the-vault-does-not-hold"
+      And the decrypted token is a "cwe"
+      And the decrypted header reports the key id of the dir encryption key
 
   Rule: a signed COSE token stating its key identifier in both header buckets is refused as malformed
 
@@ -637,7 +713,7 @@ Feature: Header provenance, empty header parameters and the asserted token type
       And I verify the token as a claims token on the cose wire
       Then verification is refused as a COSE error "cose_header_iv_invalid"
 
-  Rule: a header parameter stated in both COSE buckets is read from the protected one
+  Rule: an initialisation vector a signed COSE token states in both buckets is read from the protected one
 
     The jose wire has no scenario: a JOSE compact serialisation has one
     header (RFC 7515 §7.1, RFC 7516 §7.1), so no parameter can be stated a

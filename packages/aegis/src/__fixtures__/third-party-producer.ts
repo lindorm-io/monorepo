@@ -33,10 +33,10 @@ import type { Wire } from "./raw-bucket.js";
  * A producer may also write header parameters beside the `alg` and `kid` it
  * derives from its key ({@link ForeignHeaders}) — the shapes aegis's own writers
  * refuse to produce, which are the only way to state what a READER must do
- * with one. On JOSE such a header is signed by hand with WebCrypto, because
- * `jose` refuses to write a `crit` naming a parameter the header lacks, or one
- * it has not been told it implements: a hostile or merely careless third party
- * checks neither.
+ * with one. On a signed JOSE token such a header is signed by hand with
+ * WebCrypto, because `jose` refuses to write a `crit` naming a parameter the
+ * header lacks, or one it has not been told it implements: a hostile or merely
+ * careless third party checks neither.
  *
  * ⛔ Imports nothing from `src/internal/` or `src/classes/`. The CWT claim keys
  * and the COSE labels below are written out from the specifications, so a token
@@ -106,10 +106,11 @@ export type ForeignHeaders = {
   unprotectedHeader?: Dict;
   /**
    * COSE only: which bucket the producer's OWN `kid` rides in, `"unprotected"`
-   * when unstated. It is always the signing key's id and never a value a caller
-   * chooses — a reader with no key supplied resolves the key the hint names from
-   * its vault, so a literal naming a key the vault does not hold would be refused
-   * at key resolution rather than answer the placement under test.
+   * when unstated. It is always the id of the key the producer signs or seals
+   * with and never a value a caller chooses — a reader with no key supplied
+   * resolves the key the hint names from its vault, so a literal naming a key the
+   * vault does not hold would be refused at key resolution rather than answer the
+   * placement under test.
    */
   kidPlacement?: ForeignKidPlacement;
   /**
@@ -120,10 +121,10 @@ export type ForeignHeaders = {
   textLabelledProtected?: Dict;
   /**
    * COSE only: unprotected entries at the INTEGER label the CALLER names, in the
-   * bucket the signature does not cover (RFC 9052 §3). The producer resolves
-   * nothing — a private-use label (RFC 8152 §16.2) is registered to no
-   * parameter, so there is no specification for this fixture to read it out of
-   * and no registry it is allowed to ask.
+   * bucket nothing covers (RFC 9052 §3). The producer resolves nothing — a
+   * private-use label (RFC 8152 §16.2) is registered to no parameter, so there
+   * is no specification for this fixture to read it out of and no registry it is
+   * allowed to ask.
    */
   integerLabelledUnprotected?: IntegerLabelledEntries;
   /**
@@ -245,35 +246,37 @@ export const signCompactByHand = async (
   return `${signingInput}.${b64u(Buffer.from(signature))}`;
 };
 
-const signJose = async (
-  payload: Buffer,
-  typ: string | undefined,
-  kryptos: IKryptos,
-  headers: ForeignHeaders,
-): Promise<string> => {
+const joseInexpressibleOf = (headers: ForeignHeaders): string | undefined => {
   if (
     headers.unprotectedHeader !== undefined ||
     headers.integerLabelledUnprotected !== undefined
   ) {
-    throw new Error(
-      "a JOSE compact serialisation carries one header and it is protected (RFC 7515 §7.1): there is no unprotected bucket for a producer to write",
-    );
+    return "a JOSE compact serialisation carries one header and it is protected (RFC 7515 §7.1, RFC 7516 §7.1): there is no unprotected bucket for a producer to write";
   }
 
   if (
     headers.textLabelledProtected !== undefined ||
     headers.integerLabelledProtected !== undefined
   ) {
-    throw new Error(
-      "a JOSE header is a JSON object with one kind of member name (RFC 7515 §4): there is no second label form for a producer to write",
-    );
+    return "a JOSE header is a JSON object with one kind of member name (RFC 7515 §4, RFC 7516 §4): there is no second label form for a producer to write";
   }
 
   if (headers.kidPlacement !== undefined) {
-    throw new Error(
-      "a JOSE compact serialisation has one header and the key id rides it (RFC 7515 §7.1): there is no bucket for a producer to place it in",
-    );
+    return "a JOSE compact serialisation has one header and the key id rides it (RFC 7515 §7.1, RFC 7516 §7.1): there is no bucket for a producer to place it in";
   }
+
+  return undefined;
+};
+
+const signJose = async (
+  payload: Buffer,
+  typ: string | undefined,
+  kryptos: IKryptos,
+  headers: ForeignHeaders,
+): Promise<string> => {
+  const inexpressible = joseInexpressibleOf(headers);
+
+  if (inexpressible !== undefined) throw new Error(inexpressible);
 
   // The producer's own parameters first, so a stated one can restate them.
   const header: Dict & { alg: string } = {
@@ -303,23 +306,23 @@ const enveloped = (envelope: CoseEnvelope, structure: Tag): string =>
     encode(envelope === "cwt" ? new Tag(CBOR_TAG.cwt, structure) : structure),
   ).toString("base64url");
 
-const signCose = async (
-  payload: Buffer,
-  envelope: CoseEnvelope,
+type CoseBuckets = {
+  protectedEntries: Array<[CoseLabel, unknown]>;
+  unprotectedEntries: Array<[CoseLabel, unknown]>;
+};
+
+const coseBucketsOf = (
+  alg: number,
   typ: string | undefined,
   kryptos: IKryptos,
   headers: ForeignHeaders,
-): Promise<string> => {
-  const { kty, crv, x, y, d, k } = kryptos.export("jwk") as Dict;
-
+): CoseBuckets => {
   const placement = headers.kidPlacement ?? "unprotected";
   const kidInProtected = placement === "protected" || placement === "both";
   const kidInUnprotected = placement === "unprotected" || placement === "both";
   const kid: [CoseLabel, unknown] = [coseLabelOf("kid"), Buffer.from(kryptos.id, "utf8")];
 
-  const protectedEntries: Array<[CoseLabel, unknown]> = [
-    [coseLabelOf("alg"), coseAlgorithmOf(kryptos)],
-  ];
+  const protectedEntries: Array<[CoseLabel, unknown]> = [[coseLabelOf("alg"), alg]];
 
   if (kidInProtected) protectedEntries.push(kid);
   if (typ !== undefined) protectedEntries.push([coseLabelOf("typ"), typ]);
@@ -337,6 +340,25 @@ const signCose = async (
     ...coseEntriesOf(headers.unprotectedHeader),
     ...(headers.integerLabelledUnprotected ?? []),
   ];
+
+  return { protectedEntries, unprotectedEntries };
+};
+
+const signCose = async (
+  payload: Buffer,
+  envelope: CoseEnvelope,
+  typ: string | undefined,
+  kryptos: IKryptos,
+  headers: ForeignHeaders,
+): Promise<string> => {
+  const { kty, crv, x, y, d, k } = kryptos.export("jwk") as Dict;
+
+  const { protectedEntries, unprotectedEntries } = coseBucketsOf(
+    coseAlgorithmOf(kryptos),
+    typ,
+    kryptos,
+    headers,
+  );
 
   // A shared secret has two holders, so it authenticates a COSE_Mac0 and never
   // signs a COSE_Sign1 (RFC 9052 §6.2, RFC 9052 §4.2): the producer emits the
@@ -396,38 +418,48 @@ export const signContentAsThirdParty = (
 /**
  * Seal `content` as a third party sharing the recipient's `dir` key would on
  * `wire`, stamping `typ` only when one is given: a compact JWE with `alg: "dir"`
- * on JOSE (RFC 7518 §4.5), a COSE_Encrypt0 on COSE (RFC 9052 §5.2) with the key
- * id in the unprotected bucket. The producer chooses AES-256-GCM itself
- * (RFC 7518 §5.3, RFC 9053 §4.1) rather than reading what the key declares.
+ * on JOSE (RFC 7518 §4.5), a COSE_Encrypt0 on COSE (RFC 9052 §5.2). The producer
+ * chooses AES-256-GCM itself (RFC 7518 §5.3, RFC 9053 §4.1) rather than reading
+ * what the key declares. `headers` land in the buckets {@link signAsThirdParty}
+ * puts them in, but on JOSE `jose` writes the header and refuses a `crit` it
+ * would refuse to read, which the hand-signed JWS does not.
  */
 export const sealAsThirdParty = async (
   wire: Wire,
   content: Buffer,
   typ: string | undefined,
   kryptos: IKryptos,
+  headers: ForeignHeaders = {},
 ): Promise<string> => {
   const secret = Buffer.from(String((kryptos.export("jwk") as Dict).k), "base64url");
 
   if (wire === "jose") {
+    const inexpressible = joseInexpressibleOf(headers);
+
+    if (inexpressible !== undefined) throw new Error(inexpressible);
+
+    // The producer's own parameters first, so a stated one can restate them.
     return new CompactEncrypt(content)
       .setProtectedHeader({
         alg: "dir",
         enc: "A256GCM",
         kid: kryptos.id,
         ...(typ === undefined ? {} : { typ }),
+        ...headers.protectedHeader,
       })
       .encrypt(secret);
   }
 
-  const protectedEntries: Array<[CoseLabel, unknown]> = [
-    [coseLabelOf("alg"), EncryptionAlgorithms.A256GCM],
-  ];
-
-  if (typ !== undefined) protectedEntries.push([coseLabelOf("typ"), typ]);
+  const { protectedEntries, unprotectedEntries } = coseBucketsOf(
+    EncryptionAlgorithms.A256GCM,
+    typ,
+    kryptos,
+    headers,
+  );
 
   const encrypt0 = await Encrypt0.encrypt(
     protectedEntries as never,
-    [[coseLabelOf("kid"), Buffer.from(kryptos.id, "utf8")]] as never,
+    unprotectedEntries as never,
     content,
     secret,
   );
