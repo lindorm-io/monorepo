@@ -1,5 +1,23 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Aegis > a custom claim stated under claims on an id token > carries the claim on the cose wire in snake case and reads it back as custom 1`] = `
+{
+  "custom": {
+    "favouriteColour": "blue",
+  },
+  "onTheWire": "blue",
+}
+`;
+
+exports[`Aegis > a custom claim stated under claims on an id token > carries the claim on the jose wire in snake case and reads it back as custom 1`] = `
+{
+  "custom": {
+    "favouriteColour": "blue",
+  },
+  "onTheWire": "blue",
+}
+`;
+
 exports[`Aegis > the encoding of the token a domain refusal refused > claims_invalid keeps the cwt encoding out of data and reports it in debug 1`] = `
 {
   "code": "claims_invalid",

@@ -7,6 +7,7 @@ import type {
   ProfileContentFor,
   SignContent,
   JoseVerifiedStructuredToken,
+  UserinfoContent,
 } from "../../types/index.js";
 import type { SecurityEvents } from "../../internal/claims/events.js";
 import type { IAegis } from "./Aegis.js";
@@ -56,8 +57,8 @@ export const _mintContentGuards = (): void => {
     federationAssuranceLevel: 1,
   });
 
-  // `clientId` is required on an access token and absent from an id token, whose
-  // audience IS the client. Neither direction may leak into the other.
+  // `clientId` is required on an access token and is not a top-level member of an
+  // id token, whose audience IS the client.
   // OIDC Core §2.
   void aegis.mint(
     "id_token",
@@ -236,6 +237,12 @@ describe("IAegis — the compile-time contract", () => {
     test("should admit username on an access token and not on an id token", () => {
       expectTypeOf<AccessTokenContent>().toHaveProperty("username");
       expectTypeOf<IdTokenContent>().not.toHaveProperty("username");
+    });
+
+    // OIDC Core §2
+    test("should admit claims on an id token as a userinfo token does, beside profile", () => {
+      expectTypeOf<IdTokenContent["claims"]>().toEqualTypeOf<UserinfoContent["claims"]>();
+      expectTypeOf<IdTokenContent>().toHaveProperty("profile");
     });
   });
 

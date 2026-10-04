@@ -10,8 +10,11 @@ import {
   TEST_OKP_KEY_ENC,
   TEST_OKP_KEY_SIG,
 } from "../__fixtures__/keys.js";
+import { inspectToken } from "../__fixtures__/inspect-token.js";
+import { rawBucketOf } from "../__fixtures__/raw-bucket.js";
 import { rejectionOf } from "../__fixtures__/refusal-of.js";
 import { signAsThirdParty } from "../__fixtures__/third-party-producer.js";
+import { SIGNED_FORMAT } from "../__fixtures__/wire-formats.js";
 import { FAPI_SIG_ALGS } from "../constants/fapi.js";
 import { AegisError } from "../errors/index.js";
 import type { ClaimsTokenFormat, SignContent } from "../types/index.js";
@@ -1021,5 +1024,32 @@ describe("Aegis", () => {
     expect(payload.sub).toBe("3f2ae79d-f1d1-556b-a8bc-305e6b2334ad");
     expect(payload.exp).toBe(1704099600);
     expect(payload.nbf).toBeUndefined();
+  });
+
+  // OIDC Core §2
+  describe("a custom claim stated under claims on an id token", () => {
+    test.each(["jose", "cose"] as const)(
+      "carries the claim on the %s wire in snake case and reads it back as custom",
+      async (wire) => {
+        const { token } = await aegis.mint(
+          "id_token",
+          {
+            subject: "user-1",
+            audience: ["client-1"],
+            claims: { favouriteColour: "blue" },
+          },
+          { context: { accessTokenIssued: false }, format: SIGNED_FORMAT[wire] },
+        );
+
+        const verified = await aegis.verify("id_token", token, undefined, {
+          audience: "client-1",
+        });
+
+        expect({
+          onTheWire: rawBucketOf(inspectToken(token), "payload").get("favourite_colour"),
+          custom: verified.custom,
+        }).toMatchSnapshot();
+      },
+    );
   });
 });
