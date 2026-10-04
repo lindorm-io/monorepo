@@ -1,16 +1,24 @@
 import { B64 } from "@lindorm/b64";
 import { describe, expect, test } from "vitest";
 import { JweError } from "../../errors/index.js";
+import { buildJoseHeader } from "../header/build-jose-header.js";
+import { KIT_CAPABILITIES } from "../registry/kit-capabilities.js";
 import { assembleJweCompact } from "./assemble-jwe-compact.js";
 import { encodeJoseHeader } from "./jose-header.js";
 import { splitJweCompact } from "./split-jwe-compact.js";
 
-const header = encodeJoseHeader({
-  alg: "A256KW",
-  enc: "A256GCM",
-  kid: "key_test",
-  typ: "JWE",
-});
+const header = encodeJoseHeader(
+  buildJoseHeader({
+    reserved: KIT_CAPABILITIES.jwe.reserved,
+    defaults: {},
+    header: undefined,
+    custom: undefined,
+    derived: { alg: "A256KW", enc: "A256GCM", kid: "key_test", typ: "JWE" },
+    cert: undefined,
+    format: "jwe",
+    error: JweError,
+  }),
+);
 
 /** The reader is driven off what the writer produced — the round trip IS the contract. */
 const assemble = (publicEncryptionKey: Buffer | undefined): string =>

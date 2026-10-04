@@ -4,20 +4,18 @@ import { TOKEN_HEADER_ALGORITHMS } from "../constants/header.js";
 import { JoseError } from "../../errors/index.js";
 import { KIT_CAPABILITIES } from "../registry/kit-capabilities.js";
 import type { Dict } from "@lindorm/types";
+import type { BuiltJoseHeader } from "../header/built-jose-header.js";
 import { headerByJose } from "../header/header-registry.js";
-import type { WireTokenHeader, WireTokenHeaderOptions } from "../../types/index.js";
+import type { WireTokenHeader } from "../../types/index.js";
 
 /**
- * Serialise an ASSEMBLED JOSE protected header (`buildJoseHeader`'s output) to its
- * base64url segment: the last-line invariants, the byte fields to base64url, JSON.
+ * Serialise an ASSEMBLED JOSE protected header to its base64url segment: the
+ * last-line invariants, the byte fields to base64url, JSON.
  *
- * It takes the WIRE header, not domain options — assembling one is
- * `buildJoseHeader`'s job, and every JOSE kit goes through it, so the encoder
- * neither merges nor translates. That also means the KEY ORDER it is handed is the
- * order it emits: the caller has already canonicalised it, and the signed bytes
- * depend on it.
+ * ⚠ The KEY ORDER it is handed is the order it emits: the builder has already
+ * canonicalised it, and the signed bytes depend on it.
  */
-export const encodeJoseHeader = (header: WireTokenHeaderOptions): string => {
+export const encodeJoseHeader = (header: BuiltJoseHeader): string => {
   if (!header.alg) {
     throw new JoseError("Algorithm is required", {
       code: "jose_header_algorithm_required",

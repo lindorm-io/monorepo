@@ -11,6 +11,7 @@ import { mapTokenHeader, shapeWireHeader } from "../utils/token-header.js";
 import { assertCritEligible } from "./assert-crit-eligible.js";
 import { buildCustomHeader } from "./build-custom-header.js";
 import { assertCritSatisfied } from "./assert-crit-satisfied.js";
+import type { BuiltJoseHeader } from "./built-jose-header.js";
 import { canonicalWireHeader } from "./canonical-wire-header.js";
 import { headerByDomain, headerByJose, headerJoseName } from "./header-registry.js";
 import { normaliseHeaders } from "./normalise-headers.js";
@@ -162,7 +163,7 @@ export const buildJoseHeader = ({
   format: TokenFormatTag;
   /** The kit's own error class, so the refusal names the format it came from. */
   error: typeof JoseError;
-}): WireTokenHeaderOptions => {
+}): BuiltJoseHeader => {
   const owned = new Set(reserved);
 
   // ⛔ `Object.create(null)`, not `{}`: the keys are the CALLER's and the next thing
@@ -235,5 +236,5 @@ export const buildJoseHeader = ({
     error,
   });
 
-  return assembled;
+  return assembled as BuiltJoseHeader;
 };
