@@ -11,11 +11,17 @@ type DuplicateKey = {
   positions: Array<number>;
 };
 
+const RAGGED_TABLE_DETAILS =
+  "Cells are read by column index against the header row, so a row of any other width would drop its extra cells or read undefined for its missing ones. Give every row the same width, or read the table through raw().";
+
+const TABLE_CONVERSION_FAILED_DETAILS =
+  "The table's string cells did not satisfy the schema. Fix the table in the feature file, or the schema — every cell is a string, so zod needs z.coerce.number() for numbers and z.stringbool() for booleans.";
+
 /**
  * A step's DataTable argument, delivered in the trailing argument slot. The
  * five untyped methods are cucumber-js's exactly (models/data_table.ts, read
  * 2026-08-19): `raw`, `rows`, `hashes`, `rowsHash`, `transpose` — all values
- * `string`. Three deliberate divergences, all toward explicitness:
+ * `string`. Four deliberate divergences, all toward explicitness:
  *
  * - COPYING: cucumber's `raw()` is a shallow `slice(0)`, so mutating an inner
  *   row through it corrupts every later `hashes()`/`rows()` call on the same
@@ -30,6 +36,12 @@ type DuplicateKey = {
  *   overwrites the earlier cell under cucumber's last-write-wins assignment,
  *   so a cell the feature file carries never reaches the step. Here both
  *   throw `invalid_data_table` (pinned: DataTable.test.ts).
+ * - RAGGED TABLES: cucumber's `hashes()`/`transpose()` pair cells by column
+ *   index, so a row wider than the header loses its extra cells and a
+ *   narrower one reads `undefined`. Here both throw `invalid_data_table`,
+ *   naming the first row whose width differs from the header's. Gherkin
+ *   refuses a ragged table at parse, but the constructor is public (pinned:
+ *   DataTable.test.ts).
  *
  * Typed conversion takes a schema with `parse` / `parseAsync` (zod or any
  * other): `create`/`createSet` are SYNCHRONOUS (`.parse`) — they run inside
@@ -65,6 +77,19 @@ export class DataTable {
 
     if (isUndefined(header)) {
       return [];
+    }
+
+    const ragged = this.raggedRowIndex();
+
+    if (ragged !== -1) {
+      throw new GherkinError(
+        `hashes() requires every row to match the header row's width of ${header.length} — row ${ragged + 1} has ${this.cells[ragged].length}`,
+        {
+          code: "invalid_data_table",
+          details: RAGGED_TABLE_DETAILS,
+          data: { row: ragged + 1, width: this.cells[ragged].length },
+        },
+      );
     }
 
     const duplicate = this.duplicateKey(header);
@@ -135,6 +160,19 @@ export class DataTable {
       return new DataTable([]);
     }
 
+    const ragged = this.raggedRowIndex();
+
+    if (ragged !== -1) {
+      throw new GherkinError(
+        `transpose() requires every row to match the header row's width of ${first.length} — row ${ragged + 1} has ${this.cells[ragged].length}`,
+        {
+          code: "invalid_data_table",
+          details: RAGGED_TABLE_DETAILS,
+          data: { row: ragged + 1, width: this.cells[ragged].length },
+        },
+      );
+    }
+
     return new DataTable(first.map((_, index) => this.cells.map((row) => row[index])));
   }
 
@@ -170,6 +208,10 @@ export class DataTable {
     }
 
     return set;
+  }
+
+  private raggedRowIndex(): number {
+    return this.cells.findIndex((row) => row.length !== this.cells[0].length);
   }
 
   /** The first key occurring more than once, with its one-based positions. */
@@ -215,7 +257,21 @@ export class DataTable {
     try {
       return schema.parse(row);
     } catch (error) {
-      throw this.toConversionError(error, bodyRow);
+      if (isZodShaped(error)) {
+        const summary = `Data table body row ${bodyRow} failed schema conversion`;
+
+        throw new GherkinError(
+          isString(error.message) ? `${summary}\n\n${error.message}` : summary,
+          {
+            code: "table_conversion_failed",
+            details: TABLE_CONVERSION_FAILED_DETAILS,
+            data: { issues: error.issues, row: bodyRow },
+            cause: error,
+          },
+        );
+      }
+
+      throw error;
     }
   }
 
@@ -227,26 +283,21 @@ export class DataTable {
     try {
       return await schema.parseAsync(row);
     } catch (error) {
-      throw this.toConversionError(error, bodyRow);
+      if (isZodShaped(error)) {
+        const summary = `Data table body row ${bodyRow} failed schema conversion`;
+
+        throw new GherkinError(
+          isString(error.message) ? `${summary}\n\n${error.message}` : summary,
+          {
+            code: "table_conversion_failed",
+            details: TABLE_CONVERSION_FAILED_DETAILS,
+            data: { issues: error.issues, row: bodyRow },
+            cause: error,
+          },
+        );
+      }
+
+      throw error;
     }
-  }
-
-  private toConversionError(error: unknown, bodyRow: number): unknown {
-    if (isZodShaped(error)) {
-      const summary = `Data table body row ${bodyRow} failed schema conversion`;
-
-      return new GherkinError(
-        isString(error.message) ? `${summary}\n\n${error.message}` : summary,
-        {
-          code: "table_conversion_failed",
-          details:
-            "The table's string cells did not satisfy the schema. Fix the table in the feature file, or the schema — every cell is a string, so zod needs z.coerce.number() for numbers and z.stringbool() for booleans.",
-          data: { issues: error.issues, row: bodyRow },
-          cause: error,
-        },
-      );
-    }
-
-    return error;
   }
 }

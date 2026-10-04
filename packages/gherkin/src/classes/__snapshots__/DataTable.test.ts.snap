@@ -42,6 +42,54 @@ exports[`DataTable > duplicate keys > should throw invalid_data_table from rowsH
 }
 `;
 
+exports[`DataTable > ragged tables > should throw invalid_data_table from hashes() on a body row wider than the header, naming the row and its width 1`] = `
+{
+  "code": "invalid_data_table",
+  "data": {
+    "row": 2,
+    "width": 2,
+  },
+  "details": "Cells are read by column index against the header row, so a row of any other width would drop its extra cells or read undefined for its missing ones. Give every row the same width, or read the table through raw().",
+  "message": "hashes() requires every row to match the header row's width of 1 — row 2 has 2",
+}
+`;
+
+exports[`DataTable > ragged tables > should throw invalid_data_table from transpose() on a body row wider than the header, naming the row and its width 1`] = `
+{
+  "code": "invalid_data_table",
+  "data": {
+    "row": 2,
+    "width": 2,
+  },
+  "details": "Cells are read by column index against the header row, so a row of any other width would drop its extra cells or read undefined for its missing ones. Give every row the same width, or read the table through raw().",
+  "message": "transpose() requires every row to match the header row's width of 1 — row 2 has 2",
+}
+`;
+
+exports[`DataTable > ragged tables > should throw the same refusal from hashes() on a header wider than a body row 1`] = `
+{
+  "code": "invalid_data_table",
+  "data": {
+    "row": 2,
+    "width": 1,
+  },
+  "details": "Cells are read by column index against the header row, so a row of any other width would drop its extra cells or read undefined for its missing ones. Give every row the same width, or read the table through raw().",
+  "message": "hashes() requires every row to match the header row's width of 2 — row 2 has 1",
+}
+`;
+
+exports[`DataTable > ragged tables > should throw the same refusal from transpose() on a header wider than a body row 1`] = `
+{
+  "code": "invalid_data_table",
+  "data": {
+    "row": 2,
+    "width": 1,
+  },
+  "details": "Cells are read by column index against the header row, so a row of any other width would drop its extra cells or read undefined for its missing ones. Give every row the same width, or read the table through raw().",
+  "message": "transpose() requires every row to match the header row's width of 2 — row 2 has 1",
+}
+`;
+
 exports[`DataTable > schema error recognition through create() > should wrap a ZodError from another zod copy, built by hand — recognition is by shape, and that shape is all a foreign copy presents 1`] = `
 {
   "code": "table_conversion_failed",

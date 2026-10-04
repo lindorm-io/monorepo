@@ -10,6 +10,7 @@ import {
   ZOD_ISSUES as ISSUES,
 } from "../__fixtures__/test-helpers.js";
 import { GherkinError } from "../errors/GherkinError.js";
+import { buildFeatureModel } from "../internal/model/build-feature-model.js";
 import type { AsyncDataTableSchema, DataTableSchema } from "../types/index.js";
 import { DataTable } from "./DataTable.js";
 
@@ -252,6 +253,119 @@ describe("DataTable", () => {
 
       expect(error.code).toBe("invalid_data_table");
       expect(error.data).toEqual({ columns: [1, 2], key: "name" });
+    });
+  });
+
+  describe("ragged tables", () => {
+    const BODY_WIDER: Array<Array<string>> = [["a"], ["x", "y"]];
+    const HEADER_WIDER: Array<Array<string>> = [["a", "b"], ["x"]];
+
+    test("should throw invalid_data_table from hashes() on a body row wider than the header, naming the row and its width", () => {
+      const error = capture(() => new DataTable(BODY_WIDER).hashes());
+
+      expect(error).toBeInstanceOf(GherkinError);
+      expect(error.code).toBe("invalid_data_table");
+      expect(error.message).toContain("row 2 has 2");
+      expect(error.data).toEqual({ row: 2, width: 2 });
+      expect(errorShape(error)).toMatchSnapshot();
+    });
+
+    test("should throw invalid_data_table from transpose() on a body row wider than the header, naming the row and its width", () => {
+      const error = capture(() => new DataTable(BODY_WIDER).transpose());
+
+      expect(error).toBeInstanceOf(GherkinError);
+      expect(error.code).toBe("invalid_data_table");
+      expect(error.message).toContain("row 2 has 2");
+      expect(error.data).toEqual({ row: 2, width: 2 });
+      expect(errorShape(error)).toMatchSnapshot();
+    });
+
+    test("should throw the same refusal from hashes() on a header wider than a body row", () => {
+      const error = capture(() => new DataTable(HEADER_WIDER).hashes());
+
+      expect(error).toBeInstanceOf(GherkinError);
+      expect(error.code).toBe("invalid_data_table");
+      expect(error.message).toContain("row 2 has 1");
+      expect(error.data).toEqual({ row: 2, width: 1 });
+      expect(errorShape(error)).toMatchSnapshot();
+    });
+
+    test("should throw the same refusal from transpose() on a header wider than a body row", () => {
+      const error = capture(() => new DataTable(HEADER_WIDER).transpose());
+
+      expect(error).toBeInstanceOf(GherkinError);
+      expect(error.code).toBe("invalid_data_table");
+      expect(error.message).toContain("row 2 has 1");
+      expect(error.data).toEqual({ row: 2, width: 1 });
+      expect(errorShape(error)).toMatchSnapshot();
+    });
+
+    test("should name the first row whose width differs from the header's", () => {
+      const table = new DataTable([["a", "b"], ["x", "y"], ["z"], ["p", "q", "r"]]);
+
+      expect(capture(() => table.hashes()).data).toEqual({ row: 3, width: 1 });
+      expect(capture(() => table.transpose()).data).toEqual({ row: 3, width: 1 });
+    });
+
+    test("should return a ragged table verbatim from raw() and rows()", () => {
+      const table = new DataTable(BODY_WIDER);
+
+      expect(table.raw()).toEqual([["a"], ["x", "y"]]);
+      expect(table.rows()).toEqual([["x", "y"]]);
+    });
+
+    test.each(DOORS)(
+      "should refuse a ragged table from %s() before schema conversion",
+      async (_door, convert) => {
+        const error = await captureAsync(() =>
+          convert(
+            new DataTable([["name"], ["fig", "extra"]]),
+            z.object({ name: z.string() }),
+          ),
+        );
+
+        expect(error).toBeInstanceOf(GherkinError);
+        expect(error.code).toBe("invalid_data_table");
+        expect(error.data).toEqual({ row: 2, width: 2 });
+      },
+    );
+
+    test("should never receive a ragged table from a .feature file — the parser refuses one in either direction", () => {
+      const model = buildFeatureModel(
+        [
+          "Feature: ragged tables", // 1
+          "",
+          "  Scenario: body wider than header", // 3
+          "    Given a table", // 4
+          "      | a |", // 5
+          "      | x | y |", // 6
+          "    Then it arrives", // 7
+          "",
+          "  Scenario: header wider than body", // 9
+          "    Given a table", // 10
+          "      | a | b |", // 11
+          "      | x |", // 12
+          "    Then it arrives", // 13
+        ].join("\n"),
+        "src/features/ragged.feature",
+      );
+
+      expect(model).toEqual({
+        errors: [
+          {
+            column: 7,
+            line: 6,
+            message: "(6:7): inconsistent cell count within the table",
+          },
+          {
+            column: 7,
+            line: 12,
+            message: "(12:7): inconsistent cell count within the table",
+          },
+        ],
+        kind: "parse-error",
+        uri: "src/features/ragged.feature",
+      });
     });
   });
 
