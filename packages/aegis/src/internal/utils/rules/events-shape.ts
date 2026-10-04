@@ -27,8 +27,8 @@ export const eventsShape = (claims: Dict): Array<InvalidEntry> => {
   const events = value;
 
   // The DEMAND question, spelled as the rules layer spells it — a hand-written
-  // key count here is the same notion under a different name, and `rules/index.ts`
-  // leans on this refusal by name when it says `events` covers its own empty form.
+  // key count here is the same notion under a different name.
+  // pinned: Aegis.empty-claim-prune.feature
   if (!isClaimSatisfied(events)) {
     return [{ key: "events", message: "events must contain at least one event type" }];
   }

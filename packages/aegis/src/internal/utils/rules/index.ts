@@ -39,13 +39,14 @@
  * (`subjectId.id` of `""` identifies nobody), a validate-it-when-present member is
  * vocabulary (`act.subject`, `cnf.thumbprint`).
  *
- * ⚠ SHAPE RULES ARE OPT-IN PER PROFILE. `events` and `subjectId` refuse their
- * empty-object form through `eventsShape` / `subIdShape`, not through the presence
- * rule, so a consumer-registered profile that requires one and declares no shape
- * rule has the presence rule alone.
+ * ⚠ SHAPE RULES ARE OPT-IN PER PROFILE. The presence rule refuses an empty `events`
+ * or `subjectId` map as unsatisfied; where the profile also declares the `events` /
+ * `subjectId` shape rule (`eventsShape` / `subIdShape`), that rule adds its own
+ * fault for the same value. A consumer-registered profile that requires one and
+ * declares no shape rule has the presence rule alone.
  *
  * pinned: is-claim-satisfied.test.ts, is-claim-omitted.test.ts,
- * enforce-policy.test.ts.
+ * enforce-policy.test.ts, Aegis.empty-claim-prune.feature.
  */
 
 export * from "./act-chain-shape.js";

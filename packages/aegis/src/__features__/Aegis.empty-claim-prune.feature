@@ -519,7 +519,7 @@ Feature: The empty-claim prune
         {}
         """
 
-    Scenario Outline: <wire>: the mint is refused by the floor, listing the missing claim and the shape it failed
+    Scenario Outline: <wire>: the mint is refused by the floor, listing the empty claim and the shape it failed
       When I mint the content under the "logout_token" profile on the <wire> wire
       Then minting is refused as a domain error "profile_policy_invalid"
       And the refusal reports the direction "mint" and lists the faults
