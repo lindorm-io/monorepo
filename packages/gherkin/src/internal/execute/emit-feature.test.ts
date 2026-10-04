@@ -4,6 +4,7 @@ import { capture, captureAsync, errorShape } from "../../__fixtures__/test-helpe
 import { AfterFeature } from "../../decorators/AfterFeature.js";
 import { BeforeFeature } from "../../decorators/BeforeFeature.js";
 import { Binding } from "../../decorators/Binding.js";
+import { GherkinError } from "../../errors/GherkinError.js";
 import type {
   EmptyFeatureModel,
   FeatureModel,
@@ -155,6 +156,41 @@ describe("emitFeature", () => {
 
       expect(error.code).toBe("empty_scenario");
       expect(error.message).toContain("at src/features/emit.feature:6:3");
+      expect(fake.tests[0].tags).toEqual(["lane"]);
+      expect(errorShape(error)).toMatchSnapshot();
+    });
+
+    test("should emit a failing test for an incomplete-scenario node, anchored to the scenario line and naming the missing keywords", async () => {
+      const fake = createFakeSuiteApi();
+
+      emitFeature({
+        api: fake.api,
+        model: featureModel(
+          [
+            {
+              kind: "incomplete-scenario",
+              column: 3,
+              line: 6,
+              missingKeywords: ["Given", "Then"],
+              name: "only stars",
+              tags: ["@lane"],
+            },
+          ],
+          1,
+        ),
+        registry,
+      });
+
+      const error = await captureAsync(() => fake.tests[0].body());
+
+      expect(error).toBeInstanceOf(GherkinError);
+      expect(error.code).toBe("incomplete_scenario");
+      expect(error.message).toContain("at src/features/emit.feature:6:3");
+      expect(error.message).toContain("The scenario has no Given step and no Then step.");
+      expect(error.details).toContain(
+        "a * step counts as neither, since it states nothing about which steps assert",
+      );
+      expect(fake.tests[0].name).toBe("only stars");
       expect(fake.tests[0].tags).toEqual(["lane"]);
       expect(errorShape(error)).toMatchSnapshot();
     });

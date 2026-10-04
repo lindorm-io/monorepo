@@ -44,7 +44,7 @@ describe("meta-suite: lifecycle failures", () => {
         "",
         "seed store offline",
         "",
-        "The remaining 2 steps in this scenario were skipped.",
+        "The remaining 3 steps in this scenario were skipped.",
       ].join("\n"),
     );
   });
@@ -89,7 +89,7 @@ describe("meta-suite: lifecycle failures", () => {
         "",
         'lock unavailable for "a guarded step"',
         "",
-        "The remaining 1 step in this scenario was skipped.",
+        "The remaining 2 steps in this scenario were skipped.",
       ].join("\n"),
     );
     expect(output).not.toContain("META_SENTINEL_STEP_BEFORE_BOOM_BODY");
@@ -98,7 +98,7 @@ describe("meta-suite: lifecycle failures", () => {
 
   test("should run the @AfterStep hook even though @BeforeStep failed — cucumber parity, observing the failure", () => {
     // Exactly once: the failed first step is the only DISPATCHED one — the
-    // skipped trailing step runs no hooks.
+    // skipped trailing steps run no hooks.
     expect(
       output.match(/META_SENTINEL_STEP_BEFORE_BOOM_AFTER_STEP failed/g),
     ).toHaveLength(1);
@@ -180,6 +180,8 @@ describe("meta-suite: lifecycle failures", () => {
       [
         "primary step failure",
         "",
+        "The remaining 1 step in this scenario was skipped.",
+        "",
         "1 additional failure followed the one above:",
         "",
         "  1) disposal_failed",
@@ -201,7 +203,7 @@ describe("meta-suite: lifecycle failures", () => {
 
   test("should run hooks in priority order and unwind every After* kind in reverse, across two classes", () => {
     expect(output).toContain(
-      "META_ORDER before:alpha>before:beta>before-step:alpha>before-step:beta>step>after-step:beta>after-step:alpha>after:beta>after:alpha",
+      "META_ORDER before:alpha>before:beta>before-step:alpha>before-step:beta>step>after-step:beta>after-step:alpha>before-step:alpha>before-step:beta>check>after-step:beta>after-step:alpha>after:beta>after:alpha",
     );
     expect(output).toContain(
       "✓ features/hook-ordering.feature > hook ordering > hooks run in priority order and unwind in reverse",

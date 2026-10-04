@@ -19,9 +19,13 @@ const extractModel = (source: string): unknown => {
 };
 
 const model = buildFeatureModel(
-  ["Feature: emitted module", "", "  Scenario: one", '    Given a step "value"'].join(
-    "\n",
-  ),
+  [
+    "Feature: emitted module",
+    "",
+    "  Scenario: one",
+    '    Given a step "value"',
+    '    Then the step saw "value"',
+  ].join("\n"),
   "src/features/emitted.feature",
 );
 

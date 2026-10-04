@@ -22,17 +22,17 @@ describe("meta-suite: failure modes", () => {
   }, 180_000);
 
   test("should print exact totals — every failure mode is IN the counts", () => {
-    // 13 failed = undefined 1 + ambiguous 1 + pending 1 + conversion 2 +
+    // 17 failed = undefined 1 + ambiguous 1 + pending 1 + conversion 2 +
     // constructor 1 + async 1 + empty-examples 1 + empty-scenario 1 +
-    // data-conversion 3 + parse-error 1; 9 passed = green 3 + conversion
-    // control 1 + data-delivery 5.
-    expect(tests).toBe("13 failed | 9 passed (22)");
+    // incomplete-scenario 4 + data-conversion 3 + parse-error 1; 9 passed =
+    // green 3 + conversion control 1 + data-delivery 5.
+    expect(tests).toBe("17 failed | 9 passed (26)");
   });
 
   test("should print exact file totals — skipped files are skipped, not failed", () => {
-    // 14 files: the 10 failed and 2 passed are enumerated by name below, so
+    // 15 files: the 11 failed and 2 passed are enumerated by name below, so
     // the remaining 2 (background-only + empty file) must be the skipped.
-    expect(testFiles).toBe("10 failed | 2 passed | 2 skipped (14)");
+    expect(testFiles).toBe("11 failed | 2 passed | 2 skipped (15)");
   });
 
   test("should report an undefined step with anchor, snippet and skipped count", () => {
@@ -191,6 +191,68 @@ describe("meta-suite: failure modes", () => {
         "  at features/empty-scenario.feature:3:3",
       ].join("\n"),
     );
+  });
+
+  test("should fail a scenario with no Then as incomplete_scenario, anchored to the scenario line", () => {
+    expect(output).toContain(
+      "× features/incomplete-scenario.feature > incomplete scenario reporting > a scenario that never asserts",
+    );
+    expect(output).toContain(
+      [
+        "Incomplete scenario",
+        "",
+        "  a scenario that never asserts",
+        "  at features/incomplete-scenario.feature:3:3",
+        "",
+        "The scenario has no Then step.",
+      ].join("\n"),
+    );
+    expect(output).toContain("code: 'incomplete_scenario'");
+  });
+
+  test("should fail a scenario with no Given, naming the missing Given", () => {
+    expect(output).toContain(
+      "× features/incomplete-scenario.feature > incomplete scenario reporting > a scenario that asserts against nothing it established",
+    );
+    expect(output).toContain(
+      [
+        "  a scenario that asserts against nothing it established",
+        "  at features/incomplete-scenario.feature:7:3",
+        "",
+        "The scenario has no Given step.",
+      ].join("\n"),
+    );
+  });
+
+  test("should fail a scenario of only * steps, naming both keywords", () => {
+    expect(output).toContain(
+      "× features/incomplete-scenario.feature > incomplete scenario reporting > a scenario written only in stars",
+    );
+    expect(output).toContain(
+      [
+        "  a scenario written only in stars",
+        "  at features/incomplete-scenario.feature:11:3",
+        "",
+        "The scenario has no Given step and no Then step.",
+      ].join("\n"),
+    );
+  });
+
+  test("should fail an incomplete outline ONCE, not once per Examples row", () => {
+    const lines = output
+      .split("\n")
+      .filter((line) =>
+        line.includes(
+          "× features/incomplete-scenario.feature > incomplete scenario reporting > an outline row",
+        ),
+      );
+
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).toContain("an outline row <row> that never asserts");
+  });
+
+  test("should never run an incomplete scenario's steps", () => {
+    expect(output).not.toContain("META_SENTINEL_INCOMPLETE_STEP_RAN");
   });
 
   test("should pass the trailing slot at STABLE ARITY — undefined when no argument", () => {

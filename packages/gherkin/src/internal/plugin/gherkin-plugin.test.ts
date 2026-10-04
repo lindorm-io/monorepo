@@ -42,6 +42,7 @@ const source = [
   "",
   "  Scenario: one",
   '    Given a step "value"',
+  '    Then the step saw "value"',
 ].join("\n");
 
 describe("gherkinPlugin", () => {
@@ -151,6 +152,7 @@ describe("gherkinPlugin", () => {
         "",
         '  Scenario: name with `backticks`, ${payload}, "; and back\\slash',
         "    Given a step with `${injection}`; characters",
+        "    Then the step carries `${injection}` verbatim",
       ].join("\n");
 
       const [plugin] = gherkinPlugin();
@@ -171,6 +173,7 @@ describe("gherkinPlugin", () => {
         "",
         "  Scenario Outline: reads <safe>",
         "    Given a <safe>",
+        "    Then the <safe> holds",
         "",
         "    Examples:",
         "      | __proto__ | safe |",
@@ -219,6 +222,7 @@ describe("gherkinPlugin", () => {
         "    And a hostile table",
         "      | __proto__ | safe |",
         "      | evil      | ok   |",
+        "    Then both payloads arrive as data",
       ].join("\n");
 
       const [plugin] = gherkinPlugin();
@@ -267,10 +271,12 @@ describe("gherkinPlugin", () => {
       "  @keep",
       "  Scenario: kept",
       '    Given a step "kept"',
+      '    Then the step saw "kept"',
       "",
       "  @slow",
       "  Scenario: dropped",
       '    Given a step "dropped"',
+      '    Then the step saw "dropped"',
     ].join("\n");
 
     test("should omit scenarios the settings tags expression excludes — they never become tests", () => {
@@ -315,6 +321,7 @@ describe("gherkinPlugin", () => {
             "  @smoke",
             "  Scenario: s",
             "    Given a step",
+            "    Then a check holds",
           ].join("\n"),
         );
 
@@ -534,6 +541,7 @@ describe("gherkinPlugin", () => {
             "",
             "  Scenario: s",
             "    Given a step",
+            "    Then a check holds",
           ].join("\n"),
           "src/a.wip.feature": [
             "@issue(154) @parked",
@@ -541,6 +549,7 @@ describe("gherkinPlugin", () => {
             "",
             "  Scenario: s",
             "    Given a step",
+            "    Then a check holds",
           ].join("\n"),
         });
         const [plugin] = gherkinPlugin({ exclude: ["src/**/*.wip.feature"] });
@@ -623,6 +632,7 @@ describe("gherkinPlugin", () => {
             "",
             "  Scenario: s",
             "    Given a step",
+            "    Then a check holds",
           ].join("\n"),
           "features/a.feature": "Feature: a\n",
         });

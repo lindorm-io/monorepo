@@ -31,6 +31,7 @@ const scenarioTagged = (tag: string): Feature =>
       `  ${tag}`,
       "  Scenario: carries a reserved tag",
       "    Given a step",
+      "    Then a check holds",
     ].join("\n"),
   );
 
@@ -75,9 +76,14 @@ describe("assertSupportedTags", () => {
 
   test("should reject a reserved tag at FEATURE level", () => {
     const feature = parseFeature(
-      ["@concurrent", "Feature: reserved", "", "  Scenario: s", "    Given a step"].join(
-        "\n",
-      ),
+      [
+        "@concurrent",
+        "Feature: reserved",
+        "",
+        "  Scenario: s",
+        "    Given a step",
+        "    Then a check holds",
+      ].join("\n"),
     );
 
     const error = capture(() => assertSupportedTags(collectAstTags(feature), uri));
@@ -96,6 +102,7 @@ describe("assertSupportedTags", () => {
         "",
         "    Scenario: s",
         "      Given a step",
+        "      Then a check holds",
       ].join("\n"),
     );
 
@@ -135,6 +142,7 @@ describe("assertSupportedTags", () => {
         "",
         "  Scenario: s",
         "    Given a step",
+        "    Then a check holds",
       ].join("\n"),
     );
 

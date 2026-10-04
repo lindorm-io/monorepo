@@ -8,7 +8,7 @@ import type { StepLocation } from "./step-location-index.js";
 import { requireStepLocation } from "./step-location-index.js";
 import { toStepArgumentModel } from "./to-step-argument-model.js";
 import { toStepType } from "./to-step-type.js";
-import type { StepModel, SuiteNode } from "./types.js";
+import type { RequiredKeyword, StepModel, StepType, SuiteNode } from "./types.js";
 
 export type ModelIndexes = {
   /** Pickle keys the walk turned into scenario nodes — assert-pickle-parity.ts compares them against the full index. */
@@ -17,7 +17,10 @@ export type ModelIndexes = {
   excludedPickleKeys: Set<string>;
   pickleIndex: Map<string, Pickle>;
   stepLocationIndex: Map<string, StepLocation>;
-  /** Scenario ids whose pickles were replaced by a failing `empty-scenario` node. */
+  /**
+   * Scenario ids whose pickles were replaced by a failing `empty-scenario` or
+   * `incomplete-scenario` node.
+   */
   supersededScenarioIds: Set<string>;
   /**
    * Transform-time selection (resolve-settings.ts `tags`) — evaluated per
@@ -63,6 +66,32 @@ const toStepModel = (step: PickleStep, indexes: ModelIndexes): StepModel => {
   };
 };
 
+/** Read without consuming: the completeness check runs before selection. */
+const compiledPickles = (
+  scenario: Scenario,
+  pickleIndex: Map<string, Pickle>,
+): Array<Pickle> =>
+  scenario.examples.length === 0
+    ? [requirePickle(pickleIndex, pickleKey([scenario.id]))]
+    : scenario.examples.flatMap((examples) =>
+        examples.tableBody.map((row) =>
+          requirePickle(pickleIndex, pickleKey([scenario.id, row.id])),
+        ),
+      );
+
+const REQUIRED_KEYWORDS: Array<{ keyword: RequiredKeyword; type: StepType }> = [
+  { keyword: "Given", type: "Context" },
+  { keyword: "Then", type: "Outcome" },
+];
+
+// Pickle step types, never AST keywords; pinned: build-feature-model.test.ts ("incomplete scenarios").
+const findMissingKeywords = (pickles: Array<Pickle>): Array<RequiredKeyword> =>
+  REQUIRED_KEYWORDS.filter(({ type }) =>
+    pickles.some((pickle) =>
+      pickle.steps.every((step) => toStepType(step.type) !== type),
+    ),
+  ).map(({ keyword }) => keyword);
+
 type ScenarioNodeExtras = {
   /** `[header, value]` pairs in column order — outline rows only. */
   examplesRow?: Array<[string, string]>;
@@ -105,6 +134,16 @@ const buildScenarioNodes = (
   indexes: ModelIndexes,
   inherited: InheritedContext,
 ): Array<SuiteNode> => {
+  // Examples-level tags included: ONE failing node stands in for an outline's
+  // every row, so dropping them would leave the red carrying fewer tags than
+  // the rows it replaces — invisible under a --tagsFilter for its own lane
+  // (to-vitest-tags.ts dedupes).
+  const supersedingTags = [
+    ...inherited.tags,
+    ...scenario.tags.map((tag) => tag.name),
+    ...scenario.examples.flatMap((examples) => examples.tags.map((tag) => tag.name)),
+  ];
+
   if (scenario.steps.length === 0) {
     // A Background does NOT rescue it: compile() skips background merging for
     // a zero-step scenario (compile.js compileScenario), so its pickle would
@@ -124,17 +163,28 @@ const buildScenarioNodes = (
         column: requireColumn(scenario.location),
         line: scenario.location.line,
         name: scenario.name,
-        // Examples-level tags included: ONE node stands in for a zero-step
-        // outline's every row, so dropping them would leave the red carrying
-        // fewer tags than the rows it replaces — invisible under a
-        // --tagsFilter for its own lane (to-vitest-tags.ts dedupes).
-        tags: [
-          ...inherited.tags,
-          ...scenario.tags.map((tag) => tag.name),
-          ...scenario.examples.flatMap((examples) =>
-            examples.tags.map((tag) => tag.name),
-          ),
-        ],
+        tags: supersedingTags,
+      },
+    ];
+  }
+
+  const missingKeywords = findMissingKeywords(
+    compiledPickles(scenario, indexes.pickleIndex),
+  );
+
+  if (missingKeywords.length > 0) {
+    // Superseded and emitted before the tags filter, as the zero-step case
+    // above (pinned: build-feature-model.test.ts "should keep an incomplete
+    // scenario RED when the tags expression excludes its tags").
+    indexes.supersededScenarioIds.add(scenario.id);
+    return [
+      {
+        kind: "incomplete-scenario",
+        column: requireColumn(scenario.location),
+        line: scenario.location.line,
+        missingKeywords,
+        name: scenario.name,
+        tags: supersedingTags,
       },
     ];
   }

@@ -284,7 +284,7 @@ The plugin **declares every tag it finds at config time**: vitest's `strictTags`
 
 **Tag names must be legal vitest tag names.** Vitest rejects a name containing whitespace or `! * & | ( )`, or equal to `and` / `or` / `not` — so `@issue(1234)`, legal Gherkin and a common Cucumber convention, is refused (`invalid_tag_name`), anchored to its line in the feature file. Write `@issue-1234`.
 
-There is deliberately **no skip tag**: a per-scenario skip is a hide-a-red-row escape hatch at the point of temptation; the config `tags` expression is a centralized, reviewable lane decision. For the same reason, authoring errors (a zero-row `Examples:`, a zero-step scenario) stay RED even when a `tags` expression excludes their tags — an excludable authoring error would be a skip tag by the back door. A fully excluded file reports as a skipped suite; a Rule or outline whose every scenario is excluded is omitted quietly.
+There is deliberately **no skip tag**: a per-scenario skip is a hide-a-red-row escape hatch at the point of temptation; the config `tags` expression is a centralized, reviewable lane decision. For the same reason, authoring errors (a zero-row `Examples:`, a zero-step scenario, a scenario without a `Given` or a `Then`) stay RED even when a `tags` expression excludes their tags — an excludable authoring error would be a skip tag by the back door. A fully excluded file reports as a skipped suite; a Rule or outline whose every scenario is excluded is omitted quietly.
 
 ## Excluding feature files
 
@@ -330,7 +330,7 @@ The remaining 1 step in this scenario was skipped.
 - **Disposal failed** — a context's `dispose()` threw during teardown: the scenario is red (`disposal_failed`), disposal continues through the remaining contexts, and the failure is appended after any earlier one.
 - Remaining steps in a failed scenario are **skipped**, so the cause is never buried.
 
-The runner's OWN failures — undefined, ambiguous, pending, conversion, disposal, authoring errors — are `GherkinError`s carrying a stable `code`. A failing step or hook rethrows YOUR error with the anchor prepended, so assertion diffs survive intact. Gherkin syntax errors, empty scenarios and zero-row `Examples:` tables are authoring errors and fail red at the offending line.
+The runner's OWN failures — undefined, ambiguous, pending, conversion, disposal, authoring errors — are `GherkinError`s carrying a stable `code`. A failing step or hook rethrows YOUR error with the anchor prepended, so assertion diffs survive intact. Gherkin syntax errors, empty scenarios, zero-row `Examples:` tables and incomplete scenarios are authoring errors and fail red at the offending line. A scenario is incomplete (`incomplete_scenario`) without at least one `Given` and one `Then`: an `And` or `But` counts as the keyword it continues, a `Given` from a `Background:` counts, and a `*` step counts as neither.
 
 The plugin also fails the whole run at startup if a `.feature` file on disk matches none of the configured `features` patterns (`feature_not_included`), or matches one but no `test.include` pattern (`feature_not_collected`) — a feature file nobody collects would otherwise be a silent pass at file granularity. A file the `exclude` setting names is exempt from both; a literal `exclude` path that names no feature file fails the run instead (`exclude_unmatched`). The collection guard strips a `.integration.` / `.weekly.` suffix from the include globs before matching, so a suffixed glob satisfies it for the unsuffixed family too.
 

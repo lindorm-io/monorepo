@@ -7,6 +7,10 @@ import { createCountingSuiteApi } from "./counting-api.js";
 import { registerFeatureHooks } from "./feature-hooks.js";
 import { formatEmptyExamples } from "./format/format-empty-examples.js";
 import { formatEmptyScenario } from "./format/format-empty-scenario.js";
+import {
+  formatIncompleteScenario,
+  INCOMPLETE_SCENARIO_RULE,
+} from "./format/format-incomplete-scenario.js";
 import { runScenario } from "./run-scenario.js";
 import type { SuiteApi } from "./types.js";
 
@@ -69,6 +73,22 @@ const emitNode = (
           details:
             "The scenario has a name and zero steps — running it would report green having executed nothing. Write its steps, or delete it.",
           data: { line: node.line, name: node.name, uri },
+        });
+      });
+      return;
+
+    case "incomplete-scenario":
+      // Tags carried for the same reason as empty-examples above.
+      api.test(node.name, { tags: toVitestTags(node.tags) }, () => {
+        throw new GherkinError(formatIncompleteScenario(node, uri), {
+          code: "incomplete_scenario",
+          details: `A scenario without a Then asserts nothing, and one without a Given asserts against a situation it never established. ${INCOMPLETE_SCENARIO_RULE}`,
+          data: {
+            line: node.line,
+            missingKeywords: node.missingKeywords,
+            name: node.name,
+            uri,
+          },
         });
       });
       return;

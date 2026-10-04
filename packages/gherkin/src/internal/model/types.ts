@@ -118,6 +118,24 @@ export type EmptyScenarioNode = {
   tags: Array<string>;
 };
 
+export type RequiredKeyword = "Given" | "Then";
+
+export type IncompleteScenarioNode = {
+  kind: "incomplete-scenario";
+  /** The scenario keyword's column. */
+  column: number;
+  /**
+   * The scenario's own line — also for an outline, whose every row lacks the
+   * same keywords.
+   */
+  line: number;
+  /** In `Given`, `Then` order. */
+  missingKeywords: Array<RequiredKeyword>;
+  name: string;
+  /** Same derivation and rationale as EmptyScenarioNode.tags. */
+  tags: Array<string>;
+};
+
 export type RuleNode = {
   children: Array<SuiteNode>;
   kind: "rule";
@@ -125,7 +143,12 @@ export type RuleNode = {
   name: string;
 };
 
-export type SuiteNode = RuleNode | ScenarioNode | EmptyExamplesNode | EmptyScenarioNode;
+export type SuiteNode =
+  | RuleNode
+  | ScenarioNode
+  | EmptyExamplesNode
+  | EmptyScenarioNode
+  | IncompleteScenarioNode;
 
 export type ParseErrorEntry = {
   column?: number;
@@ -144,10 +167,10 @@ export type FeatureSuiteModel = {
   children: Array<SuiteNode>;
   /**
    * The number of test() registrations the runtime makes from this model —
-   * one per scenario, empty-examples and empty-scenario node. Counted from
-   * the finished tree (count-expected-tests.ts) so the emitter's own walk has
-   * an independent number to be checked against (the structural invariant:
-   * registered tests must equal this).
+   * one per scenario, empty-examples, empty-scenario and incomplete-scenario
+   * node. Counted from the finished tree (count-expected-tests.ts) so the
+   * emitter's own walk has an independent number to be checked against (the
+   * structural invariant: registered tests must equal this).
    */
   expectedTests: number;
   kind: "feature";

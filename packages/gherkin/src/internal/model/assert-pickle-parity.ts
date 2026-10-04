@@ -11,8 +11,9 @@ export type AssertPickleParityOptions = {
 
 /**
  * Every compiled pickle must be consumed by a scenario node, superseded by a
- * failing node for its scenario (a zero-step scenario or outline compiles
- * pickles the walk deliberately replaces with one `empty-scenario` node), or
+ * failing node for its scenario (a zero-step or incomplete scenario or
+ * outline compiles pickles the walk deliberately replaces with one
+ * `empty-scenario` or `incomplete-scenario` node), or
  * EXCLUDED by the settings `tags` expression — the one legitimate way a
  * pickle stays out of the suite, and it must be recorded, never inferred. An
  * orphaned pickle is a scenario the model builder DROPPED — it would vanish
@@ -40,7 +41,8 @@ export const assertPickleParity = ({
 
     // astNodeIds[0] is the pickle's scenario id — for an outline row the key
     // is `${scenarioId}/${rowId}` (pickle-index.ts), so every row pickle of a
-    // zero-step outline is superseded by that outline's one failing node.
+    // zero-step or incomplete outline is superseded by that outline's one
+    // failing node.
     if (supersededScenarioIds.has(pickle.astNodeIds[0])) {
       continue;
     }

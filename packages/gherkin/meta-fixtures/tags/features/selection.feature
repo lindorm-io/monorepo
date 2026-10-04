@@ -2,6 +2,7 @@ Feature: outline separation
 
   Scenario Outline: rows excluded wholesale
     Given a noted step "<value>"
+    Then the note reads "<value>"
 
     @slow
     Examples:

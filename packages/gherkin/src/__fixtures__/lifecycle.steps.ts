@@ -132,6 +132,11 @@ export class LifecycleBetaSteps extends LifecycleBase {
     expect(this.shared.touched).toEqual(["alpha", "beta"]);
   }
 
+  @Given("the scenario {string} has finished")
+  assertFinished(name: string): void {
+    expect(log).toContain(`${name}:dispose`);
+  }
+
   @Then("the recorded lifecycle for {string} is complete")
   assertLifecycle(name: string): void {
     expect(log.filter((entry) => entry.startsWith(`${name}:`))).toEqual([

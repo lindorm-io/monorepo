@@ -1,4 +1,5 @@
-import { AfterFeature, BeforeFeature, Binding, Given } from "../../../src/index.js";
+import { expect } from "vitest";
+import { AfterFeature, BeforeFeature, Binding, Given, Then } from "../../../src/index.js";
 
 /**
  * The child's stdout is the meta-suite's oracle (as in
@@ -11,6 +12,8 @@ const sentinel = (line: string): void => {
 
 @Binding()
 export class LifecycleMetaSteps {
+  private stepRan = false;
+
   @BeforeFeature("@boom")
   static brokenStart(): void {
     throw new Error("docker daemon is not running");
@@ -34,5 +37,11 @@ export class LifecycleMetaSteps {
   @Given("a lifecycle step")
   step(): void {
     sentinel("META_SENTINEL_STEP_RAN");
+    this.stepRan = true;
+  }
+
+  @Then("the lifecycle step ran")
+  lifecycleStepRan(): void {
+    expect(this.stepRan).toBe(true);
   }
 }

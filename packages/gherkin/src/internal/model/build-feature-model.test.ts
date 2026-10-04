@@ -78,6 +78,7 @@ describe("buildFeatureModel", () => {
           "",
           "  Scenario: another", // 10
           '    When I encrypt "again"', // 11
+          '    Then decrypting returns "again"', // 12
         ]),
       );
 
@@ -131,6 +132,7 @@ describe("buildFeatureModel", () => {
           "",
           "    Example: bound aad", // 11
           '      When I encrypt "secret"', // 12
+          '      Then decrypting returns "secret"', // 13
         ]),
       );
 
@@ -160,6 +162,12 @@ describe("buildFeatureModel", () => {
           text: 'I encrypt "secret"',
           type: "Action",
         },
+        {
+          column: 7,
+          line: 13,
+          text: 'decrypting returns "secret"',
+          type: "Outcome",
+        },
       ]);
 
       expect(model).toMatchSnapshot();
@@ -178,14 +186,17 @@ describe("buildFeatureModel", () => {
           "",
           "  Scenario: first", // 3
           "    Given a step", // 4
+          "    Then a check holds", // 5
           "",
-          "  Rule: grouped", // 6
-          "    Scenario: second", // 7
-          "      Given a step", // 8
+          "  Rule: grouped", // 7
+          "    Scenario: second", // 8
+          "      Given a step", // 9
+          "      Then a check holds", // 10
           "",
-          "  Rule: last", // 10
-          "    Scenario: third", // 11
-          "      Given a step", // 12
+          "  Rule: last", // 12
+          "    Scenario: third", // 13
+          "      Given a step", // 14
+          "      Then a check holds", // 15
         ]),
       );
 
@@ -270,7 +281,7 @@ describe("buildFeatureModel", () => {
           "",
           "  Scenario Outline: uses <x>", // 3
           "    Given a <x>", // 4
-          "",
+          "    Then the <x> holds", // 5
           "    Examples: empty", // 6
           "      | x |", // 7
           "",
@@ -327,7 +338,7 @@ describe("buildFeatureModel", () => {
           "  Scenario: nothing here", // 6
           "",
           "  Scenario: real", // 8
-          "    When acting", // 9
+          "    Then the key is usable", // 9
         ]),
       );
 
@@ -369,6 +380,400 @@ describe("buildFeatureModel", () => {
       expect(model.children).toEqual([
         { kind: "empty-scenario", column: 3, line: 3, name: "no steps", tags: [] },
       ]);
+    });
+  });
+
+  describe("incomplete scenarios", () => {
+    test("should fail a scenario whose steps are all Given and When, naming the missing Then", () => {
+      const model = asFeature(
+        build([
+          "Feature: no outcome", // 1
+          "",
+          "  Scenario: never asserts", // 3
+          "    Given an oct key", // 4
+          '    When I encrypt "hello"', // 5
+        ]),
+      );
+
+      expect(model.expectedTests).toBe(1);
+      expect(model.children).toEqual([
+        {
+          kind: "incomplete-scenario",
+          column: 3,
+          line: 3,
+          missingKeywords: ["Then"],
+          name: "never asserts",
+          tags: [],
+        },
+      ]);
+    });
+
+    test("should fail a scenario with no Given, naming the missing Given", () => {
+      const model = asFeature(
+        build([
+          "Feature: no situation", // 1
+          "",
+          "  Scenario: acts on nothing", // 3
+          '    When I encrypt "hello"', // 4
+          "    Then a ciphertext exists", // 5
+          "",
+          "  Scenario: asserts on nothing", // 7
+          "    Then a ciphertext exists", // 8
+        ]),
+      );
+
+      expect(model.expectedTests).toBe(2);
+      expect(model.children).toEqual([
+        {
+          kind: "incomplete-scenario",
+          column: 3,
+          line: 3,
+          missingKeywords: ["Given"],
+          name: "acts on nothing",
+          tags: [],
+        },
+        {
+          kind: "incomplete-scenario",
+          column: 3,
+          line: 7,
+          missingKeywords: ["Given"],
+          name: "asserts on nothing",
+          tags: [],
+        },
+      ]);
+    });
+
+    test("should pass a scenario whose Given comes from a feature-level Background and whose Then is its own", () => {
+      const model = asFeature(
+        build([
+          "Feature: background situation", // 1
+          "",
+          "  Background:", // 3
+          "    Given an oct key", // 4
+          "",
+          "  Scenario: encrypt", // 6
+          '    When I encrypt "hello"', // 7
+          "    Then a ciphertext exists", // 8
+        ]),
+      );
+
+      expect(asScenario(model.children[0]).steps.map((step) => step.type)).toEqual([
+        "Context",
+        "Action",
+        "Outcome",
+      ]);
+    });
+
+    test("should pass a scenario whose Given comes from a Rule-level Background and whose Then is its own", () => {
+      const model = asFeature(
+        build([
+          "Feature: rule situation", // 1
+          "",
+          "  Rule: keyed", // 3
+          "",
+          "    Background:", // 5
+          "      Given an oct key", // 6
+          "",
+          "    Example: encrypt", // 8
+          "      Then a ciphertext exists", // 9
+        ]),
+      );
+
+      expect(
+        asScenario(asRule(model.children[0]).children[0]).steps.map((step) => step.type),
+      ).toEqual(["Context", "Outcome"]);
+    });
+
+    test("should count an And continuing a Then as a Then", () => {
+      const model = asFeature(
+        build([
+          "Feature: continued outcome", // 1
+          "",
+          "  Scenario: two assertions", // 3
+          "    Given an oct key", // 4
+          "    Then a ciphertext exists", // 5
+          "    And it decrypts", // 6
+        ]),
+      );
+
+      expect(asScenario(model.children[0]).steps.map((step) => step.type)).toEqual([
+        "Context",
+        "Outcome",
+        "Outcome",
+      ]);
+    });
+
+    test("should count an And continuing a When as a When, never as a Then", () => {
+      const model = asFeature(
+        build([
+          "Feature: continued action", // 1
+          "",
+          "  Scenario: acts twice", // 3
+          "    Given an oct key", // 4
+          '    When I encrypt "hello"', // 5
+          '    And I encrypt "again"', // 6
+        ]),
+      );
+
+      expect(model.children).toEqual([
+        {
+          kind: "incomplete-scenario",
+          column: 3,
+          line: 3,
+          missingKeywords: ["Then"],
+          name: "acts twice",
+          tags: [],
+        },
+      ]);
+    });
+
+    test("should count a But continuing a Then as a Then, never as a Given", () => {
+      const model = asFeature(
+        build([
+          "Feature: continued outcome without situation", // 1
+          "",
+          "  Scenario: asserts twice", // 3
+          '    When I encrypt "hello"', // 4
+          "    Then a ciphertext exists", // 5
+          "    But it is not the plaintext", // 6
+        ]),
+      );
+
+      expect(model.children).toEqual([
+        {
+          kind: "incomplete-scenario",
+          column: 3,
+          line: 3,
+          missingKeywords: ["Given"],
+          name: "asserts twice",
+          tags: [],
+        },
+      ]);
+    });
+
+    test("should count a * step as neither a Given nor a Then", () => {
+      const model = asFeature(
+        build([
+          "Feature: starred", // 1
+          "",
+          "  Scenario: starred situation", // 3
+          "    * an oct key", // 4
+          "    Then a ciphertext exists", // 5
+          "",
+          "  Scenario: starred outcome", // 7
+          "    Given an oct key", // 8
+          "    * a ciphertext exists", // 9
+        ]),
+      );
+
+      expect(model.children).toEqual([
+        {
+          kind: "incomplete-scenario",
+          column: 3,
+          line: 3,
+          missingKeywords: ["Given"],
+          name: "starred situation",
+          tags: [],
+        },
+        {
+          kind: "incomplete-scenario",
+          column: 3,
+          line: 7,
+          missingKeywords: ["Then"],
+          name: "starred outcome",
+          tags: [],
+        },
+      ]);
+    });
+
+    test("should fail a scenario of only * steps or leading conjunctions, naming both keywords", () => {
+      const model = asFeature(
+        build([
+          "Feature: untyped", // 1
+          "",
+          "  Scenario: only stars", // 3
+          "    * an oct key", // 4
+          "    * a ciphertext exists", // 5
+          "",
+          "  Scenario: only conjunctions", // 7
+          "    And an oct key", // 8
+          "    But a ciphertext exists", // 9
+        ]),
+      );
+
+      expect(model.children).toEqual([
+        {
+          kind: "incomplete-scenario",
+          column: 3,
+          line: 3,
+          missingKeywords: ["Given", "Then"],
+          name: "only stars",
+          tags: [],
+        },
+        {
+          kind: "incomplete-scenario",
+          column: 3,
+          line: 7,
+          missingKeywords: ["Given", "Then"],
+          name: "only conjunctions",
+          tags: [],
+        },
+      ]);
+    });
+
+    test("should fail an incomplete outline once, anchored to the outline line, carrying every Examples block's tags", () => {
+      const model = asFeature(
+        build([
+          "Feature: incomplete outline", // 1
+          "",
+          "  Scenario Outline: encrypts <x>", // 3
+          '    Given an oct key with encryption "<x>"', // 4
+          "",
+          "    @fast",
+          "    Examples:", // 7
+          "      | x       |", // 8
+          "      | A128GCM |", // 9
+          "      | A256GCM |", // 10
+          "",
+          "    @slow",
+          "    Examples:", // 13
+          "      | x             |", // 14
+          "      | A256CBC-HS512 |", // 15
+        ]),
+      );
+
+      expect(model.expectedTests).toBe(1);
+      expect(model.children).toEqual([
+        {
+          kind: "incomplete-scenario",
+          column: 3,
+          line: 3,
+          missingKeywords: ["Then"],
+          name: "encrypts <x>",
+          tags: ["@fast", "@slow"],
+        },
+      ]);
+    });
+
+    test("should fail an incomplete outline once even when one of its Examples blocks is empty", () => {
+      const model = asFeature(
+        build([
+          "Feature: partly empty outline", // 1
+          "",
+          "  Scenario Outline: encrypts <x>", // 3
+          '    Given an oct key with encryption "<x>"', // 4
+          "",
+          "    Examples:", // 6
+          "      | x |", // 7
+          "",
+          "    Examples:", // 9
+          "      | x       |", // 10
+          "      | A128GCM |", // 11
+        ]),
+      );
+
+      expect(model.expectedTests).toBe(1);
+      expect(model.children).toEqual([
+        {
+          kind: "incomplete-scenario",
+          column: 3,
+          line: 3,
+          missingKeywords: ["Then"],
+          name: "encrypts <x>",
+          tags: [],
+        },
+      ]);
+    });
+
+    test("should leave an outline whose every Examples block is empty to empty-examples — no compiled step carries a type", () => {
+      const model = asFeature(
+        build([
+          "Feature: rowless outline", // 1
+          "",
+          "  Scenario Outline: encrypts <x>", // 3
+          '    Given an oct key with encryption "<x>"', // 4
+          "",
+          "    Examples:", // 6
+          "      | x |", // 7
+        ]),
+      );
+
+      expect(model.children).toEqual([
+        { kind: "empty-examples", column: 5, line: 6, name: "encrypts <x>", tags: [] },
+      ]);
+    });
+
+    test("should keep an incomplete scenario RED when the tags expression excludes its tags", () => {
+      const model = asFeature(
+        buildSelected(
+          [
+            "Feature: no back door", // 1
+            "",
+            "  Scenario: survives", // 3
+            "    Given an oct key", // 4
+            "    Then a ciphertext exists", // 5
+            "",
+            "  @slow",
+            "  Scenario: never asserts", // 8
+            "    Given an oct key", // 9
+          ],
+          "not @slow",
+        ),
+      );
+
+      expect(model.expectedTests).toBe(2);
+      expect(model.children[1]).toEqual({
+        kind: "incomplete-scenario",
+        column: 3,
+        line: 8,
+        missingKeywords: ["Then"],
+        name: "never asserts",
+        tags: ["@slow"],
+      });
+    });
+
+    test("should include a superseded incomplete scenario's tags in the feature union", () => {
+      const model = asFeature(
+        build([
+          "Feature: union", // 1
+          "",
+          "  @incomplete",
+          "  Scenario: never asserts", // 4
+          "    Given an oct key", // 5
+          "",
+          "  @real",
+          "  Scenario: real", // 8
+          "    Given an oct key", // 9
+          "    Then a ciphertext exists", // 10
+        ]),
+      );
+
+      expect(model.tags).toEqual(["@incomplete", "@real"]);
+    });
+
+    test("should give an incomplete scenario inside a Rule the AST-inherited feature, rule and scenario tags", () => {
+      const model = asFeature(
+        build([
+          "@feat", // 1
+          "Feature: inherited", // 2
+          "",
+          "  @ruled",
+          "  Rule: grouped", // 5
+          "",
+          "    @lined",
+          "    Scenario: never asserts", // 8
+          "      Given an oct key", // 9
+        ]),
+      );
+
+      expect(asRule(model.children[0]).children[0]).toEqual({
+        kind: "incomplete-scenario",
+        column: 5,
+        line: 8,
+        missingKeywords: ["Then"],
+        name: "never asserts",
+        tags: ["@feat", "@ruled", "@lined"],
+      });
     });
   });
 
@@ -426,11 +831,12 @@ describe("buildFeatureModel", () => {
           "",
           "  Scenario: real", // 3
           "    Given a step", // 4
+          "    Then a check holds", // 5
           "",
-          "  Rule: empty shell", // 6
+          "  Rule: empty shell", // 7
           "",
-          "    Background:", // 8
-          "      Given unused", // 9
+          "    Background:", // 9
+          "      Given unused", // 10
         ]),
       );
 
@@ -447,21 +853,24 @@ describe("buildFeatureModel", () => {
           "",
           "  Scenario: top", // 3
           "    Given a step", // 4
+          "    Then a check holds", // 5
           "",
-          "  Rule: many", // 6
+          "  Rule: many", // 7
           "",
-          "    Scenario: a", // 8
-          "      Given a step", // 9
+          "    Scenario: a", // 9
+          "      Given a step", // 10
+          "      Then a check holds", // 11
           "",
-          "    Scenario: b", // 11
-          "      Given a step", // 12
+          "    Scenario: b", // 13
+          "      Given a step", // 14
+          "      Then a check holds", // 15
           "",
-          "    Scenario Outline: hollow rows", // 14
-          "      Given a <x>", // 15
-          "      Examples:", // 16
-          "        | x |", // 17
+          "    Scenario Outline: hollow rows", // 17
+          "      Given a <x>", // 18
+          "      Examples:", // 19
+          "        | x |", // 20
           "",
-          "    Scenario: empty", // 19
+          "    Scenario: empty", // 22
         ]),
       );
 
@@ -493,6 +902,7 @@ describe("buildFeatureModel", () => {
           "      | a | b |", // 9
           "      | 1 | 2 |", // 10
           "    And a plain step", // 11
+          "    Then the arguments arrived", // 12
         ]),
       );
 
@@ -529,6 +939,12 @@ describe("buildFeatureModel", () => {
           text: "a plain step",
           type: "Context",
         },
+        {
+          column: 5,
+          line: 12,
+          text: "the arguments arrived",
+          type: "Outcome",
+        },
       ]);
       // Absent, not undefined — byte-identical emitted source depends on it.
       expect(Object.hasOwn(scenario.steps[2], "argument")).toBe(false);
@@ -551,10 +967,11 @@ describe("buildFeatureModel", () => {
           '      """', // 8
           "      buy <fruit> for <price>", // 9
           '      """', // 10
-          "", // 11
-          "    Examples:", // 12
-          "      | fruit | price |", // 13
-          "      | kiwi  | 9     |", // 14
+          "    Then the note prices <fruit> at <price>", // 11
+          "", // 12
+          "    Examples:", // 13
+          "      | fruit | price |", // 14
+          "      | kiwi  | 9     |", // 15
         ]),
       );
 
@@ -582,6 +999,7 @@ describe("buildFeatureModel", () => {
           "    Given a hostile table", // 4
           "      | __proto__ | safe |", // 5
           "      | evil      | ok   |", // 6
+          "    Then the table is data", // 7
         ]),
       );
 
@@ -611,6 +1029,8 @@ describe("buildFeatureModel", () => {
           "",
           "  Scenario: leading conjunction", // 11
           "    And floating", // 12
+          "    Given a context", // 13
+          "    Then an outcome", // 14
         ]),
       );
 
@@ -624,7 +1044,11 @@ describe("buildFeatureModel", () => {
         "Outcome",
         "Unknown",
       ]);
-      expect(leading.steps.map((step) => step.type)).toEqual(["Unknown"]);
+      expect(leading.steps.map((step) => step.type)).toEqual([
+        "Unknown",
+        "Context",
+        "Outcome",
+      ]);
     });
   });
 
@@ -698,24 +1122,27 @@ describe("buildFeatureModel", () => {
       "  @plain",
       "  Scenario: plain", // 5
       "    Given a step", // 6
+      "    Then a check holds", // 7
       "",
-      "  Scenario Outline: uses <x>", // 8
-      "    Given a <x>", // 9
+      "  Scenario Outline: uses <x>", // 9
+      "    Given a <x>", // 10
+      "    Then the <x> holds", // 11
       "",
       "    @fast",
-      "    Examples: fast", // 12
-      "      | x |", // 13
-      "      | 1 |", // 14
+      "    Examples: fast", // 14
+      "      | x |", // 15
+      "      | 1 |", // 16
       "",
-      "    Examples: slow", // 16
-      "      | x |", // 17
-      "      | 2 |", // 18
+      "    Examples: slow", // 18
+      "      | x |", // 19
+      "      | 2 |", // 20
       "",
-      "  Rule: grouped", // 20
+      "  Rule: grouped", // 22
       "",
       "    @ruled",
-      "    Scenario: inside", // 23
-      "      Given a step", // 24
+      "    Scenario: inside", // 25
+      "      Given a step", // 26
+      "      Then a check holds", // 27
     ];
 
     test("should carry each pickle's fully inherited tag set as authored, with the @ prefix", () => {
@@ -751,6 +1178,7 @@ describe("buildFeatureModel", () => {
           "  Rule: grouped", // 4
           "    Scenario: inside", // 5
           "      Given a step", // 6
+          "      Then a check holds", // 7
         ]),
       );
 
@@ -769,6 +1197,7 @@ describe("buildFeatureModel", () => {
           "  @dup",
           "  Scenario: twice", // 5
           "    Given a step", // 6
+          "    Then a check holds", // 7
         ]),
       );
 
@@ -788,7 +1217,9 @@ describe("buildFeatureModel", () => {
           "",
           "  @real",
           "  Scenario: real", // 7
-          "    When acting", // 8
+          "    Given a key", // 8
+          "    When acting", // 9
+          "    Then it acted", // 10
         ]),
       );
 
@@ -803,6 +1234,7 @@ describe("buildFeatureModel", () => {
           "Feature: bare", // 1
           "  Scenario: plain", // 2
           "    Given a step", // 3
+          "    Then a check holds", // 4
         ]),
       );
 
@@ -821,10 +1253,12 @@ describe("buildFeatureModel", () => {
             "  @keep",
             "  Scenario: kept", // 4
             "    Given a step", // 5
+            "    Then a check holds", // 6
             "",
             "  @slow",
-            "  Scenario: dropped", // 8
-            "    Given a step", // 9
+            "  Scenario: dropped", // 9
+            "    Given a step", // 10
+            "    Then a check holds", // 11
           ],
           "not @slow",
         ),
@@ -845,15 +1279,16 @@ describe("buildFeatureModel", () => {
             "",
             "  Scenario Outline: uses <x>", // 3
             "    Given a <x>", // 4
+            "    Then the <x> holds", // 5
             "",
             "    @fast",
-            "    Examples: fast", // 7
-            "      | x |", // 8
-            "      | 1 |", // 9
+            "    Examples: fast", // 8
+            "      | x |", // 9
+            "      | 1 |", // 10
             "",
-            "    Examples: slow", // 11
-            "      | x |", // 12
-            "      | 2 |", // 13
+            "    Examples: slow", // 12
+            "      | x |", // 13
+            "      | 2 |", // 14
           ],
           "not @fast",
         ),
@@ -872,6 +1307,7 @@ describe("buildFeatureModel", () => {
             "",
             "  Scenario: one", // 4
             "    Given a step", // 5
+            "    Then a check holds", // 6
           ],
           "not @slow",
         ),
@@ -892,11 +1328,13 @@ describe("buildFeatureModel", () => {
             "",
             "  Scenario: survives", // 3
             "    Given a step", // 4
+            "    Then a check holds", // 5
             "",
             "  @slow",
-            "  Rule: all excluded", // 7
-            "    Scenario: inside", // 8
-            "      Given a step", // 9
+            "  Rule: all excluded", // 8
+            "    Scenario: inside", // 9
+            "      Given a step", // 10
+            "      Then a check holds", // 11
           ],
           "not @slow",
         ),
@@ -918,7 +1356,7 @@ describe("buildFeatureModel", () => {
             "",
             "  Scenario Outline: excluded wholesale <x>", // 3
             "    Given a <x>", // 4
-            "",
+            "    Then the <x> holds", // 5
             "    @slow",
             "    Examples:", // 7
             "      | x |", // 8
@@ -954,7 +1392,7 @@ describe("buildFeatureModel", () => {
             "",
             "  Scenario: survives", // 3
             "    Given a step", // 4
-            "",
+            "    Then a check holds", // 5
             "  @slow",
             "  Scenario Outline: broken <x>", // 7
             "    Given a <x>", // 8
@@ -983,7 +1421,7 @@ describe("buildFeatureModel", () => {
             "",
             "  Scenario: survives", // 3
             "    Given a step", // 4
-            "",
+            "    Then a check holds", // 5
             "  @slow",
             "  Scenario: nothing here", // 7
           ],
@@ -1009,10 +1447,12 @@ describe("buildFeatureModel", () => {
             "  @keep",
             "  Scenario: kept", // 4
             "    Given a step", // 5
+            "    Then a check holds", // 6
             "",
             "  @slow @docker",
-            "  Scenario: dropped", // 8
-            "    Given a step", // 9
+            "  Scenario: dropped", // 9
+            "    Given a step", // 10
+            "    Then a check holds", // 11
           ],
           "not @slow",
         ),
@@ -1119,6 +1559,7 @@ describe("buildFeatureModel", () => {
           "  @skip",
           "  Scenario: from another runner", // 4
           "    Given a step", // 5
+          "    Then a check holds", // 6
         ]),
       );
 
@@ -1137,6 +1578,7 @@ describe("buildFeatureModel", () => {
           "  @issue(1234)",
           "  Scenario: a real Cucumber convention", // 4
           "    Given a step", // 5
+          "    Then a check holds", // 6
         ]),
       );
 
@@ -1153,6 +1595,7 @@ describe("buildFeatureModel", () => {
             "  @slow @concurrent",
             "  Scenario: excluded anyway", // 4
             "    Given a step", // 5
+            "    Then a check holds", // 6
           ],
           "not @slow",
         ),
@@ -1171,17 +1614,20 @@ describe("buildFeatureModel", () => {
           "",
           "  Scenario: top", // 3
           "    Given a step", // 4
+          "    Then a check holds", // 5
           "",
-          "  Rule: first rule", // 6
-          "    Scenario: inside first", // 7
-          "      Given a step", // 8
+          "  Rule: first rule", // 7
+          "    Scenario: inside first", // 8
+          "      Given a step", // 9
+          "      Then a check holds", // 10
           "",
-          "  Rule: second rule", // 10
-          "    Scenario Outline: inside second <x>", // 11
-          "      Given a <x>", // 12
-          "      Examples:", // 13
-          "        | x |", // 14
-          "        | 1 |", // 15
+          "  Rule: second rule", // 12
+          "    Scenario Outline: inside second <x>", // 13
+          "      Given a <x>", // 14
+          "      Then the <x> holds", // 15
+          "      Examples:", // 16
+          "        | x |", // 17
+          "        | 1 |", // 18
         ]),
       );
 
@@ -1205,11 +1651,12 @@ describe("buildFeatureModel", () => {
           "",
           "  Scenario Outline: <alg> at <price> for <tenant>", // 3
           '    Given "<alg>" and "<price>" and "<tenant>"', // 4
+          '    Then "<tenant>" pays "<price>" for "<alg>"', // 5
           "",
-          "    Examples:", // 6
-          "      | alg     | price | tenant |", // 7
-          "      | A128GCM | $100  | t-1    |", // 8
-          "      | A256GCM | $250  | t-2    |", // 9
+          "    Examples:", // 7
+          "      | alg     | price | tenant |", // 8
+          "      | A128GCM | $100  | t-1    |", // 9
+          "      | A256GCM | $250  | t-2    |", // 10
         ]),
       );
 
@@ -1235,14 +1682,15 @@ describe("buildFeatureModel", () => {
           "",
           "  Scenario Outline: <a><b>", // 3
           "    Given <a> and <b>", // 4
+          "    Then <b> follows <a>", // 5
           "",
-          "    Examples: ab", // 6
-          "      | a | b |", // 7
-          "      | 1 | 2 |", // 8
+          "    Examples: ab", // 7
+          "      | a | b |", // 8
+          "      | 1 | 2 |", // 9
           "",
-          "    Examples: ba", // 10
-          "      | b | a |", // 11
-          "      | 3 | 4 |", // 12
+          "    Examples: ba", // 11
+          "      | b | a |", // 12
+          "      | 3 | 4 |", // 13
         ]),
       );
 
@@ -1264,6 +1712,7 @@ describe("buildFeatureModel", () => {
           "Feature: plain", // 1
           "  Scenario: no rows", // 2
           "    Given a step", // 3
+          "    Then a check holds", // 4
         ]),
       );
 
@@ -1277,10 +1726,11 @@ describe("buildFeatureModel", () => {
           "",
           "  Scenario Outline: reads <safe>", // 3
           "    Given a <safe>", // 4
+          "    Then the <safe> holds", // 5
           "",
-          "    Examples:", // 6
-          "      | __proto__ | safe |", // 7
-          "      | evil      | ok   |", // 8
+          "    Examples:", // 7
+          "      | __proto__ | safe |", // 8
+          "      | evil      | ok   |", // 9
         ]),
       );
 
@@ -1305,6 +1755,7 @@ describe("buildFeatureModel", () => {
           '      """', // 5
           "      body with ` backtick, ${injection}, \"double\" and 'single' quotes", // 6
           '      """', // 7
+          '    Then the step carries "`${danger}`" verbatim', // 8
         ]),
       );
 

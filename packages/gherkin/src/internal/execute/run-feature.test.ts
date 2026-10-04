@@ -6,6 +6,7 @@ import { Context } from "../../decorators/Context.js";
 import { Given } from "../../decorators/Given.js";
 import { Inject } from "../../decorators/Inject.js";
 import { ParameterType } from "../../decorators/ParameterType.js";
+import { Then } from "../../decorators/Then.js";
 import { buildFeatureModel } from "../model/build-feature-model.js";
 import {
   drainContextRegistrations,
@@ -26,6 +27,11 @@ const stepModules = {
       run(value: string): void {
         executed.push(value);
       }
+
+      @Then("the run recorded {string}")
+      recorded(value: string): void {
+        expect(executed).toContain(value);
+      }
     }
     return FlowSteps;
   },
@@ -36,6 +42,7 @@ const source = [
   "",
   "  Scenario Outline: runs <value>",
   '    Given I run "<value>"',
+  '    Then the run recorded "<value>"',
   "",
   "    Examples:",
   "      | value |",
@@ -47,6 +54,7 @@ const source = [
   "    Scenario: runs one and two",
   '      Given I run "one"',
   '      Given I run "two"',
+  '      Then the run recorded "two"',
 ].join("\n");
 
 describe("runFeature", () => {
@@ -90,9 +98,13 @@ describe("runFeature", () => {
     await runFeature({
       api: fake.api,
       model: buildFeatureModel(
-        ["Feature: contexts", "", "  Scenario: shares state", "    Given I touch"].join(
-          "\n",
-        ),
+        [
+          "Feature: contexts",
+          "",
+          "  Scenario: shares state",
+          "    Given I touch",
+          "    Then the touch is shared",
+        ].join("\n"),
         "src/features/contexts.feature",
       ),
       stepModules: {
@@ -114,6 +126,11 @@ describe("runFeature", () => {
             @Given("I touch")
             touch(): void {
               this.shared.values.push("touched");
+            }
+
+            @Then("the touch is shared")
+            touchIsShared(): void {
+              expect(this.shared.values).toEqual(["touched"]);
             }
           }
           return ContextSteps;

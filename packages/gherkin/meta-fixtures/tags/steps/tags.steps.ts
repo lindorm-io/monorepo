@@ -1,4 +1,5 @@
-import { Binding, Given } from "../../../src/index.js";
+import { expect } from "vitest";
+import { Binding, Given, Then } from "../../../src/index.js";
 
 /**
  * The child's stdout is the meta-suite's oracle: a sentinel proves the
@@ -11,8 +12,16 @@ const sentinel = (line: string): void => {
 
 @Binding()
 export class TagSteps {
+  private note = "";
+
   @Given("a noted step {string}")
-  note(value: string): void {
+  noted(value: string): void {
     sentinel(`META_SENTINEL_NOTE_${value}`);
+    this.note = value;
+  }
+
+  @Then("the note reads {string}")
+  noteReads(value: string): void {
+    expect(this.note).toBe(value);
   }
 }

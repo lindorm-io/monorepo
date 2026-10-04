@@ -6,7 +6,7 @@
 // without dying, and that an EMPTY model's empty describe.skip is legal —
 // if any of that regressed, this file fails collection or goes red.
 import { expect, test } from "vitest";
-import { Binding, Given } from "../../index.js";
+import { Binding, Given, Then } from "../../index.js";
 import { runFeature } from "../../runtime.js";
 import { buildFeatureModel } from "../model/build-feature-model.js";
 
@@ -17,6 +17,7 @@ const source = [
   "",
   "  Scenario Outline: emits <value>",
   '    Given the real api runs "<value>"',
+  '    Then the real api recorded "<value>"',
   "",
   "    Examples:",
   "      | value |",
@@ -28,6 +29,7 @@ const source = [
   "    Scenario: emits one and two",
   '      Given the real api runs "one"',
   '      Given the real api runs "two"',
+  '      Then the real api recorded "two"',
 ].join("\n");
 
 await runFeature({
@@ -39,6 +41,11 @@ await runFeature({
         @Given("the real api runs {string}")
         run(value: string): void {
           executed.push(value);
+        }
+
+        @Then("the real api recorded {string}")
+        recorded(value: string): void {
+          expect(executed).toContain(value);
         }
       }
       return RealApiSteps;

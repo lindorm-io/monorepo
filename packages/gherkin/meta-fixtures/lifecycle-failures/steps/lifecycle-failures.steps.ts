@@ -1,3 +1,4 @@
+import { expect } from "vitest";
 import type { ScenarioResult, StepInfo, StepResult } from "../../../src/index.js";
 import {
   AfterScenario,
@@ -9,6 +10,7 @@ import {
   Given,
   Inject,
   Priority,
+  Then,
 } from "../../../src/index.js";
 
 /**
@@ -21,6 +23,14 @@ import {
 const sentinel = (line: string): void => {
   process.stdout.write(`${line}\n`);
 };
+
+@Binding()
+export class StoppedScenarioSteps {
+  @Then("the scenario stops before this step")
+  stopsBefore(): void {
+    expect.unreachable("the failure above must stop the scenario");
+  }
+}
 
 @Context()
 export class BeforeBoomContext {
@@ -122,6 +132,8 @@ export class AfterScenarioBoom {
   @Inject(AfterBoomContext)
   readonly probe!: AfterBoomContext;
 
+  private passed = false;
+
   @AfterScenario("@after-boom")
   brokenTeardown(): void {
     throw new Error("teardown flake");
@@ -130,6 +142,12 @@ export class AfterScenarioBoom {
   @Given("a passing after-boom step")
   passing(): void {
     sentinel("META_SENTINEL_AFTER_BOOM_STEP");
+    this.passed = true;
+  }
+
+  @Then("the after-boom step passed")
+  stepPassed(): void {
+    expect(this.passed).toBe(true);
   }
 }
 
@@ -156,9 +174,17 @@ export class DisposeBoom {
   @Inject(DisposeAlphaContext)
   readonly alpha!: DisposeAlphaContext;
 
+  private disposingRan = false;
+
   @Given("a disposing step")
   disposing(): void {
     sentinel("META_SENTINEL_DISPOSE_STEP");
+    this.disposingRan = true;
+  }
+
+  @Then("the disposing step ran")
+  disposingStepRan(): void {
+    expect(this.disposingRan).toBe(true);
   }
 
   @Given("a disposing step that fails")
@@ -169,6 +195,8 @@ export class DisposeBoom {
 
 @Binding()
 export class TagFilterProbe {
+  private tagControlledRan = false;
+
   @BeforeScenario("@no-such-tag")
   neverRuns(): void {
     sentinel("META_SENTINEL_TAG_FILTERED_HOOK");
@@ -182,6 +210,12 @@ export class TagFilterProbe {
   @Given("a tag-controlled step")
   tagControlled(): void {
     sentinel("META_SENTINEL_TAG_CONTROL_STEP");
+    this.tagControlledRan = true;
+  }
+
+  @Then("the tag-controlled step ran")
+  tagControlledStepRan(): void {
+    expect(this.tagControlledRan).toBe(true);
   }
 }
 
@@ -221,6 +255,12 @@ export class OrderAlpha {
   @Given("an ordered step")
   ordered(): void {
     orderLog.push("step");
+  }
+
+  @Then("the ordered step ran")
+  orderedStepRan(): void {
+    orderLog.push("check");
+    expect(orderLog).toContain("step");
   }
 }
 

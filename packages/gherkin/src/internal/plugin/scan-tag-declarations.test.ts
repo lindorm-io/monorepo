@@ -16,22 +16,39 @@ describe("scanTagDeclarations", () => {
 
     await writeFile(
       join(root, "src", "a.feature"),
-      ["@lane", "Feature: a", "", "  @smoke", "  Scenario: s", "    Given a step"].join(
-        "\n",
-      ),
+      [
+        "@lane",
+        "Feature: a",
+        "",
+        "  @smoke",
+        "  Scenario: s",
+        "    Given a step",
+        "    Then a check holds",
+      ].join("\n"),
     );
     await writeFile(
       join(root, "src", "b.feature"),
-      ["@lane", "Feature: b", "", "  @slow", "  Scenario: s", "    Given a step"].join(
-        "\n",
-      ),
+      [
+        "@lane",
+        "Feature: b",
+        "",
+        "  @slow",
+        "  Scenario: s",
+        "    Given a step",
+        "    Then a check holds",
+      ].join("\n"),
     );
     await writeFile(join(root, "src", "broken.feature"), "not gherkin at all\n");
     await writeFile(
       join(root, "outside", "c.feature"),
-      ["@never-scanned", "Feature: c", "", "  Scenario: s", "    Given a step"].join(
-        "\n",
-      ),
+      [
+        "@never-scanned",
+        "Feature: c",
+        "",
+        "  Scenario: s",
+        "    Given a step",
+        "    Then a check holds",
+      ].join("\n"),
     );
   });
 
@@ -99,6 +116,7 @@ describe("scanTagDeclarations", () => {
         "  @issue(1234)",
         "  Scenario: s",
         "    Given a step",
+        "    Then a check holds",
       ].join("\n"),
     );
 
@@ -133,6 +151,7 @@ describe("scanTagDeclarations", () => {
         "",
         "  Scenario: s",
         "    Given a step",
+        "    Then a check holds",
       ].join("\n"),
     );
 

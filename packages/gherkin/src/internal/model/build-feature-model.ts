@@ -93,8 +93,9 @@ export const buildFeatureModel = (
 
   // Union over the RETAINED pickles (the Map preserves compile order), never
   // the AST feature tags alone — a tag authored at scenario or Examples level
-  // reaches the feature set only through its pickle. Superseded zero-step
-  // scenarios contribute too: their pickles exist and their tests run (RED).
+  // reaches the feature set only through its pickle. Superseded zero-step and
+  // incomplete scenarios contribute too: their pickles exist and their tests
+  // run (RED).
   // Excluded pickles do NOT: their scenarios do not exist, so a feature hook
   // gated on their tags must not fire.
   const tags = [
