@@ -1,5 +1,9 @@
+import type { AuthorizationDetail } from "@lindorm/openid";
 import type { ClaimMemberSpec } from "../registry/claim-spec.js";
 import { wireName } from "../registry/wire-key.js";
+
+/** Gives the sample the `type` member `AuthorizationDetail` requires; the derived `type` overrides it. */
+const DETAIL_TYPE = "payment_initiation";
 
 /**
  * The members of ONE RFC 9396 `authorization_details` element — the registry's
@@ -45,7 +49,7 @@ export const AUTHORIZATION_DETAIL_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
      */
     whenEmpty: "prune",
     required: true,
-    sample: "payment_initiation",
+    sample: DETAIL_TYPE,
   },
 ];
 
@@ -57,8 +61,11 @@ export const AUTHORIZATION_DETAIL_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
  * ONE element: the claim's shape is proven by the element, and its cardinality
  * is not a registry fact.
  */
-export const AUTHORIZATION_DETAILS_SAMPLE: ReadonlyArray<Record<string, unknown>> = [
-  Object.fromEntries(
-    AUTHORIZATION_DETAIL_MEMBERS.map((member) => [member.domain, member.sample]),
-  ),
+export const AUTHORIZATION_DETAILS_SAMPLE: Array<AuthorizationDetail> = [
+  {
+    type: DETAIL_TYPE,
+    ...Object.fromEntries(
+      AUTHORIZATION_DETAIL_MEMBERS.map((member) => [member.domain, member.sample]),
+    ),
+  },
 ];

@@ -303,6 +303,20 @@ describe("CLAIM_REGISTRY", () => {
     }
   });
 
+  test("a sample is measured against its OWN claim's type, not any claim's", () => {
+    // Bites under `npm run typecheck` only: vitest strips types without checking.
+    type IssuerSample = Extract<
+      (typeof CLAIM_SPECS)[number],
+      { domain: "issuer" }
+    >["sample"];
+
+    const carried: IssuerSample = "https://issuer.lindorm.test";
+    // @ts-expect-error `issuer` is text; a Date is the sample of the time claims
+    const refused: IssuerSample = new Date();
+
+    expect([carried, refused]).toHaveLength(2);
+  });
+
   test("every entry declares a valid sensitivity and bucket", () => {
     const sensitivities = new Set(["public", "sensitive"]);
     const buckets = new Set(["claims", "profile"]);
@@ -1065,7 +1079,7 @@ describe("CLAIM_REGISTRY", () => {
     };
 
     const actual = Object.fromEntries(
-      CLAIM_SPECS.map((spec) => [spec.domain, childrenOf(spec.codec)] as const)
+      CLAIM_SPECS.map((spec: ClaimSpec) => [spec.domain, childrenOf(spec.codec)] as const)
         .filter(
           (entry): entry is readonly [string, () => ReadonlyArray<ClaimMemberSpec>] =>
             entry[1] !== undefined,

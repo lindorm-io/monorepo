@@ -408,7 +408,7 @@ describe("shapeForObject — the CWT structure shaper's drift guard", () => {
     // covering a claim the moment it migrates — and the FORM travels with the
     // member set, because the two sets look identical here while the compact
     // encoder does different things with them.
-    const structured = CLAIM_SPECS.map((spec) => {
+    const structured = CLAIM_SPECS.map((spec: ClaimSpec) => {
       const codec = spec.codec;
 
       if (codec.kind === "object")

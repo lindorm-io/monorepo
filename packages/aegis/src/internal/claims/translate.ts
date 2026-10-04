@@ -1734,7 +1734,7 @@ export const wireToFloorClaims = (
 };
 
 /** The DOMAIN names the floor read resolves — the set a custom key may not impersonate. */
-const FLOOR_DOMAINS = new Set(
+const FLOOR_DOMAINS = new Set<string>(
   CLAIM_SPECS.filter((spec) => spec.domainClaim !== undefined).map((spec) => spec.domain),
 );
 

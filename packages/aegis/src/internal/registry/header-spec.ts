@@ -4,7 +4,7 @@
  * they live here and not on the base.
  */
 
-import type { DomainTokenHeader } from "../../types/index.js";
+import type { DomainTokenHeader, DomainTokenHeaderOptions } from "../../types/index.js";
 import type { CoseHeaderCodec } from "./cose-header-codec.js";
 import type { ParamSpec, WhenEmpty } from "./param-spec.js";
 
@@ -98,3 +98,25 @@ export type HeaderSpec<D = unknown> = ParamSpec<D, HeaderCodec, WhenEmpty> & {
    */
   critEligible: boolean;
 };
+
+/**
+ * Every header parameter a registry row can name, by domain name, with the value
+ * its sample must be: the WRITE type, because samples feed the write side of the
+ * round trips. {@link DomainTokenHeaderOptions} speaks first (`initialisationVector`,
+ * `pbkdfSalt` and `publicEncryptionTag` are `Buffer`); every other parameter keeps
+ * its {@link DomainTokenHeader} type.
+ */
+export type HeaderDomainValues = Required<
+  Omit<DomainTokenHeader, keyof DomainTokenHeaderOptions> & DomainTokenHeaderOptions
+>;
+
+/**
+ * A header registry row, bound to its OWN parameter's value type. A mapped type
+ * indexed back by its own keys is a union with one member per parameter, each
+ * pairing the literal `domain: K` with `HeaderDomainValues[K]`, so the row's
+ * `domain` selects the member its `sample` is measured against.
+ * pinned: header-registry.test.ts
+ */
+export type RegisteredHeaderSpec = {
+  [K in keyof HeaderDomainValues]: HeaderSpec<HeaderDomainValues[K]> & { domain: K };
+}[keyof HeaderDomainValues];

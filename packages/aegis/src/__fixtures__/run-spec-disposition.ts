@@ -2,7 +2,7 @@ import { isDate, isUndefined } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import { expect } from "vitest";
 import type { Wire } from "../internal/registry/wire.js";
-import type { TokenFormatTag } from "../types/index.js";
+import type { ClaimsTokenFormat } from "../types/index.js";
 import { TEST_EC_KEY_ENC, TEST_EC_KEY_SIG_CERT, TEST_OCT_KEY_ENC } from "./keys.js";
 import type { SpecDisposition, SpecDoor, SpecObservation } from "./spec-dispositions.js";
 import { CLIENT, ISSUER, RESOURCE, type TestDeployment } from "./test-deployment.js";
@@ -44,7 +44,7 @@ const SPEC_DISPOSITION_FAILURE = {
 } as const;
 
 /** The claims format each wire mints as. */
-const FORMAT: Record<Wire, TokenFormatTag> = { jose: "jwt", cose: "cwt" };
+const FORMAT: Record<Wire, ClaimsTokenFormat> = { jose: "jwt", cose: "cwt" };
 
 /** The disposition that applies on ONE wire: the per-wire override, else the base. */
 export const dispositionOn = (
@@ -215,7 +215,7 @@ const openDoor = async (door: SpecDoor, input: DoorInput): Promise<unknown> => {
       const { token } = await ctx.aegis.mint(
         "default",
         { subject: "user-1", expires: "1h" } as never,
-        { format, sign: { header: { ...named, [domain]: sample } } } as never,
+        { format, sign: { header: { ...named, [domain]: sample } } },
       );
       return ctx.aegis.parse(token).header[domain as never];
     }

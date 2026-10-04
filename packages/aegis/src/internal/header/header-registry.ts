@@ -42,7 +42,7 @@ import { isNumber } from "@lindorm/is";
 import { CoseError } from "../../errors/index.js";
 import type { CoseLabel } from "../cose/cose-label.js";
 import type { CoseHeaderCodec } from "../registry/cose-header-codec.js";
-import type { HeaderSpec } from "../registry/header-spec.js";
+import type { HeaderSpec, RegisteredHeaderSpec } from "../registry/header-spec.js";
 import { isPrivateUseLabel } from "../registry/is-private-use-label.js";
 import {
   wireAbsent,
@@ -66,7 +66,7 @@ export type { CoseHeaderCodec } from "../registry/cose-header-codec.js";
  * RFC 7515 §4.1 · RFC 7516 §4.1 · RFC 7518 §4.6 · RFC 9052 §3.1 · RFC 9360 §2 ·
  * RFC 9596 §2, plus the lindorm-proprietary `oid`.
  */
-export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
+export const HEADER_SPECS: ReadonlyArray<RegisteredHeaderSpec> = [
   {
     domain: "algorithm",
     spec: {
@@ -294,7 +294,15 @@ export const HEADER_SPECS: ReadonlyArray<HeaderSpec> = [
     },
     codec: { kind: "jwk" },
     cose: null,
-    sample: { kty: "EC", crv: "P-256", x: "eHNhbXBsZQ", y: "eXNhbXBsZQ" },
+    sample: {
+      kid: "key_sample",
+      alg: "ES256",
+      use: "sig",
+      kty: "EC",
+      crv: "P-256",
+      x: "eHNhbXBsZQ",
+      y: "eXNhbXBsZQ",
+    },
     // PRUNE: `{}` is a JWK with no `kty` (RFC 7517 §4.1) and identifies no key.
     // aegis never trusts a header-embedded key on any wire, so an empty one is
     // noise no recipient can act on.

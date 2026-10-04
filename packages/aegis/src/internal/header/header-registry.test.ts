@@ -175,6 +175,20 @@ describe("HEADER_SPECS", () => {
     }
   });
 
+  test("a sample is measured against the WRITE type of its OWN parameter", () => {
+    // Bites under `npm run typecheck` only: vitest strips types without checking.
+    type IvSample = Extract<
+      (typeof HEADER_SPECS)[number],
+      { domain: "initialisationVector" }
+    >["sample"];
+
+    const carried: IvSample = Buffer.alloc(12);
+    // @ts-expect-error the write side takes the iv as a Buffer; a string is its read type
+    const refused: IvSample = "AAAAAAAAAAAAAAAA";
+
+    expect([carried, refused]).toHaveLength(2);
+  });
+
   test("wire names are unique", () => {
     const jose = HEADER_SPECS.map(headerJoseName);
     expect(new Set(jose).size).toBe(jose.length);

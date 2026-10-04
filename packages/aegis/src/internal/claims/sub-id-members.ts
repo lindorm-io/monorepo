@@ -1,7 +1,7 @@
 import type { ClaimMemberSpec } from "../registry/claim-spec.js";
 import type { Wire } from "../registry/wire.js";
 import { type WireKey, wireLabel, wireName } from "../registry/wire-key.js";
-import { SUBJECT_IDENTIFIER_REQUIRED_MEMBERS } from "./sub-id.js";
+import { SUBJECT_IDENTIFIER_REQUIRED_MEMBERS, type SubjectIdentifier } from "./sub-id.js";
 
 /**
  * The members of an RFC 9493 `sub_id` Subject Identifier.
@@ -238,7 +238,7 @@ const MEMBER_SAMPLES: ReadonlyMap<string, unknown> = new Map(
 const identifierOf = (
   format: string,
   samples: ReadonlyMap<string, unknown>,
-): Record<string, unknown> => ({
+): SubjectIdentifier => ({
   format,
   ...Object.fromEntries(
     (SUBJECT_IDENTIFIER_REQUIRED_MEMBERS.get(format) ?? []).map((member) => [
@@ -252,7 +252,7 @@ const identifierOf = (
  * One identifier per registered format EXCEPT `aliases` — the exclusion is
  * RFC 9493 §3.2.8, not a convenience, so the sample bottoms out at depth 2.
  */
-const ALIASED: ReadonlyArray<Record<string, unknown>> = [
+const ALIASED: ReadonlyArray<SubjectIdentifier> = [
   ...SUBJECT_IDENTIFIER_REQUIRED_MEMBERS.keys(),
 ]
   .filter((format) => format !== ALIASES)
@@ -269,7 +269,7 @@ const ALIASED: ReadonlyArray<Record<string, unknown>> = [
  * generated spec matrix's real mint and real verify — at DEPTH, which makes that
  * row a proof of the recursion rather than of one flat map.
  */
-export const SUB_ID_SAMPLE: Readonly<Record<string, unknown>> = identifierOf(
+export const SUB_ID_SAMPLE: SubjectIdentifier = identifierOf(
   ALIASES,
   new Map([...MEMBER_SAMPLES, ["identifiers", ALIASED]]),
 );

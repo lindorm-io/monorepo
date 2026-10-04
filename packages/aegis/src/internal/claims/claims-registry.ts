@@ -61,7 +61,7 @@
  * complete is a second source of truth waiting to disagree.
  */
 
-import type { ClaimSpec } from "../registry/claim-spec.js";
+import type { ClaimSpec, RegisteredClaimSpec } from "../registry/claim-spec.js";
 import type { WireNamed } from "../registry/param-spec.js";
 import type { Wire } from "../registry/wire.js";
 import {
@@ -124,7 +124,7 @@ const SAMPLE_FUTURE_DATE = new Date("2026-01-01T00:00:00.000Z");
  * The registry. Order groups by COSE-key category for readability; lookups are
  * by the derived maps below, not by position.
  */
-export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
+export const CLAIM_SPECS: ReadonlyArray<RegisteredClaimSpec> = [
   // --- (a) IANA-registered CWT claims (integer labels 1–9) ---
   {
     domain: "issuer",
@@ -1334,10 +1334,6 @@ export const CLAIM_SPECS: ReadonlyArray<ClaimSpec> = [
     wire: labelled("naming_system", P(42)),
     codec: { kind: "text" },
     sensitivity: "public",
-    // ⚠ THE SAMPLE MUST BE A MEMBER OF `AegisProfileNamingSystem`, AND NOTHING
-    // CHECKS THAT. The column is typed `unknown` (`ParamSpec<D = unknown>`) and
-    // the registry's sample test checks the CODEC kind (`text`), which any string
-    // satisfies.
     sample: "given_family",
     bucket: "profile",
     whenEmpty: "prune",
@@ -1542,5 +1538,6 @@ export const claimsWith = <K extends keyof ClaimSpec>(
   mark: K,
 ): ReadonlyArray<ClaimSpec & Required<Pick<ClaimSpec, K>>> =>
   CLAIM_SPECS.filter(
-    (spec): spec is ClaimSpec & Required<Pick<ClaimSpec, K>> => spec[mark] !== undefined,
+    (spec): spec is RegisteredClaimSpec & Required<Pick<ClaimSpec, K>> =>
+      spec[mark] !== undefined,
   );

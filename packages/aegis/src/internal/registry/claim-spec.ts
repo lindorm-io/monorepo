@@ -4,6 +4,7 @@
  * which is why they live here rather than on the base.
  */
 
+import type { AegisProfile, AegisSensitive, TokenClaims } from "../../types/index.js";
 import type { MemberSpec, ParamSpec, WhenEmpty } from "./param-spec.js";
 
 /**
@@ -198,3 +199,20 @@ export type ClaimSpec<D = unknown> = ParamSpec<D, ClaimCodec, WhenEmpty> & {
    */
   domainClaim?: true;
 };
+
+/**
+ * Every claim a registry row can name, by domain name, with the value its sample
+ * must be: the token read's claim set plus the profile and sensitive bags.
+ */
+export type ClaimDomainValues = Required<TokenClaims & AegisProfile & AegisSensitive>;
+
+/**
+ * A claim registry row, bound to its OWN claim's value type. A mapped type indexed
+ * back by its own keys is a union with one member per claim, each pairing the
+ * literal `domain: K` with `ClaimDomainValues[K]`, so the row's `domain` selects
+ * the member its `sample` is measured against.
+ * pinned: claims-registry.test.ts
+ */
+export type RegisteredClaimSpec = {
+  [K in keyof ClaimDomainValues]: ClaimSpec<ClaimDomainValues[K]> & { domain: K };
+}[keyof ClaimDomainValues];
