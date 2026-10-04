@@ -56,9 +56,7 @@ export const validateWireClaims = <C extends Dict = Dict>({
       // bound `createTemporalMatchers` built rather than conjoining with it, so a
       // caller adding a presence check to `exp`/`nbf`/`iat`/`auth_time` stands
       // the range check down without asking — a silent second route to what the
-      // explicit `verifyExpiration` knobs exist for. Left as is: the merge
-      // semantics are the owner's call. Tracked under "condition-language
-      // leftovers" in `TODO-MONOREPO.md`.
+      // explicit `verifyExpiration` knobs exist for.
       ...(assert ?? {}),
     } as Condition<C>,
     // The claims kits are PURE WIRE, so a failure here is a kit failure under

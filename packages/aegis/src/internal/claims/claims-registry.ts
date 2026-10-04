@@ -22,9 +22,8 @@
  *
  *   (a) a registered IANA CWT Claims label (1–9): always that integer —
  *       untouched by the byte-size rule. RFC 8392 §4 assigns 1–7 and RFC 8392 §9.1
- *       establishes the registry; RFC 8747 §7.1.1 assigns `cnf` 8. ⚠ `scope` 9
- *       is a registry entry no RFC in the local specification library states —
- *       see the open question in `TODO-MONOREPO.md`;
+ *       establishes the registry; RFC 8747 §7.1.1 assigns `cnf` 8 and RFC 9200
+ *       §8.14 assigns `scope` 9;
  *   (b) `wireName(...)` ⇒ no registered label AND a short JOSE name (≤ 4 chars):
  *       the JOSE string name is the CBOR map key on- and off-platform, so a stock
  *       verifier reads it;
