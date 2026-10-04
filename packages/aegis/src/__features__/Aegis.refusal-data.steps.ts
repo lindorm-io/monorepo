@@ -23,4 +23,12 @@ export class AegisRefusalDataSteps extends AegisStepsBase {
   theRefusalCarriesNoData(): void {
     expect(this.refusalData()).toStrictEqual({});
   }
+
+  @Then("the refusal's message is: {}")
+  theRefusalsMessageIs(message: string): void {
+    const refusal = this.refusal();
+
+    expect(refusal).toBeInstanceOf(Error);
+    expect((refusal as Error).message).toBe(message);
+  }
 }

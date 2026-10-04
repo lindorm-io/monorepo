@@ -58,6 +58,12 @@ describe("enforceVerifyFloor", () => {
     ).toThrow(AegisDomainError);
   });
 
+  test("rejects an EMPTY issuer as it rejects a different one", () => {
+    expect(() =>
+      enforceVerifyFloor({ ...base, payload: { ...validPayload, issuer: "" } }),
+    ).toThrow(expect.objectContaining({ code: "issuer_mismatch", data: { issuer: "" } }));
+  });
+
   test("rejects when aud does not contain self", () => {
     expect(() =>
       enforceVerifyFloor({

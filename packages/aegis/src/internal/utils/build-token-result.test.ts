@@ -36,6 +36,23 @@ describe("buildTokenResult", () => {
       expect(() => buildTokenResult({ ...base, wire: rest })).not.toThrow();
     });
 
+    test("accepts an issuer stated as null where the gate does not require one", () => {
+      expect(
+        buildTokenResult({ ...base, wire: { ...JOSE_WIRE, iss: null } }).claims,
+      ).not.toHaveProperty("issuer");
+    });
+
+    test("refuses an EMPTY-STRING issuer where the gate does not require one", () => {
+      expect(() =>
+        buildTokenResult({ ...base, wire: { ...JOSE_WIRE, iss: "" } }),
+      ).toThrow(
+        expect.objectContaining({
+          code: "missing_claim_iss",
+          message: 'Claim "issuer" is missing or empty',
+        }),
+      );
+    });
+
     test("accepts a non-empty issuer where the gate requires one", () => {
       expect(
         buildTokenResult({ ...base, issuerPresence: "required" }).claims.issuer,
@@ -50,10 +67,10 @@ describe("buildTokenResult", () => {
       ).toThrow(AegisDomainError);
     });
 
-    // ⚠ The EMPTY-STRING case, and the reason the guard is `isString(x) &&
-    // isClaimSatisfied(x)` rather than `isString(x)`: `isString("")` is TRUE, so an
-    // issuer of "" slips through a type-only check and every downstream
-    // comparison then runs against a claim that names nobody.
+    // ⚠ The EMPTY-STRING case, and the reason a string `iss` is also asked
+    // `isClaimSatisfied`: `isString("")` is TRUE, so an issuer of "" slips through a
+    // type-only check and every downstream comparison then runs against a claim
+    // that names nobody.
     test("refuses an EMPTY-STRING issuer where the gate requires one", () => {
       expect(() =>
         buildTokenResult({

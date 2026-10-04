@@ -77,21 +77,23 @@ export const buildTokenResult = <C extends Dict = Dict>({
    */
   issuerPresence: "required" | "optional";
 }): VerifiedToken<C> & { delegation: TokenDelegation } => {
-  // Where a wire demands `iss`, a NON-EMPTY string satisfies it and a URI is not
-  // required: an assertion's `iss` is an opaque `client_id` (RFC 7523 §3). The
-  // platform-issuer exact match is enforced by the profile floor. NON-EMPTY is the
-  // demand notion, spelled as the rules layer spells it rather than as a
-  // hand-written length test.
-  if (
-    issuerPresence === "required" &&
-    !(isString(wire.iss) && isClaimSatisfied(wire.iss))
-  ) {
-    throw new AegisDomainError("Missing claim: iss", {
+  // ⚠ A stated STRING is refused when empty whatever `issuerPresence` says — aegis
+  // policy, stricter than RFC 7519 §2 and RFC 8392 §2 — while a wire `null` stays
+  // absence. pinned: Aegis.issuer-presence.feature "a claims token whose issuer is
+  // the empty string is refused at every domain read door, on both wires", and
+  // build-token-result.test.ts "accepts an issuer stated as null where the gate
+  // does not require one".
+  const issuerFails = isString(wire.iss)
+    ? !isClaimSatisfied(wire.iss)
+    : issuerPresence === "required";
+
+  if (issuerFails) {
+    throw new AegisDomainError('Claim "issuer" is missing or empty', {
       code: "missing_claim_iss",
       debug: { format },
       title: "Missing Claim ISS",
       details:
-        "The payload has no non-empty string iss claim, which is required to read this token.",
+        "The token's iss claim is the empty string, or this read requires an iss and the token carries no string one. An empty iss names no issuer, so it is refused whether or not the claim is required.",
     });
   }
 

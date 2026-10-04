@@ -28,6 +28,18 @@ export class AegisAudienceFloorSteps extends AegisStepsBase {
     this.ctx.wireClaims = jsonCells(table);
   }
 
+  @Given("the wire claim {string} is the empty string")
+  theWireClaimIsTheEmptyString(name: string): void {
+    this.ctx.wireClaims[name] = "";
+  }
+
+  @Given("the wire claims leave out {string}")
+  theWireClaimsLeaveOut(name: string): void {
+    const { [name]: _left, ...rest } = this.ctx.wireClaims;
+
+    this.ctx.wireClaims = rest;
+  }
+
   @Given("the wire claims were issued at {string}")
   theWireClaimsWereIssuedAt(instant: string): void {
     this.ctx.wireClaims.iat = numericDate(instant);

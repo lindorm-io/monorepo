@@ -99,6 +99,11 @@ export class AegisOpaqueAndRawDoorsSteps extends AegisStepsBase {
     expect(payload).toEqual(table.rowsHash());
   }
 
+  @Then("the raw door reports the wire claim {string} as {string}")
+  theRawDoorReportsTheWireClaimAs(name: string, value: string): void {
+    expect(this.rawVerified().payload).toHaveProperty([name], value);
+  }
+
   // the refusals
 
   @Then("verification is refused as a key error {string}")
