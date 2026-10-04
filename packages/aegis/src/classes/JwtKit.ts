@@ -263,7 +263,7 @@ export class JwtKit implements IJwtKit {
   }
 
   /**
-   * WIRE decode (no signature check): the unified wire header (the single JOSE
+   * WIRE decode (no signature check): the wire header (the single JOSE
    * protected header) + the cleartext JWT claim payload. The uniform primitive
    * shared with `CwtKit`/`CwmKit` decode — read the structure without verifying.
    */

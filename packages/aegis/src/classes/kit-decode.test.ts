@@ -52,7 +52,7 @@ describe("kit decode — per-wire header buckets, no signature check", () => {
   });
 
   describe("signed kits round-trip sign -> decode (no signature/MAC check)", () => {
-    test("JwtKit.decode returns the unified wire header + cleartext claims", () => {
+    test("JwtKit.decode returns the wire header + cleartext claims", () => {
       const kit = new JwtKit({ logger, kryptos: TEST_EC_KEY_SIG });
       const token = kit.sign({ ...jwtWire, jti: "the-jti" }, { tokenType: "at" });
 
@@ -67,7 +67,7 @@ describe("kit decode — per-wire header buckets, no signature check", () => {
       expect(payload.scope).toEqual(["read", "write"]);
     });
 
-    test("CwtKit.decode (COSE_Sign1) returns the unified wire header + cleartext claims", () => {
+    test("CwtKit.decode (COSE_Sign1) returns the two wire header buckets + cleartext claims", () => {
       const kit = new CwtKit({ logger, kryptos: TEST_EC_KEY_SIG });
       const token = kit.sign(cwtWire, { tokenType: "at" });
 
@@ -86,7 +86,7 @@ describe("kit decode — per-wire header buckets, no signature check", () => {
       expect(payload.scope).toEqual(["read", "write"]);
     });
 
-    test("CwmKit.decode (COSE_Mac0) returns the unified wire header + cleartext claims", () => {
+    test("CwmKit.decode (COSE_Mac0) returns the two wire header buckets + cleartext claims", () => {
       const kit = new CwmKit({ logger, kryptos: TEST_OCT_KEY_SIG });
       const token = kit.sign(cwtWire, { tokenType: "at" });
 
@@ -99,7 +99,7 @@ describe("kit decode — per-wire header buckets, no signature check", () => {
       expect(payload.cti).toBe("the-cti");
     });
 
-    test("JwsKit.decode returns the unified wire header + opaque payload bytes", () => {
+    test("JwsKit.decode returns the wire header + opaque payload bytes", () => {
       const kit = new JwsKit({ logger, kryptos: TEST_EC_KEY_SIG });
       // A Buffer stays opaque (octet cty), so decode reconstructs it as a Buffer.
       const token = kit.sign(Buffer.from("the opaque payload"));
@@ -112,7 +112,7 @@ describe("kit decode — per-wire header buckets, no signature check", () => {
       expect(payload.toString("utf8")).toBe("the opaque payload");
     });
 
-    test("CwsKit.decode returns the unified wire header + opaque payload bytes", () => {
+    test("CwsKit.decode returns the two wire header buckets + opaque payload bytes", () => {
       const kit = new CwsKit({ logger, kryptos: TEST_EC_KEY_SIG });
       const bytes = Buffer.from("the opaque payload");
       const token = kit.sign(bytes, { tokenType: "at" });
@@ -134,7 +134,7 @@ describe("kit decode — per-wire header buckets, no signature check", () => {
       );
 
       // alg + typ come off the PROTECTED map, kid off the UNPROTECTED one, and
-      // they stay apart: merging them made a parameter no signature covers
+      // they stay apart: a merged header makes a parameter no signature covers
       // indistinguishable from one it does.
       expect(protectedHeader).toMatchObject({
         alg: "ES512",
@@ -146,7 +146,7 @@ describe("kit decode — per-wire header buckets, no signature check", () => {
 
     test("a parameter in BOTH maps is reported once per bucket, not resolved", () => {
       // Craft a COSE_Sign1 whose typ (label 16) sits in BOTH maps with different
-      // values. There is no precedence to state any more — the buckets are
+      // values. There is no precedence to state — the buckets are
       // different statements about the token, and only one of them is signed. ⚠ The
       // witness is `typ`, which the DOMAIN tier admits from the protected bucket
       // alone (`is-protected-only.ts`): seeing it reported from both is exactly the
@@ -271,7 +271,7 @@ describe("kit decode — per-wire header buckets, no signature check", () => {
       expect(cws.payload.equals(bytes)).toBe(true);
       expect(jws.header.alg).toBe(cws.protectedHeader.alg);
       // JOSE carries the kid protected, COSE unprotected — the ONE placement
-      // divergence, now visible in the result rather than merged away.
+      // divergence.
       expect(jws.header.kid).toBe(cws.unprotectedHeader.kid);
     });
 

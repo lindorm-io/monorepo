@@ -72,10 +72,10 @@ export class CwmKit implements ICwmKit {
   }
 
   /**
-   * WIRE decode (no MAC check): the unified wire header (protected + unprotected
-   * COSE maps merged, integer labels translated to their JOSE wire names) + the
-   * cleartext WIRE claim payload + the raw COSE MAC tag bytes. The uniform
-   * primitive shared with `JwtKit`/`CwtKit` decode.
+   * WIRE decode (no MAC check): the two COSE header buckets (RFC 9052 §3), kept
+   * apart as `protectedHeader` and `unprotectedHeader` (integer labels translated to
+   * their JOSE wire names) + the cleartext WIRE claim payload + the raw COSE
+   * MAC tag bytes. The uniform primitive shared with `JwtKit`/`CwtKit` decode.
    */
   static decode<C extends Dict = Dict>(
     token: Buffer,

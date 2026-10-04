@@ -10,8 +10,8 @@ import type {
 /**
  * The COSE_Sign1 claims kit — the COSE analogue of {@link IJwtKit}. Wire-only:
  * transform-free `sign` and structural `verify`. The keyless `decode` that mirrors
- * JWT decode (unified wire header + cleartext wire claims, no signature check) is a
- * static on the class, not an instance method.
+ * JWT decode (the two wire header buckets + cleartext wire claims, no signature
+ * check) is a static on the class, not an instance method.
  */
 export interface ICwtKit {
   sign<C extends Dict = Dict>(

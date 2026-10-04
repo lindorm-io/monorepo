@@ -10,9 +10,9 @@ import type {
  * serialises arbitrary content (cty negotiated via the shared codec) and returns
  * the BARE encoded COSE token (COSE_Encrypt0 bytes); `decrypt` consumes the ENCODED
  * COSE token bytes (decoded internally, parallel to JOSE), returning the
- * cty-reconstructed payload + the unified wire header + the native token. The
- * keyless `decode` (unified wire header ONLY, the content stays ciphertext, uniform
- * with JWE decode) is a static on the class, not an instance method.
+ * cty-reconstructed payload + the two wire header buckets + the native token. The
+ * keyless `decode` (the two wire header buckets ONLY, the content stays ciphertext,
+ * uniform with JWE decode) is a static on the class, not an instance method.
  */
 export interface ICweKit {
   encrypt(content: TokenContent, options?: CweEncryptOptions): Buffer;

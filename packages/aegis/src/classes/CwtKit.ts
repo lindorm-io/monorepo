@@ -77,10 +77,10 @@ export class CwtKit implements ICwtKit {
   }
 
   /**
-   * WIRE decode (no signature check): the unified wire header (protected +
-   * unprotected COSE maps merged, integer labels translated to their JOSE wire
-   * names) + the cleartext WIRE claim payload + the raw COSE signature bytes. The
-   * uniform primitive shared with `JwtKit`/`CwmKit` decode.
+   * WIRE decode (no signature check): the two COSE header buckets (RFC 9052 §3), kept
+   * apart as `protectedHeader` and `unprotectedHeader` (integer labels translated to
+   * their JOSE wire names) + the cleartext WIRE claim payload + the raw COSE
+   * signature bytes. The uniform primitive shared with `JwtKit`/`CwmKit` decode.
    */
   static decode<C extends Dict = Dict>(
     token: Buffer,

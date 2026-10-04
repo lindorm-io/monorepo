@@ -6,12 +6,14 @@ import { requireBstr } from "./require-bstr.js";
 import { splitSigned } from "./split-signed.js";
 
 /**
- * Decode a CWT to its unified WIRE view WITHOUT verifying — the shared body of
- * `CwtKit.decode`/`CwmKit.decode` (COSE_Sign1 ≡ COSE_Mac0 here). Merges the
- * protected + unprotected COSE header maps into ONE `WireTokenHeader` (integer
- * labels translated to their JOSE wire names), and decodes the CBOR claims
- * payload into the COSE-name-keyed WIRE claim map — NO signature/MAC check, NO
- * domain translation. Mirrors `JwtKit.decode`.
+ * Decode a CWT to its WIRE view WITHOUT verifying — the shared body of
+ * `CwtKit.decode`/`CwmKit.decode` (COSE_Sign1 ≡ COSE_Mac0 here). Reports the
+ * protected and unprotected COSE header maps APART as `protectedHeader` and
+ * `unprotectedHeader` (RFC 9052 §3), each with its integer labels translated to
+ * their JOSE wire names, and decodes the CBOR claims payload into the
+ * COSE-name-keyed WIRE claim map — NO signature/MAC check, NO domain
+ * translation. Only the DOMAIN tier merges the two buckets (`mergeHeaderBuckets`).
+ * Mirrors `JwtKit.decode`.
  */
 export const decodeCwtWire = <C extends Dict = Dict>(
   token: Buffer,
