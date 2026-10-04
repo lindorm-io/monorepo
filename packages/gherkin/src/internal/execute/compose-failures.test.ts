@@ -9,13 +9,8 @@ describe("composeFailures", () => {
     expect(primary.message).toBe("step failed");
   });
 
-  test("should append later failures to the PRIMARY's message, preserving its instance", () => {
-    const primary = new Error("step failed") as Error & {
-      actual: string;
-      expected: string;
-    };
-    primary.actual = "a";
-    primary.expected = "b";
+  test("should compose a NEW error appending later failures to the PRIMARY's message, the primary as its cause", () => {
+    const primary = new Error("step failed");
 
     const composed = composeFailures([
       primary,
@@ -23,10 +18,30 @@ describe("composeFailures", () => {
       new Error("Context class AesContext dispose() threw\n\nclosed"),
     ]);
 
-    // The same instance: the assertion actual/expected pair survives, so
-    // vitest still prints an expect() diff for the primary failure.
-    expect(composed).toBe(primary);
-    expect(composed).toHaveProperty("actual", "a");
+    expect(composed).not.toBe(primary);
+    expect(composed.cause).toBe(primary);
     expect(composed.message).toMatchSnapshot();
+  });
+
+  test("should leave every failure the caller holds unchanged — the primary's message, assertion pair and identity", () => {
+    const primary = new Error("step failed") as Error & {
+      actual: string;
+      expected: string;
+    };
+    primary.actual = "a";
+    primary.expected = "b";
+    const hookFailure = new Error("@AfterScenario hook failed\n\nreport upload failed");
+    const failures = [primary, hookFailure];
+
+    composeFailures(failures);
+
+    expect(failures[0]).toBe(primary);
+    expect(failures[1]).toBe(hookFailure);
+    expect(primary.message).toBe("step failed");
+    expect(primary).toHaveProperty("actual", "a");
+    expect(primary).toHaveProperty("expected", "b");
+    expect(hookFailure.message).toBe(
+      "@AfterScenario hook failed\n\nreport upload failed",
+    );
   });
 });

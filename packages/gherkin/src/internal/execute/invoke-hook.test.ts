@@ -76,6 +76,63 @@ describe("invokeHook", () => {
     expect(error.message).toBe("wrapped: boom");
   });
 
+  test("should report a frozen error with its own message under the anchor, the original as cause", async () => {
+    const original = Object.freeze(new Error("frozen boom"));
+
+    const error = await captureAsync(() =>
+      invokeHook({
+        args: [],
+        format,
+        hook: hook("throwsFrozen"),
+        instance: {
+          throwsFrozen: () => {
+            throw original;
+          },
+        },
+      }),
+    );
+
+    expect(error).not.toBeInstanceOf(TypeError);
+    expect(error.message).toBe("wrapped: frozen boom");
+    expect(error.cause).toBe(original);
+    expect(original.message).toBe("frozen boom");
+  });
+
+  test("should anchor a re-thrown instance from its unanchored message in a new error, never twice", async () => {
+    const original = new Error("shared boom");
+    const throwsShared = {
+      throwsShared: () => {
+        throw original;
+      },
+    };
+
+    const first = await captureAsync(() =>
+      invokeHook({
+        args: [],
+        format,
+        hook: hook("throwsShared"),
+        instance: throwsShared,
+      }),
+    );
+    const firstText = first.message;
+
+    const second = await captureAsync(() =>
+      invokeHook({
+        args: [],
+        format: (message) => `again: ${message}`,
+        hook: hook("throwsShared"),
+        instance: throwsShared,
+      }),
+    );
+
+    expect(first).toBe(original);
+    expect(firstText).toBe("wrapped: shared boom");
+    expect(second).not.toBe(original);
+    expect(second.message).toBe("again: shared boom");
+    expect(second.cause).toBe(original);
+    expect(original.message).toBe(firstText);
+  });
+
   test("should treat a rejecting async hook exactly as a throwing one", async () => {
     const error = await captureAsync(() =>
       invokeHook({

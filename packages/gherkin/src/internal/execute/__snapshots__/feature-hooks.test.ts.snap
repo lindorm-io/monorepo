@@ -1,5 +1,59 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`registerFeatureHooks > @AfterFeature throwing an error whose cause cannot be read > should report the error carrying 'a cause getter that throws' as itself, anchored 1`] = `
+"@AfterFeature hook failed
+
+  UnreadableHooks.boom
+  at src/features/hooks.feature
+
+docker failed"
+`;
+
+exports[`registerFeatureHooks > @AfterFeature throwing an error whose cause cannot be read > should report the error carrying 'a cause whose message has no string f…' as itself, anchored 1`] = `
+"@AfterFeature hook failed
+
+  UnreadableHooks.boom
+  at src/features/hooks.feature
+
+docker failed"
+`;
+
+exports[`registerFeatureHooks > @BeforeFeature throwing an error whose cause cannot be read > should report the error carrying 'a cause getter that throws' as itself, anchored 1`] = `
+"@BeforeFeature hook failed
+
+  UnreadableHooks.boom
+  at src/features/hooks.feature
+
+docker failed"
+`;
+
+exports[`registerFeatureHooks > @BeforeFeature throwing an error whose cause cannot be read > should report the error carrying 'a cause whose message has no string f…' as itself, anchored 1`] = `
+"@BeforeFeature hook failed
+
+  UnreadableHooks.boom
+  at src/features/hooks.feature
+
+docker failed"
+`;
+
+exports[`registerFeatureHooks > should compose the after-feature failures into a NEW error, leaving the primary hook's anchored error unchanged 1`] = `
+"@AfterFeature hook failed
+
+  LeakyTeardown.failing
+  at src/features/hooks.feature
+
+port still bound"
+`;
+
+exports[`registerFeatureHooks > should report a frozen before-feature error with its own message under the hook anchor, the original as cause 1`] = `
+"@BeforeFeature hook failed
+
+  FrozenHooks.boom
+  at src/features/hooks.feature
+
+no docker daemon"
+`;
+
 exports[`registerFeatureHooks > should run EVERY after-feature hook despite a throw and compose the failures primary-first 1`] = `
 "@AfterFeature hook failed
 

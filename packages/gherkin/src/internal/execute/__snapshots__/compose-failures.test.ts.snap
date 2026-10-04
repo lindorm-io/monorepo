@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`composeFailures > should append later failures to the PRIMARY's message, preserving its instance 1`] = `
+exports[`composeFailures > should compose a NEW error appending later failures to the PRIMARY's message, the primary as its cause 1`] = `
 "step failed
 
 2 additional failures followed the one above:

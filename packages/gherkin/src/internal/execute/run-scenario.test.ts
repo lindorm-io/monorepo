@@ -85,6 +85,23 @@ class RecordSteps {
   }
 }
 
+const frozenFailure = Object.freeze(new Error("frozen boom"));
+
+let sharedFailure = new Error("shared boom");
+
+@Binding()
+class ThrownInstanceSteps {
+  @Given("a frozen throw")
+  frozenThrow(): void {
+    throw frozenFailure;
+  }
+
+  @Given("a shared throw")
+  sharedThrow(): void {
+    throw sharedFailure;
+  }
+}
+
 @Binding()
 class OtherSteps {
   static instances = 0;
@@ -249,6 +266,7 @@ describe("runScenario", () => {
     order.length = 0;
     RecordSteps.instances = 0;
     OtherSteps.instances = 0;
+    sharedFailure = new Error("shared boom");
   });
 
   describe("execution", () => {
@@ -505,13 +523,47 @@ describe("runScenario", () => {
         run([step("an assertion failure")]),
       )) as GherkinError & { actual?: string; expected?: string };
 
-      // The same instance is rethrown — vitest reads actual/expected off it
-      // to print the expect() diff, so wrapping in a new error would lose it.
       expect(error.name).toBe("AssertionError");
       expect(error.actual).toBe("a");
       expect(error.expected).toBe("b");
       expect(error.message).toContain("Step failed");
       expect(error.message).toContain("expected 'a' to be 'b'");
+    });
+
+    test("should report a frozen step error with its own message under the step anchor, the original as cause", async () => {
+      const error = await captureAsync(() =>
+        run([step("a frozen throw"), step('record "never"')]),
+      );
+
+      expect(error).not.toBeInstanceOf(TypeError);
+      expect(error.message).toMatchSnapshot();
+      expect(error.cause).toBe(frozenFailure);
+      expect(events).toEqual([]);
+    });
+
+    test("should anchor one instance thrown in two scenarios independently, never rewriting the first report", async () => {
+      const first = await captureAsync(() => run([step("a shared throw", { line: 10 })]));
+      const firstText = first.message;
+
+      const second = await captureAsync(() =>
+        run([step("a shared throw", { line: 20 })]),
+      );
+
+      expect(first).toBe(sharedFailure);
+      expect(firstText).toBe(
+        [
+          "Step failed",
+          "",
+          "  Given a shared throw",
+          "  at src/features/run.feature:10:5",
+          "",
+          "shared boom",
+        ].join("\n"),
+      );
+      expect(first.message).toBe(firstText);
+      expect(second).not.toBe(sharedFailure);
+      expect(second.cause).toBe(sharedFailure);
+      expect(second.message).toMatchSnapshot();
     });
 
     test("should fail the scenario when an async step rejects after a tick", async () => {

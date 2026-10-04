@@ -9,6 +9,7 @@ import type { StepResult } from "../../types/step-result.js";
 import { createScenarioContainer } from "../container/create-scenario-container.js";
 import type { ScenarioNode, StepModel } from "../model/types.js";
 import type { GherkinRegistry, RegistryHook, ResolvedMatch } from "../registry/types.js";
+import { anchorError, markReported } from "./anchor-error.js";
 import { createBindingInstances } from "./binding-instances.js";
 import { composeFailures } from "./compose-failures.js";
 import { formatAnchor } from "./format/format-anchor.js";
@@ -134,23 +135,13 @@ const invokeStep = async (
       );
     }
 
-    // The ORIGINAL error is rethrown with its message extended in place:
-    // rethrowing the same instance keeps the stack and the assertion
-    // actual/expected pair, so vitest still prints an expect() diff. Pinned:
-    // run-scenario.test.ts ("preserves the original error instance").
-    if (isError(error)) {
-      error.message = formatStepFailure({
-        message: error.message,
-        remaining,
-        step,
-        uri,
-      });
-      throw error;
-    }
-
-    throw new Error(formatStepFailure({ message: String(error), remaining, step, uri }), {
-      cause: error,
-    });
+    // The thrown instance is kept wherever its message takes the anchor
+    // (anchor-error.ts): vitest reads an assertion's actual/expected off it to
+    // print the expect() diff. Pinned: run-scenario.test.ts ("should preserve
+    // an assertion error's instance, actual and expected through the wrap").
+    throw anchorError(error, (message) =>
+      formatStepFailure({ message, remaining, step, uri }),
+    );
   }
 };
 
@@ -158,8 +149,9 @@ const invokeStep = async (
  * The body of one scenario test — the full lifecycle: eager hook-class
  * construction → `@BeforeScenario` → steps (each bracketed by step hooks) →
  * `@AfterScenario` → container disposal. The after-phases and disposal ALWAYS
- * run; every failure is collected and the FIRST is thrown with the rest
- * appended to its message, never replacing it (§4; compose-failures.ts).
+ * run; every failure is collected and composed with the FIRST leading and
+ * the rest appended after it — a later failure never displaces the first
+ * (compose-failures.ts).
  */
 export const runScenario = async ({
   featureName,
@@ -185,6 +177,14 @@ export const runScenario = async ({
 
   /** In lifecycle order — index 0 is the PRIMARY failure the scenario throws. */
   const failures: Array<Error> = [];
+
+  // Pushing without markReported lets a later throw of the failure, or of its
+  // cause, rewrite what was reported. Pinned: run-scenario.lifecycle.test.ts
+  // ("an error already reported, thrown again").
+  const fail = (error: Error): void => {
+    markReported(error);
+    failures.push(error);
+  };
 
   const matched = {
     afterScenario: registry.hooks.AfterScenario.filter((hook) =>
@@ -219,7 +219,7 @@ export const runScenario = async ({
     } catch (error) {
       // NOT dispatched — undefined or ambiguous: no definition brackets the
       // step, so NO step hook fires (pinned: run-scenario.lifecycle.test.ts).
-      failures.push(error as Error);
+      fail(error as Error);
       return;
     }
 
@@ -240,7 +240,7 @@ export const runScenario = async ({
         // The step body does NOT run, and the remaining before-step hooks are
         // skipped — setup halts at the first failure (§4).
         beforeFailure = error as Error;
-        failures.push(beforeFailure);
+        fail(beforeFailure);
         break;
       }
     }
@@ -257,7 +257,7 @@ export const runScenario = async ({
         await invokeStep(instance, match, converted, context);
         result = { durationMs: performance.now() - started, status: "passed" };
       } catch (error) {
-        failures.push(error as Error);
+        fail(error as Error);
         result = {
           durationMs: performance.now() - started,
           error: error as Error,
@@ -288,7 +288,7 @@ export const runScenario = async ({
           instance: instances.acquire(hook, position),
         });
       } catch (error) {
-        failures.push(error as Error);
+        fail(error as Error);
       }
     }
   };
@@ -310,7 +310,7 @@ export const runScenario = async ({
         remaining: scenario.steps.length,
       });
     } catch (error) {
-      failures.push(error as Error);
+      fail(error as Error);
       break;
     }
   }
@@ -341,7 +341,7 @@ export const runScenario = async ({
       } catch (error) {
         // Remaining before-scenario hooks are SKIPPED, and so are the steps —
         // but the after-scenario hooks and disposal below still run (§4).
-        failures.push(error as Error);
+        fail(error as Error);
         break;
       }
     }
@@ -403,7 +403,7 @@ export const runScenario = async ({
         instance,
       });
     } catch (error) {
-      failures.push(error as Error);
+      fail(error as Error);
     }
   }
 
@@ -411,7 +411,9 @@ export const runScenario = async ({
   // contamination. Disposal errors arrive anchored to their context class
   // (create-scenario-container.ts) and are APPENDED — a scenario where ONLY
   // disposal fails is red with the disposal failure primary (§4).
-  failures.push(...(await container.dispose()));
+  for (const failure of await container.dispose()) {
+    fail(failure);
+  }
 
   if (failures.length === 0) {
     return;

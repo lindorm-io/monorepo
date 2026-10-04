@@ -9,8 +9,11 @@ import { Binding } from "../../decorators/Binding.js";
 import { Context } from "../../decorators/Context.js";
 import { Given } from "../../decorators/Given.js";
 import { Inject } from "../../decorators/Inject.js";
+import { ParameterType } from "../../decorators/ParameterType.js";
 import { Priority } from "../../decorators/Priority.js";
 import { When } from "../../decorators/When.js";
+import type { GherkinError } from "../../errors/GherkinError.js";
+import { PendingStepError } from "../../errors/PendingStepError.js";
 import type { ScenarioResult } from "../../types/scenario-result.js";
 import type { StepInfo } from "../../types/step-info.js";
 import type { StepResult } from "../../types/step-result.js";
@@ -26,6 +29,17 @@ const log: Array<string> = [];
 const stepResults: Array<StepResult> = [];
 const scenarioResults: Array<ScenarioResult> = [];
 const seenInfo: Array<ScenarioInfo> = [];
+const observedStepFailures: Array<string | undefined> = [];
+
+const frozenHookFailure = Object.freeze(new Error("frozen before-scenario boom"));
+const frozenBeforeStepFailure = Object.freeze(new Error("frozen before-step boom"));
+const frozenAfterStepFailure = Object.freeze(new Error("frozen after-step boom"));
+const noStringFormThrow: unknown = Object.create(null);
+
+type HandOff = { error: Error | undefined; message: string | undefined };
+const handOffs: Array<HandOff> = [];
+
+let sharedFailure = new Error("shared boom");
 
 @Context()
 class TrackedContext {
@@ -47,6 +61,13 @@ class ThrowingDisposeContext {
 class ThrowingCtorContext {
   constructor() {
     throw new Error("context ctor boom");
+  }
+}
+
+@Context()
+class SharedFailureDisposeContext {
+  dispose(): void {
+    throw sharedFailure;
   }
 }
 
@@ -142,6 +163,61 @@ class ThrowingHooks {
     log.push("as:throw");
     throw new Error("after-scenario boom");
   }
+
+  @BeforeScenario("@bs-frozen")
+  bsFrozen(): void {
+    throw frozenHookFailure;
+  }
+
+  @BeforeStep("@bst-frozen")
+  bstFrozen(): void {
+    throw frozenBeforeStepFailure;
+  }
+
+  @AfterStep("@ast-frozen")
+  astFrozen(): void {
+    throw frozenAfterStepFailure;
+  }
+
+  @AfterStep("@ast-shared")
+  astShared(_stepInfo: StepInfo, result: StepResult): void {
+    observedStepFailures.push(result.error?.message);
+    throw sharedFailure;
+  }
+}
+
+@Binding()
+class RethrowingHooks {
+  @AfterStep("@ast-rethrow")
+  astRethrow(_stepInfo: StepInfo, result: StepResult): void {
+    handOffs.push({ error: result.error, message: result.error?.message });
+    throw result.error;
+  }
+
+  @AfterStep("@ast-rethrow-cause")
+  astRethrowCause(_stepInfo: StepInfo, result: StepResult): void {
+    const cause = result.error?.cause as Error;
+    handOffs.push({ error: cause, message: cause.message });
+    throw cause;
+  }
+
+  @AfterScenario("@as-rethrow")
+  asRethrow(result: ScenarioResult): void {
+    handOffs.push({ error: result.error, message: result.error?.message });
+    throw result.error;
+  }
+
+  @AfterScenario("@as-cause-chain")
+  @Priority(1)
+  asThrowsCause(): void {
+    throw sharedFailure;
+  }
+
+  @AfterScenario("@as-cause-chain")
+  @Priority(2)
+  asThrowsWrapper(): void {
+    throw new Error("after-scenario wrapper boom", { cause: sharedFailure });
+  }
 }
 
 @Binding()
@@ -153,6 +229,18 @@ class EagerThrowSteps {
   @BeforeScenario("@eager-ctor-throw")
   never(): void {
     log.push("bs:eager");
+  }
+}
+
+@Binding()
+class EagerStepHookCasualty {
+  constructor() {
+    throw new Error("step-hook class ctor boom");
+  }
+
+  @BeforeStep("@eager-step-hook-ctor")
+  never(): void {
+    log.push("bst:casualty");
   }
 }
 
@@ -215,6 +303,11 @@ class InfoHooks {
 
 @Binding()
 class StepHost {
+  @ParameterType("lifecyclebad", /[a-z]+/)
+  static lifecyclebad(raw: string): string {
+    throw new Error(`bad lifecycle value: ${raw}`);
+  }
+
   @Given("step one")
   one(): void {
     log.push("step:one");
@@ -229,6 +322,72 @@ class StepHost {
   failing(): void {
     log.push("step:failing");
     throw new Error("step boom");
+  }
+
+  @Given("a step throwing the shared error")
+  throwsShared(): void {
+    throw sharedFailure;
+  }
+
+  @Given("a step throwing an error whose cause has a message with no string form")
+  throwsUnreadableCauseMessage(): void {
+    const cause = new Error("unreadable cause");
+    (cause as { message: unknown }).message = Object.create(null);
+    throw new Error("unreadable cause boom", { cause });
+  }
+
+  @Given("a step throwing a value with no string form")
+  throwsNoStringForm(): void {
+    throw noStringFormThrow;
+  }
+
+  @Given("a step throwing an error whose cause is a proxy whose traps throw")
+  throwsProxyCause(): void {
+    const cause = new Proxy(
+      {},
+      {
+        get: () => {
+          throw new TypeError("trap: get");
+        },
+        getPrototypeOf: () => {
+          throw new TypeError("trap: getPrototypeOf");
+        },
+      },
+    );
+    throw new Error("unreadable cause boom", { cause });
+  }
+
+  @Given("a step throwing an error whose cause getter throws")
+  throwsUnreadableCause(): void {
+    const error = new Error("unreadable cause boom");
+    Object.defineProperty(error, "cause", {
+      get: () => {
+        throw new TypeError("cause getter boom");
+      },
+    });
+    throw error;
+  }
+
+  @Given("a pending step")
+  pending(): void {
+    throw new PendingStepError();
+  }
+
+  @Given("a conversion of {lifecyclebad}")
+  converts(_value: string): void {
+    log.push("step:converts");
+  }
+}
+
+@Binding()
+class ThrowingCtorStepHost {
+  constructor() {
+    throw new Error("step class ctor boom");
+  }
+
+  @Given("a step on a throwing class")
+  step(): void {
+    log.push("step:throwing-class");
   }
 }
 
@@ -245,6 +404,17 @@ class DisposalSteps {
   @Given("a failing step using the throwing dispose context")
   failsWithLeak(): void {
     throw new Error("leaky step boom");
+  }
+}
+
+@Binding()
+class SharedFailureDisposalSteps {
+  @Inject(SharedFailureDisposeContext)
+  private readonly leaky!: SharedFailureDisposeContext;
+
+  @Given("a step using the shared-failure dispose context")
+  uses(): void {
+    log.push("step:shared-leaky");
   }
 }
 
@@ -366,6 +536,9 @@ describe("runScenario lifecycle", () => {
     stepResults.length = 0;
     scenarioResults.length = 0;
     seenInfo.length = 0;
+    observedStepFailures.length = 0;
+    handOffs.length = 0;
+    sharedFailure = new Error("shared boom");
   });
 
   describe("total order", () => {
@@ -455,6 +628,17 @@ describe("runScenario lifecycle", () => {
       ]);
     });
 
+    test("should report a frozen before-scenario error with its own message under the hook anchor, the original as cause", async () => {
+      const error = await captureAsync(() =>
+        run(scenario([step("step one")], ["@bs-frozen"])),
+      );
+
+      expect(error).not.toBeInstanceOf(TypeError);
+      expect(error.message).toMatchSnapshot();
+      expect(error.cause).toBe(frozenHookFailure);
+      expect(log).toEqual([]);
+    });
+
     test("should treat a REJECTING async before-scenario hook exactly as a throwing one", async () => {
       const error = await captureAsync(() =>
         run(scenario([step("step one")], ["@bs-reject"])),
@@ -513,6 +697,225 @@ describe("runScenario lifecycle", () => {
         "ast:throw",
         "ast:beta:passed",
         "ast:alpha:passed",
+        "as:beta:failed",
+        "as:alpha:failed",
+        "dispose:tracked",
+      ]);
+      expect(error.message).toMatchSnapshot();
+    });
+  });
+
+  describe("one error instance thrown by a step and then a hook", () => {
+    test("should anchor each throw independently — the instance keeps the step anchor alone, never rewritten", async () => {
+      const error = await captureAsync(() =>
+        run(scenario([step("a step throwing the shared error")], ["@ast-shared"])),
+      );
+
+      const stepFailure = [
+        "Step failed",
+        "",
+        "  Given a step throwing the shared error",
+        "  at src/features/lifecycle.feature:10:5",
+        "",
+        "shared boom",
+      ].join("\n");
+
+      expect(observedStepFailures).toEqual([stepFailure]);
+      expect(sharedFailure.message).toBe(stepFailure);
+      expect(error.cause).toBe(sharedFailure);
+      expect(error.message.split("\n\n1 additional failure followed")[0]).toBe(
+        stepFailure,
+      );
+      expect(error.message).toContain("  1) @AfterStep hook failed");
+      expect(error.message).toContain("ThrowingHooks.astShared");
+      expect(error.message.match(/Step failed/g)).toHaveLength(1);
+      expect(error.message.match(/shared boom/g)).toHaveLength(2);
+    });
+  });
+
+  describe("an error already reported, thrown again", () => {
+    test("should report a hook re-throwing the step's pending error in a new error, leaving the reported failure unchanged", async () => {
+      const error = await captureAsync(() =>
+        run(scenario([step("a pending step")], ["@ast-rethrow"])),
+      );
+      const [handOff] = handOffs;
+
+      expect(handOffs).toHaveLength(1);
+      expect(error.cause).toBe(handOff.error);
+      expect((error.cause as GherkinError).code).toBe("pending_step");
+      expect((error.cause as Error).message).toBe(handOff.message);
+      expect(error.message).toMatchSnapshot();
+    });
+
+    test.each([
+      {
+        label: "a conversion_failed error, at @AfterStep",
+        steps: [step("a conversion of abc")],
+        tags: ["@ast-rethrow"],
+      },
+      {
+        label: "a lazy binding constructor's wrap, at @AfterStep",
+        steps: [step("a step on a throwing class")],
+        tags: ["@ast-rethrow"],
+      },
+      {
+        label: "a lazy context constructor's wrap, at @AfterStep",
+        steps: [step("a step needing the broken context")],
+        tags: ["@ast-rethrow"],
+      },
+      {
+        label: "a frozen before-step failure, at @AfterStep",
+        steps: [step("step one")],
+        tags: ["@bst-frozen", "@ast-rethrow"],
+      },
+      {
+        label: "an undefined step's dispatch error, at @AfterScenario",
+        steps: [step("no definition matches this")],
+        tags: ["@as-rethrow"],
+      },
+      {
+        label: "an eager constructor's wrap, at @AfterScenario",
+        steps: [step("step one")],
+        tags: ["@eager-step-hook-ctor", "@as-rethrow"],
+      },
+      {
+        label: "a frozen before-scenario failure, at @AfterScenario",
+        steps: [step("step one")],
+        tags: ["@bs-frozen", "@as-rethrow"],
+      },
+      {
+        label: "a pending step's error, at @AfterScenario",
+        steps: [step("a pending step")],
+        tags: ["@as-rethrow"],
+      },
+      {
+        label: "a frozen after-step failure, at @AfterScenario",
+        steps: [step("step one")],
+        tags: ["@ast-frozen", "@as-rethrow"],
+      },
+    ])(
+      "should report a hook re-throwing $label in a new error, leaving the reported failure unchanged",
+      async ({ steps, tags }) => {
+        const error = await captureAsync(() => run(scenario(steps, tags)));
+        const [handOff] = handOffs;
+
+        expect(handOffs).toHaveLength(1);
+        expect(error.cause).toBe(handOff.error);
+        expect((error.cause as Error).message).toBe(handOff.message);
+        expect(error.message).toContain("1 additional failure followed");
+      },
+    );
+
+    test.each([
+      {
+        label: "a pending step's PendingStepError",
+        steps: [step("a pending step")],
+      },
+      {
+        label: "a transform's error under conversion_failed",
+        steps: [step("a conversion of abc")],
+      },
+      {
+        label: "a binding constructor's error under its wrap",
+        steps: [step("a step on a throwing class")],
+      },
+      {
+        label: "a context constructor's error under its wrap",
+        steps: [step("a step needing the broken context")],
+      },
+    ])(
+      "should report a hook re-throwing the cause of $label in a new error, leaving the reported cause unchanged",
+      async ({ steps }) => {
+        const error = await captureAsync(() =>
+          run(scenario(steps, ["@ast-rethrow-cause"])),
+        );
+        const [handOff] = handOffs;
+        const reported = error.cause as Error;
+
+        expect(handOffs).toHaveLength(1);
+        expect(reported.cause).toBe(handOff.error);
+        expect((reported.cause as Error).message).toBe(handOff.message);
+        expect(error.message).toContain("1 additional failure followed");
+      },
+    );
+
+    test("should report an @AfterScenario hook re-throwing an earlier after-scenario failure's cause in a new error, leaving that failure unchanged", async () => {
+      const error = await captureAsync(() =>
+        run(scenario([step("step one")], ["@as-cause-chain"])),
+      );
+      const reported = error.cause as Error;
+
+      expect(reported.cause).toBe(sharedFailure);
+      expect(sharedFailure.message).toBe("shared boom");
+      expect(error.message).toContain("1 additional failure followed");
+    });
+
+    test("should leave a reported disposal failure's cause unchanged when a later scenario's step throws it", async () => {
+      const first = await captureAsync(() =>
+        run(scenario([step("a step using the shared-failure dispose context")])),
+      );
+      const second = await captureAsync(() =>
+        run(scenario([step("a step throwing the shared error")])),
+      );
+
+      expect(first.code).toBe("disposal_failed");
+      expect(first.cause).toBe(sharedFailure);
+      expect(sharedFailure.message).toBe("shared boom");
+      expect(second).not.toBe(sharedFailure);
+      expect(second.cause).toBe(sharedFailure);
+    });
+  });
+
+  describe("a failure whose cause cannot be read", () => {
+    test.each([
+      {
+        label: "a cause whose message has no string form",
+        text: "a step throwing an error whose cause has a message with no string form",
+      },
+      {
+        label: "a cause getter that throws",
+        text: "a step throwing an error whose cause getter throws",
+      },
+      {
+        label: "a cause that is a proxy whose traps throw",
+        text: "a step throwing an error whose cause is a proxy whose traps throw",
+      },
+    ])(
+      "should report a step failure carrying $label under the step anchor, still running @AfterScenario and dispose",
+      async ({ text }) => {
+        const error = await captureAsync(() => run(scenario([step(text)], ["@ordered"])));
+
+        expect(error).not.toBeInstanceOf(TypeError);
+        expect(log).toEqual([
+          "bs:alpha",
+          "bs:beta",
+          `bst:alpha:${text}`,
+          `bst:beta:${text}`,
+          "ast:beta:failed",
+          "ast:alpha:failed",
+          "as:beta:failed",
+          "as:alpha:failed",
+          "dispose:tracked",
+        ]);
+        expect(error.message).toMatchSnapshot();
+      },
+    );
+  });
+
+  describe("a step throwing a value with no string form", () => {
+    test("should report it under the step anchor with the thrown value as cause, still running @AfterScenario and dispose", async () => {
+      const text = "a step throwing a value with no string form";
+      const error = await captureAsync(() => run(scenario([step(text)], ["@ordered"])));
+
+      expect(error).not.toBeInstanceOf(TypeError);
+      expect(error.cause).toBe(noStringFormThrow);
+      expect(log).toEqual([
+        "bs:alpha",
+        "bs:beta",
+        `bst:alpha:${text}`,
+        `bst:beta:${text}`,
+        "ast:beta:failed",
+        "ast:alpha:failed",
         "as:beta:failed",
         "as:alpha:failed",
         "dispose:tracked",

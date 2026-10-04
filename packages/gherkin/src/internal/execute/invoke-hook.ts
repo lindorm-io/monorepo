@@ -1,6 +1,6 @@
-import { isError } from "@lindorm/is";
 import type { StepFn } from "../../types/step-fn.js";
 import type { RegistryHook } from "../registry/types.js";
+import { anchorError } from "./anchor-error.js";
 
 export type InvokeHookOptions = {
   args: Array<unknown>;
@@ -14,9 +14,7 @@ export type InvokeHookOptions = {
 /**
  * AWAITED: a hook returning a rejecting promise must fail the scenario here,
  * not surface as an unhandled-rejection side note attributed to whichever
- * test happens to be running. The original error is rethrown with its message
- * extended in place — rethrowing the same instance keeps the stack and the
- * assertion actual/expected pair, so vitest still prints an expect() diff.
+ * test happens to be running.
  */
 export const invokeHook = async ({
   args,
@@ -27,11 +25,6 @@ export const invokeHook = async ({
   try {
     await (instance as Record<string, StepFn>)[hook.methodName](...args);
   } catch (error) {
-    if (isError(error)) {
-      error.message = format(error.message);
-      throw error;
-    }
-
-    throw new Error(format(String(error)), { cause: error });
+    throw anchorError(error, format);
   }
 };

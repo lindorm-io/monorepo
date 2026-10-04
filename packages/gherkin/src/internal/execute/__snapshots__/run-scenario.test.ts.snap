@@ -26,6 +26,15 @@ The remaining 1 step in this scenario was skipped.",
 }
 `;
 
+exports[`runScenario > failure modes > should anchor one instance thrown in two scenarios independently, never rewriting the first report 1`] = `
+"Step failed
+
+  Given a shared throw
+  at src/features/run.feature:20:5
+
+shared boom"
+`;
+
 exports[`runScenario > failure modes > should fail a pending step naming the class.method 1`] = `
 {
   "code": "pending_step",
@@ -107,4 +116,15 @@ No step definition matched. Implement it:
 
 The remaining 2 steps in this scenario were skipped.",
 }
+`;
+
+exports[`runScenario > failure modes > should report a frozen step error with its own message under the step anchor, the original as cause 1`] = `
+"Step failed
+
+  Given a frozen throw
+  at src/features/run.feature:10:5
+
+frozen boom
+
+The remaining 1 step in this scenario was skipped."
 `;

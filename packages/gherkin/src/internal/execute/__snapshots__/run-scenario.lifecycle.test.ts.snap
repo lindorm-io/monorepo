@@ -1,5 +1,64 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`runScenario lifecycle > a failure whose cause cannot be read > should report a step failure carrying 'a cause getter that throws' under the step anchor, still running @AfterScenario and dispose 1`] = `
+"Step failed
+
+  Given a step throwing an error whose cause getter throws
+  at src/features/lifecycle.feature:10:5
+
+unreadable cause boom"
+`;
+
+exports[`runScenario lifecycle > a failure whose cause cannot be read > should report a step failure carrying 'a cause that is a proxy whose traps t…' under the step anchor, still running @AfterScenario and dispose 1`] = `
+"Step failed
+
+  Given a step throwing an error whose cause is a proxy whose traps throw
+  at src/features/lifecycle.feature:10:5
+
+unreadable cause boom"
+`;
+
+exports[`runScenario lifecycle > a failure whose cause cannot be read > should report a step failure carrying 'a cause whose message has no string f…' under the step anchor, still running @AfterScenario and dispose 1`] = `
+"Step failed
+
+  Given a step throwing an error whose cause has a message with no string form
+  at src/features/lifecycle.feature:10:5
+
+unreadable cause boom"
+`;
+
+exports[`runScenario lifecycle > a step throwing a value with no string form > should report it under the step anchor with the thrown value as cause, still running @AfterScenario and dispose 1`] = `
+"Step failed
+
+  Given a step throwing a value with no string form
+  at src/features/lifecycle.feature:10:5"
+`;
+
+exports[`runScenario lifecycle > an error already reported, thrown again > should report a hook re-throwing the step's pending error in a new error, leaving the reported failure unchanged 1`] = `
+"Pending step
+
+  Given a pending step
+  at src/features/lifecycle.feature:10:5
+
+StepHost.pending is pending — implement its body.
+
+1 additional failure followed the one above:
+
+  1) @AfterStep hook failed
+
+       RethrowingHooks.astRethrow
+
+       Given a pending step
+       at src/features/lifecycle.feature:10:5
+
+     Pending step
+
+       Given a pending step
+       at src/features/lifecycle.feature:10:5
+
+     StepHost.pending is pending — implement its body."
+`;
+
 exports[`runScenario lifecycle > §4: @AfterScenario throws > should fail the scenario and still dispose 1`] = `
 "@AfterScenario hook failed
 
@@ -18,6 +77,17 @@ exports[`runScenario lifecycle > §4: @AfterStep throws > should fail the scenar
   at src/features/lifecycle.feature:10:5
 
 after-step boom
+
+The remaining 1 step in this scenario was skipped."
+`;
+
+exports[`runScenario lifecycle > §4: @BeforeScenario throws > should report a frozen before-scenario error with its own message under the hook anchor, the original as cause 1`] = `
+"@BeforeScenario hook failed
+
+  ThrowingHooks.bsFrozen
+  at src/features/lifecycle.feature:3:3
+
+frozen before-scenario boom
 
 The remaining 1 step in this scenario was skipped."
 `;

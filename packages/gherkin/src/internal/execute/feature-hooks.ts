@@ -1,5 +1,6 @@
 import type { FeatureSuiteModel } from "../model/types.js";
 import type { GherkinRegistry, RegistryHook } from "../registry/types.js";
+import { markReported } from "./anchor-error.js";
 import { composeFailures } from "./compose-failures.js";
 import { formatFeatureHookAnchor } from "./format/format-hook-anchor.js";
 import { formatHookFailure } from "./format/format-hook-failure.js";
@@ -12,20 +13,28 @@ export type RegisterFeatureHooksOptions = {
   registry: GherkinRegistry;
 };
 
-const invokeFeatureHook = (hook: RegistryHook, uri: string): Promise<void> =>
-  invokeHook({
-    args: [],
-    format: (message) =>
-      formatHookFailure({
-        anchor: formatFeatureHookAnchor(hook.className, hook.methodName, uri),
-        kind: hook.kind,
-        message,
-      }),
-    hook,
-    // STATIC by the lifetime rule (create-hook-decorator.ts scope check) —
-    // the class itself is the receiver; no scenario instance exists here.
-    instance: hook.target,
-  });
+const invokeFeatureHook = async (hook: RegistryHook, uri: string): Promise<void> => {
+  try {
+    await invokeHook({
+      args: [],
+      format: (message) =>
+        formatHookFailure({
+          anchor: formatFeatureHookAnchor(hook.className, hook.methodName, uri),
+          kind: hook.kind,
+          message,
+        }),
+      hook,
+      // STATIC by the lifetime rule (create-hook-decorator.ts scope check) —
+      // the class itself is the receiver; no scenario instance exists here.
+      instance: hook.target,
+    });
+  } catch (error) {
+    // Pinned: feature-hooks.test.ts ("re-throwing an earlier failure's cause",
+    // "re-throwing the before-feature failure's cause").
+    markReported(error as Error);
+    throw error;
+  }
+};
 
 /**
  * `@BeforeFeature` / `@AfterFeature` compile to beforeAll/afterAll on the
