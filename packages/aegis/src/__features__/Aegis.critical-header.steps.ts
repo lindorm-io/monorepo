@@ -1,6 +1,6 @@
 import type { DataTable } from "@lindorm/gherkin";
 import { Binding, Given, ParameterType, Then, When } from "@lindorm/gherkin";
-import { isInteger } from "@lindorm/is";
+import { isInteger, isString } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import { expect } from "vitest";
 import type { CoseHeaderBuckets, JoseHeaderBuckets } from "../types/index.js";
@@ -45,6 +45,20 @@ const integerLabelCells = (table: DataTable): Map<number, unknown> =>
       if (!isInteger(key)) throw new Error(`the label "${label}" is not an integer`);
 
       return [key, value];
+    }),
+  );
+
+const integerLabelBase64urlCells = (table: DataTable): Map<number, Buffer> =>
+  new Map(
+    [...integerLabelCells(table)].map(([label, value]): [number, Buffer] => {
+      if (
+        !isString(value) ||
+        Buffer.from(value, "base64url").toString("base64url") !== value
+      ) {
+        throw new Error(`the cell at label ${label} is not base64url: ${String(value)}`);
+      }
+
+      return [label, Buffer.from(value, "base64url")];
     }),
   );
 
@@ -99,6 +113,25 @@ export class AegisCriticalHeaderSteps extends AegisStepsBase {
   @Given("the foreign unprotected header carries, at the integer labels")
   theForeignUnprotectedHeaderCarriesAtTheIntegerLabels(table: DataTable): void {
     this.ctx.foreignHeaders.integerLabelledUnprotected = integerLabelCells(table);
+  }
+
+  @Given(
+    "the foreign protected header carries, at the integer labels, the byte strings in base64url",
+  )
+  theForeignProtectedHeaderCarriesAtTheIntegerLabelsTheByteStringsInBase64url(
+    table: DataTable,
+  ): void {
+    this.ctx.foreignHeaders.integerLabelledProtected = integerLabelBase64urlCells(table);
+  }
+
+  @Given(
+    "the foreign unprotected header carries, at the integer labels, the byte strings in base64url",
+  )
+  theForeignUnprotectedHeaderCarriesAtTheIntegerLabelsTheByteStringsInBase64url(
+    table: DataTable,
+  ): void {
+    this.ctx.foreignHeaders.integerLabelledUnprotected =
+      integerLabelBase64urlCells(table);
   }
 
   @Given("the third party writes its key identifier {kidPlacement}")

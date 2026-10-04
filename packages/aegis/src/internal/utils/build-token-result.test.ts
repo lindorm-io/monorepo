@@ -106,11 +106,11 @@ describe("buildTokenResult", () => {
         ...base,
         format: "cwt",
         nameOf: coseName,
-        protectedHeader: { alg: "ES512", kid: "signed-key" } as WireTokenHeader,
-        unprotectedHeader: { kid: "presented-key" },
+        protectedHeader: { alg: "ES512", iv: "cHJvdGVjdGVk" } as WireTokenHeader,
+        unprotectedHeader: { iv: "ZGVjb3k" },
       });
 
-      expect(result.header.keyId).toBe("signed-key");
+      expect(result.header.initialisationVector).toBe("cHJvdGVjdGVk");
     });
   });
 

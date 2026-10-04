@@ -29,6 +29,16 @@ export class AegisHeaderProvenanceSteps extends AegisStepsBase {
     expect(this.raw("protectedHeader").get(key)).toBe(value);
   }
 
+  @Then(
+    "the raw protected header carries {wireKey} as the byte string {string} in base64url",
+  )
+  theRawProtectedHeaderCarriesAsTheByteStringInBase64url(
+    key: WireKey,
+    base64url: string,
+  ): void {
+    this.carriesTheByteString("protectedHeader", key, base64url);
+  }
+
   @Then("the raw unprotected header carries {wireKey} {string}")
   theRawUnprotectedHeaderCarries(key: WireKey, value: string): void {
     expect(this.raw("unprotectedHeader").get(key)).toBe(value);
@@ -37,6 +47,16 @@ export class AegisHeaderProvenanceSteps extends AegisStepsBase {
   @Then("the raw unprotected header carries {wireKey} as the list {stringList}")
   theRawUnprotectedHeaderCarriesAsTheList(key: WireKey, members: Array<string>): void {
     expect(this.raw("unprotectedHeader").get(key)).toEqual(members);
+  }
+
+  @Then(
+    "the raw unprotected header carries {wireKey} as the byte string {string} in base64url",
+  )
+  theRawUnprotectedHeaderCarriesAsTheByteStringInBase64url(
+    key: WireKey,
+    base64url: string,
+  ): void {
+    this.carriesTheByteString("unprotectedHeader", key, base64url);
   }
 
   @Then("the raw unprotected header carries all of {wireKeys}")
@@ -107,6 +127,13 @@ export class AegisHeaderProvenanceSteps extends AegisStepsBase {
     for (const key of keys) {
       expect(bucket.has(key), `the raw ${part} carries no ${String(key)}`).toBe(true);
     }
+  }
+
+  private carriesTheByteString(part: RawPart, key: WireKey, base64url: string): void {
+    const value = this.raw(part).get(key);
+
+    expect(value).toBeInstanceOf(Uint8Array);
+    expect(Buffer.from(value as Uint8Array).toString("base64url")).toBe(base64url);
   }
 
   private carriesNoneOf(part: RawPart, keys: Array<WireKey>): void {

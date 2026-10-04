@@ -17,8 +17,10 @@ import { isProtectedOnly } from "./is-protected-only.js";
  * the only registered bag a caller can fill and it travels protected, so there is
  * nothing for a write-side refusal to refuse (`build-cose-headers.ts`).
  *
- * The protected bucket wins a collision — it is applied second. A reader who needs
- * the two apart reads the KIT result ({@link CoseHeaderBuckets}).
+ * The protected bucket wins a collision — it is applied second. pinned:
+ * `Aegis.header-provenance.feature` "a header parameter stated in both COSE
+ * buckets is read from the protected one". A reader who needs the two apart
+ * reads the KIT result ({@link CoseHeaderBuckets}).
  *
  * ⚠ NOT `Object.assign` and not a whole-bucket spread: an explicitly `undefined`
  * value is an ABSENT parameter, and copying one would let the protected bucket

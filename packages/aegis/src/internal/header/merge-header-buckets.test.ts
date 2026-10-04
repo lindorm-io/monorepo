@@ -60,11 +60,11 @@ describe("mergeHeaderBuckets", () => {
 
   test("the PROTECTED value wins where both buckets state one", () => {
     const merged = mergeHeaderBuckets({
-      protectedHeader: protectedHeader({ alg: "ES512", kid: "signed" }),
-      unprotectedHeader: { kid: "presented" },
+      protectedHeader: protectedHeader({ enc: "A256GCM", iv: "cHJvdGVjdGVk" }),
+      unprotectedHeader: { iv: "ZGVjb3k" },
     });
 
-    expect(merged.kid).toBe("signed");
+    expect(merged.iv).toBe("cHJvdGVjdGVk");
   });
 
   // An explicitly `undefined` value is an ABSENT parameter — the exact hazard a

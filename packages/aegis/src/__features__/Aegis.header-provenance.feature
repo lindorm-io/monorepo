@@ -637,6 +637,56 @@ Feature: Header provenance, empty header parameters and the asserted token type
       And I verify the token as a claims token on the cose wire
       Then verification is refused as a COSE error "cose_header_iv_invalid"
 
+  Rule: a header parameter stated in both COSE buckets is read from the protected one
+
+    The jose wire has no scenario: a JOSE compact serialisation has one
+    header (RFC 7515 §7.1, RFC 7516 §7.1), so no parameter can be stated a
+    second time in another bucket and there is no collision for a reader to
+    resolve. A COSE
+    header may state a parameter in the protected bucket the signature
+    covers and again in the unprotected one it does not; a reader that does
+    not reject such a token takes the parameter from the protected bucket
+    (RFC 9052 §3). The initialisation vector is the parameter that can show
+    it on a signed token: it is one of the two the registry permits in
+    either bucket (pinned: `internal/header/merge-header-buckets.test.ts`
+    "exactly kid and iv may travel unauthenticated"), and the other, the key
+    identifier, is refused when a signed token states it in both. A third party gives label 5 a different
+    byte string in each bucket, each written here in base64url, the form
+    aegis reports an initialisation vector in. The first scenario reads both
+    buckets off the wire, so the others judge the read.
+
+    Background:
+      Given the wire claims
+        | iss | "https://test.lindorm.io/" |
+        | sub | "user-1"                   |
+        | aud | ["https://rs.lindorm.io/"] |
+        | jti | "token-1"                  |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+      And the foreign protected header carries, at the integer labels, the byte strings in base64url
+        | 5 | "cHJvdGVjdGVk" |
+      And the foreign unprotected header carries, at the integer labels, the byte strings in base64url
+        | 5 | "ZGVjb3k" |
+
+    Scenario: cose: each bucket carries its own byte string at the label
+      When a third party signs the wire claims on the cose wire
+      Then the raw protected header carries label 5 as the byte string "cHJvdGVjdGVk" in base64url
+      And the raw unprotected header carries label 5 as the byte string "ZGVjb3k" in base64url
+
+    @RFC-9052
+    Scenario: cose: the keyless read reports the protected bucket's initialisation vector (RFC-9052 §3)
+      When a third party signs the wire claims on the cose wire
+      And I read the token without a key
+      Then the parsed header includes
+        | initialisationVector | "cHJvdGVjdGVk" |
+
+    @RFC-9052
+    Scenario: cose: the domain verify reports the protected bucket's initialisation vector (RFC-9052 §3)
+      When a third party signs the wire claims on the cose wire
+      And I verify the token
+      Then the verified header includes
+        | initialisationVector | "cHJvdGVjdGVk" |
+
   Rule: a token of another type is refused when the caller asserts an id token
 
     The `typ` header parameter declares the media type of the complete token
