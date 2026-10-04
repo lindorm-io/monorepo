@@ -845,23 +845,18 @@ const walkObject = (
  * name can say neither WHICH element of a collection nor WHICH DEPTH of a
  * recursive structure the bad member sits at.
  *
- * ⚠ SEVERAL FAILURES REACH IT. `details` names them because a consumer reads it
- * to know what to repair: a MANDATORY MEMBER that is absent or empty, TWO MEMBERS
- * THAT RESOLVE TO ONE KEY, a member the structure's CLOSED member set does not
- * declare, a claim value that is not the COLLECTION its codec declares, an
- * ELEMENT of that collection that is not a structure, a MEMBER of a
- * space-delimited list that is not a `scope-token` — not a string, empty, or
- * carrying a space or another character the production does not admit — whether
- * a caller's list or the members a wire string's spaces delimit, and a
- * NumericDate claim read as anything but a number of seconds since the epoch or
- * a valid `Date`. Those share one repair — the claim's shape — and each entry's
- * own `message` says which it is.
+ * ⚠ SEVERAL FAILURES REACH IT, AND `details` NAMES NONE OF THEM. It is one generic
+ * sentence, worded to hold for the spelling refusal below as well as for the
+ * structure faults: the code, `data.claim` and each `invalid` entry's `message`
+ * already say which fault it is, and a kind listed in `details` is a copy of them
+ * that drifts from the registry. The structure faults share one repair — the
+ * claim's shape.
  *
  * ⚠ AND ONE THAT IS A DIFFERENT REPAIR UNDER THE SAME CODE: a claim the dict door
  * was handed under its DOMAIN name ({@link refuseDomainSpellings}), whose repair is
  * the claim's SPELLING. The code is shared with the member-depth twin the same
  * mistake raises — two names meeting on one member key — so a consumer catching
- * one catches the other, and `details` states both repairs.
+ * one catches the other.
  */
 const refuseInvalidStructure = (claim: string, invalid: Array<InvalidEntry>): never => {
   throw new AegisDomainError("Invalid claim structure", {
@@ -869,8 +864,7 @@ const refuseInvalidStructure = (claim: string, invalid: Array<InvalidEntry>): ne
     data: { claim, invalid },
     debug: { claim, invalid },
     title: "Invalid Claim Structure",
-    details:
-      "A claim does not have the structure the registry declares for it: a member its specification makes mandatory is absent or empty, two members resolve to the same key so neither can be honoured, a member is not one the claim's closed member set declares, the value is not the collection the claim is defined as, an element of that collection is not a structure, a member of a space-delimited list is not a scope-token: not a string, empty, or carrying a space or another character the scope-token production does not admit, or a NumericDate claim holds something other than a number of seconds since the epoch. A claim stated under its domain name where the door reads wire names is refused the same way, and is repaired by spelling it as the entry says. Each entry in `invalid` names the offending position and what is wrong with it.",
+    details: "A claim is not stated as the registry declares it.",
   });
 };
 

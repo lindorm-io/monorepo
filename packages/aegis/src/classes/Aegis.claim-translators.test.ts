@@ -16,8 +16,9 @@ import { Aegis } from "./Aegis.js";
  * different-but-identically-shaped translator would be equally broken.
  *
  * ⚠ THE DOOR'S OWN RULES ARE SCENARIOS (`__features__/Aegis.vocabulary-door.feature`);
- * what is left here is the round trip through both statics, which is a statement
- * about the pair rather than about either door's behaviour.
+ * what is here is the round trip through both statics, the spaced `scope` list they
+ * cross, and the `claim_structure_invalid` refusal each raises, down to its `data`
+ * and its one `details` sentence.
  */
 describe("Aegis — the public claim translators", () => {
   test("round-trips a domain claim set out to the wire and back", () => {
@@ -185,4 +186,41 @@ describe("Aegis — the public claim translators", () => {
       }) as unknown as Error,
     );
   });
+
+  test.each([
+    [
+      "a claim stated under its domain name",
+      () => Aegis.toDomain({ clientId: "c1" }),
+      "clientId",
+    ],
+    [
+      "a spaced member containing a space",
+      () => Aegis.toWire({ scope: ["a b"] }),
+      "scope",
+    ],
+    ["an empty spaced member", () => Aegis.toWire({ scope: [""] }), "scope"],
+    [
+      "a mandatory member of the wrong shape",
+      () => Aegis.toWire({ authorizationDetails: [{ type: 42 }] } as never),
+      "authorizationDetails",
+    ],
+  ])(
+    "states one generic sentence naming no fault kind for %s, the claim riding data",
+    (_fault, refuse, claim) => {
+      let refusal: unknown;
+
+      try {
+        refuse();
+      } catch (error) {
+        refusal = error;
+      }
+
+      expect(refusal).toBeInstanceOf(AegisDomainError);
+      expect((refusal as AegisDomainError).code).toBe("claim_structure_invalid");
+      expect((refusal as AegisDomainError).data).toMatchObject({ claim });
+      expect((refusal as AegisDomainError).details).toBe(
+        "A claim is not stated as the registry declares it.",
+      );
+    },
+  );
 });
