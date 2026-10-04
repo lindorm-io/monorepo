@@ -238,6 +238,13 @@ export const HEADER_SPECS: ReadonlyArray<RegisteredHeaderSpec> = [
       section: "4.7.1.1",
       url: "https://www.rfc-editor.org/rfc/rfc7518#section-4.7.1.1",
     },
+    // ONE domain name, TWO quantities. JOSE `iv` is the KEY-WRAP IV
+    // (RFC 7518 §4.7.1.1); the JWE content IV is its own compact segment, never a
+    // header parameter (`internal/utils/assemble-jwe-compact.ts`). COSE label 5 is
+    // the IV of the layer that carries it (RFC 9052 §3, RFC 9052 §3.1), which under
+    // the RFC 9053 algorithms is only ever the content layer: its one key wrap has
+    // no per-invocation parameter to carry (RFC 9053 §6.2.1). The one site that
+    // writes it is `classes/CweKit.ts#encrypt`: a COSE_Encrypt0, no recipient layer.
     wire: { jose: wireName("iv"), cose: wireLabel(5, "iv") },
     codec: { kind: "buffer" },
     // The read refuses a value that is not a byte string, in either bucket:
@@ -477,7 +484,7 @@ export const HEADER_SPECS: ReadonlyArray<RegisteredHeaderSpec> = [
       section: "4.1.6",
       url: "https://www.rfc-editor.org/rfc/rfc7515#section-4.1.6",
     },
-    wire: { jose: wireName("x5c"), cose: wireLabel(33, "x5c") }, // RFC 9360 x5chain
+    wire: { jose: wireName("x5c"), cose: wireLabel(33, "x5chain") }, // RFC 9360 §2
     codec: { kind: "array" },
     cose: { kind: "certChain" },
     sample: ["MIIBsample"],
