@@ -31,6 +31,24 @@ const thrownBy = (bag: Record<string, unknown>): AegisDomainError => {
 };
 
 describe("createIdentityMatchers", () => {
+  describe("refusal identity", () => {
+    test.each([
+      ["a key that maps to no claim", { nope: "x" }],
+      ["a raw hash source given a non-string", { accessToken: { $eq: "x" } }],
+      ["a claim given a value no operator is lifted from", { subject: null }],
+    ])("should refuse %s under the wire-neutral code, title and type", (_label, bag) => {
+      const { code, title, type, message } = thrownBy(bag);
+
+      expect({ code, title, type, message }).toMatchSnapshot();
+    });
+
+    test("should describe an unmapped key without naming a token format", () => {
+      expect(thrownBy({ nope: "x" }).details).toBe(
+        "A verify option key does not map to any known claim, so no predicate can be built for it.",
+      );
+    });
+  });
+
   describe("hash-derive matchers refuse a non-string source", () => {
     test.each(
       SOURCES.flatMap((source) =>
@@ -39,7 +57,7 @@ describe("createIdentityMatchers", () => {
     )("should refuse %s given a %s", (source, _label, value) => {
       const error = thrownBy({ [source]: value });
 
-      expect(error.code).toBe("jwt_verify_unsupported_value");
+      expect(error.code).toBe("claim_matcher_unsupported_value");
       expect(error.data).toEqual({ key: source });
       expect(error.details).toBe(
         "A verify option value for a raw hash source must be a string; this key was given an unsupported type.",
@@ -55,14 +73,14 @@ describe("createIdentityMatchers", () => {
     test("should refuse the non-string source before a digest claim written after it", () => {
       const error = thrownBy({ accessToken: { $eq: "x" }, accessTokenHash: "y" });
 
-      expect(error.code).toBe("jwt_verify_unsupported_value");
+      expect(error.code).toBe("claim_matcher_unsupported_value");
       expect(error.data).toEqual({ key: "accessToken" });
     });
 
     test("should report the collision when the digest claim is written before the non-string source", () => {
       const error = thrownBy({ accessTokenHash: "y", accessToken: { $eq: "x" } });
 
-      expect(error.code).toBe("jwt_verify_conflicting_matchers");
+      expect(error.code).toBe("claim_matcher_conflict");
       expect(error.data).toStrictEqual({ keys: ["accessTokenHash", "accessToken"] });
       expect(error.debug).toStrictEqual({ claim: "at_hash" });
     });
@@ -89,7 +107,7 @@ describe("createIdentityMatchers", () => {
         $or: [{ accessToken: "raw", accessTokenHash: "digest" }],
       });
 
-      expect(error.code).toBe("jwt_verify_conflicting_matchers");
+      expect(error.code).toBe("claim_matcher_conflict");
       expect(error.data).toStrictEqual({ keys: ["accessToken", "accessTokenHash"] });
       expect(error.debug).toStrictEqual({ claim: "at_hash" });
     });
@@ -109,7 +127,7 @@ describe("createIdentityMatchers", () => {
     test("should refuse an unmapped key inside a branch under its own name", () => {
       const error = thrownBy({ $and: [{ subject: "s" }, { nope: "x" }] });
 
-      expect(error.code).toBe("jwt_verify_unsupported_key");
+      expect(error.code).toBe("claim_matcher_unsupported_key");
       expect(error.data).toEqual({ key: "nope" });
     });
 

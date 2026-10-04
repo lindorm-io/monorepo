@@ -220,7 +220,7 @@ Feature: The claim matcher a verify is asked beyond the floor
     Scenario Outline: <wire>: the operator is refused as an unsupported value, naming the raw source key
       When I mint the content under the "default" profile on the <wire> wire
       And I verify the token
-      Then verification is refused as a domain error "jwt_verify_unsupported_value"
+      Then verification is refused as a domain error "claim_matcher_unsupported_value"
       And the refusal names the matcher "accessToken"
 
       Examples:
@@ -252,7 +252,7 @@ Feature: The claim matcher a verify is asked beyond the floor
         """
       When I mint the content under the "default" profile on the <wire> wire
       And I verify the token
-      Then verification is refused as a domain error "jwt_verify_unsupported_key"
+      Then verification is refused as a domain error "claim_matcher_unsupported_key"
       And the refusal names the matcher "tokenType"
 
       Examples:
@@ -267,7 +267,7 @@ Feature: The claim matcher a verify is asked beyond the floor
         """
       When I mint the content under the "default" profile on the <wire> wire
       And I verify the token
-      Then verification is refused as a domain error "jwt_verify_unsupported_key"
+      Then verification is refused as a domain error "claim_matcher_unsupported_key"
       And the refusal names the matcher "tokenType"
 
       Examples:
@@ -282,7 +282,7 @@ Feature: The claim matcher a verify is asked beyond the floor
         """
       When I mint the content under the "default" profile on the <wire> wire
       And I verify the token
-      Then verification is refused as a domain error "jwt_verify_unsupported_key"
+      Then verification is refused as a domain error "claim_matcher_unsupported_key"
       And the refusal names the matcher "tokenType"
 
       Examples:
@@ -656,7 +656,7 @@ Feature: The claim matcher a verify is asked beyond the floor
     Scenario Outline: <wire>: the pair inside the branch is refused as conflicting, naming both keys
       When I mint the content under the "default" profile on the <wire> wire
       And I verify the token
-      Then verification is refused as a domain error "jwt_verify_conflicting_matchers"
+      Then verification is refused as a domain error "claim_matcher_conflict"
       And the refusal names the conflicting matchers "accessToken", "accessTokenHash"
 
       Examples:

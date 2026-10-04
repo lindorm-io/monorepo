@@ -18,8 +18,8 @@ import type { ClaimSpec } from "../claims/claims-registry.js";
  * maps to (it matches a wire payload), assert emits the caller's own key (it
  * matches a domain-keyed dict). Only the value lift is common.
  *
- * Returns `undefined` for a value shape neither builder supports, so each keeps
- * its own error code and message for that case.
+ * Returns `undefined` for a value shape neither builder supports, so each builder
+ * words its own refusal.
  */
 export const liftClaimMatcher = (
   spec: ClaimSpec | undefined,

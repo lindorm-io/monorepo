@@ -65,12 +65,12 @@ export const createIdentityMatchers = (
       const mapped = matcherWireName(key, nameOf);
 
       if (mapped === undefined) {
-        throw new AegisDomainError(`Unsupported key: ${key} for JWT verification`, {
-          code: "jwt_verify_unsupported_key",
+        throw new AegisDomainError(`Unsupported key: ${key} for claim matcher`, {
+          code: "claim_matcher_unsupported_key",
           data: { key },
-          title: "JWT Verify Unsupported Key",
+          title: "Claim Matcher Unsupported Key",
           details:
-            "A verify option key does not map to any known JWT claim, so no predicate can be built for it.",
+            "A verify option key does not map to any known claim, so no predicate can be built for it.",
         });
       }
 
@@ -83,10 +83,10 @@ export const createIdentityMatchers = (
 
       if (collision !== undefined) {
         throw new AegisDomainError(`Conflicting matchers: ${collision} and ${key}`, {
-          code: "jwt_verify_conflicting_matchers",
+          code: "claim_matcher_conflict",
           data: { keys: [collision, key] },
           debug: { claim: mapped },
-          title: "JWT Verify Conflicting Matchers",
+          title: "Claim Matcher Conflict",
           details:
             "Two verify option keys resolve to the same claim, so only one of them could be checked. State the raw source or the digest, never both.",
         });
@@ -100,9 +100,9 @@ export const createIdentityMatchers = (
         if (isString(value)) return [mapped, { $eq: createHash(algorithm, value) }];
 
         throw new AegisDomainError(`Unsupported value for key: ${key}`, {
-          code: "jwt_verify_unsupported_value",
+          code: "claim_matcher_unsupported_value",
           data: { key },
-          title: "JWT Verify Unsupported Value",
+          title: "Claim Matcher Unsupported Value",
           details:
             "A verify option value for a raw hash source must be a string; this key was given an unsupported type.",
         });
@@ -116,9 +116,9 @@ export const createIdentityMatchers = (
       if (operator !== undefined) return [mapped, operator];
 
       throw new AegisDomainError(`Unsupported value for key: ${key}`, {
-        code: "jwt_verify_unsupported_value",
+        code: "claim_matcher_unsupported_value",
         data: { key },
-        title: "JWT Verify Unsupported Value",
+        title: "Claim Matcher Unsupported Value",
         details:
           "A verify option value must be a string, number, array, or predicate object; this key was given an unsupported type.",
       });

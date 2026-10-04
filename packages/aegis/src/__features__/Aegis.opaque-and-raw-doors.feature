@@ -500,7 +500,7 @@ Feature: The opaque signed artifact and the raw wire doors
         """
       When I sign the payload as opaque content on the <wire> wire
       And I verify the token
-      Then verification is refused as a domain error "jwt_verify_unsupported_key"
+      Then verification is refused as a domain error "claim_matcher_unsupported_key"
       And the refusal names the matcher "tokenType"
 
       Examples:
@@ -515,7 +515,7 @@ Feature: The opaque signed artifact and the raw wire doors
         """
       When I sign the payload as opaque content on the <wire> wire
       And I verify the token
-      Then verification is refused as a domain error "jwt_verify_unsupported_key"
+      Then verification is refused as a domain error "claim_matcher_unsupported_key"
       And the refusal names the matcher "tokenType"
 
       Examples:
@@ -530,7 +530,7 @@ Feature: The opaque signed artifact and the raw wire doors
         """
       When I sign the payload as opaque content on the <wire> wire
       And I verify the token
-      Then verification is refused as a domain error "jwt_verify_unsupported_key"
+      Then verification is refused as a domain error "claim_matcher_unsupported_key"
       And the refusal names the matcher "tokenType"
 
       Examples:

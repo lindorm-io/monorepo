@@ -39,10 +39,10 @@ export const createJwtValidate = (assert: DomainAssert): Condition<Dict> =>
 
     if (operator !== undefined) return [key, operator];
 
-    throw new AegisDomainError(`Unsupported value: ${value as any} for key: ${key}`, {
-      code: "jwt_validate_unsupported_value",
+    throw new AegisDomainError(`Unsupported value for key: ${key}`, {
+      code: "claim_matcher_unsupported_value",
       data: { key },
-      title: "JWT Validate Unsupported Value",
+      title: "Claim Matcher Unsupported Value",
       details:
         "A claim matcher value must be a string, number, array, or predicate object; this key was given an unsupported type.",
     });

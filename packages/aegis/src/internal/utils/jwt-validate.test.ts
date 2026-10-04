@@ -1,5 +1,5 @@
 import { Aegis } from "../../classes/Aegis.js";
-import type { AegisDomainError } from "../../errors/index.js";
+import { AegisDomainError } from "../../errors/index.js";
 import { createHash } from "./create-hash.js";
 import { HASH_MATCHERS } from "./hash-matchers.js";
 import { createIdentityMatchers } from "./jwt-identity-matchers.js";
@@ -165,7 +165,7 @@ describe("createJwtValidate", () => {
 
     test("should refuse an unsupported value inside a branch under its own key", () => {
       expect(() => createJwtValidate({ $or: [{ subject: null }] } as never)).toThrowError(
-        /Unsupported value: null for key: subject/,
+        /Unsupported value for key: subject/,
       );
     });
 
@@ -263,6 +263,38 @@ describe("Aegis.matches / Aegis.assert root operators", () => {
       expect.objectContaining({ code: "claims_invalid", data: { invalid: ["$not"] } }),
     );
   });
+});
+
+describe("Aegis.matches / Aegis.assert refuse a matcher value no operator is lifted from", () => {
+  const claims = { subject: "user-1" };
+
+  test.each(
+    (
+      [
+        ["null", null],
+        ["a symbol", Symbol("x")],
+      ] as const
+    ).flatMap(([label, value]) =>
+      (["matches", "assert"] as const).map((door) => [door, label, value] as const),
+    ),
+  )(
+    "%s refuses %s under the wire-neutral code, title and type",
+    (door, _label, value) => {
+      let thrown: unknown;
+
+      try {
+        Aegis[door](claims, { subject: value } as never);
+      } catch (error) {
+        thrown = error;
+      }
+
+      expect(thrown).toBeInstanceOf(AegisDomainError);
+
+      const { code, title, type, data, message } = thrown as AegisDomainError;
+
+      expect({ code, title, type, data, message }).toMatchSnapshot();
+    },
+  );
 });
 
 // The assert and verify halves share ONE value lift; only the KEY differs (assert
@@ -396,18 +428,20 @@ describe("createJwtValidate / createIdentityMatchers parity", () => {
               thrown = error;
             }
 
-            // ⚠ THE WORDS, not just the code: `title` and `details` are what a
-            // consumer reads, and nothing else in the package holds them.
+            // ⚠ THE WORDS, not just the code: `title`, `details` and the `type` URN
+            // are what a consumer reads, and nothing else in the package holds them.
             expect(
               {
                 code: (thrown as AegisDomainError)?.code,
                 title: (thrown as AegisDomainError)?.title,
+                type: (thrown as AegisDomainError)?.type,
                 details: (thrown as AegisDomainError)?.details,
               },
               JSON.stringify(bag),
             ).toEqual({
-              code: "jwt_verify_conflicting_matchers",
-              title: "JWT Verify Conflicting Matchers",
+              code: "claim_matcher_conflict",
+              title: "Claim Matcher Conflict",
+              type: "urn:lindorm:aegis:error:claim_matcher_conflict",
               details:
                 "Two verify option keys resolve to the same claim, so only one of them could be checked. State the raw source or the digest, never both.",
             });

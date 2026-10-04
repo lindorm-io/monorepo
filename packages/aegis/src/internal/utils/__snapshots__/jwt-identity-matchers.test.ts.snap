@@ -2,7 +2,7 @@
 
 exports[`createIdentityMatchers > collision scope > should name the caller's two keys in the refusal message, never the wire claim 1`] = `
 {
-  "code": "jwt_verify_conflicting_matchers",
+  "code": "claim_matcher_conflict",
   "data": {
     "keys": [
       "accessToken",
@@ -14,5 +14,32 @@ exports[`createIdentityMatchers > collision scope > should name the caller's two
   },
   "message": "Conflicting matchers: accessToken and accessTokenHash",
   "name": "AegisDomainError",
+}
+`;
+
+exports[`createIdentityMatchers > refusal identity > should refuse a claim given a value no operator is lifted from under the wire-neutral code, title and type 1`] = `
+{
+  "code": "claim_matcher_unsupported_value",
+  "message": "Unsupported value for key: subject",
+  "title": "Claim Matcher Unsupported Value",
+  "type": "urn:lindorm:aegis:error:claim_matcher_unsupported_value",
+}
+`;
+
+exports[`createIdentityMatchers > refusal identity > should refuse a key that maps to no claim under the wire-neutral code, title and type 1`] = `
+{
+  "code": "claim_matcher_unsupported_key",
+  "message": "Unsupported key: nope for claim matcher",
+  "title": "Claim Matcher Unsupported Key",
+  "type": "urn:lindorm:aegis:error:claim_matcher_unsupported_key",
+}
+`;
+
+exports[`createIdentityMatchers > refusal identity > should refuse a raw hash source given a non-string under the wire-neutral code, title and type 1`] = `
+{
+  "code": "claim_matcher_unsupported_value",
+  "message": "Unsupported value for key: accessToken",
+  "title": "Claim Matcher Unsupported Value",
+  "type": "urn:lindorm:aegis:error:claim_matcher_unsupported_value",
 }
 `;

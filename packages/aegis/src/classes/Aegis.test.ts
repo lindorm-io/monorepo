@@ -79,7 +79,7 @@ describe("Aegis", () => {
         { accessTokenHash: "not-the-hash", accessToken: ACCESS_TOKEN },
       ]) {
         await expect(aegis.verify(token, assert), JSON.stringify(assert)).rejects.toThrow(
-          expect.objectContaining({ code: "jwt_verify_conflicting_matchers" }),
+          expect.objectContaining({ code: "claim_matcher_conflict" }),
         );
       }
     });
