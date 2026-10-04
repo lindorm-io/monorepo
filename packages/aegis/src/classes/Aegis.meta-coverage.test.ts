@@ -337,6 +337,18 @@ describe("Aegis — meta coverage", () => {
     expect(Object.keys(SHAPE_VIOLATIONS).sort()).toEqual(Object.keys(SHAPE_RULES).sort());
   });
 
+  test("should declare the actChain shape rule for mint alone in the three profiles that state it", () => {
+    const stated = INSTANCES.filter(
+      ([, , rule]) => rule.rule === "shape" && rule.shape === "actChain",
+    ).map(([, profile, rule]) => [profile.name, rule.on]);
+
+    expect(stated).toEqual([
+      ["access_token", ["mint"]],
+      ["external_access_token", ["mint"]],
+      ["id_token", ["mint"]],
+    ]);
+  });
+
   // A violation must SAY why it violates. The note is what a reader of a failing
   // row has instead of reverse-engineering the input.
   test("should state a reason on every declared violation", () => {

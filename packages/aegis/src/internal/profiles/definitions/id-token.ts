@@ -39,7 +39,7 @@ export const idTokenProfile = defineProfile({
     { rule: "match", on: ["mint", "verify"], condition: ISSUER_IS_URI },
     { rule: "shape", on: ["mint", "verify"], shape: "crossField" },
     { rule: "shape", on: ["mint", "verify"], shape: "confirmation" },
-    { rule: "shape", on: ["mint", "verify"], shape: "actChain" },
+    { rule: "shape", on: ["mint"], shape: "actChain" },
   ],
   autoInject: ["issuedAt", "issuer"],
   issuer: "platform",

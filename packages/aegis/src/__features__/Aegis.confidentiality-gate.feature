@@ -483,9 +483,12 @@ Feature: The confidentiality gate at the verify door
     and on the keyless read alike, and the entry names the member at its
     position in the domain vocabulary. The member beside the fault is not
     named. Aegis policy at verify: the specifications type the member, and
-    refusing rather than dropping is aegis's own call. The cose scenario
-    carries no tag: `act` has no registered CWT claim key — it rides the COSE
-    wire under its JWT name.
+    refusing rather than dropping is aegis's own call. The profiles that state
+    the actor shape rule state it for mint alone, because the read answers
+    first under every profile, the profile floor included: the token below
+    carries no audience, so a floor that ran first would refuse it with
+    `audience_mismatch`. The cose scenario carries no tag: `act` has no
+    registered CWT claim key — it rides the COSE wire under its JWT name.
 
     Background:
       Given the wire claims
@@ -515,6 +518,21 @@ Feature: The confidentiality gate at the verify door
         | wire | typ             |
         | jose | JWT             |
         | cose | application/cwt |
+
+    Scenario Outline: <wire>: a verify under the <profile> profile is refused by the read, before the profile floor
+      When a third party signs the wire claims on the <wire> wire, typed "<typ>"
+      And I verify the token under the "<profile>" profile as the audience "https://rs.lindorm.io/"
+      Then verification is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "act" and locates the fault at "act.subject": Member "subject" must be the shape it declares
+
+      Examples:
+        | wire | profile               | typ                |
+        | jose | access_token          | application/at+jwt |
+        | jose | external_access_token | JWT                |
+        | jose | id_token              | JWT                |
+        | cose | access_token          | application/at+cwt |
+        | cose | external_access_token | application/cwt    |
+        | cose | id_token              | application/cwt    |
 
   Rule: minting a token whose nested actor names a subject that is not a string is refused at its depth
 

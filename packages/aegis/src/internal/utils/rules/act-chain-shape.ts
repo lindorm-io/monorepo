@@ -29,12 +29,16 @@ import { isClaimOmitted } from "./is-claim-omitted.js";
  * policy gate runs BEFORE wire assembly, so at mint this rule answers first for
  * those, with every fault in one report.
  *
- * ⛔ AT VERIFY IT REPORTS NOTHING. It reads what the token read produced, and
- * `internal/claims/translate.ts` has already disposed of every fault it names: a
- * non-object actor is refused at any depth, a `text` member the read cannot decode
- * is refused (`readLeafFailure`, `internal/claims/act-members.ts`), and a tail key
- * resolving to a declared member's key is refused. An actor member aegis does not
- * declare is not measured here at all — it rides the open tail, `aud` included.
+ * ⛔ AT VERIFY IT HAS NOTHING TO JUDGE, UNDER ANY PROFILE, so `access_token`,
+ * `external_access_token` and `id_token` declare it `on: ["mint"]`. The token read
+ * runs before any policy, and `internal/claims/translate.ts` has already disposed
+ * of every fault this rule names: a non-object actor is refused at any depth, a
+ * `text` member stating anything but a string is refused (`readLeafFailure`,
+ * `internal/claims/act-members.ts`), a tail key spelled as a declared member's
+ * domain key is refused as a collision, and a null member is OMITTED, not refused
+ * (`isNotStated`, `internal/claims/is-not-stated.ts`), so no policy sees it. An
+ * actor member aegis does not declare is not measured here at all — it rides the
+ * open tail, `aud` included.
  * ⇒ Nothing may be moved out of the read on the grounds that this rule would
  * catch it at verify.
  *
