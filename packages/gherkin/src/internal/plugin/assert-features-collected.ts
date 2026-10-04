@@ -50,8 +50,7 @@ const toAnchored = (pattern: string): string =>
  * So every file matching a `features` pattern must match an include pattern
  * in its cadence FAMILY (toCadenceIndependent) — which means an overwrite
  * that keeps only a lane-suffixed glob still passes: the guard proves the
- * family collectable, never the current mode's own derived includes
- * (limitation tracked in the workspace TODO-MONOREPO.md).
+ * family collectable, never the current mode's own derived includes.
  * `test.exclude` is never consulted: a lane exclusion prunes files the
  * include still names, and a feature that must never be collected is named
  * by the `exclude` setting, whose files never reach this guard
