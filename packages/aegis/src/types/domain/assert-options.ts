@@ -1,6 +1,7 @@
 /**
- * The per-call knobs for `Aegis.assert` / `Aegis.matches`. The matcher itself is
- * the positional {@link import("./domain-assert.js").DomainAssert} argument, so
+ * The per-call knobs for the claim check — `aegis.assert` / `aegis.matches` and
+ * `assertClaims` / `claimsMatch`. The matcher itself is the positional
+ * {@link import("./domain-assert.js").DomainAssert} argument, so
  * `assert` is "verify's claim checking, without the signature" — that one
  * sentence explains every difference from {@link
  * import("./verify.js").VerifyOptions}.
@@ -13,8 +14,9 @@
 export type AssertOptions = {
   /**
    * Widen every temporal range check by this many seconds in both directions,
-   * to absorb clock skew. Default `0` — the same default `aegis.verify` runs
-   * with, so the two agree unless told otherwise.
+   * to absorb clock skew. Unstated, `assertClaims` / `claimsMatch` allow `0`,
+   * and `aegis.assert` / `aegis.matches` allow the deployment's
+   * `clockTolerance` — the window `aegis.verify` runs in.
    */
   clockTolerance?: number;
   /** Override "now" for the temporal range checks. */

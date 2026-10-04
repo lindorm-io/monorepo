@@ -59,7 +59,7 @@ export type DomainTokenMatchers = {
  *
  * That hashing needs the algorithm, and `alg` is a HEADER parameter, never a
  * claim. `verify` resolves it from the verifying key (`JwtKit.algorithm`,
- * cross-checked against the header); `Aegis.assert` is handed a flat claim DICT
+ * cross-checked against the header); the claim check is handed a flat claim DICT
  * — no token, no header — so it has nothing to resolve it from BY
  * CONSTRUCTION. A matcher needing a companion input one surface cannot supply
  * does not belong on that surface, so these live on {@link VerifyAssert} alone.
@@ -82,7 +82,7 @@ export type DerivedHashClaim = "accessTokenHash" | "codeHash" | "stateHash";
  * `Condition<WireClaims>`: the eight named {@link DomainClaimMatchers},
  * {@link DomainTokenMatchers}, PLUS a plain predicate over every OTHER claim the
  * token read returns ({@link TokenClaims}). This is the vocabulary BOTH surfaces
- * share, and the whole argument `Aegis.assert` / `Aegis.matches` take.
+ * share, and the whole argument `aegis.assert` / `aegis.matches` take.
  */
 export type DomainAssert = DomainClaimMatchers &
   DomainTokenMatchers &

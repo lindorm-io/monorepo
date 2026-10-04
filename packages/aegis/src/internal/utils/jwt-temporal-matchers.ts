@@ -153,7 +153,7 @@ export const createTemporalMatchers = (
 ): Partial<Record<keyof AegisClaimsWire, ConditionOperator<any>>> =>
   buildTemporalMatchers(joseName, options);
 
-/** The DOMAIN-keyed twin — what `Aegis.assert` runs over a flat claim dict. */
+/** The DOMAIN-keyed twin — what the claim check (`assertClaims`) runs over a flat claim dict. */
 export const createDomainTemporalMatchers = (
   options: TemporalMatcherOptions,
 ): Dict<ConditionOperator<any>> => buildTemporalMatchers(domainName, options);

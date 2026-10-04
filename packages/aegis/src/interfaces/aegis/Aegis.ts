@@ -242,8 +242,7 @@ export interface IAegis {
    * `verify` applies, run over a flat domain-keyed claim dict that arrived some
    * other way (an introspection response, a cached credential). The temporal
    * range is checked by DEFAULT, in THIS deployment's `clockTolerance` unless
-   * `options.clockTolerance` states one — so a claim set inside `verify`'s skew
-   * window does not pass one surface and fail the other.
+   * `options.clockTolerance` states one — the window `verify` runs in.
    *
    * Throws `AegisDomainError("Invalid token")` under `claims_invalid`, naming
    * every failing top-level key; a root `$and` / `$or` / `$not` is named by its

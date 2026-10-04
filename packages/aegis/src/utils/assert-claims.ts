@@ -9,8 +9,7 @@ import type { AssertOptions, DomainAssert } from "../types/index.js";
  * (`DomainAssert`) and the same temporal window ({@link AssertOptions})
  * `aegis.verify` applies, run over a flat domain-keyed claim dict that arrived
  * some other way (an introspection response, a cached credential). The temporal
- * range is checked by DEFAULT, so a claim set inside verify's window does not
- * pass one surface and fail the other.
+ * range is checked by DEFAULT, in the same window `aegis.verify` applies.
  *
  * Outside any deployment, so the window allows no clock tolerance unless
  * `options.clockTolerance` states one; `aegis.assert` is the same check run in

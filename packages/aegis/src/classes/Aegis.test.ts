@@ -39,6 +39,20 @@ const jws = (header: unknown, payload = CLAIMS, signature = "sig"): string =>
 const jwe = (header: unknown, tag = "tag"): string =>
   [seg(header), "key", "iv", "ciphertext", tag].join(".");
 
+/**
+ * NEVER INVOKED — the compiler IS the assertion. The claim check is the
+ * DEPLOYMENT's: `assert` / `matches` are instance members, and the class declares
+ * no static of either name. A bare property access has one way to fail — TS2339
+ * — and an unused `@ts-expect-error` is itself a compile error, so a static of
+ * either name, whatever its shape, fails here.
+ */
+export const _claimCheckDoorGuards = (): void => {
+  // @ts-expect-error - the claim check is the deployment's; the class has no static assert
+  void Aegis.assert;
+  // @ts-expect-error - nor a static matches
+  void Aegis.matches;
+};
+
 describe("Aegis", () => {
   let logger: ILogger;
   let amphora: IAmphora;
@@ -134,8 +148,8 @@ describe("Aegis", () => {
   });
 
   // A shape `@lindorm/match` refuses is the caller's coding error, and verify
-  // reports it as the matcher's own error, exactly as the static door does
-  // (jwt-validate.test.ts). Only a failed EVALUATION is `claims_invalid`.
+  // reports it as the matcher's own error, exactly as the claim check does
+  // (claims-match.test.ts). Only a failed EVALUATION is `claims_invalid`.
   describe("a malformed assert bag on verify", () => {
     const mint = () =>
       aegis.mint("default", {
@@ -1051,5 +1065,12 @@ describe("Aegis", () => {
         }).toMatchSnapshot();
       },
     );
+  });
+
+  test("should keep the claim-check door guard compiling exactly as declared", () => {
+    // The `@ts-expect-error` directives ARE the assertion, and an unused one
+    // fails the build — so the only thing left to check at runtime is that the
+    // guard is still exported.
+    expect(_claimCheckDoorGuards).toBeInstanceOf(Function);
   });
 });

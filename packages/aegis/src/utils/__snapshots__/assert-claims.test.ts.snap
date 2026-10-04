@@ -1,0 +1,49 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`claimsMatch / assertClaims refuse a matcher value no operator is lifted from > assert refuses a symbol under the wire-neutral code, title and type 1`] = `
+{
+  "code": "claim_matcher_unsupported_value",
+  "data": {
+    "key": "subject",
+  },
+  "message": "Unsupported value for key: subject",
+  "title": "Claim Matcher Unsupported Value",
+  "type": "urn:lindorm:aegis:error:claim_matcher_unsupported_value",
+}
+`;
+
+exports[`claimsMatch / assertClaims refuse a matcher value no operator is lifted from > assert refuses null under the wire-neutral code, title and type 1`] = `
+{
+  "code": "claim_matcher_unsupported_value",
+  "data": {
+    "key": "subject",
+  },
+  "message": "Unsupported value for key: subject",
+  "title": "Claim Matcher Unsupported Value",
+  "type": "urn:lindorm:aegis:error:claim_matcher_unsupported_value",
+}
+`;
+
+exports[`claimsMatch / assertClaims refuse a matcher value no operator is lifted from > matches refuses a symbol under the wire-neutral code, title and type 1`] = `
+{
+  "code": "claim_matcher_unsupported_value",
+  "data": {
+    "key": "subject",
+  },
+  "message": "Unsupported value for key: subject",
+  "title": "Claim Matcher Unsupported Value",
+  "type": "urn:lindorm:aegis:error:claim_matcher_unsupported_value",
+}
+`;
+
+exports[`claimsMatch / assertClaims refuse a matcher value no operator is lifted from > matches refuses null under the wire-neutral code, title and type 1`] = `
+{
+  "code": "claim_matcher_unsupported_value",
+  "data": {
+    "key": "subject",
+  },
+  "message": "Unsupported value for key: subject",
+  "title": "Claim Matcher Unsupported Value",
+  "type": "urn:lindorm:aegis:error:claim_matcher_unsupported_value",
+}
+`;

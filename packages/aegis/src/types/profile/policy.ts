@@ -102,7 +102,7 @@ type BoundRule<T> = T & {
  * - `forbidden`    — no named claim may be NAMED.
  * - `atLeastOneOf` — at least one of the named claims must be SATISFIED.
  * - `match`        — a flat `Condition` over the DOMAIN-keyed claim layer, in
- *                    the operators `assert` / `Aegis.assert` use but over the
+ *                    the operators `assert` / `aegis.assert` use but over the
  *                    floor's names: the floor spells `txn` where `assert` names
  *                    `transactionId`.
  * - `shape`        — a named structural validator (recursive / cross-field).

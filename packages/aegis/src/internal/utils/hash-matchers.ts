@@ -8,8 +8,8 @@
  *
  * VERIFY-ONLY (`DomainHashMatchers`): the digest is tied to the token's signing
  * algorithm, which only a surface holding the verifying key can resolve. Mint
- * and verify use this table; `Aegis.assert` matches the computed hash under its
- * own domain claim name instead.
+ * and verify use this table; the claim check (`aegis.assert`) matches the
+ * computed hash under its own domain claim name instead.
  *
  * The table maps the matcher key to the DOMAIN claim, and the registry maps that
  * domain to its wire name — so each consumer takes the name IT speaks from one

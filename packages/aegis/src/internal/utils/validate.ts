@@ -21,8 +21,9 @@ type AegisErrorClass = new (
 ) => AegisError;
 
 /**
- * Throwing claim matching — the shared body behind `Aegis.assert`, the verify
- * pipeline's matcher pass, and both claims kits' temporal + assert pass.
+ * Throwing claim matching — the shared body behind `assertClaims` (and through
+ * it `aegis.assert`), the verify pipeline's matcher pass, and both claims kits'
+ * temporal + assert pass.
  *
  * ⚠ ONE throw site, four doors, and it MUST raise an `AegisError` subclass:
  * `instanceof AegisError` is this package's error interface — a consumer branches

@@ -428,6 +428,50 @@ parsed.claims.subject; // domain-keyed, unverified
 parsed.header.keyId;
 ```
 
+### Claim checking without a signature
+
+**`aegis.assert` is verify's claim checking, without the signature.** It takes the same `DomainAssert` matcher argument as [`aegis.verify`](#verify-assert--options), applied to any flat, domain-keyed claim dict — a set of claims that arrived some other way (an introspection response, a cached credential). `aegis.matches` returns the answer, `aegis.assert` is the throwing layer over it and names every failing top-level key (`claims_invalid`) — a root `$and` / `$or` / `$not` is named by its own key. Root and nested `$and` / `$or` / `$not` are honoured here as on `verify`. A bag the matcher refuses (an empty `$or` / `$and`, a `$not` that is not an object) throws as the matcher's own `TypeError`, on `verify` and the claim check alike; only a failed evaluation is `claims_invalid`. One vocabulary, so a **scalar** against an array-valued claim (`audience`, `scope`, `authMethods`, `roles`, `permissions`, `groups`, `entitlements`) means CONTAINS, not equals:
+
+```typescript
+aegis.matches(
+  { audience: ["https://api.example.com"] },
+  { audience: "https://api.example.com" },
+); // true
+aegis.matches({ scope: ["openid", "profile"] }, { scope: "openid" }); // true
+aegis.matches({ scope: ["openid"] }, { scope: ["openid", "profile"] }); // false — an array requires ALL
+```
+
+The three hash-DERIVE matchers (`accessToken` / `authCode` / `authState`) are **not** part of this vocabulary — they are `verify`-only (`VerifyAssert`). Deriving a digest needs the token's signing algorithm, `alg` is a HEADER parameter rather than a claim, and this surface is handed a flat claim dict with no header to read one from. Nothing is lost: `accessTokenHash` / `codeHash` / `stateHash` are ordinary domain claims, so a digest you already hold matches by name.
+
+```typescript
+aegis.matches(verified.claims, { accessTokenHash: knownHash }); // plain equality
+await aegis.verify(token, { accessToken: presented }); // verify derives; it holds the key
+```
+
+The temporal range is checked **by default** — `expiresAt` / `notBefore` / `issuedAt` / `authTime` are bounded if present, tolerated if absent — in the deployment's `clockTolerance`, the window `aegis.verify` runs in, so nothing downstream needs a hand-rolled `exp > now` that quietly carries no tolerance. The third argument (`AssertOptions`) is the rest of what verify's options mean for claims alone — the temporal family, and nothing else — and a `clockTolerance` stated there replaces the deployment's for that call:
+
+```typescript
+aegis.assert(
+  claims,
+  { audience: "https://api.example.com" },
+  {
+    clockTolerance: 30, // this call's window, in place of the deployment's
+    currentDate,
+    maxTokenAge: 300,
+    verifyExpiration: true, // and verifyNotBefore / verifyIssuedAt / verifyAuthTime
+  },
+);
+```
+
+The same check is exported outside any deployment as `assertClaims` / `claimsMatch`, for a caller holding claims and no vault. They take the same three arguments and allow **no** clock tolerance unless `options.clockTolerance` states one:
+
+```typescript
+import { assertClaims, claimsMatch } from "@lindorm/aegis";
+
+claimsMatch(claims, { subject: "user-1" }); // boolean; expiry judged with no tolerance
+assertClaims(claims, { subject: "user-1" }, { clockTolerance: 30 }); // throws `claims_invalid` on refusal; expiry judged with 30 s tolerance
+```
+
 ### Static helpers
 
 These do not need a key or amphora.
@@ -446,8 +490,6 @@ Aegis.isCwe(token); // COSE_Encrypt0
 
 Aegis.toDomain(wire); // wire claim dict → { claims, custom, profile, sensitive }
 Aegis.toWire(claims); // domain claims → JOSE-keyed wire dict
-Aegis.matches(claims, assert, options?); // boolean — same question, no throw
-Aegis.assert(claims, assert, options?); // the throwing layer over `matches`
 
 Aegis.verifyDpopProof({ proof, accessToken, expectedThumbprint, dpopMaxSkew?, critical? });
 ```
@@ -461,41 +503,6 @@ Aegis.verifyDpopProof({ proof, accessToken, expectedThumbprint, dpopMaxSkew?, cr
 The JOSE guards decide on the **wire grammar** — segment count plus the header parameters the RFCs make REQUIRED (`alg`; `enc` for a JWE) — and on aegis's algorithm allowlist. `typ` is a hint, never the discriminant — aegis never requires one to classify a token (RFC 7515 §4.1.9, RFC 7519 §5.1), so a typ-less id_token, an RFC 9068 `at+jwt`, and an RFC 9449 `dpop+jwt` all read as a JWT. What separates a JWT from an opaque JWS is the payload being a JSON claims object — a signed handle stays a `jws`, including one that DECLARES `typ: JWT` over a non-claims payload. Because every JWT is a JWS (RFC 7519 §3), `isJws` is TRUE for a claims token as well; ask `isJwt` first when you need the narrow answer.
 
 ⚠ These are **wire-family** guards — they say which kit `verify` would select, not whether the token carries claims. A `jws` / `cws` passes `isJose` / `isCose` and verifies to an EMPTY claims set. To route a credential between local verification and introspection, use [`isClaimsBearingToken`](#isclaimsbearingtoken--verify-locally-or-introspect).
-
-**`assert` is verify's claim checking, without the signature.** It takes the same `DomainAssert` matcher argument as [`aegis.verify`](#verify-assert--options), applied to any flat, domain-keyed claim dict — a set of claims that arrived some other way (an introspection response, a cached credential). `matches` returns the answer, `assert` is the throwing layer over it and names every failing top-level key (`claims_invalid`) — a root `$and` / `$or` / `$not` is named by its own key. Root and nested `$and` / `$or` / `$not` are honoured here as on `verify`. A bag the matcher refuses (an empty `$or` / `$and`, a `$not` that is not an object) throws as the matcher's own `TypeError`, on `verify` and the static doors alike; only a failed evaluation is `claims_invalid`. One vocabulary, so a **scalar** against an array-valued claim (`audience`, `scope`, `authMethods`, `roles`, `permissions`, `groups`, `entitlements`) means CONTAINS, not equals:
-
-```typescript
-Aegis.matches(
-  { audience: ["https://api.example.com"] },
-  { audience: "https://api.example.com" },
-); // true
-Aegis.matches({ scope: ["openid", "profile"] }, { scope: "openid" }); // true
-Aegis.matches({ scope: ["openid"] }, { scope: ["openid", "profile"] }); // false — an array requires ALL
-```
-
-The three hash-DERIVE matchers (`accessToken` / `authCode` / `authState`) are **not** part of this vocabulary — they are `verify`-only (`VerifyAssert`). Deriving a digest needs the token's signing algorithm, `alg` is a HEADER parameter rather than a claim, and this surface is handed a flat claim dict with no header to read one from. Nothing is lost: `accessTokenHash` / `codeHash` / `stateHash` are ordinary domain claims, so a digest you already hold matches by name.
-
-```typescript
-Aegis.matches(verified.claims, { accessTokenHash: knownHash }); // plain equality
-await aegis.verify(token, { accessToken: presented }); // verify derives; it holds the key
-```
-
-The third argument (`AssertOptions`) is the rest of what verify's options mean for claims alone — the temporal family, and nothing else:
-
-```typescript
-Aegis.assert(
-  claims,
-  { audience: "https://api.example.com" },
-  {
-    clockTolerance: 30,
-    currentDate,
-    maxTokenAge: 300,
-    verifyExpiration: true, // and verifyNotBefore / verifyIssuedAt / verifyAuthTime
-  },
-);
-```
-
-The temporal range is checked **by default**, with the same builder and the same `0`-second default `aegis.verify` uses — `expiresAt` / `notBefore` / `issuedAt` / `authTime` are bounded if present, tolerated if absent. That is what makes the two substitutable: a claim set inside verify's skew window cannot pass one surface and fail the other, so nothing downstream needs a hand-rolled `exp > now` that quietly carries no tolerance.
 
 `verifyDpopProof` runs the RFC 9449 proof checks standalone — `typ: dpop+jwt`, the `crit` gate every JOSE verify door runs (RFC 7515 §4.1.11) under the call's own `critical` declaration (DOMAIN names; nothing declared refuses every critical parameter, `dpop_unsupported_crit_param`), the RFC 7638 thumbprint of the proof's embedded `jwk` against the token's bound `cnf.jkt`, the signature over that `jwk`, `iat` freshness (default skew 60s), and the RFC 9449 §7 `ath` hash of the presented access token. It needs no key resolution because the proof carries its own key, and it returns the `ParsedDpopProof`.
 
@@ -1142,11 +1149,12 @@ how the check runs.**
   hash-derive inputs (below). Every other domain claim folds into a free
   condition, each field accepting a literal value or a `ConditionOperator`.
   `DomainAssert` — the same vocabulary less the hash-derive inputs — drives the
-  standalone [`Aegis.matches` / `Aegis.assert`](#static-helpers). The root
-  operators `$and` / `$or` / `$not` are honoured at the root and nested, on this
-  door and on the static one alike. A bag the matcher refuses (an empty `$or` /
-  `$and`, a `$not` that is not an object) throws as the matcher's own
-  `TypeError`, on `verify` and the static doors alike; only a failed evaluation
+  [claim check](#claim-checking-without-a-signature) (`aegis.matches` /
+  `aegis.assert`, and `claimsMatch` / `assertClaims` outside a deployment). The
+  root operators `$and` / `$or` / `$not` are honoured at the root and nested, on
+  this door and on the claim check alike. A bag the matcher refuses (an empty
+  `$or` / `$and`, a `$not` that is not an object) throws as the matcher's own
+  `TypeError`, on `verify` and the claim check alike; only a failed evaluation
   is `claims_invalid`.
 - **`options`** (`VerifyOptions`) — the verify KNOBS, every one read on both wires:
   see [wire parity](#wire-parity-of-verifyoptions) below.
@@ -1188,12 +1196,12 @@ await aegis.verify(
   header in the family of its own format: the JOSE `typ` (`application/at+jwt`,
   or `application/at+jws` on an opaque JWS) or the COSE type
   (`application/at+cwt`, or `application/at+cws` on an opaque CWS); on a flat
-  claim dict (`Aegis.assert`) it is the `tokenType` field
+  claim dict (`aegis.assert`) it is the `tokenType` field
 - `accessToken` / `authCode` / `authState` (`DomainHashMatchers`, **verify
   only**) — `at_hash` / `c_hash` / `s_hash` checks. The RAW source value is
   hashed with the token's signing algorithm, not compared literally, and verify
   is the only surface that resolves that algorithm (from the verifying key).
-  `Aegis.assert` matches an already-computed digest under its own claim name
+  The claim check matches an already-computed digest under its own claim name
   instead. A raw source takes only a string: a condition operator under one of
   these keys is refused with `claim_matcher_unsupported_value`, naming the key
 - ⚠ A raw source and its DIGEST claim (`accessToken` / `accessTokenHash`, and the
@@ -1384,8 +1392,10 @@ import { createMockAegis } from "@lindorm/aegis/mocks/jest";
 // Vitest
 import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
 
-const aegis = createMockAegis(); // fully mocked IAegis
+const aegis = createMockAegis(); // an IAegis whose every arm is a mock function
 ```
+
+The sign, verify, encrypt and decrypt arms resolve canned results. `assert` and `matches` forward to the real check (`assertClaims` / `claimsMatch`), so a gate under test refuses what the gate refuses; a mock has no deployment, so their window allows no clock tolerance unless the call states one.
 
 ## License
 

@@ -16,7 +16,6 @@ import {
   VERIFY_FLOOR,
 } from "@lindorm/amphora";
 import { isString } from "@lindorm/is";
-import { AegisDomainError } from "../errors/index.js";
 import type { IKryptos, KryptosEncAlgorithm, KryptosEncryption } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import type { Dict } from "@lindorm/types";
@@ -49,8 +48,6 @@ import {
 import type { AegisDeps, ResolveVerifyKeyOptions } from "../internal/utils/aegis-deps.js";
 import { decryptToken } from "../internal/utils/decrypt-token.js";
 import { encryptToken } from "../internal/utils/encrypt-token.js";
-import { createAssertPredicate } from "../internal/utils/create-assert-predicate.js";
-import { matches } from "../internal/utils/matches.js";
 import { mintToken } from "../internal/utils/mint-token.js";
 import { parseToken } from "../internal/utils/parse-token.js";
 import { rawDecryptAes } from "../internal/utils/raw-decrypt-aes.js";
@@ -70,7 +67,6 @@ import { rawVerifyJws } from "../internal/utils/raw-verify-jws.js";
 import { rawVerifyJwt } from "../internal/utils/raw-verify-jwt.js";
 import { resolveKey } from "../internal/utils/resolve-key.js";
 import { signToken } from "../internal/utils/sign-token.js";
-import { validate } from "../internal/utils/validate.js";
 import { assertClaims } from "../utils/assert-claims.js";
 import { claimsMatch } from "../utils/claims-match.js";
 import { verifyDpopProof } from "../internal/utils/verify-dpop-proof.js";
@@ -527,49 +523,6 @@ export class Aegis implements IAegis {
   // kit's own static (`JwtKit.decode`, `CwtKit.decode`, …); of an UNKNOWN one, the
   // INSTANCE `aegis.parse`. The wire namespaces (`aegis.jwt` …) expose sign and
   // verify only — no `decode` member exists on any of the seven.
-
-  /**
-   * Test a flat claim dict against a {@link DomainAssert} — the boolean form of
-   * {@link Aegis.assert}, for a caller that BRANCHES on the answer rather than
-   * rejecting the token. Same arguments, same vocabulary, same temporal window.
-   *
-   * Works on any flat claim source — a parsed domain claim set or any
-   * structurally-compatible dict.
-   */
-  static matches(claims: Dict, assert: DomainAssert, options?: AssertOptions): boolean {
-    return matches(claims, createAssertPredicate(assert, options));
-  }
-
-  /**
-   * `assert` is VERIFY'S CLAIM CHECKING, WITHOUT THE SIGNATURE — the same
-   * matcher argument (`DomainAssert`) and the same temporal window
-   * ({@link AssertOptions}) `aegis.verify` applies, run over a flat claim dict
-   * that arrived some other way (an introspection response, a cached credential).
-   * That is why the temporal range is checked here by DEFAULT: a claim set inside
-   * verify's skew window must not pass one surface and fail the other.
-   *
-   * ⚠ The tolerances agree at the DEFAULT only. This is a STATIC method, so it
-   * cannot read a deployment's `AegisSettings.clockTolerance` — that is stored
-   * `private` on the instance and reaches `verify` alone. Both default to `0`, so
-   * they match until a deployment configures a non-zero tolerance, at which point
-   * `verify` widens and this does not. A caller with an instance must pass the
-   * same value explicitly; there is no way to read it back off `IAegis`.
-   *
-   * The throwing layer over {@link Aegis.matches}: throws
-   * `AegisDomainError("Invalid token")` naming every failing key.
-   *
-   * ⚠ The error is an `AegisDomainError`, never a bare `LindormError`:
-   * `instanceof AegisError` is what this package asks consumers to branch on, and
-   * a door that does not honour it is a door they cannot use.
-   */
-  static assert(claims: Dict, assert: DomainAssert, options?: AssertOptions): void {
-    validate(
-      claims,
-      createAssertPredicate(assert, options),
-      AegisDomainError,
-      "claims_invalid",
-    );
-  }
 
   // private raw namespaces — each a ONE-LINE delegator to its
   // `internal/utils/raw-*` body. The bodies (key-resolve → kit → native wire)
