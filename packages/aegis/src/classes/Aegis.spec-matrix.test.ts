@@ -4,8 +4,6 @@ import {
   dispositionOn,
   runSpecDisposition,
   specLabel,
-  specWiresOf,
-  SPEC_DISPOSITION_DEFECT_TAGS,
 } from "../__fixtures__/run-spec-disposition.js";
 import {
   CLAIM_DISPOSITIONS,
@@ -76,19 +74,17 @@ const headerRows: ReadonlyArray<SpecRow> = HEADER_SPECS.filter(
 
 const ROWS: ReadonlyArray<SpecRow> = [...claimRows, ...headerRows];
 
-/** The generated matrix: every registry entry × every wire its disposition runs on. */
+/** The generated matrix: every registry entry × every wire. */
 const MATRIX: ReadonlyArray<[string, string, SpecDisposition, unknown, string, Wire]> =
   ROWS.flatMap(([domain, disposition, sample, wireKey]) =>
-    specWiresOf(disposition).map(
-      (wire): [string, string, SpecDisposition, unknown, string, Wire] => [
-        specLabel(domain, disposition, wire),
-        domain,
-        disposition,
-        sample,
-        wireKey,
-        wire,
-      ],
-    ),
+    WIRE_TAGS.map((wire): [string, string, SpecDisposition, unknown, string, Wire] => [
+      specLabel(domain, disposition, wire),
+      domain,
+      disposition,
+      sample,
+      wireKey,
+      wire,
+    ]),
   );
 
 describe("Aegis — per-spec matrix", () => {
@@ -184,77 +180,6 @@ describe("Aegis — per-spec matrix", () => {
     expect(unstated).toEqual([]);
   });
 
-  // `defect` is the TRANSIENT declaration — the parameter IS suppliable and does
-  // NOT come back, which is a code shortfall and never a disposition. It says
-  // where, as `src/path.ts#<verbatim substring of the cited line>`, or it is a
-  // complaint. The meta suite RESOLVES the anchor; this only checks the shape.
-  test("should name a repairable site in every declared defect", () => {
-    const defects = ROWS.filter(([, disposition]) => disposition.defect !== undefined);
-
-    // ⚠ `ROWS`, not the defect list: an EMPTY register is the GOAL, so requiring a
-    // defect to exist would make the last repair impossible to land. What must
-    // never be empty is the table this filters.
-    expect(ROWS.length).toBeGreaterThan(0);
-    expect(
-      defects
-        .filter(([, d]) => !/^src\/.+\.ts#.+$/.test(d.defect?.site ?? ""))
-        .map(([domain]) => domain),
-    ).toEqual([]);
-    expect(defects.filter(([, d]) => !d.defect?.note.trim())).toEqual([]);
-  });
-
-  // ⚠ THE DEFECT LIST IS SELF-VERIFYING. A `defect` SKIPS its wires in the matrix
-  // below, so an unchecked one is a way to turn a red cell green by writing a
-  // sentence. Every declared defect is RUN on the wire it names and must still
-  // FAIL — and it is what DELETES the entry: repair the code and this goes red
-  // until the declaration is removed and the cell rejoins the matrix.
-  //
-  // ⚠ AND THE FAILURE HAS TO BE THE RIGHT FAILURE. This asserted only that the
-  // cell did not round-trip, which ANY thrown message satisfies — including the
-  // interpreter's own `HARNESS_BROKEN` throws, one of which sits directly above
-  // the door call. A dead entry would then keep its wire skipped forever with
-  // nothing behind the skip, so the interpreter tags each reason and this reads
-  // the tag (see `SPEC_DISPOSITION_FAILURE`). Two of the four tags name a
-  // shortfall; the other two name the entry or the sample being broken, and both
-  // fail in the same direction as a shortfall does.
-  test.each(
-    ROWS.flatMap(([domain, disposition, sample, wireKey]) =>
-      (disposition.defect?.wires ?? []).map(
-        (wire): [string, string, SpecDisposition, unknown, string, Wire] => [
-          `${domain} [${wire}] still manifests`,
-          domain,
-          disposition,
-          sample,
-          wireKey,
-          wire,
-        ],
-      ),
-    ),
-  )("%s", async (_label, domain, disposition, sample, wireKey, wire) => {
-    MockDate.set(new Date(DEFAULT_CLOCK));
-
-    const outcome = await runSpecDisposition({
-      ctx: await createTestDeployment(),
-      disposition,
-      domain,
-      sample,
-      wireKey,
-      wire,
-    }).then(
-      () => "the parameter DOES round-trip",
-      (error: unknown) => (error as Error).message,
-    );
-
-    expect(outcome).not.toBe("the parameter DOES round-trip");
-
-    // The tag is the first token of the message, and the two that count are the
-    // ones meaning the parameter was suppliable and did not survive.
-    expect(
-      SPEC_DISPOSITION_DEFECT_TAGS.some((tag) => outcome.startsWith(tag)),
-      `the declared defect no longer fails for the reason it names — the cell failed with: ${outcome}`,
-    ).toBe(true);
-  });
-
   // Every claim sample must be USABLE, and a NumericDate sample is usable only
   // relative to the clock a token is verified at. `temporal: "past"` must not be
   // in the future and `temporal: "future"` must be in the future, so ONE instant
@@ -280,7 +205,7 @@ describe("Aegis — per-spec matrix", () => {
     expect(Math.min(...future)).toBeGreaterThan(clock);
   });
 
-  // THE MATRIX. Every registry entry, on every wire its disposition runs on.
+  // THE MATRIX. Every registry entry, on every wire.
   test.each(MATRIX)("%s", async (_label, domain, disposition, sample, wireKey, wire) => {
     await runSpecDisposition({ ctx, disposition, domain, sample, wireKey, wire });
   });

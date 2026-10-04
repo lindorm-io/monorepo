@@ -198,29 +198,20 @@ const bodyFor = <T>(probe: KnobProbe<T>, wire: Wire): KnobProbe<T> => {
 
 /** The wires a probe RUNS on: every wire, less the ones it declares it cannot state. */
 export const probeWiresOf = <T>(probe: KnobProbe<T>): ReadonlyArray<Wire> =>
-  WIRE_TAGS.filter(
-    (wire) =>
-      probe.unobservable?.[wire] === undefined &&
-      !(probe.defect !== undefined && (probe.defect.wires ?? WIRE_TAGS).includes(wire)),
-  );
+  WIRE_TAGS.filter((wire) => probe.unobservable?.[wire] === undefined);
 
 /**
  * WHY a probe failed, as a stable tag rather than as prose.
  *
- * ⚠ Only two of these mean THE OPTION IS DROPPED. The other three mean the PROBE
- * is broken — its GIVEN no longer builds, its observation was already true
- * without the knob, or the act reached a different verdict than the probe states
- * it reaches WITHOUT the knob — and all of them fail in exactly the same
- * direction as a real shortfall does. That matters because a declared `defect`
- * SKIPS its wire in the matrix, and the self-verifying defect test proves the
- * skip is still earned by running the probe and requiring it to fail. A coarse
- * "it failed" would accept a rotted probe as proof and leave the skip standing
- * forever with nothing behind it, so the tag is what the check reads.
+ * Two of these mean the option is dropped, `VERDICT_AGREES` with the caveat on
+ * its own entry. The other three mean the PROBE is broken — its GIVEN no longer
+ * builds, its observation was already true without the knob, or the act reached a
+ * different verdict than the probe states it reaches WITHOUT the knob.
  *
- * Each message begins with its tag, and the tag is the whole contract; the
- * sentence after it is for whoever has to fix the thing.
+ * Each message begins with its tag; the sentence after it is for whoever has to
+ * fix the thing.
  */
-export const KNOB_PROBE_FAILURE = {
+const KNOB_PROBE_FAILURE = {
   /** The probe's own baseline artifact will not build. The GIVEN is broken. */
   givenDoesNotBuild: "GIVEN_DOES_NOT_BUILD",
   /** The observation held WITHOUT the knob, so it demonstrates nothing. */
@@ -235,7 +226,9 @@ export const KNOB_PROBE_FAILURE = {
   optionDropped: "OPTION_DROPPED",
   /**
    * The act WITH the knob set reached the SAME verdict as without it — the
-   * option is dropped.
+   * option is dropped, or, for a `baseline: "rejects"` probe, its GIVEN broke:
+   * `verdictOf` reads any throw as a rejection, so a broken GIVEN rejects both
+   * runs.
    *
    * ⚠ The emitter never compares the two runs to each other; it compares each
    * against its own declaration, and raises THIS tag for the FLIPPED run alone —
@@ -248,14 +241,7 @@ export const KNOB_PROBE_FAILURE = {
   verdictAgrees: "VERDICT_AGREES",
 } as const;
 
-export type KnobProbeFailure =
-  (typeof KNOB_PROBE_FAILURE)[keyof typeof KNOB_PROBE_FAILURE];
-
-/** The tags that mean the shortfall a `defect` declares is still there. */
-export const KNOB_PROBE_DEFECT_TAGS: ReadonlyArray<KnobProbeFailure> = [
-  KNOB_PROBE_FAILURE.optionDropped,
-  KNOB_PROBE_FAILURE.verdictAgrees,
-];
+type KnobProbeFailure = (typeof KNOB_PROBE_FAILURE)[keyof typeof KNOB_PROBE_FAILURE];
 
 /** What a run leaves behind: the token, and the kind aegis reported it as. A third party reports none. */
 type Artifact = { token: string; format?: string; wrapper?: string };
@@ -610,14 +596,11 @@ const expectVerdict = (
 /**
  * The run WITHOUT the knob must reach the verdict the probe states it reaches.
  *
- * ⚠ Its own tag, deliberately OUTSIDE {@link KNOB_PROBE_DEFECT_TAGS}. A baseline
- * that disagrees is the verdict form of `GIVEN_DOES_NOT_BUILD`: the probe's
- * premise has rotted — its artifact no longer builds what it built, or the
- * default it was written against has moved — and that is a statement about the
- * probe, never about the knob. Sharing `VERDICT_AGREES` with the flipped run
- * would let the self-verifying defect test accept a dead verdict probe as proof
- * the declared shortfall still manifests, so a wire could stay skipped forever
- * with nothing behind the skip. The artifact form guards its own setup twice
+ * ⚠ Its own tag, apart from the flipped run's `VERDICT_AGREES`. A baseline that
+ * disagrees is the verdict form of `GIVEN_DOES_NOT_BUILD`: the probe's premise
+ * has rotted — its artifact no longer builds what it built, or the default it
+ * was written against has moved — and that is a statement about the probe,
+ * never about the knob. The artifact form guards its own setup twice
  * (`builds`, then `baseline`); this is the verdict form's single guard.
  */
 const expectBaselineVerdict = (

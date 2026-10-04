@@ -1,7 +1,7 @@
 import { isDate, isUndefined } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import { expect } from "vitest";
-import { WIRE_TAGS, type Wire } from "../internal/registry/wire.js";
+import type { Wire } from "../internal/registry/wire.js";
 import type { TokenFormatTag } from "../types/index.js";
 import { TEST_EC_KEY_ENC, TEST_EC_KEY_SIG_CERT, TEST_OCT_KEY_ENC } from "./keys.js";
 import type { SpecDisposition, SpecDoor, SpecObservation } from "./spec-dispositions.js";
@@ -14,31 +14,23 @@ import { CLIENT, ISSUER, RESOURCE, type TestDeployment } from "./test-deployment
 
 /**
  * WHY a (spec, wire) cell failed, as a stable tag rather than as prose — the
- * same discipline `run-knob-probe.ts` carries, and for the identical reason.
- *
- * ⚠ A `defect` SKIPS its wires in the matrix, and the self-verifying defect test
- * proves the skip is still earned by RUNNING the cell and requiring it to fail.
- * A coarse "it threw" accepts ANY exception as that proof — including this
- * file's own {@link SPEC_DISPOSITION_FAILURE.harnessBroken} throws, which sit
- * directly above the door call and which any table edit can raise. A dead entry
- * would then keep a wire skipped forever with nothing behind the skip, which is
- * exactly what the tag exists to prevent.
+ * same discipline `run-knob-probe.ts` carries.
  *
  * Each message begins with its tag; the sentence after it is for whoever has to
  * fix the thing.
  */
-export const SPEC_DISPOSITION_FAILURE = {
+const SPEC_DISPOSITION_FAILURE = {
   /**
    * The ENTRY or this interpreter cannot run the cell at all — a disposition
    * with no door, a door or observation nothing implements. Never a shortfall in
-   * aegis, so never proof of one.
+   * aegis, so never evidence of one.
    */
   harnessBroken: "HARNESS_BROKEN",
   /**
    * The door, or the artifact an observation names, threw instead of producing
    * something to read. Ambiguous between a real refusal and a sample that has
-   * gone stale — the `GIVEN_DOES_NOT_BUILD` of this matrix — so it is not proof
-   * either.
+   * gone stale — the `GIVEN_DOES_NOT_BUILD` of this matrix — so it is not
+   * evidence of a shortfall either.
    */
   artifactNotBuilt: "ARTIFACT_NOT_BUILT",
   /**
@@ -51,15 +43,6 @@ export const SPEC_DISPOSITION_FAILURE = {
   refusalMissing: "REFUSAL_MISSING",
 } as const;
 
-export type SpecDispositionFailure =
-  (typeof SPEC_DISPOSITION_FAILURE)[keyof typeof SPEC_DISPOSITION_FAILURE];
-
-/** The tags that mean the shortfall a `defect` declares is still there. */
-export const SPEC_DISPOSITION_DEFECT_TAGS: ReadonlyArray<SpecDispositionFailure> = [
-  SPEC_DISPOSITION_FAILURE.parameterLost,
-  SPEC_DISPOSITION_FAILURE.refusalMissing,
-];
-
 /** The claims format each wire mints as. */
 const FORMAT: Record<Wire, TokenFormatTag> = { jose: "jwt", cose: "cwt" };
 
@@ -68,14 +51,6 @@ export const dispositionOn = (
   disposition: SpecDisposition,
   wire: Wire,
 ): SpecDisposition => ({ ...disposition, ...disposition.per?.[wire], per: undefined });
-
-/**
- * The wires a spec's disposition is RUN on: every wire, less the ones a declared
- * `defect` names. A defect skips its wires in the matrix and is proved
- * separately — see the self-verifying defect test.
- */
-export const specWiresOf = (disposition: SpecDisposition): ReadonlyArray<Wire> =>
-  WIRE_TAGS.filter((wire) => !(disposition.defect?.wires ?? []).includes(wire));
 
 /**
  * Equality that admits the two shapes a domain value legitimately changes into
@@ -409,8 +384,7 @@ export const runSpecDisposition = async (input: {
       // ⚠ The door's OWN throw is caught and tagged apart from the value not
       // coming back. A `roundTrip` claims the parameter is SUPPLIABLE and comes
       // back; a door that refuses the sample outright is as likely a sample that
-      // has gone stale as it is a shortfall, so it must never be readable as
-      // proof that a declared defect still manifests.
+      // has gone stale as it is a shortfall, so it must never read as one.
       const value = await openDoor(door, { ctx, domain, sample, wire }).catch(
         (error: unknown) => {
           throw new Error(

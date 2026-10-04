@@ -11,7 +11,6 @@ import {
 } from "../__fixtures__/knob-probes.js";
 import {
   KNOB_PATHS,
-  KNOB_PROBE_DEFECT_TAGS,
   probeWiresOf,
   runKnobProbe,
 } from "../__fixtures__/run-knob-probe.js";
@@ -197,8 +196,8 @@ describe("Aegis — knob matrix", () => {
 
   // `unobservable` is the PERMANENT declaration — a specification or
   // serialisation fact — so it must cite one. A reason that names no
-  // specification is either a code shortfall (which is `defect`) or an unwritten
-  // probe, and both would hide here as prose.
+  // specification is either a code shortfall (which is a red probe) or an
+  // unwritten probe, and both would hide here as prose.
   test("should cite a specification in every unobservable declaration", () => {
     const declarations = PROBES.flatMap(([label, , , probe]) =>
       Object.entries(probe.unobservable ?? {}).map(
@@ -214,135 +213,12 @@ describe("Aegis — knob matrix", () => {
     expect(uncited).toEqual([]);
   });
 
-  // `defect` is the TRANSIENT declaration, and it exists to be repaired — so it
-  // has to say where. A `src/path.ts#<verbatim substring of the cited line>` is
-  // the whole difference between a finding and a complaint — and unlike a line
-  // number the meta suite can RESOLVE it. This only checks the shape.
-  test("should name a repairable site in every defect declaration", () => {
-    const defects = PROBES.filter(([, , , probe]) => probe.defect !== undefined);
-
-    const unsited = defects
-      .filter(([, , , probe]) => !/^src\/.+\.ts#.+$/.test(probe.defect?.site ?? ""))
-      .map(([label]) => label);
-
-    // ⚠ `PROBES`, not the defect list: an EMPTY register is the GOAL, so requiring a
-    // defect to exist would make the last repair impossible to land. What must
-    // never be empty is the table this filters.
-    expect(PROBES.length).toBeGreaterThan(0);
-    expect(unsited).toEqual([]);
-    expect(defects.filter(([, , , probe]) => !probe.defect?.note.trim())).toEqual([]);
-  });
-
-  // ⚠ THE STATIC HALF of the defect discipline — checkable without running
-  // anything, and it closes the class the tag check cannot see. Every wire a
-  // `defect` names must have something to OBSERVE on that wire. An artifact
-  // probe whose every `observed` step is scoped to the OTHER wire fails on the
-  // named wire for want of an observation rather than for the shortfall — a
-  // skipped wire with nothing behind it — and that failure arrives through the
-  // same `OPTION_DROPPED` door a real drop does, so no runtime tag can separate
-  // them.
-  //
-  // A VERDICT probe satisfies it by construction: its proof is which of the two
-  // answers came back, which is a statement about every wire it runs on. So is a
-  // `format`, which names the artifact both wires produce.
-  test("should observe something on every wire a defect names", () => {
-    const blind = PROBES.flatMap(([label, , , probe]) => {
-      if (probe.defect === undefined) return [];
-
-      return (
-        (probe.defect.wires ?? WIRE_TAGS)
-          // A wire the probe cannot be STATED on is `unobservable`'s to own, and
-          // the defect test skips it for the same reason.
-          .filter((wire) => probe.unobservable?.[wire] === undefined)
-          .filter((wire) => {
-            // The same merge `bodyFor` performs, so this reads the body the runner
-            // would actually use on that wire.
-            const body = { ...probe, ...(probe.overrides?.[wire] ?? {}) };
-
-            if (body.baseline !== undefined || body.format !== undefined) return false;
-
-            return !(body.observed ?? []).some(
-              (step) => step.on === undefined || step.on === wire,
-            );
-          })
-          .map(
-            (wire) =>
-              `${label} — declares a defect on ${wire} and observes nothing on that wire`,
-          )
-      );
-    });
-
-    // Same reason as above: the table must be non-empty, the defect list may be.
-    expect(PROBES.length).toBeGreaterThan(0);
-    expect(blind).toEqual([]);
-  });
-
-  // ⚠ THE DEFECT LIST IS SELF-VERIFYING, and it has to be: a `defect` SKIPS a
-  // wire in the matrix below, so an unchecked one is a way to make a red probe
-  // green by writing prose. Every declared defect is therefore RUN on the wire it
-  // names and must FAIL — which is the same red-before-green proof the repair
-  // itself needs, taken once, up front.
-  //
-  // It is also what deletes the entry: repair the forward and this test goes red
-  // until the `defect` is removed and the probe rejoins the matrix.
-  //
-  // ⚠ THE FAILURE HAS TO BE THE RIGHT FAILURE. A probe can fail for five reasons
-  // and only two of them are the shortfall — the other three are the probe itself
-  // rotting (a GIVEN that stopped building, an observation that became true
-  // without the knob, a baseline that no longer reaches the verdict the probe
-  // declares), and all of them fail in the same direction. Accepting any failure
-  // as proof would let a dead probe keep a wire skipped forever with nothing
-  // behind the skip, so the harness tags each reason and this reads the tag (see
-  // `KNOB_PROBE_FAILURE`).
-  test.each(
-    PROBES.flatMap(([label, bag, key, probe]) =>
-      (probe.defect?.wires ?? (probe.defect === undefined ? [] : WIRE_TAGS))
-        // A wire the probe cannot be STATED on has nothing to demonstrate; the
-        // defect there is real but unmeasurable, and `unobservable` owns it.
-        .filter((wire) => probe.unobservable?.[wire] === undefined)
-        .map(
-          (wire): [string, keyof typeof KNOB_PATHS, string, KnobProbe<never>, Wire] => [
-            `${label} [${wire}] still manifests`,
-            bag,
-            key,
-            probe,
-            wire,
-          ],
-        ),
-    ),
-  )("%s", async (_label, bag, key, probe, wire) => {
-    MockDate.set(new Date(DEFAULT_CLOCK));
-
-    const outcome = await runKnobProbe({
-      bag,
-      key,
-      probe,
-      ctx: async () => {
-        MockDate.set(new Date(DEFAULT_CLOCK));
-        return createTestDeployment();
-      },
-      wire,
-    }).then(
-      () => "the option IS read",
-      (err: unknown) => (err as Error).message,
-    );
-
-    expect(outcome).not.toBe("the option IS read");
-
-    // The tag is the first token of the message, and the two that count are the
-    // ones meaning the option was accepted and dropped.
-    expect(
-      KNOB_PROBE_DEFECT_TAGS.some((tag) => outcome.startsWith(tag)),
-      `the declared defect no longer fails for the reason it names — the probe failed with: ${outcome}`,
-    ).toBe(true);
-  });
-
   // A probe that runs nowhere asserts nothing, and would sit in the table looking
   // like coverage — `test.each` simply never names it.
-  test("should run every probe that is not wholly defective on at least one wire", () => {
-    const silent = PROBES.filter(
-      ([, , , probe]) => probe.defect === undefined && probeWiresOf(probe).length === 0,
-    ).map(([label]) => label);
+  test("should run every probe on at least one wire", () => {
+    const silent = PROBES.filter(([, , , probe]) => probeWiresOf(probe).length === 0).map(
+      ([label]) => label,
+    );
 
     expect(PROBES.length).toBeGreaterThan(0);
     expect(silent).toEqual([]);

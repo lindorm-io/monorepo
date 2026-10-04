@@ -422,8 +422,8 @@ describe("Aegis — meta coverage", () => {
   // stored, so a reader still gets somewhere to look.
   //
   // Read from the FIXTURE SOURCES as text rather than from the tables as data,
-  // because most citations live in PROSE — a `knownDefect` reason, an
-  // `unobservable` sentence — where no field holds them. Every `.ts` under
+  // because most citations live in PROSE — an `unobservable` sentence, a code
+  // comment — where no field holds them. Every `.ts` under
   // `__fixtures__` is scanned, DERIVED not hand-listed, so a new fixture cannot
   // opt out of the check by being new (one already had).
   describe("every cited source site", () => {

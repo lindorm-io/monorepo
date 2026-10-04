@@ -34,16 +34,8 @@ import type { Wire } from "../internal/registry/wire.js";
  *                    plainly that nothing is assertable and why.
  *
  * ⚠ `refused` and `notSuppliable` ARE NOT ESCAPE HATCHES. A parameter a caller
- * CAN supply and that does NOT come back is neither: it is a `defect`, which
- * carries a `file:line` and skips the wire it names, and the matrix RUNS every
- * declared defect and requires it to FAIL FOR THE REASON IT NAMES — otherwise
- * the field is a way of turning a red cell green by writing a sentence.
- *
- * ⚠ "For the reason it names" is the whole of it. A bare "it did not round-trip"
- * check is satisfied by ANY thrown message — including the interpreter's own
- * "declares a roundTrip with no door", which sits one line above the door call —
- * so `run-spec-disposition.ts` tags every way a cell can fail, and only the tags
- * naming a SHORTFALL count as proof.
+ * CAN supply and that does NOT come back is neither: it is a red `roundTrip`
+ * cell, and the repair note lives in a tracker item.
  */
 
 /**
@@ -107,10 +99,10 @@ export type SpecDisposition = {
    * registry's own {@link ParamSpec.sample}. Defaults to that sample, which is
    * what every parameter both wires spell identically wants.
    *
-   * ⚠ A re-spelling is NOT a shortfall, so it is not a {@link defect}: the
-   * parameter IS suppliable and DOES come back, under its domain name, in the
-   * spelling that wire registers for it. The one instance is the type header —
-   * `application/at+jwt` on JOSE, `application/at+cwt` on COSE (RFC 9596 §2).
+   * ⚠ A re-spelling is NOT a shortfall: the parameter IS suppliable and DOES
+   * come back, under its domain name, in the spelling that wire registers for
+   * it. The one instance is the type header — `application/at+jwt` on JOSE,
+   * `application/at+cwt` on COSE (RFC 9596 §2).
    *
    * ⛔ A LITERAL, never derived from the code under test. Computing it from the
    * translator would put the same expression on both sides of the comparison, and
@@ -119,14 +111,6 @@ export type SpecDisposition = {
   sample?: unknown;
   /** A DIFFERENT disposition on one wire, with its own reason. */
   per?: Partial<Record<Wire, Omit<SpecDisposition, "per">>>;
-  /**
-   * TRANSIENT. The parameter IS suppliable and does NOT come back — a code
-   * shortfall, not a specification one. Carries `file#anchor` — the anchor a
-   * VERBATIM substring of the cited line, so the meta suite resolves it instead
-   * of trusting a line number code motion silently invalidates — skips the wires
-   * it names, and is RUN by the matrix and required to still fail.
-   */
-  defect?: { site: string; note: string; wires: ReadonlyArray<Wire> };
 };
 
 const CALLER: SpecDisposition = { disposition: "roundTrip", door: "mint.content" };

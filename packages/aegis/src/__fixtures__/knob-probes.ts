@@ -51,14 +51,11 @@ import { TEST_X509_CHAIN_B64 } from "./x509.js";
  *   comes out. The artifact is built WITHOUT the knob and the observation must
  *   FAIL, then WITH it and the observation must HOLD.
  *
- * Two DECLARATION fields, and they are NOT interchangeable:
- *
- * - {@link KnobProbeCore.unobservable} — the flip cannot be observed on that
- *   wire for a SPECIFICATION or SERIALISATION reason, verified against the
- *   primary text. Permanent: no repair to aegis would make it observable.
- * - {@link KnobProbeCore.defect} — the option is accepted and DROPPED by today's
- *   code. Transient, and a real finding: it names the `file:line` that fails to
- *   read it, and it is deleted when the forward is repaired.
+ * One DECLARATION field, {@link KnobProbeCore.unobservable}: the flip cannot be
+ * observed on that wire for a SPECIFICATION or SERIALISATION reason, verified
+ * against the primary text. Permanent: no repair to aegis would make it
+ * observable. An option today's code accepts and DROPS is never declared: its
+ * probe is red, and the repair note lives in a tracker item.
  *
  * ⚠ Every value here is JSON-serialisable (a table test enforces it): these
  * tables are meant to be readable by something that is not TypeScript. A `Date` therefore appears as a {@link DateCell}, the
@@ -178,22 +175,6 @@ export type ObservationStep = WireAssertion & {
 /** A format tag, bare when it holds on every wire the probe runs on, else stated per wire. */
 export type FormatTag = TokenFormatTag | Partial<Record<Wire, TokenFormatTag>>;
 
-/**
- * A defect: the option reaches the call and is then not read.
- *
- * `site` is `file#anchor`, where the anchor is a VERBATIM substring of the cited
- * line — the exact forward that omits it, so the repair has a destination, and
- * the meta suite resolves it rather than trusting a line number that code motion
- * silently invalidates. `wires` narrows the drop to the wires it happens on; a
- * knob read on one wire and dropped on the other keeps its coverage on the wire
- * that works, which an all-or-nothing skip would throw away.
- */
-export type KnobDefect = {
-  site: string;
-  note: string;
-  wires?: ReadonlyArray<Wire>;
-};
-
 type VerdictBody = {
   baseline: Verdict;
   flipped: Verdict;
@@ -225,8 +206,7 @@ type KnobProbeCore<T> = {
   /**
    * WHY the option must be read — the specification requirement or the security
    * property a caller loses when it is dropped. Durable: it reads as true whether
-   * or not the forward currently honours it, which is what makes it survive the
-   * repair of a {@link defect}.
+   * or not the forward currently honours it.
    */
   rationale: string;
   /** The vault residents to stock, then the artifact the knob is probed on. */
@@ -234,10 +214,9 @@ type KnobProbeCore<T> = {
   /**
    * The wires the flip cannot be stated on, and WHY — a SPECIFICATION or
    * SERIALISATION fact, cited to the primary text and permanent. Never "no probe
-   * written yet", and never a shortfall in the code: that is {@link defect}.
+   * written yet", and never a shortfall in the code: that is a red probe.
    */
   unobservable?: Readonly<Partial<Record<Wire, string>>>;
-  defect?: KnobDefect;
   /**
    * The wires whose flip is stated DIFFERENTLY — a different value, a different
    * verdict, a different observation.
@@ -761,8 +740,6 @@ export const MINT_SIGN_KNOB_PROBES = {
         content: { audience: [CLIENT] },
       },
     ],
-    // Both wires, because the defect below is declared on COSE and a JOSE-only
-    // observation would hold vacuously on the wire the shortfall is claimed on.
     // The COSE spelling is the caller's media type with the wire's own
     // structured suffix — `+jwt` becomes `+cwt`, the same translation `coseTyp`
     // applies to a profile's own typ. RFC 9596 §2.
