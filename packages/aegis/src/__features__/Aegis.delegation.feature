@@ -716,7 +716,9 @@ Feature: Delegation, and the actor policy a verifier states over it
       When I sign the wire claims as a claims token on the <wire> wire
       And I verify the token
       Then verification is refused as a domain error "claim_structure_invalid"
-      And the refusal names the claim "address" and locates the fault at "address.streetAddress": Members "streetAddress" and "street_address" both resolve to "streetAddress" in "address"
+      And the refusal's data is exactly
+        | claim   | "address"                                                                                                                                            |
+        | invalid | [{ "key": "address.streetAddress", "message": "Members \"streetAddress\" and \"street_address\" both resolve to \"streetAddress\" in \"address\"" }] |
 
       Examples:
         | wire |
@@ -971,7 +973,9 @@ Feature: Delegation, and the actor policy a verifier states over it
       When I sign the wire claims as a claims token on the <wire> wire
       And I verify the token
       Then verification is refused as a domain error "claim_structure_invalid"
-      And the refusal names the claim "address" and locates the fault at "address.streetAddress": Members "streetAddress" and "street_address" both resolve to "streetAddress" in "address"
+      And the refusal's data is exactly
+        | claim   | "address"                                                                                                                                            |
+        | invalid | [{ "key": "address.streetAddress", "message": "Members \"streetAddress\" and \"street_address\" both resolve to \"streetAddress\" in \"address\"" }] |
 
       Examples:
         | wire |

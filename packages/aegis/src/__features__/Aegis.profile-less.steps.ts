@@ -263,13 +263,6 @@ export class AegisProfileLessSteps extends AegisStepsBase {
     expect(this.refusalData()).toEqual({ claim, invalid: [{ key, message }] });
   }
 
-  @Then(
-    "the refusal reports operation {string} and option {string}, unsupported because: {}",
-  )
-  theRefusalReports(operation: string, option: string, reason: string): void {
-    expect(this.refusalData()).toEqual({ operation, option, reason });
-  }
-
   // parameter types
 
   @ParameterType("wire", alternationOf(["jose", "cose"]))

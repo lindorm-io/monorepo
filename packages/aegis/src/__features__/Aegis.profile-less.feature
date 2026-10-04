@@ -228,7 +228,10 @@ Feature: Signing and sealing without a profile
     Scenario: cose: a party producer is refused rather than dropped
       When I encrypt the data on the cose wire with the party producer "cHJvZHVjZXI"
       Then encryption is refused as a domain error
-      And the refusal reports operation "encryptContent" and option "partyProducer", unsupported because: A COSE_Encrypt0 carries no recipients array and runs no recipient algorithm, so there is no key-agreement step for the ECDH-ES party info to describe. See RFC 9052 §5.2 and RFC 7518 §4.6.
+      And the refusal's data is exactly
+        | operation | "encryptContent"                                                                                                                                                                              |
+        | option    | "partyProducer"                                                                                                                                                                               |
+        | reason    | "A COSE_Encrypt0 carries no recipients array and runs no recipient algorithm, so there is no key-agreement step for the ECDH-ES party info to describe. See RFC 9052 §5.2 and RFC 7518 §4.6." |
 
   Rule: a signed token wrapped in an encrypting envelope reports its own kind, with the envelope beside it
 

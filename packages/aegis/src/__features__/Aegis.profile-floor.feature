@@ -795,7 +795,9 @@ Feature: The profile floor, applied to a token that arrived
     Scenario Outline: <wire>: the mint is refused at the nested identifier's position (RFC-9493 §3.2.8)
       When I mint the content under the "security_event" profile on the <wire> wire
       Then minting is refused as a domain error "profile_policy_invalid"
-      And the refusal reports the direction "mint" and locates the fault at "subjectId.identifiers[1]": subjectId.identifiers[1] must not be an identifier of format "aliases"
+      And the refusal's data is exactly
+        | direction | "mint"                                                                                                                         |
+        | invalid   | [{ "key": "subjectId.identifiers[1]", "message": "subjectId.identifiers[1] must not be an identifier of format \"aliases\"" }] |
 
       Examples:
         | wire |
@@ -836,7 +838,9 @@ Feature: The profile floor, applied to a token that arrived
       When a third party signs the wire claims on the <wire> wire, typed "<typ>"
       And I verify the token under the "security_event" profile as the audience "https://receiver.lindorm.io/"
       Then verification is refused as a domain error "profile_policy_invalid"
-      And the refusal reports the direction "verify" and locates the fault at "subjectId.identifiers[1]": subjectId.identifiers[1] must not be an identifier of format "aliases"
+      And the refusal's data is exactly
+        | direction | "verify"                                                                                                                       |
+        | invalid   | [{ "key": "subjectId.identifiers[1]", "message": "subjectId.identifiers[1] must not be an identifier of format \"aliases\"" }] |
 
       Examples:
         | wire | typ                      |
