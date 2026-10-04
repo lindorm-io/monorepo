@@ -16,7 +16,10 @@ export class AegisTemporalPolicySteps extends AegisStepsBase {
   @Given("the deployment allows a clock tolerance of {int} seconds")
   theDeploymentAllowsAClockToleranceOf(seconds: number): void {
     // A setting is a constructor argument, so the deployment is built again
-    // around the vault the feature already stocked.
+    // around the vault the feature already stocked. ⚠ The new `Aegis`'s profile
+    // registry starts from the built-ins alone (`createProfileRegistry`), so a
+    // profile registered earlier in the scenario is lost and the scenario fails
+    // `unknown_profile`: a scenario needing both states this step first.
     this.ctx.aegis = new Aegis({
       amphora: this.ctx.amphora,
       logger: createMockLogger(),

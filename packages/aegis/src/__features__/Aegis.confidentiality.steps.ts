@@ -171,6 +171,10 @@ export class AegisConfidentialitySteps extends AegisStepsBase {
   /**
    * A setting is a constructor argument, so the deployment is built again around
    * the vault the feature already stocked — the same keys, another default.
+   * ⚠ The new `Aegis`'s profile registry starts from the built-ins alone
+   * (`createProfileRegistry`), so a profile registered earlier in the scenario is
+   * lost and the scenario fails `unknown_profile`: a scenario needing both states
+   * the Given deployment step first.
    */
   private reconfigure(defaultEncryption: KryptosEncryption): void {
     this.ctx.aegis = new Aegis({

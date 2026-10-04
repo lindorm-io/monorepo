@@ -50,6 +50,10 @@ export class AegisCallerSuppliedKeyPolicySteps extends AegisStepsBase {
 
   @Given("the deployment verifies with the producer's key under a key id of its own")
   theDeploymentVerifiesWithTheProducersKey(): void {
+    // ⚠ This step builds a new `Aegis`, whose profile registry starts from the
+    // built-ins alone (`createProfileRegistry`), so a profile registered earlier
+    // in the scenario is lost and the scenario fails `unknown_profile`: a
+    // scenario needing both states this step first.
     this.ctx.aegis = new Aegis({
       amphora: this.ctx.amphora,
       logger: createMockLogger(),
