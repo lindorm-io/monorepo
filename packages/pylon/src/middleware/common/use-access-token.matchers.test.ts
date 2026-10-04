@@ -28,21 +28,18 @@ const ELSEWHERE = "https://other.test.lindorm.io";
 /**
  * THE CONFUSED-DEPUTY TEST.
  *
- * A mount's claim matchers used to be applied ONLY inside the locally-verified
- * arm — `splitVerifyInput` was called under `isClaimsBearingToken`, so the
- * matchers reached `aegis.verify` and nothing else. For an OPAQUE credential
- * they were a silent no-op.
- *
- * The consequence, proven downstream in a real deployment: a JWT audienced at
- * somebody else was refused, while THE OPAQUE HANDLE FOR THE SAME WRONG
- * AUDIENCE WAS SERVED. Since a client's token format is the client's own choice,
- * a mount gating on audience gated whichever clients happened to pick JWT.
+ * A mount's claim matchers apply on BOTH arms. Applied inside the
+ * locally-verified arm alone, they are a silent no-op for an OPAQUE credential:
+ * a JWT audienced at somebody else is refused while THE OPAQUE HANDLE FOR THE
+ * SAME WRONG AUDIENCE IS SERVED, and since a client's token format is the
+ * client's own choice, a mount gating on audience gates whichever clients happen
+ * to pick JWT.
  *
  * Every test here is written as a PAIR — the same claim, the same matcher, once
  * per provenance — because a check that holds on only one arm is the bug.
  *
- * ⚠ The two arms now refuse a wrong AUDIENCE for different reasons, and the pair
- * is what proves both do it. `audience` is a REQUIRED mount option and is handed
+ * ⚠ The two arms refuse a wrong AUDIENCE for different reasons, and the pair is
+ * what proves both do it. `audience` is a REQUIRED mount option and is handed
  * to the `access_token` profile floor, so the structured arm refuses inside
  * verify (RFC 9068 §4); the introspected arm has no profile, so its audience is
  * an ordinary matcher in the shared assert. Same verdict, two mechanisms, one
@@ -50,11 +47,9 @@ const ELSEWHERE = "https://other.test.lindorm.io";
  *
  * ⚠ `audience` is a SCALAR matcher against an ARRAY-valued claim ("aud contains
  * this one identity"). That is the form a resource server writes for itself, and
- * it is the form `Aegis.assert` refused until the registry-driven lift landed —
- * so an audience gate applied to `ctx.state.access.claims` would have refused
- * every correctly self-audienced token. Both halves had to be true before this
- * could be closed, which is why the ACCEPT cases below matter as much as the
- * REJECT ones.
+ * `aegis.assert` answers it by containment — read as equality, an audience gate
+ * over `ctx.state.access.claims` would refuse every correctly self-audienced
+ * token, which is why the ACCEPT cases below matter as much as the REJECT ones.
  */
 describe("useAccessToken — mount matchers apply to BOTH provenances", () => {
   let aegis: IAegis;
@@ -101,11 +96,9 @@ describe("useAccessToken — mount matchers apply to BOTH provenances", () => {
   });
 
   describe("audience", () => {
-    // ⚠ EXPECTATION FLIPPED — same refusal, different reason. `audience` is now
-    // handed to the profiled verify, so RFC 9068 §4's "aud MUST contain the
-    // resource server's identity" refuses the token inside `verifyAccessToken`,
-    // before the shared assert ever sees it. It used to reach the assert and come
-    // back as `access_token_claims_invalid`.
+    // `audience` is handed to the profiled verify, so RFC 9068 §4's "aud MUST
+    // contain the resource server's identity" refuses the token inside
+    // `verifyAccessToken`, before the shared assert ever sees it.
     test("VERIFIED: refuses a token audienced elsewhere", async () => {
       const ctx = makeCtx(await mintJwt({ audience: [ELSEWHERE] }));
 
@@ -245,9 +238,8 @@ describe("useAccessToken — mount matchers apply to BOTH provenances", () => {
       expect(next).not.toHaveBeenCalled();
     });
 
-    // ⚠ EXPECTATION FLIPPED BACK. A hard `$eq` refused this, which is a
-    // spec-conformant answer (RFC 7662 §2.2 makes `iss` a MAY) and cost nothing
-    // to refuse — see the note above.
+    // An answer with no `iss` is spec-conformant (RFC 7662 §2.2 makes it a MAY);
+    // a hard `$eq` would refuse it for nothing — see the note above.
     test("INTROSPECTED: an answer with no iss is served", async () => {
       const ctx = makeCtx(OPAQUE_TOKEN);
       const { issuer: _none, ...noIssuer } = introspectionAnswer({ audience: [SELF] });
@@ -272,11 +264,9 @@ describe("useAccessToken — mount matchers apply to BOTH provenances", () => {
       expect(next).not.toHaveBeenCalled();
     });
 
-    // ⚠ EXPECTATION FLIPPED. A deployment that settled no issuer used to resolve
-    // opaque credentials with no issuer matcher at all. `resolveAccessIssuer` now
-    // runs BEFORE both arms and refuses the request by name: an absent issuer is
-    // not a weaker check, it is NO check, and it is a deployment fault (500), not
-    // a bad credential.
+    // `resolveAccessIssuer` runs BEFORE both arms and refuses the request by
+    // name: an absent issuer is not a weaker check, it is NO check, and it is a
+    // deployment fault (500), not a bad credential.
     test("INTROSPECTED: no issuer resolved refuses the request outright", async () => {
       const ctx = makeCtx(OPAQUE_TOKEN);
       ctx.state.app.config = createTestAppConfig({

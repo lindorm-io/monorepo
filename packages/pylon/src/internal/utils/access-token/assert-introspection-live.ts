@@ -1,4 +1,4 @@
-import { Aegis } from "@lindorm/aegis";
+import type { IAegis } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import type { Dict } from "@lindorm/types";
 import type { PylonIntrospectionActive } from "../../../types/index.js";
@@ -11,21 +11,22 @@ import type { PylonIntrospectionActive } from "../../../types/index.js";
  * NOT cover is an answer that reports a stale `exp` while still saying
  * `active: true` — the authorization server contradicting itself.
  *
- * ⚠ The window is `Aegis.matches`'s DEFAULT one — the same builder
- * `aegis.verify` runs, with the same clock tolerance — not a hand-rolled
- * `exp > now`. A hand-rolled comparison carries no tolerance, so it rejected
- * claims the structured arm accepts inside its skew window: two answers to one
- * question. The duplication with the shared assert that follows is deliberate
- * and kept: this rejects a self-contradicting answer at the arm that produced
- * it, naming introspection as the reason.
+ * ⚠ The window is `aegis.matches`'s — the deployment's clock tolerance, the
+ * same one `aegis.verify` runs in — not a hand-rolled `exp > now`. A hand-rolled
+ * comparison carries no tolerance, so it would reject claims the structured arm
+ * accepts inside its skew window: two answers to one question. The duplication
+ * with the shared assert that follows is deliberate: this rejects a
+ * self-contradicting answer at the arm that produced it, naming introspection
+ * as the reason.
  *
  * The answer's `token_type` is the OTHER thing this arm owns, and it is
  * `assertIntrospectionScheme`'s — a scheme comparison, not a temporal one.
  */
 export const assertIntrospectionLive = (
+  aegis: IAegis,
   introspection: PylonIntrospectionActive,
 ): void => {
-  const live = Aegis.matches(introspection as Dict, {});
+  const live = aegis.matches(introspection as Dict, {});
 
   if (live === true) return;
 

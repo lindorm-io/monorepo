@@ -1,4 +1,4 @@
-import { Aegis, type DomainClaims } from "@lindorm/aegis";
+import type { DomainClaims } from "@lindorm/aegis";
 import { ClientError, LindormError } from "@lindorm/errors";
 import { isObject } from "@lindorm/is";
 import type { PylonContext, PylonMiddleware } from "../../types/index.js";
@@ -22,8 +22,7 @@ export const useRoles = (...args: Array<string | TokenOption>): PylonMiddleware 
       // The RESOLVED access credential — populated on BOTH the locally-verified
       // and the introspected path, so this gate never depends on there being a
       // parsed JWT (or on `auth` being configured at all). Same contract as
-      // useAccess / usePermissions: an introspected credential used to pass
-      // those two and fail here with `token_not_found`.
+      // useAccess / usePermissions.
       const access = ctx.state.access;
 
       if (!access) {
@@ -58,7 +57,7 @@ export const useRoles = (...args: Array<string | TokenOption>): PylonMiddleware 
 
     // OR logic — at least one required role must be present (`$overlap`).
     try {
-      Aegis.assert(claims, { roles: { $overlap: required } });
+      ctx.aegis.assert(claims, { roles: { $overlap: required } });
     } catch (err) {
       if (err instanceof LindormError) {
         throw new ClientError("Insufficient roles", {

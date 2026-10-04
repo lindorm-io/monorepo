@@ -21,11 +21,9 @@ import {
 const APP_CONFIG = createTestAppConfig({ auth: createTestAuthConfig() });
 
 /**
- * ⚠ A JOSE-SHAPED token, not the bare string `"jwt-token"` this suite used to
- * present. The handshake arm now runs the same claims-bearing SNIFF as HTTP, and
- * a bare handle is routed to introspection — which is what these tests are NOT
- * about. The old fixture only ever reached `aegis.verify` because the handshake
- * arm called it unconditionally.
+ * ⚠ A JOSE-SHAPED token, never a bare string: the handshake arm runs the same
+ * claims-bearing SNIFF as HTTP, and a bare handle is routed to introspection —
+ * which is what these tests are NOT about.
  */
 const TOKEN = joseShapedToken();
 
@@ -39,9 +37,10 @@ const REFRESHED = joseShapedToken({ sub: "alice", refreshed: true });
 
 /**
  * A well-clear expiry. Every mocked verify answer travels through the SHARED
- * `assertResolvedAccess`, which applies `Aegis.assert`'s default temporal range —
- * so a present `expiresAt` is really range-checked, and a claims fixture minted
- * "now" or in a fixed past month is rejected rather than merely stale.
+ * `assertResolvedAccess`, which applies `aegis.assert`'s temporal range (the mock
+ * arm runs the real check, in no clock tolerance) — so a present `expiresAt` is
+ * really range-checked, and a claims fixture minted "now" or in a fixed past
+ * month is rejected rather than merely stale.
  */
 const LIVE_EXPIRY = new Date("2099-04-11T12:05:00.000Z");
 
@@ -115,10 +114,10 @@ describe("useAccessToken — socket handshake", () => {
       }
     });
 
-    // The handshake shares the middleware's error contract now: a raw failure
-    // out of aegis is an unauthenticated CLIENT, not a 500. It used to escape
-    // the old handshake factory unwrapped, so socket.io saw a bare `Error` with
-    // no status and the connection error handler logged it as a server fault.
+    // The handshake shares the middleware's error contract: a raw failure out
+    // of aegis is an unauthenticated CLIENT, not a 500. Unwrapped, socket.io
+    // would see a bare `Error` with no status and the connection error handler
+    // would log it as a server fault.
     test("wraps a raw verification failure as an unauthorized client error", async () => {
       const ctx = makeCtx();
       ctx.io.socket.handshake.auth.bearer = TOKEN;

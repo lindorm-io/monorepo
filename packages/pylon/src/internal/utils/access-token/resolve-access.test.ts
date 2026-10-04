@@ -157,10 +157,9 @@ describe("resolveAccess", () => {
       );
     });
 
-    // ⚠ EXPECTATION FLIPPED. An answer with no `token_type` used to be refused
-    // by name. RFC 7662 §2.2 makes it a MAY, so a bare answer is conformant —
-    // and there was never an `at+jwt`-shaped value to compare it against
-    // anyway, `token_type` being RFC 6749 §7.1's presentation scheme.
+    // RFC 7662 §2.2 makes `token_type` a MAY, so a bare answer is conformant;
+    // `token_type` is RFC 6749 §7.1's presentation scheme, so there is no
+    // `at+jwt`-shaped value to compare it against.
     test("accepts an active answer that states no token type", async () => {
       ctx.auth.introspect.mockResolvedValue(
         introspectionAnswer({ tokenType: undefined }),
@@ -206,12 +205,10 @@ describe("resolveAccess", () => {
       expect(ctx.auth.introspect).not.toHaveBeenCalled();
     });
 
-    // ⚠ EXPECTATION FLIPPED. This arm used to resolve with `issuer: null` — RFC
-    // 7662 makes the authorization server the authority, so an unpinned
-    // deployment was let through. That made the opaque arm the laxer of the two:
-    // the structured arm refuses the same deployment outright, and "the
-    // authority answered" is not "the answer came from OUR authority". The
-    // issuer is now resolved BEFORE the arms, so the driver is never even asked.
+    // The issuer is resolved BEFORE the arms, so the driver is never asked: an
+    // unpinned deployment would make the opaque arm the laxer of the two — the
+    // structured arm refuses the same deployment outright, and "the authority
+    // answered" is not "the answer came from OUR authority".
     test("refuses when the deployment settled no issuer", async () => {
       ctx.state.app.config = createTestAppConfig({
         auth: createTestAuthConfig({ issuer: null }),
@@ -224,10 +221,11 @@ describe("resolveAccess", () => {
       expect(ctx.auth.introspect).not.toHaveBeenCalled();
     });
 
-    // The temporal check is `Aegis.matches`'s DEFAULT window — the same builder
-    // `aegis.verify` runs — so there is no `currentDate` knob left to pin it
-    // with: the two arms read one clock. Stated against wall-clock offsets,
-    // which is what a live introspection answer is measured against anyway.
+    // The temporal check is `aegis.matches`'s window — the deployment's clock
+    // tolerance, the one `aegis.verify` runs in — so there is no `currentDate`
+    // knob to pin it with: the two arms read one clock. Stated against
+    // wall-clock offsets, which is what a live introspection answer is measured
+    // against anyway.
     test("refuses an answer whose own exp has passed", async () => {
       ctx.auth.introspect.mockResolvedValue(
         introspectionAnswer({ expiresAt: new Date(Date.now() - 60_000) }),

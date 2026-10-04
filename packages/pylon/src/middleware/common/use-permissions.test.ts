@@ -1,3 +1,4 @@
+import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
 import { ClientError } from "@lindorm/errors";
 import { createUnconfiguredAuthClient } from "../../internal/utils/auth/create-unconfigured-auth-client.js";
 import type { PylonResolvedAccess } from "../../types/index.js";
@@ -21,6 +22,7 @@ describe("usePermissions", () => {
 
   beforeEach(() => {
     ctx = {
+      aegis: createMockAegis(),
       // No `options.auth` configured — usePermissions must never reach for it.
       auth: createUnconfiguredAuthClient(),
       state: {

@@ -153,7 +153,7 @@ export const resolveAccess = async (
 
   assertIntrospectionScheme(introspection, options.scheme);
 
-  assertIntrospectionLive(introspection);
+  assertIntrospectionLive(ctx.aegis, introspection);
 
   // `active` and `tokenType` are RFC 7662 §2.2 facts about the ANSWER, not
   // claims of the token, so neither reaches the resolved credential: `active` is

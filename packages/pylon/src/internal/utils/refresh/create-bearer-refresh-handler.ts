@@ -32,11 +32,9 @@ type CreateBearerRefreshHandlerOptions = {
  * Swap the credential a live socket runs on.
  *
  * ⚠ It goes through the SAME `resolveAccess` the handshake ran, so a connection
- * established with an OPAQUE credential can refresh onto another one. It used to
- * call the structured verify directly, which meant the one credential kind that
- * cannot be re-verified locally was also the one kind that could never be
- * refreshed — a socket that authenticated fine at handshake time was dropped the
- * moment its token rotated.
+ * established with an OPAQUE credential can refresh onto another one: the
+ * structured verify alone cannot re-verify an opaque credential, so a refresh
+ * through it would drop every such socket the moment its token rotated.
  *
  * The handshake CONTEXT is captured rather than just `ctx.aegis`, because the
  * opaque arm needs the auth driver and the resolved app config to introspect
@@ -92,7 +90,7 @@ export const createBearerRefreshHandler = ({
       scheme: undefined,
     });
 
-    assertResolvedAccess(access, { issuer, matchers });
+    assertResolvedAccess(ctx.aegis, access, { issuer, matchers });
 
     assertSubjectUnchanged(subject, access.claims.subject);
 

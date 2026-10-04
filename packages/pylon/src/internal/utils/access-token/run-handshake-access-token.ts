@@ -59,7 +59,7 @@ export const runHandshakeAccessToken = async (
       const access = sessionResolvedAccess(source.session.accessToken, parsed);
 
       // The SAME assert the header arms run — see the HTTP session arm.
-      assertResolvedAccess(access, {
+      assertResolvedAccess(ctx.aegis, access, {
         issuer: resolveAccessIssuer(ctx),
         matchers: options.matchers,
       });

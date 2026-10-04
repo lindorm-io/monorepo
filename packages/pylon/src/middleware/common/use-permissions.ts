@@ -1,4 +1,4 @@
-import { Aegis, type DomainClaims } from "@lindorm/aegis";
+import type { DomainClaims } from "@lindorm/aegis";
 import { ClientError, LindormError } from "@lindorm/errors";
 import { isObject } from "@lindorm/is";
 import type { PylonContext, PylonMiddleware } from "../../types/index.js";
@@ -56,7 +56,7 @@ export const usePermissions = (...args: Array<string | TokenOption>): PylonMiddl
 
     // AND logic — every required permission must be present (`$all`).
     try {
-      Aegis.assert(claims, { permissions: required });
+      ctx.aegis.assert(claims, { permissions: required });
     } catch (err) {
       if (err instanceof LindormError) {
         const missing = required.filter((p) => !claims.permissions?.includes(p));

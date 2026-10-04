@@ -1,4 +1,4 @@
-import { Aegis, type DomainAssert } from "@lindorm/aegis";
+import type { DomainAssert, IAegis } from "@lindorm/aegis";
 import { ClientError, LindormError } from "@lindorm/errors";
 import type { Dict } from "@lindorm/types";
 import type { AccessTokenMatchers, PylonResolvedAccess } from "../../../types/index.js";
@@ -47,6 +47,7 @@ export type AssertResolvedAccessOptions = {
  * there is no single value both arms could be matched against.
  */
 export const assertResolvedAccess = (
+  aegis: IAegis,
   access: PylonResolvedAccess,
   options: AssertResolvedAccessOptions,
 ): void => {
@@ -56,7 +57,7 @@ export const assertResolvedAccess = (
   };
 
   try {
-    Aegis.assert(access.claims as Dict, predicate);
+    aegis.assert(access.claims as Dict, predicate);
   } catch (error) {
     if (!(error instanceof LindormError)) throw error;
 

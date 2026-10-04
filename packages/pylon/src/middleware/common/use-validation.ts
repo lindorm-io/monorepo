@@ -1,4 +1,4 @@
-import { Aegis, type DomainAssert } from "@lindorm/aegis";
+import type { DomainAssert } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import objectPath from "object-path";
 import type { PylonMiddleware } from "../../types/index.js";
@@ -24,7 +24,7 @@ export const useValidation = (
         });
       }
 
-      Aegis.assert(token.claims, options);
+      ctx.aegis.assert(token.claims, options);
 
       timer.debug("Token validation successful");
     } catch (err: any) {

@@ -59,7 +59,7 @@ export const runHttpAccessToken = async (
       scheme: source.kind,
     });
 
-    assertResolvedAccess(access, { issuer, matchers: options.matchers });
+    assertResolvedAccess(ctx.aegis, access, { issuer, matchers: options.matchers });
 
     // `ctx.state.tokens.accessToken` is left UNSET on the introspected arm:
     // there is no VerifiedToken, and synthesising one would erase the very
@@ -104,7 +104,7 @@ export const runHttpAccessToken = async (
     // this deployment — so it has no reason to sit outside: leaving it out meant
     // a mount's `audience` (and every other matcher) silently did not apply to a
     // browser-presented credential.
-    assertResolvedAccess(access, {
+    assertResolvedAccess(ctx.aegis, access, {
       issuer: resolveAccessIssuer(ctx),
       matchers: options.matchers,
     });

@@ -1,3 +1,4 @@
+import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
 import { ClientError } from "@lindorm/errors";
 import { createUnconfiguredAuthClient } from "../../internal/utils/auth/create-unconfigured-auth-client.js";
 import type { PylonResolvedAccess } from "../../types/index.js";
@@ -26,6 +27,7 @@ describe("useAccess", () => {
 
   beforeEach(() => {
     ctx = {
+      aegis: createMockAegis(),
       // No `options.auth` configured: every ctx.auth method throws
       // `auth_not_configured`. useAccess must never touch it.
       auth: createUnconfiguredAuthClient(),

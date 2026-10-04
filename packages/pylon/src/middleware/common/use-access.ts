@@ -1,4 +1,4 @@
-import { Aegis, type DomainAssert, isStructuredToken } from "@lindorm/aegis";
+import { type DomainAssert, isStructuredToken } from "@lindorm/aegis";
 import { ClientError, LindormError } from "@lindorm/errors";
 import type { Dict } from "@lindorm/types";
 import type { PylonContext, PylonMiddleware } from "../../types/index.js";
@@ -55,7 +55,7 @@ export const useAccess = (options: UseAccessOptions): PylonMiddleware => {
     }
 
     try {
-      Aegis.assert(claims, matchers);
+      ctx.aegis.assert(claims, matchers);
     } catch (err) {
       if (err instanceof LindormError) {
         // assert keeps the failing claim VALUES in debug (not data); read

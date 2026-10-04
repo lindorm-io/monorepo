@@ -29,12 +29,11 @@ type RegisterBearerHandshakeAuthOptions = {
  * Resolve a handshake credential through the SAME `resolveAccess` the HTTP arm
  * runs, then register the auth state the connection lives on.
  *
- * Two things follow from sharing the resolver, and both are new here: an OPAQUE
- * credential now authenticates over a handshake (this path used to call
- * `aegis.parse` unconditionally, which throws `parse_requires_claims` on a
- * signed handle and `unsupported_token_type` on a bare one — so an opaque token
- * could not connect at all), and the mount's claim matchers apply to whichever
- * arm resolved it.
+ * Two things follow from sharing the resolver: an OPAQUE credential
+ * authenticates over a handshake — an unconditional `aegis.parse` would throw
+ * `parse_requires_claims` on a signed handle and `unsupported_token_type` on a
+ * bare one, so no opaque token could connect — and the mount's claim matchers
+ * apply to whichever arm resolved it.
  *
  * The DPoP proof is pylon's to check, not aegis's: `resolveAccess` passes
  * `trustBoundThumbprint`, and `assertDpopBinding` runs the RFC 9449 §7.1 check
@@ -83,7 +82,7 @@ export const registerBearerHandshakeAuth = async (
     scheme: undefined,
   });
 
-  assertResolvedAccess(access, { issuer, matchers });
+  assertResolvedAccess(ctx.aegis, access, { issuer, matchers });
 
   const thumbprint = access.claims.confirmation?.thumbprint;
   const bound = isString(thumbprint) && thumbprint.length > 0;

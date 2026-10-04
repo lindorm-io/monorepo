@@ -1,4 +1,4 @@
-import { Aegis } from "@lindorm/aegis";
+import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
 import { ClientError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { useValidation } from "./use-validation.js";
@@ -10,10 +10,13 @@ describe("useValidation", () => {
 
   beforeEach(() => {
     ctx = {
+      // The mock's `assert` arm runs the real claim check, so every verdict
+      // below is the check's own.
+      aegis: createMockAegis(),
       logger: createMockLogger(),
       state: {
         tokens: {
-          jwt: { claims: { audience: "test-audience" } },
+          jwt: { claims: { audience: ["test-audience"] } },
         },
       },
     };
@@ -21,15 +24,11 @@ describe("useValidation", () => {
   });
 
   test("should resolve when validation passes", async () => {
-    vi.spyOn(Aegis, "assert").mockImplementation(() => undefined);
-
     const middleware = useValidation("jwt", { audience: "test-audience" });
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined();
 
     expect(next).toHaveBeenCalledTimes(1);
-
-    vi.restoreAllMocks();
   });
 
   test("should throw ClientError when token not found at path", async () => {
@@ -46,10 +45,6 @@ describe("useValidation", () => {
   });
 
   test("should throw ClientError 403 when validation fails", async () => {
-    vi.spyOn(Aegis, "assert").mockImplementation(() => {
-      throw new Error("audience mismatch");
-    });
-
     const middleware = useValidation("jwt", { audience: "wrong-audience" });
 
     await expect(middleware(ctx, next)).rejects.toThrow(ClientError);
@@ -59,8 +54,9 @@ describe("useValidation", () => {
     } catch (err: any) {
       expect(err.status).toBe(403);
       expect(err.message).toMatchSnapshot();
+      // The catch-all turns ANY error into this 403, so the 403 alone proves
+      // nothing; the details are the claim check's own refusal.
+      expect(err.details).toBe("Invalid token");
     }
-
-    vi.restoreAllMocks();
   });
 });

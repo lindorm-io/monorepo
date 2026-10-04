@@ -350,11 +350,11 @@ describe("useAccessToken introspection cache", () => {
    * `active: true` beside an `exp` already in the past is not a live token, and
    * serving it would extend every such grant indefinitely.
    *
-   * ⚠ The window is `Aegis.matches`'s DEFAULT one — the same builder verify
-   * runs — not a hand-rolled `exp > now`, which would carry no clock tolerance at
-   * all and so reject claims the structured arm accepts inside its skew window.
-   * The default tolerance is zero, which is why one second past `exp` is enough
-   * to refuse the answer here.
+   * ⚠ The window is `aegis.matches`'s — the deployment's clock tolerance, the
+   * one verify runs in — not a hand-rolled `exp > now`, which would carry no
+   * clock tolerance at all and so reject claims the structured arm accepts
+   * inside its skew window. The mock aegis allows no tolerance, which is why one
+   * second past `exp` is enough to refuse the answer here.
    */
   test("should reject an active answer whose own exp has already passed", async () => {
     const middleware = useAccessToken(ACCESS_MOUNT);
@@ -441,11 +441,10 @@ describe("useAccessToken introspection cache", () => {
    * Serving an earlier answer while the AS is unreachable is a revocation bypass
    * with extra steps — so nothing is cached and the failure propagates.
    *
-   * ⚠ PROPAGATES AS ITSELF. It used to be converted into a 401
-   * `access_token_verification_failed`, because the middleware wrapped every
-   * error it did not recognise. A driver whose store or transport failed
-   * therefore told the caller its credential was bad and hid the 500 from the
-   * operator — on the hot path for every opaque token.
+   * ⚠ PROPAGATES AS ITSELF, never as a 401: wrapped as a credential failure, a
+   * driver whose store or transport failed would tell the caller its credential
+   * was bad and hide the 500 from the operator — on the hot path for every
+   * opaque token.
    */
   test("should cache nothing and propagate when introspection fails", async () => {
     const middleware = useAccessToken(ACCESS_MOUNT);
@@ -495,12 +494,11 @@ describe("useAccessToken introspection cache", () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  // ⚠ EXPECTATION FLIPPED. This asserted that a deployment with no settled issuer
-  // still introspected, uncached, on every request. `resolveAccessIssuer` now runs
-  // BEFORE either arm and both require its answer, so such a deployment refuses
-  // the request outright — the authorization server is never asked at all, and the
-  // cache's own "no issuer ⇒ no safe key" branch is unreachable through this
-  // middleware. (Cache keying by issuer stays covered by the cross-issuer test.)
+  // `resolveAccessIssuer` runs BEFORE either arm and both require its answer, so
+  // a deployment with no settled issuer refuses the request outright — the
+  // authorization server is never asked, and the cache's own "no issuer ⇒ no
+  // safe key" branch is unreachable through this middleware. (Cache keying by
+  // issuer is covered by the cross-issuer test.)
   test("should refuse the request when the deployment resolved no issuer", async () => {
     const middleware = useAccessToken(ACCESS_MOUNT);
 
