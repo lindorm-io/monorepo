@@ -42,6 +42,566 @@ exports[`DataTable > duplicate keys > should throw invalid_data_table from rowsH
 }
 `;
 
+exports[`DataTable > schema error recognition through create() > should wrap a ZodError from another zod copy, built by hand — recognition is by shape, and that shape is all a foreign copy presents 1`] = `
+{
+  "code": "table_conversion_failed",
+  "data": {
+    "issues": [
+      {
+        "code": "custom",
+        "message": "price is not a number",
+        "path": [
+          "price",
+        ],
+      },
+    ],
+    "row": 1,
+  },
+  "details": "The table's string cells did not satisfy the schema. Fix the table in the feature file, or the schema — every cell is a string, so zod needs z.coerce.number() for numbers and z.stringbool() for booleans.",
+  "message": "Data table body row 1 failed schema conversion
+
+the schema rejected the row",
+}
+`;
+
+exports[`DataTable > schema error recognition through create() > should wrap a real zod 3 ZodError as table_conversion_failed 1`] = `
+{
+  "code": "table_conversion_failed",
+  "data": {
+    "issues": [
+      {
+        "code": "invalid_type",
+        "expected": "number",
+        "message": "Expected number, received nan",
+        "path": [
+          "price",
+        ],
+        "received": "nan",
+      },
+    ],
+    "row": 1,
+  },
+  "details": "The table's string cells did not satisfy the schema. Fix the table in the feature file, or the schema — every cell is a string, so zod needs z.coerce.number() for numbers and z.stringbool() for booleans.",
+  "message": "Data table body row 1 failed schema conversion
+
+[
+  {
+    "code": "invalid_type",
+    "expected": "number",
+    "received": "nan",
+    "path": [
+      "price"
+    ],
+    "message": "Expected number, received nan"
+  }
+]",
+}
+`;
+
+exports[`DataTable > schema error recognition through create() > should wrap a real zod/mini $ZodError as table_conversion_failed 1`] = `
+{
+  "code": "table_conversion_failed",
+  "data": {
+    "issues": [
+      {
+        "code": "invalid_type",
+        "expected": "number",
+        "message": "Invalid input: expected number, received NaN",
+        "path": [
+          "price",
+        ],
+        "received": "NaN",
+      },
+    ],
+    "row": 1,
+  },
+  "details": "The table's string cells did not satisfy the schema. Fix the table in the feature file, or the schema — every cell is a string, so zod needs z.coerce.number() for numbers and z.stringbool() for booleans.",
+  "message": "Data table body row 1 failed schema conversion
+
+[
+  {
+    "expected": "number",
+    "code": "invalid_type",
+    "received": "NaN",
+    "path": [
+      "price"
+    ],
+    "message": "Invalid input: expected number, received NaN"
+  }
+]",
+}
+`;
+
+exports[`DataTable > schema error recognition through create() > should wrap a thrown plain object named ZodError carrying an issues array as table_conversion_failed 1`] = `
+{
+  "code": "table_conversion_failed",
+  "data": {
+    "issues": [
+      {
+        "code": "custom",
+        "message": "price is not a number",
+        "path": [
+          "price",
+        ],
+      },
+    ],
+    "row": 1,
+  },
+  "details": "The table's string cells did not satisfy the schema. Fix the table in the feature file, or the schema — every cell is a string, so zod needs z.coerce.number() for numbers and z.stringbool() for booleans.",
+  "message": "Data table body row 1 failed schema conversion",
+}
+`;
+
+exports[`DataTable > schema error recognition through create() > should wrap a zod 4 ZodError a consumer built and threw from a transform — zod declares it without an Error parent 1`] = `
+{
+  "code": "table_conversion_failed",
+  "data": {
+    "issues": [
+      {
+        "code": "custom",
+        "message": "price is not a number",
+        "path": [
+          "price",
+        ],
+      },
+    ],
+    "row": 1,
+  },
+  "details": "The table's string cells did not satisfy the schema. Fix the table in the feature file, or the schema — every cell is a string, so zod needs z.coerce.number() for numbers and z.stringbool() for booleans.",
+  "message": "Data table body row 1 failed schema conversion
+
+[
+  {
+    "code": "custom",
+    "message": "price is not a number",
+    "path": [
+      "price"
+    ]
+  }
+]",
+}
+`;
+
+exports[`DataTable > schema error recognition through createAsync() > should wrap a ZodError from another zod copy, built by hand — recognition is by shape, and that shape is all a foreign copy presents 1`] = `
+{
+  "code": "table_conversion_failed",
+  "data": {
+    "issues": [
+      {
+        "code": "custom",
+        "message": "price is not a number",
+        "path": [
+          "price",
+        ],
+      },
+    ],
+    "row": 1,
+  },
+  "details": "The table's string cells did not satisfy the schema. Fix the table in the feature file, or the schema — every cell is a string, so zod needs z.coerce.number() for numbers and z.stringbool() for booleans.",
+  "message": "Data table body row 1 failed schema conversion
+
+the schema rejected the row",
+}
+`;
+
+exports[`DataTable > schema error recognition through createAsync() > should wrap a real zod 3 ZodError as table_conversion_failed 1`] = `
+{
+  "code": "table_conversion_failed",
+  "data": {
+    "issues": [
+      {
+        "code": "invalid_type",
+        "expected": "number",
+        "message": "Expected number, received nan",
+        "path": [
+          "price",
+        ],
+        "received": "nan",
+      },
+    ],
+    "row": 1,
+  },
+  "details": "The table's string cells did not satisfy the schema. Fix the table in the feature file, or the schema — every cell is a string, so zod needs z.coerce.number() for numbers and z.stringbool() for booleans.",
+  "message": "Data table body row 1 failed schema conversion
+
+[
+  {
+    "code": "invalid_type",
+    "expected": "number",
+    "received": "nan",
+    "path": [
+      "price"
+    ],
+    "message": "Expected number, received nan"
+  }
+]",
+}
+`;
+
+exports[`DataTable > schema error recognition through createAsync() > should wrap a real zod/mini $ZodError as table_conversion_failed 1`] = `
+{
+  "code": "table_conversion_failed",
+  "data": {
+    "issues": [
+      {
+        "code": "invalid_type",
+        "expected": "number",
+        "message": "Invalid input: expected number, received NaN",
+        "path": [
+          "price",
+        ],
+        "received": "NaN",
+      },
+    ],
+    "row": 1,
+  },
+  "details": "The table's string cells did not satisfy the schema. Fix the table in the feature file, or the schema — every cell is a string, so zod needs z.coerce.number() for numbers and z.stringbool() for booleans.",
+  "message": "Data table body row 1 failed schema conversion
+
+[
+  {
+    "expected": "number",
+    "code": "invalid_type",
+    "received": "NaN",
+    "path": [
+      "price"
+    ],
+    "message": "Invalid input: expected number, received NaN"
+  }
+]",
+}
+`;
+
+exports[`DataTable > schema error recognition through createAsync() > should wrap a thrown plain object named ZodError carrying an issues array as table_conversion_failed 1`] = `
+{
+  "code": "table_conversion_failed",
+  "data": {
+    "issues": [
+      {
+        "code": "custom",
+        "message": "price is not a number",
+        "path": [
+          "price",
+        ],
+      },
+    ],
+    "row": 1,
+  },
+  "details": "The table's string cells did not satisfy the schema. Fix the table in the feature file, or the schema — every cell is a string, so zod needs z.coerce.number() for numbers and z.stringbool() for booleans.",
+  "message": "Data table body row 1 failed schema conversion",
+}
+`;
+
+exports[`DataTable > schema error recognition through createAsync() > should wrap a zod 4 ZodError a consumer built and threw from a transform — zod declares it without an Error parent 1`] = `
+{
+  "code": "table_conversion_failed",
+  "data": {
+    "issues": [
+      {
+        "code": "custom",
+        "message": "price is not a number",
+        "path": [
+          "price",
+        ],
+      },
+    ],
+    "row": 1,
+  },
+  "details": "The table's string cells did not satisfy the schema. Fix the table in the feature file, or the schema — every cell is a string, so zod needs z.coerce.number() for numbers and z.stringbool() for booleans.",
+  "message": "Data table body row 1 failed schema conversion
+
+[
+  {
+    "code": "custom",
+    "message": "price is not a number",
+    "path": [
+      "price"
+    ]
+  }
+]",
+}
+`;
+
+exports[`DataTable > schema error recognition through createSet() > should wrap a ZodError from another zod copy, built by hand — recognition is by shape, and that shape is all a foreign copy presents 1`] = `
+{
+  "code": "table_conversion_failed",
+  "data": {
+    "issues": [
+      {
+        "code": "custom",
+        "message": "price is not a number",
+        "path": [
+          "price",
+        ],
+      },
+    ],
+    "row": 1,
+  },
+  "details": "The table's string cells did not satisfy the schema. Fix the table in the feature file, or the schema — every cell is a string, so zod needs z.coerce.number() for numbers and z.stringbool() for booleans.",
+  "message": "Data table body row 1 failed schema conversion
+
+the schema rejected the row",
+}
+`;
+
+exports[`DataTable > schema error recognition through createSet() > should wrap a real zod 3 ZodError as table_conversion_failed 1`] = `
+{
+  "code": "table_conversion_failed",
+  "data": {
+    "issues": [
+      {
+        "code": "invalid_type",
+        "expected": "number",
+        "message": "Expected number, received nan",
+        "path": [
+          "price",
+        ],
+        "received": "nan",
+      },
+    ],
+    "row": 1,
+  },
+  "details": "The table's string cells did not satisfy the schema. Fix the table in the feature file, or the schema — every cell is a string, so zod needs z.coerce.number() for numbers and z.stringbool() for booleans.",
+  "message": "Data table body row 1 failed schema conversion
+
+[
+  {
+    "code": "invalid_type",
+    "expected": "number",
+    "received": "nan",
+    "path": [
+      "price"
+    ],
+    "message": "Expected number, received nan"
+  }
+]",
+}
+`;
+
+exports[`DataTable > schema error recognition through createSet() > should wrap a real zod/mini $ZodError as table_conversion_failed 1`] = `
+{
+  "code": "table_conversion_failed",
+  "data": {
+    "issues": [
+      {
+        "code": "invalid_type",
+        "expected": "number",
+        "message": "Invalid input: expected number, received NaN",
+        "path": [
+          "price",
+        ],
+        "received": "NaN",
+      },
+    ],
+    "row": 1,
+  },
+  "details": "The table's string cells did not satisfy the schema. Fix the table in the feature file, or the schema — every cell is a string, so zod needs z.coerce.number() for numbers and z.stringbool() for booleans.",
+  "message": "Data table body row 1 failed schema conversion
+
+[
+  {
+    "expected": "number",
+    "code": "invalid_type",
+    "received": "NaN",
+    "path": [
+      "price"
+    ],
+    "message": "Invalid input: expected number, received NaN"
+  }
+]",
+}
+`;
+
+exports[`DataTable > schema error recognition through createSet() > should wrap a thrown plain object named ZodError carrying an issues array as table_conversion_failed 1`] = `
+{
+  "code": "table_conversion_failed",
+  "data": {
+    "issues": [
+      {
+        "code": "custom",
+        "message": "price is not a number",
+        "path": [
+          "price",
+        ],
+      },
+    ],
+    "row": 1,
+  },
+  "details": "The table's string cells did not satisfy the schema. Fix the table in the feature file, or the schema — every cell is a string, so zod needs z.coerce.number() for numbers and z.stringbool() for booleans.",
+  "message": "Data table body row 1 failed schema conversion",
+}
+`;
+
+exports[`DataTable > schema error recognition through createSet() > should wrap a zod 4 ZodError a consumer built and threw from a transform — zod declares it without an Error parent 1`] = `
+{
+  "code": "table_conversion_failed",
+  "data": {
+    "issues": [
+      {
+        "code": "custom",
+        "message": "price is not a number",
+        "path": [
+          "price",
+        ],
+      },
+    ],
+    "row": 1,
+  },
+  "details": "The table's string cells did not satisfy the schema. Fix the table in the feature file, or the schema — every cell is a string, so zod needs z.coerce.number() for numbers and z.stringbool() for booleans.",
+  "message": "Data table body row 1 failed schema conversion
+
+[
+  {
+    "code": "custom",
+    "message": "price is not a number",
+    "path": [
+      "price"
+    ]
+  }
+]",
+}
+`;
+
+exports[`DataTable > schema error recognition through createSetAsync() > should wrap a ZodError from another zod copy, built by hand — recognition is by shape, and that shape is all a foreign copy presents 1`] = `
+{
+  "code": "table_conversion_failed",
+  "data": {
+    "issues": [
+      {
+        "code": "custom",
+        "message": "price is not a number",
+        "path": [
+          "price",
+        ],
+      },
+    ],
+    "row": 1,
+  },
+  "details": "The table's string cells did not satisfy the schema. Fix the table in the feature file, or the schema — every cell is a string, so zod needs z.coerce.number() for numbers and z.stringbool() for booleans.",
+  "message": "Data table body row 1 failed schema conversion
+
+the schema rejected the row",
+}
+`;
+
+exports[`DataTable > schema error recognition through createSetAsync() > should wrap a real zod 3 ZodError as table_conversion_failed 1`] = `
+{
+  "code": "table_conversion_failed",
+  "data": {
+    "issues": [
+      {
+        "code": "invalid_type",
+        "expected": "number",
+        "message": "Expected number, received nan",
+        "path": [
+          "price",
+        ],
+        "received": "nan",
+      },
+    ],
+    "row": 1,
+  },
+  "details": "The table's string cells did not satisfy the schema. Fix the table in the feature file, or the schema — every cell is a string, so zod needs z.coerce.number() for numbers and z.stringbool() for booleans.",
+  "message": "Data table body row 1 failed schema conversion
+
+[
+  {
+    "code": "invalid_type",
+    "expected": "number",
+    "received": "nan",
+    "path": [
+      "price"
+    ],
+    "message": "Expected number, received nan"
+  }
+]",
+}
+`;
+
+exports[`DataTable > schema error recognition through createSetAsync() > should wrap a real zod/mini $ZodError as table_conversion_failed 1`] = `
+{
+  "code": "table_conversion_failed",
+  "data": {
+    "issues": [
+      {
+        "code": "invalid_type",
+        "expected": "number",
+        "message": "Invalid input: expected number, received NaN",
+        "path": [
+          "price",
+        ],
+        "received": "NaN",
+      },
+    ],
+    "row": 1,
+  },
+  "details": "The table's string cells did not satisfy the schema. Fix the table in the feature file, or the schema — every cell is a string, so zod needs z.coerce.number() for numbers and z.stringbool() for booleans.",
+  "message": "Data table body row 1 failed schema conversion
+
+[
+  {
+    "expected": "number",
+    "code": "invalid_type",
+    "received": "NaN",
+    "path": [
+      "price"
+    ],
+    "message": "Invalid input: expected number, received NaN"
+  }
+]",
+}
+`;
+
+exports[`DataTable > schema error recognition through createSetAsync() > should wrap a thrown plain object named ZodError carrying an issues array as table_conversion_failed 1`] = `
+{
+  "code": "table_conversion_failed",
+  "data": {
+    "issues": [
+      {
+        "code": "custom",
+        "message": "price is not a number",
+        "path": [
+          "price",
+        ],
+      },
+    ],
+    "row": 1,
+  },
+  "details": "The table's string cells did not satisfy the schema. Fix the table in the feature file, or the schema — every cell is a string, so zod needs z.coerce.number() for numbers and z.stringbool() for booleans.",
+  "message": "Data table body row 1 failed schema conversion",
+}
+`;
+
+exports[`DataTable > schema error recognition through createSetAsync() > should wrap a zod 4 ZodError a consumer built and threw from a transform — zod declares it without an Error parent 1`] = `
+{
+  "code": "table_conversion_failed",
+  "data": {
+    "issues": [
+      {
+        "code": "custom",
+        "message": "price is not a number",
+        "path": [
+          "price",
+        ],
+      },
+    ],
+    "row": 1,
+  },
+  "details": "The table's string cells did not satisfy the schema. Fix the table in the feature file, or the schema — every cell is a string, so zod needs z.coerce.number() for numbers and z.stringbool() for booleans.",
+  "message": "Data table body row 1 failed schema conversion
+
+[
+  {
+    "code": "custom",
+    "message": "price is not a number",
+    "path": [
+      "price"
+    ]
+  }
+]",
+}
+`;
+
 exports[`DataTable > zod conversion > should throw invalid_data_table from create() on a multi-row table — never silent truncation 1`] = `
 {
   "code": "invalid_data_table",
@@ -50,5 +610,39 @@ exports[`DataTable > zod conversion > should throw invalid_data_table from creat
   },
   "details": "create() returns ONE object, so the table must carry a header row and exactly one body row — converting any other count would silently truncate or invent data.",
   "message": "create() converts exactly one body row — this table has 2. Use createSet() for multi-row tables.",
+}
+`;
+
+exports[`DataTable > zod conversion > should wrap a ZodError as table_conversion_failed, naming the body row 1`] = `
+{
+  "code": "table_conversion_failed",
+  "data": {
+    "issues": [
+      {
+        "code": "invalid_type",
+        "expected": "number",
+        "message": "Invalid input: expected number, received NaN",
+        "path": [
+          "price",
+        ],
+        "received": "NaN",
+      },
+    ],
+    "row": 2,
+  },
+  "details": "The table's string cells did not satisfy the schema. Fix the table in the feature file, or the schema — every cell is a string, so zod needs z.coerce.number() for numbers and z.stringbool() for booleans.",
+  "message": "Data table body row 2 failed schema conversion
+
+[
+  {
+    "expected": "number",
+    "code": "invalid_type",
+    "received": "NaN",
+    "path": [
+      "price"
+    ],
+    "message": "Invalid input: expected number, received NaN"
+  }
+]",
 }
 `;

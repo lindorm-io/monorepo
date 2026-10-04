@@ -1,7 +1,10 @@
-import { isUndefined } from "@lindorm/is";
-import type { output, ZodType } from "zod";
-import { ZodError } from "zod";
+import { isString, isUndefined } from "@lindorm/is";
 import { GherkinError } from "../errors/GherkinError.js";
+import type {
+  AsyncDataTableSchema,
+  DataTableSchema,
+} from "../types/data-table-schema.js";
+import { isZodShaped } from "./is-zod-shaped.js";
 
 type DuplicateKey = {
   key: string;
@@ -28,13 +31,16 @@ type DuplicateKey = {
  *   so a cell the feature file carries never reaches the step. Here both
  *   throw `invalid_data_table` (pinned: DataTable.test.ts).
  *
- * Typed conversion is zod: `create`/`createSet` are SYNCHRONOUS (`.parse`) —
- * they run inside the consumer's step body where the runner cannot await
- * them, so a Promise return would let a forgotten `await` manufacture a
- * green. A schema with an async refinement makes `.parse` throw zod's own
- * "Encountered Promise during synchronous parse. Use .parseAsync() instead."
- * (measured, zod 4.4.3) — that error passes through UNTOUCHED so the message
- * naming the fix survives verbatim; use `createAsync`/`createSetAsync`.
+ * Typed conversion takes a schema with `parse` / `parseAsync` (zod or any
+ * other): `create`/`createSet` are SYNCHRONOUS (`.parse`) — they run inside
+ * the consumer's step body where the runner cannot await them, so a Promise
+ * return would let a forgotten `await` manufacture a green. A zod schema with
+ * an async refinement makes `.parse` throw zod's own "Encountered Promise
+ * during synchronous parse. Use .parseAsync() instead." (measured, zod 4.4.3)
+ * — that error passes through UNTOUCHED so the message naming the fix
+ * survives verbatim; use `createAsync`/`createSetAsync`. A zod validation
+ * error, from any zod copy, becomes `table_conversion_failed`; anything else
+ * the schema throws reaches the caller untouched.
  */
 export class DataTable {
   private readonly cells: Array<Array<string>>;
@@ -136,26 +142,28 @@ export class DataTable {
    * The table's SINGLE body row parsed through the schema — the horizontal
    * reading (header + one body row), the same row shape `createSet` parses.
    * Any other body-row count throws loudly; silent truncation to the first
-   * row would be the manufactured-green class. Vertical key/value tables
-   * need no dedicated method: `schema.parse(table.rowsHash())`.
+   * row would be the manufactured-green class. A vertical key/value table
+   * converts through `table.transpose().create(schema)`.
    */
-  create<T extends ZodType>(schema: T): output<T> {
+  create<TOutput>(schema: DataTableSchema<TOutput>): TOutput {
     return this.parseRow(schema, this.exactlyOneHash(), 1);
   }
 
   /** As `create`, via `.parseAsync` — for schemas with async refinements. */
-  async createAsync<T extends ZodType>(schema: T): Promise<output<T>> {
+  async createAsync<TOutput>(schema: AsyncDataTableSchema<TOutput>): Promise<TOutput> {
     return await this.parseRowAsync(schema, this.exactlyOneHash(), 1);
   }
 
   /** Every `hashes()` row parsed through the schema, in table order. */
-  createSet<T extends ZodType>(schema: T): Array<output<T>> {
+  createSet<TOutput>(schema: DataTableSchema<TOutput>): Array<TOutput> {
     return this.hashes().map((row, index) => this.parseRow(schema, row, index + 1));
   }
 
   /** As `createSet`, via `.parseAsync` — for schemas with async refinements. */
-  async createSetAsync<T extends ZodType>(schema: T): Promise<Array<output<T>>> {
-    const set: Array<output<T>> = [];
+  async createSetAsync<TOutput>(
+    schema: AsyncDataTableSchema<TOutput>,
+  ): Promise<Array<TOutput>> {
+    const set: Array<TOutput> = [];
 
     for (const [index, row] of this.hashes().entries()) {
       set.push(await this.parseRowAsync(schema, row, index + 1));
@@ -199,11 +207,11 @@ export class DataTable {
     );
   }
 
-  private parseRow<T extends ZodType>(
-    schema: T,
+  private parseRow<TOutput>(
+    schema: DataTableSchema<TOutput>,
     row: Record<string, string>,
     bodyRow: number,
-  ): output<T> {
+  ): TOutput {
     try {
       return schema.parse(row);
     } catch (error) {
@@ -211,11 +219,11 @@ export class DataTable {
     }
   }
 
-  private async parseRowAsync<T extends ZodType>(
-    schema: T,
+  private async parseRowAsync<TOutput>(
+    schema: AsyncDataTableSchema<TOutput>,
     row: Record<string, string>,
     bodyRow: number,
-  ): Promise<output<T>> {
+  ): Promise<TOutput> {
     try {
       return await schema.parseAsync(row);
     } catch (error) {
@@ -224,19 +232,15 @@ export class DataTable {
   }
 
   private toConversionError(error: unknown, bodyRow: number): unknown {
-    // ONLY a ZodError is wrapped (zod's Symbol.hasInstance makes this
-    // marker-based — dual-install safe). Everything else rethrows untouched:
-    // zod's $ZodAsyncError must keep its fix-naming message verbatim, and a
-    // consumer refinement throwing its own error keeps its identity so
-    // assertion diffs survive. The step anchor is prepended by the runner's
-    // step-failure path either way.
-    if (error instanceof ZodError) {
+    if (isZodShaped(error)) {
+      const summary = `Data table body row ${bodyRow} failed schema conversion`;
+
       return new GherkinError(
-        `Data table body row ${bodyRow} failed schema conversion\n\n${error.message}`,
+        isString(error.message) ? `${summary}\n\n${error.message}` : summary,
         {
           code: "table_conversion_failed",
           details:
-            "The table's string cells did not satisfy the zod schema. Fix the table in the feature file, or the schema — string cells usually need z.coerce for numbers, booleans and dates.",
+            "The table's string cells did not satisfy the schema. Fix the table in the feature file, or the schema — every cell is a string, so zod needs z.coerce.number() for numbers and z.stringbool() for booleans.",
           data: { issues: error.issues, row: bodyRow },
           cause: error,
         },

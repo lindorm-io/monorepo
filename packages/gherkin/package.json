@@ -59,8 +59,7 @@
   "peerDependencies": {
     "unplugin-swc": ">=1.5.9",
     "vite": ">=8.0.0",
-    "vitest": ">=4.1.4",
-    "zod": ">=4.3.6"
+    "vitest": ">=4.1.4"
   },
   "peerDependenciesMeta": {
     "unplugin-swc": {

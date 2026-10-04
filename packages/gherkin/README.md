@@ -19,7 +19,7 @@ Reqnroll-style BDD for vitest. A `.feature` file **is** a vitest test file: a Vi
 npm install --save-dev @lindorm/gherkin unplugin-swc
 ```
 
-Peer dependencies: `vite` >= 8, `vitest` >= 4.1.4 and `zod` >= 4.3.6, plus `unplugin-swc` >= 1.5.9 as an optional peer. Step classes are written with stage-3 decorators, so the pipeline has to lower them; `unplugin-swc` is the route this package verifies, and any equivalent transform does. Without one, the run fails with a `GherkinError` naming the step module and the missing transform: `Step module <path> still carries a stage-3 decorator after the transform pipeline ran.` (`step_module_not_lowered`), or `step_module_not_compiled` when the module does not parse as JavaScript at all.
+Peer dependencies: `vite` >= 8 and `vitest` >= 4.1.4, plus `unplugin-swc` >= 1.5.9 as an optional peer. Step classes are written with stage-3 decorators, so the pipeline has to lower them; `unplugin-swc` is the route this package verifies, and any equivalent transform does. Without one, the run fails with a `GherkinError` naming the step module and the missing transform: `Step module <path> still carries a stage-3 decorator after the transform pipeline ran.` (`step_module_not_lowered`), or `step_module_not_compiled` when the module does not parse as JavaScript at all.
 
 ## Quick start
 
@@ -250,7 +250,13 @@ A step's DataTable or DocString arrives as the **trailing argument**, after any 
 
 `DataTable` carries cucumber-js's five methods, all values `string`: `raw()` (full matrix), `rows()` (body minus header), `hashes()` (header-keyed Records — a repeated header cell throws `invalid_data_table`, naming the key and its columns), `rowsHash()` (two-column key/value Record — any other width, or a repeated key, throws `invalid_data_table`), `transpose()` (a new DataTable). Outline `<placeholder>` values substitute into cells and DocString bodies exactly as into step text.
 
-Typed conversion is zod: `createSet(schema)` parses every `hashes()` row — `table.createSet(z.object({ name: z.string() }))` in place of `hashes()` above — and `create(schema)` parses the table's **single** body row (any other count throws — never silent truncation; for vertical key/value tables use `schema.parse(table.rowsHash())`). Both are **synchronous** on purpose — they run inside your step body, where the runner cannot await them. A schema with an async refinement makes them throw zod's own "Encountered Promise during synchronous parse. Use `.parseAsync()` instead." — switch to `createAsync`/`createSetAsync` and `await`. A failed conversion is red (`table_conversion_failed`) with zod's issues and the step anchor.
+Typed conversion takes a schema with `parse` / `parseAsync` (zod or any other): `createSet(schema)` parses every `hashes()` row — `table.createSet(z.object({ name: z.string() }))` in place of `hashes()` above — and `create(schema)` parses the table's **single** body row (any other count throws — never silent truncation). Both are **synchronous** on purpose — they run inside your step body, where the runner cannot await them. A zod schema with an async refinement makes them throw zod's own "Encountered Promise during synchronous parse. Use `.parseAsync()` instead." — switch to `createAsync`/`createSetAsync` and `await`. A zod validation error (`ZodError` or `$ZodError`, from whichever zod copy you install) is red as `table_conversion_failed`, with zod's issues and the step anchor; anything else the schema throws reaches you untouched.
+
+Table gotchas:
+
+- Numbers need `z.coerce.number()` — every cell is a string.
+- Booleans need `z.stringbool()` — `z.coerce.boolean()` reads `"false"` as `true`.
+- A vertical key/value table needs `table.transpose().create(schema)`.
 
 An undefined step that carries an argument gets its snippet with the trailing parameter typed — `dataTable: DataTable` or `docString: DocString`.
 
@@ -332,7 +338,7 @@ And it fails a step module whose transformed code could never have run — one t
 
 ## Current scope
 
-Feature-complete for the planned set: everything above — parsing and emission, step matching with custom parameter types, lifecycle hooks and contexts, DataTable/DocString + zod, tags, and the failure contract. An unknown plugin setting throws at config time (`unknown_setting`) rather than being silently ignored.
+Feature-complete for the planned set: everything above — parsing and emission, step matching with custom parameter types, lifecycle hooks and contexts, DataTable/DocString with typed schema conversion, tags, and the failure contract. An unknown plugin setting throws at config time (`unknown_setting`) rather than being silently ignored.
 
 Deliberately out, for now: `RegExp` step expressions, living-doc HTML output, a `bin` that scaffolds step stubs, and richer built-in parameter types (`{email}`, `{date}`, `{list}`, …).
 
