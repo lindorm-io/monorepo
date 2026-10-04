@@ -97,10 +97,12 @@ describe("useAccessToken — what a credential must be", () => {
      * profile's `forbidden` list bites on, so every plausible loss of the type
      * discrimination changes `data` and turns this red.
      *
-     * ⚠ The ONE strict-floor claim this fixture cannot carry is `client_id`:
-     * `IdTokenContent` does not admit it, and no real id_token has one — its
-     * `aud` IS the client. So the assertion has to name the typ rather than rely
-     * on typ being the only check the token could fail.
+     * ⚠ The ONE strict-floor claim this fixture does not state is `client_id`:
+     * no real id_token has one — its `aud` IS the client. `IdTokenContent` admits
+     * `claims`, and a custom claim stated there reaches the wire (pinned:
+     * aegis/src/classes/Aegis.test.ts); this fixture states none. So the assertion
+     * has to name the typ rather than rely on typ being the only check the token
+     * could fail.
      */
     test("an ID TOKEN is refused, however well it otherwise fits", async () => {
       present(await mintTestIdToken(aegis));
