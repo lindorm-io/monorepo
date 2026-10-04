@@ -209,7 +209,12 @@ export const SUB_ID_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
      */
     codec: {
       kind: "array",
-      of: { kind: "object", children: () => SUB_ID_MEMBERS, open: "verbatim" },
+      of: {
+        kind: "object",
+        children: () => SUB_ID_MEMBERS,
+        open: "verbatim",
+        readLeafFailure: "drop",
+      },
     },
     whenEmpty: KEEP,
     /**

@@ -13,7 +13,7 @@ import {
   joseName,
 } from "./claims-registry.js";
 import { isNotStated } from "./is-not-stated.js";
-import type { ClaimMemberSpec } from "../registry/claim-spec.js";
+import type { ClaimMemberSpec, LeafFailure } from "../registry/claim-spec.js";
 import { wireName } from "../registry/wire-key.js";
 import {
   decodeClaim,
@@ -191,14 +191,16 @@ describe("domainToJose — content -> wire mapping", () => {
     expect(joseToDomain(wire).claims.address).toEqual({ locality: "Stockholm" });
   });
 
-  // ⚠⚠ A WRONGLY-TYPED MEMBER SPLITS BY DIRECTION, and each side's disposal is
-  // the other's safety argument. The WRITE side REFUSES a member its own reader
-  // would not read back — written, it is bytes the reader reports as never
-  // stated; dropped, the signed token silently says less than the caller
-  // stated — and the write door is aegis's own caller, so strictness costs no
-  // interoperability. The READ side DROPS: a foreign token is not bound by
-  // aegis's declarations, so a member the read cannot decode is reported as one
-  // the token does not state, scoped to the member alone.
+  // ⚠⚠ A WRONGLY-TYPED MEMBER IS REFUSED ON WRITE FOR EVERY STRUCTURE, AND ON
+  // READ DISPOSED OF AS THE STRUCTURE'S OWN CELL SAYS. The WRITE side REFUSES a
+  // member its own reader would not read back — written, it is bytes the reader
+  // reports as never stated; dropped, the signed token silently says less than
+  // the caller stated — and the write door is aegis's own caller, so strictness
+  // costs no interoperability. The READ side reports a foreign token, which
+  // aegis's declarations do not bind, so `ObjectCodec.readLeafFailure` answers
+  // per structure: an ADDRESS drops the member and keeps the rest, because its
+  // members are independent facts; an ACTOR is refused, because its members
+  // jointly name one party (see `act-members.ts`).
   //
   // ⚠ IT TAKES A WRONGLY-TYPED VALUE, NOT A `null`. A `null` member is an ABSENCE
   // ({@link isNotStated}), so it is omitted on both sides for a different reason
@@ -233,10 +235,10 @@ describe("domainToJose — content -> wire mapping", () => {
     ).toEqual({ locality: "Stockholm" });
   });
 
-  // The actor twin, because `act` is where the two directions' split is
-  // security-relevant: WHO a token says acted must never be decided by a silent
-  // write-side drop, while a stranger's chain stays readable minus the member
-  // the read cannot decode.
+  // The actor twin, because `act` is where a wrongly-typed member is
+  // security-relevant in BOTH directions: WHO a token says acted must never be
+  // decided by a silent write-side drop, nor read as an actor stating no subject
+  // — the shape an allowlist `{ subject: { $exists: false } }` admits.
   test("refuses a wrongly-typed actor member on the write side at its own path", () => {
     let refusal: unknown = "no refusal";
     try {
@@ -256,20 +258,118 @@ describe("domainToJose — content -> wire mapping", () => {
     });
   });
 
-  test("drops a foreign actor's wrongly-typed member on the read side, keeping the members beside it", () => {
-    expect(joseToDomain({ act: { sub: 42, client_id: "service-1" } }).claims.act).toEqual(
-      { clientId: "service-1" },
-    );
+  /** The read's refusal `data`, or the sentinel when the read resolved. */
+  const readRefusalOf = (wire: Dict): unknown => {
+    try {
+      joseToDomain(wire);
+      return "no refusal";
+    } catch (error) {
+      return (error as AegisDomainError).data;
+    }
+  };
+
+  test("refuses a foreign actor's wrongly-typed member on the read side at its own path", () => {
+    expect(readRefusalOf({ act: { sub: 42, client_id: "service-1" } })).toEqual({
+      claim: "act",
+      invalid: [
+        {
+          key: "act.subject",
+          message: 'Member "subject" must be the shape it declares',
+        },
+      ],
+    });
   });
 
-  // `toEqual`, so the inner `subject` is stated ABSENT rather than merely
-  // unasserted.
-  test("drops a foreign actor's wrongly-typed member at depth, keeping the chain and the members beside it", () => {
+  // The key is the FULL path, so the entry says which actor in a chain of
+  // identical member sets is malformed; the outer actor is not named.
+  test("refuses a foreign actor's wrongly-typed member at depth, keying the fault at the inner actor", () => {
     expect(
-      joseToDomain({
+      readRefusalOf({
         act: { sub: "outer-service", act: { sub: 42, client_id: "service-2" } },
-      }).claims.act,
-    ).toEqual({ subject: "outer-service", act: { clientId: "service-2" } });
+      }),
+    ).toEqual({
+      claim: "act",
+      invalid: [
+        {
+          key: "act.act.subject",
+          message: 'Member "subject" must be the shape it declares',
+        },
+      ],
+    });
+  });
+
+  // Every declared TEXT member of BOTH actor claims, so the refusal is the member
+  // set's and not one member's or one claim's: `act` and `mayAct` share the set
+  // (`claims-registry.ts`) but each carries its own codec literal, so a cell set
+  // on one claim alone would leave the other dropping.
+  test.each([
+    { wireClaim: "act", domainClaim: "act", wireMember: "iss", domainMember: "issuer" },
+    { wireClaim: "act", domainClaim: "act", wireMember: "sub", domainMember: "subject" },
+    {
+      wireClaim: "act",
+      domainClaim: "act",
+      wireMember: "client_id",
+      domainMember: "clientId",
+    },
+    {
+      wireClaim: "may_act",
+      domainClaim: "mayAct",
+      wireMember: "iss",
+      domainMember: "issuer",
+    },
+    {
+      wireClaim: "may_act",
+      domainClaim: "mayAct",
+      wireMember: "sub",
+      domainMember: "subject",
+    },
+    {
+      wireClaim: "may_act",
+      domainClaim: "mayAct",
+      wireMember: "client_id",
+      domainMember: "clientId",
+    },
+  ])(
+    "refuses a foreign $wireClaim whose $wireMember is not a string, keying the fault at the domain name $domainMember of $domainClaim",
+    ({ wireClaim, domainClaim, wireMember, domainMember }) => {
+      expect(readRefusalOf({ [wireClaim]: { [wireMember]: 42 } })).toEqual({
+        claim: domainClaim,
+        invalid: [
+          {
+            key: `${domainClaim}.${domainMember}`,
+            message: `Member "${domainMember}" must be the shape it declares`,
+          },
+        ],
+      });
+    },
+  );
+
+  // The boundary the refusal does not cross: `null` is an absence
+  // ({@link isNotStated}), classified before any codec runs, so a refusing
+  // structure omits the member exactly as a dropping one does.
+  test("reads a foreign actor's null member as absence, keeping the members beside it", () => {
+    expect(
+      joseToDomain({ act: { sub: null, client_id: "service-1" } }).claims.act,
+    ).toEqual({ clientId: "service-1" });
+  });
+
+  // Both faults at one key, in the payload's own key order: the leaf refusal for
+  // `sub` first, then the collision the look-alike `subject` raises on the slot
+  // `sub` resolves to. One claim, one accumulator, so neither masks the other.
+  test("names a wrongly-typed member AND the look-alike colliding with it, both at the member's key", () => {
+    expect(readRefusalOf({ act: { sub: 42, subject: "rogue" } })).toEqual({
+      claim: "act",
+      invalid: [
+        {
+          key: "act.subject",
+          message: 'Member "subject" must be the shape it declares',
+        },
+        {
+          key: "act.subject",
+          message: 'Members "sub" and "subject" both resolve to "subject" in "act"',
+        },
+      ],
+    });
   });
 
   // ⚠⚠ ONE LEVEL OUT THE WRITE DISPOSAL DIFFERS, and the difference is owned by
@@ -1506,6 +1606,7 @@ describe("walkObject — the structure walker's direction guard", () => {
         member("pruned", "pruned", "prune"),
       ],
       open: "closed",
+      readLeafFailure: "drop",
     },
     whenEmpty: "keep",
     sample: {},
@@ -1594,7 +1695,12 @@ describe("walkObject — the structure walker's direction guard", () => {
       domain: "inner",
       spec: SYNTHETIC_SPEC,
       wire: { jose: wireName("inner"), cose: wireName("inner") },
-      codec: { kind: "object", children: () => [required], open: "closed" },
+      codec: {
+        kind: "object",
+        children: () => [required],
+        open: "closed",
+        readLeafFailure: "drop",
+      },
       whenEmpty: "keep",
       sample: {},
     };
@@ -1604,7 +1710,12 @@ describe("walkObject — the structure walker's direction guard", () => {
       domain,
       spec: SYNTHETIC_SPEC,
       wire: { jose: wireName(domain), cose: wireName(domain) },
-      codec: { kind: "object", children: () => [nested], open: "closed" },
+      codec: {
+        kind: "object",
+        children: () => [nested],
+        open: "closed",
+        readLeafFailure: "drop",
+      },
       whenEmpty: "keep",
       sample: {},
     });
@@ -1664,7 +1775,12 @@ describe("walkObject — the structure walker's direction guard", () => {
       domain: "place",
       spec: SYNTHETIC_SPEC,
       wire: { jose: wireName("place"), cose: wireName("place") },
-      codec: { kind: "object", children: () => [divergent], open: "closed" },
+      codec: {
+        kind: "object",
+        children: () => [divergent],
+        open: "closed",
+        readLeafFailure: "drop",
+      },
       whenEmpty: "keep",
       sample: {},
     };
@@ -1757,7 +1873,12 @@ describe("a CLOSED member set", () => {
     domain: "actor",
     spec: SYNTHETIC_SPEC,
     wire: { jose: wireName("actor"), cose: wireName("actor") },
-    codec: { kind: "object", children: () => [declared], open: "closed" },
+    codec: {
+      kind: "object",
+      children: () => [declared],
+      open: "closed",
+      readLeafFailure: "drop",
+    },
     whenEmpty: "keep",
     sample: {},
   };
@@ -1767,7 +1888,12 @@ describe("a CLOSED member set", () => {
     domain: "actor",
     spec: SYNTHETIC_SPEC,
     wire: { jose: wireName("actor"), cose: wireName("actor") },
-    codec: { kind: "object", children: () => [declared], open: "verbatim" },
+    codec: {
+      kind: "object",
+      children: () => [declared],
+      open: "verbatim",
+      readLeafFailure: "drop",
+    },
     whenEmpty: "keep",
     sample: {},
   };
@@ -1831,6 +1957,80 @@ describe("a CLOSED member set", () => {
     expect(
       encodeClaim(opened, { subject: "service-1", surprise: "x" }, joseName),
     ).toEqual({ sub: "service-1", surprise: "x" });
+  });
+});
+
+/**
+ * THE READ-SIDE LEAF DISPOSITION — {@link ObjectCodec.readLeafFailure}, exercised
+ * through the real claim boundary on two synthetic structures identical but for
+ * the cell, so the verdict below is the cell's doing and nothing else's.
+ *
+ * ⚠ THE WRITE SIDE IS THE CONTROL. It refuses for every structure without reading
+ * the cell, so the `"drop"` structure refusing on write is what shows the cell is
+ * read on ONE side only — a walker consulting it in both directions would let a
+ * caller mint `{ subject: 42 }` into a token its own reader drops.
+ */
+describe("a structure's read-side disposition of a declared member it cannot decode", () => {
+  const subject: ClaimMemberSpec = {
+    domain: "subject",
+    spec: SYNTHETIC_SPEC,
+    wire: { jose: wireName("sub"), cose: wireName("sub") },
+    codec: { kind: "text" },
+    whenEmpty: "keep",
+    sample: "actor",
+  };
+
+  const actorWith = (readLeafFailure: LeafFailure): ClaimMemberSpec => ({
+    domain: "actor",
+    spec: SYNTHETIC_SPEC,
+    wire: { jose: wireName("actor"), cose: wireName("actor") },
+    codec: { kind: "object", children: () => [subject], open: "closed", readLeafFailure },
+    whenEmpty: "keep",
+    sample: {},
+  });
+
+  const refusing = actorWith("refuse");
+  const dropping = actorWith("drop");
+
+  const refusalOf = (act: () => unknown): unknown => {
+    try {
+      act();
+      return "no refusal";
+    } catch (error) {
+      return (error as AegisDomainError).data;
+    }
+  };
+
+  test("refuses a wrongly-typed declared member on read where the structure says refuse, at its full path", () => {
+    expect(refusalOf(() => decodeClaim(refusing, { sub: 42 }, joseName))).toEqual({
+      claim: "actor",
+      invalid: [
+        {
+          key: "actor.subject",
+          message: 'Member "subject" must be the shape it declares',
+        },
+      ],
+    });
+  });
+
+  test("drops a wrongly-typed declared member on read where the structure says drop", () => {
+    expect(decodeClaim(dropping, { sub: 42 }, joseName)).toEqual({});
+  });
+
+  test("refuses a wrongly-typed declared member on write whatever the structure says of a read", () => {
+    expect(refusalOf(() => encodeClaim(dropping, { subject: 42 }, joseName))).toEqual({
+      claim: "actor",
+      invalid: [
+        {
+          key: "actor.subject",
+          message: 'Member "subject" must be the shape it declares',
+        },
+      ],
+    });
+  });
+
+  test("reads a null member as absence before the cell is asked, so a refusing structure omits it", () => {
+    expect(decodeClaim(refusing, { sub: null }, joseName)).toEqual({});
   });
 });
 

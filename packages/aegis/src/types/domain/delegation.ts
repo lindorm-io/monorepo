@@ -1,8 +1,10 @@
 import type { ActClaim } from "../claims/domain/act-claim.js";
 
-// Delegation summary derived from the token's `act` claim chain.
-// Subject lives on the payload (payload.subject). This type focuses
-// purely on "how is the token being used" — the actor chain and its state.
+// Delegation summary derived from the read's DECODED `act` claim chain — the
+// same walk `claims.act` came from, so the two cannot disagree about which
+// members an actor states. Subject lives on the payload (payload.subject). This
+// type focuses purely on "how is the token being used" — the actor chain and
+// its state.
 export type TokenDelegation = {
   currentActor: string | undefined;
   actorChain: Array<ActClaim>;

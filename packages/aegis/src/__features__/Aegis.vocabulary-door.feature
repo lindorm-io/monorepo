@@ -132,3 +132,23 @@ Feature: The claim vocabulary door
       Then the domain claims are
         | scope | [] |
       And the custom bucket is empty
+
+  Rule: an actor whose declared member is not of its declared kind is refused rather than read without it
+
+    The door reads `act` as a token read does: member by member, each against
+    the kind the registry declares for it (RFC 8693 §4.1, RFC 7519 §4.1.2).
+    Nothing signs this door's input, so a member of the wrong kind is in the
+    hands of whoever wrote the dict, and reading the actor without it would
+    hand the consumer an actor stating no subject — the shape an allowlist
+    admitting exactly that would accept. The refusal is aegis policy, the
+    same one the token read applies, so an introspection body and a token
+    agree about the same actor; the entry locates the member in the domain
+    vocabulary.
+
+    Scenario: the actor whose subject is not a string is refused at the member's position
+      Given the claim dict
+        | sub | "user-1"                                |
+        | act | { "sub": 42, "client_id": "service-1" } |
+      When I read the claim dict into the domain vocabulary
+      Then the read is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "act" and locates the fault at "act.subject": Member "subject" must be the shape it declares

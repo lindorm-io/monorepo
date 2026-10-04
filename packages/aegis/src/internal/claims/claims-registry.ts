@@ -407,8 +407,14 @@ export const CLAIM_SPECS: ReadonlyArray<RegisteredClaimSpec> = [
     // A DECLARED, RECURSIVE and OPEN member set (RFC 8693 §4.1, RFC 8693 §4.4) — see
     // `act-members.ts`. The nested `act` member names ACT_MEMBERS itself, which is
     // what the `children` thunk exists for; `"verbatim"` and not `"flip"` because
-    // a tail member is another specification's JWT claim name.
-    codec: { kind: "object", children: () => ACT_MEMBERS, open: "verbatim" },
+    // a tail member is another specification's JWT claim name; `"refuse"` on read
+    // for the reason `act-members.ts` states beside the nested cell.
+    codec: {
+      kind: "object",
+      children: () => ACT_MEMBERS,
+      open: "verbatim",
+      readLeafFailure: "refuse",
+    },
     sensitivity: "public",
     sample: ACT_SAMPLE,
     bucket: "claims",
@@ -706,6 +712,7 @@ export const CLAIM_SPECS: ReadonlyArray<RegisteredClaimSpec> = [
         kind: "object",
         children: () => AUTHORIZATION_DETAIL_MEMBERS,
         open: "verbatim",
+        readLeafFailure: "drop",
       },
     },
     sensitivity: "public",
@@ -730,8 +737,14 @@ export const CLAIM_SPECS: ReadonlyArray<RegisteredClaimSpec> = [
     // ⚠ THE SAME member set OBJECT as `act` (RFC 8693 §4.1, RFC 8693 §4.4), not a copy:
     // two arrays would be two places a label could be written. The CLAIM key is
     // where the two genuinely differ — a private-use integer label here, a string
-    // name there.
-    codec: { kind: "object", children: () => ACT_MEMBERS, open: "verbatim" },
+    // name there. Both codec cells match `act`'s, the `"refuse"` for the reason
+    // `act-members.ts` states beside the nested cell.
+    codec: {
+      kind: "object",
+      children: () => ACT_MEMBERS,
+      open: "verbatim",
+      readLeafFailure: "refuse",
+    },
     sensitivity: "public",
     sample: ACT_SAMPLE,
     bucket: "claims",
@@ -850,7 +863,12 @@ export const CLAIM_SPECS: ReadonlyArray<RegisteredClaimSpec> = [
     // reaching the COLLECTION arm of every walker. `open: "verbatim"` because a
     // Subject Identifier's members are named by whoever registered its FORMAT; see
     // `internal/claims/sub-id-members.ts`.
-    codec: { kind: "object", children: () => SUB_ID_MEMBERS, open: "verbatim" },
+    codec: {
+      kind: "object",
+      children: () => SUB_ID_MEMBERS,
+      open: "verbatim",
+      readLeafFailure: "drop",
+    },
     sensitivity: "public",
     sample: SUB_ID_SAMPLE,
     bucket: "claims",
@@ -996,7 +1014,12 @@ export const CLAIM_SPECS: ReadonlyArray<RegisteredClaimSpec> = [
     // key: an undeclared address member is a lindorm extension of a lindorm type,
     // so the house convention is the right one for it. See `address-members.ts`,
     // and `ObjectCodec` for why the tail policy is a cell rather than a constant.
-    codec: { kind: "object", children: () => ADDRESS_MEMBERS, open: "flip" },
+    codec: {
+      kind: "object",
+      children: () => ADDRESS_MEMBERS,
+      open: "flip",
+      readLeafFailure: "drop",
+    },
     sensitivity: "public",
     sample: ADDRESS_SAMPLE,
     bucket: "profile",

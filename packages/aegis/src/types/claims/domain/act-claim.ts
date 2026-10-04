@@ -13,11 +13,12 @@ import type { Dict } from "@lindorm/types";
 // a tail member is another specification's JWT claim name and a flip would
 // rewrite it.
 //
-// ⚠ ONE THING IS STILL REFUSED: a tail member whose key COLLIDES with a declared
+// ⚠ ONE TAIL MEMBER IS STILL REFUSED: one whose key COLLIDES with a declared
 // member's resolved key — `{ sub: "audited", subject: "rogue" }`. Both resolve to
 // `subject`, and silently letting the last one win would hand actor
 // identification to whoever wrote the token. Refused by `reportCollision` in
-// `internal/claims/translate.ts`.
+// `internal/claims/translate.ts`. A DECLARED member of the wrong kind is refused
+// on read as well — `readLeafFailure`, `internal/claims/act-members.ts`.
 
 /**
  * The four members aegis DECLARES, split out from the open type on purpose.

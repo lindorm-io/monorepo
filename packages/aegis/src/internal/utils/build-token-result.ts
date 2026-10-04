@@ -112,7 +112,10 @@ export const buildTokenResult = <C extends Dict = Dict>({
     // was encrypted. `claims` has them stripped either way, so an unencrypted
     // token carrying them in cleartext leaks nothing regardless of this line.
     sensitive: encrypted ? sensitive : undefined,
-    delegation: extractTokenDelegation(wire as { act?: any }),
+    // ⚠ From the DECODED claim, never the wire: the two must agree. pinned:
+    // Aegis.confidentiality-gate.feature "an actor member stated as null is absent
+    // from the actor claim and from the delegation bucket alike".
+    delegation: extractTokenDelegation(claims.act),
     wire: { payload: wire },
     token,
   };

@@ -303,6 +303,59 @@ Feature: Delegation, and the actor policy a verifier states over it
         | jose |
         | cose |
 
+  Rule: a verifier admitting only an actor that states no subject still refuses a token whose actor subject is not a string
+
+    An allowlist is read against the actor the token read produced
+    (RFC 8693 §4.1), so what the read makes of a member it cannot decode
+    decides what the allowlist sees. Dropped, `{ "sub": 42 }` reads as an
+    actor stating no subject, and a condition admitting exactly that shape is
+    satisfied by a token whose issuer named a subject — the verdict handed to
+    whoever wrote the value. The read therefore refuses the token before any
+    actor policy is consulted, and the refusal is the structure's, never the
+    policy's: a token refused for its actor's shape must not be reported as
+    an actor the list declined, and the keyless read, which states no policy
+    at all, refuses it the same way. Aegis policy at verify: the
+    specifications type the member (RFC 7519 §4.1.2), and aegis chooses
+    refusal over a drop that admits the attack. The cose scenario carries no
+    tag: `act` has no registered CWT claim key — it rides the COSE wire under
+    its JWT name.
+
+    Background:
+      Given the wire claims
+        | iss | "https://test.lindorm.io/" |
+        | sub | "user-1"                   |
+        | aud | ["https://rs.lindorm.io/"] |
+        | jti | "token-1"                  |
+        | act | { "sub": 42 }              |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+      And the verifier admits only an actor matching
+        """json
+        { "subject": { "$exists": false } }
+        """
+
+    Scenario Outline: <wire>: the token is refused for its actor's shape, neither admitted by the list nor declined by it
+      When a third party signs the wire claims on the <wire> wire, typed "<typ>"
+      And I verify the token
+      Then verification is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "act" and locates the fault at "act.subject": Member "subject" must be the shape it declares
+
+      Examples:
+        | wire | typ             |
+        | jose | JWT             |
+        | cose | application/cwt |
+
+    Scenario Outline: <wire>: the keyless read, which states no actor policy, is refused the same way
+      When a third party signs the wire claims on the <wire> wire, typed "<typ>"
+      And I read the token without a key
+      Then the keyless read is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "act" and locates the fault at "act.subject": Member "subject" must be the shape it declares
+
+      Examples:
+        | wire | typ             |
+        | jose | JWT             |
+        | cose | application/cwt |
+
   Rule: a verifier stating an actor allowlist with no condition in it has the call refused rather than obeyed
 
     A condition naming no field is satisfied by every actor, so an allowlist
@@ -509,6 +562,46 @@ Feature: Delegation, and the actor policy a verifier states over it
       And the verified actor claim is exactly the object
         """json
         { "subject": "service-1", "email": "service-1@example.test" }
+        """
+
+      Examples:
+        | wire | format |
+        | jose | jwt    |
+        | cose | cwt    |
+
+  Rule: a verify reports an undeclared actor member as written whatever its value, so the refusal reaches declared members alone
+
+    The read refuses a declared actor member whose value is not of its
+    declared kind, and that refusal has an edge: a member aegis does not
+    declare has no declared kind to fail. `email` is a claim aegis types at
+    the top level and does not declare inside an actor — the member set is
+    open (RFC 8693 §4.1) — so an actor's `email` holding a number is a member
+    aegis holds no opinion about, reported under the name and with the value
+    its issuer wrote, beside the subject the refusal would have reached. A
+    read that refused it would reject conformant issuers over a member it
+    never declared; a read that typed it from the top-level claim would be
+    reading a declaration the actor does not carry. Aegis's read policy,
+    stated whole so a read that dropped, typed or refused the member fails.
+    The token is written through the raw kit door, which performs no
+    translation, so the wire says exactly what this row means it to say.
+
+    Background:
+      Given the wire claims
+        | iss | "https://test.lindorm.io/"          |
+        | sub | "user-1"                            |
+        | aud | ["https://rs.lindorm.io/"]          |
+        | jti | "token-1"                           |
+        | act | { "sub": "service-1", "email": 42 } |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+
+    Scenario Outline: <wire>: the undeclared member is reported as written, its value untouched
+      When I sign the wire claims as a claims token on the <wire> wire
+      And I verify the token
+      Then the verified token is a "<format>"
+      And the verified actor claim is exactly the object
+        """json
+        { "subject": "service-1", "email": 42 }
         """
 
       Examples:
@@ -1126,3 +1219,39 @@ Feature: Delegation, and the actor policy a verifier states over it
         | wire | format |
         | jose | jwt    |
         | cose | cwt    |
+
+  Rule: a foreign token whose authorized actor names a subject that is not a string is refused, naming the member at its position
+
+    `may_act` names its party as `act` names the actor (RFC 8693 §4.4), and
+    aegis declares one member set for both, so a member of the wrong kind
+    inside it is the same fault one claim over: a
+    party authorised to become the actor, read without its subject, is an
+    authorisation a token endpoint can match to nobody, and a drop would turn
+    the issuer's grant into one for a party that states nothing. The read
+    refuses the token, and the entry names the claim and the member at its
+    position in the domain vocabulary; the member beside the fault is not
+    named. Aegis policy at verify: the specifications type the member
+    (RFC 7519 §4.1.2), and aegis chooses refusal over the drop. The cose
+    scenario carries no tag: `may_act` has no registered CWT claim key — a
+    third party's token carries it under its JWT name.
+
+    Background:
+      Given the wire claims
+        | iss     | "https://test.lindorm.io/"                      |
+        | sub     | "user-1"                                        |
+        | aud     | ["https://rs.lindorm.io/"]                      |
+        | jti     | "token-1"                                       |
+        | may_act | { "sub": 42, "client_id": "delegate-client-1" } |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+
+    Scenario Outline: <wire>: the verify is refused, naming the authorized-actor member at its position
+      When a third party signs the wire claims on the <wire> wire, typed "<typ>"
+      And I verify the token
+      Then verification is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "mayAct" and locates the fault at "mayAct.subject": Member "subject" must be the shape it declares
+
+      Examples:
+        | wire | typ             |
+        | jose | JWT             |
+        | cose | application/cwt |

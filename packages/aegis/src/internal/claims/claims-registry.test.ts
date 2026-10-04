@@ -173,6 +173,69 @@ const childrenOf = (
       ? codec.of?.children
       : undefined;
 
+/**
+ * One cell of EVERY structure the registry declares, keyed by the PATH that
+ * first reaches the structure — the walk the per-codec freeze tests share.
+ *
+ * ⚠⚠ IT WALKS EVERY STRUCTURE, NOT EVERY CLAIM. A per-codec cell sits on the
+ * CODEC, so a nested member declares its OWN, and a walk reading only the claim's
+ * top-level codec says nothing about any structure below it — changing a cell on
+ * the NESTED `act` member alone then leaves this whole file GREEN while the actor
+ * set answers one way at depth 1 and another below. Keyed by PATH so a nested
+ * cell is named where it sits, and cycle-guarded as `internal/cose/cwt-spec.ts`
+ * does — the actor set names itself, so a naive descent would not terminate.
+ *
+ * ⚠ THE CYCLE GUARD IS ASKED FIRST, so a declaration reached twice is recorded
+ * ONCE — at the first path that reaches it. `act.act.act` and `mayAct.act` are
+ * the SAME member declaration as `act.act`, so recording them would grow the
+ * table with repetitions of one cell and make a genuinely new nesting harder to
+ * see. `act` and `mayAct` are each their own codec literal, so both claims still
+ * appear.
+ *
+ * ⚠ KEYED ON THE CODEC, NOT ON THE `children` THUNK — and the difference is the
+ * cells these tests exist to freeze. The cells live on the CODEC, so two codecs
+ * sharing one `children` arrow while declaring DIFFERENT values would have the
+ * second silently skipped: the guard would miss exactly the drift it was written
+ * to catch. No such pair exists today, and the codec object is just as stable an
+ * identity for cutting the cycle (`internal/cose/cwt-spec.ts` keys on the thunk
+ * because it reads no per-codec cell, so either works there).
+ */
+const cellOfEachStructure = <T>(
+  cell: (structure: ObjectCodec) => T,
+): Record<string, T> => {
+  const cells: Record<string, T> = {};
+  const seen = new Set<ObjectCodec>();
+
+  const structureOf = (codec: ClaimCodec): ObjectCodec | undefined =>
+    codec.kind === "object"
+      ? codec
+      : codec.kind === "array" && codec.of !== undefined
+        ? codec.of
+        : undefined;
+
+  const visit = (codec: ClaimCodec, path: string): void => {
+    const structure = structureOf(codec);
+    if (structure === undefined) return;
+
+    // An ARRAY of structures declares its member set on the ELEMENT, and the
+    // path says so — `authorizationDetails[]`, not `authorizationDetails`.
+    const here = codec.kind === "array" ? `${path}[]` : path;
+
+    if (seen.has(structure)) return;
+    seen.add(structure);
+
+    cells[here] = cell(structure);
+
+    for (const member of structure.children()) {
+      visit(member.codec, `${here}.${member.domain}`);
+    }
+  };
+
+  for (const spec of CLAIM_SPECS) visit(spec.codec, spec.domain);
+
+  return cells;
+};
+
 // The frozen `[domain, jose]` pairs the verify-FLOOR read resolves — the claims
 // carrying a `domainClaim` mark. These literals are the INDEPENDENT side of the
 // guard: not derived from the registry, so a registry edit that changes a name
@@ -1176,58 +1239,8 @@ describe("CLAIM_REGISTRY", () => {
     // nobody remembered to add to a test can be caught. NO registered claim is
     // closed today, and the table below is what says so.
     //
-    // ⚠⚠ IT WALKS EVERY STRUCTURE, NOT EVERY CLAIM. `open` sits on the CODEC, so a
-    // nested member declares its OWN, and a walk reading only the claim's
-    // top-level codec says nothing about any structure below it — removing
-    // `open: "verbatim"` from the NESTED `act` member then leaves this whole file
-    // GREEN while the actor set is open at depth 1 and closed below. Keyed by PATH
-    // so a nested cell is named where it sits, and cycle-guarded on the `children`
-    // thunk as `internal/cose/cwt-spec.ts` does — the actor set names itself, so a
-    // naive descent would not terminate.
-    const tails: Record<string, string> = {};
-    const seen = new Set<ObjectCodec>();
-
-    const structureOf = (codec: ClaimCodec): ObjectCodec | undefined =>
-      codec.kind === "object"
-        ? codec
-        : codec.kind === "array" && codec.of !== undefined
-          ? codec.of
-          : undefined;
-
-    const visit = (codec: ClaimCodec, path: string): void => {
-      const structure = structureOf(codec);
-      if (structure === undefined) return;
-
-      // An ARRAY of structures declares its member set on the ELEMENT, and the
-      // path says so — `authorizationDetails[]`, not `authorizationDetails`.
-      const here = codec.kind === "array" ? `${path}[]` : path;
-
-      // ⚠ THE CYCLE GUARD IS ASKED FIRST, so a declaration reached twice is
-      // recorded ONCE — at the first path that reaches it. `act.act.act` and
-      // `mayAct.act` are the SAME member declaration as `act.act`, so recording
-      // them would grow the table with repetitions of one cell and make a
-      // genuinely new nesting harder to see. `act` and `mayAct` are each their own
-      // codec literal, so both claims still appear.
-      //
-      // ⚠ KEYED ON THE CODEC, NOT ON THE `children` THUNK — and the difference is
-      // the cell this test exists to freeze. `open` lives on the CODEC, so two
-      // codecs sharing one `children` arrow while declaring DIFFERENT `open`
-      // values would have the second silently skipped: the guard would miss
-      // exactly the drift it was written to catch. No such pair exists today, and
-      // the codec object is just as stable an identity for cutting the cycle
-      // (`internal/cose/cwt-spec.ts` keys on the thunk because it reads no
-      // per-codec cell, so either works there).
-      if (seen.has(structure)) return;
-      seen.add(structure);
-
-      tails[here] = structure.open;
-
-      for (const member of structure.children()) {
-        visit(member.codec, `${here}.${member.domain}`);
-      }
-    };
-
-    for (const spec of CLAIM_SPECS) visit(spec.codec, spec.domain);
+    // ⚠⚠ IT WALKS EVERY STRUCTURE, NOT EVERY CLAIM — see `cellOfEachStructure`.
+    const tails = cellOfEachStructure((structure) => structure.open);
 
     expect(tails).toEqual({
       act: "verbatim",
@@ -1241,6 +1254,33 @@ describe("CLAIM_REGISTRY", () => {
       subjectId: "verbatim",
       "subjectId.identifiers[]": "verbatim",
       address: "flip",
+    });
+  });
+
+  test("each declared structure states what a read makes of a declared member it cannot decode", () => {
+    // The read-side leaf disposition decides whether a foreign token whose
+    // declared member holds a value of the wrong kind is refused whole or read
+    // as a structure that does not state the member — a verdict a verifier's
+    // policy then reads, so a cell that moves changes which tokens are accepted.
+    // The actor set refuses, at every depth and on both claims that share it,
+    // because its members jointly name one party; the rest drop, because their
+    // members are independent facts — {@link ObjectCodec.readLeafFailure} and
+    // `act-members.ts` carry the argument. The cell is REQUIRED, so a structure
+    // that states nothing fails to COMPILE; this table is what says which way
+    // each answers, nested cells included, and a later ruling on one structure
+    // is a one-cell change here beside its own.
+    //
+    // ⚠⚠ IT WALKS EVERY STRUCTURE, NOT EVERY CLAIM — see `cellOfEachStructure`.
+    const reads = cellOfEachStructure((structure) => structure.readLeafFailure);
+
+    expect(reads).toEqual({
+      act: "refuse",
+      "act.act": "refuse",
+      mayAct: "refuse",
+      "authorizationDetails[]": "drop",
+      subjectId: "drop",
+      "subjectId.identifiers[]": "drop",
+      address: "drop",
     });
   });
 

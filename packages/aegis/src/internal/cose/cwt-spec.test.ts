@@ -149,11 +149,11 @@ describe("shapeForBstr — the CWT byte-encoding shaper's drift guard", () => {
  * wire. `cwt-spec.ts` states the reason.
  */
 describe("shapeForObject — the CWT structure shaper's drift guard", () => {
-  // ⚠ The synthetic structures below state `open: "verbatim"` and the shaper never
-  // reads it — `ObjectCodec.open` is a required cell, and the compact spec is
-  // derived from the members' labels alone. The value mirrors what the registered
-  // structures these stand in for declare, so it stays true if the cell ever does
-  // reach the COSE side.
+  // ⚠ The synthetic structures below state `open` and `readLeafFailure`, and the
+  // shaper reads neither — both are required `ObjectCodec` cells, and the compact
+  // spec is derived from the members' labels alone. Each value mirrors what the
+  // registered structure the literal stands in for declares, so it stays true if
+  // either cell ever does reach the COSE side.
   const textMember = (domain: string): ClaimMemberSpec => ({
     domain,
     spec: SYNTHETIC_SPEC,
@@ -230,7 +230,7 @@ describe("shapeForObject — the CWT structure shaper's drift guard", () => {
         domain: "act",
         spec: SYNTHETIC_SPEC,
         wire: { jose: wireName("act"), cose: wireLabel(5, "act") },
-        codec: { kind: "object", children, open: "verbatim" },
+        codec: { kind: "object", children, open: "verbatim", readLeafFailure: "refuse" },
         whenEmpty: "keep",
         sample: {},
       },
@@ -289,6 +289,7 @@ describe("shapeForObject — the CWT structure shaper's drift guard", () => {
         kind: "object",
         children: () => [labelledMember("sub", 2)],
         open: "verbatim",
+        readLeafFailure: "refuse",
       },
       whenEmpty: "keep",
       sample: {},
@@ -317,7 +318,7 @@ describe("shapeForObject — the CWT structure shaper's drift guard", () => {
         domain: "act",
         spec: SYNTHETIC_SPEC,
         wire: { jose: wireName("act"), cose: wireName("act") },
-        codec: { kind: "object", children, open: "verbatim" },
+        codec: { kind: "object", children, open: "verbatim", readLeafFailure: "refuse" },
         whenEmpty: "keep",
         sample: {},
       },
@@ -336,7 +337,7 @@ describe("shapeForObject — the CWT structure shaper's drift guard", () => {
         domain: "act",
         spec: SYNTHETIC_SPEC,
         wire: { jose: wireName("act"), cose: wireName("act") },
-        codec: { kind: "object", children, open: "verbatim" },
+        codec: { kind: "object", children, open: "verbatim", readLeafFailure: "refuse" },
         whenEmpty: "keep",
         sample: {},
       },
@@ -373,6 +374,7 @@ describe("shapeForObject — the CWT structure shaper's drift guard", () => {
           kind: "object",
           children: () => [textMember("iss"), labelledMember("sub", 2)],
           open: "verbatim",
+          readLeafFailure: "drop",
         },
       },
       sensitivity: "public",

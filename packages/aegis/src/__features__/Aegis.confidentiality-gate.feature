@@ -4,11 +4,11 @@ Feature: The confidentiality gate at the verify door
   from a token that arrived sealed; the standard profile claims
   (OpenID Connect Core 1.0 §5.1) land in a bucket of their own; a structured
   claim is read member by member, so a member that contradicts its declared
-  shape is refused at aegis's own mint and declined — never spread — at the
-  specification-faithful read; and a null is an absence at every depth. The
-  buckets have no wire representation, so every rule here is aegis's read
-  surface and carries no tag unless a wire spelling the row cites is what
-  the scenario asserts. A cose twin of such a scenario carries none: the
+  shape is refused at aegis's own mint, and at the read an actor's member is
+  refused too while an address's is declined — never spread; and a null is
+  an absence at every depth. The buckets have no wire representation, so
+  every rule here is aegis's read surface and carries no tag unless a wire
+  spelling the row cites is what the scenario asserts. A cose twin of such a scenario carries none: the
   document defines the JWT claim, and a CWT carries the name only because
   aegis keys it by its interoperable text form.
 
@@ -318,6 +318,64 @@ Feature: The confidentiality gate at the verify door
         | jose |
         | cose |
 
+  Rule: an actor member stated as null is absent from the actor claim and from the delegation bucket alike
+
+    A null member is an absence, and the delegation bucket is a summary of the
+    actor claim the read produced — the same `act`, the same walk — so the two
+    cannot disagree about which members an actor states. A summary built from
+    the wire instead would carry the null into the actor chain and into the
+    current actor, a field that holds a string or nothing, and a consumer
+    reading it to learn who acts would be handed a value its type never
+    admitted. Aegis policy on the read surface. The bucket is asserted
+    exactly, so the current actor is asserted unstated rather than merely
+    unasserted. A raw door carries the null as written, and the first
+    scenario reads that premise off the wire.
+
+    Background:
+      Given the wire claims
+        | iss | "https://test.lindorm.io/"                |
+        | sub | "user-1"                                  |
+        | act | { "sub": null, "client_id": "service-1" } |
+      And the wire claims expire at "2024-01-01T09:00:00.000Z"
+
+    Scenario Outline: <wire>: the null member reaches the wire as written, so it is the read that is judged
+      When I sign the wire claims as a claims token on the <wire> wire
+      Then the raw payload carries "act" as the object
+        """json
+        { "sub": null, "client_id": "service-1" }
+        """
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
+    Scenario Outline: <wire>: the token verifies and the actor claim states the one member that was stated
+      When I sign the wire claims as a claims token on the <wire> wire
+      And I verify the token
+      Then the verified actor claim is exactly the object
+        """json
+        { "clientId": "service-1" }
+        """
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
+    Scenario Outline: <wire>: the delegation bucket states the same member and no other
+      When I sign the wire claims as a claims token on the <wire> wire
+      And I verify the token
+      Then the verified delegation is exactly the object
+        """json
+        { "isDelegated": true, "actorChain": [{ "clientId": "service-1" }] }
+        """
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
   Rule: minting a token whose claim member is not of its declared kind is refused
 
     A signature binds an issuer to what a token says, and a member whose value
@@ -349,18 +407,20 @@ Feature: The confidentiality gate at the verify door
         | jose |
         | cose |
 
-  Rule: a claim member a read cannot decode is dropped without discarding the members beside it
+  Rule: an address member a read cannot decode is dropped without discarding the members beside it
 
-    The members of a structured claim are independently meaningful
+    The members of an address are independent facts
     (OpenID Connect Core 1.0 §5.1.1) — a street address is a fact about the
     end-user whether or not the region beside it arrived in a shape this
-    reader can hold. A foreign token is not bound by aegis's declarations, so
-    an undecodable member is reported as one the token does not state, and
-    the disposal must never spread: discarding the whole structure destroys
-    information the issuer signed, silently. Aegis policy at the read. The
-    unreadable member has a surviving sibling, the only shape in which the
-    scoping is observable, and the bucket is asserted exactly so the dropped
-    member is asserted absent.
+    reader can hold — which is what sets the address apart from an actor,
+    whose members jointly name one party and whose undecodable member is
+    refused instead. A foreign token is not bound by aegis's declarations, so
+    the undecodable address member is reported as one the token does not
+    state, and the disposal must never spread: discarding the whole structure
+    destroys information the issuer signed, silently. Aegis policy at the
+    read. The unreadable member has a surviving sibling, the only shape in
+    which the scoping is observable, and the bucket is asserted exactly so
+    the dropped member is asserted absent.
 
     Background:
       Given the wire claims
@@ -412,15 +472,20 @@ Feature: The confidentiality gate at the verify door
         | jose |
         | cose |
 
-  Rule: a foreign token whose actor subject is not a string is read as an actor that does not state one
+  Rule: a foreign token whose actor names a subject that is not a string is refused, naming the member at its position
 
-    A foreign token is not bound by aegis's declarations, and an actor member
-    the reader cannot decode into its declared type is a fact the reader
-    cannot report in that type — reporting the raw value would hand a
-    consumer a runtime type error in code the type checker passed. The
-    actor's structure conforms, so the disposal stays scoped to the member:
-    the claim is read as an actor that does not state it, and the token stays
-    the delegated one its issuer signed. Aegis policy at the read.
+    An actor's members jointly identify the acting party (RFC 8693 §4.1), and
+    the subject among them is a string (RFC 7519 §4.1.2). A member of the
+    wrong kind cannot be read as that party, and reading the actor without it
+    reports an actor stating no subject — the shape an allowlist admitting
+    only actors that state none would accept, so a drop hands the verdict to
+    whoever wrote the value. The read refuses the token instead, on verify
+    and on the keyless read alike, and the entry names the member at its
+    position in the domain vocabulary. The member beside the fault is not
+    named. Aegis policy at verify: the specifications type the member, and
+    refusing rather than dropping is aegis's own call. The cose scenario
+    carries no tag: `act` has no registered CWT claim key — it rides the COSE
+    wire under its JWT name.
 
     Background:
       Given the wire claims
@@ -429,24 +494,22 @@ Feature: The confidentiality gate at the verify door
         | act | { "sub": 42, "client_id": "service-1" } |
       And the wire claims expire at "2024-01-01T09:00:00.000Z"
 
-    Scenario Outline: <wire>: the token verifies and the actor keeps the member beside the fault
+    Scenario Outline: <wire>: the verify is refused, naming the member at its position
       When a third party signs the wire claims on the <wire> wire, typed "<typ>"
       And I verify the token
-      Then the verified token is a "<format>"
-      And the verified actor claim is exactly the object
-        """json
-        { "clientId": "service-1" }
-        """
+      Then verification is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "act" and locates the fault at "act.subject": Member "subject" must be the shape it declares
 
       Examples:
-        | wire | typ             | format |
-        | jose | JWT             | jwt    |
-        | cose | application/cwt | cwt    |
+        | wire | typ             |
+        | jose | JWT             |
+        | cose | application/cwt |
 
-    Scenario Outline: <wire>: the token stays the delegated one its issuer signed
+    Scenario Outline: <wire>: the keyless read is refused the same way, so no door reads the actor without the member
       When a third party signs the wire claims on the <wire> wire, typed "<typ>"
-      And I verify the token
-      Then the verified delegation reports a delegated presentation
+      And I read the token without a key
+      Then the keyless read is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "act" and locates the fault at "act.subject": Member "subject" must be the shape it declares
 
       Examples:
         | wire | typ             |
@@ -482,15 +545,19 @@ Feature: The confidentiality gate at the verify door
         | jose |
         | cose |
 
-  Rule: a foreign token whose nested actor subject is not a string is read as a chain whose inner actor does not state one
+  Rule: a foreign token whose nested actor names a subject that is not a string is refused at its depth
 
-    A delegation chain nests one actor inside another (RFC 8693 §4.1), and a
-    foreign token is not bound by aegis's declarations at any depth. The
-    disposal must not widen with distance from the surface: discarding the
-    inner actor would erase a party from a chain whose whole purpose is
-    recording who acted for whom. So the outer chain is read as written, the
-    inner actor keeps the members beside the fault, and only the member the
-    reader cannot hold goes unreported. Aegis policy at the read.
+    A delegation chain nests one actor inside another (RFC 8693 §4.1),
+    putting the same member set at every depth, so the read-side refusal
+    holds one hop back exactly as it holds at the surface: a prior actor read
+    without its subject misreports who the token passed through, and a rule
+    that weakened with distance from the surface would be a rule about depth
+    rather than about the member. The entry's key carries the full path from
+    the claim down to the member, because a bare claim name cannot say which
+    actor in a chain of identical member sets is malformed; the outer actor
+    and the conforming member beside the fault are not named. Aegis policy at
+    verify, on both doors. The cose scenario carries no tag: `act` has no
+    registered CWT claim key — it rides the COSE wire under its JWT name.
 
     Background:
       Given the wire claims
@@ -499,24 +566,22 @@ Feature: The confidentiality gate at the verify door
         | act | { "sub": "outer-service", "act": { "sub": 42, "client_id": "service-2" } } |
       And the wire claims expire at "2024-01-01T09:00:00.000Z"
 
-    Scenario Outline: <wire>: the token verifies and the chain arrives with the inner actor's remaining member
+    Scenario Outline: <wire>: the verify is refused, keying the fault at the inner actor's member
       When a third party signs the wire claims on the <wire> wire, typed "<typ>"
       And I verify the token
-      Then the verified token is a "<format>"
-      And the verified actor claim is exactly the object
-        """json
-        { "subject": "outer-service", "act": { "clientId": "service-2" } }
-        """
+      Then verification is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "act" and locates the fault at "act.act.subject": Member "subject" must be the shape it declares
 
       Examples:
-        | wire | typ             | format |
-        | jose | JWT             | jwt    |
-        | cose | application/cwt | cwt    |
+        | wire | typ             |
+        | jose | JWT             |
+        | cose | application/cwt |
 
-    Scenario Outline: <wire>: the token stays the delegated one its issuer signed
+    Scenario Outline: <wire>: the keyless read is refused at the same depth
       When a third party signs the wire claims on the <wire> wire, typed "<typ>"
-      And I verify the token
-      Then the verified delegation reports a delegated presentation
+      And I read the token without a key
+      Then the keyless read is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "act" and locates the fault at "act.act.subject": Member "subject" must be the shape it declares
 
       Examples:
         | wire | typ             |

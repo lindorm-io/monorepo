@@ -114,6 +114,17 @@ export type ClaimCodec =
 export type ClaimMemberSpec = MemberSpec<unknown, ClaimCodec, "keep" | "prune">;
 
 /**
+ * What becomes of a DECLARED member whose value fails its LEAF codec — a `text`
+ * member holding `42`, an `int` holding `"x"`. A member whose codec is itself a
+ * structure is refused by its own walk at every depth and never asks this.
+ *   - `"refuse"` the whole claim is refused (`claim_structure_invalid`), the
+ *                entry naming the member at its FULL PATH (`act.act.subject`).
+ *   - `"drop"`   the member alone is omitted, the members beside it kept: the
+ *                value is read as one the token does not state.
+ */
+export type LeafFailure = "refuse" | "drop";
+
+/**
  * A claim value with a DECLARED member set.
  *
  * ⚠ `children` IS A THUNK for two load-bearing reasons: the actor chain is
@@ -156,11 +167,35 @@ export type ClaimMemberSpec = MemberSpec<unknown, ClaimCodec, "keep" | "prune">;
  *
  * pinned: claims-registry.test.ts, "each declared structure states what becomes of
  * a member it does not declare".
+ *
+ * `readLeafFailure` says what a READ makes of a DECLARED member whose value fails
+ * its leaf codec ({@link LeafFailure}). A WRITE refuses such a member for every
+ * structure without consulting the cell: the write door is aegis's own caller, so
+ * a member the codec cannot carry is refused by name rather than signed away in
+ * silence — dropped, the token says less than the caller stated and the caller is
+ * the one party who cannot notice. A read reports a stranger's token, which
+ * aegis's declarations do not bind, so the structure answers for itself:
+ *   - `"drop"`   where the members are INDEPENDENT facts — a street address is a
+ *                fact about the end-user whether or not the region beside it
+ *                arrived in a shape this reader can hold (OIDC Core §5.1.1).
+ *   - `"refuse"` where the members JOINTLY name one party — an actor
+ *                (RFC 8693 §4.1). Dropped, `act: { sub: 42 }` reads as an actor
+ *                stating NO subject, which an allowlist `{ subject: { $exists:
+ *                false } }` admits; and the member's type is the specification's
+ *                (RFC 7519 §4.1.2). Aegis policy at verify.
+ *
+ * ⚠ REQUIRED, like `open`, and for the same reason: the cell sits on the CODEC, a
+ * NESTED member declares its own, and a cell decided by omission would answer one
+ * depth silently while the depth above said something else.
+ *
+ * pinned: claims-registry.test.ts, "each declared structure states what a read
+ * makes of a declared member it cannot decode".
  */
 export type ObjectCodec = {
   kind: "object";
   children: () => ReadonlyArray<ClaimMemberSpec>;
   open: "closed" | "flip" | "verbatim";
+  readLeafFailure: LeafFailure;
 };
 
 export type ClaimSpec<D = unknown> = ParamSpec<D, ClaimCodec, WhenEmpty> & {

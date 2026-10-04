@@ -111,13 +111,30 @@ export const ACT_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
       url: "https://www.rfc-editor.org/rfc/rfc8693#section-4.1",
     },
     wire: actorMember("act", 5),
-    // ⚠⚠ `open` IS DECLARED HERE TOO, AND OMITTING IT IS A LIVE DEFECT. `open`
-    // sits on the CODEC and a nested member declares its own, so setting it on the
-    // two claim entries alone leaves the actor set OPEN at depth 1 and CLOSED at
-    // every depth below. A nested `act` is the same kind of object as the outer
-    // one (RFC 8693 §4.1), so a rule that changes with depth is a rule about
-    // nothing.
-    codec: { kind: "object", children: () => ACT_MEMBERS, open: "verbatim" },
+    // ⚠⚠ BOTH CELLS ARE DECLARED HERE TOO, AND OMITTING EITHER IS A LIVE DEFECT.
+    // `open` and `readLeafFailure` sit on the CODEC and a nested member declares
+    // its own, so setting them on the two claim entries alone leaves the actor
+    // set answering one way at depth 1 and another at every depth below. A
+    // nested `act` is the same kind of object as the outer one (RFC 8693 §4.1),
+    // so a rule that changes with depth is a rule about nothing.
+    //
+    // ⛔ `readLeafFailure: "refuse"` IS AEGIS POLICY AT VERIFY, stated once here
+    // and pointed at from both claim entries. An actor's members jointly name ONE
+    // party (RFC 8693 §4.1) and `sub` is a string (RFC 7519 §4.1.2), so a foreign
+    // `act: { sub: 42 }` read without the member is an actor stating NO subject —
+    // which an allowlist `{ subject: { $exists: false } }` admits, handing the
+    // verdict to whoever wrote the value. The token is refused instead, at
+    // verify, parse and `Aegis.toDomain`, the entry naming the member at its
+    // full path. `address` drops, because its members are independent facts.
+    // pinned: Aegis.delegation.feature "a verifier admitting only an actor that
+    // states no subject still refuses a token whose actor subject is not a
+    // string".
+    codec: {
+      kind: "object",
+      children: () => ACT_MEMBERS,
+      open: "verbatim",
+      readLeafFailure: "refuse",
+    },
     whenEmpty: KEEP,
     // A PRIOR actor, one hop back — hand-written and deliberately shallow,
     // because the sample is the one place a self-referential declaration has to

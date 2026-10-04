@@ -32,10 +32,11 @@ import { isClaimOmitted } from "./is-claim-omitted.js";
  * ⛔ AT VERIFY IT REPORTS NOTHING. It reads what the token read produced, and
  * `internal/claims/translate.ts` has already disposed of every fault it names: a
  * non-object actor is refused at any depth, a `text` member the read cannot decode
- * is dropped rather than carried, and a tail key resolving to a declared member's
- * key is refused. An actor member aegis does not declare is not measured here at
- * all — it rides the open tail, `aud` included. ⇒ Nothing may be moved out of the
- * read on the grounds that this rule would catch it at verify.
+ * is refused (`readLeafFailure`, `internal/claims/act-members.ts`), and a tail key
+ * resolving to a declared member's key is refused. An actor member aegis does not
+ * declare is not measured here at all — it rides the open tail, `aud` included.
+ * ⇒ Nothing may be moved out of the read on the grounds that this rule would
+ * catch it at verify.
  *
  * ⚠ THE DEPTH BOUND IS NOT PART OF THIS RULE. `maxChainDepth` is a VERIFIER's
  * option (`internal/utils/validate-actor.ts`), not a shape fact.

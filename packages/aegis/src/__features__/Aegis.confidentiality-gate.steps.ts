@@ -68,9 +68,4 @@ export class AegisConfidentialityGateSteps extends AegisStepsBase {
   theVerifiedCustomBucketCarriesNo(name: string): void {
     expect(this.verified().custom).not.toHaveProperty(name);
   }
-
-  @Then("the verified delegation reports a delegated presentation")
-  theVerifiedDelegationReportsADelegatedPresentation(): void {
-    expect(this.verified().delegation?.isDelegated).toBe(true);
-  }
 }

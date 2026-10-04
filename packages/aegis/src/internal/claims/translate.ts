@@ -10,6 +10,7 @@ import type {
   BespokeKind,
   ClaimCodec,
   ClaimMemberSpec,
+  LeafFailure,
   ObjectCodec,
 } from "../registry/claim-spec.js";
 import { isClaimSatisfied } from "../utils/rules/is-claim-satisfied.js";
@@ -479,19 +480,21 @@ type WalkDirection = {
    */
   prunesEmpty: boolean;
   /**
-   * What becomes of a member whose value fails a LEAF codec on this side —
-   * `"refuse"` on the write side ALONE; the branch in {@link walkObject} is the
+   * What becomes of a member whose value fails a LEAF codec on this side, asked
+   * of the STRUCTURE the member sits in; the branch in {@link walkObject} is the
    * one consumer.
    *
-   * ⚠ THE SPLIT IS THE RULE, NOT AN ACCIDENT OF THE WALK. The write door is
+   * ⚠ THE SPLIT IS THE RULE, NOT AN ACCIDENT OF THE WALK. The write side answers
+   * `"refuse"` for every structure without reading the codec: the write door is
    * aegis's own caller, so a member the codec cannot carry is refused by name
    * rather than signed away in silence — dropped, the token says less than the
    * caller stated and the caller is the one party who cannot notice. A READ
-   * reports a stranger's token, which aegis's declarations do not bind: a
-   * member the read cannot decode stays a member the token is read as not
-   * stating, scoped to that member alone.
+   * reports a stranger's token, which aegis's declarations do not bind, so the
+   * read side defers to the structure's own {@link ObjectCodec.readLeafFailure}
+   * cell: an address drops the member and keeps the rest, an actor is refused
+   * whole — the cell carries the argument for each.
    */
-  leafFailure: "refuse" | "drop";
+  leafFailure: (codec: ObjectCodec) => LeafFailure;
 };
 
 /**
@@ -756,33 +759,34 @@ const walkObject = (
       childPath(context, member.domain),
     );
     /**
-     * ⚠⚠ A MEMBER WHOSE VALUE FAILS A **LEAF** CODEC IS REFUSED ON WRITE AND
-     * DROPPED ON READ — {@link WalkDirection.leafFailure} names the side and
-     * carries the argument. A member whose codec is `{ kind: "object" }` or
-     * `{ kind: "array", of }` reaches {@link walkObject} or
-     * {@link walkElements}, each pushing its own entry before returning
-     * `undefined`, so `act: { act: 42 }` is refused at every depth in both
-     * directions — the `faults` guard is what keeps this branch from reporting
-     * those a second time. A LEAF codec — `text`, `int`, `date`, `bstr`, an
-     * array of strings — has no walker to speak for it, so its verdict is taken
-     * here. (`bool` cannot fail: its decode arm accepts any value — see
-     * {@link encodeIfReadable}.)
+     * ⚠⚠ A MEMBER WHOSE VALUE FAILS A **LEAF** CODEC IS REFUSED ON WRITE, AND ON
+     * READ DISPOSED OF AS THE STRUCTURE'S OWN CELL SAYS —
+     * {@link WalkDirection.leafFailure} asks the side,
+     * {@link ObjectCodec.readLeafFailure} carries the argument. A member whose
+     * codec is `{ kind: "object" }` or `{ kind: "array", of }` reaches
+     * {@link walkObject} or {@link walkElements}, each pushing its own entry
+     * before returning `undefined`, so `act: { act: 42 }` is refused at every
+     * depth in both directions — the `faults` guard is what keeps this branch
+     * from reporting those a second time. A LEAF codec — `text`, `int`, `date`,
+     * `bstr`, an array of strings — has no walker to speak for it, so its
+     * verdict is taken here. (`bool` cannot fail: its decode arm accepts any
+     * value — see {@link encodeIfReadable}.)
      *
-     * ⚠ A REQUIRED member's write-side failure is reported by the mandatory
-     * check below instead, through `codecRejected` — ONE entry, naming the
-     * fault as a shape one.
+     * ⚠ A REQUIRED member's failure is reported by the mandatory check below
+     * instead, through `codecRejected` — ONE entry, naming the fault as a shape
+     * one.
      * pinned: classes/authorization-details-claim-wire.test.ts#a required
      * member written with the WRONG SHAPE says so, not that it is empty.
      *
      * ⚠ `null` NEVER REACHES THIS LINE — classified as absence above, so neither
      * dropped-as-malformed nor refused. See {@link isNotStated}.
      *
-     * ⚠ THE READ-SIDE DROP IS RECORDED so the mandatory-member check below can
-     * tell "you wrote a value of the wrong shape" from "you wrote nothing".
+     * ⚠ A DROP IS RECORDED so the mandatory-member check below can tell "you
+     * wrote a value of the wrong shape" from "you wrote nothing".
      */
     if (translated === undefined) {
       if (
-        direction.leafFailure === "refuse" &&
+        direction.leafFailure(codec) === "refuse" &&
         member.required === undefined &&
         context.invalid.length === faults
       ) {
@@ -906,7 +910,7 @@ const writeDirection = (nameOf: NameSelector): WalkDirection => ({
   translate: (member, inner, context) => encodeIfReadable(member, inner, nameOf, context),
   flip: snakeKeys,
   prunesEmpty: true,
-  leafFailure: "refuse",
+  leafFailure: () => "refuse",
 });
 
 /** The READ side's walk rules — the mirror, keyed by wire name. */
@@ -915,9 +919,10 @@ const readDirection = (nameOf: NameSelector): WalkDirection => ({
   outKeyOf: (member) => member.domain,
   translate: (member, inner, context) => decodeValue(member, inner, nameOf, context),
   flip: camelKeys,
-  // A read reports what the PRODUCER wrote — see `WalkDirection`, both cells.
+  // A read reports what the PRODUCER wrote, and what it makes of a member it
+  // cannot decode is the structure's own call — see `WalkDirection`, both cells.
   prunesEmpty: false,
-  leafFailure: "drop",
+  leafFailure: (codec) => codec.readLeafFailure,
 });
 
 /**
