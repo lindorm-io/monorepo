@@ -1,5 +1,6 @@
 import { isString, isUndefined } from "@lindorm/is";
 import { GherkinError } from "../errors/GherkinError.js";
+import { readValue } from "../internal/execute/read-consumer-value.js";
 import type {
   AsyncDataTableSchema,
   DataTableSchema,
@@ -259,16 +260,14 @@ export class DataTable {
     } catch (error) {
       if (isZodShaped(error)) {
         const summary = `Data table body row ${bodyRow} failed schema conversion`;
+        const message = readValue(() => error.message);
 
-        throw new GherkinError(
-          isString(error.message) ? `${summary}\n\n${error.message}` : summary,
-          {
-            code: "table_conversion_failed",
-            details: TABLE_CONVERSION_FAILED_DETAILS,
-            data: { issues: error.issues, row: bodyRow },
-            cause: error,
-          },
-        );
+        throw new GherkinError(isString(message) ? `${summary}\n\n${message}` : summary, {
+          code: "table_conversion_failed",
+          details: TABLE_CONVERSION_FAILED_DETAILS,
+          data: { issues: error.issues, row: bodyRow },
+          cause: error,
+        });
       }
 
       throw error;
@@ -285,16 +284,14 @@ export class DataTable {
     } catch (error) {
       if (isZodShaped(error)) {
         const summary = `Data table body row ${bodyRow} failed schema conversion`;
+        const message = readValue(() => error.message);
 
-        throw new GherkinError(
-          isString(error.message) ? `${summary}\n\n${error.message}` : summary,
-          {
-            code: "table_conversion_failed",
-            details: TABLE_CONVERSION_FAILED_DETAILS,
-            data: { issues: error.issues, row: bodyRow },
-            cause: error,
-          },
-        );
+        throw new GherkinError(isString(message) ? `${summary}\n\n${message}` : summary, {
+          code: "table_conversion_failed",
+          details: TABLE_CONVERSION_FAILED_DETAILS,
+          data: { issues: error.issues, row: bodyRow },
+          cause: error,
+        });
       }
 
       throw error;

@@ -1,27 +1,8 @@
 import { describe, expect, test } from "vitest";
+import { proxyWithThrowingTraps, revokedProxy } from "../../__fixtures__/test-helpers.js";
 import { anchorError, markReported } from "./anchor-error.js";
 
 const format = (message: string): string => `anchored: ${message}`;
-
-const proxyWithThrowingTraps = (): object =>
-  new Proxy(
-    {},
-    {
-      get: () => {
-        throw new TypeError("trap: get");
-      },
-      getPrototypeOf: () => {
-        throw new TypeError("trap: getPrototypeOf");
-      },
-    },
-  );
-
-const revokedProxy = (): object => {
-  const { proxy, revoke } = Proxy.revocable({}, {});
-  revoke();
-
-  return proxy;
-};
 
 const unclassifiable = [
   { label: "a Proxy whose traps throw", build: proxyWithThrowingTraps },

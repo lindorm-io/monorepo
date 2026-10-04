@@ -5,8 +5,11 @@ import { z as z3 } from "zod/v3";
 import {
   capture,
   captureAsync,
+  captureRejection,
+  defineThrowingGetter,
   errorNamed,
   errorShape,
+  proxyWithThrowingTraps,
   ZOD_ISSUES as ISSUES,
 } from "../__fixtures__/test-helpers.js";
 import { GherkinError } from "../errors/GherkinError.js";
@@ -644,6 +647,38 @@ describe("DataTable", () => {
       expect(error.cause).toBe(shaped);
       expect(errorShape(error)).toMatchSnapshot();
     });
+
+    test("should wrap a zod-shaped error whose message cannot be read as table_conversion_failed, naming the row alone", async () => {
+      const unreadable = defineThrowingGetter(errorNamed("ZodError", ISSUES), "message");
+
+      const error = await captureAsync(() =>
+        convert(new DataTable([["name"], ["fig"]]), throwing(unreadable)),
+      );
+
+      expect(error).toBeInstanceOf(GherkinError);
+      expect(error.code).toBe("table_conversion_failed");
+      expect(error.cause).toBe(unreadable);
+      expect(error.message).toBe("Data table body row 1 failed schema conversion");
+    });
+
+    test.each([
+      {
+        label: "an error whose name getter throws",
+        build: (): unknown => defineThrowingGetter(new Error("unnamed boom"), "name"),
+      },
+      { label: "a proxy whose traps throw", build: proxyWithThrowingTraps },
+    ])(
+      "should rethrow $label, which cannot be classified, as the same value",
+      async ({ build }) => {
+        const thrown = build();
+
+        const { error } = await captureRejection(() =>
+          convert(new DataTable([["name"], ["fig"]]), throwing(thrown)),
+        );
+
+        expect(error).toBe(thrown);
+      },
+    );
 
     test("should rethrow a thrown plain object named ZodError without an issues array as the same value", async () => {
       const issueless = { name: "ZodError", message: "the schema rejected the row" };

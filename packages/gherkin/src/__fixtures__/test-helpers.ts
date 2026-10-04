@@ -18,6 +18,51 @@ export const errorNamed = (
   return error;
 };
 
+export const defineThrowingGetter = <T extends object>(target: T, key: string): T =>
+  Object.defineProperty(target, key, {
+    get: (): never => {
+      throw new TypeError(`${key} getter boom`);
+    },
+  });
+
+export const proxyWithThrowingTraps = (): object =>
+  new Proxy(
+    {},
+    {
+      get: () => {
+        throw new TypeError("trap: get");
+      },
+      getPrototypeOf: () => {
+        throw new TypeError("trap: getPrototypeOf");
+      },
+    },
+  );
+
+export const revokedProxy = (): object => {
+  const { proxy, revoke } = Proxy.revocable({}, {});
+  revoke();
+
+  return proxy;
+};
+
+/** `build` returns a fresh value. */
+export const UNREADABLE_THROWS: Array<{ label: string; build: () => unknown }> = [
+  {
+    label: "an error whose message has no string form",
+    build: () => {
+      const error = new Error("replaced");
+      (error as { message: unknown }).message = Object.create(null);
+      return error;
+    },
+  },
+  {
+    label: "an error whose message getter throws",
+    build: () => defineThrowingGetter(new Error("hidden"), "message"),
+  },
+  { label: "a value with no string form", build: () => Object.create(null) },
+  { label: "a proxy whose traps throw", build: proxyWithThrowingTraps },
+];
+
 /** Rejects the class declaration — the later-class-decorator-throws case. */
 export const RejectClass =
   () =>
@@ -39,6 +84,17 @@ export const captureAsync = async (fn: () => unknown): Promise<GherkinError> => 
     await fn();
   } catch (error) {
     return error as GherkinError;
+  }
+  throw new Error("expected function to reject");
+};
+
+export const captureRejection = async (
+  fn: () => unknown,
+): Promise<{ error: unknown }> => {
+  try {
+    await fn();
+  } catch (error) {
+    return { error };
   }
   throw new Error("expected function to reject");
 };

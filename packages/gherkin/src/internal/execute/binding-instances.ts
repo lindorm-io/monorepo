@@ -1,8 +1,9 @@
-import { isError, isObjectLike } from "@lindorm/is";
+import { isObjectLike } from "@lindorm/is";
 import type { Constructor } from "@lindorm/types";
 import type { ScenarioContainer } from "../container/types.js";
 import type { StagedInject } from "../metadata/staged.js";
 import { formatConstructorFailure } from "./format/format-constructor-failure.js";
+import { readThrownMessage } from "./read-consumer-value.js";
 
 /** What both a StepDefinition and a RegistryHook carry about their class. */
 export type BindingClass = {
@@ -66,7 +67,7 @@ export const createBindingInstances = (
         formatConstructorFailure({
           anchor,
           className,
-          message: isError(error) ? error.message : String(error),
+          message: readThrownMessage(error),
           remaining,
         }),
         { cause: error },

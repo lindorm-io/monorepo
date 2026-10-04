@@ -1,4 +1,4 @@
-import { isError, isUndefined } from "@lindorm/is";
+import { isUndefined } from "@lindorm/is";
 import { ScenarioInfo } from "../../classes/ScenarioInfo.js";
 import { GherkinError } from "../../errors/GherkinError.js";
 import { isPendingStepError } from "../../errors/is-pending-step-error.js";
@@ -23,6 +23,7 @@ import { formatPendingStep } from "./format/format-pending-step.js";
 import { formatStepAnchor } from "./format/format-step-anchor.js";
 import { formatStepFailure } from "./format/format-step-failure.js";
 import { invokeHook } from "./invoke-hook.js";
+import { readThrownMessage } from "./read-consumer-value.js";
 import { resolveDispatch } from "./resolve-dispatch.js";
 import { toStepArgument } from "./to-step-argument.js";
 
@@ -60,7 +61,7 @@ const convertArguments = async (
     } catch (error) {
       throw new GherkinError(
         formatConversionFailed({
-          causeMessage: isError(error) ? error.message : String(error),
+          causeMessage: readThrownMessage(error),
           declaration: registry.parameterTypeDeclarations.get(argument.parameterTypeName),
           parameterTypeName: argument.parameterTypeName,
           raw: argument.raw,

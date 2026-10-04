@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { ScenarioInfo } from "../../classes/ScenarioInfo.js";
-import { capture } from "../../__fixtures__/test-helpers.js";
+import { capture, UNREADABLE_THROWS } from "../../__fixtures__/test-helpers.js";
 import { createScenarioContainer } from "../container/create-scenario-container.js";
 import type { ScenarioContainer } from "../container/types.js";
 import type { ContextRegistration } from "../registry/registrations.js";
@@ -162,6 +162,40 @@ describe("createBindingInstances", () => {
     );
     expect(error.cause).toBe(original);
   });
+
+  test.each(UNREADABLE_THROWS)(
+    "should anchor a constructor throwing $label to the class, its text read as empty, the value as cause",
+    ({ build }) => {
+      const thrown = build();
+
+      class UnreadableSteps {
+        constructor() {
+          throw thrown;
+        }
+      }
+
+      const instances = createBindingInstances(container());
+
+      const error = capture(() =>
+        instances.acquire(
+          { className: "UnreadableSteps", injects: [], target: UnreadableSteps },
+          position,
+        ),
+      );
+
+      expect(error.message).toBe(
+        [
+          "Binding class UnreadableSteps constructor threw",
+          "",
+          "  under test",
+          "  at src/features/binding.feature:3:3",
+          "",
+          "The remaining 2 steps in this scenario were skipped.",
+        ].join("\n"),
+      );
+      expect(error.cause).toBe(thrown);
+    },
+  );
 
   test("should anchor the SAME thrown instance twice independently, never compounding its message", () => {
     const original = new Error("shared store boom");

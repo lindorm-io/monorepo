@@ -1,4 +1,5 @@
 import { isString } from "@lindorm/is";
+import { readMessage, readValue } from "../read-consumer-value.js";
 import { indent } from "./indent.js";
 import { joinBlocks } from "./join-blocks.js";
 
@@ -7,8 +8,9 @@ const formatEntry = (error: Error, index: number): string => {
   // Any error carrying a string `code` gets a code line — runner-owned
   // (disposal_failed, …) and consumer alike, read off the property rather than
   // the prototype, so a second installed copy of this package renders the same.
-  const code = (error as { code?: unknown }).code;
-  const message = isString(code) ? `${code}\n\n${error.message}` : error.message;
+  const code = readValue(() => (error as { code?: unknown }).code);
+  const text = readMessage(error);
+  const message = isString(code) ? `${code}\n\n${text}` : text;
 
   // Indent the whole message to the label's width, then splice the label into
   // the first line — multi-line messages stay aligned under their number.

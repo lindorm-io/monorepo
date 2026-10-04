@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { defineThrowingGetter } from "../../__fixtures__/test-helpers.js";
 import { composeFailures } from "./compose-failures.js";
 
 describe("composeFailures", () => {
@@ -43,5 +44,15 @@ describe("composeFailures", () => {
     expect(hookFailure.message).toBe(
       "@AfterScenario hook failed\n\nreport upload failed",
     );
+  });
+
+  test("should read a primary whose message cannot be read as empty, keeping it as the cause", () => {
+    const primary = defineThrowingGetter(new Error("hidden"), "message");
+    const hookFailure = new Error("@AfterScenario hook failed\n\nreport upload failed");
+
+    const composed = composeFailures([primary, hookFailure]);
+
+    expect(composed.cause).toBe(primary);
+    expect(composed.message).toBe(composeFailures([new Error(""), hookFailure]).message);
   });
 });

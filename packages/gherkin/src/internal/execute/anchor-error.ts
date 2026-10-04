@@ -1,37 +1,12 @@
-import { isError, isString } from "@lindorm/is";
+import { isString } from "@lindorm/is";
+import {
+  isReadableError,
+  readCause,
+  readMessage,
+  readText,
+} from "./read-consumer-value.js";
 
 const reportedMessage = new WeakMap<Error, string>();
-
-// A consumer can throw anything and give an error's `message` or `cause`
-// anything — a non-string, a value with no string form, a throwing getter, a
-// Proxy — and a read that throws here escapes the catch sites in
-// run-scenario.ts (the after-phases never run) and feature-hooks.ts (the
-// hook's error is replaced). Pinned: anchor-error.test.ts.
-const isReadableError = (value: unknown): value is Error => {
-  try {
-    return isError(value);
-  } catch {
-    return false;
-  }
-};
-
-const readText = (read: () => unknown): string => {
-  try {
-    return String(read());
-  } catch {
-    return "";
-  }
-};
-
-const readMessage = (error: Error): string => readText(() => error.message);
-
-const readCause = (error: Error): unknown => {
-  try {
-    return error.cause;
-  } catch {
-    return undefined;
-  }
-};
 
 const writeMessage = (error: Error, message: string): boolean => {
   // Module code is strict: a frozen instance, a read-only `message` or a

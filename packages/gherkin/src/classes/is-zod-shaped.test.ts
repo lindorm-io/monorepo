@@ -2,7 +2,13 @@ import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { z as zMini } from "zod/mini";
 import { z as z3 } from "zod/v3";
-import { errorNamed, ZOD_ISSUES as ISSUES } from "../__fixtures__/test-helpers.js";
+import {
+  defineThrowingGetter,
+  errorNamed,
+  proxyWithThrowingTraps,
+  revokedProxy,
+  ZOD_ISSUES as ISSUES,
+} from "../__fixtures__/test-helpers.js";
 import { isZodShaped } from "./is-zod-shaped.js";
 
 const thrownBy = (parse: () => unknown): unknown => {
@@ -71,6 +77,21 @@ describe("isZodShaped", () => {
       "Encountered Promise during synchronous parse. Use .parseAsync() instead.",
     );
     expect(isZodShaped(asyncError)).toBe(false);
+  });
+
+  test.each([
+    {
+      label: "a name getter that throws",
+      build: (): unknown => defineThrowingGetter(errorNamed("ZodError", ISSUES), "name"),
+    },
+    {
+      label: "an issues getter that throws",
+      build: (): unknown => defineThrowingGetter({ name: "ZodError" }, "issues"),
+    },
+    { label: "a proxy whose traps throw", build: proxyWithThrowingTraps },
+    { label: "a revoked proxy", build: revokedProxy },
+  ])("should reject a value with $label rather than throw", ({ build }) => {
+    expect(isZodShaped(build())).toBe(false);
   });
 
   test("should reject values that are not objects", () => {

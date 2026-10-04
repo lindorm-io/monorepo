@@ -1,6 +1,11 @@
 import type { Constructor } from "@lindorm/types";
 import { describe, expect, test } from "vitest";
-import { capture, errorShape } from "../../__fixtures__/test-helpers.js";
+import {
+  capture,
+  defineThrowingGetter,
+  errorShape,
+  UNREADABLE_THROWS,
+} from "../../__fixtures__/test-helpers.js";
 import { ScenarioInfo } from "../../classes/ScenarioInfo.js";
 import { Context } from "../../decorators/Context.js";
 import { GherkinError } from "../../errors/GherkinError.js";
@@ -261,6 +266,25 @@ describe("createScenarioContainer", () => {
       expect(error.cause).toBe(original);
     });
 
+    test.each(UNREADABLE_THROWS)(
+      "should anchor a constructor throwing $label to its TOKEN, its text read as empty, the value as cause",
+      ({ build }) => {
+        const thrown = build();
+
+        class UnreadableContext {
+          public constructor() {
+            throw thrown;
+          }
+        }
+
+        const scoped = container([registration(UnreadableContext)]);
+        const error = capture(() => scoped.resolve(UnreadableContext));
+
+        expect(error.message).toBe("Context class UnreadableContext constructor threw");
+        expect(error.cause).toBe(thrown);
+      },
+    );
+
     test("should anchor the SAME thrown instance twice independently, never compounding its message", () => {
       const original = new Error("shared boom");
 
@@ -324,6 +348,20 @@ describe("createScenarioContainer", () => {
         "Context class StringBoomContext constructor threw\n\nctor string",
       );
       expect((error as unknown as { cause: unknown }).cause).toBe("ctor string");
+    });
+
+    test("should refuse to resolve after dispose a token whose name cannot be read, naming it as empty", async () => {
+      const scoped = container([]);
+
+      await scoped.dispose();
+
+      const error = capture(() =>
+        scoped.resolve(defineThrowingGetter(class NamelessContext {}, "name")),
+      );
+
+      expect(error.code).toBe("container_disposed");
+      expect(error.message).toBe("Cannot resolve  after dispose()");
+      expect(error.data).toEqual({ token: "" });
     });
 
     test("should refuse to resolve after dispose — a late context would never be disposed", async () => {
@@ -488,6 +526,16 @@ describe("createScenarioContainer", () => {
       expect(error.code).toBe("unknown_context_token");
       expect(error.message).toBe("Unknown context token UnregisteredContext");
       expect(error.data).toEqual({ token: "UnregisteredContext" });
+    });
+
+    test("should name a token whose name cannot be read as empty", () => {
+      const error = capture(() =>
+        container([]).resolve(defineThrowingGetter(class NamelessContext {}, "name")),
+      );
+
+      expect(error.code).toBe("unknown_context_token");
+      expect(error.message).toBe("Unknown context token ");
+      expect(error.data).toEqual({ token: "" });
     });
 
     test("should name the demanding context when a context's own inject is unregistered", () => {
@@ -777,6 +825,68 @@ describe("createScenarioContainer", () => {
       // The original still travels as the cause.
       expect((error.cause as GherkinError).code).toBe("vault_sealed");
       expect(error.message).toContain("vault sealed");
+    });
+
+    test.each(UNREADABLE_THROWS)(
+      "should collect a dispose() throwing $label as disposal_failed, its text read as empty, and dispose the remaining contexts",
+      async ({ build }) => {
+        const thrown = build();
+        const disposals: Array<string> = [];
+
+        class AContext {
+          public dispose(): void {
+            disposals.push("A");
+          }
+        }
+
+        class UnreadableContext {
+          public dispose(): void {
+            throw thrown;
+          }
+        }
+
+        const scoped = container([
+          registration(AContext),
+          registration(UnreadableContext),
+        ]);
+
+        scoped.resolve(AContext);
+        scoped.resolve(UnreadableContext);
+
+        const errors = await scoped.dispose();
+
+        expect(errors.map((error) => error.message)).toEqual([
+          "Context class UnreadableContext dispose() threw",
+        ]);
+        expect(errors.map((error) => (error as GherkinError).code)).toEqual([
+          "disposal_failed",
+        ]);
+        expect(errors[0].cause).toBe(thrown);
+        expect(disposals).toEqual(["A"]);
+      },
+    );
+
+    test("should name a disposal failure by the context's registration when its instance's constructor cannot be read", async () => {
+      class ShadowedContext {
+        public constructor() {
+          defineThrowingGetter(this, "constructor");
+        }
+
+        public dispose(): void {
+          throw new Error("shadowed boom");
+        }
+      }
+
+      const scoped = container([registration(ShadowedContext)]);
+
+      scoped.resolve(ShadowedContext);
+
+      const [error] = await scoped.dispose();
+
+      expect(error.message).toBe(
+        "Context class ShadowedContext dispose() threw\n\nshadowed boom",
+      );
+      expect((error as GherkinError).data).toEqual({ className: "ShadowedContext" });
     });
 
     test("should dispose nothing and return empty on a second call", async () => {

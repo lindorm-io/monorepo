@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { defineThrowingGetter } from "../../../__fixtures__/test-helpers.js";
 import { GherkinError } from "../../../errors/GherkinError.js";
 import { formatAdditionalFailures } from "./format-additional-failures.js";
 
@@ -40,5 +41,21 @@ describe("formatAdditionalFailures", () => {
     failure.code = 42;
 
     expect(formatAdditionalFailures([failure])).not.toContain("42");
+  });
+
+  test("should render a failure whose message cannot be read as an empty message", () => {
+    const failure = defineThrowingGetter(new Error("hidden"), "message");
+
+    expect(formatAdditionalFailures([failure])).toBe(
+      formatAdditionalFailures([new Error("")]),
+    );
+  });
+
+  test("should render no code line when the code cannot be read", () => {
+    const failure = defineThrowingGetter(new Error("boom"), "code");
+
+    expect(formatAdditionalFailures([failure])).toBe(
+      formatAdditionalFailures([new Error("boom")]),
+    );
   });
 });

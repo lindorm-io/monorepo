@@ -421,9 +421,6 @@ describe("runScenario", () => {
 
   describe("failure modes", () => {
     test("should report an UNDEFINED argument-bearing step with a table-typed snippet", async () => {
-      // The M1 guard is gone: dispatch decides on the text alone, so an
-      // unmatched table step is an ordinary undefined_step — and its snippet
-      // declares the trailing parameter.
       const error = await captureAsync(() =>
         run([
           step("a table nobody defined", {

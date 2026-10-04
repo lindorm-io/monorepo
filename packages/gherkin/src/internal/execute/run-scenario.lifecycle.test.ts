@@ -1,6 +1,12 @@
 import { beforeEach, describe, expect, test } from "vitest";
 import { ScenarioInfo } from "../../classes/ScenarioInfo.js";
-import { captureAsync, errorShape } from "../../__fixtures__/test-helpers.js";
+import {
+  captureAsync,
+  defineThrowingGetter,
+  errorShape,
+  proxyWithThrowingTraps,
+  UNREADABLE_THROWS,
+} from "../../__fixtures__/test-helpers.js";
 import { AfterScenario } from "../../decorators/AfterScenario.js";
 import { AfterStep } from "../../decorators/AfterStep.js";
 import { BeforeScenario } from "../../decorators/BeforeScenario.js";
@@ -40,6 +46,8 @@ type HandOff = { error: Error | undefined; message: string | undefined };
 const handOffs: Array<HandOff> = [];
 
 let sharedFailure = new Error("shared boom");
+let unreadableThrow: unknown;
+let spoilable = new Error("spoilable boom");
 
 @Context()
 class TrackedContext {
@@ -68,6 +76,20 @@ class ThrowingCtorContext {
 class SharedFailureDisposeContext {
   dispose(): void {
     throw sharedFailure;
+  }
+}
+
+@Context()
+class UnreadableCtorContext {
+  constructor() {
+    throw unreadableThrow;
+  }
+}
+
+@Context()
+class UnreadableDisposeContext {
+  dispose(): void {
+    throw unreadableThrow;
   }
 }
 
@@ -343,18 +365,7 @@ class StepHost {
 
   @Given("a step throwing an error whose cause is a proxy whose traps throw")
   throwsProxyCause(): void {
-    const cause = new Proxy(
-      {},
-      {
-        get: () => {
-          throw new TypeError("trap: get");
-        },
-        getPrototypeOf: () => {
-          throw new TypeError("trap: getPrototypeOf");
-        },
-      },
-    );
-    throw new Error("unreadable cause boom", { cause });
+    throw new Error("unreadable cause boom", { cause: proxyWithThrowingTraps() });
   }
 
   @Given("a step throwing an error whose cause getter throws")
@@ -415,6 +426,81 @@ class SharedFailureDisposalSteps {
   @Given("a step using the shared-failure dispose context")
   uses(): void {
     log.push("step:shared-leaky");
+  }
+}
+
+@Binding()
+class UnreadableTransformSteps {
+  @ParameterType("unreadable", /[a-z]+/)
+  static unreadable(): string {
+    throw unreadableThrow;
+  }
+
+  @Given("a conversion of an unreadable {unreadable}")
+  converts(_value: string): void {
+    log.push("step:unreadable-converts");
+  }
+}
+
+@Binding()
+class UnreadableCtorSteps {
+  constructor() {
+    throw unreadableThrow;
+  }
+
+  @Given("a step on a class whose constructor throws an unreadable value")
+  step(): void {
+    log.push("step:unreadable-ctor");
+  }
+}
+
+@Binding()
+class UnreadableContextSteps {
+  @Inject(UnreadableCtorContext)
+  private readonly broken!: UnreadableCtorContext;
+
+  @Given("a step needing a context whose constructor throws an unreadable value")
+  needs(): void {
+    log.push("step:unreadable-context");
+  }
+}
+
+@Binding()
+class UnreadableDisposalSteps {
+  @Inject(TrackedContext)
+  private readonly tracked!: TrackedContext;
+
+  @Inject(UnreadableDisposeContext)
+  private readonly leaky!: UnreadableDisposeContext;
+
+  @Given("a failing step using a context whose dispose throws an unreadable value")
+  fails(): void {
+    throw new Error("unreadable-dispose step boom");
+  }
+}
+
+@Binding()
+class SpoilingHooks {
+  @AfterStep("@ast-spoil-step-message")
+  spoilStepMessage(_stepInfo: StepInfo, result: StepResult): void {
+    handOffs.push({ error: result.error, message: result.error?.message });
+    defineThrowingGetter(result.error as Error, "message");
+    throw new Error("after-step spoiler boom");
+  }
+
+  @AfterStep("@ast-unreadable-code")
+  throwsUnreadableCode(): void {
+    throw defineThrowingGetter(new Error("after-step coded boom"), "code");
+  }
+
+  @AfterStep("@ast-spoilable")
+  throwsSpoilable(): void {
+    throw spoilable;
+  }
+
+  @AfterScenario("@as-spoil-spoilable")
+  spoilSpoilable(): void {
+    defineThrowingGetter(spoilable, "message");
   }
 }
 
@@ -539,6 +625,8 @@ describe("runScenario lifecycle", () => {
     observedStepFailures.length = 0;
     handOffs.length = 0;
     sharedFailure = new Error("shared boom");
+    unreadableThrow = undefined;
+    spoilable = new Error("spoilable boom");
   });
 
   describe("total order", () => {
@@ -924,6 +1012,140 @@ describe("runScenario lifecycle", () => {
     });
   });
 
+  describe("a consumer value whose text cannot be read", () => {
+    const captureBesideEmpty = async (
+      node: ScenarioNode,
+      thrown: unknown,
+    ): Promise<{ empty: GherkinError; error: GherkinError }> => {
+      unreadableThrow = new Error("");
+      const empty = await captureAsync(() => run(node));
+      log.length = 0;
+      unreadableThrow = thrown;
+      const error = await captureAsync(() => run(node));
+
+      return { empty, error };
+    };
+
+    test.each(UNREADABLE_THROWS)(
+      "should fail the step with conversion_failed when a transform throws $label, its text read as empty, the value as cause",
+      async ({ build }) => {
+        const thrown = build();
+        const { empty, error } = await captureBesideEmpty(
+          scenario([step("a conversion of an unreadable abc")]),
+          thrown,
+        );
+
+        expect(error).not.toBeInstanceOf(TypeError);
+        expect(error.code).toBe("conversion_failed");
+        expect(error.cause).toBe(thrown);
+        expect(error.message).toBe(empty.message);
+      },
+    );
+
+    test.each(UNREADABLE_THROWS)(
+      "should report a step class constructor throwing $label through its wrap, its text read as empty, the value as cause",
+      async ({ build }) => {
+        const thrown = build();
+        const { empty, error } = await captureBesideEmpty(
+          scenario([
+            step("a step on a class whose constructor throws an unreadable value"),
+          ]),
+          thrown,
+        );
+
+        expect(error).not.toBeInstanceOf(TypeError);
+        expect(error.message).toContain(
+          "Binding class UnreadableCtorSteps constructor threw",
+        );
+        expect(error.cause).toBe(thrown);
+        expect(error.message).toBe(empty.message);
+      },
+    );
+
+    test.each(UNREADABLE_THROWS)(
+      "should report a context constructor throwing $label through its wrap, its text read as empty, the value as cause",
+      async ({ build }) => {
+        const thrown = build();
+        const { empty, error } = await captureBesideEmpty(
+          scenario([
+            step("a step needing a context whose constructor throws an unreadable value"),
+          ]),
+          thrown,
+        );
+
+        expect(error).not.toBeInstanceOf(TypeError);
+        expect(error.message).toContain(
+          "Context class UnreadableCtorContext constructor threw",
+        );
+        expect(error.cause).toBe(thrown);
+        expect(error.message).toBe(empty.message);
+      },
+    );
+
+    test.each(UNREADABLE_THROWS)(
+      "should keep the step failure primary, append disposal_failed and dispose the remaining contexts when a dispose() throws $label",
+      async ({ build }) => {
+        const { empty, error } = await captureBesideEmpty(
+          scenario([
+            step(
+              "a failing step using a context whose dispose throws an unreadable value",
+            ),
+          ]),
+          build(),
+        );
+
+        expect(error).not.toBeInstanceOf(TypeError);
+        expect((error.cause as Error).message).toContain("unreadable-dispose step boom");
+        expect(error.message).toContain(
+          "disposal_failed\n\n     Context class UnreadableDisposeContext dispose() threw",
+        );
+        expect(error.message).toBe(empty.message);
+        expect(log).toEqual(["dispose:tracked"]);
+      },
+    );
+  });
+
+  describe("a reported failure whose text turns unreadable before the failures compose", () => {
+    test("should compose the appendix under a primary whose message cannot be read, the primary as cause", async () => {
+      const error = await captureAsync(() =>
+        run(scenario([step("a failing step")], ["@ast-spoil-step-message"])),
+      );
+      const [handOff] = handOffs;
+
+      expect(error).not.toBeInstanceOf(TypeError);
+      expect(error.cause).toBe(handOff.error);
+      expect(error.message).toMatch(/^1 additional failure followed the one above:/);
+      expect(error.message).toContain("after-step spoiler boom");
+    });
+
+    test("should compose an additional failure whose code cannot be read without a code line", async () => {
+      const error = await captureAsync(() =>
+        run(scenario([step("a failing step")], ["@ast-unreadable-code"])),
+      );
+
+      expect(error).not.toBeInstanceOf(TypeError);
+      expect((error.cause as Error).message).toContain("step boom");
+      expect(error.message).toContain(
+        "1 additional failure followed the one above:\n\n  1) @AfterStep hook failed",
+      );
+      expect(error.message).toContain("after-step coded boom");
+    });
+
+    test("should compose an additional failure whose message cannot be read as an empty entry", async () => {
+      const error = await captureAsync(() =>
+        run(
+          scenario([step("a failing step")], ["@ast-spoilable", "@as-spoil-spoilable"]),
+        ),
+      );
+
+      expect(error).not.toBeInstanceOf(TypeError);
+      expect((error.cause as Error).message).toContain("step boom");
+      expect(error.message).toMatch(
+        /1 additional failure followed the one above:\n\n {2}1\) $/,
+      );
+    });
+  });
+
   describe("§4: @AfterScenario throws", () => {
     test("should fail the scenario and still dispose", async () => {
       const error = await captureAsync(() =>
@@ -1046,8 +1268,6 @@ describe("runScenario lifecycle", () => {
     });
 
     test("should bracket an ARGUMENT-BEARING step with step hooks like any dispatched step", async () => {
-      // The M1 guard is gone: an argument-bearing step dispatches on its
-      // text, so it IS a bracketed step — hooks observe it normally.
       await run(
         scenario(
           [

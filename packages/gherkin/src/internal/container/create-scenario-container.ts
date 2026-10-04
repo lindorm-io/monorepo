@@ -1,9 +1,10 @@
-import { isError, isFunction, isObjectLike, isUndefined } from "@lindorm/is";
+import { isFunction, isObjectLike, isUndefined } from "@lindorm/is";
 import type { Constructor } from "@lindorm/types";
 import { ScenarioInfo } from "../../classes/ScenarioInfo.js";
 import { GherkinError } from "../../errors/GherkinError.js";
 import { formatContextConstructorFailure } from "../execute/format/format-context-constructor-failure.js";
 import { formatDisposalFailure } from "../execute/format/format-disposal-failure.js";
+import { readText, readThrownMessage } from "../execute/read-consumer-value.js";
 import type { StagedInject } from "../metadata/staged.js";
 import type { ContextRegistration } from "../registry/registrations.js";
 import type {
@@ -17,6 +18,16 @@ import type {
 type ResolvedField = {
   fieldName: string;
   value: object;
+};
+
+/**
+ * Named by its registration for the disposal report: a read off the
+ * consumer's instance (`instance.constructor.name`) can throw. Pinned:
+ * create-scenario-container.test.ts ("by the context's registration").
+ */
+type ResolvedContext = {
+  className: string;
+  instance: object;
 };
 
 /**
@@ -47,7 +58,7 @@ export const createScenarioContainer = (
    * its injected fields. Pinned: create-scenario-container.test.ts ("reverse
    * first-resolved order").
    */
-  const resolved: Array<object> = [];
+  const resolved: Array<ResolvedContext> = [];
 
   const resolving: Array<ContextRegistration> = [];
 
@@ -76,11 +87,13 @@ export const createScenarioContainer = (
     // prevent — so it fails loudly instead. The runner disposes as its very
     // last act (run-scenario.ts), so only a runner bug can reach this.
     if (disposed) {
-      throw new GherkinError(`Cannot resolve ${token.name} after dispose()`, {
+      const tokenName = readText(() => token.name);
+
+      throw new GherkinError(`Cannot resolve ${tokenName} after dispose()`, {
         code: "container_disposed",
         details:
           "The scenario container was already disposed; resolving would construct a context whose dispose() never runs. Nothing may touch the container after the scenario's teardown.",
-        data: { token: token.name },
+        data: { token: tokenName },
       });
     }
 
@@ -96,16 +109,17 @@ export const createScenarioContainer = (
     const registration = registrations.get(token);
 
     if (isUndefined(registration)) {
+      const tokenName = readText(() => token.name);
       const demanded = isUndefined(demand)
         ? ""
         : ` demanded by ${demand.className}.${demand.fieldName}`;
 
-      throw new GherkinError(`Unknown context token ${token.name}${demanded}`, {
+      throw new GherkinError(`Unknown context token ${tokenName}${demanded}`, {
         code: "unknown_context_token",
         details:
           "The token is neither a registered @Context class nor ScenarioInfo — the usual authoring mistake is a missing @Context() decorator on the token class. Add @Context() to it, or inject a registered context.",
         data: {
-          token: token.name,
+          token: tokenName,
           ...(isUndefined(demand)
             ? {}
             : { className: demand.className, fieldName: demand.fieldName }),
@@ -157,7 +171,7 @@ export const createScenarioContainer = (
         throw new Error(
           formatContextConstructorFailure({
             className: registration.className,
-            message: isError(error) ? error.message : String(error),
+            message: readThrownMessage(error),
           }),
           { cause: error },
         );
@@ -165,7 +179,7 @@ export const createScenarioContainer = (
 
       assignFields(instance, fields);
       instances.set(token, instance);
-      resolved.push(instance);
+      resolved.push({ className: registration.className, instance });
 
       return instance;
     } finally {
@@ -182,7 +196,7 @@ export const createScenarioContainer = (
 
     const errors: Array<Error> = [];
 
-    for (const instance of [...resolved].reverse()) {
+    for (const { className, instance } of [...resolved].reverse()) {
       const candidate = (instance as { dispose?: unknown }).dispose;
 
       if (isFunction(candidate)) {
@@ -196,12 +210,8 @@ export const createScenarioContainer = (
           // error is the runner's own failure, never an assertion diff, so it
           // gets the house code instead of the primary-instance rethrow steps
           // and hooks use. The original travels as the cause.
-          const className = instance.constructor.name;
           const failure = new GherkinError(
-            formatDisposalFailure({
-              className,
-              message: isError(error) ? error.message : String(error),
-            }),
+            formatDisposalFailure({ className, message: readThrownMessage(error) }),
             {
               code: "disposal_failed",
               details:
