@@ -16,6 +16,8 @@ import type {
   JoseHeaderBuckets,
   SignedToken,
 } from "../types/index.js";
+import { assertClaims } from "../utils/assert-claims.js";
+import { claimsMatch } from "../utils/claims-match.js";
 
 /** Any member of `IAegis` or of one of its namespaces. */
 type AegisArm = (...args: Array<any>) => any;
@@ -184,5 +186,12 @@ export const _createMockAegis = (mockFn: () => any, aesKit: IAesKit): IAegis => 
       custom: {},
       token: "mocked_token",
     }),
+
+    // The claim check FORWARDS to the real one, as the aes arms do: a consumer's
+    // gate test must refuse what the gate refuses, and a canned `undefined` /
+    // `true` would pass every claim set. A mock has no deployment, so the window
+    // allows no clock tolerance unless the call states one.
+    assert: impl<IAegis["assert"]>(assertClaims),
+    matches: impl<IAegis["matches"]>(claimsMatch),
   };
 };

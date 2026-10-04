@@ -15,6 +15,7 @@ import type {
   AegisVerifyKey,
   AesDecryptOptions,
   AesEncryptOptions,
+  AssertOptions,
   CweEncryptOptions,
   CwtClaimsWire,
   CoseDecryptedEncryptedToken,
@@ -24,6 +25,7 @@ import type {
   DecryptedToken,
   DecryptOptions,
   DecryptTokenOptions,
+  DomainAssert,
   EncryptData,
   EncryptedToken,
   EncryptOptions,
@@ -233,4 +235,27 @@ export interface IAegis {
     assert?: VerifyAssert,
     options?: VerifyOptions,
   ): Promise<VerifiedToken<C>>;
+
+  /**
+   * Verify's claim checking, WITHOUT the signature: the same matcher argument
+   * ({@link DomainAssert}) and the same temporal window ({@link AssertOptions})
+   * `verify` applies, run over a flat domain-keyed claim dict that arrived some
+   * other way (an introspection response, a cached credential). The temporal
+   * range is checked by DEFAULT, in THIS deployment's `clockTolerance` unless
+   * `options.clockTolerance` states one — so a claim set inside `verify`'s skew
+   * window does not pass one surface and fail the other.
+   *
+   * Throws `AegisDomainError("Invalid token")` under `claims_invalid`, naming
+   * every failing top-level key; a root `$and` / `$or` / `$not` is named by its
+   * own key. The same check outside any deployment is `assertClaims`.
+   */
+  assert(claims: Dict, assert: DomainAssert, options?: AssertOptions): void;
+
+  /**
+   * The boolean form of {@link IAegis.assert}: the same claims, matcher and
+   * window, answered rather than enforced, for a caller that BRANCHES on the
+   * result instead of rejecting the claim set. The same check outside any
+   * deployment is `claimsMatch`.
+   */
+  matches(claims: Dict, assert: DomainAssert, options?: AssertOptions): boolean;
 }

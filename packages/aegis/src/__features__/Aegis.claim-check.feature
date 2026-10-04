@@ -1,18 +1,24 @@
-Feature: The static claim matcher
+Feature: Checking claims without a signature
 
   Verify's claim checking without the signature: the same matcher argument and
   the same temporal window, run over a flat claim set that arrived some other
   way — an introspection response, a cached credential, a claim set verified
   upstream. Every rule here is one a caller would otherwise hand-roll, and a
-  hand-rolled version disagrees with the verified arm at the boundary. The door
-  has two forms that must agree — the boolean one answers, the throwing one
-  refuses — so every verdict is read off both. No scenario carries a tag: the
-  door is handed a claim set in the domain vocabulary, and the cited documents
-  state processing rules for a token, not for a claim set outside one. The
+  hand-rolled version disagrees with the verified arm at the boundary. The
+  check is offered at two doors. A deployment's runs the window in the
+  deployment's clock tolerance, the one its verify runs in, so the two arms
+  agree at the boundary without the caller restating anything. The one
+  outside any deployment allows no clock tolerance unless its caller states
+  one, there being no deployment to read it from. Each door has two forms
+  that must agree — the boolean one answers, the throwing one refuses — so
+  every verdict is read off both. No scenario carries a tag: the door is
+  handed a claim set in the domain vocabulary, and the cited documents state
+  processing rules for a token, not for a claim set outside one. The
   descriptions cite the obligations the defaults carry over.
 
   Background:
     Given the clock reads "2024-01-01T08:00:00.000Z"
+    And a deployment at "https://test.lindorm.io/" whose vault holds an ES512 signing key
 
   Rule: a caller asserting one value of a list-valued claim is answered by a claim containing it
 
@@ -197,9 +203,9 @@ Feature: The static claim matcher
       Then the claims are refused as a domain error "claims_invalid"
       And the refusal lists the invalid claims "audience", "subject"
 
-  Rule: a caller stating a conjunction to the static claim matcher is answered by a claim set satisfying every member
+  Rule: a caller stating a conjunction to the claim check is answered by a claim set satisfying every member
 
-    The static matcher takes the same matcher argument as verify, and a
+    The claim check takes the same matcher argument as verify, and a
     matcher argument is a condition that composes. A surface that read a
     conjunction as a claim name would find no such claim in any set and
     refuse every caller who composed one, so the accepting direction shows
@@ -218,7 +224,7 @@ Feature: The static claim matcher
       When I check the claims without a signature
       Then the claims are accepted
 
-  Rule: a caller stating a conjunction to the static claim matcher is refused by a claim set failing one member, under the conjunction's own key
+  Rule: a caller stating a conjunction to the claim check is refused by a claim set failing one member, under the conjunction's own key
 
     The refusal names the top-level entries of the matcher argument that did
     not hold, and a root operator is a top-level entry of its own: the caller
@@ -240,7 +246,7 @@ Feature: The static claim matcher
       Then the claims are refused as a domain error "claims_invalid"
       And the refusal lists the invalid claims "$and"
 
-  Rule: a caller stating a disjunction to the static claim matcher is answered by a claim set satisfying only its second member
+  Rule: a caller stating a disjunction to the claim check is answered by a claim set satisfying only its second member
 
     A disjunction holds when any member does, and the member that holds must
     not have to be the first. A surface evaluating only the first member
@@ -259,7 +265,7 @@ Feature: The static claim matcher
       When I check the claims without a signature
       Then the claims are accepted
 
-  Rule: a caller negating a claim matcher at the static claim matcher is refused by a claim set matching it, under the negation's own key
+  Rule: a caller negating a claim matcher at the claim check is refused by a claim set matching it, under the negation's own key
 
     A negation fails exactly when its payload holds, and the refusal names
     the entry that failed: `$not`. The claim inside the negation matched, so
@@ -280,7 +286,7 @@ Feature: The static claim matcher
       Then the claims are refused as a domain error "claims_invalid"
       And the refusal lists the invalid claims "$not"
 
-  Rule: a raw hash source presented to the static claim matcher matches nothing
+  Rule: a raw hash source presented to the claim check matches nothing
 
     `at_hash` is derived with the hash function the token's signing `alg`
     selects (OpenID Connect Core 1.0 §3.1.3.6), and `alg` is a header
@@ -320,8 +326,7 @@ Feature: The static claim matcher
     what the token carried, not about what the caller wrote.
 
     Background:
-      Given a deployment at "https://test.lindorm.io/" whose vault holds an ES512 signing key
-      And the content to mint
+      Given the content to mint
         | transactionId | txn_abc |
       And an audience list whose only member is "https://receiver.lindorm.io/"
       And the subject identifier
@@ -504,6 +509,147 @@ Feature: The static claim matcher
 
     Scenario: the claim set ten seconds past its expiry is accepted inside a sixty-second leeway
       When I check the claims without a signature
+      Then the claims are accepted
+
+  Rule: a claim set expired inside the deployment's clock tolerance is accepted
+
+    The leeway is the deployment's to choose, and a deployment chooses it
+    once: the window the claim check runs in is the one its verify runs in, so
+    a claim set inside the verified arm's skew window passes the check without
+    the caller restating the tolerance at every call site. A check that did
+    not read the deployment's tolerance would refuse, at the boundary, exactly
+    the claim sets verify accepts — intermittently, in production.
+
+    Background:
+      Given the deployment allows a clock tolerance of 30 seconds
+      And the claims to check
+        | subject | "user-1" |
+      And the claims expire at "2024-01-01T07:59:50.000Z"
+      And the verifier asserts
+        """json
+        { "subject": "user-1" }
+        """
+
+    Scenario: the claim set ten seconds past its expiry is accepted inside the deployment's thirty-second tolerance
+      When I check the claims without a signature
+      Then the claims are accepted
+
+  Rule: a claim set expired ten seconds ago is refused by a deployment allowing no clock tolerance
+
+    A deployment stating no tolerance gets none: `exp` is the instant on or
+    after which a token must not be accepted for processing (RFC 7519 §4.1.4),
+    and the deployment's window is the only leeway the check applies on its
+    behalf. The refusal names the expiry claim, so it is attributable to the
+    window rather than to the matcher the caller did state.
+
+    Background:
+      Given the deployment allows a clock tolerance of 0 seconds
+      And the claims to check
+        | subject | "user-1" |
+      And the claims expire at "2024-01-01T07:59:50.000Z"
+      And the verifier asserts
+        """json
+        { "subject": "user-1" }
+        """
+
+    Scenario: the claim set ten seconds past its expiry is refused by a deployment allowing no tolerance
+      When I check the claims without a signature
+      Then the claims are refused as a domain error "claims_invalid"
+      And the refusal lists the invalid claims "expiresAt"
+
+  Rule: a caller's own clock tolerance replaces the deployment's for that check
+
+    The deployment's tolerance is the default, not a floor. A caller stating a
+    tolerance at the call is asking a narrower or wider question about this
+    claim set, and it gets the one it asked: a check taking the wider of the
+    two would leave the caller no way to tighten the window for one decision,
+    and a check taking the deployment's regardless would make the option a
+    knob that turns nothing.
+
+    Background:
+      Given the deployment allows a clock tolerance of 30 seconds
+      And the claims to check
+        | subject | "user-1" |
+      And the claims expire at "2024-01-01T07:59:50.000Z"
+      And the verifier asserts
+        """json
+        { "subject": "user-1" }
+        """
+      And the verifier allows a clock tolerance of 0 seconds
+
+    Scenario: the claim set ten seconds past its expiry is refused under the caller's zero tolerance at a deployment allowing thirty seconds
+      When I check the claims without a signature
+      Then the claims are refused as a domain error "claims_invalid"
+      And the refusal lists the invalid claims "expiresAt"
+
+  Rule: a caller leaving its clock tolerance undefined is answered in the deployment's
+
+    An option bag a caller builds from its own configuration often carries
+    the key with no value, and that is a tolerance not stated, not a
+    tolerance of nothing. The deployment's window answers it exactly as it
+    answers a bag without the key: an undefined knob is the absence of a
+    statement, and reading it as a statement of zero would refuse at the
+    boundary the claim sets the deployment configured itself to accept.
+
+    Background:
+      Given the deployment allows a clock tolerance of 30 seconds
+      And the claims to check
+        | subject | "user-1" |
+      And the claims expire at "2024-01-01T07:59:50.000Z"
+      And the verifier asserts
+        """json
+        { "subject": "user-1" }
+        """
+      And the verifier's clock tolerance is left undefined
+
+    Scenario: the claim set ten seconds past its expiry is accepted inside the deployment's tolerance when the caller's is left undefined
+      When I check the claims without a signature
+      Then the claims are accepted
+
+  Rule: a claim check outside any deployment allows no clock tolerance unless its caller states one
+
+    The check is offered outside any deployment too, for a caller holding a
+    claim set and no vault — a test, a tool reading a cached credential.
+    There is no deployment to read a tolerance from, so none is applied: the
+    window is the strict one `exp` states (RFC 7519 §4.1.4), and a caller
+    wanting leeway states it. The deployment this scenario builds, and the
+    tolerance it allows, stand beside the check and never reach it.
+
+    Background:
+      Given the deployment allows a clock tolerance of 30 seconds
+      And the claims to check
+        | subject | "user-1" |
+      And the claims expire at "2024-01-01T07:59:50.000Z"
+      And the verifier asserts
+        """json
+        { "subject": "user-1" }
+        """
+
+    Scenario: the claim set ten seconds past its expiry is refused outside any deployment
+      When I check the claims without a signature or a deployment
+      Then the claims are refused as a domain error "claims_invalid"
+      And the refusal lists the invalid claims "expiresAt"
+
+  Rule: a claim check outside any deployment widens by the clock tolerance its caller states
+
+    Outside a deployment the caller is the only party that can state a
+    tolerance, so the one it states is the one applied — the same knob, with
+    the same meaning, as at a deployment's door. A check ignoring it would
+    leave a caller outside any deployment no leeway at all, and the
+    hand-rolled comparison the check exists to retire would come back.
+
+    Background:
+      Given the claims to check
+        | subject | "user-1" |
+      And the claims expire at "2024-01-01T07:59:50.000Z"
+      And the verifier asserts
+        """json
+        { "subject": "user-1" }
+        """
+      And the verifier allows a clock tolerance of 30 seconds
+
+    Scenario: the claim set ten seconds past its expiry is accepted inside the thirty-second tolerance the caller states
+      When I check the claims without a signature or a deployment
       Then the claims are accepted
 
   Rule: a claim set is judged against the instant the caller names rather than the wall clock

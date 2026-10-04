@@ -71,6 +71,8 @@ import { rawVerifyJwt } from "../internal/utils/raw-verify-jwt.js";
 import { resolveKey } from "../internal/utils/resolve-key.js";
 import { signToken } from "../internal/utils/sign-token.js";
 import { validate } from "../internal/utils/validate.js";
+import { assertClaims } from "../utils/assert-claims.js";
+import { claimsMatch } from "../utils/claims-match.js";
 import { verifyDpopProof } from "../internal/utils/verify-dpop-proof.js";
 import { resolveVerifyFloor, verifyToken } from "../internal/utils/verify-token.js";
 import type {
@@ -401,6 +403,23 @@ export class Aegis implements IAegis {
       assert: assertOrToken,
       options: optionsOrAssert as VerifyOptions | undefined,
       deps: this.deps,
+    });
+  }
+
+  // The claim check in THIS deployment's window, with the precedence the kits
+  // give the per-call tolerance over the configured one (`JwtKit.verify`,
+  // `CwtKit.verify`): the window `assert` runs in is the one `verify` runs in.
+  assert(claims: Dict, assert: DomainAssert, options: AssertOptions = {}): void {
+    assertClaims(claims, assert, {
+      ...options,
+      clockTolerance: options.clockTolerance ?? this.clockTolerance,
+    });
+  }
+
+  matches(claims: Dict, assert: DomainAssert, options: AssertOptions = {}): boolean {
+    return claimsMatch(claims, assert, {
+      ...options,
+      clockTolerance: options.clockTolerance ?? this.clockTolerance,
     });
   }
 

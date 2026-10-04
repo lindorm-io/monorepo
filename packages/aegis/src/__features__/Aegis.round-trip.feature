@@ -282,7 +282,7 @@ Feature: The domain round trip
   Rule: a caller asserting one scope is answered by the space-delimited wire claim containing it
 
     A single scope named at verify is a containment question about the list the
-    token grants — the same question the static matcher answers over a claim
+    token grants — the same question the claim check answers over a claim
     dict. On the wire that list is one space-separated string (RFC 8693 §4.2),
     so the matcher is answered against the list the string spells: answered
     against the string itself, containment fails for every token whose grant

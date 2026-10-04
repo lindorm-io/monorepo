@@ -4,6 +4,7 @@ exports[`createMockAegis > declares every member of IAegis 1`] = `
 [
   "aes.decrypt",
   "aes.encrypt",
+  "assert",
   "cwe.decrypt",
   "cwe.encrypt",
   "cwm.sign",
@@ -21,6 +22,7 @@ exports[`createMockAegis > declares every member of IAegis 1`] = `
   "jws.verify",
   "jwt.sign",
   "jwt.verify",
+  "matches",
   "mint",
   "parse",
   "registerProfile",

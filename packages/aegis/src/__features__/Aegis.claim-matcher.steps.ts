@@ -48,6 +48,13 @@ export class AegisClaimMatcherSteps extends AegisStepsBase {
     this.ctx.verifyOptions.clockTolerance = seconds;
   }
 
+  @Given("the verifier's clock tolerance is left undefined")
+  theVerifiersClockToleranceIsLeftUndefined(): void {
+    // An own key holding `undefined`, never an absent key: the sentence states a
+    // tolerance the verifier wrote and left unset.
+    this.ctx.verifyOptions.clockTolerance = undefined;
+  }
+
   @Given("the verifier judges the claims at {string}")
   theVerifierJudgesTheClaimsAt(instant: string): void {
     this.ctx.verifyOptions.currentDate = new Date(instant);

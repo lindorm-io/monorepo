@@ -68,9 +68,9 @@ Feature: The error contract at every door
         | jose |
         | cose |
 
-  Rule: a failing static claim assertion throws an AegisError
+  Rule: a failing claim assertion at the deployment throws an AegisError
 
-    The static claim-matching surface is a door like any other: a caller that
+    The deployment's claim check is a door like any other: a caller that
     wraps it in the same guard as a verify must catch the same class. The
     door takes a flat claim set and no token, so the scenario names no wire.
 
@@ -82,8 +82,26 @@ Feature: The error contract at every door
         { "subject": "someone-else" }
         """
 
-    Scenario: the static door's refusal is an aegis error
+    Scenario: the deployment's claim check refusal is an aegis error
       When I check the claims without a signature
+      Then the claims are refused as an aegis error
+
+  Rule: a failing claim assertion outside any deployment throws an AegisError
+
+    The claim check offered outside any deployment is a door too, and a
+    caller holding claims and no vault still branches on the class. The door
+    takes a flat claim set and no token, so the scenario names no wire.
+
+    Background:
+      Given the claims to check
+        | subject | "user-1" |
+      And the verifier asserts
+        """json
+        { "subject": "someone-else" }
+        """
+
+    Scenario: the refusal of a claim check outside any deployment is an aegis error
+      When I check the claims without a signature or a deployment
       Then the claims are refused as an aegis error
 
   Rule: a domain refusal keeps the token's encoding out of its data

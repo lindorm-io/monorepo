@@ -1,13 +1,14 @@
 import type { DataTable, DocString } from "@lindorm/gherkin";
 import { Binding, Given, Then, When } from "@lindorm/gherkin";
 import { expect } from "vitest";
-import { Aegis } from "../classes/Aegis.js";
+import type { IAegis } from "../interfaces/index.js";
 import type { DomainAssert, VerifyAssert } from "../types/index.js";
+import { assertClaims, claimsMatch } from "../utils/index.js";
 import { AegisStepsBase } from "../__fixtures__/aegis-steps-base.js";
 import { jsonCells } from "../__fixtures__/json-cells.js";
 
 @Binding()
-export class AegisStaticMatcherSteps extends AegisStepsBase {
+export class AegisClaimCheckSteps extends AegisStepsBase {
   // the claim set, stated in the domain vocabulary
 
   @Given("the claims to check")
@@ -36,12 +37,23 @@ export class AegisStaticMatcherSteps extends AegisStepsBase {
   async iCheckTheClaimsWithoutASignature(): Promise<void> {
     const { claims, verifyOptions } = this.ctx;
     const assert = this.stated();
+    const aegis = this.deployment();
 
     // Both forms of the door answer the same question: the boolean one is read
     // here, the throwing one is left for a Then to judge.
-    this.ctx.matched = Aegis.matches(claims, assert, verifyOptions);
+    this.ctx.matched = aegis.matches(claims, assert, verifyOptions);
 
-    await this.attempt(async () => Aegis.assert(claims, assert, verifyOptions));
+    await this.attempt(async () => aegis.assert(claims, assert, verifyOptions));
+  }
+
+  @When("I check the claims without a signature or a deployment")
+  async iCheckTheClaimsWithoutASignatureOrADeployment(): Promise<void> {
+    const { claims, verifyOptions } = this.ctx;
+    const assert = this.stated();
+
+    this.ctx.matched = claimsMatch(claims, assert, verifyOptions);
+
+    await this.attempt(async () => assertClaims(claims, assert, verifyOptions));
   }
 
   @When("I check the verified claims without a signature, asserting")
@@ -49,10 +61,11 @@ export class AegisStaticMatcherSteps extends AegisStepsBase {
     const { claims } = this.verified();
     const { verifyOptions } = this.ctx;
     const assert = JSON.parse(matcher.content) as DomainAssert;
+    const aegis = this.deployment();
 
-    this.ctx.matched = Aegis.matches(claims, assert, verifyOptions);
+    this.ctx.matched = aegis.matches(claims, assert, verifyOptions);
 
-    await this.attempt(async () => Aegis.assert(claims, assert, verifyOptions));
+    await this.attempt(async () => aegis.assert(claims, assert, verifyOptions));
   }
 
   // the verdicts
@@ -78,6 +91,13 @@ export class AegisStaticMatcherSteps extends AegisStepsBase {
   }
 
   // helpers
+
+  /** The deployment the scenario stated; its clock tolerance is the window the check runs in. */
+  private deployment(): IAegis {
+    if (this.ctx.aegis !== undefined) return this.ctx.aegis;
+
+    throw new Error("no deployment was stated in this scenario");
+  }
 
   /** The matcher the scenario stated; an empty one would constrain nothing and pass vacuously. */
   private stated(): VerifyAssert {

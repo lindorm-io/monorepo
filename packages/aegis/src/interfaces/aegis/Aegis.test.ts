@@ -299,6 +299,18 @@ describe("IAegis — the compile-time contract", () => {
     });
   });
 
+  // The claim check is the deployment's: both forms take the claims, the matcher
+  // and the per-call window, and differ only in how they answer.
+  describe("the claim check answers in two forms", () => {
+    test("should answer matches as a boolean", () => {
+      expectTypeOf(aegis.matches).returns.toEqualTypeOf<boolean>();
+    });
+
+    test("should answer assert with nothing, refusing by throwing", () => {
+      expectTypeOf(aegis.assert).returns.toEqualTypeOf<void>();
+    });
+  });
+
   test("should keep every guarded call site compiling exactly as declared", () => {
     // The `@ts-expect-error` directives above ARE the assertion, and an unused
     // one fails the build — so the only thing left to check at runtime is that

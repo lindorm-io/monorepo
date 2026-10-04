@@ -35,8 +35,10 @@ const MEMBERS = {
   jws: { sign: true, verify: true } satisfies Record<keyof IAegisJws, true>,
   jwt: { sign: true, verify: true } satisfies Record<keyof IAegisJwt, true>,
 
+  assert: true,
   decrypt: true,
   encrypt: true,
+  matches: true,
   mint: true,
   parse: true,
   registerProfile: true,
@@ -54,13 +56,16 @@ const MEMBER_NAMES: Array<string> = Object.entries(MEMBERS)
 const CALLABLE_NAMES: Array<string> = MEMBER_NAMES.filter((name) => name !== "issuer");
 
 /**
- * The aes arms FORWARD to a real `IAesKit` rather than resolving a default, so they
- * have no default shape to record and calling them needs real input. Derived from
+ * The arms that FORWARD rather than resolve a default — the aes arms to a real
+ * `IAesKit`, the claim-check arms to the real check — have no default shape to
+ * record, and calling them needs real input. The aes half is derived from
  * `MEMBERS.aes` so a member added to `IAegisAes` is excluded without a second list.
  */
-const FORWARDING_NAMES: Array<string> = Object.keys(MEMBERS.aes).map(
-  (method) => `aes.${method}`,
-);
+const FORWARDING_NAMES: Array<string> = [
+  ...Object.keys(MEMBERS.aes).map((method) => `aes.${method}`),
+  "assert",
+  "matches",
+];
 
 const DEFAULT_NAMES: Array<string> = CALLABLE_NAMES.filter(
   (name) => !FORWARDING_NAMES.includes(name),
@@ -98,6 +103,49 @@ describe("createMockAegis", () => {
 
   test.each(DEFAULT_NAMES)("resolves %s to its interface shape", async (name) => {
     expect(await call(createMockAegis(), name)).toMatchSnapshot();
+  });
+});
+
+/**
+ * The claim-check arms run the REAL check rather than a canned answer, so a
+ * consumer's gate test refuses what the gate refuses. Tolerance is the arm's own
+ * default — none — unless the call states one; a mock has no deployment to read
+ * one from.
+ */
+describe("createMockAegis claim-check arms", () => {
+  const claims = { subject: "user-1" };
+  const currentDate = new Date("2024-01-01T08:00:00.000Z");
+  const expired = { subject: "user-1", expiresAt: new Date("2024-01-01T07:59:50.000Z") };
+
+  test("assert refuses claims the matcher does not satisfy as claims_invalid", () => {
+    expect(() => createMockAegis().assert(claims, { subject: "someone-else" })).toThrow(
+      expect.objectContaining({ code: "claims_invalid", data: { invalid: ["subject"] } }),
+    );
+  });
+
+  test("matches answers false on the same claims", () => {
+    expect(createMockAegis().matches(claims, { subject: "someone-else" })).toBe(false);
+  });
+
+  test("assert refuses a claim set expired ten seconds ago when the call states no clock tolerance", () => {
+    expect(() =>
+      createMockAegis().assert(expired, { subject: "user-1" }, { currentDate }),
+    ).toThrow(
+      expect.objectContaining({
+        code: "claims_invalid",
+        data: { invalid: ["expiresAt"] },
+      }),
+    );
+  });
+
+  test("assert accepts the same claim set inside the clock tolerance the call states", () => {
+    expect(() =>
+      createMockAegis().assert(
+        expired,
+        { subject: "user-1" },
+        { currentDate, clockTolerance: 30 },
+      ),
+    ).not.toThrow();
   });
 });
 

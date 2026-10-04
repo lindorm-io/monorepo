@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Aegis.matches / Aegis.assert refuse a matcher value no operator is lifted from > assert refuses a symbol under the wire-neutral code, title and type 1`] = `
+exports[`claimsMatch / assertClaims refuse a matcher value no operator is lifted from > assert refuses a symbol under the wire-neutral code, title and type 1`] = `
 {
   "code": "claim_matcher_unsupported_value",
   "data": {
@@ -12,7 +12,7 @@ exports[`Aegis.matches / Aegis.assert refuse a matcher value no operator is lift
 }
 `;
 
-exports[`Aegis.matches / Aegis.assert refuse a matcher value no operator is lifted from > assert refuses null under the wire-neutral code, title and type 1`] = `
+exports[`claimsMatch / assertClaims refuse a matcher value no operator is lifted from > assert refuses null under the wire-neutral code, title and type 1`] = `
 {
   "code": "claim_matcher_unsupported_value",
   "data": {
@@ -24,7 +24,7 @@ exports[`Aegis.matches / Aegis.assert refuse a matcher value no operator is lift
 }
 `;
 
-exports[`Aegis.matches / Aegis.assert refuse a matcher value no operator is lifted from > matches refuses a symbol under the wire-neutral code, title and type 1`] = `
+exports[`claimsMatch / assertClaims refuse a matcher value no operator is lifted from > matches refuses a symbol under the wire-neutral code, title and type 1`] = `
 {
   "code": "claim_matcher_unsupported_value",
   "data": {
@@ -36,7 +36,7 @@ exports[`Aegis.matches / Aegis.assert refuse a matcher value no operator is lift
 }
 `;
 
-exports[`Aegis.matches / Aegis.assert refuse a matcher value no operator is lifted from > matches refuses null under the wire-neutral code, title and type 1`] = `
+exports[`claimsMatch / assertClaims refuse a matcher value no operator is lifted from > matches refuses null under the wire-neutral code, title and type 1`] = `
 {
   "code": "claim_matcher_unsupported_value",
   "data": {

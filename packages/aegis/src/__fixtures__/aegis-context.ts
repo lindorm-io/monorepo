@@ -74,7 +74,7 @@ export class AegisContext {
   proofStatement?: DpopProofStatement;
   /** What the presenter writes in the proof's header beside the parameters it derives. */
   proofHeader?: Dict;
-  /** What the verifier asserts about the claims — the matcher bag the signed and the static door share. */
+  /** What the verifier asserts about the claims — the matcher bag the verify and the claim check share. */
   assert?: VerifyAssert;
   /** The boolean door's answer, when the claims were checked without a signature. */
   matched?: boolean;
