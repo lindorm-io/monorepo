@@ -1,9 +1,18 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`assertFeaturesCollected > should name vitest's match directory, root-relative, and the outside-the-directory cause 1`] = `
+"Feature file(s) matched by \`features\` but never collected by vitest's \`test.include\` — the run would stay green without them:
+  src/b.feature (matches: **/*.feature)
+Resolved test.include, relative to \`features\`:
+  **/*.feature"
+`;
+
+exports[`assertFeaturesCollected > should name vitest's match directory, root-relative, and the outside-the-directory cause 2`] = `"A .feature file matches the configured \`features\` patterns but vitest never collects it — the coverage check passes, the counts stay green, and the feature silently never runs. Either no \`test.include\` pattern matches it: append the feature globs to \`test.include\` by spreading the existing array — never overwrite it. Or it lies outside \`test.dir\` / \`--dir\`, the directory vitest reads \`test.include\` from: move it inside, or widen the directory. A feature that must never be collected belongs in the gherkin \`exclude\` setting."`;
+
 exports[`assertFeaturesCollected > should throw feature_not_collected for the include-overwrite accident 1`] = `
 "Feature file(s) matched by \`features\` but never collected by vitest's \`test.include\` — the run would stay green without them:
   src/features/a.feature (matches: src/**/*.feature)
   src/b.feature (matches: src/**/*.feature)
-Resolved test.include:
+Resolved test.include, relative to \`.\`:
   src/**/*.test.ts"
 `;

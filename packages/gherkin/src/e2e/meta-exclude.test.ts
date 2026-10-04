@@ -134,6 +134,46 @@ describe("meta-suite: exclude", () => {
         "look-alike1.feature > look-alike > a feature an unescaped exclusion would over-match runs",
       );
     });
+
+    test("should read test.include relative to test.dir, where vitest globs it — no collection guard", () => {
+      expect(result.output).toContain(
+        "kept.feature > kept > a feature no exclude pattern matches runs",
+      );
+      expect(result.output).not.toContain("feature_not_collected");
+    });
+  });
+
+  describe("a consumer that passes --dir on the command line", () => {
+    let result: MetaRunResult;
+
+    beforeAll(() => {
+      result = runMetaFixture("exclude", [
+        "--config",
+        "vitest.cli-dir.config.ts",
+        "--dir",
+        "features",
+      ]);
+    }, 180_000);
+
+    test("should print exact totals — the --dir tree globbed, minus the excluded feature files", () => {
+      expect(result.summary.tests).toBe("3 passed (3)");
+      expect(result.summary.testFiles).toBe("3 passed (3)");
+    });
+
+    test("should write each excluded feature file relative to the --dir directory, which no config hook sees", () => {
+      expect(result.output).not.toContain("parked.wip.feature");
+      expect(result.output).not.toContain("look-alike[1].feature");
+      expect(result.output).toContain(
+        "look-alike1.feature > look-alike > a feature an unescaped exclusion would over-match runs",
+      );
+    });
+
+    test("should read test.include relative to the --dir directory — no collection guard", () => {
+      expect(result.output).toContain(
+        "kept.feature > kept > a feature no exclude pattern matches runs",
+      );
+      expect(result.output).not.toContain("feature_not_collected");
+    });
   });
 
   describe("a relative test.dir under a root other than the working directory", () => {
@@ -151,6 +191,37 @@ describe("meta-suite: exclude", () => {
       expect(result.summary.testFiles).toBe("3 passed (3)");
       expect(result.output).not.toContain("parked.wip.feature");
       expect(result.output).not.toContain("look-alike[1].feature");
+    });
+  });
+
+  describe("a test.root other than the working directory", () => {
+    let result: MetaRunResult;
+
+    beforeAll(() => {
+      result = runVitestChild(META_FIXTURES_DIRECTORY, [
+        "--config",
+        "exclude/vitest.test-root.config.ts",
+      ]);
+    }, 180_000);
+
+    test("should print exact totals — test.root walked and globbed, minus the excluded feature files", () => {
+      expect(result.summary.tests).toBe("4 passed (4)");
+      expect(result.summary.testFiles).toBe("4 passed (4)");
+    });
+
+    test("should resolve the exclude patterns under test.root, as vitest roots its run there", () => {
+      expect(result.output).not.toContain("parked.wip.feature");
+      expect(result.output).not.toContain("drafts/draft.feature");
+      expect(result.output).not.toContain("look-alike[1].feature");
+      expect(result.output).toContain(
+        "✓ drafts/draft.test.ts > a non-feature test under an excluded directory runs",
+      );
+    });
+
+    test("should raise no guard and no tag-scan refusal", () => {
+      expect(result.output).not.toContain("feature_not_included");
+      expect(result.output).not.toContain("feature_not_collected");
+      expect(result.output).not.toContain("invalid_tag_name");
     });
   });
 

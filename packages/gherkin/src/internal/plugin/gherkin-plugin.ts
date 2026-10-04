@@ -1,8 +1,6 @@
-import { isUndefined } from "@lindorm/is";
 import { relative, resolve } from "node:path";
 import type { Plugin } from "vite";
 import { createFilter, normalizePath } from "vite";
-import { configDefaults } from "vitest/config";
 import { GherkinError } from "../../errors/GherkinError.js";
 import type { GherkinSettings } from "../../types/gherkin-settings.js";
 import { buildFeatureModel } from "../model/build-feature-model.js";
@@ -35,8 +33,7 @@ export type GherkinTransformResult = {
 export type GherkinUserConfig = {
   root?: string;
   test?: {
-    dir?: string;
-    exclude?: Array<string>;
+    root?: string;
     tags?: Array<GherkinTagDeclaration>;
   };
 };
@@ -44,11 +41,10 @@ export type GherkinUserConfig = {
 /**
  * What the config hook returns — vite merges it into the user config: an
  * array is appended to the one the user config sets, and stands alone where
- * it sets none. `exclude` is present only when an excluded feature file lies
- * under the directory vitest globs (`test.dir`, else the root).
+ * it sets none.
  */
 export type GherkinConfigPatch = {
-  test: { exclude?: Array<string>; tags: Array<GherkinTagDeclaration> };
+  test: { tags: Array<GherkinTagDeclaration> };
 };
 
 /**
@@ -62,6 +58,9 @@ export type GherkinVitePlugin = Plugin & {
   buildStart: () => Promise<void>;
   config: (config: GherkinUserConfig) => Promise<GherkinConfigPatch>;
   configResolved: (config: { root: string; test?: { include?: Array<string> } }) => void;
+  configureVitest: (context: {
+    project: { config: { dir?: string; exclude: Array<string> } };
+  }) => void;
   transform: (code: string, id: string) => GherkinTransformResult | null;
 };
 
@@ -90,12 +89,18 @@ export const gherkinPlugin = (settings?: GherkinSettings): GherkinVitePlugins =>
   // one; absent means vitest applies its own default test globs
   // (assert-features-collected.ts substitutes configDefaults).
   let include: Array<string> | undefined;
+  let vitestDir: string | undefined;
+  // vitest globs test.include under, and matches test.exclude relative to,
+  // `dir || root` — a relative dir resolved against the working directory,
+  // never the root (pinned: the relative test.dir child in
+  // src/e2e/meta-exclude.test.ts).
+  const resolveMatchDirectory = (): string => resolve(vitestDir || root);
   // Rebuilt from the resolved root below — createFilter anchors a relative
   // pattern at the root it was handed, so the cwd default would mis-anchor
   // every step pattern under a configured root.
   let isStepModule = createFilter(steps, [], { resolve: root });
   // Resolved ONCE, by the config hook, which vite runs before every other
-  // hook: the tag scan, the test.exclude patch and buildStart's guards all
+  // hook: the tag scan, the test.exclude write and buildStart's guards all
   // read this one set, so what vitest never collects and what no guard
   // reports cannot disagree.
   let excluded: ExcludedFeatures = { files: [], unmatchedLiterals: [] };
@@ -112,8 +117,8 @@ export const gherkinPlugin = (settings?: GherkinSettings): GherkinVitePlugins =>
       // carry vitest tags, and vitest's strictTags (default true, kept) fails
       // collection on any UNDECLARED tag — so the union of every feature
       // file's tags is injected into `test.tags` here, or one missed tag
-      // collapses the suite to the invisible "no tests". The excluded feature
-      // files join `test.exclude` here too, before vitest globs test files.
+      // collapses the suite to the invisible "no tests". The `exclude`
+      // setting is resolved to feature files here too.
       // ⚠ Computed ONCE at config time: a tag newly added to a .feature
       // mid-watch is undeclared until vitest restarts — strictTags then fails
       // collection LOUDLY (that is strictTags working, never a silent skip) —
@@ -121,8 +126,8 @@ export const gherkinPlugin = (settings?: GherkinSettings): GherkinVitePlugins =>
       // Documented in README.md#tags and README.md#excluding-feature-files.
       config: async (config: GherkinUserConfig): Promise<GherkinConfigPatch> => {
         // The hook runs before configResolved, so the root is derived the way
-        // vite derives it: the configured root or the cwd.
-        const configRoot = resolve(config.root ?? ".");
+        // vitest derives it: test.root, else vite's root, else the cwd.
+        const configRoot = resolve(config.test?.root || config.root || ".");
         const files = await walkFeatureFiles(configRoot);
 
         excluded = resolveExcludedFeatures({ exclude, files, root: configRoot });
@@ -134,34 +139,7 @@ export const gherkinPlugin = (settings?: GherkinSettings): GherkinVitePlugins =>
           root: configRoot,
         });
 
-        // vitest globs test files under, and matches test.exclude relative
-        // to, `test.dir || root` — a relative test.dir resolved against the
-        // working directory, never the root (pinned: the relative test.dir
-        // child in src/e2e/meta-exclude.test.ts).
-        const matchDirectory = resolve(config.test?.dir || configRoot);
-        const isUnderMatchDirectory = (path: string): boolean =>
-          path.startsWith("../") === false;
-        const entries = excluded.files
-          .map((file) => normalizePath(relative(matchDirectory, file)))
-          .filter(isUnderMatchDirectory)
-          .map(escapeGlob);
-
-        if (entries.length === 0) {
-          return { test: { tags } };
-        }
-
-        return {
-          test: {
-            exclude: [
-              // vitest REPLACES its default list with any test.exclude it is
-              // handed, and this patch IS that list when the user config sets
-              // none — so the defaults (node_modules, .git) go first.
-              ...(isUndefined(config.test?.exclude) ? configDefaults.exclude : []),
-              ...entries,
-            ],
-            tags,
-          },
-        };
+        return { test: { tags } };
       },
 
       configResolved: (config: {
@@ -173,13 +151,40 @@ export const gherkinPlugin = (settings?: GherkinSettings): GherkinVitePlugins =>
         isStepModule = createFilter(steps, [], { resolve: root });
       },
 
+      // The one hook that reads vitest's resolved config — a CLI `--dir`
+      // included — and vitest runs it before it globs test files, so the
+      // excluded feature files join test.exclude here.
+      configureVitest: ({
+        project,
+      }: {
+        project: { config: { dir?: string; exclude: Array<string> } };
+      }): void => {
+        vitestDir = project.config.dir;
+
+        const matchDirectory = resolveMatchDirectory();
+        const isUnderMatchDirectory = (path: string): boolean =>
+          path.startsWith("../") === false;
+        const entries = excluded.files
+          .map((file) => normalizePath(relative(matchDirectory, file)))
+          .filter(isUnderMatchDirectory)
+          .map(escapeGlob);
+
+        // A new array, never a push: with no consumer test.exclude, the
+        // resolved one IS vitest's module-level default list.
+        project.config.exclude = [...project.config.exclude, ...entries];
+      },
+
       // ONE walk feeds both guards — the same file set, minus the excluded
-      // files, and the same createFilter resolve-root semantics, so "covered"
-      // and "collected" cannot disagree on what a feature file is. buildStart
+      // files, and `features` anchored at the same root, so "covered" and
+      // "collected" cannot disagree on what a feature file is. buildStart
       // follows configResolved (root + include) and fires at server init,
       // before test file globbing — pinned by the overwrite child in
       // src/e2e/base-config-wiring.test.ts, which dies here although its
-      // include collects no feature at all.
+      // include collects no feature at all. It follows configureVitest (dir)
+      // for the root project alone (pinned: the --dir child in
+      // src/e2e/meta-exclude.test.ts); vitest's `Vitest._setServer` inits
+      // each test.projects project, its buildStart included, before the
+      // configureVitest loop, so a project's guard never sees its dir.
       buildStart: async (): Promise<void> => {
         if (excluded.unmatchedLiterals.length > 0) {
           throw new GherkinError(
@@ -198,7 +203,13 @@ export const gherkinPlugin = (settings?: GherkinSettings): GherkinVitePlugins =>
 
         const files = (await walkFeatureFiles(root)).filter(isIncluded);
         assertFeaturesCovered({ features, files, root });
-        assertFeaturesCollected({ features, files, include, root });
+        assertFeaturesCollected({
+          features,
+          files,
+          include,
+          matchDirectory: resolveMatchDirectory(),
+          root,
+        });
       },
 
       transform: (code: string, id: string): GherkinTransformResult | null => {

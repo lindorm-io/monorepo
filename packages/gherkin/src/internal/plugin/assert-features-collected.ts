@@ -9,6 +9,8 @@ export type AssertFeaturesCollectedOptions = {
   files: Array<string>;
   /** vitest's resolved `test.include`; absent when the consumer set none. */
   include?: Array<string>;
+  /** Absolute: vitest's `dir || root`, the directory it globs `include` under. */
+  matchDirectory: string;
   root: string;
 };
 
@@ -32,6 +34,14 @@ const toCadenceIndependent = (pattern: string): string =>
   pattern.replace(/\.(integration|weekly)\.feature$/, ".feature");
 
 /**
+ * vite's createFilter leaves a `**`-leading pattern unanchored, matching
+ * outside the directory vitest globs under; `./` makes it anchor like every
+ * other relative pattern (pinned: assert-features-collected.test.ts).
+ */
+const toAnchored = (pattern: string): string =>
+  pattern.startsWith("**") ? `./${pattern}` : pattern;
+
+/**
  * The companion of assert-features-covered.ts, closing the other half of the
  * gap: `features` proves a `.feature` file is gherkin's to run, but only
  * vitest's `test.include` makes it a collected test — a consumer that
@@ -51,6 +61,7 @@ export const assertFeaturesCollected = ({
   features,
   files,
   include,
+  matchDirectory,
   root,
 }: AssertFeaturesCollectedOptions): void => {
   // Absent include means vitest applies its own default test globs — those
@@ -61,14 +72,14 @@ export const assertFeaturesCollected = ({
   // reads an empty include list as "match everything" — handed through, the
   // guard would fail OPEN on the one config that collects the least. So
   // empty ⇒ no file is collectable.
-  // resolve: root — the same anchoring as assert-features-covered.ts, so the
-  // two guards cannot disagree on what "matches" means.
   const collected =
     resolvedInclude.length === 0
       ? () => false
-      : createFilter(resolvedInclude.map(toCadenceIndependent), [], {
-          resolve: root,
+      : createFilter(resolvedInclude.map(toCadenceIndependent).map(toAnchored), [], {
+          resolve: matchDirectory,
         });
+  // resolve: root — the same anchoring as assert-features-covered.ts, so the
+  // two guards cannot disagree on which `features` pattern a file matches.
   const matchers = features.map((pattern) => ({
     pattern,
     matches: createFilter([pattern], [], { resolve: root }),
@@ -91,20 +102,28 @@ export const assertFeaturesCollected = ({
     return;
   }
 
+  const matchDirectoryUri = toRootUri(root, matchDirectory);
+
   // Every uncollected file, matching the coverage guard's list-all shape:
   // one failure names the whole fix.
   throw new GherkinError(
     [
       "Feature file(s) matched by `features` but never collected by vitest's `test.include` — the run would stay green without them:",
       ...uncollected.map(({ pattern, uri }) => `  ${uri} (matches: ${pattern})`),
-      "Resolved test.include:",
+      `Resolved test.include, relative to \`${matchDirectoryUri}\`:`,
       ...resolvedInclude.map((pattern) => `  ${pattern}`),
     ].join("\n"),
     {
       code: "feature_not_collected",
       details:
-        "A .feature file matches the configured `features` patterns but no `test.include` pattern, so vitest never collects it — the coverage check passes, the counts stay green, and the feature silently never runs. Append the feature globs to `test.include` by spreading the existing array — never overwrite it. A feature that must never be collected belongs in the gherkin `exclude` setting.",
-      data: { features, include: resolvedInclude, root, uncollected },
+        "A .feature file matches the configured `features` patterns but vitest never collects it — the coverage check passes, the counts stay green, and the feature silently never runs. Either no `test.include` pattern matches it: append the feature globs to `test.include` by spreading the existing array — never overwrite it. Or it lies outside `test.dir` / `--dir`, the directory vitest reads `test.include` from: move it inside, or widen the directory. A feature that must never be collected belongs in the gherkin `exclude` setting.",
+      data: {
+        features,
+        include: resolvedInclude,
+        matchDirectory: matchDirectoryUri,
+        root,
+        uncollected,
+      },
     },
   );
 };

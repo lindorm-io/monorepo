@@ -7,6 +7,7 @@ import { afterEach, describe, expect, test } from "vitest";
 import { configDefaults } from "vitest/config";
 import { capture, captureAsync, errorShape } from "../../__fixtures__/test-helpers.js";
 import { buildFeatureModel } from "../model/build-feature-model.js";
+import type { GherkinVitePlugin } from "./gherkin-plugin.js";
 import { gherkinPlugin } from "./gherkin-plugin.js";
 
 const MODEL_PREFIX = "const model = ";
@@ -349,6 +350,58 @@ describe("gherkinPlugin", () => {
         test: { tags: [{ name: "lifecycle" }] },
       });
     });
+
+    describe("test.root", () => {
+      const tagged = (tag: string): string =>
+        [
+          tag,
+          "Feature: f",
+          "",
+          "  Scenario: s",
+          "    Given a step",
+          "    Then a check holds",
+        ].join("\n");
+
+      test("should walk test.root when one is set — vitest runs from it, over vite's root and the working directory", async () => {
+        const parent = await mkdtemp(join(tmpdir(), "gherkin-plugin-test-root-"));
+
+        try {
+          await mkdir(join(parent, "app", "src"), { recursive: true });
+          await mkdir(join(parent, "vite", "src"), { recursive: true });
+          await writeFile(join(parent, "app", "src", "a.feature"), tagged("@app"));
+          await writeFile(join(parent, "vite", "src", "b.feature"), tagged("@vite"));
+
+          const [plugin] = gherkinPlugin();
+          const root = join(parent, "app");
+
+          await expect(plugin.config({ test: { root } })).resolves.toEqual({
+            test: { tags: [{ name: "app" }] },
+          });
+          await expect(
+            plugin.config({ root: join(parent, "vite"), test: { root } }),
+          ).resolves.toEqual({ test: { tags: [{ name: "app" }] } });
+        } finally {
+          await rm(parent, { force: true, recursive: true });
+        }
+      });
+
+      test("should walk vite's root when test.root is empty, as vitest does", async () => {
+        const parent = await mkdtemp(join(tmpdir(), "gherkin-plugin-test-root-"));
+
+        try {
+          await mkdir(join(parent, "vite", "src"), { recursive: true });
+          await writeFile(join(parent, "vite", "src", "b.feature"), tagged("@vite"));
+
+          const [plugin] = gherkinPlugin();
+
+          await expect(
+            plugin.config({ root: join(parent, "vite"), test: { root: "" } }),
+          ).resolves.toEqual({ test: { tags: [{ name: "vite" }] } });
+        } finally {
+          await rm(parent, { force: true, recursive: true });
+        }
+      });
+    });
   });
 
   describe("buildStart", () => {
@@ -396,6 +449,55 @@ describe("gherkinPlugin", () => {
         await rm(root, { force: true, recursive: true });
       }
     });
+
+    test("should read test.include relative to vitest's dir — test.dir or --dir — where vitest globs it", async () => {
+      const root = await mkdtemp(join(tmpdir(), "gherkin-plugin-dir-"));
+
+      try {
+        await mkdir(join(root, "features"), { recursive: true });
+        await writeFile(join(root, "features", "a.feature"), "Feature: a\n");
+
+        const [plugin] = gherkinPlugin({ features: ["features/**/*.feature"] });
+
+        await plugin.config({ root });
+        plugin.configResolved({ root, test: { include: ["*.feature"] } });
+        plugin.configureVitest({
+          project: { config: { dir: join(root, "features"), exclude: [] } },
+        });
+
+        await expect(plugin.buildStart()).resolves.toBeUndefined();
+      } finally {
+        await rm(root, { force: true, recursive: true });
+      }
+    });
+
+    test("should reject with feature_not_collected for a covered feature outside vitest's dir — vitest never globs it", async () => {
+      const root = await mkdtemp(join(tmpdir(), "gherkin-plugin-dir-"));
+
+      try {
+        await mkdir(join(root, "features"), { recursive: true });
+        await mkdir(join(root, "src"), { recursive: true });
+        await writeFile(join(root, "features", "a.feature"), "Feature: a\n");
+        await writeFile(join(root, "src", "b.feature"), "Feature: b\n");
+
+        const [plugin] = gherkinPlugin({ features: ["**/*.feature"] });
+
+        await plugin.config({ root });
+        plugin.configResolved({ root, test: { include: ["**/*.feature"] } });
+        plugin.configureVitest({
+          project: { config: { dir: join(root, "features"), exclude: [] } },
+        });
+
+        const error = await captureAsync(() => plugin.buildStart());
+
+        expect(error.code).toBe("feature_not_collected");
+        expect(error.data.uncollected).toEqual([
+          { pattern: "**/*.feature", uri: "src/b.feature" },
+        ]);
+      } finally {
+        await rm(root, { force: true, recursive: true });
+      }
+    });
   });
 
   describe("exclude", () => {
@@ -419,120 +521,29 @@ describe("gherkinPlugin", () => {
       }
     });
 
+    /**
+     * The hooks in vitest's order up to the `test.exclude` write — config,
+     * configResolved, configureVitest — returning vitest's resolved list
+     * after it.
+     */
+    const resolveTestExclude = async (
+      plugin: GherkinVitePlugin,
+      {
+        dir,
+        exclude = [...configDefaults.exclude],
+        root,
+      }: { dir?: string; exclude?: Array<string>; root: string },
+    ): Promise<Array<string>> => {
+      const context = { project: { config: { dir, exclude } } };
+
+      await plugin.config({ root });
+      plugin.configResolved({ root });
+      plugin.configureVitest(context);
+
+      return context.project.config.exclude;
+    };
+
     describe("config", () => {
-      test("should add the excluded feature files to test.exclude after vitest's default excludes when the consumer sets none", async () => {
-        const root = await createTree({
-          "src/a.feature": "Feature: a\n",
-          "src/a.wip.feature": "Feature: a wip\n",
-        });
-        const [plugin] = gherkinPlugin({ exclude: ["src/**/*.wip.feature"] });
-
-        const patch = await plugin.config({ root });
-
-        expect(patch.test.exclude).toEqual([
-          ...configDefaults.exclude,
-          "src/a.wip.feature",
-        ]);
-      });
-
-      test("should add only the excluded feature files when the consumer sets test.exclude — vite appends them to the consumer's list", async () => {
-        const root = await createTree({
-          "src/a.feature": "Feature: a\n",
-          "src/a.wip.feature": "Feature: a wip\n",
-        });
-        const [plugin] = gherkinPlugin({ exclude: ["src/**/*.wip.feature"] });
-
-        const patch = await plugin.config({ root, test: { exclude: ["**/custom/**"] } });
-
-        expect(patch.test.exclude).toEqual(["src/a.wip.feature"]);
-      });
-
-      test("should leave test.exclude out of the patch when no feature file is excluded", async () => {
-        const root = await createTree({ "src/a.feature": "Feature: a\n" });
-        const [plugin] = gherkinPlugin({ exclude: ["src/**/*.wip.feature"] });
-
-        await expect(plugin.config({ root })).resolves.toEqual({ test: { tags: [] } });
-      });
-
-      test("should resolve a directory glob to the feature files beneath it, never a non-feature file", async () => {
-        const root = await createTree({
-          "drafts/draft.feature": "Feature: draft\n",
-          "drafts/draft.test.ts": "export {};\n",
-          "drafts/nested/deeper.feature": "Feature: deeper\n",
-          "src/a.feature": "Feature: a\n",
-        });
-        const [plugin] = gherkinPlugin({ exclude: ["drafts/**"] });
-
-        const patch = await plugin.config({ root });
-
-        expect(patch.test.exclude).toEqual([
-          ...configDefaults.exclude,
-          "drafts/draft.feature",
-          "drafts/nested/deeper.feature",
-        ]);
-      });
-
-      test("should match a pattern as written — a lane-suffixed file escapes a plain-suffix pattern", async () => {
-        const root = await createTree({
-          "src/a.wip.feature": "Feature: a wip\n",
-          "src/a.wip.integration.feature": "Feature: a wip integration\n",
-          "src/a.wip.weekly.feature": "Feature: a wip weekly\n",
-        });
-        const [plugin] = gherkinPlugin({ exclude: ["src/**/*.wip.feature"] });
-
-        const patch = await plugin.config({ root });
-
-        expect(patch.test.exclude).toEqual([
-          ...configDefaults.exclude,
-          "src/a.wip.feature",
-        ]);
-      });
-
-      test("should escape glob syntax in an excluded path so vitest prunes that file alone", async () => {
-        const root = await createTree({
-          "src/(draft)[1].wip.feature": "Feature: draft\n",
-          "src/draft1.feature": "Feature: draft1\n",
-        });
-        const [plugin] = gherkinPlugin({ exclude: ["src/**/*.wip.feature"] });
-
-        const patch = await plugin.config({ root });
-
-        expect(patch.test.exclude).toEqual([
-          ...configDefaults.exclude,
-          "src/\\(draft\\)\\[1\\].wip.feature",
-        ]);
-      });
-
-      test("should escape a | in an excluded path so vitest prunes that file alone, never the directory named before it", async () => {
-        const root = await createTree({
-          "features/draft/real.feature": "Feature: real\n",
-          "features/draft|wip.feature": "Feature: draft or wip\n",
-        });
-        const [plugin] = gherkinPlugin({ exclude: ["features/*wip.feature"] });
-
-        const patch = await plugin.config({ root });
-
-        expect(patch.test.exclude).toEqual([
-          ...configDefaults.exclude,
-          "features/draft\\|wip.feature",
-        ]);
-      });
-
-      test('should escape a " in an excluded path so vitest prunes that file alone, never its unquoted namesake', async () => {
-        const root = await createTree({
-          'features/"draft".feature': "Feature: quoted draft\n",
-          "features/draft.feature": "Feature: draft\n",
-        });
-        const [plugin] = gherkinPlugin({ exclude: ["features/?draft?.feature"] });
-
-        const patch = await plugin.config({ root });
-
-        expect(patch.test.exclude).toEqual([
-          ...configDefaults.exclude,
-          'features/\\"draft\\".feature',
-        ]);
-      });
-
       test("should leave an excluded file out of the tag scan — its tags are neither validated nor declared", async () => {
         const root = await createTree({
           "src/a.feature": [
@@ -559,7 +570,129 @@ describe("gherkinPlugin", () => {
         expect(patch.test.tags).toEqual([{ name: "kept" }]);
       });
 
-      test("should write each excluded feature file relative to test.dir, the directory vitest matches test.exclude against", async () => {
+      test("should defer a literal path matching no feature file to buildStart", async () => {
+        const root = await createTree({ "src/a.feature": "Feature: a\n" });
+        const [plugin] = gherkinPlugin({ exclude: ["src/missing.feature"] });
+
+        await expect(plugin.config({ root })).resolves.toEqual({ test: { tags: [] } });
+      });
+    });
+
+    describe("configureVitest", () => {
+      test("should append the excluded feature files to vitest's resolved test.exclude — its defaults when the consumer sets none", async () => {
+        const root = await createTree({
+          "src/a.feature": "Feature: a\n",
+          "src/a.wip.feature": "Feature: a wip\n",
+        });
+        const [plugin] = gherkinPlugin({ exclude: ["src/**/*.wip.feature"] });
+
+        await expect(resolveTestExclude(plugin, { root })).resolves.toEqual([
+          ...configDefaults.exclude,
+          "src/a.wip.feature",
+        ]);
+      });
+
+      test("should append the excluded feature files to the consumer's own test.exclude", async () => {
+        const root = await createTree({
+          "src/a.feature": "Feature: a\n",
+          "src/a.wip.feature": "Feature: a wip\n",
+        });
+        const [plugin] = gherkinPlugin({ exclude: ["src/**/*.wip.feature"] });
+
+        await expect(
+          resolveTestExclude(plugin, { exclude: ["**/custom/**"], root }),
+        ).resolves.toEqual(["**/custom/**", "src/a.wip.feature"]);
+      });
+
+      test("should never write into the array vitest resolved — with no consumer list it is vitest's own default array", async () => {
+        const root = await createTree({ "src/a.wip.feature": "Feature: a wip\n" });
+        const [plugin] = gherkinPlugin({ exclude: ["src/**/*.wip.feature"] });
+        const resolved = ["**/node_modules/**", "**/.git/**"];
+
+        await resolveTestExclude(plugin, { exclude: resolved, root });
+
+        expect(resolved).toEqual(["**/node_modules/**", "**/.git/**"]);
+      });
+
+      test("should leave vitest's resolved test.exclude as it is when no feature file is excluded", async () => {
+        const root = await createTree({ "src/a.feature": "Feature: a\n" });
+        const [plugin] = gherkinPlugin({ exclude: ["src/**/*.wip.feature"] });
+
+        await expect(resolveTestExclude(plugin, { root })).resolves.toEqual([
+          ...configDefaults.exclude,
+        ]);
+      });
+
+      test("should resolve a directory glob to the feature files beneath it, never a non-feature file", async () => {
+        const root = await createTree({
+          "drafts/draft.feature": "Feature: draft\n",
+          "drafts/draft.test.ts": "export {};\n",
+          "drafts/nested/deeper.feature": "Feature: deeper\n",
+          "src/a.feature": "Feature: a\n",
+        });
+        const [plugin] = gherkinPlugin({ exclude: ["drafts/**"] });
+
+        await expect(resolveTestExclude(plugin, { root })).resolves.toEqual([
+          ...configDefaults.exclude,
+          "drafts/draft.feature",
+          "drafts/nested/deeper.feature",
+        ]);
+      });
+
+      test("should match a pattern as written — a lane-suffixed file escapes a plain-suffix pattern", async () => {
+        const root = await createTree({
+          "src/a.wip.feature": "Feature: a wip\n",
+          "src/a.wip.integration.feature": "Feature: a wip integration\n",
+          "src/a.wip.weekly.feature": "Feature: a wip weekly\n",
+        });
+        const [plugin] = gherkinPlugin({ exclude: ["src/**/*.wip.feature"] });
+
+        await expect(resolveTestExclude(plugin, { root })).resolves.toEqual([
+          ...configDefaults.exclude,
+          "src/a.wip.feature",
+        ]);
+      });
+
+      test("should escape glob syntax in an excluded path so vitest prunes that file alone", async () => {
+        const root = await createTree({
+          "src/(draft)[1].wip.feature": "Feature: draft\n",
+          "src/draft1.feature": "Feature: draft1\n",
+        });
+        const [plugin] = gherkinPlugin({ exclude: ["src/**/*.wip.feature"] });
+
+        await expect(resolveTestExclude(plugin, { root })).resolves.toEqual([
+          ...configDefaults.exclude,
+          "src/\\(draft\\)\\[1\\].wip.feature",
+        ]);
+      });
+
+      test("should escape a | in an excluded path so vitest prunes that file alone, never the directory named before it", async () => {
+        const root = await createTree({
+          "features/draft/real.feature": "Feature: real\n",
+          "features/draft|wip.feature": "Feature: draft or wip\n",
+        });
+        const [plugin] = gherkinPlugin({ exclude: ["features/*wip.feature"] });
+
+        await expect(resolveTestExclude(plugin, { root })).resolves.toEqual([
+          ...configDefaults.exclude,
+          "features/draft\\|wip.feature",
+        ]);
+      });
+
+      test('should escape a " in an excluded path so vitest prunes that file alone, never its unquoted namesake', async () => {
+        const root = await createTree({
+          'features/"draft".feature': "Feature: quoted draft\n",
+          "features/draft.feature": "Feature: draft\n",
+        });
+        const [plugin] = gherkinPlugin({ exclude: ["features/?draft?.feature"] });
+
+        await expect(resolveTestExclude(plugin, { root })).resolves.toEqual([
+          ...configDefaults.exclude,
+          'features/\\"draft\\".feature',
+        ]);
+      });
+
+      test("should write each excluded feature file relative to vitest's dir — test.dir or --dir — where it matches test.exclude", async () => {
         const root = await createTree({
           "features/(draft)[1].wip.feature": "Feature: draft\n",
           "features/a.feature": "Feature: a\n",
@@ -567,19 +700,16 @@ describe("gherkinPlugin", () => {
         });
         const [plugin] = gherkinPlugin({ exclude: ["features/**/*.wip.feature"] });
 
-        const patch = await plugin.config({
-          root,
-          test: { dir: join(root, "features") },
-        });
-
-        expect(patch.test.exclude).toEqual([
+        await expect(
+          resolveTestExclude(plugin, { dir: join(root, "features"), root }),
+        ).resolves.toEqual([
           ...configDefaults.exclude,
           "\\(draft\\)\\[1\\].wip.feature",
           "nested/b.wip.feature",
         ]);
       });
 
-      test("should give an excluded feature file outside test.dir no entry — vitest never globs it", async () => {
+      test("should give an excluded feature file outside vitest's dir no entry — vitest never globs it", async () => {
         const root = await createTree({
           "drafts/c.wip.feature": "Feature: c wip\n",
           "features-old/d.wip.feature": "Feature: d wip\n",
@@ -587,32 +717,23 @@ describe("gherkinPlugin", () => {
         });
         const [plugin] = gherkinPlugin({ exclude: ["**/*.wip.feature"] });
 
-        const patch = await plugin.config({
-          root,
-          test: { dir: join(root, "features") },
-        });
-
-        expect(patch.test.exclude).toEqual([...configDefaults.exclude, "a.wip.feature"]);
+        await expect(
+          resolveTestExclude(plugin, { dir: join(root, "features"), root }),
+        ).resolves.toEqual([...configDefaults.exclude, "a.wip.feature"]);
       });
 
-      test("should keep the entry of a file inside test.dir whose name starts with two dots — outside means a `..` segment", async () => {
+      test("should keep the entry of a file inside vitest's dir whose name starts with two dots — outside means a `..` segment", async () => {
         const root = await createTree({
           "features/..a.wip.feature": "Feature: a wip\n",
         });
         const [plugin] = gherkinPlugin({ exclude: ["**/*.wip.feature"] });
 
-        const patch = await plugin.config({
-          root,
-          test: { dir: join(root, "features") },
-        });
-
-        expect(patch.test.exclude).toEqual([
-          ...configDefaults.exclude,
-          "..a.wip.feature",
-        ]);
+        await expect(
+          resolveTestExclude(plugin, { dir: join(root, "features"), root }),
+        ).resolves.toEqual([...configDefaults.exclude, "..a.wip.feature"]);
       });
 
-      test("should leave test.exclude out of the patch when every excluded feature file lies outside test.dir", async () => {
+      test("should leave vitest's resolved test.exclude as it is when every excluded feature file lies outside its dir", async () => {
         const root = await createTree({
           "drafts/c.wip.feature": "Feature: c wip\n",
           "features/a.feature": "Feature: a\n",
@@ -620,36 +741,11 @@ describe("gherkinPlugin", () => {
         const [plugin] = gherkinPlugin({ exclude: ["**/*.wip.feature"] });
 
         await expect(
-          plugin.config({ root, test: { dir: join(root, "features") } }),
-        ).resolves.toEqual({ test: { tags: [] } });
+          resolveTestExclude(plugin, { dir: join(root, "features"), root }),
+        ).resolves.toEqual([...configDefaults.exclude]);
       });
 
-      test("should keep an excluded feature file outside test.dir out of the tag scan", async () => {
-        const root = await createTree({
-          "drafts/c.wip.feature": [
-            "@issue(154) @parked",
-            "Feature: c wip",
-            "",
-            "  Scenario: s",
-            "    Given a step",
-            "    Then a check holds",
-          ].join("\n"),
-          "features/a.feature": "Feature: a\n",
-        });
-        const [plugin] = gherkinPlugin({
-          exclude: ["**/*.wip.feature"],
-          features: ["**/*.feature"],
-        });
-
-        const patch = await plugin.config({
-          root,
-          test: { dir: join(root, "features") },
-        });
-
-        expect(patch.test.tags).toEqual([]);
-      });
-
-      test("should resolve a relative test.dir against the working directory, as vitest does — never against the root", async () => {
+      test("should resolve a relative dir against the working directory, as vitest does — never against the root", async () => {
         // realpath: process.cwd() reads back symlink-resolved (macOS /tmp is
         // /private/tmp), so the root must be too.
         const workingDirectory = await realpath(
@@ -661,39 +757,46 @@ describe("gherkinPlugin", () => {
         process.chdir(workingDirectory);
 
         try {
-          const patch = await plugin.config({
-            root: join(workingDirectory, "pkg"),
-            test: { dir: "pkg/features" },
-          });
-
-          expect(patch.test.exclude).toEqual([
-            ...configDefaults.exclude,
-            "a.wip.feature",
-          ]);
+          await expect(
+            resolveTestExclude(plugin, {
+              dir: "pkg/features",
+              root: join(workingDirectory, "pkg"),
+            }),
+          ).resolves.toEqual([...configDefaults.exclude, "a.wip.feature"]);
         } finally {
           process.chdir(testDirectory);
         }
       });
 
-      test("should anchor at the root when test.dir is empty, as vitest does", async () => {
+      test("should anchor at the root when vitest's dir is empty, as vitest does", async () => {
         const root = await createTree({
           "features/a.wip.feature": "Feature: a wip\n",
         });
         const [plugin] = gherkinPlugin({ exclude: ["**/*.wip.feature"] });
 
-        const patch = await plugin.config({ root, test: { dir: "" } });
-
-        expect(patch.test.exclude).toEqual([
+        await expect(resolveTestExclude(plugin, { dir: "", root })).resolves.toEqual([
           ...configDefaults.exclude,
           "features/a.wip.feature",
         ]);
       });
 
-      test("should defer a literal path matching no feature file to buildStart", async () => {
-        const root = await createTree({ "src/a.feature": "Feature: a\n" });
-        const [plugin] = gherkinPlugin({ exclude: ["src/missing.feature"] });
+      test("should resolve the exclude patterns under test.root and write each file relative to it — vitest runs from test.root", async () => {
+        const parent = await createTree({
+          "app/features/a.wip.feature": "Feature: a wip\n",
+          "vite/features/b.wip.feature": "Feature: b wip\n",
+        });
+        const root = join(parent, "app");
+        const [plugin] = gherkinPlugin({ exclude: ["features/**/*.wip.feature"] });
+        const context = { project: { config: { exclude: [...configDefaults.exclude] } } };
 
-        await expect(plugin.config({ root })).resolves.toEqual({ test: { tags: [] } });
+        await plugin.config({ root: join(parent, "vite"), test: { root } });
+        plugin.configResolved({ root });
+        plugin.configureVitest(context);
+
+        expect(context.project.config.exclude).toEqual([
+          ...configDefaults.exclude,
+          "features/a.wip.feature",
+        ]);
       });
     });
 
@@ -791,12 +894,17 @@ describe("gherkinPlugin", () => {
           "src/b.feature": "Feature: b\n",
         });
         const [plugin] = gherkinPlugin({ exclude: ["src/b.feature"] });
+        const context = { project: { config: { exclude: [...configDefaults.exclude] } } };
 
-        const patch = await plugin.config({ root });
+        await plugin.config({ root });
         plugin.configResolved({ root, test: { include: ["src/a.feature"] } });
+        plugin.configureVitest(context);
 
         await expect(plugin.buildStart()).resolves.toBeUndefined();
-        expect(patch.test.exclude).toEqual([...configDefaults.exclude, "src/b.feature"]);
+        expect(context.project.config.exclude).toEqual([
+          ...configDefaults.exclude,
+          "src/b.feature",
+        ]);
       });
     });
   });

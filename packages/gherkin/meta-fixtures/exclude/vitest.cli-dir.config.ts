@@ -3,10 +3,11 @@ import { SETTINGS } from "./settings.js";
 
 const config = createChildConfig(SETTINGS);
 
+// Run with `--dir features`: the directory reaches vitest from the command
+// line alone, and `*.feature` names the feature files directly under it.
 config.test = {
   ...config.test,
-  exclude: ["**/node_modules/**", "drafts/**/*.test.ts"],
-  include: ["features/**/*.feature", "**/*.test.ts"],
+  include: ["*.feature"],
 };
 
 export default config;
