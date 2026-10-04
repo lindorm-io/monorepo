@@ -1,7 +1,8 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, expectTypeOf, test } from "vitest";
+import type { Wire as FixtureWire } from "../../__fixtures__/raw-bucket.js";
 import { CLAIM_SPECS } from "../claims/claims-registry.js";
 import { HEADER_SPECS } from "../header/header-registry.js";
-import { WIRE_TAGS } from "./wire.js";
+import { WIRE_TAGS, type Wire } from "./wire.js";
 
 describe("wire", () => {
   test("WIRE_TAGS is every wire tag, in declaration order", () => {
@@ -19,6 +20,14 @@ describe("wire", () => {
       [...CLAIM_SPECS, ...HEADER_SPECS].some((spec) => spec.wire.cose.kind === "label"),
       "no registry entry is label-keyed on COSE",
     ).toBe(true);
+  });
+
+  /**
+   * ⚠ ONLY `typecheck` SEES THIS: vitest strips types without checking them, so
+   * `npm test` stays green on a wire added to one enumeration and not the other.
+   */
+  test("the feature-suite fixture enumerates exactly the registry's wires", () => {
+    expectTypeOf<Wire>().toEqualTypeOf<FixtureWire>();
   });
 
   test("both registries are total over every wire in WIRE_TAGS", () => {

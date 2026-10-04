@@ -1,6 +1,10 @@
 import { isNumber } from "@lindorm/is";
 import type { TokenInspection } from "./inspect-token.js";
 
+/**
+ * The registry's `Wire`, spelled out: the fixtures that read the wire (this file
+ * and `inspect-token.ts`) import nothing from `src/internal/` or `src/classes/`.
+ */
 export type Wire = "jose" | "cose";
 
 /** A JOSE member name, or a COSE label — the wire's own vocabulary, never a domain name. */

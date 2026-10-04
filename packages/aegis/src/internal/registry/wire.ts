@@ -1,7 +1,12 @@
 /**
- * The wires aegis speaks, and the one place they are enumerated. `Wire` is the
- * type every registry entry is TOTAL over (`wire: Record<Wire, WireKey>`), so a
- * third wire is a compile error in every entry rather than a silent hole.
+ * The wires aegis speaks, as every registry entry sees them. `Wire` is the type
+ * every registry entry is TOTAL over (`wire: Record<Wire, WireKey>`), so a third
+ * wire is a compile error in every entry rather than a silent hole.
+ *
+ * ⚠ The fixtures that read the wire enumerate it a second time in
+ * `__fixtures__/raw-bucket.ts`: they import nothing from `internal/` or
+ * `classes/`, so they cannot reach this one. A wire added to one and not the
+ * other fails the typecheck. pinned: `wire.test.ts`.
  *
  * A wire is the SERIALISATION vocabulary, not the token format: `jose` covers
  * JWS/JWE/JWT, `cose` covers CWS/CWM/CWE/CWT. Per-KIT facts live in the kit
