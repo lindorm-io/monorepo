@@ -6,6 +6,7 @@ import { beforeAll, describe, expect, test } from "vitest";
 import { encode, Tag } from "cbor2";
 import { CBOR_TAG, inspectToken } from "../__fixtures__/inspect-token.js";
 import { TEST_EC_KEY_SIG } from "../__fixtures__/keys.js";
+import { refusalOf, rejectionOf } from "../__fixtures__/refusal-of.js";
 import { Aegis } from "./Aegis.js";
 
 /**
@@ -303,18 +304,9 @@ describe("the events claim on the wire", () => {
   // The non-object form.
   // ---------------------------------------------------------------------------
 
-  // ⚠⚠ CORRECTED FROM "a non-object `events` does not resolve, on either wire",
-  // which asserted a DROP and argued for it. The argument was that `events` is
-  // not a claim this package can validate at read time, and that a profile
-  // requiring it reads the raw wire value through
-  // `internal/utils/rules/events-shape.ts` — so refusing here "would take that
-  // answer away from the layer that can phrase it". That reasoning survives for
-  // the KEYS and the PAYLOADS, which aegis still says nothing about, and it never
-  // reached the question this row asks: whether the value is a map at all is not
-  // a fact about any event definition, and a reader that answers "no events" for
-  // a token carrying a value reports a statement the issuer did not make. The
-  // shape rule is also not a substitute — it binds only where a profile declares
-  // it, and the profile-less `parse` below declares nothing.
+  // ⚠ The profile `events` shape rule (`internal/utils/rules/events-shape.ts`) is
+  // no substitute for this refusal: it binds only where a profile declares it, and
+  // the profile-less `parse` below declares nothing.
   test("a non-object `events` is refused, not reported as a token stating none", () => {
     for (const value of ["not-an-object", 42, ["urn:e"]] as const) {
       expect(() => Aegis.toDomain({ events: value } as Dict)).toThrow(
@@ -359,10 +351,9 @@ describe("the events claim on the wire", () => {
     expect(aegis.parse(forgeCose(coseFloor(null))).claims.events).toBeUndefined();
   });
 
-  // ⚠ CORRECTED FROM "aegis will not WRITE a non-object `events` either", which
-  // asserted the write side merely DROPPED it. Both sides ask ONE guard now
-  // (`eventsMap`, `internal/claims/translate.ts`), so the correction is the same
-  // one on both — and the write side is where a caller can still repair the fault.
+  // ⚠ Both directions ask ONE guard (`eventsMap`, `internal/claims/translate.ts`),
+  // so the write side refuses what the read side refuses, and it is where a caller
+  // can still repair the fault.
   test("aegis REFUSES to write a non-object `events`, rather than dropping it", () => {
     expect(() => Aegis.toWire({ events: "not-an-object" } as Dict)).toThrow(
       expect.objectContaining({
@@ -392,5 +383,107 @@ describe("the events claim on the wire", () => {
     // guard is not allowed to blur. `Object.hasOwn`: an absent key is the
     // claim, a present key holding `undefined` is not.
     expect(Object.hasOwn(Aegis.toWire({ events: null } as Dict), "events")).toBe(false);
+  });
+});
+
+/**
+ * A value RFC 8417 §2.2 forbids as an event payload, one per JSON type that is
+ * not an object.
+ */
+const NON_OBJECT_PAYLOADS = [
+  ["a string", "scalar"],
+  ["a number", 42],
+  ["null", null],
+  ["an array", [{}]],
+  ["a boolean", true],
+] as const;
+
+const EVENT_URI = "urn:lindorm:event:test";
+
+describe("an event payload that is not a JSON object", () => {
+  test.each(NON_OBJECT_PAYLOADS)(
+    "Aegis.toWire refuses an event whose payload is %s, naming the event",
+    (_label, payload) => {
+      expect(
+        refusalOf(() => Aegis.toWire({ events: { [EVENT_URI]: payload } })),
+      ).toMatchSnapshot();
+    },
+  );
+
+  test.each(NON_OBJECT_PAYLOADS)(
+    "Aegis.toDomain refuses an event whose payload is %s, naming the event",
+    (_label, payload) => {
+      expect(
+        refusalOf(() => Aegis.toDomain({ events: { [EVENT_URI]: payload } })),
+      ).toMatchSnapshot();
+    },
+  );
+
+  test("Aegis.toWire and Aegis.toDomain refuse an event whose payload is undefined, naming the event", () => {
+    expect({
+      toWire: refusalOf(() => Aegis.toWire({ events: { [EVENT_URI]: undefined } })),
+      toDomain: refusalOf(() => Aegis.toDomain({ events: { [EVENT_URI]: undefined } })),
+    }).toMatchSnapshot();
+  });
+
+  test("mint drops an event whose payload is undefined before it reads the claims, writing the events beside it", async () => {
+    const events = { [EVENT_URI]: undefined, "urn:lindorm:event:kept": {} };
+
+    expect({
+      jose: wireClaimOf(await mint("jwt", { events }), "events"),
+      cose: plain(wireClaimOf(await mint("cwt", { events }), "events")),
+    }).toMatchSnapshot();
+  });
+
+  test("mint refuses the events map an undefined payload leaves empty, as an empty map", async () => {
+    const events = { [EVENT_URI]: undefined };
+
+    expect({
+      jose: await rejectionOf(() => mint("jwt", { events })),
+      cose: await rejectionOf(() => mint("cwt", { events })),
+    }).toMatchSnapshot();
+  });
+
+  test("the keyless read refuses a foreign token's scalar payload on both wires", () => {
+    expect({
+      jose: refusalOf(() =>
+        aegis.parse(
+          forgeJose(
+            `{"iss":"${ISSUER}","sub":"u","exp":9999999999,"events":{"${EVENT_URI}":"scalar"}}`,
+          ),
+        ),
+      ),
+      cose: refusalOf(() =>
+        aegis.parse(forgeCose(coseFloor(new Map([[EVENT_URI, "scalar"]])))),
+      ),
+    }).toMatchSnapshot();
+  });
+
+  test("names every event whose payload is not an object, not only the first", () => {
+    expect(
+      refusalOf(() =>
+        Aegis.toWire({
+          events: {
+            "urn:lindorm:event:a": "x",
+            "urn:lindorm:event:b": {},
+            "urn:lindorm:event:c": 1,
+          },
+        }),
+      ),
+    ).toMatchSnapshot();
+  });
+
+  test("accepts the empty object as an event payload at both vocabulary doors and the keyless read", () => {
+    expect({
+      toWire: Aegis.toWire({ events: { [EVENT_URI]: {} } }).events,
+      toDomain: Aegis.toDomain({ events: { [EVENT_URI]: {} } }).claims.events,
+      parseJose: aegis.parse(
+        forgeJose(
+          `{"iss":"${ISSUER}","sub":"u","exp":9999999999,"events":{"${EVENT_URI}":{}}}`,
+        ),
+      ).claims.events,
+      parseCose: aegis.parse(forgeCose(coseFloor(new Map([[EVENT_URI, new Map()]]))))
+        .claims.events,
+    }).toMatchSnapshot();
   });
 });

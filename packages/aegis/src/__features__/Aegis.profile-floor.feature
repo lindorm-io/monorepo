@@ -1316,7 +1316,10 @@ Feature: The profile floor, applied to a token that arrived
     the wire, since a verify under this profile would pass a token that did
     carry an expiry identically; and both statements a security event makes
     are read back under their domain names, which is what shows the profile is
-    usable and not merely acceptable.
+    usable and not merely acceptable. A SET is a JWT (RFC 8417 §1.2), so the
+    jose scenarios carry the tag; the cose twins carry none, because on that
+    wire the rule is aegis policy: no document defines a security event token
+    as a CWT.
 
     Background:
       Given an audience list whose only member is "https://receiver.lindorm.io/"
@@ -1327,27 +1330,180 @@ Feature: The profile floor, applied to a token that arrived
       And an events map whose only event is "urn:lindorm:event:test"
 
     @RFC-8417
-    Scenario Outline: <wire>: the minted security event carries no expiry (RFC-8417 §2.2)
-      When I mint the content under the "security_event" profile on the <wire> wire
-      Then the raw payload carries no <expiry key>
+    Scenario: jose: the minted security event carries no expiry (RFC-8417 §2.2)
+      When I mint the content under the "security_event" profile on the jose wire
+      Then the raw payload carries no "exp"
 
-      Examples:
-        | wire | expiry key  |
-        | jose | "exp"       |
-        | cose | claim key 4 |
+    Scenario: cose: the minted security event carries no expiry
+      When I mint the content under the "security_event" profile on the cose wire
+      Then the raw payload carries no claim key 4
 
     @RFC-8417
-    Scenario Outline: <wire>: the token verifies, and both statements a security event makes are read back (RFC-8417 §2.2)
-      When I mint the content under the "security_event" profile on the <wire> wire
+    Scenario: jose: the token verifies, and both statements a security event makes are read back (RFC-8417 §2.2)
+      When I mint the content under the "security_event" profile on the jose wire
       And I verify the token under the "security_event" profile as the audience "https://receiver.lindorm.io/"
-      Then the verified token is a "<format>"
+      Then the verified token is a "jwt"
       And the verified subject identifier is exactly
         | format  | iss_sub                  |
         | issuer  | https://test.lindorm.io/ |
         | subject | user-1                   |
       And the verified claims carry the event "urn:lindorm:event:test" with an empty payload
 
+    Scenario: cose: the token verifies, and both statements a security event makes are read back
+      When I mint the content under the "security_event" profile on the cose wire
+      And I verify the token under the "security_event" profile as the audience "https://receiver.lindorm.io/"
+      Then the verified token is a "cwt"
+      And the verified subject identifier is exactly
+        | format  | iss_sub                  |
+        | issuer  | https://test.lindorm.io/ |
+        | subject | user-1                   |
+      And the verified claims carry the event "urn:lindorm:event:test" with an empty payload
+
+  Rule: a security event whose payload is not a JSON object is refused at every door, with or without a profile
+
+    The `events` claim names each event by URI, and the value under each name
+    is the event statement: RFC 8417 §2.2 requires every one to be a JSON
+    object, which may be empty. A string under an event's name is no statement
+    a receiver can read, so a writer carrying it issues a token that is not a
+    SET, and a reader handing it on gives the consumer a string where an event
+    statement belongs. The requirement is the claim's own rather than one
+    profile's, so it holds at aegis's write doors and on a third party's token
+    alike, with or without a profile. A verify without a profile demands an
+    expiry, so the token it reads carries one; the third party's other tokens
+    carry none, as a security event normally does. A verify reads the token's
+    claims before it applies the profile floor, so under a profile that states
+    the claim's shape rule it is still the claim's own refusal that answers;
+    which layer answers is aegis's layer order, so that scenario carries no
+    tag. A SET is a JWT (RFC 8417 §1.2), so the other jose scenarios carry the
+    tag and their cose twins do not. On the cose wire the refusal is aegis
+    policy: no document gives a CWT `events` claim a meaning, and
+    `claims.events` reads the same on both wires.
+
+    Background:
+      Given the wire claims
+        | iss    | "https://test.lindorm.io/"             |
+        | aud    | ["https://receiver.lindorm.io/"]       |
+        | jti    | "set-1"                                |
+        | events | { "urn:lindorm:event:test": "scalar" } |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+      And the wire claim "sub_id" is the object
+        """json
+        { "format": "iss_sub", "iss": "https://test.lindorm.io/", "sub": "user-1" }
+        """
+      And the content to mint
+        | subject | user-1 |
+      And the content expires in "1h"
+      And the events claim is the object
+        """json
+        { "urn:lindorm:event:test": "scalar" }
+        """
+
+    @RFC-8417
+    Scenario: jose: a mint under a profile that states no shape rule for the claim is refused, naming the event (RFC-8417 §2.2)
+      When I mint the content under the "default" profile on the jose wire
+      Then minting is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "events" and locates the fault at "events.urn:lindorm:event:test": Member "urn:lindorm:event:test" must be an object
+
+    Scenario: cose: a mint under a profile that states no shape rule for the claim is refused, naming the event
+      When I mint the content under the "default" profile on the cose wire
+      Then minting is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "events" and locates the fault at "events.urn:lindorm:event:test": Member "urn:lindorm:event:test" must be an object
+
+    @RFC-8417
+    Scenario: jose: a signature without a profile is refused, naming the event (RFC-8417 §2.2)
+      When I sign the claims without a profile on the jose wire
+      Then signing is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "events" and locates the fault at "events.urn:lindorm:event:test": Member "urn:lindorm:event:test" must be an object
+
+    Scenario: cose: a signature without a profile is refused, naming the event
+      When I sign the claims without a profile on the cose wire
+      Then signing is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "events" and locates the fault at "events.urn:lindorm:event:test": Member "urn:lindorm:event:test" must be an object
+
+    @RFC-8417
+    Scenario: jose: the verify of a third party's token is refused, naming the event (RFC-8417 §2.2)
+      Given the wire claims expire at "2024-01-01T09:00:00.000Z"
+      When a third party signs the wire claims on the jose wire, typed "application/secevent+jwt"
+      And I verify the token
+      Then verification is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "events" and locates the fault at "events.urn:lindorm:event:test": Member "urn:lindorm:event:test" must be an object
+
+    Scenario: cose: the verify of a third party's token is refused, naming the event
+      Given the wire claims expire at "2024-01-01T09:00:00.000Z"
+      When a third party signs the wire claims on the cose wire, typed "application/secevent+cwt"
+      And I verify the token
+      Then verification is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "events" and locates the fault at "events.urn:lindorm:event:test": Member "urn:lindorm:event:test" must be an object
+
+    @RFC-8417
+    Scenario: jose: the keyless read of a third party's token is refused, naming the event (RFC-8417 §2.2)
+      When a third party signs the wire claims on the jose wire, typed "application/secevent+jwt"
+      And I read the token without a key
+      Then the keyless read is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "events" and locates the fault at "events.urn:lindorm:event:test": Member "urn:lindorm:event:test" must be an object
+
+    Scenario: cose: the keyless read of a third party's token is refused, naming the event
+      When a third party signs the wire claims on the cose wire, typed "application/secevent+cwt"
+      And I read the token without a key
+      Then the keyless read is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "events" and locates the fault at "events.urn:lindorm:event:test": Member "urn:lindorm:event:test" must be an object
+
+    Scenario Outline: <wire>: a verify under a profile that states the claim's shape rule is answered by the claim's own refusal, which runs before the floor
+      When a third party signs the wire claims on the <wire> wire, typed "<typ>"
+      And I verify the token under the "security_event" profile as the audience "https://receiver.lindorm.io/"
+      Then verification is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "events" and locates the fault at "events.urn:lindorm:event:test": Member "urn:lindorm:event:test" must be an object
+
       Examples:
-        | wire | format |
-        | jose | jwt    |
-        | cose | cwt    |
+        | wire | typ                      |
+        | jose | application/secevent+jwt |
+        | cose | application/secevent+cwt |
+
+    @RFC-8417
+    Scenario: jose: an event whose payload is the empty object verifies under the same profile (RFC-8417 §2.2)
+      Given the wire claim "events" is the object
+        """json
+        { "urn:lindorm:event:test": {} }
+        """
+      When a third party signs the wire claims on the jose wire, typed "application/secevent+jwt"
+      And I verify the token under the "security_event" profile as the audience "https://receiver.lindorm.io/"
+      Then the verified claims carry the event "urn:lindorm:event:test" with an empty payload
+
+    Scenario: cose: an event whose payload is the empty object verifies under the same profile
+      Given the wire claim "events" is the object
+        """json
+        { "urn:lindorm:event:test": {} }
+        """
+      When a third party signs the wire claims on the cose wire, typed "application/secevent+cwt"
+      And I verify the token under the "security_event" profile as the audience "https://receiver.lindorm.io/"
+      Then the verified claims carry the event "urn:lindorm:event:test" with an empty payload
+
+  Rule: minting a security event token whose event payload is not a JSON object is refused by the profile floor, which runs before the claim's own refusal
+
+    Under a profile that states the `events` shape rule — here
+    `security_event` — the payload fault is the profile's to report as well
+    as the claim's. A mint runs the profile floor before it assembles the
+    wire, so the floor answers first, with its own code and in the vocabulary
+    the caller writes in, and the claim's own refusal never runs. Which layer
+    answers is aegis's layer order at mint; the token is refused either way.
+
+    Background:
+      Given an audience list whose only member is "https://receiver.lindorm.io/"
+      And the subject identifier
+        | format  | iss_sub                  |
+        | issuer  | https://test.lindorm.io/ |
+        | subject | user-1                   |
+      And the events claim is the object
+        """json
+        { "urn:lindorm:event:test": "scalar" }
+        """
+
+    Scenario Outline: <wire>: the floor answers first, naming the event's payload
+      When I mint the content under the "security_event" profile on the <wire> wire
+      Then minting is refused as a domain error "profile_policy_invalid"
+      And the refusal reports the direction "mint" and locates the fault at "events.urn:lindorm:event:test": event "urn:lindorm:event:test" payload must be an object
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |

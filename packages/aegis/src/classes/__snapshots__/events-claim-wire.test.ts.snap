@@ -1,0 +1,450 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`an event payload that is not a JSON object > Aegis.toDomain refuses an event whose payload is a boolean, naming the event 1`] = `
+{
+  "code": "claim_structure_invalid",
+  "data": {
+    "claim": "events",
+    "invalid": [
+      {
+        "key": "events.urn:lindorm:event:test",
+        "message": "Member "urn:lindorm:event:test" must be an object",
+      },
+    ],
+  },
+  "debug": {
+    "claim": "events",
+    "invalid": [
+      {
+        "key": "events.urn:lindorm:event:test",
+        "message": "Member "urn:lindorm:event:test" must be an object",
+      },
+    ],
+  },
+  "message": "Invalid claim structure",
+  "name": "AegisDomainError",
+}
+`;
+
+exports[`an event payload that is not a JSON object > Aegis.toDomain refuses an event whose payload is a number, naming the event 1`] = `
+{
+  "code": "claim_structure_invalid",
+  "data": {
+    "claim": "events",
+    "invalid": [
+      {
+        "key": "events.urn:lindorm:event:test",
+        "message": "Member "urn:lindorm:event:test" must be an object",
+      },
+    ],
+  },
+  "debug": {
+    "claim": "events",
+    "invalid": [
+      {
+        "key": "events.urn:lindorm:event:test",
+        "message": "Member "urn:lindorm:event:test" must be an object",
+      },
+    ],
+  },
+  "message": "Invalid claim structure",
+  "name": "AegisDomainError",
+}
+`;
+
+exports[`an event payload that is not a JSON object > Aegis.toDomain refuses an event whose payload is a string, naming the event 1`] = `
+{
+  "code": "claim_structure_invalid",
+  "data": {
+    "claim": "events",
+    "invalid": [
+      {
+        "key": "events.urn:lindorm:event:test",
+        "message": "Member "urn:lindorm:event:test" must be an object",
+      },
+    ],
+  },
+  "debug": {
+    "claim": "events",
+    "invalid": [
+      {
+        "key": "events.urn:lindorm:event:test",
+        "message": "Member "urn:lindorm:event:test" must be an object",
+      },
+    ],
+  },
+  "message": "Invalid claim structure",
+  "name": "AegisDomainError",
+}
+`;
+
+exports[`an event payload that is not a JSON object > Aegis.toDomain refuses an event whose payload is an array, naming the event 1`] = `
+{
+  "code": "claim_structure_invalid",
+  "data": {
+    "claim": "events",
+    "invalid": [
+      {
+        "key": "events.urn:lindorm:event:test",
+        "message": "Member "urn:lindorm:event:test" must be an object",
+      },
+    ],
+  },
+  "debug": {
+    "claim": "events",
+    "invalid": [
+      {
+        "key": "events.urn:lindorm:event:test",
+        "message": "Member "urn:lindorm:event:test" must be an object",
+      },
+    ],
+  },
+  "message": "Invalid claim structure",
+  "name": "AegisDomainError",
+}
+`;
+
+exports[`an event payload that is not a JSON object > Aegis.toDomain refuses an event whose payload is null, naming the event 1`] = `
+{
+  "code": "claim_structure_invalid",
+  "data": {
+    "claim": "events",
+    "invalid": [
+      {
+        "key": "events.urn:lindorm:event:test",
+        "message": "Member "urn:lindorm:event:test" must be an object",
+      },
+    ],
+  },
+  "debug": {
+    "claim": "events",
+    "invalid": [
+      {
+        "key": "events.urn:lindorm:event:test",
+        "message": "Member "urn:lindorm:event:test" must be an object",
+      },
+    ],
+  },
+  "message": "Invalid claim structure",
+  "name": "AegisDomainError",
+}
+`;
+
+exports[`an event payload that is not a JSON object > Aegis.toWire and Aegis.toDomain refuse an event whose payload is undefined, naming the event 1`] = `
+{
+  "toDomain": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "events",
+      "invalid": [
+        {
+          "key": "events.urn:lindorm:event:test",
+          "message": "Member "urn:lindorm:event:test" must be an object",
+        },
+      ],
+    },
+    "debug": {
+      "claim": "events",
+      "invalid": [
+        {
+          "key": "events.urn:lindorm:event:test",
+          "message": "Member "urn:lindorm:event:test" must be an object",
+        },
+      ],
+    },
+    "message": "Invalid claim structure",
+    "name": "AegisDomainError",
+  },
+  "toWire": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "events",
+      "invalid": [
+        {
+          "key": "events.urn:lindorm:event:test",
+          "message": "Member "urn:lindorm:event:test" must be an object",
+        },
+      ],
+    },
+    "debug": {
+      "claim": "events",
+      "invalid": [
+        {
+          "key": "events.urn:lindorm:event:test",
+          "message": "Member "urn:lindorm:event:test" must be an object",
+        },
+      ],
+    },
+    "message": "Invalid claim structure",
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`an event payload that is not a JSON object > Aegis.toWire refuses an event whose payload is a boolean, naming the event 1`] = `
+{
+  "code": "claim_structure_invalid",
+  "data": {
+    "claim": "events",
+    "invalid": [
+      {
+        "key": "events.urn:lindorm:event:test",
+        "message": "Member "urn:lindorm:event:test" must be an object",
+      },
+    ],
+  },
+  "debug": {
+    "claim": "events",
+    "invalid": [
+      {
+        "key": "events.urn:lindorm:event:test",
+        "message": "Member "urn:lindorm:event:test" must be an object",
+      },
+    ],
+  },
+  "message": "Invalid claim structure",
+  "name": "AegisDomainError",
+}
+`;
+
+exports[`an event payload that is not a JSON object > Aegis.toWire refuses an event whose payload is a number, naming the event 1`] = `
+{
+  "code": "claim_structure_invalid",
+  "data": {
+    "claim": "events",
+    "invalid": [
+      {
+        "key": "events.urn:lindorm:event:test",
+        "message": "Member "urn:lindorm:event:test" must be an object",
+      },
+    ],
+  },
+  "debug": {
+    "claim": "events",
+    "invalid": [
+      {
+        "key": "events.urn:lindorm:event:test",
+        "message": "Member "urn:lindorm:event:test" must be an object",
+      },
+    ],
+  },
+  "message": "Invalid claim structure",
+  "name": "AegisDomainError",
+}
+`;
+
+exports[`an event payload that is not a JSON object > Aegis.toWire refuses an event whose payload is a string, naming the event 1`] = `
+{
+  "code": "claim_structure_invalid",
+  "data": {
+    "claim": "events",
+    "invalid": [
+      {
+        "key": "events.urn:lindorm:event:test",
+        "message": "Member "urn:lindorm:event:test" must be an object",
+      },
+    ],
+  },
+  "debug": {
+    "claim": "events",
+    "invalid": [
+      {
+        "key": "events.urn:lindorm:event:test",
+        "message": "Member "urn:lindorm:event:test" must be an object",
+      },
+    ],
+  },
+  "message": "Invalid claim structure",
+  "name": "AegisDomainError",
+}
+`;
+
+exports[`an event payload that is not a JSON object > Aegis.toWire refuses an event whose payload is an array, naming the event 1`] = `
+{
+  "code": "claim_structure_invalid",
+  "data": {
+    "claim": "events",
+    "invalid": [
+      {
+        "key": "events.urn:lindorm:event:test",
+        "message": "Member "urn:lindorm:event:test" must be an object",
+      },
+    ],
+  },
+  "debug": {
+    "claim": "events",
+    "invalid": [
+      {
+        "key": "events.urn:lindorm:event:test",
+        "message": "Member "urn:lindorm:event:test" must be an object",
+      },
+    ],
+  },
+  "message": "Invalid claim structure",
+  "name": "AegisDomainError",
+}
+`;
+
+exports[`an event payload that is not a JSON object > Aegis.toWire refuses an event whose payload is null, naming the event 1`] = `
+{
+  "code": "claim_structure_invalid",
+  "data": {
+    "claim": "events",
+    "invalid": [
+      {
+        "key": "events.urn:lindorm:event:test",
+        "message": "Member "urn:lindorm:event:test" must be an object",
+      },
+    ],
+  },
+  "debug": {
+    "claim": "events",
+    "invalid": [
+      {
+        "key": "events.urn:lindorm:event:test",
+        "message": "Member "urn:lindorm:event:test" must be an object",
+      },
+    ],
+  },
+  "message": "Invalid claim structure",
+  "name": "AegisDomainError",
+}
+`;
+
+exports[`an event payload that is not a JSON object > accepts the empty object as an event payload at both vocabulary doors and the keyless read 1`] = `
+{
+  "parseCose": {
+    "urn:lindorm:event:test": {},
+  },
+  "parseJose": {
+    "urn:lindorm:event:test": {},
+  },
+  "toDomain": {
+    "urn:lindorm:event:test": {},
+  },
+  "toWire": {
+    "urn:lindorm:event:test": {},
+  },
+}
+`;
+
+exports[`an event payload that is not a JSON object > mint drops an event whose payload is undefined before it reads the claims, writing the events beside it 1`] = `
+{
+  "cose": {
+    "urn:lindorm:event:kept": {},
+  },
+  "jose": {
+    "urn:lindorm:event:kept": {},
+  },
+}
+`;
+
+exports[`an event payload that is not a JSON object > mint refuses the events map an undefined payload leaves empty, as an empty map 1`] = `
+{
+  "cose": {
+    "code": "claim_empty_value",
+    "data": {
+      "claim": "events",
+      "whenEmpty": "refuse",
+    },
+    "debug": {},
+    "message": "Claim "events" carries no value",
+    "name": "AegisDomainError",
+  },
+  "jose": {
+    "code": "claim_empty_value",
+    "data": {
+      "claim": "events",
+      "whenEmpty": "refuse",
+    },
+    "debug": {},
+    "message": "Claim "events" carries no value",
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`an event payload that is not a JSON object > names every event whose payload is not an object, not only the first 1`] = `
+{
+  "code": "claim_structure_invalid",
+  "data": {
+    "claim": "events",
+    "invalid": [
+      {
+        "key": "events.urn:lindorm:event:a",
+        "message": "Member "urn:lindorm:event:a" must be an object",
+      },
+      {
+        "key": "events.urn:lindorm:event:c",
+        "message": "Member "urn:lindorm:event:c" must be an object",
+      },
+    ],
+  },
+  "debug": {
+    "claim": "events",
+    "invalid": [
+      {
+        "key": "events.urn:lindorm:event:a",
+        "message": "Member "urn:lindorm:event:a" must be an object",
+      },
+      {
+        "key": "events.urn:lindorm:event:c",
+        "message": "Member "urn:lindorm:event:c" must be an object",
+      },
+    ],
+  },
+  "message": "Invalid claim structure",
+  "name": "AegisDomainError",
+}
+`;
+
+exports[`an event payload that is not a JSON object > the keyless read refuses a foreign token's scalar payload on both wires 1`] = `
+{
+  "cose": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "events",
+      "invalid": [
+        {
+          "key": "events.urn:lindorm:event:test",
+          "message": "Member "urn:lindorm:event:test" must be an object",
+        },
+      ],
+    },
+    "debug": {
+      "claim": "events",
+      "invalid": [
+        {
+          "key": "events.urn:lindorm:event:test",
+          "message": "Member "urn:lindorm:event:test" must be an object",
+        },
+      ],
+    },
+    "message": "Invalid claim structure",
+    "name": "AegisDomainError",
+  },
+  "jose": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "events",
+      "invalid": [
+        {
+          "key": "events.urn:lindorm:event:test",
+          "message": "Member "urn:lindorm:event:test" must be an object",
+        },
+      ],
+    },
+    "debug": {
+      "claim": "events",
+      "invalid": [
+        {
+          "key": "events.urn:lindorm:event:test",
+          "message": "Member "urn:lindorm:event:test" must be an object",
+        },
+      ],
+    },
+    "message": "Invalid claim structure",
+    "name": "AegisDomainError",
+  },
+}
+`;

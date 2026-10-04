@@ -267,7 +267,7 @@ const cnfBinding = (cnf: Dict, memberFaulted: boolean, context: WalkContext): Di
 
 /**
  * The RFC 8417 §2.2 SET `events` map, guarded in EITHER direction — ONE function,
- * because the two directions ask exactly one question of this claim and asking it
+ * because the two directions ask the same questions of this claim and asking them
  * in two places is how they come to disagree.
  *
  * ⚠⚠ A NON-OBJECT IS REFUSED, NOT DROPPED — the same disposition
@@ -277,9 +277,21 @@ const cnfBinding = (cnf: Dict, memberFaulted: boolean, context: WalkContext): Di
  * vanish from a signed token with nothing said, and a stranger's token is
  * reported as carrying no events when it carries a value.
  *
+ * ⚠⚠ SO IS AN EVENT PAYLOAD THAT IS NOT AN OBJECT (RFC 8417 §2.2), with or
+ * without a profile. The profile `events` shape rule
+ * (`internal/utils/rules/events-shape.ts`) asks the same, but only where a profile
+ * declares it, so it is no substitute: without this loop a profile-less door
+ * writes the payload, or returns it in a `claims.events` that `SecurityEvents`
+ * types as objects. ⚠ `null` AND `undefined` ARE NOT ABSENCE HERE, as in
+ * {@link walkElements}: the event's name is present, and neither states an event
+ * under it. Skipping one would not drop it, since this function hands the map on
+ * unrebuilt (see the `__proto__` note below), so a read would return the key
+ * holding it.
+ * pinned: Aegis.profile-floor.feature, classes/events-claim-wire.test.ts.
+ *
  * ⚠ The KEYS are untouched, which is the whole reason this claim has its own
  * arms: an event-type URI is an identifier, and the house case flip would rewrite
- * it. ⚠ NOTHING IS SAID ABOUT THE PAYLOADS — aegis has no shape to hold one to.
+ * it. A payload's members belong to the event type's definition and ride verbatim.
  *
  * ⛔ NEITHER ARM REBUILDS THE MAP, which is why this claim never reaches
  * {@link walkObject}'s `emit` and a `__proto__` event-type key keeps the own-key
@@ -289,14 +301,25 @@ const cnfBinding = (cnf: Dict, memberFaulted: boolean, context: WalkContext): Di
  * pinned: translate.test.ts#carries a `__proto__` event-type key as an own key.
  */
 const eventsMap = (value: unknown, context: WalkContext): Dict | undefined => {
-  if (isObject(value)) return value;
+  if (!isObject(value)) {
+    context.invalid.push({
+      key: context.path,
+      message: `Claim "${context.claim}" must be an object`,
+    });
 
-  context.invalid.push({
-    key: context.path,
-    message: `Claim "${context.claim}" must be an object`,
-  });
+    return undefined;
+  }
 
-  return undefined;
+  for (const [uri, payload] of Object.entries(value)) {
+    if (isObject(payload)) continue;
+
+    context.invalid.push({
+      key: `${context.path}.${uri}`,
+      message: `Member "${uri}" must be an object`,
+    });
+  }
+
+  return value;
 };
 
 /**
@@ -935,10 +958,10 @@ const walkElements = (
     // a bad element fall into it pushes TWO entries at one path. This message is
     // the one kept because it names the INDEX — "element 0 of a collection is not a
     // structure" is a different repair from "this claim is not a structure".
-    // ⚠⚠ AN ELEMENT IS POSITIONAL, SO `null` IS **NOT** ABSENCE HERE — the one
-    // place in this file where it is not. A member is named and can go unnamed; an
-    // array slot cannot be left unfilled without changing every later index, so
-    // `[null]` states a first element that is not a structure (RFC 9396 §2).
+    // ⚠⚠ AN ELEMENT IS POSITIONAL, SO `null` IS **NOT** ABSENCE HERE. A member is
+    // named and can go unnamed; an array slot cannot be left unfilled without
+    // changing every later index, so `[null]` states a first element that is not
+    // a structure (RFC 9396 §2).
     if (isObject(element)) return walkObject(of, element, direction, at);
 
     context.invalid.push({
