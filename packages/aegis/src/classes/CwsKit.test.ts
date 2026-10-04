@@ -37,14 +37,23 @@ describe("CwsKit — asymmetric key produces a COSE_Sign1 (tag 18)", () => {
     expect(token.equals(bytes)).toBe(true);
   });
 
-  test("rejects a tampered payload", () => {
+  test("refuses a tampered signature as a CwsError carrying cose_signature_invalid", () => {
     const sign1 = decodeCbor<Tag>(kit.sign(Buffer.from("authentic")));
     const arr = sign1.contents as Array<Buffer>;
     const tampered = Buffer.from(arr[3]); // the signature
     tampered[0] ^= 0xff;
     arr[3] = tampered;
 
-    expect(() => kit.verify(encodeCbor(sign1))).toThrow(AegisError);
+    let thrown: unknown;
+
+    try {
+      kit.verify(encodeCbor(sign1));
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(CwsError);
+    expect((thrown as CwsError).code).toBe("cose_signature_invalid");
   });
 });
 
@@ -64,14 +73,23 @@ describe("CwsKit — symmetric key produces a COSE_Mac0 (tag 17)", () => {
     expect(header.alg).toBe("HS256"); // HS256 wire alg name
   });
 
-  test("rejects a tampered payload", () => {
+  test("refuses a tampered payload as a CwsError carrying cose_mac_invalid", () => {
     const mac0 = decodeCbor<Tag>(kit.sign(Buffer.from("authentic")));
     const arr = mac0.contents as Array<Buffer>;
     const tampered = Buffer.from(arr[2]); // the payload
     tampered[0] ^= 0xff;
     arr[2] = tampered;
 
-    expect(() => kit.verify(encodeCbor(mac0))).toThrow(AegisError);
+    let thrown: unknown;
+
+    try {
+      kit.verify(encodeCbor(mac0));
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(CwsError);
+    expect((thrown as CwsError).code).toBe("cose_mac_invalid");
   });
 });
 
@@ -480,6 +498,20 @@ describe("CwsKit — a slot holding something other than a byte string", () => {
       ]),
     );
 
+  // RFC 9052 §4.1, RFC 9052 §5.1.
+  const COSE_SIGN_TAG = 98;
+  const COSE_ENCRYPT_TAG = 96;
+
+  const fourElementsUnderTag = (tag: number): Buffer =>
+    encodeCbor(
+      new Tag(tag, [
+        Buffer.alloc(0),
+        new Map<number, unknown>(),
+        Buffer.from("content"),
+        [],
+      ]),
+    );
+
   test.each([
     [
       "decode names the protected slot",
@@ -489,7 +521,17 @@ describe("CwsKit — a slot holding something other than a byte string", () => {
     [
       "decode names the arity",
       () => CwsKit.decode(threeElements()),
-      "A COSE_Sign1/COSE_Mac0 must be a 4-element array [protected, unprotected, payload, signature/tag].",
+      "The token is neither a COSE_Sign1 nor a COSE_Mac0, each a 4-element array [protected, unprotected, payload, signature/tag].",
+    ],
+    [
+      "decode names what a 4-element COSE_Sign is not",
+      () => CwsKit.decode(fourElementsUnderTag(COSE_SIGN_TAG)),
+      "The token is neither a COSE_Sign1 nor a COSE_Mac0, each a 4-element array [protected, unprotected, payload, signature/tag].",
+    ],
+    [
+      "decode names what a 4-element COSE_Encrypt is not",
+      () => CwsKit.decode(fourElementsUnderTag(COSE_ENCRYPT_TAG)),
+      "The token is neither a COSE_Sign1 nor a COSE_Mac0, each a 4-element array [protected, unprotected, payload, signature/tag].",
     ],
     [
       "decode names the payload slot",
@@ -507,9 +549,14 @@ describe("CwsKit — a slot holding something other than a byte string", () => {
       "The COSE_Sign1 protected header slot is not a byte string, so its parameters cannot be read.",
     ],
     [
+      "verify names what a 4-element COSE_Sign is not",
+      () => kit.verify(fourElementsUnderTag(COSE_SIGN_TAG)),
+      "The token is not a COSE_Sign1, which is a 4-element array [protected, unprotected, payload, signature/tag].",
+    ],
+    [
       "verify names the arity",
       () => kit.verify(threeElements()),
-      "A COSE_Sign1 must be a 4-element array [protected, unprotected, payload, signature/tag].",
+      "The token is not a COSE_Sign1, which is a 4-element array [protected, unprotected, payload, signature/tag].",
     ],
   ])("%s", (_name, door, details) => {
     let thrown: unknown;
@@ -816,6 +863,42 @@ describe("CwsKit — a key identifier stated in both header buckets", () => {
       expect(thrown).toBeInstanceOf(CwsError);
       expect(thrown?.code).toBe("cose_duplicate_kid");
       expect(thrown?.data).toEqual({ parameter: "kid" });
+    },
+  );
+});
+
+describe("CwsKit — a signed COSE structure the key does not imply", () => {
+  test.each([
+    [
+      "a COSE_Mac0 handed to an asymmetric key",
+      TEST_OCT_KEY_SIG,
+      TEST_EC_KEY_SIG,
+      "The token is not a COSE_Sign1, which is a 4-element array [protected, unprotected, payload, signature/tag].",
+    ],
+    [
+      "a COSE_Sign1 handed to a symmetric key",
+      TEST_EC_KEY_SIG,
+      TEST_OCT_KEY_SIG,
+      "The token is not a COSE_Mac0, which is a 4-element array [protected, unprotected, payload, signature/tag].",
+    ],
+  ])(
+    "verify says what the token is not rather than that its element count is wrong for %s",
+    (_name, signer, verifier, details) => {
+      const token = new CwsKit({ kryptos: signer, logger: createMockLogger() }).sign(
+        Buffer.from("content"),
+      );
+
+      let thrown: unknown;
+
+      try {
+        new CwsKit({ kryptos: verifier, logger: createMockLogger() }).verify(token);
+      } catch (error) {
+        thrown = error;
+      }
+
+      expect(thrown).toBeInstanceOf(AegisError);
+      expect((thrown as AegisError).code).toBe("cose_malformed");
+      expect((thrown as AegisError).details).toBe(details);
     },
   );
 });

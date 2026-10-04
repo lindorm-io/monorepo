@@ -124,7 +124,7 @@ describe("CwtKit (COSE_Sign1, asymmetric)", () => {
       }
     })();
 
-    expect(error).toBeInstanceOf(CwsError);
+    expect(error).toBeInstanceOf(CwtError);
     expect(error?.code).toBe("cose_signature_invalid");
   });
 
@@ -1122,7 +1122,7 @@ describe("CwmKit — a slot holding something other than a byte string", () => {
             ]),
           ),
         ),
-      "A COSE_Mac0 must be a 4-element array [protected, unprotected, payload, signature/tag].",
+      "The token is not a COSE_Mac0, which is a 4-element array [protected, unprotected, payload, signature/tag].",
     ],
   ])("%s", (_name, door, details) => {
     let thrown: unknown;
@@ -1194,6 +1194,54 @@ describe("CwmKit — a slot holding something other than a byte string", () => {
       expect(payload.sub).toBe(wire.sub);
     },
   );
+});
+
+describe("CwtKit — a COSE_Mac0 handed to an asymmetric key", () => {
+  test("verify says the token is not a COSE_Sign1 rather than that its element count is wrong", () => {
+    const mac0 = new CwmKit({
+      kryptos: TEST_OCT_KEY_SIG,
+      logger: createMockLogger(),
+    }).sign(wire);
+    const kit = new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger: createMockLogger() });
+
+    let thrown: unknown;
+
+    try {
+      kit.verify(mac0);
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(AegisError);
+    expect((thrown as AegisError).code).toBe("cose_malformed");
+    expect((thrown as AegisError).details).toBe(
+      "The token is not a COSE_Sign1, which is a 4-element array [protected, unprotected, payload, signature/tag].",
+    );
+  });
+});
+
+describe("CwmKit — a COSE_Sign1 handed to a symmetric key", () => {
+  test("verify says the token is not a COSE_Mac0 rather than that its element count is wrong", () => {
+    const sign1 = new CwtKit({
+      kryptos: TEST_EC_KEY_SIG,
+      logger: createMockLogger(),
+    }).sign(wire);
+    const kit = new CwmKit({ kryptos: TEST_OCT_KEY_SIG, logger: createMockLogger() });
+
+    let thrown: unknown;
+
+    try {
+      kit.verify(sign1);
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(AegisError);
+    expect((thrown as AegisError).code).toBe("cose_malformed");
+    expect((thrown as AegisError).details).toBe(
+      "The token is not a COSE_Mac0, which is a 4-element array [protected, unprotected, payload, signature/tag].",
+    );
+  });
 });
 
 /**

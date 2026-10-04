@@ -2,7 +2,7 @@ import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import MockDate from "mockdate";
 import { beforeEach, describe, expect, test } from "vitest";
-import { AegisError, CwmError, CwsError } from "../errors/index.js";
+import { AegisError, CwmError } from "../errors/index.js";
 import { TEST_EC_KEY_SIG } from "../__fixtures__/keys.js";
 import { Tag, decodeCbor, encodeCbor } from "../internal/cose/cbor.js";
 import { COSE_TAG } from "../internal/cose/structures.js";
@@ -109,7 +109,7 @@ describe("CwmKit (COSE_Mac0, symmetric)", () => {
       }
     })();
 
-    expect(error).toBeInstanceOf(CwsError);
+    expect(error).toBeInstanceOf(CwmError);
     expect(error?.code).toBe("cose_mac_invalid");
     expect(error?.title).toBe("Invalid COSE MAC");
   });
@@ -153,11 +153,10 @@ describe("CwmKit (COSE_Mac0, symmetric)", () => {
 /**
  * The MAC half of the claims core.
  *
- * ⚠ Covered INCIDENTALLY before: the claims core built its COSE structure by
- * constructing `CwsKit`, so a symmetric key reached the Mac0 branch of a body
- * `CwsKit.test.ts` drove. The claims core composes the same utilities itself now,
- * so the two things only a SYMMETRIC key can reach on this wire — the Mac0
- * structure and the MAC-invalid refusal — need their own evidence here.
+ * ⚠ The claims core composes the COSE utilities itself and never constructs
+ * `CwsKit`, so the two things only a SYMMETRIC key can reach on this wire — the
+ * Mac0 structure and the MAC-invalid refusal — need their own evidence here, not
+ * `CwsKit.test.ts`'s.
  *
  * The header RULES are one shared call site and are pinned once, on `CwtKit`.
  * The header refusal's CLASS is not: it comes from `ERROR_BY_FORMAT[format]`,
@@ -192,7 +191,7 @@ describe("CwmKit — the COSE_Mac0 it builds and the refusal only a MAC can rais
       thrown = error as AegisError;
     }
 
-    expect(thrown).toBeInstanceOf(CwsError);
+    expect(thrown).toBeInstanceOf(CwmError);
     expect(thrown?.code).toBe("cose_mac_invalid");
   });
 

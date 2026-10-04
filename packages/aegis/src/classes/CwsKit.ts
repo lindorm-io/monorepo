@@ -87,7 +87,7 @@ export class CwsKit implements ICwsKit {
         message: "Malformed COSE structure",
         title: "Malformed COSE Structure",
         arityDetails:
-          "A COSE_Sign1/COSE_Mac0 must be a 4-element array [protected, unprotected, payload, signature/tag].",
+          "The token is neither a COSE_Sign1 nor a COSE_Mac0, each a 4-element array [protected, unprotected, payload, signature/tag].",
         protectedDetails:
           "The COSE_Sign1/COSE_Mac0 protected header slot is not a byte string, so its parameters cannot be read.",
       });
@@ -214,9 +214,8 @@ export class CwsKit implements ICwsKit {
 
     // ⛔ ONE OPENING. The split, the two protected-header gates, the two
     // nil-able-slot refusals and the signature/MAC cycle are the SHARED signed
-    // COSE read — byte-identical to the claims path's before it was extracted,
-    // down to the `if (!valid) throw` block. The kit's own work is what follows:
-    // reconstructing the OPAQUE content by its cty.
+    // COSE read, `verifyCoseStructure`, which the claims path calls as well. The
+    // kit's own work is what follows: reconstructing the OPAQUE content by its cty.
     const { protectedHeader, unprotectedHeader, custom, protectedMap, content } =
       verifyCoseStructure({
         kryptos: this.kryptos,

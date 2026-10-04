@@ -56,7 +56,7 @@ export const verifyCoseStructure = ({
    * `crit` verify option, handed to the crit gate below.
    */
   declared: ReadonlyArray<string> | undefined;
-  /** Namespaces the header-gate refusals. The structural ones are shared. */
+  /** Namespaces every refusal but the structural ones, which are shared. */
   format: SignedCoseFormat;
   /**
    * What an unreadable payload slot costs on this path, in the path's own words.
@@ -82,7 +82,7 @@ export const verifyCoseStructure = ({
     error: CwsError,
     message: `Malformed ${label}`,
     title: `Malformed ${label}`,
-    arityDetails: `A ${label} must be a 4-element array [protected, unprotected, payload, signature/tag].`,
+    arityDetails: `The token is not a ${label}, which is a 4-element array [protected, unprotected, payload, signature/tag].`,
     protectedDetails: `The ${label} protected header slot is not a byte string, so its parameters cannot be read.`,
   });
 
@@ -160,13 +160,15 @@ export const verifyCoseStructure = ({
   }
 
   if (!valid) {
+    const Refusal = ERROR_BY_FORMAT[format];
+
     throw sign1
-      ? new CwsError("Invalid COSE_Sign1 signature", {
+      ? new Refusal("Invalid COSE_Sign1 signature", {
           code: "cose_signature_invalid",
           title: "Invalid COSE Signature",
           details: "The COSE_Sign1 signature did not verify against the resolved key.",
         })
-      : new CwsError("Invalid COSE_Mac0 tag", {
+      : new Refusal("Invalid COSE_Mac0 tag", {
           code: "cose_mac_invalid",
           title: "Invalid COSE MAC",
           details:

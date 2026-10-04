@@ -10,7 +10,7 @@ import { TEST_EC_KEY_SIG } from "../../__fixtures__/keys.js";
 import { spliceCoseSlot } from "../../__fixtures__/splice-cose-slot.js";
 import { Aegis } from "../../classes/Aegis.js";
 import { SignatureKit } from "../../classes/SignatureKit.js";
-import { AegisError, CwsError } from "../../errors/index.js";
+import { AegisError, type CoseError, CwsError, CwtError } from "../../errors/index.js";
 
 MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
 afterAll(() => MockDate.reset());
@@ -37,6 +37,7 @@ type Door = [
   door: string,
   mint: (aegis: Aegis) => Promise<string>,
   open: (aegis: Aegis, token: string) => Promise<unknown>,
+  signatureError: typeof CoseError,
 ];
 
 const mintCwt = async (aegis: Aegis): Promise<string> =>
@@ -53,10 +54,10 @@ const mintCws = async (aegis: Aegis): Promise<string> =>
   (await aegis.cws.sign("the content bytes")).token;
 
 const DOORS: ReadonlyArray<Door> = [
-  ["aegis.verify, a CWT", mintCwt, (aegis, token) => aegis.verify(token)],
-  ["aegis.cwt.verify", mintCwt, (aegis, token) => aegis.cwt.verify(token)],
-  ["aegis.verify, a CWS", mintCws, (aegis, token) => aegis.verify(token)],
-  ["aegis.cws.verify", mintCws, (aegis, token) => aegis.cws.verify(token)],
+  ["aegis.verify, a CWT", mintCwt, (aegis, token) => aegis.verify(token), CwtError],
+  ["aegis.cwt.verify", mintCwt, (aegis, token) => aegis.cwt.verify(token), CwtError],
+  ["aegis.verify, a CWS", mintCws, (aegis, token) => aegis.verify(token), CwsError],
+  ["aegis.cws.verify", mintCws, (aegis, token) => aegis.cws.verify(token), CwsError],
 ];
 
 const withSignature = (token: string, signature: Buffer): string =>
@@ -96,7 +97,7 @@ describe("a COSE_Sign1 whose EC signature is not the curve's raw length", () => 
       aegis = await deployment(kryptos);
     });
 
-    describe.each(DOORS)("at %s", (_door, mint, open) => {
+    describe.each(DOORS)("at %s", (_door, mint, open, signatureError) => {
       let token: string;
 
       beforeAll(async () => {
@@ -125,10 +126,10 @@ describe("a COSE_Sign1 whose EC signature is not the curve's raw length", () => 
         },
       );
 
-      test("answers a right-length signature that does not verify under the signature verdict", async () => {
+      test("answers a right-length signature that does not verify under the signature verdict in the door's own error class", async () => {
         const thrown = await refusalOf(() => open(aegis, alterToken(token, "signature")));
 
-        expect(thrown).toBeInstanceOf(CwsError);
+        expect(thrown).toBeInstanceOf(signatureError);
         expect((thrown as CwsError).code).toBe("cose_signature_invalid");
       });
     });
