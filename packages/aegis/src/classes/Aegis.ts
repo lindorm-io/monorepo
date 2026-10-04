@@ -287,8 +287,7 @@ export class Aegis implements IAegis {
 
   // The domain confidentiality surface, the mirror of `sign`: NO inner
   // signature (sender auth is `mint(profile, content, { encrypt })`, read with
-  // `verify`). `encrypt` translates domain claims to the wire then seals them in
-  // a JWE/CWE; `decrypt` reverses it with NO signature check.
+  // `verify`).
   encrypt(data: EncryptData, options: EncryptOptions = {}): Promise<EncryptedToken> {
     return encryptToken({ data, options, deps: this.deps });
   }
