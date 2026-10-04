@@ -32,12 +32,12 @@ Feature: A verify-only profile's structural policy
       When I sign the wire claims as a claims token on the <wire> wire
       And I verify the token under the "external_access_token" profile as the audience "https://rs.lindorm.io/"
       Then verification is refused as a domain error "profile_policy_invalid"
-      And the refusal reports the format "<format>", the direction "verify" and locates the fault at "issuer": Claim "issuer" did not satisfy the profile rule predicate
+      And the refusal reports the direction "verify" and locates the fault at "issuer": Claim "issuer" did not satisfy the profile rule predicate
 
       Examples:
-        | wire | format |
-        | jose | jwt    |
-        | cose | cwt    |
+        | wire |
+        | jose |
+        | cose |
 
   Rule: a token that expires before it was issued is refused as structurally incoherent
 
@@ -63,12 +63,12 @@ Feature: A verify-only profile's structural policy
       When I sign the wire claims as a claims token on the <wire> wire
       And I verify the token under the "external_access_token" profile as the audience "https://rs.lindorm.io/"
       Then verification is refused as a domain error "profile_policy_invalid"
-      And the refusal reports the format "<format>", the direction "verify" and locates the fault at "expiresAt": expiresAt (exp) must be after issuedAt (iat)
+      And the refusal reports the direction "verify" and locates the fault at "expiresAt": expiresAt (exp) must be after issuedAt (iat)
 
       Examples:
-        | wire | format |
-        | jose | jwt    |
-        | cose | cwt    |
+        | wire |
+        | jose |
+        | cose |
 
   Rule: the envelope claims a profile injects for the caller arrive on the wire under their registered names
 
@@ -238,12 +238,12 @@ Feature: A verify-only profile's structural policy
     Scenario Outline: <wire>: the mint is refused, naming the profile and the use it declares
       When I mint the content under the "external_access_token" profile on the <wire> wire
       Then minting is refused as a domain error "profile_not_mintable"
-      And the refusal reports the format "<format>", names the profile "external_access_token" and its declared use "verify"
+      And the refusal names the profile "external_access_token" and its declared use "verify"
 
       Examples:
-        | wire | format |
-        | jose | jwt    |
-        | cose | cwt    |
+        | wire |
+        | jose |
+        | cose |
 
   Rule: a third-party token that satisfies the profile's structural policy verifies
 

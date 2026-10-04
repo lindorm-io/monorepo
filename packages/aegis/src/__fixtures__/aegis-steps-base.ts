@@ -50,12 +50,12 @@ export abstract class AegisStepsBase {
   }
 
   /**
-   * The client-visible bag the refusal reports. Every call site compares the whole
-   * bag with `toEqual`, so a member a thrower adds to `data` reddens its scenario —
-   * unless the value is `undefined`, which `toEqual` ignores: merging the `debug` of
-   * `src/internal/utils/apply-verify-policy.ts#DPoP Token Not Bound` into its `data`
-   * stays green for that reason. No scenario asserts `debug`, which is where content
-   * a client must not see goes.
+   * The client-visible bag the refusal reports. The table and every sentence naming
+   * a member compare the whole bag with `toEqual`, so a member a thrower adds to
+   * `data` reddens its scenario — unless the value is `undefined`, which `toEqual`
+   * ignores. "the refusal carries no data" compares with `toStrictEqual`, which
+   * does not. No scenario asserts `debug`, which is where content a client must not
+   * see goes.
    */
   protected refusalData(): Dict {
     const refusal = this.refusal();

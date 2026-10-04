@@ -88,7 +88,7 @@ export const buildTokenResult = <C extends Dict = Dict>({
   ) {
     throw new AegisDomainError("Missing claim: iss", {
       code: "missing_claim_iss",
-      data: { format },
+      debug: { format },
       title: "Missing Claim ISS",
       details:
         "The payload has no non-empty string iss claim, which is required to read this token.",

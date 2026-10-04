@@ -45,7 +45,8 @@ export const mintToken = async ({
   if (profile.use === "verify") {
     throw new AegisDomainError("Profile cannot be minted", {
       code: "profile_not_mintable",
-      data: { profile: profile.name, use: profile.use, format },
+      data: { profile: profile.name, use: profile.use },
+      debug: { format },
       title: "Profile Not Mintable",
       details:
         "This token profile declares itself verify-only: it exists to verify a token issued elsewhere, so it cannot be used to mint one. Use the profile that owns the artifact you are issuing.",
@@ -57,7 +58,8 @@ export const mintToken = async ({
   if (options.encrypt !== undefined && !profile.encryptable) {
     throw new AegisDomainError("Encryption is not allowed for this profile", {
       code: "encryption_not_allowed",
-      data: { profile: profile.name, format },
+      data: { profile: profile.name },
+      debug: { format },
       title: "Encryption Not Allowed",
       details:
         "This token profile is not encryptable, so an encrypt option cannot be supplied; remove it or use an encryptable profile.",

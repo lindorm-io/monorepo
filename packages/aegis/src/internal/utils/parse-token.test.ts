@@ -14,9 +14,9 @@ const ISSUER = "https://test.lindorm.io/";
  * `parseToken` — the keyless, unverified claims read, beside this file.
  *
  * What it does with each token KIND is stated in the feature files (a claims
- * token is read; an opaque one and an encrypted one are refused, each naming the
- * format it refused). Two things about it are stated here: both take an input no
- * scenario builds, which is exactly why they are the two worth holding.
+ * token is read; an opaque one and an encrypted one are refused, each under its
+ * own code). Two things about it are stated here: both take an input no scenario
+ * builds, which is exactly why they are the two worth holding.
  */
 describe("parseToken", () => {
   let aegis: Aegis;

@@ -121,7 +121,7 @@ export const applyVerifyPolicy = ({
       // NOT `invalid_typ`: the kits use that name for the OPPOSITE condition — a
       // typ that is PRESENT and wrong. This is the absence.
       code: "typ_required",
-      data: { typ: decodedTyp, format },
+      debug: { format },
       title: "Typ Required",
       details:
         "The token carries no type header, but this verification requires explicit typing.",
@@ -137,7 +137,7 @@ export const applyVerifyPolicy = ({
   if (options.expPresence !== "optional" && !isClaimSatisfied(wireClaims.exp)) {
     throw new AegisDomainError("Missing claim: exp", {
       code: "missing_claim_exp",
-      data: { format },
+      debug: { format },
       title: "Missing Claim Exp",
       details:
         'The token has no exp claim, but exp is required for this verification (expPresence is not "optional").',
@@ -153,8 +153,7 @@ export const applyVerifyPolicy = ({
 
     throw new AegisDomainError(actorError.message, {
       code: actorError.code,
-      data: { format },
-      debug: actorError.debug,
+      debug: { ...actorError.debug, format },
       title: refusal.title,
       details: refusal.details,
     });
@@ -212,25 +211,26 @@ export const applyVerifyPolicy = ({
     !isClaimOmitted(value) && !isClaimSatisfied(value);
 
   /**
-   * WHICH of the two values was named and unsatisfied — `cnf` for a confirmation
-   * with no member, `cnf.jkt` for one whose thumbprint is empty.
+   * WHICH of the two values was named and unsatisfied — a confirmation with no
+   * member, or one whose thumbprint is empty — spelled in the caller's vocabulary
+   * for `data` and the wire's for `debug`.
    *
-   * ⚠⚠ IT IS IN `data` because `format` alone cannot discriminate this refusal
+   * ⚠⚠ IT IS IN `data` because nothing else in `data` discriminates this refusal
    * from `dpop_token_not_bound`, which fires on the SAME token when a proof is
-   * supplied and stamps an identical `data: { format }`. A scenario pinning
-   * `format` alone goes green against the wrong refusal.
+   * supplied and carries no `data`. A scenario pinning an empty bag goes green
+   * against the wrong refusal.
    */
   const unsatisfied = namedButUnsatisfied(claims.confirmation)
-    ? "cnf"
+    ? { domain: "confirmation", wire: "cnf" }
     : namedButUnsatisfied(boundThumbprint)
-      ? "cnf.jkt"
+      ? { domain: "confirmation.thumbprint", wire: "cnf.jkt" }
       : undefined;
 
   if (unsatisfied !== undefined) {
     throw new AegisDomainError("Invalid token: the confirmation binds no key", {
       code: "confirmation_binds_no_key",
-      data: { format, member: unsatisfied },
-      debug: { confirmation: claims.confirmation },
+      data: { member: unsatisfied.domain },
+      debug: { confirmation: claims.confirmation, format, member: unsatisfied.wire },
       title: "Confirmation Binds No Key",
       details:
         "The token carries a confirmation that is empty, or one whose thumbprint (cnf.jkt) is present but empty. A confirmation declares that the presenter holds a particular key, so one naming nothing cannot be honoured and is refused on every path, including the ones where a caller vouches that the proof was checked upstream. Only those two shapes are judged here: the thumbprint is the one confirmation member this verifier acts on, so an empty value in any other member passes no gate it could otherwise have failed. RFC 7800 §3.1.",
@@ -243,8 +243,7 @@ export const applyVerifyPolicy = ({
         "Invalid token: DPoP proof provided but token is not bound",
         {
           code: "dpop_token_not_bound",
-          data: { format },
-          debug: { confirmation: claims.confirmation },
+          debug: { confirmation: claims.confirmation, format },
           title: "DPoP Token Not Bound",
           details:
             "A DPoP proof was supplied but the token carries no cnf.jkt thumbprint, so it cannot be DPoP-bound.",
@@ -272,7 +271,7 @@ export const applyVerifyPolicy = ({
       "Invalid token: token is DPoP-bound but no DPoP proof was provided",
       {
         code: "dpop_proof_required",
-        data: { format },
+        debug: { format },
         title: "DPoP Proof Required",
         details:
           "The token carries a cnf.jkt thumbprint, so a matching DPoP proof must be supplied unless trustBoundThumbprint is set.",

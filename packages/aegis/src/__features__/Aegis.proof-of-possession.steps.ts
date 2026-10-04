@@ -163,9 +163,9 @@ export class AegisProofOfPossessionSteps extends AegisStepsBase {
     expect(this.refusalData()).toEqual({ members, supported });
   }
 
-  @Then("the refusal reports the format {string} and names the member {string}")
-  theRefusalReportsTheFormatAndNamesTheMember(format: string, member: string): void {
-    expect(this.refusalData()).toEqual({ format, member });
+  @Then("the refusal names the member {string}")
+  theRefusalNamesTheMember(member: string): void {
+    expect(this.refusalData()).toEqual({ member });
   }
 
   // parameter types

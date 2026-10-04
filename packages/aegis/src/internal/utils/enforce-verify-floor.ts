@@ -56,8 +56,8 @@ const typMismatch = (
     // caller's own `assert.tokenType` mismatch is a different refusal raised by
     // the kit.
     code: "profile_typ_mismatch",
-    data: { typ: decodedTyp, format },
-    debug: { expected, profile: profile.name },
+    data: { typ: decodedTyp },
+    debug: { expected, format, profile: profile.name },
     title: "Profile Typ Mismatch",
     details:
       "The header typ does not match the typ mandated by the profile being verified.",
@@ -107,8 +107,8 @@ export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
     if (invalid.length > 0) {
       throw new AegisDomainError("Invalid token", {
         code: "algorithm_not_permitted",
-        data: { algorithm, invalid, format },
-        debug: { algClass: profile.algClass, invalid, profile: profile.name },
+        data: { algorithm, invalid },
+        debug: { algClass: profile.algClass, format, invalid, profile: profile.name },
         title: "Algorithm Not Permitted",
         details:
           "The token was verified under an algorithm whose class the profile does not permit, so its signature cannot prove what the profile requires of it.",
@@ -139,8 +139,8 @@ export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
     default:
       throw new AegisDomainError("Unsupported typ presence", {
         code: "unsupported_typ_presence",
-        data: { typ: profile.typ, format },
-        debug: { profile: profile.name },
+        data: { typ: profile.typ },
+        debug: { format, profile: profile.name },
         title: "Unsupported Typ Presence",
         details:
           "The profile typ presence is not one of none or required, so the floor cannot enforce it.",
@@ -150,8 +150,8 @@ export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
   if (expectedIssuer !== undefined && payload.issuer !== expectedIssuer) {
     throw new AegisDomainError("Invalid token", {
       code: "issuer_mismatch",
-      data: { issuer: payload.issuer, format },
-      debug: { expected: expectedIssuer, profile: profile.name },
+      data: { issuer: payload.issuer },
+      debug: { expected: expectedIssuer, format, profile: profile.name },
       title: "Issuer Mismatch",
       details:
         "The token issuer (iss) does not exactly match the issuer expected for this profile.",
@@ -163,8 +163,8 @@ export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
   if (!audList.includes(audience)) {
     throw new AegisDomainError("Invalid token", {
       code: "audience_mismatch",
-      data: { audience: payload.audience, format },
-      debug: { expected: audience, profile: profile.name },
+      data: { audience: payload.audience },
+      debug: { expected: audience, format, profile: profile.name },
       title: "Audience Mismatch",
       details:
         "The token audience (aud) does not contain the verifier's own identity supplied to verify.",
@@ -186,8 +186,7 @@ export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
   if (profile.lifetime !== null && !isClaimSatisfied(payload.expiresAt)) {
     throw new AegisDomainError("Invalid token", {
       code: "missing_claim_exp",
-      data: { format },
-      debug: { profile: profile.name },
+      debug: { format, profile: profile.name },
       title: "Missing Claim Exp",
       details:
         "This profile mandates an exp claim, but the token has none; it is rejected unconditionally.",

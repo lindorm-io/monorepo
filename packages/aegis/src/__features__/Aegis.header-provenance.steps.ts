@@ -99,11 +99,6 @@ export class AegisHeaderProvenanceSteps extends AegisStepsBase {
     expect(this.refusalData()).toEqual({ parameter, whenEmpty });
   }
 
-  @Then("the refusal reports the format {string}")
-  theRefusalReportsTheFormat(format: string): void {
-    expect(this.refusalData()).toEqual({ format });
-  }
-
   // helpers
 
   private carriesAllOf(part: RawPart, keys: Array<WireKey>): void {

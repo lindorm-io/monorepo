@@ -31,12 +31,8 @@ export const assertWireInput = <T extends Dict>(
 
   throw new AegisDomainError(`Option is not supported on this wire: ${option}`, {
     code: "wire_option_unsupported",
-    data: {
-      format: context.format,
-      operation: context.operation,
-      option,
-      reason: rule.reason,
-    },
+    data: { operation: context.operation, option, reason: rule.reason },
+    debug: { format: context.format },
     title: "Wire Option Unsupported",
     details: `The ${context.format} wire cannot honour the ${option} option, so the request is refused rather than accepted and ignored. ${rule.reason}`,
   });

@@ -32,14 +32,14 @@ Feature: The audience floor
       When I sign the wire claims as a claims token on the jose wire
       And I verify the token under the "default" profile as the audience "https://rs.lindorm.io/"
       Then verification is refused as a domain error "audience_mismatch"
-      And the refusal reports the format "jwt" and the audience it read as the list "someone-else"
+      And the refusal reports the audience it read as the list "someone-else"
 
     @RFC-8392
     Scenario: cose: the look-alike does not answer for the registered audience claim (RFC-8392 §3.1.3)
       When I sign the wire claims as a claims token on the cose wire
       And I verify the token under the "default" profile as the audience "https://rs.lindorm.io/"
       Then verification is refused as a domain error "audience_mismatch"
-      And the refusal reports the format "cwt" and the audience it read as the list "someone-else"
+      And the refusal reports the audience it read as the list "someone-else"
 
   Rule: a token that states no audience at all is refused, even when it carries a custom audience claim
 
@@ -92,11 +92,11 @@ Feature: The audience floor
       When I sign the wire claims as a claims token on the jose wire
       And I verify the token under the "default" profile as the audience "https://rs.lindorm.io/"
       Then verification is refused as a domain error "audience_mismatch"
-      And the refusal reports the format "jwt" and the audience it read as the list "someone-else"
+      And the refusal reports the audience it read as the list "someone-else"
 
     @RFC-8392
     Scenario: cose: a verifier not named in the audience refuses the token (RFC-8392 §3.1.3)
       When I sign the wire claims as a claims token on the cose wire
       And I verify the token under the "default" profile as the audience "https://rs.lindorm.io/"
       Then verification is refused as a domain error "audience_mismatch"
-      And the refusal reports the format "cwt" and the audience it read as the list "someone-else"
+      And the refusal reports the audience it read as the list "someone-else"

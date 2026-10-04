@@ -108,31 +108,20 @@ export class AegisVerifyOnlyProfileSteps extends AegisStepsBase {
     expect(this.refusalData()).toEqual({ typ });
   }
 
-  @Then(
-    "the refusal reports the format {string}, names the profile {string} and its declared use {string}",
-  )
-  theRefusalNamesTheProfileAndItsDeclaredUse(
-    format: string,
-    profile: string,
-    use: string,
-  ): void {
-    expect(this.refusalData()).toEqual({ profile, use, format });
+  @Then("the refusal names the profile {string} and its declared use {string}")
+  theRefusalNamesTheProfileAndItsDeclaredUse(profile: string, use: string): void {
+    expect(this.refusalData()).toEqual({ profile, use });
   }
 
   @Then(
-    "the refusal reports the format {string}, the direction {string} and locates the fault at {string}: {}",
+    "the refusal reports the direction {string} and locates the fault at {string}: {}",
   )
   theRefusalReportsTheDirectionAndLocatesTheFault(
-    format: string,
     direction: string,
     key: string,
     message: string,
   ): void {
-    expect(this.refusalData()).toEqual({
-      direction,
-      invalid: [{ key, message }],
-      format,
-    });
+    expect(this.refusalData()).toEqual({ direction, invalid: [{ key, message }] });
   }
 
   // parameter types

@@ -5,9 +5,11 @@ Feature: The error contract at every door
   else falls through that guard and surfaces as a generic 500 that tells the
   caller nothing about the token. Every failure aegis raises is therefore an
   `AegisError`, at every door. A domain rule is one rule and raises one code
-  on both encodings, so the encoding of the token it refused travels as data
-  on the error. Both are aegis policy — no specification says anything about
-  the shape of an implementation's error — so no scenario carries a tag.
+  on both encodings, and the data on the error leaves out the token's
+  encoding: the client sent that token or chose its encoding, so the
+  encoding is a diagnostic. Both are aegis policy — no specification says
+  anything about the shape of an implementation's error — so no scenario
+  carries a tag.
 
   Background:
     Given the clock reads "2024-01-01T08:00:00.000Z"
@@ -84,18 +86,15 @@ Feature: The error contract at every door
       When I check the claims without a signature
       Then the claims are refused as an aegis error
 
-  Rule: a domain refusal names the encoding of the token it refused in its data
+  Rule: a domain refusal keeps the token's encoding out of its data
 
-    A consumer handling a domain refusal — logging it, rendering it, deciding
-    whether to retry against a different endpoint — has to know which
-    encoding the refused token was in, and that fact is not in the code. A
-    refusal that names the wrong encoding is worse than one that names none:
-    it sends whoever reads it to the wrong decoder, the wrong issuer and the
-    wrong half of the code, most convincingly when both wires share the one
-    implementation that produced it. The token carries no expiry, so the
-    domain rule that refuses it is expiry presence; the range check belongs
-    to the kit and is not what answers. The verify states no options at all,
-    so the twin that states an empty bag can be held to the same verdict.
+    The data on a refusal reaches the client. The client sent the token or
+    chose its encoding, so the data does not repeat the encoding: it is a
+    diagnostic. The token carries no expiry, so the domain rule that refuses
+    it is expiry presence, whose refusal names nothing else; the range check
+    belongs to the kit and is not what answers. The verify states no options
+    at all, so the twin that states an empty bag can be held to the same
+    verdict.
 
     Background:
       Given the wire claims
@@ -105,16 +104,16 @@ Feature: The error contract at every door
         | jti | "token-1"                  |
       And the wire claims were issued at "2024-01-01T08:00:00.000Z"
 
-    Scenario Outline: <wire>: the refusal reports the format of the token it refused
+    Scenario Outline: <wire>: the refusal of a token with no expiry carries no data
       When I sign the wire claims as a claims token on the <wire> wire
       And I verify the token stating no options
       Then verification is refused as a domain error "missing_claim_exp"
-      And the refusal reports the format "<format>"
+      And the refusal carries no data
 
       Examples:
-        | wire | format |
-        | jose | jwt    |
-        | cose | cwt    |
+        | wire |
+        | jose |
+        | cose |
 
   Rule: a COSE type header that is not a text string is refused as a COSE error at every door
 

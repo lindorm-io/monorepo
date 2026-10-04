@@ -1,0 +1,171 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Aegis > the encoding of the token a domain refusal refused > claims_invalid keeps the cwt encoding out of data and reports it in debug 1`] = `
+{
+  "code": "claims_invalid",
+  "data": {
+    "invalid": [
+      "subject",
+    ],
+  },
+  "debug": {
+    "format": "cwt",
+    "invalid": [
+      {
+        "key": "sub",
+        "value": "user-1",
+      },
+    ],
+  },
+  "message": "Invalid token",
+  "name": "AegisDomainError",
+}
+`;
+
+exports[`Aegis > the encoding of the token a domain refusal refused > claims_invalid keeps the jwt encoding out of data and reports it in debug 1`] = `
+{
+  "code": "claims_invalid",
+  "data": {
+    "invalid": [
+      "subject",
+    ],
+  },
+  "debug": {
+    "format": "jwt",
+    "invalid": [
+      {
+        "key": "sub",
+        "value": "user-1",
+      },
+    ],
+  },
+  "message": "Invalid token",
+  "name": "AegisDomainError",
+}
+`;
+
+exports[`Aegis > the encoding of the token a domain refusal refused > confirmation_binds_no_key on a jose token whose confirmation has an empty thumbprint names the member in the domain vocabulary in data and the wire's in debug 1`] = `
+{
+  "code": "confirmation_binds_no_key",
+  "data": {
+    "member": "confirmation.thumbprint",
+  },
+  "debug": {
+    "confirmation": {
+      "thumbprint": "",
+    },
+    "format": "jwt",
+    "member": "cnf.jkt",
+  },
+  "message": "Invalid token: the confirmation binds no key",
+  "name": "AegisDomainError",
+}
+`;
+
+exports[`Aegis > the encoding of the token a domain refusal refused > confirmation_binds_no_key on a jose token whose confirmation has no member names the member in the domain vocabulary in data and the wire's in debug 1`] = `
+{
+  "code": "confirmation_binds_no_key",
+  "data": {
+    "member": "confirmation",
+  },
+  "debug": {
+    "confirmation": {},
+    "format": "jwt",
+    "member": "cnf",
+  },
+  "message": "Invalid token: the confirmation binds no key",
+  "name": "AegisDomainError",
+}
+`;
+
+exports[`Aegis > the encoding of the token a domain refusal refused > the actor refusal of an undelegated cwt carries no data and reports the encoding in debug 1`] = `
+{
+  "code": "actor_not_allowed",
+  "data": {},
+  "debug": {
+    "format": "cwt",
+  },
+  "message": "Expected delegated token with act claim",
+  "name": "AegisDomainError",
+}
+`;
+
+exports[`Aegis > the encoding of the token a domain refusal refused > the actor refusal of an undelegated jwt carries no data and reports the encoding in debug 1`] = `
+{
+  "code": "actor_not_allowed",
+  "data": {},
+  "debug": {
+    "format": "jwt",
+  },
+  "message": "Expected delegated token with act claim",
+  "name": "AegisDomainError",
+}
+`;
+
+exports[`Aegis > the encoding of the token a domain refusal refused > the actor refusal of an unlisted actor on a cwt reports the encoding beside the actor in debug 1`] = `
+{
+  "code": "actor_not_allowed",
+  "data": {},
+  "debug": {
+    "actor": {
+      "subject": "service-1",
+    },
+    "format": "cwt",
+  },
+  "message": "Actor not allowed",
+  "name": "AegisDomainError",
+}
+`;
+
+exports[`Aegis > the encoding of the token a domain refusal refused > the actor refusal of an unlisted actor on a jwt reports the encoding beside the actor in debug 1`] = `
+{
+  "code": "actor_not_allowed",
+  "data": {},
+  "debug": {
+    "actor": {
+      "subject": "service-1",
+    },
+    "format": "jwt",
+  },
+  "message": "Actor not allowed",
+  "name": "AegisDomainError",
+}
+`;
+
+exports[`Aegis > the encoding of the token a domain refusal refused > typ_required of a typ-less cose token carries no data and reports the encoding in debug 1`] = `
+{
+  "code": "typ_required",
+  "data": {},
+  "debug": {
+    "format": "cwt",
+  },
+  "message": "Invalid token",
+  "name": "AegisDomainError",
+}
+`;
+
+exports[`Aegis > the encoding of the token a domain refusal refused > typ_required of a typ-less jose token carries no data and reports the encoding in debug 1`] = `
+{
+  "code": "typ_required",
+  "data": {},
+  "debug": {
+    "format": "jwt",
+  },
+  "message": "Invalid token",
+  "name": "AegisDomainError",
+}
+`;
+
+exports[`Aegis > the encoding of the token a domain refusal refused > verify_requires_signature of a JWE sealing a CWT carries no data and reports both encodings in debug 1`] = `
+{
+  "code": "verify_requires_signature",
+  "data": {},
+  "debug": {
+    "format": "jwe",
+    "inner": "cwt",
+    "token": Any<String>,
+  },
+  "message": "Encrypted token does not contain a signed inner token",
+  "name": "AegisDomainError",
+}
+`;

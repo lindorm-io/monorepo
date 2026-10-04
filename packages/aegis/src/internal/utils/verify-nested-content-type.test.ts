@@ -3,6 +3,7 @@ import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import MockDate from "mockdate";
 import { beforeEach, describe, expect, test } from "vitest";
 import { TEST_EC_KEY_ENC, TEST_EC_KEY_SIG } from "../../__fixtures__/keys.js";
+import { rejectionOf } from "../../__fixtures__/refusal-of.js";
 import { Aegis } from "../../classes/Aegis.js";
 
 MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
@@ -48,8 +49,8 @@ describe("the nested content-type declaration on an encrypted token", () => {
       header: { cty: "JWT" },
     });
 
-    await expect(aegis.verify(token)).rejects.toMatchObject({
-      code: "verify_inner_type_mismatch",
+    expect(await rejectionOf(() => aegis.verify(token))).toMatchSnapshot({
+      debug: { token: expect.any(String) },
     });
   });
 

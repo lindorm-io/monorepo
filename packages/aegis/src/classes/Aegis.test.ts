@@ -10,8 +10,11 @@ import {
   TEST_OKP_KEY_ENC,
   TEST_OKP_KEY_SIG,
 } from "../__fixtures__/keys.js";
+import { rejectionOf } from "../__fixtures__/refusal-of.js";
+import { signAsThirdParty } from "../__fixtures__/third-party-producer.js";
 import { FAPI_SIG_ALGS } from "../constants/fapi.js";
 import { AegisError } from "../errors/index.js";
+import type { ClaimsTokenFormat, SignContent } from "../types/index.js";
 import { Aegis } from "./Aegis.js";
 import { JwtKit } from "./JwtKit.js";
 
@@ -245,17 +248,18 @@ describe("Aegis", () => {
       expect({
         code: policyInvalid.code,
         data: policyInvalid.data,
+        debugFormat: policyInvalid.debug.format,
         debugInvalid: policyInvalid.debug.invalid,
       }).toStrictEqual({
         code: "profile_policy_invalid",
         data: {
           direction: "mint",
-          format: "jwt",
           invalid: [
             { key: "events", message: 'Required claim "events" is missing or empty' },
             { key: "events", message: "events must contain at least one event type" },
           ],
         },
+        debugFormat: "jwt",
         debugInvalid: [
           {
             key: "events",
@@ -269,6 +273,104 @@ describe("Aegis", () => {
             shape: "events",
           },
         ],
+      });
+    });
+  });
+
+  describe("the encoding of the token a domain refusal refused", () => {
+    const FORMATS: Array<ClaimsTokenFormat> = ["jwt", "cwt"];
+
+    const mint = (format: ClaimsTokenFormat, delegated: Partial<SignContent> = {}) =>
+      aegis.mint(
+        "default",
+        { subject: "user-1", expires: "1h", tokenType: "test_token", ...delegated },
+        { format },
+      );
+
+    const signedByAThirdParty = (wire: "jose" | "cose", typ?: string, cnf?: unknown) =>
+      signAsThirdParty(
+        wire,
+        {
+          iss: "https://test.lindorm.io/",
+          sub: "user-1",
+          iat: 1704096000,
+          exp: 1704099600,
+          ...(cnf === undefined ? {} : { cnf }),
+        },
+        typ,
+        TEST_EC_KEY_SIG,
+      );
+
+    test.each(FORMATS)(
+      "claims_invalid keeps the %s encoding out of data and reports it in debug",
+      async (format) => {
+        const { token } = await mint(format);
+
+        expect(
+          await rejectionOf(() => aegis.verify(token, { subject: "other" })),
+        ).toMatchSnapshot();
+      },
+    );
+
+    test.each(FORMATS)(
+      "the actor refusal of an undelegated %s carries no data and reports the encoding in debug",
+      async (format) => {
+        const { token } = await mint(format);
+
+        expect(
+          await rejectionOf(() =>
+            aegis.verify(token, undefined, { actor: { required: true } }),
+          ),
+        ).toMatchSnapshot();
+      },
+    );
+
+    test.each(FORMATS)(
+      "the actor refusal of an unlisted actor on a %s reports the encoding beside the actor in debug",
+      async (format) => {
+        const { token } = await mint(format, { act: { subject: "service-1" } });
+
+        expect(
+          await rejectionOf(() =>
+            aegis.verify(token, undefined, {
+              actor: { allowedActor: { subject: "trusted-service" } },
+            }),
+          ),
+        ).toMatchSnapshot();
+      },
+    );
+
+    test.each(["jose", "cose"] as const)(
+      "typ_required of a typ-less %s token carries no data and reports the encoding in debug",
+      async (wire) => {
+        const token = await signedByAThirdParty(wire);
+
+        expect(
+          await rejectionOf(() =>
+            aegis.verify(token, undefined, { typPresence: "required" }),
+          ),
+        ).toMatchSnapshot();
+      },
+    );
+
+    test.each([
+      ["jose", "no member", "JWT", {}],
+      ["jose", "an empty thumbprint", "JWT", { jkt: "" }],
+    ] as const)(
+      "confirmation_binds_no_key on a %s token whose confirmation has %s names the member in the domain vocabulary in data and the wire's in debug",
+      async (wire, _shape, typ, cnf) => {
+        const token = await signedByAThirdParty(wire, typ, cnf);
+
+        expect(await rejectionOf(() => aegis.verify(token))).toMatchSnapshot();
+      },
+    );
+
+    test("verify_requires_signature of a JWE sealing a CWT carries no data and reports both encodings in debug", async () => {
+      const { token: cwt } = await mint("cwt");
+      const { token } = await aegis.jwe.encrypt(cwt);
+
+      expect(await rejectionOf(() => aegis.verify(token))).toMatchSnapshot({
+        debug: { token: expect.any(String) },
       });
     });
   });

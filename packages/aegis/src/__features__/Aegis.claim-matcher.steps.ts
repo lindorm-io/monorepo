@@ -78,10 +78,8 @@ export class AegisClaimMatcherSteps extends AegisStepsBase {
     expect(this.refusalData()).toEqual({ key });
   }
 
-  @Then(
-    "the refusal names the wire claim {string} and the conflicting matchers {stringList}",
-  )
-  theRefusalNamesTheConflictingMatchers(claim: string, keys: Array<string>): void {
-    expect(this.refusalData()).toEqual({ claim, keys });
+  @Then("the refusal names the conflicting matchers {stringList}")
+  theRefusalNamesTheConflictingMatchers(keys: Array<string>): void {
+    expect(this.refusalData()).toEqual({ keys });
   }
 }

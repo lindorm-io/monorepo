@@ -115,8 +115,8 @@ Feature: A signed token sealed in an encrypting envelope
     wrote the ciphertext. A verify that returned the claims of an unsigned
     encrypted payload would report an authenticated credential assembled
     entirely by the party presenting it, so a plaintext carrying no
-    signature has to be refused rather than reported. The refusal names the
-    encrypting format it opened.
+    signature has to be refused rather than reported. The refusal carries no
+    data: the presenter sent the token and knows its encoding.
 
     Background:
       Given the vault also holds an ECDH-ES encryption key
@@ -124,13 +124,13 @@ Feature: A signed token sealed in an encrypting envelope
       And the data to encrypt
         | subject | user-1 |
 
-    Scenario Outline: <wire>: the verify is refused as a domain error naming the encrypting format
+    Scenario Outline: <wire>: the verify is refused as a domain error carrying no data
       When I encrypt the data on the <wire> wire
       And I verify the token
       Then verification is refused as a domain error "verify_requires_signature"
-      And the refusal reports the format "<format>"
+      And the refusal carries no data
 
       Examples:
-        | wire | format |
-        | jose | jwe    |
-        | cose | cwe    |
+        | wire |
+        | jose |
+        | cose |

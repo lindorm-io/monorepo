@@ -25,7 +25,7 @@ export const tokenWireFor = (format: TokenFormatTag): TokenWire => {
 
   throw new AegisError("Unsupported token format", {
     code: "unsupported_token_format",
-    data: { format },
+    debug: { format },
     title: "Unsupported Token Format",
     details: "No token wire is registered for this format.",
   });

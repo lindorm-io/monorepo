@@ -105,12 +105,11 @@ Feature: The issuer claim's presence
       Then verification is refused as a domain error "claims_invalid"
       And the refusal's data is exactly
         | invalid | ["issuer"] |
-        | format  | "<format>" |
 
       Examples:
-        | wire | format |
-        | jose | jwt    |
-        | cose | cwt    |
+        | wire |
+        | jose |
+        | cose |
 
   Rule: a profiled verify refuses the issuer-less token at the floor, on both wires
 

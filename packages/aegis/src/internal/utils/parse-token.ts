@@ -40,8 +40,7 @@ export const parseToken = <C extends Dict = Dict>(token: string): ParsedToken<C>
   if (TOKEN_FORMAT_KIND[format] === "encrypted") {
     throw new AegisDomainError("Cannot parse an encrypted token", {
       code: "parse_requires_decrypt",
-      data: { format },
-      debug: { token: sanitiseToken(token) },
+      debug: { format, token: sanitiseToken(token) },
       title: "Parse Requires Decrypt",
       details:
         "aegis.parse is keyless and unverified, so it cannot read a JWE/CWE — its claims are encrypted. Use aegis.decrypt to read confidential claims, or aegis.verify for a sign-then-encrypt token.",
@@ -51,8 +50,7 @@ export const parseToken = <C extends Dict = Dict>(token: string): ParsedToken<C>
   if (TOKEN_FORMAT_KIND[format] === "opaque") {
     throw new AegisDomainError("Cannot parse an opaque token", {
       code: "parse_requires_claims",
-      data: { format },
-      debug: { token: sanitiseToken(token) },
+      debug: { format, token: sanitiseToken(token) },
       title: "Parse Requires Claims",
       details:
         "An opaque JWS/CWS is a signed blob with no claims layer, so aegis.parse (a claims reader) has nothing to return. Read it with aegis.jws.verify / aegis.cws.verify.",

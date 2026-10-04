@@ -110,8 +110,8 @@ export const enforcePolicy = ({
         if (missing.length > 0) {
           throw new AegisDomainError("Mint context is incomplete", {
             code: "missing_sign_context",
-            data: { missing, format },
-            debug: { claim: rule.claim, missing, profile: profile.name },
+            data: { missing },
+            debug: { claim: rule.claim, format, missing, profile: profile.name },
             title: "Missing Sign Context",
             details:
               "A profile rule reads mint-time facts the caller did not supply, so it cannot be evaluated. Supply every named key in the mint context; a fact that is false must be stated as false.",
@@ -126,8 +126,8 @@ export const enforcePolicy = ({
         const exhaustive: never = rule;
         throw new AegisDomainError("Unsupported policy rule", {
           code: "unsupported_policy_rule",
-          data: { rule: exhaustive, format },
-          debug: { profile: profile.name },
+          data: { rule: exhaustive },
+          debug: { format, profile: profile.name },
           title: "Unsupported Policy Rule",
           details:
             "The profile declares a policy rule this build does not implement, so its policy cannot be enforced.",
@@ -144,9 +144,8 @@ export const enforcePolicy = ({
       data: {
         direction,
         invalid: invalid.map(({ key, message }) => ({ key, message })),
-        format,
       },
-      debug: { direction, invalid, profile: profile.name },
+      debug: { direction, format, invalid, profile: profile.name },
       title: "Profile Policy Invalid",
       details:
         "The claims do not satisfy the policy the profile declares for this direction.",

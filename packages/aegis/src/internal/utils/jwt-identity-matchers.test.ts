@@ -1,3 +1,4 @@
+import { refusalOf } from "../../__fixtures__/refusal-of.js";
 import { AegisDomainError } from "../../errors/index.js";
 import { createHash } from "./create-hash.js";
 import { HASH_MATCHERS } from "./hash-matchers.js";
@@ -62,10 +63,8 @@ describe("createIdentityMatchers", () => {
       const error = thrownBy({ accessTokenHash: "y", accessToken: { $eq: "x" } });
 
       expect(error.code).toBe("jwt_verify_conflicting_matchers");
-      expect(error.data).toEqual({
-        claim: "at_hash",
-        keys: ["accessTokenHash", "accessToken"],
-      });
+      expect(error.data).toStrictEqual({ keys: ["accessTokenHash", "accessToken"] });
+      expect(error.debug).toStrictEqual({ claim: "at_hash" });
     });
   });
 
@@ -91,10 +90,20 @@ describe("createIdentityMatchers", () => {
       });
 
       expect(error.code).toBe("jwt_verify_conflicting_matchers");
-      expect(error.data).toEqual({
-        claim: "at_hash",
-        keys: ["accessToken", "accessTokenHash"],
-      });
+      expect(error.data).toStrictEqual({ keys: ["accessToken", "accessTokenHash"] });
+      expect(error.debug).toStrictEqual({ claim: "at_hash" });
+    });
+
+    test("should name the caller's two keys in the refusal message, never the wire claim", () => {
+      expect(
+        refusalOf(() =>
+          createIdentityMatchers(
+            "ES256",
+            { $or: [{ accessToken: "raw", accessTokenHash: "digest" }] },
+            joseName,
+          ),
+        ),
+      ).toMatchSnapshot();
     });
 
     test("should refuse an unmapped key inside a branch under its own name", () => {

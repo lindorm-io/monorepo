@@ -115,22 +115,24 @@ Feature: The keyless claims read
     indistinguishable from a claims token that happened to carry none, and
     every presence check a caller then makes passes vacuously — so the reader
     must say that the artifact is the wrong kind rather than answer as though
-    it were the right one. The refusal names the format it read.
+    it were the right one. The refusal's code says which kind it read, and
+    it carries no data: the caller handed the token in and knows its
+    encoding.
 
     Background:
       Given the payload to sign
         | tid | at_abc |
 
-    Scenario Outline: <wire>: the read is refused as a domain error naming the opaque format
+    Scenario Outline: <wire>: the read of an opaque token is refused as a domain error carrying no data
       When I sign the payload as opaque content on the <wire> wire
       And I read the token without a key
       Then the keyless read is refused as a domain error "parse_requires_claims"
-      And the refusal reports the format "<format>"
+      And the refusal carries no data
 
       Examples:
-        | wire | format |
-        | jose | jws    |
-        | cose | cws    |
+        | wire |
+        | jose |
+        | cose |
 
   Rule: the keyless claims read refuses an encrypted token rather than reporting a partial result
 
@@ -138,24 +140,24 @@ Feature: The keyless claims read
     see them at all. Anything it returned would be about the envelope and not
     the content, and a caller reading claims off such a result would be
     making decisions from an empty set while holding a token full of them.
-    The refusal is what sends the caller to the verb that holds a key, and
-    it names the format it read.
+    The refusal is what sends the caller to the verb that holds a key; its
+    code says the token is encrypted, and it carries no data.
 
     Background:
       Given the vault also holds an ECDH-ES encryption key
       And the vault also holds a dir encryption key
       And the text to encrypt "secret"
 
-    Scenario Outline: <wire>: the read is refused as a domain error naming the encrypting format
+    Scenario Outline: <wire>: the read of an encrypted token is refused as a domain error carrying no data
       When I encrypt the text on the <wire> wire
       And I read the token without a key
       Then the keyless read is refused as a domain error "parse_requires_decrypt"
-      And the refusal reports the format "<format>"
+      And the refusal carries no data
 
       Examples:
-        | wire | format |
-        | jose | jwe    |
-        | cose | cwe    |
+        | wire |
+        | jose |
+        | cose |
 
   Rule: a sensitive claim sitting in cleartext is not surfaced by the keyless claims read either
 

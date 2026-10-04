@@ -670,13 +670,12 @@ Feature: Header provenance, empty header parameters and the asserted token type
       And I verify the token
       Then verification is refused as a domain error "token_type_mismatch"
       And the refusal's data is exactly
-        | typ    | "<typ>"    |
-        | format | "<format>" |
+        | typ | "<typ>" |
 
       Examples:
-        | wire | typ                | format |
-        | jose | application/at+jwt | jwt    |
-        | cose | application/at+cwt | cwt    |
+        | wire | typ                |
+        | jose | application/at+jwt |
+        | cose | application/at+cwt |
 
   Rule: a token typed as an id token verifies when the caller asserts an id token
 

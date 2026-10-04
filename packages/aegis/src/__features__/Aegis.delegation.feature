@@ -144,12 +144,12 @@ Feature: Delegation, and the actor policy a verifier states over it
       When I sign the wire claims as a claims token on the <wire> wire
       And I verify the token
       Then verification is refused as a domain error "actor_not_allowed"
-      And the refusal reports the format "<format>"
+      And the refusal carries no data
 
       Examples:
-        | wire | format |
-        | jose | jwt    |
-        | cose | cwt    |
+        | wire |
+        | jose |
+        | cose |
 
   Rule: a verifier listing the actors it trusts accepts a chain whose earlier actors it does not list
 
@@ -221,12 +221,12 @@ Feature: Delegation, and the actor policy a verifier states over it
       When I sign the wire claims as a claims token on the <wire> wire
       And I verify the token
       Then verification is refused as a domain error "actor_not_allowed"
-      And the refusal reports the format "<format>"
+      And the refusal carries no data
 
       Examples:
-        | wire | format |
-        | jose | jwt    |
-        | cose | cwt    |
+        | wire |
+        | jose |
+        | cose |
 
   Rule: a verifier listing the actors it trusts refuses a token presented by its own subject
 
@@ -256,12 +256,12 @@ Feature: Delegation, and the actor policy a verifier states over it
       When I sign the wire claims as a claims token on the <wire> wire
       And I verify the token
       Then verification is refused as a domain error "actor_not_allowed"
-      And the refusal reports the format "<format>"
+      And the refusal carries no data
 
       Examples:
-        | wire | format |
-        | jose | jwt    |
-        | cose | cwt    |
+        | wire |
+        | jose |
+        | cose |
 
   Rule: a verifier whose actor allowlist names the parties it refuses still refuses a token presented by its own subject
 
@@ -296,12 +296,12 @@ Feature: Delegation, and the actor policy a verifier states over it
       When I sign the wire claims as a claims token on the <wire> wire
       And I verify the token
       Then verification is refused as a domain error "actor_not_allowed"
-      And the refusal reports the format "<format>"
+      And the refusal carries no data
 
       Examples:
-        | wire | format |
-        | jose | jwt    |
-        | cose | cwt    |
+        | wire |
+        | jose |
+        | cose |
 
   Rule: a verifier stating an actor allowlist with no condition in it has the call refused rather than obeyed
 
@@ -338,12 +338,12 @@ Feature: Delegation, and the actor policy a verifier states over it
       When I sign the wire claims as a claims token on the <wire> wire
       And I verify the token
       Then verification is refused as a domain error "actor_policy_invalid"
-      And the refusal reports the format "<format>"
+      And the refusal carries no data
 
       Examples:
-        | wire | format |
-        | jose | jwt    |
-        | cose | cwt    |
+        | wire |
+        | jose |
+        | cose |
 
   Rule: a verifier stating an actor allowlist whose alternatives include one with no condition in it has the call refused rather than obeyed
 
@@ -377,12 +377,12 @@ Feature: Delegation, and the actor policy a verifier states over it
       When I sign the wire claims as a claims token on the <wire> wire
       And I verify the token
       Then verification is refused as a domain error "actor_policy_invalid"
-      And the refusal reports the format "<format>"
+      And the refusal carries no data
 
       Examples:
-        | wire | format |
-        | jose | jwt    |
-        | cose | cwt    |
+        | wire |
+        | jose |
+        | cose |
 
   Rule: a verifier bounding the delegation depth refuses a chain longer than it allows
 
@@ -410,12 +410,12 @@ Feature: Delegation, and the actor policy a verifier states over it
       When I sign the wire claims as a claims token on the <wire> wire
       And I verify the token
       Then verification is refused as a domain error "actor_not_allowed"
-      And the refusal reports the format "<format>"
+      And the refusal carries no data
 
       Examples:
-        | wire | format |
-        | jose | jwt    |
-        | cose | cwt    |
+        | wire |
+        | jose |
+        | cose |
 
   Rule: a mint carries an actor member RFC 8693 permits and aegis does not declare, at every depth
 

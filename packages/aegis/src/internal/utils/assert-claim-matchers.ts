@@ -94,14 +94,11 @@ export const assertClaimMatchers = ({
       // wire name and maps to itself in `domainByWire`; every claim key
       // `validate` reports is in the map because `createIdentityMatchers`
       // throws on one it cannot map. The `?? key` is the Map's `| undefined`.
-      data: {
-        invalid: invalid?.map((key) => domainByWire.get(key) ?? key),
-        format,
-      },
+      data: { invalid: invalid?.map((key) => domainByWire.get(key) ?? key) },
       // `debug` stays WIRE-spelled and carries the values. A lifted claim's
       // value is the list ({@link withSpacedArrays}), not the token's own
       // string.
-      debug: { invalid: err.debug?.invalid },
+      debug: { format, invalid: err.debug?.invalid },
       title: "Claims Invalid",
       details:
         "One or more claims (such as a verifier-supplied claim) failed the validation predicate.",

@@ -74,12 +74,11 @@ Feature: The token identifier matcher
       Then verification is refused as a domain error "claims_invalid"
       And the refusal's data is exactly
         | invalid | ["tokenId"] |
-        | format  | "<format>"  |
 
       Examples:
-        | wire | format |
-        | jose | jwt    |
-        | cose | cwt    |
+        | wire |
+        | jose |
+        | cose |
 
   Rule: a caller asserting that no token identifier is present is refused by a token that carries one
 
@@ -109,9 +108,8 @@ Feature: The token identifier matcher
       Then verification is refused as a domain error "claims_invalid"
       And the refusal's data is exactly
         | invalid | ["tokenId"] |
-        | format  | "<format>"  |
 
       Examples:
-        | wire | format |
-        | jose | jwt    |
-        | cose | cwt    |
+        | wire |
+        | jose |
+        | cose |

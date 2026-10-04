@@ -158,13 +158,13 @@ Feature: The profile floor, applied to a token that arrived
       When I sign the wire claims as a claims token on the jose wire
       And I verify the token under the "access_token" profile as the audience "https://rs.lindorm.io/"
       Then verification is refused as a domain error "profile_policy_invalid"
-      And the refusal reports the format "jwt", the direction "verify" and locates the fault at "issuedAt": Required claim "issuedAt" is missing or empty
+      And the refusal reports the direction "verify" and locates the fault at "issuedAt": Required claim "issuedAt" is missing or empty
 
     Scenario: cose: the issue instant the access token profile requires is demanded on arrival
       When I sign the wire claims as a claims token on the cose wire
       And I verify the token under the "access_token" profile as the audience "https://rs.lindorm.io/"
       Then verification is refused as a domain error "profile_policy_invalid"
-      And the refusal reports the format "cwt", the direction "verify" and locates the fault at "issuedAt": Required claim "issuedAt" is missing or empty
+      And the refusal reports the direction "verify" and locates the fault at "issuedAt": Required claim "issuedAt" is missing or empty
 
   Rule: a token missing a claim its profile does not require verifies
 
@@ -241,12 +241,12 @@ Feature: The profile floor, applied to a token that arrived
       When I sign the wire claims as a claims token on the <wire> wire
       And I verify the token under the "delegation" profile as the audience "https://test.lindorm.io/"
       Then verification is refused as a domain error "profile_policy_invalid"
-      And the refusal reports the format "<format>", the direction "verify" and locates the fault at "tokenId": Required claim "tokenId" is missing or empty
+      And the refusal reports the direction "verify" and locates the fault at "tokenId": Required claim "tokenId" is missing or empty
 
       Examples:
-        | wire | format |
-        | jose | jwt    |
-        | cose | cwt    |
+        | wire |
+        | jose |
+        | cose |
 
   Rule: a third party's token whose required identifier is the empty string is refused on arrival, as one without it is
 
@@ -286,12 +286,12 @@ Feature: The profile floor, applied to a token that arrived
       When a third party signs the wire claims on the <wire> wire, typed "<typ>"
       And I verify the token under the "delegation" profile as the audience "https://test.lindorm.io/"
       Then verification is refused as a domain error "profile_policy_invalid"
-      And the refusal reports the format "<format>", the direction "verify" and locates the fault at "tokenId": Required claim "tokenId" is missing or empty
+      And the refusal reports the direction "verify" and locates the fault at "tokenId": Required claim "tokenId" is missing or empty
 
       Examples:
-        | wire | typ                        | format |
-        | jose | application/delegation+jwt | jwt    |
-        | cose | application/delegation+cwt | cwt    |
+        | wire | typ                        |
+        | jose | application/delegation+jwt |
+        | cose | application/delegation+cwt |
 
   Rule: a token whose issuer is stated per call round-trips under the issuer the caller named
 
@@ -359,12 +359,12 @@ Feature: The profile floor, applied to a token that arrived
     Scenario Outline: <wire>: the mint is refused, naming the empty member (RFC-9493 §3.2.3)
       When I mint the content under the "security_event" profile on the <wire> wire
       Then minting is refused as a domain error "profile_policy_invalid"
-      And the refusal reports the format "<format>", the direction "mint" and locates the fault at "subjectId.subject": subjectId of format "iss_sub" requires member "subject"
+      And the refusal reports the direction "mint" and locates the fault at "subjectId.subject": subjectId of format "iss_sub" requires member "subject"
 
       Examples:
-        | wire | format |
-        | jose | jwt    |
-        | cose | cwt    |
+        | wire |
+        | jose |
+        | cose |
 
   Rule: a subject identifier member is written and read back in the domain vocabulary while the wire keeps the RFC spelling
 
@@ -558,7 +558,7 @@ Feature: The profile floor, applied to a token that arrived
     Scenario Outline: <wire>: the profile's shape rule answers first, in the vocabulary the caller writes in
       When I mint the content under the "security_event" profile on the <wire> wire
       Then minting is refused as a domain error "profile_policy_invalid"
-      And the refusal reports the format "<format>", the direction "mint" and lists the faults
+      And the refusal reports the direction "mint" and lists the faults
         | key               | message                                                    |
         | subjectId.issuer  | subjectId of format "iss_sub" requires member "issuer"     |
         | subjectId.subject | subjectId of format "iss_sub" requires member "subject"    |
@@ -566,9 +566,9 @@ Feature: The profile floor, applied to a token that arrived
         | subjectId.sub     | subjectId of format "iss_sub" does not describe member "sub" |
 
       Examples:
-        | wire | format |
-        | jose | jwt    |
-        | cose | cwt    |
+        | wire |
+        | jose |
+        | cose |
 
   Rule: minting a token whose subject identifier spells its issuer and subject as `iss` and `sub` is refused under a profile that states no shape rule
 
@@ -759,12 +759,12 @@ Feature: The profile floor, applied to a token that arrived
       When a third party signs the wire claims on the <wire> wire, typed "<typ>"
       And I verify the token under the "security_event" profile as the audience "https://receiver.lindorm.io/"
       Then verification is refused as a domain error "profile_policy_invalid"
-      And the refusal reports the format "<format>", the direction "verify" and locates the fault at "subjectId.uri": subjectId of format "email" does not describe member "uri"
+      And the refusal reports the direction "verify" and locates the fault at "subjectId.uri": subjectId of format "email" does not describe member "uri"
 
       Examples:
-        | wire | typ                      | format |
-        | jose | application/secevent+jwt | jwt    |
-        | cose | application/secevent+cwt | cwt    |
+        | wire | typ                      |
+        | jose | application/secevent+jwt |
+        | cose | application/secevent+cwt |
 
   Rule: minting a security event token whose alias list holds an aliases identifier is refused at the position that holds it
 
@@ -795,12 +795,12 @@ Feature: The profile floor, applied to a token that arrived
     Scenario Outline: <wire>: the mint is refused at the nested identifier's position (RFC-9493 §3.2.8)
       When I mint the content under the "security_event" profile on the <wire> wire
       Then minting is refused as a domain error "profile_policy_invalid"
-      And the refusal reports the format "<format>", the direction "mint" and locates the fault at "subjectId.identifiers[1]": subjectId.identifiers[1] must not be an identifier of format "aliases"
+      And the refusal reports the direction "mint" and locates the fault at "subjectId.identifiers[1]": subjectId.identifiers[1] must not be an identifier of format "aliases"
 
       Examples:
-        | wire | format |
-        | jose | jwt    |
-        | cose | cwt    |
+        | wire |
+        | jose |
+        | cose |
 
   Rule: verifying a security event token another producer wrote whose alias list holds an aliases identifier is refused
 
@@ -836,12 +836,12 @@ Feature: The profile floor, applied to a token that arrived
       When a third party signs the wire claims on the <wire> wire, typed "<typ>"
       And I verify the token under the "security_event" profile as the audience "https://receiver.lindorm.io/"
       Then verification is refused as a domain error "profile_policy_invalid"
-      And the refusal reports the format "<format>", the direction "verify" and locates the fault at "subjectId.identifiers[1]": subjectId.identifiers[1] must not be an identifier of format "aliases"
+      And the refusal reports the direction "verify" and locates the fault at "subjectId.identifiers[1]": subjectId.identifiers[1] must not be an identifier of format "aliases"
 
       Examples:
-        | wire | typ                      | format |
-        | jose | application/secevent+jwt | jwt    |
-        | cose | application/secevent+cwt | cwt    |
+        | wire | typ                      |
+        | jose | application/secevent+jwt |
+        | cose | application/secevent+cwt |
 
   Rule: a security event token whose subject identifier aliases several formats is minted and read back at every depth
 

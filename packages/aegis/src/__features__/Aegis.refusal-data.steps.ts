@@ -18,4 +18,9 @@ export class AegisRefusalDataSteps extends AegisStepsBase {
   theRefusalsDataIsExactly(table: DataTable): void {
     expect(this.refusalData()).toEqual(jsonCells(table));
   }
+
+  @Then("the refusal carries no data")
+  theRefusalCarriesNoData(): void {
+    expect(this.refusalData()).toStrictEqual({});
+  }
 }

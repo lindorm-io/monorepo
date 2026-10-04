@@ -347,6 +347,13 @@ describe("createJwtValidate / createIdentityMatchers parity", () => {
       authState: "the-auth-state",
     };
 
+    // OIDC Core §3.1.3.6, OIDC Core §3.3.2.11, FAPI 1.0 Part 2 §5.1.1.
+    const DIGEST_WIRE_CLAIM: Readonly<Record<string, string>> = {
+      accessTokenHash: "at_hash",
+      codeHash: "c_hash",
+      stateHash: "s_hash",
+    };
+
     test("should map every hash matcher key to a registry domain claim", () => {
       for (const [key, domain] of Object.entries(HASH_MATCHERS)) {
         expect(claimByDomain(domain), `${key} → ${domain}`).toBeDefined();
@@ -404,9 +411,20 @@ describe("createJwtValidate / createIdentityMatchers parity", () => {
               details:
                 "Two verify option keys resolve to the same claim, so only one of them could be checked. State the raw source or the digest, never both.",
             });
-            expect((thrown as AegisDomainError).data.keys).toEqual(
-              expect.arrayContaining([source, digestClaim]),
-            );
+            const [first, second] = Object.keys(bag);
+
+            expect(
+              {
+                data: (thrown as AegisDomainError).data,
+                debug: (thrown as AegisDomainError).debug,
+                message: (thrown as AegisDomainError).message,
+              },
+              JSON.stringify(bag),
+            ).toStrictEqual({
+              data: { keys: [first, second] },
+              debug: { claim: DIGEST_WIRE_CLAIM[digestClaim] },
+              message: `Conflicting matchers: ${first} and ${second}`,
+            });
           }
         }
       }

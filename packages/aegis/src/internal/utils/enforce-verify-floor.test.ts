@@ -191,10 +191,11 @@ describe("enforceVerifyFloor", () => {
       ).toThrow(
         expect.objectContaining({
           code: "profile_typ_mismatch",
-          // The wire the failure came from is DIAGNOSTIC and travels in `data`;
+          // The wire the failure came from is DIAGNOSTIC and travels in `debug`;
           // the code itself is neutral, so a CWT does not report itself as a JWT
           // problem.
-          data: expect.objectContaining({ format: "cwt" }),
+          data: { typ: undefined },
+          debug: expect.objectContaining({ format: "cwt" }),
         }),
       );
 

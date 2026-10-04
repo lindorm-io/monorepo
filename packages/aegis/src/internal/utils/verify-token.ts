@@ -170,8 +170,7 @@ export const verifyToken = async <C extends Dict = Dict>({
         "Encrypted token does not contain a signed inner token",
         {
           code: "verify_requires_signature",
-          data: { format },
-          debug: { token: sanitiseToken(token) },
+          debug: { format, token: sanitiseToken(token) },
           title: "Verify Requires Signature",
           details: REQUIRES_SIGNATURE_DETAILS,
         },
@@ -187,8 +186,12 @@ export const verifyToken = async <C extends Dict = Dict>({
         "Encrypted token does not contain the declared claims token",
         {
           code: "verify_inner_type_mismatch",
-          data: { contentType, format, inner: innerFormat },
-          debug: { token: sanitiseToken(token) },
+          debug: {
+            contentType,
+            format,
+            inner: innerFormat,
+            token: sanitiseToken(token),
+          },
           title: "Verify Inner Type Mismatch",
           details:
             "The encrypted token declares a nested claims token in its content type but its plaintext is not one. A token whose envelope misdescribes its content cannot be trusted to carry the claims it advertises.",
@@ -201,8 +204,7 @@ export const verifyToken = async <C extends Dict = Dict>({
         "Encrypted token does not contain a signed inner token",
         {
           code: "verify_requires_signature",
-          data: { format, inner: innerFormat },
-          debug: { token: sanitiseToken(token) },
+          debug: { format, inner: innerFormat, token: sanitiseToken(token) },
           title: "Verify Requires Signature",
           details: REQUIRES_SIGNATURE_DETAILS,
         },
@@ -236,8 +238,8 @@ export const verifyToken = async <C extends Dict = Dict>({
     if (floor) {
       throw new AegisDomainError("Profile requires a claims token", {
         code: "profile_requires_claims",
-        data: { profile: floor.profile.name, format },
-        debug: { token: sanitiseToken(token) },
+        data: { profile: floor.profile.name },
+        debug: { format, token: sanitiseToken(token) },
         title: "Profile Requires Claims",
         details:
           "An opaque signed token carries no claims layer, so a profile floor — which is a statement about claims — cannot be applied to it. Verify it without a profile.",

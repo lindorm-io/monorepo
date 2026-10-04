@@ -222,14 +222,14 @@ describe("enforcePolicy", () => {
       ).toThrow(
         expect.objectContaining({
           code: "profile_policy_invalid",
-          data: expect.objectContaining({
+          data: {
             direction: "mint",
-            format: "jwt",
             invalid: [
               { key: "issuer", message: 'Required claim "issuer" is missing or empty' },
               { key: "tokenId", message: 'Required claim "tokenId" is missing or empty' },
             ],
-          }),
+          },
+          debug: expect.objectContaining({ format: "jwt" }),
         }),
       );
     });
@@ -434,7 +434,6 @@ describe("enforcePolicy", () => {
     test("data names each failure by key and message alone, never by the rule that refused it", () => {
       expect(refusalOf().data).toStrictEqual({
         direction: "mint",
-        format: "jwt",
         invalid: [
           { key: "subject", message: 'Required claim "subject" is missing or empty' },
           { key: "nonce", message: 'Forbidden claim "nonce" is present' },
@@ -455,9 +454,10 @@ describe("enforcePolicy", () => {
       });
     });
 
-    test("debug names the rule that refused each failure, and a shape rule's validator", () => {
+    test("debug names the rule that refused each failure, a shape rule's validator, and the token's format", () => {
       expect(refusalOf().debug).toStrictEqual({
         direction: "mint",
+        format: "jwt",
         profile: "test_profile",
         invalid: [
           {

@@ -170,12 +170,12 @@ Feature: The confidentiality verb
     Scenario Outline: <wire>: the mint is refused, naming the profile that declared itself unencryptable
       When I mint the content under the "access_token" profile on the <wire> wire
       Then minting is refused as a domain error
-      And the refusal reports the format "<format>" and names the profile "access_token"
+      And the refusal names the profile "access_token"
 
       Examples:
-        | wire | format |
-        | jose | jwt    |
-        | cose | cwt    |
+        | wire |
+        | jose |
+        | cose |
 
   Rule: a mint asked to seal a token with no resolvable recipient key refuses rather than signing it in the clear
 

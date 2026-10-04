@@ -196,9 +196,9 @@ export class AegisRoundTripSteps extends AegisStepsBase {
     expect(this.refusal()).toBeInstanceOf(AegisKeyError);
   }
 
-  @Then("the refusal reports the format {string} and names the profile {string}")
-  theRefusalNamesTheProfile(format: string, profile: string): void {
-    expect(this.refusalData()).toEqual({ profile, format });
+  @Then("the refusal names the profile {string}")
+  theRefusalNamesTheProfile(profile: string): void {
+    expect(this.refusalData()).toEqual({ profile });
   }
 
   // parameter types

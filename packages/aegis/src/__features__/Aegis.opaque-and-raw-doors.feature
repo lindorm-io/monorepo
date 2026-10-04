@@ -346,13 +346,12 @@ Feature: The opaque signed artifact and the raw wire doors
       And I verify the token
       Then verification is refused as a domain error "token_type_mismatch"
       And the refusal's data is exactly
-        | typ    | "<typ>"    |
-        | format | "<format>" |
+        | typ | "<typ>" |
 
       Examples:
-        | wire | typ                | format |
-        | jose | application/at+jws | jws    |
-        | cose | application/at+cws | cws    |
+        | wire | typ                |
+        | jose | application/at+jws |
+        | cose | application/at+cws |
 
   Rule: a caller asserting a token type is answered by an opaque signed token of that type
 
@@ -399,8 +398,8 @@ Feature: The opaque signed artifact and the raw wire doors
     verify sealed. A verify peels the encrypting outer and verifies the
     plaintext under the same assertion, so an opaque JOSE signature sealed in
     a JWE is held to the caller's type exactly as a bare one is. The refusal
-    reports the sealed token's own type and format, which is what the caller
-    asserted on. Aegis policy.
+    reports the sealed token's own type, which is what the caller asserted
+    on. Aegis policy.
 
     Background:
       Given the vault also holds an ECDH-ES encryption key
@@ -418,8 +417,7 @@ Feature: The opaque signed artifact and the raw wire doors
       And I verify the token
       Then verification is refused as a domain error "token_type_mismatch"
       And the refusal's data is exactly
-        | typ    | "application/at+jws" |
-        | format | "jws"                |
+        | typ | "application/at+jws" |
 
     Scenario: jose: a sealed opaque token of the asserted type verifies through its outer
       Given the verifier asserts
@@ -459,12 +457,11 @@ Feature: The opaque signed artifact and the raw wire doors
       Then verification is refused as a domain error "claims_invalid"
       And the refusal's data is exactly
         | invalid | ["subject"] |
-        | format  | "<format>"  |
 
       Examples:
-        | wire | format |
-        | jose | jws    |
-        | cose | cws    |
+        | wire |
+        | jose |
+        | cose |
 
     Scenario Outline: <wire>: a raw access token is refused under the source the caller presented
       Given the verifier asserts
@@ -476,12 +473,11 @@ Feature: The opaque signed artifact and the raw wire doors
       Then verification is refused as a domain error "claims_invalid"
       And the refusal's data is exactly
         | invalid | ["accessToken"] |
-        | format  | "<format>"      |
 
       Examples:
-        | wire | format |
-        | jose | jws    |
-        | cose | cws    |
+        | wire |
+        | jose |
+        | cose |
 
   Rule: a caller nesting a token type assertion inside a condition operator is refused at an opaque signed token
 

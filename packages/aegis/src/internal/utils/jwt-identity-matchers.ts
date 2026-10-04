@@ -82,9 +82,10 @@ export const createIdentityMatchers = (
       const collision = claimedBy.get(mapped);
 
       if (collision !== undefined) {
-        throw new AegisDomainError(`Conflicting matchers for claim: ${mapped}`, {
+        throw new AegisDomainError(`Conflicting matchers: ${collision} and ${key}`, {
           code: "jwt_verify_conflicting_matchers",
-          data: { claim: mapped, keys: [collision, key] },
+          data: { keys: [collision, key] },
+          debug: { claim: mapped },
           title: "JWT Verify Conflicting Matchers",
           details:
             "Two verify option keys resolve to the same claim, so only one of them could be checked. State the raw source or the digest, never both.",

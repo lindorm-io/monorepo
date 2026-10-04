@@ -77,7 +77,7 @@ Feature: Proof-of-possession bindings
       When I mint the content under the "access_token" profile on the jose wire
       And I verify the token under the "access_token" profile as the audience "https://rs.lindorm.io/"
       Then verification is refused as a domain error "dpop_proof_required"
-      And the refusal reports the format "jwt"
+      And the refusal carries no data
 
   Rule: a token declaring a confirmation whose thumbprint is empty is refused, not read as unbound
 
@@ -89,10 +89,11 @@ Feature: Proof-of-possession bindings
     holding a copy may present. Aegis policy at verify. The token comes from
     the raw claims door: a mint refuses a thumbprint that is not 32 base64url
     bytes, and the profile-less verify runs no shape rule behind the binding
-    check either. The refusal names the member, because `format` alone is
-    stamped on every refusal this gate throws. The cose wire has no scenario:
-    a JWK thumbprint confirmation has no CWT counterpart (RFC 9679 §5.5), so
-    no bound token can be built on that wire to present.
+    check either. The refusal names the member as the caller spells it,
+    because the gate's other two refusals — a proof demanded, a token not
+    bound — carry no data. The cose wire has no scenario: a JWK thumbprint
+    confirmation has no CWT counterpart (RFC 9679 §5.5), so no bound token
+    can be built on that wire to present.
 
     Background:
       Given the wire claims
@@ -109,7 +110,7 @@ Feature: Proof-of-possession bindings
       When I sign the wire claims as a claims token on the jose wire
       And I verify the token
       Then verification is refused as a domain error "confirmation_binds_no_key"
-      And the refusal reports the format "jwt" and names the member "cnf.jkt"
+      And the refusal names the member "confirmation.thumbprint"
 
   Rule: a caller vouching that a binding was already proven is still refused a confirmation that binds no key
 
@@ -138,7 +139,7 @@ Feature: Proof-of-possession bindings
       When I sign the wire claims as a claims token on the jose wire
       And I verify the token
       Then verification is refused as a domain error "confirmation_binds_no_key"
-      And the refusal reports the format "jwt" and names the member "cnf.jkt"
+      And the refusal names the member "confirmation.thumbprint"
 
   Rule: presenting a real proof of possession against a confirmation that binds no key is refused
 
@@ -171,7 +172,7 @@ Feature: Proof-of-possession bindings
       And the presenter signs the proof with the ES512 presenter key over the presented token
       And I verify the token
       Then verification is refused as a domain error "confirmation_binds_no_key"
-      And the refusal reports the format "jwt" and names the member "cnf.jkt"
+      And the refusal names the member "confirmation.thumbprint"
 
   Rule: a token whose confirmation names no key at all is refused rather than read as unbound
 
@@ -202,7 +203,7 @@ Feature: Proof-of-possession bindings
       When a third party signs the wire claims on the jose wire, typed "application/access+jwt"
       And I verify the token
       Then verification is refused as a domain error "confirmation_binds_no_key"
-      And the refusal reports the format "jwt" and names the member "cnf"
+      And the refusal names the member "confirmation"
 
   Rule: a caller vouching that a binding was already proven is still refused a confirmation with no member
 
@@ -232,7 +233,7 @@ Feature: Proof-of-possession bindings
       When a third party signs the wire claims on the jose wire, typed "application/access+jwt"
       And I verify the token
       Then verification is refused as a domain error "confirmation_binds_no_key"
-      And the refusal reports the format "jwt" and names the member "cnf"
+      And the refusal names the member "confirmation"
 
   Rule: presenting a real proof of possession against a confirmation with no member is refused
 
@@ -263,7 +264,7 @@ Feature: Proof-of-possession bindings
       And the presenter signs the proof with the ES512 presenter key over the presented token
       And I verify the token
       Then verification is refused as a domain error "confirmation_binds_no_key"
-      And the refusal reports the format "jwt" and names the member "cnf"
+      And the refusal names the member "confirmation"
 
   Rule: a token whose confirmation member holds a value of the wrong shape is refused, not read as unbound
 
@@ -450,7 +451,7 @@ Feature: Proof-of-possession bindings
       And the presenter signs the proof with the EdDSA presenter key over the presented token
       And I verify the token under the "access_token" profile as the audience "https://rs.lindorm.io/"
       Then verification is refused as a domain error "dpop_token_not_bound"
-      And the refusal reports the format "jwt"
+      And the refusal carries no data
 
   Rule: a token carrying a confirmation is refused when the proof is made by a different key
 

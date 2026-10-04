@@ -260,15 +260,10 @@ export class AegisProfileLessSteps extends AegisStepsBase {
   }
 
   @Then(
-    "the refusal reports format {string}, operation {string} and option {string}, unsupported because: {}",
+    "the refusal reports operation {string} and option {string}, unsupported because: {}",
   )
-  theRefusalReports(
-    format: string,
-    operation: string,
-    option: string,
-    reason: string,
-  ): void {
-    expect(this.refusalData()).toEqual({ format, operation, option, reason });
+  theRefusalReports(operation: string, option: string, reason: string): void {
+    expect(this.refusalData()).toEqual({ operation, option, reason });
   }
 
   // parameter types

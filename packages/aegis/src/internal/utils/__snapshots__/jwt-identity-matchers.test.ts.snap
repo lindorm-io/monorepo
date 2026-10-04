@@ -1,0 +1,18 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`createIdentityMatchers > collision scope > should name the caller's two keys in the refusal message, never the wire claim 1`] = `
+{
+  "code": "jwt_verify_conflicting_matchers",
+  "data": {
+    "keys": [
+      "accessToken",
+      "accessTokenHash",
+    ],
+  },
+  "debug": {
+    "claim": "at_hash",
+  },
+  "message": "Conflicting matchers: accessToken and accessTokenHash",
+  "name": "AegisDomainError",
+}
+`;

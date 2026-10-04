@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`the nested content-type declaration on an encrypted token > refuses an envelope declaring a nested claims token over an opaque signature 1`] = `
+{
+  "code": "verify_inner_type_mismatch",
+  "data": {},
+  "debug": {
+    "contentType": "JWT",
+    "format": "jwe",
+    "inner": "jws",
+    "token": Any<String>,
+  },
+  "message": "Encrypted token does not contain the declared claims token",
+  "name": "AegisDomainError",
+}
+`;

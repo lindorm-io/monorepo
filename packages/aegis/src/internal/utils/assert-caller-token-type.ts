@@ -34,8 +34,8 @@ export const assertCallerTokenType = ({
 
   throw new AegisDomainError("Invalid token", {
     code: "token_type_mismatch",
-    data: { typ, format },
-    debug: { expected, tokenType },
+    data: { typ },
+    debug: { expected, format, tokenType },
     title: "Token Type Mismatch",
     details:
       "The token's type header does not match the tokenType asserted for this verification.",
