@@ -1,8 +1,11 @@
 import { readdir } from "node:fs/promises";
 import { join } from "node:path";
 
-/** Never feature sources: dependency trees, build output, git internals. */
-const SKIPPED_DIRECTORIES = new Set(["node_modules", "dist", ".git"]);
+const SKIPPED_DIRECTORIES = new Set(["node_modules", "dist", "coverage"]);
+
+// Skips every dot-named directory, dependency trees, build output and coverage reports.
+const isSkippedDirectory = (name: string): boolean =>
+  name.startsWith(".") || SKIPPED_DIRECTORIES.has(name);
 
 /**
  * Code-unit comparison, never localeCompare — locale collation varies with
@@ -12,18 +15,14 @@ const SKIPPED_DIRECTORIES = new Set(["node_modules", "dist", ".git"]);
 export const byEntryName = (a: { name: string }, b: { name: string }): number =>
   a.name < b.name ? -1 : 1;
 
-/**
- * Every `.feature` file under `dir`, absolute paths in sorted order (readdir
- * order is filesystem-dependent; the coverage error message must be
- * deterministic). A directory named `*.feature` is walked into, not listed.
- */
+/** pinned: walk-feature-files.test.ts */
 export const walkFeatureFiles = async (dir: string): Promise<Array<string>> => {
   const found: Array<string> = [];
   const entries = await readdir(dir, { withFileTypes: true });
 
   for (const entry of entries.sort(byEntryName)) {
     if (entry.isDirectory()) {
-      if (SKIPPED_DIRECTORIES.has(entry.name)) {
+      if (isSkippedDirectory(entry.name)) {
         continue;
       }
       found.push(...(await walkFeatureFiles(join(dir, entry.name))));

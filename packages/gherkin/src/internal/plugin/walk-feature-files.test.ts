@@ -1,8 +1,23 @@
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { afterAll, beforeAll, describe, expect, test } from "vitest";
+import { dirname, join } from "node:path";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  test,
+} from "vitest";
 import { byEntryName, walkFeatureFiles } from "./walk-feature-files.js";
+
+const writeFeatures = async (root: string, files: Array<string>): Promise<void> => {
+  for (const file of files) {
+    await mkdir(dirname(join(root, file)), { recursive: true });
+    await writeFile(join(root, file), "Feature: f\n");
+  }
+};
 
 describe("walkFeatureFiles", () => {
   let root: string;
@@ -63,5 +78,67 @@ describe("walkFeatureFiles", () => {
       { name: "Z" },
       { name: "a" },
     ]);
+  });
+
+  describe("in a fresh tree", () => {
+    let tree: string;
+
+    beforeEach(async () => {
+      tree = await mkdtemp(join(tmpdir(), "gherkin-walk-tree-"));
+    });
+
+    afterEach(async () => {
+      await rm(tree, { force: true, recursive: true });
+    });
+
+    test.each([
+      ".git",
+      ".nx",
+      ".tmp",
+      ".turbo",
+      ".vitest",
+      ".cache",
+      "node_modules",
+      "dist",
+      "coverage",
+    ])(
+      "should return no feature file under a %s directory, at the top or nested",
+      async (name) => {
+        await writeFeatures(tree, [
+          `${name}/a.feature`,
+          `src/${name}/b.feature`,
+          "src/kept.feature",
+        ]);
+
+        expect(await walkFeatureFiles(tree)).toEqual([join(tree, "src", "kept.feature")]);
+      },
+    );
+
+    test("should return a dot-named feature file — the dot rule skips directories only", async () => {
+      await writeFeatures(tree, [".draft.feature", "src/.draft.feature"]);
+
+      expect(await walkFeatureFiles(tree)).toEqual([
+        join(tree, ".draft.feature"),
+        join(tree, "src", ".draft.feature"),
+      ]);
+    });
+
+    test("should list a directory's files before a sibling file extending its name, which a flat path sort reverses", async () => {
+      await writeFeatures(tree, ["token.feature", "token/a.feature"]);
+
+      expect(await walkFeatureFiles(tree)).toEqual([
+        join(tree, "token", "a.feature"),
+        join(tree, "token.feature"),
+      ]);
+    });
+
+    test("should order U+1F600 before U+FF21 by UTF-16 code unit, which readdir's UTF-8 byte order reverses", async () => {
+      await writeFeatures(tree, ["\uFF21.feature", "\u{1F600}.feature"]);
+
+      expect(await walkFeatureFiles(tree)).toEqual([
+        join(tree, "\u{1F600}.feature"),
+        join(tree, "\uFF21.feature"),
+      ]);
+    });
   });
 });
