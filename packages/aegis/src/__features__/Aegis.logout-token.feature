@@ -73,3 +73,72 @@ Feature: Logout tokens
       When I sign the wire claims as a claims token on the cose wire
       And I verify the token under the "logout_token" profile as the audience "client-1"
       Then the verified token is a "cwt"
+
+  Rule: a logout token authenticated with a shared secret verifies
+
+    A logout token's algorithm is validated the way an ID Token's is, and
+    its selection is governed by the same discovery and registration
+    parameters (OpenID Connect Back-Channel Logout 1.0 §2.6). An ID Token
+    may carry a MAC algorithm keyed with the client secret
+    (OpenID Connect Core 1.0 §10.1), so a relying party that registered one
+    receives its logout tokens under it. A floor demanding a signature here
+    would refuse every such logout and leave the sessions it names running.
+    The profile declares no algorithm class, which is what separates it
+    from a profile that refuses the same token. The token is a third
+    party's, authenticated with the secret the vault holds.
+
+    Background:
+      Given the vault also holds an HS256 signing key
+      And the wire claims
+        | iss    | "https://test.lindorm.io/"                                 |
+        | aud    | ["client-1"]                                               |
+        | sub    | "user-1"                                                   |
+        | jti    | "token-1"                                                  |
+        | events | { "http://schemas.openid.net/event/backchannel-logout": {} } |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+      And the wire claims expire at "2024-01-01T08:02:00.000Z"
+
+    @openid-connect-backchannel-1_0
+    @openid-connect-core-1_0
+    Scenario: jose: the MAC-authenticated logout token verifies as a JWT (OpenID Connect Back-Channel Logout 1.0 §2.6) (OpenID Connect Core 1.0 §10.1)
+      When a third party authenticates the wire claims with the shared secret on the jose wire, typed "application/logout+jwt"
+      And I verify the token under the "logout_token" profile as the audience "client-1"
+      Then the verified token is a "jwt"
+
+    Scenario: cose: the MAC-authenticated logout token verifies, and reports the MAC-authenticated format
+      When a third party authenticates the wire claims with the shared secret on the cose wire, typed "application/logout+cwt"
+      And I verify the token under the "logout_token" profile as the audience "client-1"
+      Then the verified token is a "cwm"
+
+  Rule: a logout token is minted with a shared secret
+
+    The issuer selects a logout token's algorithm as it selects an ID
+    Token's (OpenID Connect Back-Channel Logout 1.0 §2.6), and it must
+    select one the recipient supports — a MAC algorithm keyed with the
+    client secret among them (OpenID Connect Core 1.0 §10.1). A mint that
+    refused a shared secret here could not log out a relying party that
+    registered a MAC algorithm. The secret is handed to the mint outright,
+    as a client secret is, and the algorithm is read off the bytes. On the
+    COSE wire a shared secret produces a COSE_Mac0, so that scenario asks
+    for the MAC-authenticated form, whose HMAC 256/256 algorithm is the
+    integer 5 (RFC 9053 §3.1).
+
+    Background:
+      Given the content to mint
+        | subject | user-1 |
+      And an audience list whose only member is "client-1"
+      And the events claim is the object
+        """json
+        { "http://schemas.openid.net/event/backchannel-logout": {} }
+        """
+      And the mint is handed the HS256 signing key outright
+
+    @openid-connect-backchannel-1_0
+    @openid-connect-core-1_0
+    Scenario: jose: the logout token is minted under the shared secret's MAC algorithm (OpenID Connect Back-Channel Logout 1.0 §2.6) (OpenID Connect Core 1.0 §10.1)
+      When I mint the content under the "logout_token" profile on the jose wire
+      Then the raw protected header carries "alg" "HS256"
+
+    Scenario: cose: the logout token is minted as a COSE_Mac0 under the shared secret's MAC algorithm
+      When I mint the content under the "logout_token" profile as a MAC-authenticated claims token
+      Then the raw protected header carries label 1 as the integer 5

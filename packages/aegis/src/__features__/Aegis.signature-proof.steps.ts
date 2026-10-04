@@ -1,9 +1,11 @@
+import type { DataTable } from "@lindorm/gherkin";
 import { Binding, Given, ParameterType, Then, When } from "@lindorm/gherkin";
 import type { KryptosAlgClass } from "@lindorm/kryptos";
 import { expect } from "vitest";
 import { AegisStepsBase } from "../__fixtures__/aegis-steps-base.js";
 import { alternationOf } from "../__fixtures__/alternation-of.js";
 import { alterToken, type TokenPart } from "../__fixtures__/altered-token.js";
+import { jsonCells } from "../__fixtures__/json-cells.js";
 import { TEST_OCT_KEY_SIG } from "../__fixtures__/keys.js";
 import type { Wire } from "../__fixtures__/raw-bucket.js";
 import { signAsThirdParty } from "../__fixtures__/third-party-producer.js";
@@ -23,6 +25,14 @@ export class AegisSignatureProofSteps extends AegisStepsBase {
     this.ctx.mintOptions.sign = {
       ...this.ctx.mintOptions.sign,
       key: { condition: { algClass } },
+    };
+  }
+
+  @Given("the mint is handed the HS256 signing key outright")
+  theMintIsHandedTheHs256SigningKeyOutright(): void {
+    this.ctx.mintOptions.sign = {
+      ...this.ctx.mintOptions.sign,
+      key: { kryptos: TEST_OCT_KEY_SIG },
     };
   }
 
@@ -82,6 +92,30 @@ export class AegisSignatureProofSteps extends AegisStepsBase {
     message: string,
   ): void {
     expect(this.refusalData()).toEqual({ algorithm, invalid: [{ key, message }] });
+  }
+
+  @Then(
+    "the refusal names the {string} key it was handed, of the {algClass} class, under the profile {string} and the floor",
+  )
+  theRefusalNamesTheKeyItWasHanded(
+    algorithm: string,
+    algClass: KryptosAlgClass,
+    profile: string,
+    floor: DataTable,
+  ): void {
+    const handed = this.ctx.mintOptions.sign?.key?.kryptos;
+
+    if (handed === undefined) {
+      throw new Error("the scenario handed the mint no key outright");
+    }
+
+    expect(this.refusalData()).toEqual({
+      kid: handed.id,
+      algorithm,
+      algClass,
+      floor: jsonCells(floor),
+      profile,
+    });
   }
 
   // parameter types

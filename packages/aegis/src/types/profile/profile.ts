@@ -87,9 +87,8 @@ export type TokenProfile<
    * token's `kid`), so `enforceVerifyFloor` checks it against the algorithm the
    * signature was verified under and raises `algorithm_not_permitted`.
    *
-   * In practice only `"asymmetric"` (access_token, external_access_token,
-   * delegation). Absent means no constraint: with `alg: none` not being a
-   * Kryptos algorithm, "asymmetric or HS*" is the whole algorithm space.
+   * Absent means no constraint: with `alg: none` not being a Kryptos
+   * algorithm, "asymmetric or HS*" is the whole algorithm space.
    */
   algClass?: KryptosAlgClass;
 };

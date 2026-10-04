@@ -272,6 +272,82 @@ Feature: What a signature proves
       Then verification is refused as a domain error "algorithm_not_permitted"
       And the refusal reports the algorithm it read "HS256" and locates the fault at "alg": symmetric alg "HS256" is not permitted for this artifact (asymmetric only)
 
+  Rule: an erasure instruction authenticated with a shared secret is refused by its profile
+
+    An erasure token instructs the client that receives it to delete what
+    it holds about a subject, and the client acts because it believes the
+    issuer wrote the instruction. A MAC cannot carry that belief: every
+    party that can verify one holds the secret and can produce one, so any
+    holder could forge an instruction to erase. Nothing the token is built
+    on restricts its signing class — it is a security event token, and a
+    security event token may be authenticated with a shared secret, as the
+    rule on a profile that requires no signature shows — so the refusal is
+    aegis policy at verify, kept strict on arrival because the permissive
+    reading would let a holder of the secret forge one. The token is a
+    third party's, authenticated with the secret the vault holds and
+    carrying every claim the profile requires, so the refusal is the class
+    floor's and names the algorithm it read. Neither scenario carries a
+    tag: no document requires the refusal.
+
+    Background:
+      Given the vault also holds an HS256 signing key
+      And the wire claims
+        | iss    | "https://test.lindorm.io/"       |
+        | sub    | "user-1"                         |
+        | aud    | ["client-1"]                     |
+        | jti    | "forged-3"                       |
+        | events | {"urn:lindorm:event:erasure":{}} |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+      And the wire claims expire at "2024-01-01T08:02:00.000Z"
+
+    Scenario: jose: the erasure profile refuses the instruction under the algorithm-class floor, naming the MAC algorithm
+      When a third party authenticates the wire claims with the shared secret on the jose wire, typed "application/erasure+jwt"
+      And I verify the token under the "erasure_token" profile as the audience "client-1"
+      Then verification is refused as a domain error "algorithm_not_permitted"
+      And the refusal reports the algorithm it read "HS256" and locates the fault at "alg": symmetric alg "HS256" is not permitted for this artifact (asymmetric only)
+
+    Scenario: cose: the erasure profile refuses the instruction under the algorithm-class floor, naming the MAC algorithm
+      When a third party authenticates the wire claims with the shared secret on the cose wire, typed "application/erasure+cwt"
+      And I verify the token under the "erasure_token" profile as the audience "client-1"
+      Then verification is refused as a domain error "algorithm_not_permitted"
+      And the refusal reports the algorithm it read "HS256" and locates the fault at "alg": symmetric alg "HS256" is not permitted for this artifact (asymmetric only)
+
+  Rule: a mint handed a shared secret for an erasure instruction refuses it
+
+    The class floor that refuses a MAC-authenticated erasure token on
+    arrival is part of the signing floor as well, so a profiled mint never
+    writes the token the profile refuses to read. The secret is handed to the
+    mint outright, the way a client secret reaches a mint, and the floor
+    binds a key supplied outright as it binds one the vault selects. The
+    refusal names the key it was handed and the floor that key failed, the
+    profile's class among the floor's members. The key is refused before
+    anything wire-specific runs, so both wires answer alike. Aegis policy at
+    mint.
+
+    Background:
+      Given the content to mint
+        | subject | user-1 |
+      And an audience list whose only member is "client-1"
+      And the events claim is the object
+        """json
+        { "urn:lindorm:event:erasure": {} }
+        """
+      And the mint is handed the HS256 signing key outright
+
+    Scenario Outline: <wire>: the mint refuses the shared secret under the signing floor, naming the profile's class
+      When I mint the content under the "erasure_token" profile on the <wire> wire
+      Then minting is refused as a key error "sign_key_policy_violation"
+      And the refusal names the "HS256" key it was handed, of the symmetric class, under the profile "erasure_token" and the floor
+        | use           | "sig"        |
+        | hasPrivateKey | true         |
+        | isActive      | true         |
+        | algClass      | "asymmetric" |
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
   Rule: a token authenticated with a shared secret verifies under a profile that requires no signature
 
     The class floor is the profile's rule and not a blanket ban, and the
