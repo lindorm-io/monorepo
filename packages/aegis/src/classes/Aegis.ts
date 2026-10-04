@@ -299,11 +299,13 @@ export class Aegis implements IAegis {
     return decryptToken<C>({ token, options, deps: this.deps });
   }
 
-  // The KEYLESS, UNVERIFIED domain read of ALL seven wire formats. It touches no
-  // key: it decodes and domain-translates what is readable without one — a
-  // structured token's header + claims buckets, an unstructured token's header +
-  // opaque payload, an encrypted token's header alone. An INSTANCE verb (uniform
-  // with `verify`/`decrypt`), not a static, even though the decode needs no `deps`.
+  // The KEYLESS, UNVERIFIED domain read of the three claims-bearing formats
+  // (jwt / cwt / cwm). It touches no key: it decodes and domain-translates the
+  // header + claims buckets. An opaque jws / cws (`parse_requires_claims`), an
+  // encrypted jwe / cwe (`parse_requires_decrypt`) and a string that is no
+  // recognised token (`unsupported_token_type`) are refused. An INSTANCE verb
+  // (uniform with `verify`/`decrypt`), not a static, even though the decode needs
+  // no `deps`.
   //
   // ⚠ UNVERIFIED IS NOT UNCONDITIONAL. It skips the SIGNATURE and the profile
   // floor; it does NOT skip claim translation, so a claim whose declared

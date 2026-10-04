@@ -193,11 +193,14 @@ export interface IAegis {
   ): Promise<DecryptedToken<C>>;
 
   /**
-   * The KEYLESS, UNVERIFIED domain read of ALL seven wire formats: a structured
-   * token yields its header + claims buckets, an unstructured one its header +
-   * opaque payload, an encrypted one its header alone (the content is ciphertext).
-   * Every format ALWAYS yields the header; `dpop` (a verify-only artefact) never
-   * appears. Use `verify` for an authenticity guarantee.
+   * The KEYLESS, UNVERIFIED domain read of a token's claims. It reads the three
+   * claims-bearing formats (`jwt`, `cwt`, `cwm`) and yields the header + claims
+   * buckets; `dpop` (a verify-only artefact) never appears. It refuses an opaque
+   * `jws` / `cws` (`parse_requires_claims`; read it with `jws.verify` /
+   * `cws.verify`), an encrypted `jwe` / `cwe` (`parse_requires_decrypt`; read it
+   * with `decrypt`, or `verify` for a sign-then-encrypt token), and a string that
+   * is no recognised token (`unsupported_token_type`). Use `verify` for an
+   * authenticity guarantee.
    */
   parse<C extends Dict = Dict>(token: string): ParsedToken<C>;
 
