@@ -13,6 +13,7 @@ import type {
   AegisProfile,
   AegisProfileAddress,
   AegisSensitive,
+  ConfirmationClaimMembers,
   DomainClaims,
   TokenClaims,
 } from "../../types/index.js";
@@ -23,7 +24,8 @@ import type {
   ClaimSpec,
   ObjectCodec,
 } from "../registry/claim-spec.js";
-import { codecFor } from "../registry/param-spec.js";
+import { codecFor, type WhenEmpty } from "../registry/param-spec.js";
+import { wireKeyName } from "../registry/wire-key.js";
 import { SENSITIVE_DOMAINS } from "../utils/extract-sensitive-claims.js";
 import type { SubjectIdentifierMembers } from "./sub-id.js";
 import { type Wire, WIRE_TAGS } from "../registry/wire.js";
@@ -120,6 +122,11 @@ const sampleMatchesCodec = (
       // A byte string is a b64url STRING in the domain form and Buffer bytes on
       // the COSE wire; no claim carries `bstr` as its BASE codec today.
       return isString(sample) || isBuffer(sample);
+    case "jwk":
+    case "coseKey":
+      // A key is a JWK OBJECT in the domain form on both wires; the COSE_Key is
+      // the COSE wire's rendering of the same sample.
+      return isObject(sample);
     case "array":
       // An array of STRINGS samples strings; an array of DECLARED STRUCTURES
       // samples the structure, at least once — a zero-element sample would
@@ -153,7 +160,6 @@ const sampleMatchesCodec = (
 
 const sampleMatchesBespoke = (bespoke: BespokeKind, sample: unknown): boolean => {
   switch (bespoke) {
-    case "confirmation":
     case "events":
       return isObject(sample);
     default: {
@@ -172,6 +178,45 @@ const childrenOf = (
     : codec.kind === "array"
       ? codec.of?.children
       : undefined;
+
+/**
+ * Every declared member the predicate admits, at EVERY depth, with its
+ * `claim.member` path — cycle-guarded on the `children` thunk, with an array of
+ * structures reporting its element as `claim[]`, the spelling the mandatory census
+ * below uses.
+ */
+const declaredMembersWhere = (
+  predicate: (member: ClaimMemberSpec) => boolean,
+): Array<{ path: string; member: ClaimMemberSpec }> => {
+  const found: Array<{ path: string; member: ClaimMemberSpec }> = [];
+  const seen = new Set<() => ReadonlyArray<ClaimMemberSpec>>();
+
+  const visit = (codec: ClaimCodec, path: string): void => {
+    const children = childrenOf(codec);
+
+    if (children === undefined) return;
+    if (seen.has(children)) return;
+
+    seen.add(children);
+
+    const here = codec.kind === "array" ? `${path}[]` : path;
+
+    for (const member of children()) {
+      if (predicate(member)) found.push({ path: `${here}.${member.domain}`, member });
+
+      visit(member.codec, `${here}.${member.domain}`);
+    }
+  };
+
+  for (const spec of CLAIM_SPECS) visit(spec.codec, spec.domain);
+
+  return found;
+};
+
+/** The paths alone — see {@link declaredMembersWhere}. */
+const memberPathsWhere = (
+  predicate: (member: ClaimMemberSpec) => boolean,
+): Array<string> => declaredMembersWhere(predicate).map(({ path }) => path);
 
 /**
  * One cell of EVERY structure the registry declares, keyed by the PATH that
@@ -686,30 +731,44 @@ describe("CLAIM_REGISTRY", () => {
     expect(CLAIM_SPECS.length).toBe(78);
   });
 
-  test('a member\'s empty verdict is "keep" or "prune"; "refuse" is claim-level only', () => {
-    // The two columns answer different questions and only one of them is enforced
-    // for a MEMBER: `ClaimMemberSpec` takes `"keep" | "prune"` and
-    // `internal/claims/translate.ts` compares that cell against `"prune"` exactly,
-    // so a member could state no third verdict and nothing would run it. `required`
-    // is the column that refuses — and it refuses in BOTH directions, which is
-    // strictly stronger than a write-side-only verdict.
-    //
-    // ⛔ WRITTEN OUT, NOT DERIVED. The `@ts-expect-error` states the same rule from
-    // the other side: widen `ClaimMemberSpec` and the directive goes UNUSED, which
-    // is itself a compile error. ⚠ ONLY `typecheck` sees EITHER —
-    // `tsconfig.build.json` excludes `**/*.test.ts`, so on a widened alias
-    // `npm run build` AND `npm test` both stay GREEN. `pruningMember` is the
-    // positive line: it compiles, so what the directive catches is the VERDICT and
-    // not a malformed spread.
-    expectTypeOf<ClaimMemberSpec["whenEmpty"]>().toEqualTypeOf<"keep" | "prune">();
+  /**
+   * The MEMBER `refuse` census — the twin of the claim-level one above, and of the
+   * member `prune` census below. A member's `"refuse"` is read by the structure
+   * walker on the write side alone (`internal/claims/translate.ts`), refusing the
+   * claim at `<claim>.<member>`, so a cell flipped to it changes which structures
+   * aegis mints; `required` is the stronger column and refuses in BOTH directions,
+   * so a member that must be present states that instead.
+   *
+   * ⚠⚠ IT DESCENDS, like the prune census, so a refusing member added at ANY
+   * depth has to arrive in this list.
+   */
+  test("the members refused when empty are exactly the stated set", () => {
+    // A member may STATE the verdict — no directive, no cast. ⚠ ONLY `typecheck`
+    // sees these two lines: narrow `ClaimMemberSpec.whenEmpty` back to
+    // `"keep" | "prune"` and `npm test` stays GREEN on a narrowed surface.
+    expectTypeOf<ClaimMemberSpec["whenEmpty"]>().toEqualTypeOf<WhenEmpty>();
 
     const declared = childrenOf(claimByDomain("act")!.codec)!()[0]!;
-    const pruningMember: ClaimMemberSpec = { ...declared, whenEmpty: "prune" };
-    const refusingMember: ClaimMemberSpec = {
-      ...declared,
-      // @ts-expect-error a member states no `refuse` verdict
-      whenEmpty: "refuse",
-    };
+    const refusing: ClaimMemberSpec = { ...declared, whenEmpty: "refuse" };
+
+    const refusedIn = (members: ReadonlyArray<ClaimMemberSpec>) =>
+      members.filter((member) => member.whenEmpty === "refuse").map((m) => m.domain);
+
+    // Registry declaration order. The five confirmation members, and no other: an
+    // empty one names no key the presenter could prove — AEGIS POLICY AT MINT; verify
+    // accepts one as written (for the key id, RFC 7800 §3.4 and RFC 8747 §3.4 leave
+    // its content to the application). See `cnf-members.ts`; the wire is pinned in
+    // `Aegis.empty-claim-prune.feature` and verify in `Aegis.proof-of-possession.feature`.
+    expect(memberPathsWhere((member) => member.whenEmpty === "refuse")).toEqual([
+      "confirmation.thumbprint",
+      "confirmation.mtlsCertThumbprint",
+      "confirmation.key",
+      "confirmation.keyId",
+      "confirmation.jwkSetUri",
+    ]);
+
+    // The control: the predicate sees a cell wherever it is written.
+    expect(refusedIn([declared, refusing])).toEqual([refusing.domain]);
   });
 
   /**
@@ -872,12 +931,36 @@ describe("CLAIM_REGISTRY", () => {
     }
   });
 
-  test('no claim carries "bstr" as its BASE codec', () => {
-    // JOSE has no byte strings, and the base codec is what the translator reads
-    // for BOTH wires, so a `bstr` base is silently treated as text on JOSE.
-    for (const spec of CLAIM_SPECS) {
-      expect(spec.codec.kind, `${spec.domain} has a bstr base codec`).not.toBe("bstr");
-    }
+  test("no claim or member carries a per-wire-only codec as its BASE codec", () => {
+    // JOSE has no byte strings and no COSE_Key, and the base codec is what the
+    // translator reads for BOTH wires, so a `bstr` or `coseKey` base is silently
+    // treated as its JOSE form there. Claims and members alike, at every depth:
+    // a per-wire codec belongs in `per.cose`.
+    const perWireOnly = new Set<ClaimCodec["kind"]>(["bstr", "coseKey"]);
+
+    expect(
+      CLAIM_SPECS.filter((spec) => perWireOnly.has(spec.codec.kind)).map((s) => s.domain),
+    ).toEqual([]);
+    expect(memberPathsWhere((member) => perWireOnly.has(member.codec.kind))).toEqual([]);
+  });
+
+  /**
+   * The MEMBERS whose value takes another codec on COSE — frozen by path with the
+   * COSE codec each resolves to, descending, so a member transcoded on one wire
+   * cannot arrive or change quietly. The registered label shaper
+   * (`internal/cose/registered-labels.ts`) reads these cells.
+   */
+  test("the members with a per-wire COSE codec are exactly the stated set", () => {
+    const transcoded = declaredMembersWhere(
+      (member) => member.codec.per !== undefined,
+    ).map(({ path, member }) => [path, codecFor(member, "cose")]);
+
+    // RFC 8747 §3.1: a JWK rides label 1 as a COSE_Key, a key id rides label 3 as
+    // a byte string of the text's own bytes.
+    expect(transcoded).toEqual([
+      ["confirmation.key", { kind: "coseKey" }],
+      ["confirmation.keyId", { kind: "bstr", encoding: "utf8" }],
+    ]);
   });
 
   // --- Bespoke sub-kind drift guards ---------------------------------------
@@ -891,7 +974,6 @@ describe("CLAIM_REGISTRY", () => {
     // test, which is why the byte-encoding guard below and the structure guard
     // after it exist: the group it moves INTO has to be pinned too.
     const FROZEN_BESPOKE: Record<string, string> = {
-      confirmation: "confirmation",
       events: "events",
     };
 
@@ -915,16 +997,19 @@ describe("CLAIM_REGISTRY", () => {
     // `CLAIM_SPECS` and `FROZEN_MEMBERS` is written out, because an expectation
     // built from the registry asserts the table against itself.
     //
-    // ⚠ A BESPOKE CLAIM IS OUT OF ITS REACH: `cnf` declares its members in
-    // `internal/claims/cnf-members.ts` rather than on its codec, so `childrenOf`
-    // never sees them and `cnf-members.test.ts` carries their literal pin.
-    //
     // ⭐⭐ `FROZEN_ADDRESS` IS `Record<keyof AegisProfileAddress, …>`, so its row
-    // cannot go while the PUBLIC type still declares the member.
+    // cannot go while the PUBLIC type still declares the member; `FROZEN_CNF` is
+    // bound to `ConfirmationClaimMembers` the same way.
+    //
+    // ⚠ `cose` IS `null` FOR A MEMBER THE COSE WIRE DOES NOT CARRY. The three
+    // confirmation members with no COSE label are keyed by their JOSE name in the
+    // walk (`memberNameOf`) and refused by the byte layer when present, so the
+    // table records the cell as it is declared rather than the name the walk
+    // falls back to.
     type FrozenMember = {
       jose: string;
-      cose: string;
-      whenEmpty: "keep" | "prune";
+      cose: string | null;
+      whenEmpty: WhenEmpty;
       required: boolean;
       codec: ClaimCodec["kind"];
     };
@@ -1118,7 +1203,57 @@ describe("CLAIM_REGISTRY", () => {
       },
     };
 
+    /**
+     * TOTAL over the PUBLIC confirmation type (RFC 7800 §3.1), as `FROZEN_ADDRESS`
+     * is over the address. The two members COSE carries ride registered labels
+     * (RFC 8747 §3.1); the other three have no COSE cell. Every member refuses its
+     * empty form — aegis policy at mint, see the member census above.
+     */
+    const FROZEN_CNF: Record<keyof ConfirmationClaimMembers, FrozenMember> = {
+      // RFC 9449 §6.1 — no COSE label (RFC 9679 §5.5).
+      thumbprint: {
+        jose: "jkt",
+        cose: null,
+        whenEmpty: "refuse",
+        required: false,
+        codec: "text",
+      },
+      // RFC 8705 §3.1 — no COSE label.
+      mtlsCertThumbprint: {
+        jose: "x5t#S256",
+        cose: null,
+        whenEmpty: "refuse",
+        required: false,
+        codec: "text",
+      },
+      // RFC 7800 §3.2 / RFC 8747 §3.1 label 1 — a JWK, transcoded to a COSE_Key.
+      key: {
+        jose: "jwk",
+        cose: "jwk",
+        whenEmpty: "refuse",
+        required: false,
+        codec: "jwk",
+      },
+      // RFC 7800 §3.4 / RFC 8747 §3.1 label 3 — text, a byte string on COSE.
+      keyId: {
+        jose: "kid",
+        cose: "kid",
+        whenEmpty: "refuse",
+        required: false,
+        codec: "text",
+      },
+      // RFC 7800 §3.5 — no COSE label.
+      jwkSetUri: {
+        jose: "jku",
+        cose: null,
+        whenEmpty: "refuse",
+        required: false,
+        codec: "text",
+      },
+    };
+
     const FROZEN_MEMBERS: Record<string, Record<string, FrozenMember>> = {
+      confirmation: FROZEN_CNF,
       // ⚠ ONE MEMBER SET, TWO CLAIMS, and the table states it twice on purpose:
       // the equality below is per CLAIM, so declaring the shared array is what
       // makes "these two claims have the same members" checkable rather than
@@ -1154,7 +1289,8 @@ describe("CLAIM_REGISTRY", () => {
               member.domain,
               {
                 jose: joseName(member),
-                cose: coseName(member),
+                // Not `coseName`, which throws for an `absent` cell — see the type.
+                cose: wireKeyName(member.wire.cose) ?? null,
                 whenEmpty: member.whenEmpty,
                 // Normalised to a boolean so EVERY member states the cell.
                 // `required?: true` makes the absent case `undefined`, and a
@@ -1243,6 +1379,9 @@ describe("CLAIM_REGISTRY", () => {
     const tails = cellOfEachStructure((structure) => structure.open);
 
     expect(tails).toEqual({
+      // An unrecognised confirmation member is another specification's registered
+      // method (RFC 7800 §3.1, RFC 7800 §6.2.1), carried untouched.
+      confirmation: "verbatim",
       act: "verbatim",
       "act.act": "verbatim",
       mayAct: "verbatim",
@@ -1274,6 +1413,9 @@ describe("CLAIM_REGISTRY", () => {
     const reads = cellOfEachStructure((structure) => structure.readLeafFailure);
 
     expect(reads).toEqual({
+      // A confirmation member of the wrong shape is a binding this package cannot
+      // read, never one it reads as absent (RFC 7800 §3) — aegis policy at verify.
+      confirmation: "refuse",
       act: "refuse",
       "act.act": "refuse",
       mayAct: "refuse",
@@ -1281,6 +1423,57 @@ describe("CLAIM_REGISTRY", () => {
       subjectId: "drop",
       "subjectId.identifiers[]": "drop",
       address: "drop",
+    });
+  });
+
+  test("each declared structure states whether it binds a key", () => {
+    // The cell decides what a `null` member is — absence, or a value contradicting
+    // its shape — and whether a write that leaves the structure naming no key adds
+    // a second fault saying so ({@link ObjectCodec.binds}). `"key"` is for a
+    // structure stating a key the presenter must prove (RFC 7800 §3.1), and the
+    // confirmation is the one; every other structure reports facts and states
+    // `"none"`. The cell is REQUIRED, so a structure that states nothing fails to
+    // COMPILE; this table is what says which way each answers, nested cells
+    // included.
+    //
+    // ⚠⚠ IT WALKS EVERY STRUCTURE, NOT EVERY CLAIM — see `cellOfEachStructure`.
+    const binds = cellOfEachStructure((structure) => structure.binds);
+
+    expect(binds).toEqual({
+      confirmation: "key",
+      act: "none",
+      "act.act": "none",
+      mayAct: "none",
+      "authorizationDetails[]": "none",
+      subjectId: "none",
+      "subjectId.identifiers[]": "none",
+      address: "none",
+    });
+  });
+
+  test("each declared structure states how its labels reach the COSE wire", () => {
+    // The cell decides whether a structure's integer labels ride on every COSE
+    // token (`"registered"`, IANA labels a stock reader understands — RFC 8747 §3.1)
+    // or under the proprietary encoding alone (`"proprietary"`, lindorm's own) —
+    // a byte-level fact `internal/cose/cwt-spec.ts` switches on, and a registered
+    // structure speaks the confirmation's COSE error contract, so a second one is a
+    // decision this table has to go through. The confirmation is the one
+    // registered structure; every other carries lindorm's own labels. The cell is
+    // REQUIRED, so a structure that states nothing fails to COMPILE; this table
+    // says which way each answers.
+    //
+    // ⚠⚠ IT WALKS EVERY STRUCTURE, NOT EVERY CLAIM — see `cellOfEachStructure`.
+    const labels = cellOfEachStructure((structure) => structure.labels);
+
+    expect(labels).toEqual({
+      confirmation: "registered",
+      act: "proprietary",
+      "act.act": "proprietary",
+      mayAct: "proprietary",
+      "authorizationDetails[]": "proprietary",
+      subjectId: "proprietary",
+      "subjectId.identifiers[]": "proprietary",
+      address: "proprietary",
     });
   });
 

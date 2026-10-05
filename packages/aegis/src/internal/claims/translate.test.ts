@@ -14,7 +14,8 @@ import {
 } from "./claims-registry.js";
 import { isNotStated } from "./is-not-stated.js";
 import type { ClaimMemberSpec, LeafFailure } from "../registry/claim-spec.js";
-import { wireName } from "../registry/wire-key.js";
+import type { WhenEmpty } from "../registry/param-spec.js";
+import { wireAbsent, wireLabel, wireName } from "../registry/wire-key.js";
 import {
   decodeClaim,
   domainToJose,
@@ -1568,23 +1569,28 @@ describe("a stranger's payload cannot answer through Object.prototype", () => {
  * `walkObject` runs the SAME code for writing and reading, which is what makes
  * it worth having — and is exactly why a rule that holds in only one direction
  * cannot be left to it. `whenEmpty` is such a rule: `ParamSpec.whenEmpty` states
- * that the prune decides what AEGIS EMITS, because a read reports what a
- * PRODUCER wrote, and rewriting a foreign token's empty member into an absence
- * would make aegis misreport a stranger's token.
+ * that the verdict decides what AEGIS EMITS, because a read reports what a
+ * PRODUCER wrote, and rewriting a foreign token's empty member into an absence —
+ * or refusing it — would make aegis misreport a stranger's token. The
+ * `binds: "key"` entry for a structure its own faults left naming no key is the
+ * other such rule; the absence predicate `binds` selects is the one cell here
+ * that holds in BOTH directions, and is measured in both.
  *
- * ⚠ THE REGISTRY'S OWN `"prune"` MEMBERS CANNOT OBSERVE IT. Both of them —
- * `authorization-details-members.ts`'s `type` and `sub_id`'s `format` — also carry
- * `required: true`, so an empty value is refused before the prune could be seen
- * choosing anything, in either direction; every other declared member is
- * `whenEmpty: "keep"`. ⇒ The synthetic member below is the only thing that
- * observes the rule, and a `"prune"` member arriving WITHOUT a `required` cell
- * would not announce itself — a symmetric walk is symmetric by construction.
+ * ⚠ THE REGISTRY'S OWN MEMBERS CANNOT OBSERVE EVERY VERDICT. The `"prune"` members
+ * that also carry `required: true` — `authorization-details-members.ts`'s `type`
+ * and `sub_id`'s `format` — are refused before the prune could be seen choosing
+ * anything, in either direction, and the `address` members that prune for real
+ * are pinned at the public door (`Aegis.empty-claim-prune.feature`). ⇒ The
+ * synthetic members below observe each verdict and each `binds` cell through the
+ * real claim boundary, whether or not the registry declares one, because a
+ * verdict arriving on a member nothing observes would not announce itself — a
+ * symmetric walk is symmetric by construction.
  */
 describe("walkObject — the structure walker's direction guard", () => {
   const member = (
     domain: string,
     wire: string,
-    whenEmpty: "keep" | "prune",
+    whenEmpty: WhenEmpty,
   ): ClaimMemberSpec => ({
     domain,
     spec: SYNTHETIC_SPEC,
@@ -1604,13 +1610,256 @@ describe("walkObject — the structure walker's direction guard", () => {
       children: () => [
         member("kept", "kept", "keep"),
         member("pruned", "pruned", "prune"),
+        member("refused", "refused", "refuse"),
       ],
       open: "closed",
       readLeafFailure: "drop",
+      binds: "none",
+      labels: "proprietary",
     },
     whenEmpty: "keep",
     sample: {},
   };
+
+  const refusalOf = (act: () => unknown): unknown => {
+    try {
+      act();
+      return "no refusal";
+    } catch (error) {
+      return (error as AegisDomainError).data;
+    }
+  };
+
+  test("a refuse member's EMPTY value is refused at the member's full path", () => {
+    expect(
+      refusalOf(() => encodeClaim(structured, { kept: "a", refused: "" }, joseName)),
+    ).toEqual({
+      claim: "synthetic",
+      invalid: [
+        { key: "synthetic.refused", message: 'Member "refused" must not be empty' },
+      ],
+    });
+  });
+
+  test("a refuse member's NON-empty value reaches the wire", () => {
+    expect(encodeClaim(structured, { kept: "a", refused: "b" }, joseName)).toEqual({
+      kept: "a",
+      refused: "b",
+    });
+  });
+
+  test("a refuse member's EMPTY value IS reported when a producer wrote one", () => {
+    // The direction half: a read takes no emptiness verdict, so the refusal a
+    // write raises is never raised against a stranger's token.
+    expect(decodeClaim(structured, { kept: "", refused: "" }, joseName)).toEqual({
+      kept: "",
+      refused: "",
+    });
+  });
+
+  /**
+   * A synthetic structure that BINDS A KEY ({@link ObjectCodec.binds}): `undefined`
+   * is its only absence, and a member fault that leaves it naming no key is a
+   * second fault on the write side.
+   */
+  const binding: ClaimMemberSpec = {
+    domain: "binding",
+    spec: SYNTHETIC_SPEC,
+    wire: { jose: wireName("binding"), cose: wireName("binding") },
+    codec: {
+      kind: "object",
+      children: () => [
+        member("thumb", "thumb", "keep"),
+        member("ident", "ident", "keep"),
+      ],
+      open: "verbatim",
+      readLeafFailure: "refuse",
+      binds: "key",
+      labels: "proprietary",
+    },
+    whenEmpty: "keep",
+    sample: {},
+  };
+
+  describe("a structure that binds a key", () => {
+    test("refuses a null member as a value contradicting its shape, where a structure binding none omits it", () => {
+      // ONE entry: the member beside it names a key, so nothing is added.
+      expect(
+        refusalOf(() => encodeClaim(binding, { thumb: null, ident: "k" }, joseName)),
+      ).toEqual({
+        claim: "binding",
+        invalid: [
+          {
+            key: "binding.thumb",
+            message: 'Member "thumb" must be the shape it declares',
+          },
+        ],
+      });
+
+      // The control: the same null under `binds: "none"` is absence.
+      expect(encodeClaim(structured, { kept: null, pruned: "x" }, joseName)).toEqual({
+        pruned: "x",
+      });
+    });
+
+    test("carries a null tail member", () => {
+      expect(encodeClaim(binding, { ident: "k", ext: null }, joseName)).toEqual({
+        ident: "k",
+        ext: null,
+      });
+    });
+
+    test("reports a lone fault that leaves it naming no key twice, on the write side", () => {
+      expect(refusalOf(() => encodeClaim(binding, { thumb: null }, joseName))).toEqual({
+        claim: "binding",
+        invalid: [
+          {
+            key: "binding.thumb",
+            message: 'Member "thumb" must be the shape it declares',
+          },
+          { key: "binding", message: 'Claim "binding" names no key to confirm' },
+        ],
+      });
+    });
+
+    test("reports the same lone fault once on a read", () => {
+      expect(refusalOf(() => decodeClaim(binding, { thumb: null }, joseName))).toEqual({
+        claim: "binding",
+        invalid: [
+          {
+            key: "binding.thumb",
+            message: 'Member "thumb" must be the shape it declares',
+          },
+        ],
+      });
+    });
+
+    test("hands a structure naming no member with no member fault on as the empty object", () => {
+      expect(encodeClaim(binding, {}, joseName)).toEqual({});
+      expect(encodeClaim(binding, { thumb: undefined }, joseName)).toEqual({});
+    });
+  });
+
+  /**
+   * A member `absent` on COSE, and the structure carrying it. The walker keys it by
+   * its JOSE name there (`memberNameOf`) — reserving that slot too, so a look-alike
+   * spelled in it still collides — and leaves refusing it to the byte layer.
+   */
+  const absentOnCose: ClaimMemberSpec = {
+    domain: "thumbprint",
+    spec: SYNTHETIC_SPEC,
+    wire: {
+      jose: wireName("jkt"),
+      cose: wireAbsent("A synthetic member the COSE wire has no label for."),
+    },
+    codec: { kind: "text" },
+    whenEmpty: "keep",
+    sample: "sample",
+  };
+
+  const carrier: ClaimMemberSpec = {
+    domain: "carrier",
+    spec: SYNTHETIC_SPEC,
+    wire: { jose: wireName("carrier"), cose: wireName("carrier") },
+    codec: {
+      kind: "object",
+      children: () => [absentOnCose],
+      open: "verbatim",
+      readLeafFailure: "drop",
+      binds: "none",
+      labels: "proprietary",
+    },
+    whenEmpty: "keep",
+    sample: {},
+  };
+
+  /**
+   * A structure carrying a JWK member — the `jwk` codec, with a COSE_Key as its
+   * COSE form. The translator carries the object through on both wires; the COSE
+   * form is the byte layer's (`internal/cose/registered-labels.ts`).
+   */
+  const keyed: ClaimMemberSpec = {
+    domain: "keyed",
+    spec: SYNTHETIC_SPEC,
+    wire: { jose: wireName("keyed"), cose: wireName("keyed") },
+    codec: {
+      kind: "object",
+      children: () => [
+        {
+          domain: "key",
+          spec: SYNTHETIC_SPEC,
+          wire: { jose: wireName("jwk"), cose: wireLabel(1, "jwk") },
+          codec: { kind: "jwk", per: { cose: { kind: "coseKey" } } },
+          whenEmpty: "keep",
+          sample: {},
+        },
+      ],
+      open: "verbatim",
+      readLeafFailure: "refuse",
+      binds: "none",
+      labels: "registered",
+    },
+    whenEmpty: "keep",
+    sample: {},
+  };
+
+  describe("a JWK member", () => {
+    const jwk = { kty: "EC", crv: "P-256", x: "eA", y: "eQ" };
+
+    test("is carried through as the object it is, on both wires and in both directions", () => {
+      expect(encodeClaim(keyed, { key: jwk }, joseName)).toEqual({ jwk });
+      expect(encodeClaim(keyed, { key: jwk }, coseName)).toEqual({ jwk });
+      expect(decodeClaim(keyed, { jwk }, joseName)).toEqual({ key: jwk });
+      expect(decodeClaim(keyed, { jwk }, coseName)).toEqual({ key: jwk });
+    });
+
+    test("is refused when it is not an object, in both directions", () => {
+      const refusal = {
+        claim: "keyed",
+        invalid: [
+          { key: "keyed.key", message: 'Member "key" must be the shape it declares' },
+        ],
+      };
+
+      expect(refusalOf(() => encodeClaim(keyed, { key: "not-a-jwk" }, joseName))).toEqual(
+        refusal,
+      );
+      expect(refusalOf(() => decodeClaim(keyed, { jwk: 42 }, joseName))).toEqual(refusal);
+    });
+  });
+
+  describe("a member absent on COSE", () => {
+    test("is keyed by its JOSE name under the COSE selector, in both directions", () => {
+      expect(encodeClaim(carrier, { thumbprint: "t" }, coseName)).toEqual({ jkt: "t" });
+      expect(decodeClaim(carrier, { jkt: "t" }, coseName)).toEqual({ thumbprint: "t" });
+    });
+
+    test("still reserves that name, so a tail member spelling it collides", () => {
+      expect(
+        refusalOf(() => encodeClaim(carrier, { thumbprint: "t", jkt: "u" }, coseName)),
+      ).toEqual({
+        claim: "carrier",
+        invalid: [
+          {
+            key: "carrier.jkt",
+            message: 'Members "jkt" and "thumbprint" both resolve to "jkt" in "carrier"',
+          },
+        ],
+      });
+    });
+
+    test("leaves the COSE selector throwing for a CLAIM absent on COSE", () => {
+      expect(() =>
+        coseName({
+          domain: "synthetic",
+          wire: {
+            jose: wireName("synthetic"),
+            cose: wireAbsent("A synthetic claim with no COSE form."),
+          },
+        }),
+      ).toThrow('Claim "synthetic" has no cose wire name');
+    });
+  });
 
   test("a prune member's EMPTY value does not reach the wire", () => {
     expect(encodeClaim(structured, { kept: "", pruned: "" }, joseName)).toEqual({
@@ -1700,6 +1949,8 @@ describe("walkObject — the structure walker's direction guard", () => {
         children: () => [required],
         open: "closed",
         readLeafFailure: "drop",
+        binds: "none",
+        labels: "proprietary",
       },
       whenEmpty: "keep",
       sample: {},
@@ -1715,19 +1966,12 @@ describe("walkObject — the structure walker's direction guard", () => {
         children: () => [nested],
         open: "closed",
         readLeafFailure: "drop",
+        binds: "none",
+        labels: "proprietary",
       },
       whenEmpty: "keep",
       sample: {},
     });
-
-    const refusalOf = (act: () => unknown): unknown => {
-      try {
-        act();
-        return "no refusal";
-      } catch (error) {
-        return (error as AegisDomainError).data;
-      }
-    };
 
     test("names the CLAIM entered, not the member that happens to hold the set", () => {
       // Both claims share `nested`, so a refusal built from the member's own
@@ -1780,6 +2024,8 @@ describe("walkObject — the structure walker's direction guard", () => {
         children: () => [divergent],
         open: "closed",
         readLeafFailure: "drop",
+        binds: "none",
+        labels: "proprietary",
       },
       whenEmpty: "keep",
       sample: {},
@@ -1878,6 +2124,8 @@ describe("a CLOSED member set", () => {
       children: () => [declared],
       open: "closed",
       readLeafFailure: "drop",
+      binds: "none",
+      labels: "proprietary",
     },
     whenEmpty: "keep",
     sample: {},
@@ -1893,6 +2141,8 @@ describe("a CLOSED member set", () => {
       children: () => [declared],
       open: "verbatim",
       readLeafFailure: "drop",
+      binds: "none",
+      labels: "proprietary",
     },
     whenEmpty: "keep",
     sample: {},
@@ -1984,7 +2234,14 @@ describe("a structure's read-side disposition of a declared member it cannot dec
     domain: "actor",
     spec: SYNTHETIC_SPEC,
     wire: { jose: wireName("actor"), cose: wireName("actor") },
-    codec: { kind: "object", children: () => [subject], open: "closed", readLeafFailure },
+    codec: {
+      kind: "object",
+      children: () => [subject],
+      open: "closed",
+      readLeafFailure,
+      binds: "none",
+      labels: "proprietary",
+    },
     whenEmpty: "keep",
     sample: {},
   });

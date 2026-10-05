@@ -69,8 +69,9 @@ const JWT_CLAIMS_WIRE_KINDS = {
   s_hash: "text",
   vot: "text",
   vtm: "text",
-  // RFC 7800 proof-of-possession
-  cnf: "bespoke",
+  // RFC 7800 proof-of-possession — a DECLARED member set
+  // (`internal/claims/cnf-members.ts`) riding registered COSE labels.
+  cnf: "object",
   // RFC 8693 delegation — a DECLARED member set (`internal/claims/act-members.ts`),
   // recursive: the `act` member's own codec is this same structure.
   act: "object",

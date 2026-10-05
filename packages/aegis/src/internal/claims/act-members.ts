@@ -134,6 +134,8 @@ export const ACT_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
       children: () => ACT_MEMBERS,
       open: "verbatim",
       readLeafFailure: "refuse",
+      binds: "none",
+      labels: "proprietary",
     },
     whenEmpty: KEEP,
     // A PRIOR actor, one hop back — hand-written and deliberately shallow,

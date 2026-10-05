@@ -22,11 +22,13 @@ import { isNull, isUndefined } from "@lindorm/is";
  * rewrite a foreign token's empty member into an absence — aegis reporting that
  * an issuer said nothing where the issuer said "empty".
  *
- * ⛔ `cnf` MEMBERS ARE EXEMPT, and the inconsistency is the security property.
- * `walkConfirmation` asks `=== undefined` on both its declared and its tail arm
- * (`internal/claims/translate.ts`), so a null binding falls through to the
- * member refusal instead of being erased into an unbound token. That file owns
- * the reasoning and the measurement; do not generalise this predicate over it.
+ * ⛔ A STRUCTURE THAT BINDS A KEY IS EXEMPT — the confirmation — and the
+ * inconsistency is the security property. Its `ObjectCodec.binds: "key"` cell
+ * (`internal/registry/claim-spec.ts`) makes the walker ask `isClaimOmitted`
+ * (`=== undefined`) on its declared members and its tail alike
+ * (`internal/claims/translate.ts`), so a null binding falls through to the member
+ * refusal instead of being erased into an unbound token. Those files own the
+ * reasoning and the measurement; do not generalise this predicate over them.
  *
  * pinned: is-not-stated.test.ts — the boundary against the other three of the
  * FOUR presence notions tabled in `internal/utils/rules/index.ts`.

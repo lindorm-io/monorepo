@@ -10,10 +10,12 @@ Feature: Proof-of-possession bindings
   wire alone: a JWK thumbprint confirmation has no CWT counterpart
   (RFC 9679 §5.5) — the COSE thumbprint, `ckt` (RFC 9679 §5.6), digests a
   different canonicalisation of the same key — so a bound token cannot be
-  built on that wire to present in the first place. The mint's refusal of
-  that thumbprint is the one rule stated on the COSE wire alone; the two
-  rules on a confirmation's members at mint run on both wires; and a rule on
-  a confirmation with no member states its own reason for the COSE leg.
+  built on that wire to present in the first place. The mint's refusals of
+  the members that wire has no label for — the thumbprint, and the
+  certificate thumbprint with the key-set URI — are the two rules stated on
+  the COSE wire alone; the rules on a confirmation's members at mint and on
+  an empty key id at verify run on both wires; and a rule on a confirmation
+  with no member states its own reason for the COSE leg.
 
   Background:
     Given the clock reads "2024-01-01T08:00:00.000Z"
@@ -49,6 +51,69 @@ Feature: Proof-of-possession bindings
       When I mint the content under the "access_token" profile on the cose wire
       Then minting is refused as a COSE error "cose_cnf_unsupported"
       And the refusal lists the unrepresentable members "jkt" beside the supported ones "jwk", "kid"
+
+  Rule: a CWT mint refuses the confirmation members the COSE wire has no label for, naming each
+
+    RFC 8747 §3.1 registers a label for an embedded key and for a key id, and
+    none for a certificate thumbprint (RFC 8705 §3.1) or a key-set URI
+    (RFC 7800 §3.5); aegis invents no label, so a confirmation naming either
+    has no COSE form and the mint fails closed, naming every member it could
+    not carry. Failing closed is aegis policy: dropped, the token would
+    assert a binding narrower than its author wrote. The key id is
+    representable and absent from the list, which is what makes it a
+    per-member refusal. The jose wire has no scenario: JOSE spells both
+    members by name (RFC 8705 §3.1, RFC 7800 §3.5), so there is no refusal to
+    state.
+
+    Background:
+      Given the content to mint
+        | subject  | user-1   |
+        | clientId | client-1 |
+      And an audience list whose only member is "https://rs.lindorm.io/"
+      And the confirmation claim is the object
+        """json
+        { "mtlsCertThumbprint": "A4DtL2JmUMhAsvJj5tKyn64SqzmuXbMrJa0n761y5v0", "jwkSetUri": "https://rs.lindorm.io/.well-known/jwks.json", "keyId": "k1" }
+        """
+
+    Scenario: cose: the mint is refused as a COSE error naming the two members the wire cannot carry
+      When I mint the content under the "access_token" profile on the cose wire
+      Then minting is refused as a COSE error "cose_cnf_unsupported"
+      And the refusal lists the unrepresentable members "x5t#S256", "jku" beside the supported ones "jwk", "kid"
+
+  Rule: a token whose confirmation names an empty key id verifies, and reports the key id as written
+
+    RFC 7800 §3.4 says only that the key id identifies the key, and
+    RFC 8747 §3.4 adds that its content is application specific; neither
+    forbids an empty one, so the verifier reports it as the issuer wrote it.
+    The mint's refusal of an empty member is aegis policy at mint, not a rule
+    the verifier holds a stranger's token to: a key id is a name the
+    recipient resolves, not key material aegis acts on, and the thumbprint
+    stays the one member the verifier gates. The token is signed through the
+    raw claims door, which walks nothing and writes the member as given.
+
+    Background:
+      Given the wire claims
+        | iss | "https://test.lindorm.io/" |
+        | sub | "user-1"                   |
+        | aud | ["https://rs.lindorm.io/"] |
+        | jti | "token-1"                  |
+        | cnf | { "kid": "" }              |
+      And the wire claims were issued at "2024-01-01T08:00:00.000Z"
+      And the wire claims expire at "2024-01-01T08:02:00.000Z"
+      And the claims token carries the type prefix "access"
+
+    Scenario Outline: <wire>: the verified confirmation carries the empty key id
+      When I sign the wire claims as a claims token on the <wire> wire
+      And I verify the token
+      Then the verified confirmation claim is exactly the object
+        """json
+        { "keyId": "" }
+        """
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
 
   Rule: a token carrying a confirmation is refused when the verifier is shown no proof of possession
 
@@ -294,7 +359,7 @@ Feature: Proof-of-possession bindings
       When I sign the wire claims as a claims token on the jose wire
       And I verify the token
       Then verification is refused as a domain error "claim_structure_invalid"
-      And the refusal names the claim "confirmation" and locates the fault at "confirmation.thumbprint": Member "thumbprint" must be a string
+      And the refusal names the claim "confirmation" and locates the fault at "confirmation.thumbprint": Member "thumbprint" must be the shape it declares
 
   Rule: a token whose confirmation names a null thumbprint is refused, not read as carrying no confirmation
 
@@ -328,7 +393,7 @@ Feature: Proof-of-possession bindings
       When a third party signs the wire claims on the jose wire, typed "application/access+jwt"
       And I verify the token
       Then verification is refused as a domain error "claim_structure_invalid"
-      And the refusal names the claim "confirmation" and locates the fault at "confirmation.thumbprint": Member "thumbprint" must be a string
+      And the refusal names the claim "confirmation" and locates the fault at "confirmation.thumbprint": Member "thumbprint" must be the shape it declares
 
   Rule: a confirmation naming a member in the wrong vocabulary is refused, not written into the declared member's slot
 

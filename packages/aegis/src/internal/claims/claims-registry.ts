@@ -73,6 +73,7 @@ import {
 
 import { ACT_MEMBERS, ACT_SAMPLE } from "./act-members.js";
 import { ADDRESS_MEMBERS, ADDRESS_SAMPLE } from "./address-members.js";
+import { CNF_MEMBERS } from "./cnf-members.js";
 import {
   AUTHORIZATION_DETAIL_MEMBERS,
   AUTHORIZATION_DETAILS_SAMPLE,
@@ -257,7 +258,25 @@ export const CLAIM_SPECS: ReadonlyArray<RegisteredClaimSpec> = [
       url: "https://www.rfc-editor.org/rfc/rfc7800#section-3.1",
     },
     wire: labelled("cnf", 8),
-    codec: { kind: "bespoke", bespoke: "confirmation" },
+    codec: {
+      kind: "object",
+      // The five RFC 7800 §3.1 members, each with its wire spellings and codecs:
+      // `internal/claims/cnf-members.ts`.
+      children: () => CNF_MEMBERS,
+      // An unrecognised member is another specification's registered
+      // confirmation method, carried untouched (RFC 7800 §3.1, RFC 7800 §6.2.1).
+      open: "verbatim",
+      // A member of the wrong shape is refused, never read as unbound — aegis
+      // policy at verify (RFC 7800 §3); the leaf messages are the walker's.
+      readLeafFailure: "refuse",
+      // Labels 1 and 3 are IANA-registered (RFC 8747 §3.1) and ride on every COSE
+      // token; `key` and `keyId` carry their COSE codecs as `per.cose`.
+      labels: "registered",
+      // The members name a key the presenter must prove: `undefined` is the one
+      // absence, a `null` member is refused, and a fault that leaves the
+      // confirmation naming no key is a second fault (`ObjectCodec.binds`).
+      binds: "key",
+    },
     sensitivity: "public",
     // `keyId` and `key` are the two confirmation forms both wires carry; the
     // other three are `wireAbsent` on COSE (`internal/claims/cnf-members.ts`).
@@ -414,6 +433,8 @@ export const CLAIM_SPECS: ReadonlyArray<RegisteredClaimSpec> = [
       children: () => ACT_MEMBERS,
       open: "verbatim",
       readLeafFailure: "refuse",
+      binds: "none",
+      labels: "proprietary",
     },
     sensitivity: "public",
     sample: ACT_SAMPLE,
@@ -713,6 +734,8 @@ export const CLAIM_SPECS: ReadonlyArray<RegisteredClaimSpec> = [
         children: () => AUTHORIZATION_DETAIL_MEMBERS,
         open: "verbatim",
         readLeafFailure: "drop",
+        binds: "none",
+        labels: "proprietary",
       },
     },
     sensitivity: "public",
@@ -744,6 +767,8 @@ export const CLAIM_SPECS: ReadonlyArray<RegisteredClaimSpec> = [
       children: () => ACT_MEMBERS,
       open: "verbatim",
       readLeafFailure: "refuse",
+      binds: "none",
+      labels: "proprietary",
     },
     sensitivity: "public",
     sample: ACT_SAMPLE,
@@ -868,6 +893,8 @@ export const CLAIM_SPECS: ReadonlyArray<RegisteredClaimSpec> = [
       children: () => SUB_ID_MEMBERS,
       open: "verbatim",
       readLeafFailure: "drop",
+      binds: "none",
+      labels: "proprietary",
     },
     sensitivity: "public",
     sample: SUB_ID_SAMPLE,
@@ -1019,6 +1046,8 @@ export const CLAIM_SPECS: ReadonlyArray<RegisteredClaimSpec> = [
       children: () => ADDRESS_MEMBERS,
       open: "flip",
       readLeafFailure: "drop",
+      binds: "none",
+      labels: "proprietary",
     },
     sensitivity: "public",
     sample: ADDRESS_SAMPLE,
@@ -1489,9 +1518,12 @@ export const CLAIM_SPECS: ReadonlyArray<RegisteredClaimSpec> = [
  */
 export type NameSelector = (spec: WireNamed) => string;
 
-// Neither a claim nor a declared member is `absent` on either wire, and a registry
-// test pins that. The narrowing is explicit rather than asserted, so the day one
-// IS absent this throws at construction instead of putting `undefined` on a wire.
+// No claim is `absent` on either wire, and a registry test pins that
+// (claims-registry.test.ts, "no claim is absent on either wire"). A declared MEMBER
+// may be, and the structure walker reaches these selectors for one only through
+// `memberNameOf`, which projects the absent cell away first. The narrowing is
+// explicit rather than asserted, so the day a claim IS absent this throws at
+// construction instead of putting `undefined` on a wire.
 const requireName = (spec: WireNamed, wire: Wire): string => {
   const name = wireKeyName(spec.wire[wire]);
 
@@ -1507,6 +1539,29 @@ export const joseName: NameSelector = (spec) => requireName(spec, "jose");
 
 /** The COSE wire name — the diverging name where declared, else the JOSE one. */
 export const coseName: NameSelector = (spec) => requireName(spec, "cose");
+
+/**
+ * The selector a DECLARED MEMBER is spelled by: a member `absent` on the selected
+ * wire is keyed by its JOSE name there. Every confirmation method has a JOSE
+ * spelling (RFC 7800 §6.2), so the fallback always resolves; and the byte layer,
+ * not the walker, is where a member the wire cannot carry is refused.
+ *
+ * ⚠ THE PROJECTION IS A `Record<Wire, WireKey>` LITERAL, so a third wire is a
+ * compile error here rather than a wire the fallback silently never reaches. A
+ * CLAIM never passes through it — `joseName`/`coseName` stay the claim selectors,
+ * and `requireName` keeps its throw for a claim with no name.
+ */
+export const memberNameOf =
+  (nameOf: NameSelector): NameSelector =>
+  (member) => {
+    const { jose, cose } = member.wire;
+    const wire: Record<Wire, WireKey> = {
+      jose,
+      cose: cose.kind === "absent" ? jose : cose,
+    };
+
+    return nameOf({ domain: member.domain, wire });
+  };
 
 /** The COSE integer label, or `undefined` where the claim is string-keyed. */
 export const coseLabel = (spec: ClaimSpec): number | undefined =>

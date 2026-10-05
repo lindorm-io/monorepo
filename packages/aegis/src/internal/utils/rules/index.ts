@@ -16,8 +16,10 @@
  * ⛔ `isNotStated` is the CODEC's question (`internal/claims/is-not-stated.ts`)
  * and is NOT exported from this barrel: the translator has already emptied the bag
  * of unstated positions, so a rule asking it gets one answer. Its ONE exception is
- * a `cnf` MEMBER, which takes the VOCABULARY notion instead (`translate.ts`,
- * `internal/cose/cose-key.ts`) — a security property; do not unify it away.
+ * a member of a structure that BINDS A KEY — the `cnf` members — which takes the
+ * VOCABULARY notion instead (`ObjectCodec.binds` in `internal/registry/claim-spec.ts`,
+ * read by `internal/claims/translate.ts`; `internal/cose/cose-key.ts` asks the same)
+ * — a security property; do not unify it away.
  *
  * ⚠ `$exists` means NOT NULL (`@lindorm/match`, `constants/operators.ts`), not
  * "the key is present". `ISSUER_IS_URI` and `AUD_SINGLE_RESOURCE` are written

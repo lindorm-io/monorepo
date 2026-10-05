@@ -6,11 +6,12 @@ import { describe, expect, test } from "vitest";
 import { B64U } from "../constants/format.js";
 import { CwtKit } from "../../classes/CwtKit.js";
 import { AegisError } from "../../errors/index.js";
-import { COSE_CNF_LABELS } from "../claims/cnf-members.js";
+import { CNF_MEMBERS } from "../claims/cnf-members.js";
 import { coseByJose } from "../header/header-registry.js";
 import { encodeCbor, Tag } from "./cbor.js";
 import { coseKeyToJwk, decodeCnf, encodeCnf, jwkToCoseKey } from "./cose-key.js";
 import { decodeCwtWire } from "./decode-cwt-wire.js";
+import { registeredLabelsOf } from "./registered-labels.js";
 import { COSE_TAG, encodeProtectedHeader } from "./structures.js";
 
 // COSE_Key labels: RFC 9052 §7, and RFC 9964 §3 for AKP (kty 7).
@@ -18,8 +19,14 @@ const KTY = 1;
 const AKP_PUB = -1;
 const AKP_PRIV = -2;
 const AKP_KTY = 7;
-// RFC 8747 §3.1
+// RFC 8747 §7.1.1: the CWT claim key of `cnf`.
 const CNF_LABEL = 8;
+// RFC 8747 §3.1: the confirmation member labels, WRITTEN OUT — a test reading them
+// off the table it drives would agree with whatever the table says.
+const CNF_JWK_LABEL = 1;
+const CNF_KID_LABEL = 3;
+/** The table the codec is driven with: the confirmation's own, derived from its declaration. */
+const CNF_LABELS = registeredLabelsOf("confirmation", CNF_MEMBERS);
 const ML_DSA_SEED_SIZE = 32;
 
 describe("AKP COSE_Key (RFC 9964)", () => {
@@ -96,25 +103,27 @@ const thrownBy = (fn: () => unknown): AegisError => {
  */
 describe("encodeCnf, on a confirmation with more than one member", () => {
   test("writes EVERY member it was given, under its own label", () => {
-    const out = encodeCnf({ jwk: CNF_JWK, kid: "key_probe" });
+    const out = encodeCnf({ jwk: CNF_JWK, kid: "key_probe" }, CNF_LABELS);
 
     expect(out.size).toBe(2);
-    expect(out.get(COSE_CNF_LABELS.jwk)).toBeInstanceOf(Map);
-    expect(out.get(COSE_CNF_LABELS.kid)).toEqual(Buffer.from("key_probe", "utf8"));
+    expect(out.get(CNF_JWK_LABEL)).toBeInstanceOf(Map);
+    expect(out.get(CNF_KID_LABEL)).toEqual(Buffer.from("key_probe", "utf8"));
   });
 
   test("REFUSES a malformed member rather than dropping it", () => {
     // Without the per-member refusal: a non-string `kid` produces no entry, the
     // map comes out with the `jwk` alone and non-empty, and the token mints bound
     // by the key and NOT by the key id.
-    const error = thrownBy(() => encodeCnf({ jwk: CNF_JWK, kid: 42 }));
+    const error = thrownBy(() => encodeCnf({ jwk: CNF_JWK, kid: 42 }, CNF_LABELS));
 
     expect(error.code).toBe("cose_cnf_member_invalid");
     expect(error.data).toEqual({ member: "kid" });
   });
 
   test("REFUSES a malformed embedded key the same way", () => {
-    const error = thrownBy(() => encodeCnf({ jwk: "not-a-jwk", kid: "key_probe" }));
+    const error = thrownBy(() =>
+      encodeCnf({ jwk: "not-a-jwk", kid: "key_probe" }, CNF_LABELS),
+    );
 
     expect(error.code).toBe("cose_cnf_member_invalid");
     expect(error.data).toEqual({ member: "jwk" });
@@ -126,7 +135,9 @@ describe("encodeCnf, on a confirmation with more than one member", () => {
   test.each(["jkt", "x5t#S256", "jku"])(
     "still refuses %s — a member the wire cannot carry at all",
     (member) => {
-      const error = thrownBy(() => encodeCnf({ jwk: CNF_JWK, [member]: "probe" }));
+      const error = thrownBy(() =>
+        encodeCnf({ jwk: CNF_JWK, [member]: "probe" }, CNF_LABELS),
+      );
 
       expect(error.code).toBe("cose_cnf_unsupported");
       expect(error.data).toEqual({ members: [member], supported: ["jwk", "kid"] });
@@ -134,7 +145,10 @@ describe("encodeCnf, on a confirmation with more than one member", () => {
   );
 
   test("round-trips both members back to the JOSE cnf shape", () => {
-    const decoded = decodeCnf(encodeCnf({ jwk: CNF_JWK, kid: "key_probe" }));
+    const decoded = decodeCnf(
+      encodeCnf({ jwk: CNF_JWK, kid: "key_probe" }, CNF_LABELS),
+      CNF_LABELS,
+    );
 
     expect(decoded).toEqual({ jwk: CNF_JWK, kid: "key_probe" });
   });
@@ -153,7 +167,9 @@ describe("encodeCnf, on keys that are not what they look like", () => {
     // finds it representable and raises nothing; the write loop iterates the
     // table's OWN keys and never writes it; `out.size` is 1 so the emptiness guard
     // is silent too. The member vanishes and the token mints.
-    const error = thrownBy(() => encodeCnf({ jwk: CNF_JWK, constructor: "x" }));
+    const error = thrownBy(() =>
+      encodeCnf({ jwk: CNF_JWK, constructor: "x" }, CNF_LABELS),
+    );
 
     expect(error.code).toBe("cose_cnf_unsupported");
     expect(error.data).toEqual({ members: ["constructor"], supported: ["jwk", "kid"] });
@@ -178,14 +194,14 @@ describe("encodeCnf, on keys that are not what they look like", () => {
   test("an own key holding `undefined` is ABSENT, and the rest still mints", () => {
     // `undefined` means absent across this package (`omitUndefined` spells it), so
     // `{ jwk: undefined }` is a caller who supplied no key, not a broken one.
-    const out = encodeCnf({ jwk: undefined, kid: "key_probe" });
+    const out = encodeCnf({ jwk: undefined, kid: "key_probe" }, CNF_LABELS);
 
     expect(out.size).toBe(1);
-    expect(out.get(COSE_CNF_LABELS.kid)).toEqual(Buffer.from("key_probe", "utf8"));
+    expect(out.get(CNF_KID_LABEL)).toEqual(Buffer.from("key_probe", "utf8"));
   });
 
   test("`null` is NOT absent — it is a value, and a malformed one", () => {
-    const error = thrownBy(() => encodeCnf({ jwk: null, kid: "key_probe" }));
+    const error = thrownBy(() => encodeCnf({ jwk: null, kid: "key_probe" }, CNF_LABELS));
 
     expect(error.code).toBe("cose_cnf_member_invalid");
     expect(error.data).toEqual({ member: "jwk" });
@@ -195,7 +211,9 @@ describe("encodeCnf, on keys that are not what they look like", () => {
     // The mirror of the prototype hole on the filter side: `Reflect.ownKeys` never
     // flags an inherited `kid`, so a write loop reading it off the prototype would
     // carry a member the caller never set.
-    const error = thrownBy(() => encodeCnf(Object.create({ kid: "inherited" })));
+    const error = thrownBy(() =>
+      encodeCnf(Object.create({ kid: "inherited" }), CNF_LABELS),
+    );
 
     expect(error.code).toBe("cose_cnf_unsupported");
   });
@@ -208,7 +226,7 @@ describe("encodeCnf, on keys that are not what they look like", () => {
     const bag: Dict = { kid: "key_probe" };
     Object.defineProperty(bag, "jkt", { value: "jkt_probe" });
 
-    const error = thrownBy(() => encodeCnf(bag));
+    const error = thrownBy(() => encodeCnf(bag, CNF_LABELS));
 
     expect(error.code).toBe("cose_cnf_unsupported");
     expect(error.data).toEqual({ members: ["jkt"], supported: ["jwk", "kid"] });
@@ -220,21 +238,25 @@ describe("encodeCnf, on keys that are not what they look like", () => {
     // mean "absent" for `jwk`/`kid` and "present and unrepresentable" for the
     // thumbprint forms — and `{ jkt: claim.thumbprint }` with no thumbprint
     // supplied nothing to fail closed over.
-    const out = encodeCnf({ jkt: undefined, kid: "key_probe" });
+    const out = encodeCnf({ jkt: undefined, kid: "key_probe" }, CNF_LABELS);
 
     expect(out.size).toBe(1);
-    expect(out.get(COSE_CNF_LABELS.kid)).toEqual(Buffer.from("key_probe", "utf8"));
+    expect(out.get(CNF_KID_LABEL)).toEqual(Buffer.from("key_probe", "utf8"));
   });
 
   test("but a PRESENT unrepresentable member still fails the map closed", () => {
-    const error = thrownBy(() => encodeCnf({ jkt: "jkt_probe", kid: "key_probe" }));
+    const error = thrownBy(() =>
+      encodeCnf({ jkt: "jkt_probe", kid: "key_probe" }, CNF_LABELS),
+    );
 
     expect(error.code).toBe("cose_cnf_unsupported");
     expect(error.data).toEqual({ members: ["jkt"], supported: ["jwk", "kid"] });
   });
 
   test("an all-undefined confirmation is still the emptiness refusal", () => {
-    const error = thrownBy(() => encodeCnf({ jwk: undefined, kid: undefined }));
+    const error = thrownBy(() =>
+      encodeCnf({ jwk: undefined, kid: undefined }, CNF_LABELS),
+    );
 
     expect(error.code).toBe("cose_cnf_unsupported");
   });
@@ -270,7 +292,7 @@ const foreignCwt = (claims: Map<number | string, unknown>): Buffer =>
 const withCoseKey = (key: Map<number, unknown>): Buffer =>
   foreignCwt(
     new Map<number | string, unknown>([
-      [CNF_LABEL, new Map<number, unknown>([[COSE_CNF_LABELS.jwk, key]])],
+      [CNF_LABEL, new Map<number, unknown>([[CNF_JWK_LABEL, key]])],
     ]),
   );
 
@@ -353,7 +375,7 @@ describe("COSE_Key labels that name an Object.prototype member", () => {
           // inside the cnf map, not in its place.
           encodeCbor(
             new Map<number, unknown>([
-              [CNF_LABEL, new Map<number, unknown>([[COSE_CNF_LABELS.jwk, coseKey]])],
+              [CNF_LABEL, new Map<number, unknown>([[CNF_JWK_LABEL, coseKey]])],
             ]),
           ),
           Buffer.alloc(8),

@@ -1,0 +1,1533 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`the confirmation claim's outcome at every public door > Aegis.toDomain > 16: { jkt: 42 } 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.thumbprint",
+          "message": "Member "thumbprint" must be the shape it declares",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > Aegis.toDomain > 16: { jkt: null } 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.thumbprint",
+          "message": "Member "thumbprint" must be the shape it declares",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > Aegis.toDomain > 16: { kid: "" } 1`] = `
+{
+  "ok": {
+    "confirmation": "{"keyId":""}",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > Aegis.toDomain > 16: { thumbprint: "abc" } 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.thumbprint",
+          "message": "Members "jkt" and "thumbprint" both resolve to "thumbprint" in "confirmation"",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > Aegis.toDomain > 16: all five members and a null tail 1`] = `
+{
+  "ok": {
+    "confirmation": "{"thumbprint":"0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I","mtlsCertThumbprint":"A4DtL2JmUMhAsvJj5tKyn64SqzmuXbMrJa0n761y5v0","key":{"kty":"EC","crv":"P-256","x":"MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D4","y":"4Etl6SRW2YiLUrN5vfvVHuhp7x8PxltmWWlbbM4IFyM"},"keyId":"cnf-outcome-key-id","jwkSetUri":"https://rs.lindorm.test/.well-known/jwks.json","someExt":null}",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > Aegis.toWire > 15: { keyId: "" } 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.keyId",
+          "message": "Member "keyId" must not be empty",
+        },
+        {
+          "key": "confirmation",
+          "message": "Claim "confirmation" names no key to confirm",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > Aegis.toWire > 15: { thumbprint, keyId } 1`] = `
+{
+  "ok": "{"cnf":{"jkt":"0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I","kid":"cnf-outcome-key-id"}}",
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.cwt.sign > 14: { ckt: "x" } 1`] = `
+{
+  "refused": {
+    "code": "cose_cnf_unsupported",
+    "data": {
+      "members": [
+        "ckt",
+      ],
+      "supported": [
+        "jwk",
+        "kid",
+      ],
+    },
+    "name": "CoseError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.cwt.sign > 14: { jkt } 1`] = `
+{
+  "refused": {
+    "code": "cose_cnf_unsupported",
+    "data": {
+      "members": [
+        "jkt",
+      ],
+      "supported": [
+        "jwk",
+        "kid",
+      ],
+    },
+    "name": "CoseError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.cwt.sign > 14: { jwk, kid: 42 } 1`] = `
+{
+  "refused": {
+    "code": "cose_cnf_member_invalid",
+    "data": {
+      "member": "kid",
+    },
+    "name": "CoseError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.cwt.sign > 14: { kid: "" } 1`] = `
+{
+  "ok": {
+    "cose": Map {
+      3 => {
+        "data": [],
+        "type": "Buffer",
+      },
+    },
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 1: { keyId } on cose 1`] = `
+{
+  "ok": {
+    "cose": Map {
+      3 => {
+        "data": [
+          99,
+          110,
+          102,
+          45,
+          111,
+          117,
+          116,
+          99,
+          111,
+          109,
+          101,
+          45,
+          107,
+          101,
+          121,
+          45,
+          105,
+          100,
+        ],
+        "type": "Buffer",
+      },
+    },
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 1: { keyId } on cose(p) 1`] = `
+{
+  "ok": {
+    "cose": Map {
+      3 => {
+        "data": [
+          99,
+          110,
+          102,
+          45,
+          111,
+          117,
+          116,
+          99,
+          111,
+          109,
+          101,
+          45,
+          107,
+          101,
+          121,
+          45,
+          105,
+          100,
+        ],
+        "type": "Buffer",
+      },
+    },
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 1: { keyId } on jose 1`] = `
+{
+  "ok": {
+    "jose": "{"kid":"cnf-outcome-key-id"}",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 2: { key: JWK } on cose 1`] = `
+{
+  "ok": {
+    "cose": Map {
+      1 => Map {
+        1 => 2,
+        -1 => 1,
+        -2 => {
+          "data": [
+            48,
+            160,
+            66,
+            76,
+            210,
+            28,
+            41,
+            68,
+            131,
+            138,
+            45,
+            117,
+            201,
+            43,
+            55,
+            231,
+            110,
+            162,
+            13,
+            159,
+            0,
+            137,
+            58,
+            59,
+            78,
+            238,
+            138,
+            60,
+            10,
+            175,
+            236,
+            62,
+          ],
+          "type": "Buffer",
+        },
+        -3 => {
+          "data": [
+            224,
+            75,
+            101,
+            233,
+            36,
+            86,
+            217,
+            136,
+            139,
+            82,
+            179,
+            121,
+            189,
+            251,
+            213,
+            30,
+            232,
+            105,
+            239,
+            31,
+            15,
+            198,
+            91,
+            102,
+            89,
+            105,
+            91,
+            108,
+            206,
+            8,
+            23,
+            35,
+          ],
+          "type": "Buffer",
+        },
+      },
+    },
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 2: { key: JWK } on cose(p) 1`] = `
+{
+  "ok": {
+    "cose": Map {
+      1 => Map {
+        1 => 2,
+        -1 => 1,
+        -2 => {
+          "data": [
+            48,
+            160,
+            66,
+            76,
+            210,
+            28,
+            41,
+            68,
+            131,
+            138,
+            45,
+            117,
+            201,
+            43,
+            55,
+            231,
+            110,
+            162,
+            13,
+            159,
+            0,
+            137,
+            58,
+            59,
+            78,
+            238,
+            138,
+            60,
+            10,
+            175,
+            236,
+            62,
+          ],
+          "type": "Buffer",
+        },
+        -3 => {
+          "data": [
+            224,
+            75,
+            101,
+            233,
+            36,
+            86,
+            217,
+            136,
+            139,
+            82,
+            179,
+            121,
+            189,
+            251,
+            213,
+            30,
+            232,
+            105,
+            239,
+            31,
+            15,
+            198,
+            91,
+            102,
+            89,
+            105,
+            91,
+            108,
+            206,
+            8,
+            23,
+            35,
+          ],
+          "type": "Buffer",
+        },
+      },
+    },
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 2: { key: JWK } on jose 1`] = `
+{
+  "ok": {
+    "jose": "{"jwk":{"kty":"EC","crv":"P-256","x":"MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D4","y":"4Etl6SRW2YiLUrN5vfvVHuhp7x8PxltmWWlbbM4IFyM"}}",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 3: { key, keyId } on cose 1`] = `
+{
+  "ok": {
+    "cose": Map {
+      1 => Map {
+        1 => 2,
+        -1 => 1,
+        -2 => {
+          "data": [
+            48,
+            160,
+            66,
+            76,
+            210,
+            28,
+            41,
+            68,
+            131,
+            138,
+            45,
+            117,
+            201,
+            43,
+            55,
+            231,
+            110,
+            162,
+            13,
+            159,
+            0,
+            137,
+            58,
+            59,
+            78,
+            238,
+            138,
+            60,
+            10,
+            175,
+            236,
+            62,
+          ],
+          "type": "Buffer",
+        },
+        -3 => {
+          "data": [
+            224,
+            75,
+            101,
+            233,
+            36,
+            86,
+            217,
+            136,
+            139,
+            82,
+            179,
+            121,
+            189,
+            251,
+            213,
+            30,
+            232,
+            105,
+            239,
+            31,
+            15,
+            198,
+            91,
+            102,
+            89,
+            105,
+            91,
+            108,
+            206,
+            8,
+            23,
+            35,
+          ],
+          "type": "Buffer",
+        },
+      },
+      3 => {
+        "data": [
+          99,
+          110,
+          102,
+          45,
+          111,
+          117,
+          116,
+          99,
+          111,
+          109,
+          101,
+          45,
+          107,
+          101,
+          121,
+          45,
+          105,
+          100,
+        ],
+        "type": "Buffer",
+      },
+    },
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 3: { key, keyId } on jose 1`] = `
+{
+  "ok": {
+    "jose": "{"jwk":{"kty":"EC","crv":"P-256","x":"MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D4","y":"4Etl6SRW2YiLUrN5vfvVHuhp7x8PxltmWWlbbM4IFyM"},"kid":"cnf-outcome-key-id"}",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 4: { keyId, thumbprint, jwkSetUri, mtlsCertThumbprint, key } on cose 1`] = `
+{
+  "refused": {
+    "code": "cose_cnf_unsupported",
+    "data": {
+      "members": [
+        "jkt",
+        "jku",
+        "x5t#S256",
+      ],
+      "supported": [
+        "jwk",
+        "kid",
+      ],
+    },
+    "name": "CoseError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 4: { keyId, thumbprint, jwkSetUri, mtlsCertThumbprint, key } on jose 1`] = `
+{
+  "ok": {
+    "jose": "{"kid":"cnf-outcome-key-id","jkt":"0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I","jku":"https://rs.lindorm.test/.well-known/jwks.json","x5t#S256":"A4DtL2JmUMhAsvJj5tKyn64SqzmuXbMrJa0n761y5v0","jwk":{"kty":"EC","crv":"P-256","x":"MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D4","y":"4Etl6SRW2YiLUrN5vfvVHuhp7x8PxltmWWlbbM4IFyM"}}",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 5: { keyId, tlsClientAuth: "x" } on cose 1`] = `
+{
+  "refused": {
+    "code": "cose_cnf_unsupported",
+    "data": {
+      "members": [
+        "tlsClientAuth",
+      ],
+      "supported": [
+        "jwk",
+        "kid",
+      ],
+    },
+    "name": "CoseError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 5: { keyId, tlsClientAuth: "x" } on jose 1`] = `
+{
+  "ok": {
+    "jose": "{"kid":"cnf-outcome-key-id","tlsClientAuth":"x"}",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 6: { thumbprint, someExt: null } on jose 1`] = `
+{
+  "ok": {
+    "jose": "{"jkt":"0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I","someExt":null}",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 7: { key: { ...JWK, ext: null } } on jose 1`] = `
+{
+  "ok": {
+    "jose": "{"jwk":{"kty":"EC","crv":"P-256","x":"MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D4","y":"4Etl6SRW2YiLUrN5vfvVHuhp7x8PxltmWWlbbM4IFyM","ext":null}}",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 8: { jkt: "abc" } on cose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.jkt",
+          "message": "Members "jkt" and "thumbprint" both resolve to "jkt" in "confirmation"",
+        },
+        {
+          "key": "confirmation",
+          "message": "Claim "confirmation" names no key to confirm",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 8: { jkt: "abc" } on jose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.jkt",
+          "message": "Members "jkt" and "thumbprint" both resolve to "jkt" in "confirmation"",
+        },
+        {
+          "key": "confirmation",
+          "message": "Claim "confirmation" names no key to confirm",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 8: { kid: "k2" } on cose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.kid",
+          "message": "Members "keyId" and "kid" both resolve to "kid" in "confirmation"",
+        },
+        {
+          "key": "confirmation",
+          "message": "Claim "confirmation" names no key to confirm",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 8: { kid: "k2" } on jose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.kid",
+          "message": "Members "keyId" and "kid" both resolve to "kid" in "confirmation"",
+        },
+        {
+          "key": "confirmation",
+          "message": "Claim "confirmation" names no key to confirm",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 8: { thumbprint, jkt: other } on cose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.jkt",
+          "message": "Members "jkt" and "thumbprint" both resolve to "jkt" in "confirmation"",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 8: { thumbprint, jkt: other } on jose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.jkt",
+          "message": "Members "jkt" and "thumbprint" both resolve to "jkt" in "confirmation"",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 9: { thumbprint: null } on cose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.thumbprint",
+          "message": "Member "thumbprint" must be the shape it declares",
+        },
+        {
+          "key": "confirmation",
+          "message": "Claim "confirmation" names no key to confirm",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 9: { thumbprint: null } on jose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.thumbprint",
+          "message": "Member "thumbprint" must be the shape it declares",
+        },
+        {
+          "key": "confirmation",
+          "message": "Claim "confirmation" names no key to confirm",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 9: { thumbprint: null, keyId } on cose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.thumbprint",
+          "message": "Member "thumbprint" must be the shape it declares",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 9: { thumbprint: null, keyId } on jose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.thumbprint",
+          "message": "Member "thumbprint" must be the shape it declares",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 10: { key: "not-a-jwk" } on cose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.key",
+          "message": "Member "key" must be the shape it declares",
+        },
+        {
+          "key": "confirmation",
+          "message": "Claim "confirmation" names no key to confirm",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 10: { key: "not-a-jwk" } on jose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.key",
+          "message": "Member "key" must be the shape it declares",
+        },
+        {
+          "key": "confirmation",
+          "message": "Claim "confirmation" names no key to confirm",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 10: { keyId: 42 } on cose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.keyId",
+          "message": "Member "keyId" must be the shape it declares",
+        },
+        {
+          "key": "confirmation",
+          "message": "Claim "confirmation" names no key to confirm",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 10: { keyId: 42 } on jose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.keyId",
+          "message": "Member "keyId" must be the shape it declares",
+        },
+        {
+          "key": "confirmation",
+          "message": "Claim "confirmation" names no key to confirm",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 10: { thumbprint: 42 } on cose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.thumbprint",
+          "message": "Member "thumbprint" must be the shape it declares",
+        },
+        {
+          "key": "confirmation",
+          "message": "Claim "confirmation" names no key to confirm",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 10: { thumbprint: 42 } on jose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.thumbprint",
+          "message": "Member "thumbprint" must be the shape it declares",
+        },
+        {
+          "key": "confirmation",
+          "message": "Claim "confirmation" names no key to confirm",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 11: { keyId: undefined } on cose 1`] = `
+{
+  "refused": {
+    "code": "claim_empty_value",
+    "data": {
+      "claim": "confirmation",
+      "whenEmpty": "refuse",
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 11: { keyId: undefined } on jose 1`] = `
+{
+  "refused": {
+    "code": "claim_empty_value",
+    "data": {
+      "claim": "confirmation",
+      "whenEmpty": "refuse",
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 11: {} on cose 1`] = `
+{
+  "refused": {
+    "code": "claim_empty_value",
+    "data": {
+      "claim": "confirmation",
+      "whenEmpty": "refuse",
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 11: {} on jose 1`] = `
+{
+  "refused": {
+    "code": "claim_empty_value",
+    "data": {
+      "claim": "confirmation",
+      "whenEmpty": "refuse",
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 12: { jwkSetUri: "" } on cose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.jwkSetUri",
+          "message": "Member "jwkSetUri" must not be empty",
+        },
+        {
+          "key": "confirmation",
+          "message": "Claim "confirmation" names no key to confirm",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 12: { jwkSetUri: "" } on jose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.jwkSetUri",
+          "message": "Member "jwkSetUri" must not be empty",
+        },
+        {
+          "key": "confirmation",
+          "message": "Claim "confirmation" names no key to confirm",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 12: { jwkSetUri: "", keyId: "k1" } on cose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.jwkSetUri",
+          "message": "Member "jwkSetUri" must not be empty",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 12: { jwkSetUri: "", keyId: "k1" } on jose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.jwkSetUri",
+          "message": "Member "jwkSetUri" must not be empty",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 12: { key: {} } on cose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.key",
+          "message": "Member "key" must not be empty",
+        },
+        {
+          "key": "confirmation",
+          "message": "Claim "confirmation" names no key to confirm",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 12: { key: {} } on jose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.key",
+          "message": "Member "key" must not be empty",
+        },
+        {
+          "key": "confirmation",
+          "message": "Claim "confirmation" names no key to confirm",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 12: { key: {}, keyId: "k1" } on cose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.key",
+          "message": "Member "key" must not be empty",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 12: { key: {}, keyId: "k1" } on jose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.key",
+          "message": "Member "key" must not be empty",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 12: { keyId: "" } on cose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.keyId",
+          "message": "Member "keyId" must not be empty",
+        },
+        {
+          "key": "confirmation",
+          "message": "Claim "confirmation" names no key to confirm",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 12: { keyId: "" } on jose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.keyId",
+          "message": "Member "keyId" must not be empty",
+        },
+        {
+          "key": "confirmation",
+          "message": "Claim "confirmation" names no key to confirm",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 12: { keyId: "", key: JWK } on cose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.keyId",
+          "message": "Member "keyId" must not be empty",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 12: { keyId: "", key: JWK } on jose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.keyId",
+          "message": "Member "keyId" must not be empty",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 12: { mtlsCertThumbprint: "" } on cose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.mtlsCertThumbprint",
+          "message": "Member "mtlsCertThumbprint" must not be empty",
+        },
+        {
+          "key": "confirmation",
+          "message": "Claim "confirmation" names no key to confirm",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 12: { mtlsCertThumbprint: "" } on jose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.mtlsCertThumbprint",
+          "message": "Member "mtlsCertThumbprint" must not be empty",
+        },
+        {
+          "key": "confirmation",
+          "message": "Claim "confirmation" names no key to confirm",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 12: { mtlsCertThumbprint: "", keyId: "k1" } on cose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.mtlsCertThumbprint",
+          "message": "Member "mtlsCertThumbprint" must not be empty",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 12: { mtlsCertThumbprint: "", keyId: "k1" } on jose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.mtlsCertThumbprint",
+          "message": "Member "mtlsCertThumbprint" must not be empty",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 12: { thumbprint: "" } on cose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.thumbprint",
+          "message": "Member "thumbprint" must not be empty",
+        },
+        {
+          "key": "confirmation",
+          "message": "Claim "confirmation" names no key to confirm",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 12: { thumbprint: "" } on jose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.thumbprint",
+          "message": "Member "thumbprint" must not be empty",
+        },
+        {
+          "key": "confirmation",
+          "message": "Claim "confirmation" names no key to confirm",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 12: { thumbprint: "", keyId: "k1" } on cose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.thumbprint",
+          "message": "Member "thumbprint" must not be empty",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 12: { thumbprint: "", keyId: "k1" } on jose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation.thumbprint",
+          "message": "Member "thumbprint" must not be empty",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 13: "not-an-object" on cose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation",
+          "message": "Claim "confirmation" must be an object",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.mint > 13: "not-an-object" on jose 1`] = `
+{
+  "refused": {
+    "code": "claim_structure_invalid",
+    "data": {
+      "claim": "confirmation",
+      "invalid": [
+        {
+          "key": "confirmation",
+          "message": "Claim "confirmation" must be an object",
+        },
+      ],
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.parse of a third party's COSE confirmation > 17: Map { 1: COSE_Key, "jwk": JWK } 1`] = `
+{
+  "ok": {
+    "confirmation": "{"key":{"kty":"EC","crv":"P-256","x":"MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D4","y":"4Etl6SRW2YiLUrN5vfvVHuhp7x8PxltmWWlbbM4IFyM"}}",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.parse of a third party's COSE confirmation > 17: Map { 1: COSE_Key, 3: h'6b' } 1`] = `
+{
+  "ok": {
+    "confirmation": "{"key":{"kty":"EC","crv":"P-256","x":"MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D4","y":"4Etl6SRW2YiLUrN5vfvVHuhp7x8PxltmWWlbbM4IFyM"},"keyId":"k"}",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.parse of a third party's COSE confirmation > 17: Map { 3: "text" } 1`] = `
+{
+  "ok": {
+    "confirmation": "{}",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.parse of a third party's COSE confirmation > 17: Map { 3: h'' } 1`] = `
+{
+  "ok": {
+    "confirmation": "{"keyId":""}",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.parse of a third party's COSE confirmation > 17: Map { 3: h'6b', 99: "x", "jkt": "y" } 1`] = `
+{
+  "ok": {
+    "confirmation": "{"keyId":"k"}",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.verify > 18: raw-signed { kid: "" } on cose 1`] = `
+{
+  "ok": {
+    "confirmation": "{"keyId":""}",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.verify > 18: raw-signed { kid: "" } on jose 1`] = `
+{
+  "ok": {
+    "confirmation": "{"keyId":""}",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.verify > 18: raw-signed {} on cose 1`] = `
+{
+  "refused": {
+    "code": "claim_empty_value",
+    "data": {
+      "claim": "confirmation",
+      "whenEmpty": "refuse",
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.verify > 18: raw-signed {} on jose 1`] = `
+{
+  "refused": {
+    "code": "claim_empty_value",
+    "data": {
+      "claim": "confirmation",
+      "whenEmpty": "refuse",
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.verify > 18: third-party {} on jose 1`] = `
+{
+  "refused": {
+    "code": "confirmation_binds_no_key",
+    "data": {
+      "member": "confirmation",
+    },
+    "name": "AegisDomainError",
+  },
+}
+`;
+
+exports[`the confirmation claim's outcome at every public door > aegis.verify > 18: third-party Map {} on cose 1`] = `
+{
+  "refused": {
+    "code": "cose_cnf_unsupported",
+    "data": {
+      "claim": "cnf",
+      "label": 8,
+    },
+    "name": "CoseError",
+  },
+}
+`;

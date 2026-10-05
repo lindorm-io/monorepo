@@ -226,7 +226,7 @@ describe("the confirmation claim on the wire", () => {
     const other = "LXEWQrcmsEQBYnyp-6wy9chTD7GQPMTbAiWHF5IaSIE";
 
     // ⚠ ONE entry here, not two: the declared `thumbprint` survives and fills the
-    // bag, so `cnfBinding` has nothing to add. That the two rows differ in entry
+    // bag, so the walker's binding entry has nothing to add. That the two rows differ in entry
     // COUNT is itself the check — it is what says the collision is reported for
     // the collision rather than folded into the emptiness verdict.
     const collision = {
@@ -400,7 +400,7 @@ describe("the confirmation claim on the wire", () => {
         invalid: [
           {
             key: "confirmation.thumbprint",
-            message: 'Member "thumbprint" must be a string',
+            message: 'Member "thumbprint" must be the shape it declares',
           },
         ],
       },
@@ -422,7 +422,7 @@ describe("the confirmation claim on the wire", () => {
         invalid: [
           {
             key: "confirmation.thumbprint",
-            message: 'Member "thumbprint" must be a string',
+            message: 'Member "thumbprint" must be the shape it declares',
           },
           {
             key: "confirmation",

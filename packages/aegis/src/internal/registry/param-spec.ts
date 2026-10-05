@@ -62,7 +62,9 @@ export type ParamSpec<
    * ⚠ A MEMBER's own cell ({@link MemberSpec}) answers a different question. This
    * one is read about the WHOLE parameter
    * (`internal/claims/prune-empty-claims.ts`); a member's by the structure walker
-   * about that member alone (`internal/claims/translate.ts`).
+   * about that member alone (`internal/claims/translate.ts`), where a member's
+   * `"refuse"` is `claim_structure_invalid` keyed `<claim>.<member>`, on the
+   * write side alone.
    */
   whenEmpty: E;
   /**
@@ -93,10 +95,12 @@ export type ParamSpec<
  * (`internal/cose/cose-key.ts` branches EC/OKP/AKP, and the AKP `pub` label -1 is
  * the EC `crv` label -1), which a flat member set cannot express.
  *
- * ⚠ A MEMBER INHERITS `codec: WireCodec<C>` AND NOTHING READS A PER-WIRE OVERRIDE
- * ON ONE — {@link codecFor} is the only reader and is only ever handed a
- * TOP-LEVEL spec; the structure walkers read `member.codec` directly. The fix is
- * to route the walkers through {@link codecFor}, not to fork the type.
+ * ⚠ A MEMBER INHERITS `codec: WireCodec<C>`, AND A PER-WIRE OVERRIDE ON ONE IS
+ * APPLIED BY the registered label shaper
+ * (`internal/cose/registered-labels.ts`) resolves a member's COSE codec through
+ * {@link codecFor}. The structure walkers read `member.codec` — the BASE codec —
+ * on both wires, as the top-level translator does: the byte layer is where a
+ * per-wire codec applies.
  */
 export type MemberSpec<
   D = unknown,

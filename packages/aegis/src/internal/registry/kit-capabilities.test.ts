@@ -26,9 +26,10 @@ import { B64U } from "../constants/format.js";
 import { Tag, decodeCbor } from "../cose/cbor.js";
 import { decodeProtectedHeader } from "../cose/structures.js";
 import { encodeCnf } from "../cose/cose-key.js";
+import { registeredLabelsOf } from "../cose/registered-labels.js";
 import { coseByJose, coseWireKey } from "../header/header-registry.js";
 import { decodeJoseHeader } from "../utils/jose-header.js";
-import { COSE_CNF_MEMBERS } from "../claims/cnf-members.js";
+import { CNF_MEMBERS } from "../claims/cnf-members.js";
 import { KIT_CAPABILITIES } from "./kit-capabilities.js";
 import { WIRE_TAGS } from "./wire.js";
 
@@ -230,7 +231,7 @@ describe("KIT_CAPABILITIES", () => {
   test("no kit claims a ckt, because no producer can make one", () => {
     const derivable = ((): boolean => {
       try {
-        encodeCnf({ ckt: "ckt_probe" });
+        encodeCnf({ ckt: "ckt_probe" }, registeredLabelsOf("confirmation", CNF_MEMBERS));
         return true;
       } catch {
         return false;
@@ -603,16 +604,20 @@ describe("KIT_CAPABILITIES", () => {
       expect(KIT_CAPABILITIES.jwe.cnfMembers).toBe(KIT_CAPABILITIES.jwt.cnfMembers);
     });
 
-    test("cnfMembers (cose): the row is DERIVED from the codec's label table", () => {
-      // ⚠ CIRCULAR, and stated as such. `encodeCnf` and this row read the same
-      // `COSE_CNF_LABELS`, so probing the encoder and comparing it with the row can
-      // only agree — which is the POINT: the two cannot drift.
+    test("cnfMembers (cose): the row and the codec's label table are one set", () => {
+      // TWO derivations from one declaration's `wire.cose` cells — the capability
+      // row (`claims/cnf-members.ts`) and the table the encoder is driven with
+      // (`cose/registered-labels.ts`) — held to each other here, so neither can
+      // admit a member the other lacks.
       //
-      // ⭐ WHAT MAKES THAT ACCEPTABLE: what the row SHOULD contain is pinned against a
-      // HAND-WRITTEN literal in `claims/cnf-members.test.ts`. Without that literal
-      // this assertion would be the only statement about the set, and would say
-      // nothing.
-      expect(new Set(KIT_CAPABILITIES.cwt.cnfMembers)).toEqual(new Set(COSE_CNF_MEMBERS));
+      // ⭐ WHAT THE SET SHOULD CONTAIN is pinned against a HAND-WRITTEN literal in
+      // `claims/cnf-members.test.ts`. Without that literal this assertion would be
+      // the only statement about the set, and would say nothing.
+      const table = registeredLabelsOf("confirmation", CNF_MEMBERS).map(
+        (entry) => entry.name,
+      );
+
+      expect([...KIT_CAPABILITIES.cwt.cnfMembers]).toEqual(table);
       expect(KIT_CAPABILITIES.cwm.cnfMembers).toBe(KIT_CAPABILITIES.cwt.cnfMembers);
       expect(KIT_CAPABILITIES.cwe.cnfMembers).toBe(KIT_CAPABILITIES.cwt.cnfMembers);
     });

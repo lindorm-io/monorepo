@@ -214,6 +214,8 @@ export const SUB_ID_MEMBERS: ReadonlyArray<ClaimMemberSpec> = [
         children: () => SUB_ID_MEMBERS,
         open: "verbatim",
         readLeafFailure: "drop",
+        binds: "none",
+        labels: "proprietary",
       },
     },
     whenEmpty: KEEP,

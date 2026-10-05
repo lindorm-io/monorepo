@@ -731,6 +731,151 @@ Feature: The empty-claim prune
       Then the raw payload carries claim key 2 "user-1"
       And the raw payload carries none of claim key -65557, "address"
 
+  Rule: a confirmation key id handed the empty string is refused at the mint rather than written
+
+    A confirmation's key id names the key a presenter proves possession of
+    (RFC 7800 §3.4, RFC 8747 §3.4), and an empty one names none. Neither
+    document forbids an empty value — the content of the key id is
+    application specific — so the refusal is aegis policy at mint, and a
+    verifier still accepts a token carrying one as written. The empty member
+    is paired with a key the confirmation does name, so the refusal states
+    the empty member alone and not the binding left naming nothing. The walk
+    answers on both wires, before the COSE claim encoder is reached.
+
+    Background:
+      Given the content to mint
+        | subject | user-1 |
+      And the content expires in "1h"
+      And the confirmation claim is the object
+        """json
+        { "keyId": "", "key": { "kty": "EC", "crv": "P-256", "x": "MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D4", "y": "4Etl6SRW2YiLUrN5vfvVHuhp7x8PxltmWWlbbM4IFyM" } }
+        """
+
+    Scenario Outline: <wire>: the mint is refused, locating the fault at the empty key id
+      When I mint the content under the "default" profile on the <wire> wire
+      Then minting is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "confirmation" and locates the fault at "confirmation.keyId": Member "keyId" must not be empty
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
+  Rule: a confirmation thumbprint handed the empty string is refused at the mint rather than written
+
+    A JWK thumbprint binds the token to the key it digests (RFC 9449 §6.1,
+    RFC 7638 §3), and an empty one digests nothing a presenter could prove.
+    No specification states what a mint does with one, so the refusal is
+    aegis policy at mint; the `default` profile declares no confirmation
+    shape rule, so the walk is the layer that answers. On the cose wire the
+    walk refuses before the claim encoder would refuse the member for having
+    no COSE label. The empty member is paired with a key id, so the refusal
+    states the empty member alone.
+
+    Background:
+      Given the content to mint
+        | subject | user-1 |
+      And the content expires in "1h"
+      And the confirmation claim is the object
+        """json
+        { "thumbprint": "", "keyId": "k1" }
+        """
+
+    Scenario Outline: <wire>: the mint is refused, locating the fault at the empty thumbprint
+      When I mint the content under the "default" profile on the <wire> wire
+      Then minting is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "confirmation" and locates the fault at "confirmation.thumbprint": Member "thumbprint" must not be empty
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
+  Rule: a confirmation certificate thumbprint handed the empty string is refused at the mint rather than written
+
+    A certificate thumbprint binds the token to the client certificate it
+    digests (RFC 8705 §3.1), and an empty one digests nothing. No
+    specification states what a mint does with one, so the refusal is aegis
+    policy at mint. On the cose wire the walk refuses before the claim
+    encoder would refuse the member for having no COSE label. The empty
+    member is paired with a key id, so the refusal states the empty member
+    alone.
+
+    Background:
+      Given the content to mint
+        | subject | user-1 |
+      And the content expires in "1h"
+      And the confirmation claim is the object
+        """json
+        { "mtlsCertThumbprint": "", "keyId": "k1" }
+        """
+
+    Scenario Outline: <wire>: the mint is refused, locating the fault at the empty certificate thumbprint
+      When I mint the content under the "default" profile on the <wire> wire
+      Then minting is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "confirmation" and locates the fault at "confirmation.mtlsCertThumbprint": Member "mtlsCertThumbprint" must not be empty
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
+  Rule: a confirmation key handed the empty object is refused at the mint rather than written
+
+    An embedded key is the public key the presenter proves possession of
+    (RFC 7800 §3.2, RFC 8747 §3.2), and an object with no member is no key at
+    all. No specification states what a mint does with one, so the refusal
+    is aegis policy at mint, and the walk answers on both wires before the
+    COSE claim encoder would find no key type to transcode. The empty member
+    is paired with a key id, so the refusal states the empty member alone.
+
+    Background:
+      Given the content to mint
+        | subject | user-1 |
+      And the content expires in "1h"
+      And the confirmation claim is the object
+        """json
+        { "key": {}, "keyId": "k1" }
+        """
+
+    Scenario Outline: <wire>: the mint is refused, locating the fault at the empty key
+      When I mint the content under the "default" profile on the <wire> wire
+      Then minting is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "confirmation" and locates the fault at "confirmation.key": Member "key" must not be empty
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
+  Rule: a confirmation key-set URI handed the empty string is refused at the mint rather than written
+
+    A key-set URI names where the presenter's key can be fetched
+    (RFC 7800 §3.5), and an empty one names nowhere. No specification states
+    what a mint does with one, so the refusal is aegis policy at mint. On the
+    cose wire the walk refuses before the claim encoder would refuse the
+    member for having no COSE label. The empty member is paired with a key
+    id, so the refusal states the empty member alone.
+
+    Background:
+      Given the content to mint
+        | subject | user-1 |
+      And the content expires in "1h"
+      And the confirmation claim is the object
+        """json
+        { "jwkSetUri": "", "keyId": "k1" }
+        """
+
+    Scenario Outline: <wire>: the mint is refused, locating the fault at the empty key-set URI
+      When I mint the content under the "default" profile on the <wire> wire
+      Then minting is refused as a domain error "claim_structure_invalid"
+      And the refusal names the claim "confirmation" and locates the fault at "confirmation.jwkSetUri": Member "jwkSetUri" must not be empty
+
+      Examples:
+        | wire |
+        | jose |
+        | cose |
+
   Rule: a confirmation supplied as null through the domain door states no binding, and the token is minted without one
 
     `null` and `undefined` are absence, never a value: the emission boundary

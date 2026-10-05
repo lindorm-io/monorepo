@@ -280,12 +280,12 @@ describe("Aegis — meta coverage", () => {
   // ⚠ The three JOSE kits read their own `reserved` row through `buildJoseHeader`,
   // the way the COSE kits read theirs through `buildCoseHeaders`.
   //
-  // ⚠ `cwt.cnfMembers` has no reader, and the reason is on the record: the COSE
-  // confirmation has ONE source, the row being DERIVED from the label table the
-  // codec switches over (`claims/cnf-members.ts`, where the label table is in
-  // turn derived from each member's own `wire.cose` cell). Nothing reads it back
-  // because there is nothing left to disagree with — the row and the encoder are
-  // the same data. A read of a second list is weaker than not having one.
+  // ⚠ `cwt.cnfMembers` has no reader, and the reason is on the record: the row
+  // and the codec's label table are TWO derivations from one declaration's
+  // `wire.cose` cells (`claims/cnf-members.ts`, `cose/registered-labels.ts`), held
+  // to one set by `kit-capabilities.test.ts`. Nothing reads the row back because
+  // nothing is left to disagree with it; a read of a second list is weaker than
+  // the equality that already binds the two.
   test("should record how many capability cells a kit actually reads", () => {
     const cells = Object.values(KIT_CELL_CENSUS).flatMap((row) => Object.values(row));
 

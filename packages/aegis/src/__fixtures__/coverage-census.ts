@@ -178,7 +178,7 @@ export const KIT_CELL_CENSUS: {
       // nothing reads it back. That is a tighter binding than a read, not a
       // looser one: the encoder cannot represent a member the row omits because
       // there is no second list to disagree with.
-      note: "DERIVED from `src/internal/claims/cnf-members.ts#export const COSE_CNF_LABELS`, itself derived from the `wire.cose` cell of each declared member, whose test pins the resulting table against a hand-written literal AND NOTHING ELSE. The behaviour is driven one file over, at `src/internal/cose/cose-key.test.ts#encodeCnf({ jwk: CNF_JWK, kid: 42 })` and the rows beside it: a mixed `{ jwk, kid }` writes BOTH labels, a malformed member refuses instead of dropping, and a member with no label (`jkt`) fails the map closed",
+      note: "DERIVED from `src/internal/claims/cnf-members.ts#export const COSE_CNF_MEMBERS`, the members whose `wire.cose` cell carries a label, whose test pins the resulting set against a hand-written literal AND NOTHING ELSE; the encoder is driven with a table derived from the same cells (`src/internal/cose/registered-labels.ts#export const registeredLabelsOf`), and `kit-capabilities.test.ts` holds the two to one set. The behaviour is driven one file over, at `src/internal/cose/cose-key.test.ts#encodeCnf({ jwk: CNF_JWK, kid: 42 }, CNF_LABELS)` and the rows beside it: a mixed `{ jwk, kid }` writes BOTH labels, a malformed member refuses instead of dropping, and a member with no label (`jkt`) fails the map closed",
     },
     reserved: {
       exercised: "reader",

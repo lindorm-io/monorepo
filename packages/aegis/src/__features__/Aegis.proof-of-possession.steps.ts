@@ -111,6 +111,11 @@ export class AegisProofOfPossessionSteps extends AegisStepsBase {
 
   // the domain result
 
+  @Then("the verified confirmation claim is exactly the object")
+  theVerifiedConfirmationClaimIsExactlyTheObject(object: DocString): void {
+    expect(this.verified().claims.confirmation).toEqual(JSON.parse(object.content));
+  }
+
   @Then(
     "the verified proof reports the identifier {string} for the request {string} {string}",
   )

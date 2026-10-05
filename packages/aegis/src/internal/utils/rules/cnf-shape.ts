@@ -10,8 +10,10 @@ const JKT_BYTE_LENGTH = 32;
 
 // `cnf.jkt` (RFC 7638 / RFC 9449 §6.1), validated only when the confirmation
 // NAMES it — the same reading of presence the entry guard above uses.
-// ⚠ This check is live on JOSE only. `COSE_CNF_LABELS` (internal/cose/cose-key.ts) carries `jwk` and
-// `kid`; `jkt` is `wireAbsent`, so `encodeCnf` refuses a thumbprint on COSE whatever this returns.
+// ⚠ This check is live on JOSE only. The registered label table derived from
+// `internal/claims/cnf-members.ts` (`internal/cose/registered-labels.ts`) carries `jwk` and `kid`;
+// `jkt` is `wireAbsent`, so `encodeCnf` (`internal/cose/cose-key.ts`) refuses a thumbprint on COSE
+// whatever this returns.
 // Shape rules are wire-neutral by signature and stay that way — the error-class inconsistency that
 // creates is tracked as the mint-ordering item, which fixes it for all five rules at once.
 const validateThumbprint = (thumbprint: unknown, invalid: Array<InvalidEntry>): void => {

@@ -51,7 +51,7 @@ registerEncoder(Buffer, (buffer, writer) => {
   return undefined;
 });
 
-/** RFC 8392 §4, and RFC 9200 §8.14 for `scope`: the CWT claim keys a third party writes as integers. */
+/** RFC 8392 §4, RFC 8747 §7.1.1 for `cnf` and RFC 9200 §8.14 for `scope`: the CWT claim keys a third party writes as integers. */
 const CWT_CLAIM_KEY: ReadonlyMap<string, number> = new Map([
   ["iss", 1],
   ["sub", 2],
@@ -60,6 +60,7 @@ const CWT_CLAIM_KEY: ReadonlyMap<string, number> = new Map([
   ["nbf", 5],
   ["iat", 6],
   ["jti", 7],
+  ["cnf", 8],
   ["scope", 9],
 ]);
 

@@ -3,9 +3,13 @@ import { describe, expect, test } from "vitest";
 import { CwtKit } from "../../classes/CwtKit.js";
 import { CoseError } from "../../errors/index.js";
 import { CLAIM_SPECS, type ClaimSpec, claimByDomain } from "../claims/claims-registry.js";
-import type { BespokeKind, ClaimMemberSpec } from "../registry/claim-spec.js";
+import type {
+  BespokeKind,
+  ClaimMemberSpec,
+  ObjectCodec,
+} from "../registry/claim-spec.js";
 import { codecFor } from "../registry/param-spec.js";
-import { wireLabel, wireName } from "../registry/wire-key.js";
+import { wireAbsent, wireLabel, wireName } from "../registry/wire-key.js";
 import { encodeCbor, Tag } from "./cbor.js";
 import { coseByJose } from "../header/header-registry.js";
 import { COSE_TAG, encodeProtectedHeader } from "./structures.js";
@@ -65,7 +69,6 @@ describe("shapeForBespoke — the CWT claim shaper's drift guard", () => {
   test("the shape a sub-kind resolves to is keyed by the DECLARATION, not the name", () => {
     // Keyed by KIND, the only thing the function takes: a second claim declaring
     // an existing sub-kind under a new domain name cannot fall through.
-    expect(shapeForBespoke("confirmation").kind).toBe("bespoke");
     expect(shapeForBespoke("events").kind).toBe("bespoke");
   });
 
@@ -149,11 +152,12 @@ describe("shapeForBstr — the CWT byte-encoding shaper's drift guard", () => {
  * wire. `cwt-spec.ts` states the reason.
  */
 describe("shapeForObject — the CWT structure shaper's drift guard", () => {
-  // ⚠ The synthetic structures below state `open` and `readLeafFailure`, and the
-  // shaper reads neither — both are required `ObjectCodec` cells, and the compact
-  // spec is derived from the members' labels alone. Each value mirrors what the
-  // registered structure the literal stands in for declares, so it stays true if
-  // either cell ever does reach the COSE side.
+  // ⚠ The synthetic structures below state `open`, `readLeafFailure` and `binds`,
+  // which the shaper does not read — all three are required `ObjectCodec` cells —
+  // and `labels: "proprietary"`, which it does: the compact spec is derived from
+  // the members' labels alone. Each value mirrors what the registered structure
+  // the literal stands in for declares, so it stays true if a cell ever does reach
+  // the COSE side.
   const textMember = (domain: string): ClaimMemberSpec => ({
     domain,
     spec: SYNTHETIC_SPEC,
@@ -172,8 +176,22 @@ describe("shapeForObject — the CWT structure shaper's drift guard", () => {
     sample: "sample",
   });
 
+  /** A structure over `children` whose labels are lindorm's own. */
+  const proprietary = (children: ReadonlyArray<ClaimMemberSpec>): ObjectCodec => ({
+    kind: "object",
+    children: () => children,
+    open: "verbatim",
+    readLeafFailure: "drop",
+    binds: "none",
+    labels: "proprietary",
+  });
+
   test("an all-text-keyed member set rides the wire exactly as the translator built it", () => {
-    const field = shapeForObject("address", [textMember("street_address")], "single");
+    const field = shapeForObject(
+      "address",
+      proprietary([textMember("street_address")]),
+      "single",
+    );
     const value = { street_address: "1 Byron Way" };
 
     expect(field.kind).toBe("bespoke");
@@ -182,14 +200,18 @@ describe("shapeForObject — the CWT structure shaper's drift guard", () => {
   });
 
   /** What an unshaped-but-legal structure resolves to — the identity codec. */
-  const VERBATIM_FIELD = shapeForObject("reference", [textMember("any")], "single");
+  const VERBATIM_FIELD = shapeForObject(
+    "reference",
+    proprietary([textMember("any")]),
+    "single",
+  );
 
   test("an all-labelled member set becomes a compact label map derived from the declarations", () => {
     // The arm the RFC 8693 actor chain takes: the label table is DERIVED from the
     // member declarations, so there is no second copy for the wire to disagree with.
     const field = shapeForObject(
       "synthetic",
-      [labelledMember("iss", 1), labelledMember("sub", 2)],
+      proprietary([labelledMember("iss", 1), labelledMember("sub", 2)]),
       "single",
     );
     const value = { iss: "https://issuer.test", sub: "user-1" };
@@ -230,13 +252,20 @@ describe("shapeForObject — the CWT structure shaper's drift guard", () => {
         domain: "act",
         spec: SYNTHETIC_SPEC,
         wire: { jose: wireName("act"), cose: wireLabel(5, "act") },
-        codec: { kind: "object", children, open: "verbatim", readLeafFailure: "refuse" },
+        codec: {
+          kind: "object",
+          children,
+          open: "verbatim",
+          readLeafFailure: "refuse",
+          binds: "none",
+          labels: "proprietary",
+        },
         whenEmpty: "keep",
         sample: {},
       },
     ];
 
-    const field = shapeForObject("synthetic", children(), "single");
+    const field = shapeForObject("synthetic", proprietary(children()), "single");
     const value = { sub: "a", act: { sub: "b", act: { sub: "c" } } };
 
     // Three levels: a spec that compacted only the top leaves the inner actors
@@ -261,10 +290,12 @@ describe("shapeForObject — the CWT structure shaper's drift guard", () => {
       labelledMember("sub", 2),
     ];
 
-    expect(() => shapeForObject("synthetic", mixed(), "single")).toThrow(CoseError);
+    expect(() => shapeForObject("synthetic", proprietary(mixed()), "single")).toThrow(
+      CoseError,
+    );
 
     try {
-      shapeForObject("synthetic", mixed(), "single");
+      shapeForObject("synthetic", proprietary(mixed()), "single");
       expect.unreachable("the guard did not throw");
     } catch (error) {
       expect((error as CoseError).code).toBe("cose_mixed_member_keying");
@@ -290,13 +321,15 @@ describe("shapeForObject — the CWT structure shaper's drift guard", () => {
         children: () => [labelledMember("sub", 2)],
         open: "verbatim",
         readLeafFailure: "refuse",
+        binds: "none",
+        labels: "proprietary",
       },
       whenEmpty: "keep",
       sample: {},
     };
 
     try {
-      shapeForObject("outer", [textMember("iss"), inner], "single");
+      shapeForObject("outer", proprietary([textMember("iss"), inner]), "single");
       expect.unreachable("the guard did not throw");
     } catch (error) {
       // The PATH, not the leaf name: at depth, "sub" alone does not locate it.
@@ -318,14 +351,23 @@ describe("shapeForObject — the CWT structure shaper's drift guard", () => {
         domain: "act",
         spec: SYNTHETIC_SPEC,
         wire: { jose: wireName("act"), cose: wireName("act") },
-        codec: { kind: "object", children, open: "verbatim", readLeafFailure: "refuse" },
+        codec: {
+          kind: "object",
+          children,
+          open: "verbatim",
+          readLeafFailure: "refuse",
+          binds: "none",
+          labels: "proprietary",
+        },
         whenEmpty: "keep",
         sample: {},
       },
     ];
 
     // Terminating at all IS the assertion; an unguarded walk overflows the stack.
-    expect(shapeForObject("act", children(), "single")).toEqual(VERBATIM_FIELD);
+    expect(shapeForObject("act", proprietary(children()), "single")).toEqual(
+      VERBATIM_FIELD,
+    );
   });
 
   test("a self-referential set that is MIXED is still refused", () => {
@@ -337,14 +379,21 @@ describe("shapeForObject — the CWT structure shaper's drift guard", () => {
         domain: "act",
         spec: SYNTHETIC_SPEC,
         wire: { jose: wireName("act"), cose: wireName("act") },
-        codec: { kind: "object", children, open: "verbatim", readLeafFailure: "refuse" },
+        codec: {
+          kind: "object",
+          children,
+          open: "verbatim",
+          readLeafFailure: "refuse",
+          binds: "none",
+          labels: "proprietary",
+        },
         whenEmpty: "keep",
         sample: {},
       },
     ];
 
     try {
-      shapeForObject("synthetic", children(), "single");
+      shapeForObject("synthetic", proprietary(children()), "single");
       expect.unreachable("the guard did not throw");
     } catch (error) {
       // Every PATH at which a member sits, not one entry per declaration: this
@@ -375,6 +424,8 @@ describe("shapeForObject — the CWT structure shaper's drift guard", () => {
           children: () => [textMember("iss"), labelledMember("sub", 2)],
           open: "verbatim",
           readLeafFailure: "drop",
+          binds: "none",
+          labels: "proprietary",
         },
       },
       sensitivity: "public",
@@ -413,26 +464,22 @@ describe("shapeForObject — the CWT structure shaper's drift guard", () => {
     const structured = CLAIM_SPECS.map((spec: ClaimSpec) => {
       const codec = spec.codec;
 
-      if (codec.kind === "object")
-        return [spec.domain, codec.children, "single"] as const;
+      if (codec.kind === "object") return [spec.domain, codec, "single"] as const;
       if (codec.kind === "array" && codec.of !== undefined) {
-        return [spec.domain, codec.of.children, "collection"] as const;
+        return [spec.domain, codec.of, "collection"] as const;
       }
 
       return [spec.domain, undefined, "single"] as const;
     }).filter(
-      (
-        entry,
-      ): entry is readonly [
-        string,
-        () => ReadonlyArray<ClaimMemberSpec>,
-        StructureForm,
-      ] => entry[1] !== undefined,
+      (entry): entry is readonly [string, ObjectCodec, StructureForm] =>
+        entry[1] !== undefined,
     );
 
     // Registry order, with each claim's DECLARED form. `act` and `mayAct` share one
     // member set and are listed separately: the shape is derived per CLAIM.
     expect(structured.map(([domain, , form]) => [domain, form])).toEqual([
+      // The one structure riding REGISTERED labels (RFC 8747 §3.1).
+      ["confirmation", "single"],
       ["act", "single"],
       ["authorizationDetails", "collection"],
       ["mayAct", "single"],
@@ -443,9 +490,9 @@ describe("shapeForObject — the CWT structure shaper's drift guard", () => {
       ["address", "single"],
     ]);
 
-    for (const [domain, children, form] of structured) {
+    for (const [domain, codec, form] of structured) {
       expect(
-        () => shapeForObject(domain, children(), form),
+        () => shapeForObject(domain, codec, form),
         `no COSE shape for "${domain}"`,
       ).not.toThrow();
     }
@@ -457,7 +504,7 @@ describe("shapeForObject — the CWT structure shaper's drift guard", () => {
     // with every round trip through this package still agreeing with itself.
     const field = shapeForObject(
       "syntheticCollection",
-      [labelledMember("sub", 2), labelledMember("iss", 1)],
+      proprietary([labelledMember("sub", 2), labelledMember("iss", 1)]),
       "collection",
     );
     const value = [{ sub: "a", iss: "b" }, { sub: "c" }];
@@ -474,6 +521,275 @@ describe("shapeForObject — the CWT structure shaper's drift guard", () => {
 
     // …and back, so the two halves are one codec rather than two.
     expect(field.decode?.(compact as never)).toEqual(value);
+  });
+
+  /**
+   * THE PROPRIETARY MAP'S CONSTRUCTION GUARDS — three declarations the compact
+   * map has no answer for, each refused at import on a synthetic structure, since
+   * no registered structure declares one.
+   */
+  describe("the proprietary label map's construction guards", () => {
+    const absentMember: ClaimMemberSpec = {
+      domain: "thumbprint",
+      spec: SYNTHETIC_SPEC,
+      wire: {
+        jose: wireName("jkt"),
+        cose: wireAbsent("A synthetic member the COSE wire has no label for."),
+      },
+      codec: { kind: "text" },
+      whenEmpty: "keep",
+      sample: "sample",
+    };
+
+    const perWireMember: ClaimMemberSpec = {
+      domain: "keyId",
+      spec: SYNTHETIC_SPEC,
+      wire: { jose: wireName("kid"), cose: wireLabel(3, "kid") },
+      codec: { kind: "text", per: { cose: { kind: "bstr", encoding: "utf8" } } },
+      whenEmpty: "keep",
+      sample: "sample",
+    };
+
+    const refusalOf = (act: () => unknown): unknown => {
+      try {
+        act();
+        return "no refusal";
+      } catch (error) {
+        return { code: (error as CoseError).code, data: (error as CoseError).data };
+      }
+    };
+
+    test("refuses a member absent on COSE, which the map has no key for", () => {
+      expect(
+        refusalOf(() =>
+          shapeForObject(
+            "synthetic",
+            proprietary([absentMember, labelledMember("sub", 2)]),
+            "single",
+          ),
+        ),
+      ).toEqual({
+        code: "cose_proprietary_member_unsupported",
+        data: { claim: "synthetic", member: "thumbprint" },
+      });
+    });
+
+    test("refuses a member carrying a per-wire codec the map would never apply", () => {
+      expect(
+        refusalOf(() =>
+          shapeForObject("synthetic", proprietary([perWireMember]), "single"),
+        ),
+      ).toEqual({
+        code: "cose_proprietary_member_unsupported",
+        data: { claim: "synthetic", member: "keyId" },
+      });
+    });
+
+    test("refuses a nested structure riding a registered label map, at its path", () => {
+      const nested: ClaimMemberSpec = {
+        domain: "cnf",
+        spec: SYNTHETIC_SPEC,
+        wire: { jose: wireName("cnf"), cose: wireLabel(8, "cnf") },
+        codec: {
+          kind: "object",
+          children: () => [perWireMember],
+          open: "verbatim",
+          readLeafFailure: "refuse",
+          binds: "key",
+          labels: "registered",
+        },
+        whenEmpty: "keep",
+        sample: {},
+      };
+
+      expect(
+        refusalOf(() =>
+          shapeForObject(
+            "synthetic",
+            proprietary([labelledMember("sub", 2), nested]),
+            "single",
+          ),
+        ),
+      ).toEqual({
+        code: "cose_proprietary_member_unsupported",
+        data: { claim: "synthetic", member: "cnf" },
+      });
+    });
+  });
+});
+
+/**
+ * THE REGISTERED LABEL MAP — the shape a structure declaring `labels: "registered"`
+ * takes, driven on synthetic members mirroring the confirmation's: a key whose
+ * COSE form is a COSE_Key (RFC 8747 §3.1 label 1) and a key id whose COSE form is
+ * a byte string (label 3).
+ */
+describe("shapeForObject — the registered label map", () => {
+  const CNF_JWK = { kty: "EC", crv: "P-256", x: "eHNhbXBsZQ", y: "eXNhbXBsZQ" };
+
+  const keyMember: ClaimMemberSpec = {
+    domain: "key",
+    spec: SYNTHETIC_SPEC,
+    wire: { jose: wireName("jwk"), cose: wireLabel(1, "jwk") },
+    codec: { kind: "jwk", per: { cose: { kind: "coseKey" } } },
+    whenEmpty: "keep",
+    sample: CNF_JWK,
+  };
+
+  const keyIdMember: ClaimMemberSpec = {
+    domain: "keyId",
+    spec: SYNTHETIC_SPEC,
+    wire: { jose: wireName("kid"), cose: wireLabel(3, "kid") },
+    codec: { kind: "text", per: { cose: { kind: "bstr", encoding: "utf8" } } },
+    whenEmpty: "keep",
+    sample: "sample",
+  };
+
+  const absentMember: ClaimMemberSpec = {
+    domain: "thumbprint",
+    spec: SYNTHETIC_SPEC,
+    wire: {
+      jose: wireName("jkt"),
+      cose: wireAbsent("A synthetic member the COSE wire has no label for."),
+    },
+    codec: { kind: "text" },
+    whenEmpty: "keep",
+    sample: "sample",
+  };
+
+  /** A structure over `children` whose labels are IANA-registered. */
+  const registered = (children: ReadonlyArray<ClaimMemberSpec>): ObjectCodec => ({
+    kind: "object",
+    children: () => children,
+    open: "verbatim",
+    readLeafFailure: "refuse",
+    binds: "key",
+    labels: "registered",
+  });
+
+  const refusalOf = (act: () => unknown): unknown => {
+    try {
+      act();
+      return "no refusal";
+    } catch (error) {
+      return { code: (error as CoseError).code, data: (error as CoseError).data };
+    }
+  };
+
+  test("rides its labels on EVERY token, whatever the proprietary option says", () => {
+    const field = shapeForObject(
+      "synthetic",
+      registered([keyMember, keyIdMember]),
+      "single",
+    );
+    const expected = new Map<number, unknown>([[3, Buffer.from("k", "utf8")]]);
+
+    expect(field.kind).toBe("bespoke");
+    expect(field.encode?.({ kid: "k" }, { proprietary: false })).toEqual(expected);
+    expect(field.encode?.({ kid: "k" }, { proprietary: true })).toEqual(expected);
+  });
+
+  test("applies each member's per-wire codec: a JWK becomes a COSE_Key and a key id a byte string", () => {
+    const field = shapeForObject(
+      "synthetic",
+      registered([keyMember, keyIdMember]),
+      "single",
+    );
+
+    const out = field.encode?.({ jwk: CNF_JWK, kid: "k" }, { proprietary: false }) as Map<
+      number,
+      unknown
+    >;
+
+    expect([...out.keys()]).toEqual([1, 3]);
+    expect(out.get(1)).toBeInstanceOf(Map);
+    expect(out.get(3)).toEqual(Buffer.from("k", "utf8"));
+
+    // …and back to the JOSE form, so the two halves are one codec.
+    expect(field.decode?.(out)).toEqual({ jwk: CNF_JWK, kid: "k" });
+  });
+
+  test("reads the table's labels alone and drops every other key, raising no duplicate refusal", () => {
+    const field = shapeForObject(
+      "synthetic",
+      registered([keyMember, keyIdMember]),
+      "single",
+    );
+
+    expect(
+      field.decode?.(
+        new Map<number | string, unknown>([
+          [3, Buffer.from("k", "utf8")],
+          [99, "x"],
+          ["jkt", "y"],
+          ["kid", "the text twin of label 3"],
+        ]),
+      ),
+    ).toEqual({ kid: "k" });
+  });
+
+  test("gives a member absent on COSE no label, so the encoder refuses a present one by name", () => {
+    const field = shapeForObject(
+      "synthetic",
+      registered([absentMember, keyIdMember]),
+      "single",
+    );
+
+    expect(
+      refusalOf(() => field.encode?.({ jkt: "t", kid: "k" }, { proprietary: false })),
+    ).toEqual({
+      code: "cose_cnf_unsupported",
+      data: { members: ["jkt"], supported: ["kid"] },
+    });
+  });
+
+  test("refuses a collection at construction", () => {
+    expect(
+      refusalOf(() =>
+        shapeForObject("synthetic", registered([keyIdMember]), "collection"),
+      ),
+    ).toEqual({
+      code: "cose_registered_collection_unsupported",
+      data: { claim: "synthetic" },
+    });
+  });
+
+  test("refuses a member keyed by a text name on COSE at construction", () => {
+    const named: ClaimMemberSpec = {
+      domain: "acr",
+      spec: SYNTHETIC_SPEC,
+      wire: { jose: wireName("acr"), cose: wireName("acr") },
+      codec: { kind: "text" },
+      whenEmpty: "keep",
+      sample: "sample",
+    };
+
+    expect(
+      refusalOf(() =>
+        shapeForObject("synthetic", registered([named, keyIdMember]), "single"),
+      ),
+    ).toEqual({
+      code: "cose_registered_member_unsupported",
+      data: { claim: "synthetic", member: "acr" },
+    });
+  });
+
+  test("refuses a labelled member whose COSE codec the map has no value form for", () => {
+    const text: ClaimMemberSpec = {
+      domain: "sub",
+      spec: SYNTHETIC_SPEC,
+      wire: { jose: wireName("sub"), cose: wireLabel(2, "sub") },
+      codec: { kind: "text" },
+      whenEmpty: "keep",
+      sample: "sample",
+    };
+
+    expect(
+      refusalOf(() => shapeForObject("synthetic", registered([text]), "single")),
+    ).toEqual({
+      code: "cose_registered_member_unsupported",
+      data: { claim: "synthetic", member: "sub" },
+    });
   });
 });
 

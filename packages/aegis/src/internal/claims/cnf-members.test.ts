@@ -1,11 +1,13 @@
 import { describe, expect, expectTypeOf, test } from "vitest";
 import type { ConfirmationClaimMembers } from "../../types/index.js";
-import type { CnfMember, CoseCnfMember } from "./cnf-members.js";
+import { registeredLabelsOf } from "../cose/registered-labels.js";
+import type { ClaimMemberSpec } from "../registry/claim-spec.js";
+import { codecFor } from "../registry/param-spec.js";
+import type { CnfMember } from "./cnf-members.js";
 import {
   CNF_DOMAIN_MEMBERS,
   CNF_JOSE_MEMBERS,
   CNF_MEMBERS,
-  COSE_CNF_LABELS,
   COSE_CNF_MEMBERS,
 } from "./cnf-members.js";
 
@@ -26,7 +28,11 @@ describe("CNF_MEMBERS", () => {
    */
   test("is exactly the five confirmation members aegis carries, spelled as their specifications do", () => {
     expect(
-      CNF_MEMBERS.map((member) => [member.domain, member.wire.jose.name, member.value]),
+      CNF_MEMBERS.map((member) => [
+        member.domain,
+        member.wire.jose.name,
+        member.codec.kind,
+      ]),
     ).toEqual([
       ["thumbprint", "jkt", "text"],
       ["mtlsCertThumbprint", "x5t#S256", "text"],
@@ -37,13 +43,47 @@ describe("CNF_MEMBERS", () => {
   });
 
   /**
-   * ⚠ THE LABELS AS WELL AS THE MEMBER NAMES. A wrong label mints a confirmation
-   * no RFC 8747 reader can interpret. What the CODEC does with the table is
-   * pinned beside the codec, in `cose/cose-key.test.ts`.
+   * ⚠ THE LABELS AND THE COSE CODECS AS WELL AS THE MEMBER NAMES. A wrong label
+   * mints a confirmation no RFC 8747 reader can interpret, and a wrong codec one
+   * whose value no reader can decode. The table is what the codec is driven with;
+   * what the CODEC does with it is pinned beside the codec, in
+   * `cose/cose-key.test.ts`.
    */
-  test("gives COSE exactly the two members RFC 8747 §3.1 labels", () => {
-    expect(COSE_CNF_LABELS).toEqual({ jwk: 1, kid: 3 });
+  test("gives COSE exactly the two members RFC 8747 §3.1 labels, each with its COSE value codec", () => {
+    expect(
+      registeredLabelsOf("confirmation", CNF_MEMBERS).map((entry) => [
+        entry.name,
+        entry.label,
+        entry.codec.kind,
+      ]),
+    ).toEqual([
+      ["jwk", 1, "coseKey"],
+      ["kid", 3, "bstr"],
+    ]);
     expect(COSE_CNF_MEMBERS).toEqual(["jwk", "kid"]);
+  });
+
+  /**
+   * The codec each member carries on EACH wire — the two members COSE transcodes
+   * state their COSE form as `per.cose`, and the translator reads the base codec
+   * alone, so both columns are pinned.
+   */
+  test("declares a per-wire codec for exactly the two members COSE transcodes", () => {
+    const members: ReadonlyArray<ClaimMemberSpec> = CNF_MEMBERS;
+
+    expect(
+      members.map((member) => [
+        member.domain,
+        codecFor(member, "jose").kind,
+        codecFor(member, "cose").kind,
+      ]),
+    ).toEqual([
+      ["thumbprint", "text", "text"],
+      ["mtlsCertThumbprint", "text", "text"],
+      ["key", "jwk", "coseKey"],
+      ["keyId", "text", "bstr"],
+      ["jwkSetUri", "text", "text"],
+    ]);
   });
 
   /**
@@ -97,9 +137,9 @@ describe("CNF_MEMBERS", () => {
    * only the compiler can hold it, and only if something asks.
    *
    * ⚠ THE CONTRAST IS THE POINT, and it is why this is the only type-level
-   * assertion in the file: `CNF_JOSE_MEMBERS`, `COSE_CNF_LABELS` and
-   * `CoseCnfMember` each have a runtime reader and are caught by the tests around
-   * it, so a type assertion for those would restate what behaviour already proves.
+   * assertion in the file: `CNF_JOSE_MEMBERS` and `COSE_CNF_MEMBERS` each have a
+   * runtime reader and are caught by the tests around it, so a type assertion for
+   * those would restate what behaviour already proves.
    *
    * ⛔ WRITTEN OUT, NOT DERIVED, like every other pin in this file. An assertion
    * built from `CNF_MEMBERS` agrees with whatever the declaration currently says,
@@ -114,11 +154,6 @@ describe("CNF_MEMBERS", () => {
     expectTypeOf<CnfMember>().toEqualTypeOf<
       "jkt" | "x5t#S256" | "jwk" | "kid" | "jku" | "ckt"
     >();
-
-    // The COSE narrowing is derived by DISCRIMINATING each member's `wire.cose`,
-    // so it is a second, independent statement: a member losing its label would
-    // move this union without moving the one above.
-    expectTypeOf<CoseCnfMember>().toEqualTypeOf<"jwk" | "kid">();
   });
 
   test("offers the JOSE kits every member it declares", () => {

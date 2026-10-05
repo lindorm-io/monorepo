@@ -4,8 +4,8 @@ import type { Dict } from "@lindorm/types";
 // Public, camelCase representation of the RFC 7800 `cnf` claim.
 //
 // The wire counterpart is `ConfirmationClaimWire` (`../wire/confirmation-claim-wire.ts`);
-// the mapping lives in `internal/claims/translate.ts`, driven by
-// `internal/claims/cnf-members.ts`.
+// the mapping is the structure walker in `internal/claims/translate.ts`, driven by
+// the declared member set `internal/claims/cnf-members.ts`.
 //
 // ⚠⚠ THE MEMBER SET IS OPEN ON JOSE AND CLOSED ON COSE AT THE MINT DOOR: the COSE
 // wire is a registered label map and `internal/cose/cose-key.ts`'s `encodeCnf`

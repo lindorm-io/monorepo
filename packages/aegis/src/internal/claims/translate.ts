@@ -13,13 +13,14 @@ import type {
   LeafFailure,
   ObjectCodec,
 } from "../registry/claim-spec.js";
+import { isClaimOmitted } from "../utils/rules/is-claim-omitted.js";
 import { isClaimSatisfied } from "../utils/rules/is-claim-satisfied.js";
-import { type CnfMemberSpec, cnfMemberByDomain, cnfMemberByJose } from "./cnf-members.js";
 import {
   CLAIM_SPECS,
   type ClaimSpec,
   claimByDomain,
   joseName,
+  memberNameOf,
   type NameSelector,
 } from "./claims-registry.js";
 import { isNotStated } from "./is-not-stated.js";
@@ -40,9 +41,9 @@ import { omitNotStated } from "./omit-not-stated.js";
  *
  * It is the ONLY domain-aware claim code — both format paths meet here. Value
  * transforms come from the registry's `ClaimCodec`; a co-located BESPOKE builder
- * table holds the two claims the generic member-set walker cannot serve (`cnf`,
- * `events` — see `internal/claims/cnf-members.ts` and {@link BespokeKind}), and
- * the generic structure walker handles the rest. A registered claim takes the
+ * holds the one claim the generic member-set walker cannot serve (`events` — see
+ * {@link BespokeKind}), and the generic structure walker handles every declared
+ * structure, the RFC 7800 confirmation included. A registered claim takes the
  * registry path (name + value transform); anything NOT registered is a custom
  * claim whose KEY case flips mechanically (snake on write, camel on read) with
  * its value untouched.
@@ -72,199 +73,6 @@ const toAudience = (value: unknown): Array<string> | undefined => {
   if (isString(value)) return [value];
   return undefined;
 };
-
-// --- The RFC 7800 confirmation, in both directions ---------------------------
-
-/**
- * ⭐ BOTH DIRECTIONS ARE DRIVEN BY ONE DECLARATION — `internal/claims/cnf-members.ts`
- * — so a member cannot be added to one side and not the other.
- *
- * ⚠⚠ NEITHER SIDE ACCEPTS THE OTHER VOCABULARY'S SPELLING FOR A DECLARED MEMBER.
- * Tolerating one (reading `v.thumbprint ?? v.jkt`) lets a presenter-supplied
- * look-alike answer for an absent registered member — the same hazard the
- * top-level read closes by resolving a claim under its WIRE name alone
- * ({@link ClaimReadMode}). A misspelled member is REFUSED for the collision; see
- * the UNCONDITIONAL reservation in {@link walkConfirmation}, which is what makes
- * that hold when only ONE of the two names is present.
- *
- * ⚠⚠ A MEMBER WHOSE VALUE CONTRADICTS ITS DECLARED SHAPE IS REFUSED, NOT DROPPED,
- * ON BOTH SIDES. Erasing it collapses the whole confirmation to `undefined` and
- * the token VERIFIES AS A PLAIN BEARER — an attacker who can blank one field
- * turns a sender-constrained token into one anybody holding a copy may present.
- * A binding the issuer STATED and this package cannot read cannot be honoured,
- * and the only safe disposal of one is a refusal.
- *
- * ⚠ AN EMPTY CONFIRMATION IS HANDED ON AS `{}`, NEVER COLLAPSED TO `undefined`.
- * `domainToWire` leaves an `undefined` claim off the wire, so the emission
- * boundary that refuses an empty one (`internal/claims/refuse-empty-claims.ts`)
- * would never see it, and the token would mint as the same silent bearer token.
- * See {@link cnfBinding}.
- * pinned: translate.test.ts, "an all-empty confirmation is written as the empty
- * object for the emission boundary to refuse, never dropped".
- */
-const cnfValueMatches = (member: CnfMemberSpec, value: unknown): boolean =>
-  member.value === "jwk" ? isObject(value) : isString(value);
-
-/**
- * Translate the confirmation in ONE direction, driven by the member table.
- *
- * `lookup` resolves an INCOMING key to a declared member and `outKeyOf` spells
- * that member on the way out, which is the whole of the difference between the
- * two directions — the guards, the tail policy and the refusals are shared, so
- * they cannot be written differently twice.
- */
-const walkConfirmation = (
-  value: unknown,
-  lookup: ReadonlyMap<string, CnfMemberSpec>,
-  outKeyOf: (member: CnfMemberSpec) => string,
-  context: WalkContext,
-): Dict | undefined => {
-  if (!isObject(value)) {
-    context.invalid.push({
-      key: context.path,
-      message: `Claim "${context.claim}" must be an object`,
-    });
-
-    return undefined;
-  }
-
-  const out: Dict = {};
-
-  /**
-   * ⭐⭐ EVERY DECLARED MEMBER'S OUTGOING KEY IS RESERVED UNCONDITIONALLY, whether
-   * or not that member is present. This is the whole of the collision defence,
-   * and the UNCONDITIONAL part is what makes it hold.
-   *
-   * ⛔⛔ RESERVING ONLY WHAT ARRIVES LEAVES THE ATTACK FULLY OPEN. A `cnf` naming
-   * just ONE of a declared/wire pair has nothing to collide with, so the
-   * look-alike takes the declared member's own slot: on WRITE, a caller spelling
-   * `confirmation: { jkt }` skips the DOMAIN-keyed shape rule entirely; on READ, a
-   * foreign `cnf: { thumbprint }` lands where
-   * `internal/utils/apply-verify-policy.ts` reads the bound thumbprint and drives
-   * the DPoP gate. ⇒ A key a declared member OWNS is refused to the tail
-   * outright. The tail rides because an unknown member must be ignored
-   * (RFC 7800 §3.1); a MISSPELLED one is not unknown, and honouring it lets the
-   * token's writer choose which vocabulary aegis reads the binding in.
-   *
-   * ⚠ IT ALSO SUBSUMES THE BOTH-PRESENT CASE, which is why there is no second
-   * mechanism beside it: `{ jkt, thumbprint }` is refused by this one check
-   * whichever arrives first.
-   *
-   * ⚠ A `Map` keyed by the OUTGOING name, holding the member's own INCOMING name,
-   * so the refusal can say which two names met. Two declared members cannot
-   * collide with each other (`cnf-members.test.ts` pins the spellings apart) and
-   * two tail keys cannot collide at all — they are keys of one object.
-   */
-  const declaredOutKeys = new Map<string, string>();
-  for (const [incoming, member] of lookup) {
-    declaredOutKeys.set(outKeyOf(member), incoming);
-  }
-
-  for (const [key, inner] of Object.entries(value)) {
-    const member = lookup.get(key);
-
-    // An undeclared member rides VERBATIM rather than being refused or
-    // case-flipped: a tail member is another specification's registered
-    // confirmation-method name (RFC 7800 §3.1, RFC 7800 §6.2.1).
-    if (member === undefined) {
-      const owner = declaredOutKeys.get(key);
-
-      if (owner !== undefined) {
-        const [first, second] = [owner, key].sort();
-
-        context.invalid.push({
-          key: `${context.path}.${key}`,
-          message: `Members "${first}" and "${second}" both resolve to "${key}" in "${context.path}"`,
-        });
-        continue;
-      }
-
-      // ⚠ `=== undefined`, not {@link isNotStated} — the tail takes the same `cnf`
-      // exemption the declared members take (RFC 7800 §6.2): a tail member is
-      // somebody's confirmation method, not a spare attribute, so erasing a null
-      // one lets a caller state a binding this package silently drops. See the
-      // declared-member note below.
-      if (inner === undefined) continue;
-
-      Object.defineProperty(out, key, {
-        value: inner,
-        configurable: true,
-        enumerable: true,
-        writable: true,
-      });
-      continue;
-    }
-
-    // `undefined` is how absence is spelled throughout this package, so a member a
-    // caller assembled from an optional it did not have is ABSENT rather than
-    // malformed. JSON has none, and `decodeCnf` (`internal/cose/cose-key.ts`) omits
-    // a CBOR `undefined` (RFC 8949 §3.3) before this runs, so on the read side it
-    // can only come from a caller's own dict at the vocabulary door.
-    //
-    // ⛔⛔ `null` IS **NOT** ABSENCE HERE, AND `cnf` IS THE ONE CLAIM EXEMPT FROM
-    // THAT RULING. Everywhere else a null member is omitted ({@link isNotStated});
-    // a confirmation member falls through to the refusal below instead, for three
-    // reasons that hold together:
-    //
-    //   1. ERASING ONE MINTS AN UNBOUND TOKEN. `domainToWire` would erase the
-    //      member before the COSE fail-closed guard runs, and that guard asks
-    //      `cnf[member] !== undefined` (`internal/cose/cose-key.ts`) — so an
-    //      already-erased `jkt` is not "unrepresentable on COSE", it is nothing at
-    //      all. A caller asking for a thumbprint binding would receive a token
-    //      nobody is ever asked to prove possession for, byte-indistinguishable
-    //      from a legitimate key-id binding, on both wires.
-    //      pinned: `classes/confirmation-claim-wire.test.ts`.
-    //   2. RFC 9449 §6.1 TYPES THE MEMBER, BY MUST, so `jkt: null` is a value
-    //      CONTRADICTING the declared shape rather than a position left unfilled.
-    //      The ordinary argument for a carve-out — a nullable database column is an
-    //      unset optional — does not reach a claim whose whole content is a key the
-    //      recipient must be able to confirm.
-    //   3. "ERASED" AND "ABSENT" MUST NOT COLLAPSE ON THIS CLAIM. Every other
-    //      structured claim reports a fact; `cnf` states a security property whose
-    //      failure mode is exactly the two becoming indistinguishable.
-    // ⇒ A `cnf` member is judged by {@link cnfValueMatches} alone, and `undefined`
-    //   is the only absence it recognises.
-    if (inner === undefined) continue;
-
-    if (!cnfValueMatches(member, inner)) {
-      context.invalid.push({
-        key: `${context.path}.${member.domain}`,
-        message: `Member "${member.domain}" must be ${member.value === "jwk" ? "a JWK object" : "a string"}`,
-      });
-      continue;
-    }
-
-    out[outKeyOf(member)] = inner;
-  }
-
-  return out;
-};
-
-/**
- * A confirmation that its OWN MEMBER FAULTS left naming no key gets a second
- * entry beside them, so the refusal says that deleting the faulty member is no
- * repair: nothing would be left to confirm.
- *
- * ⚠⚠ A CONFIRMATION NAMING NO MEMBER WITH NO MEMBER FAULT — `{}`,
- * `{ keyId: undefined }` — IS NOT REFUSED HERE. It rides on as `{}` to the
- * emission boundary (`internal/claims/refuse-empty-claims.ts`, the registry's
- * `whenEmpty: "refuse"`), which every sign door runs, the raw doors that walk
- * nothing included. Refusing it here as well answers the domain doors with a
- * different code from the raw doors for one empty value.
- * pinned: Aegis.empty-claim-prune.feature.
- */
-const cnfBinding = (cnf: Dict, memberFaulted: boolean, context: WalkContext): Dict => {
-  if (memberFaulted && !isClaimSatisfied(cnf)) {
-    context.invalid.push({
-      key: context.path,
-      message: `Claim "${context.claim}" names no key to confirm`,
-    });
-  }
-
-  return cnf;
-};
-
-// -----------------------------------------------------------------------------
 
 /**
  * The RFC 8417 §2.2 SET `events` map, guarded in EITHER direction — ONE function,
@@ -344,19 +152,6 @@ const encodeBespoke = (
   context: WalkContext,
 ): unknown => {
   switch (bespoke) {
-    case "confirmation": {
-      const faultsBefore = context.invalid.length;
-      const cnf = walkConfirmation(
-        value,
-        cnfMemberByDomain,
-        (member) => member.wire.jose.name,
-        context,
-      );
-
-      if (cnf === undefined) return undefined;
-
-      return cnfBinding(cnf, context.invalid.length > faultsBefore, context);
-    }
     case "events":
       // ⚠ One guard for both directions — see {@link eventsMap}.
       return eventsMap(value, context);
@@ -466,19 +261,20 @@ type WalkDirection = {
    */
   flip: (dict: Dict) => Dict;
   /**
-   * Whether {@link ClaimMemberSpec.whenEmpty} applies on this side. TRUE on the
-   * write side ALONE.
+   * Whether this side JUDGES EMPTINESS: {@link ClaimMemberSpec.whenEmpty} on each
+   * member, and the {@link ObjectCodec.binds} entry for a structure whose member
+   * faults left it naming no key. TRUE on the write side ALONE.
    *
    * ⚠ IT IS NOT AN OPTIMISATION AND NOT A SYMMETRY. `ParamSpec.whenEmpty` is a
    * verdict about what AEGIS EMITS: a read reports what a PRODUCER wrote, and
-   * rewriting a foreign token's empty member into an absence would make aegis
-   * misreport a stranger's token — claiming an issuer said nothing where the
-   * issuer said "empty". The top-level column has always been write-side-only
+   * rewriting a foreign token's empty member into an absence — or refusing it —
+   * would make aegis misreport a stranger's token: claiming an issuer said nothing
+   * where the issuer said "empty". The top-level column is write-side-only
    * (`internal/claims/prune-empty-claims.ts` runs on emission and nowhere else);
    * this is the same rule, one level in, and it has to be stated because a
    * single shared walk would otherwise apply it to both sides for free.
    */
-  prunesEmpty: boolean;
+  judgesEmpty: boolean;
   /**
    * What becomes of a member whose value fails a LEAF codec on this side, asked
    * of the STRUCTURE the member sits in; the branch in {@link walkObject} is the
@@ -498,6 +294,58 @@ type WalkDirection = {
 };
 
 /**
+ * What a MEMBER's absence is, by the structure's {@link ObjectCodec.binds} cell —
+ * TOTAL, so a third answer is a compile error here before it is a silent hole in
+ * the walk. Both the declared-member and the tail arm of {@link walkObject} read
+ * it, so the two cannot drift apart.
+ *
+ *   - `"none"`  `null` and `undefined` ({@link isNotStated}): the codec's boundary.
+ *   - `"key"`   `undefined` alone ({@link isClaimOmitted}): the VOCABULARY notion,
+ *               the one exception the presence table in
+ *               `internal/utils/rules/index.ts` records.
+ */
+const ABSENCE: Record<ObjectCodec["binds"], (value: unknown) => boolean> = {
+  key: isClaimOmitted,
+  none: isNotStated,
+};
+
+/**
+ * Whether a member's EMPTY value is emitted, by the member's own
+ * {@link ClaimMemberSpec.whenEmpty} — asked on the write side alone, and only once
+ * the value is known to be empty.
+ *
+ *   - `"keep"`    emitted: the empty form is a statement the issuer made.
+ *   - `"prune"`   skipped: the empty form is indistinguishable from "not stated".
+ *   - `"refuse"`  skipped, and the fault recorded at the member's full path — a
+ *                 member whose empty form cannot be honoured. Aegis policy at mint.
+ */
+const judgeEmptyMember = (member: ClaimMemberSpec, context: WalkContext): boolean => {
+  switch (member.whenEmpty) {
+    case "keep":
+      return true;
+    case "prune":
+      return false;
+    case "refuse":
+      context.invalid.push({
+        key: `${context.path}.${member.domain}`,
+        message: `Member "${member.domain}" must not be empty`,
+      });
+
+      return false;
+    default: {
+      const exhaustive: never = member.whenEmpty;
+      throw new AegisDomainError("Unhandled member empty verdict", {
+        code: "translate_unhandled_when_empty",
+        data: { domain: member.domain, whenEmpty: String(exhaustive) },
+        title: "Unhandled Member Empty Verdict",
+        details:
+          "The claim registry declared a member empty verdict the translator has no rule for.",
+      });
+    }
+  }
+};
+
+/**
  * Walk a DECLARED structure in ONE direction, driven by the registry's member set.
  *
  * ⭐ IT WALKS THE VALUE, NOT THE MEMBER LIST. JSON preserves insertion order, so
@@ -514,13 +362,13 @@ type WalkDirection = {
  *
  * ⚠⚠ A NON-OBJECT VALUE IS REFUSED, NOT DROPPED — the ruling that makes every
  * declared structure answer the same way ({@link walkElements},
- * {@link walkConfirmation}). A drop is invisible from both sides: a caller's claim
+ * {@link eventsMap}). A drop is invisible from both sides: a caller's claim
  * vanishes from a signed token with nothing said, and a stranger's token is
  * reported as saying less than its issuer signed.
  *
  * ⚠ `null` NEVER REACHES THIS GUARD. A CLAIM's value is classified at the
- * read/write core and a MEMBER's at the loop below — both by {@link isNotStated},
- * the one place that boundary is decided — while an ELEMENT takes
+ * read/write core by {@link isNotStated}, and a MEMBER's at the loop below by the
+ * structure's own {@link ABSENCE} predicate — while an ELEMENT takes
  * {@link walkElements}'s own `isObject`, a DIFFERENT rule because an array slot is
  * positional and cannot be left unfilled.
  *
@@ -549,6 +397,12 @@ const walkObject = (
 
     return undefined;
   }
+
+  // The faults this walk adds are counted from here, past the shape refusal above:
+  // a structure that is not an object has no members whose faults could leave it
+  // naming no key.
+  const faultsAtEntry = context.invalid.length;
+  const isAbsent = ABSENCE[codec.binds];
 
   const members = new Map(
     codec.children().map((member) => [direction.keyOf(member), member]),
@@ -722,11 +576,14 @@ const walkObject = (
       // Two DISTINCT undeclared keys can flip onto one outgoing key, and a tail
       // member that states nothing still occupies its own incoming name — so
       // `{ foo_bar: null, fooBar: "x" }` is still the collision it always was.
-      // ⚠ `null` is NOT STATED here exactly as it is on a declared member: an
-      // undeclared address member is a lindorm extension of a lindorm type, and a
-      // caller's database row carries its nulls into the tail as readily as into
-      // the six OIDC members. See {@link isNotStated}.
-      if (isNotStated(inner)) continue;
+      // ⚠ The tail takes the SAME absence predicate as a declared member — the
+      // structure's {@link ObjectCodec.binds} cell decides for both. Under `"none"`
+      // a `null` tail member is omitted: an undeclared address member is a lindorm
+      // extension of a lindorm type, and a caller's database row carries its nulls
+      // into the tail as readily as into the six OIDC members. Under `"key"` it is
+      // carried: a tail member is somebody's confirmation method (RFC 7800 §6.2),
+      // and erasing a null one lets a caller state a binding that is silently dropped.
+      if (isAbsent(inner)) continue;
 
       if (codec.open === "verbatim") {
         emit(outKey, inner);
@@ -743,14 +600,17 @@ const walkObject = (
     // been taken by anything — see `declaredOutKeys` above for the two versions
     // that took it later and what each one let through.
     //
-    // ⚠⚠ `null` IS NOT STATED, SO IT IS OMITTED RATHER THAN REFUSED, and this is
-    // the line that keeps the two rulings from colliding. `AegisProfileAddress`
-    // declares every member `string | null`, so a caller minting from a database
-    // row hands nulls straight in; the structure refusal above would otherwise
-    // turn the ordinary shape of a nullable column into a thrown error. It is
-    // asked here rather than inside the codec because the codec's answer is
-    // "contradicts", and absence is not a contradiction. See {@link isNotStated}.
-    if (isNotStated(inner)) continue;
+    // ⚠⚠ ABSENCE IS THE STRUCTURE'S OWN CALL ({@link ObjectCodec.binds}), and this
+    // is the line that keeps the two rulings from colliding. Under `"none"` a
+    // `null` member is OMITTED rather than refused: `AegisProfileAddress` declares
+    // every member `string | null`, so a caller minting from a database row hands
+    // nulls straight in, and the leaf refusal below would otherwise turn the
+    // ordinary shape of a nullable column into a thrown error. Under `"key"` only
+    // `undefined` is absence, so a `null` member falls through to that refusal as
+    // a value contradicting its shape. It is asked here rather than inside the
+    // codec because the codec's answer is "contradicts", and absence is not a
+    // contradiction.
+    if (isAbsent(inner)) continue;
 
     const faults = context.invalid.length;
     const translated = direction.translate(
@@ -778,8 +638,9 @@ const walkObject = (
      * pinned: classes/authorization-details-claim-wire.test.ts#a required
      * member written with the WRONG SHAPE says so, not that it is empty.
      *
-     * ⚠ `null` NEVER REACHES THIS LINE — classified as absence above, so neither
-     * dropped-as-malformed nor refused. See {@link isNotStated}.
+     * ⚠ `null` REACHES THIS LINE ONLY UNDER `binds: "key"`, where it is a value
+     * contradicting the member's shape; under `"none"` it is classified as
+     * absence above, so neither dropped-as-malformed nor refused.
      *
      * ⚠ A DROP IS RECORDED so the mandatory-member check below can tell "you
      * wrote a value of the wrong shape" from "you wrote nothing".
@@ -802,11 +663,14 @@ const walkObject = (
     }
 
     // The member's OWN emptiness verdict, asked one level in — on the WRITE side
-    // only. A `"keep"` member states its empty form (the issuer wrote it); a
-    // `"prune"` member's empty form is indistinguishable from having said
-    // nothing. See {@link WalkDirection.prunesEmpty} for why a read must not ask.
-    if (direction.prunesEmpty && member.whenEmpty === "prune") {
-      if (!isClaimSatisfied(translated)) continue;
+    // only. See {@link judgeEmptyMember} for the three verdicts and
+    // {@link WalkDirection.judgesEmpty} for why a read must not ask.
+    if (
+      direction.judgesEmpty &&
+      !isClaimSatisfied(translated) &&
+      !judgeEmptyMember(member, context)
+    ) {
+      continue;
     }
 
     emit(direction.outKeyOf(member), translated);
@@ -848,6 +712,32 @@ const walkObject = (
       message: codecRejected.has(member.domain)
         ? `Member "${member.domain}" is required and must be the shape it declares`
         : `Member "${member.domain}" is required and must not be empty`,
+    });
+  }
+
+  // A structure that BINDS A KEY and whose own member faults left it naming none
+  // gets a second entry beside them, so the refusal says that deleting the faulty
+  // member is no repair: nothing would be left to confirm.
+  //
+  // ⚠⚠ A STRUCTURE NAMING NO MEMBER WITH NO MEMBER FAULT — `{}`, `{ keyId:
+  // undefined }` — IS NOT REFUSED HERE. It rides on as `{}` to the emission
+  // boundary (`internal/claims/refuse-empty-claims.ts`, the claim's own
+  // `whenEmpty: "refuse"`), which every sign door runs, the raw doors that walk
+  // nothing included. Refusing it here as well answers the domain doors with a
+  // different code from the raw doors for one empty value.
+  //
+  // ⚠ WRITE SIDE ONLY, like every emptiness verdict: a read reports what a
+  // producer wrote, and the verifier's gate judges the binding it read
+  // (`internal/utils/apply-verify-policy.ts`).
+  if (
+    direction.judgesEmpty &&
+    codec.binds === "key" &&
+    context.invalid.length > faultsAtEntry &&
+    !isClaimSatisfied(out)
+  ) {
+    context.invalid.push({
+      key: context.path,
+      message: `Claim "${context.claim}" names no key to confirm`,
     });
   }
 
@@ -902,26 +792,30 @@ const refuseInvalidStructure = (claim: string, invalid: Array<InvalidEntry>): ne
  * ⚠ NAMED RATHER THAN INLINED AT EACH ARM. A structure and a collection of
  * structures cross in the same direction, so a rule written twice is a rule that
  * can be written differently twice — and the one that differs between the sides
- * (`prunesEmpty`) is exactly the one a reader would not notice drifting.
+ * (`judgesEmpty`) is exactly the one a reader would not notice drifting.
+ *
+ * ⚠ A MEMBER is spelled through {@link memberNameOf}, a CLAIM through the bare
+ * selector: a member may be `absent` on a wire and is keyed by its JOSE name
+ * there, where a claim rides every wire.
  */
 const writeDirection = (nameOf: NameSelector): WalkDirection => ({
   keyOf: (member) => member.domain,
-  outKeyOf: nameOf,
+  outKeyOf: memberNameOf(nameOf),
   translate: (member, inner, context) => encodeIfReadable(member, inner, nameOf, context),
   flip: snakeKeys,
-  prunesEmpty: true,
+  judgesEmpty: true,
   leafFailure: () => "refuse",
 });
 
 /** The READ side's walk rules — the mirror, keyed by wire name. */
 const readDirection = (nameOf: NameSelector): WalkDirection => ({
-  keyOf: nameOf,
+  keyOf: memberNameOf(nameOf),
   outKeyOf: (member) => member.domain,
   translate: (member, inner, context) => decodeValue(member, inner, nameOf, context),
   flip: camelKeys,
   // A read reports what the PRODUCER wrote, and what it makes of a member it
   // cannot decode is the structure's own call — see `WalkDirection`, both cells.
-  prunesEmpty: false,
+  judgesEmpty: false,
   leafFailure: (codec) => codec.readLeafFailure,
 });
 
@@ -1073,8 +967,9 @@ export const decodeClaim = (
  * ⚠⚠ IT IS ONLY AS STRONG AS THE DECODE ARM IT ASKS, and `bool` ANSWERS NOTHING —
  * it returns its input unchanged, so `"yes"`, `null` and `{ a: 1 }` all pass.
  * Every other arm checks: `text`/`bstr` (`isString`), `int` (`isFinite`), `date`
- * (`toDate`), `array` (its `ArrayScalar` policy, or its element walk under `of`),
- * `object` (a non-object walks to `undefined`), and both `bespoke` sub-kinds.
+ * (`toDate`), `jwk`/`coseKey` (`isObject`), `array` (its `ArrayScalar` policy, or
+ * its element walk under `of`), `object` (a non-object walks to `undefined`), and
+ * the `bespoke` events map.
  * ⛔ `bool` is NOT this probe's to tighten: narrowing the decode arm changes what
  * a READ of an existing foreign token reports.
  */
@@ -1231,7 +1126,8 @@ const encodeArray = (
 // ⚠ It reads the BASE codec, never a per-wire override: it produces the
 // jose-shaped values BOTH wires start from, and `internal/cose/cwt-spec.ts`
 // applies the per-wire codec when it turns those into labels and CBOR bytes —
-// which is why `bstr`, a COSE-only codec, returns the value untouched here.
+// which is why `bstr` and `coseKey`, the COSE-only codecs, return the value
+// untouched here.
 //
 // RECURSIVE over `{ kind: "object" }`, and the wire SELECTOR travels with the
 // recursion, so a member is spelled by the wire the claim is being written for.
@@ -1253,6 +1149,7 @@ const encodeValue = (
     case "text":
     case "int":
     case "bool":
+    case "jwk":
       return value;
     case "array":
       return codec.of === undefined
@@ -1261,7 +1158,8 @@ const encodeValue = (
     case "date":
       return value instanceof Date ? getUnixTime(value) : undefined;
     case "bstr":
-      return value; // JOSE keeps the string; only COSE turns it into bytes
+    case "coseKey":
+      return value; // JOSE keeps the string or JWK; only COSE turns it into bytes or a COSE_Key
     case "object":
       return walkObject(codec, value, writeDirection(nameOf), context);
     case "bespoke":
@@ -1373,13 +1271,6 @@ const decodeBespoke = (
   context: WalkContext,
 ): unknown => {
   switch (bespoke) {
-    case "confirmation":
-      // ⚠ NO EMPTINESS VERDICT ON THIS SIDE. A read reports what a PRODUCER wrote,
-      // and a `cnf: {}` on a foreign token is a statement the reader must be able
-      // to see — the VERIFIER's gate is what refuses it
-      // (`internal/utils/apply-verify-policy.ts`), because that refusal is about
-      // the token being presented rather than about a claim being assembled.
-      return walkConfirmation(value, cnfMemberByJose, (member) => member.domain, context);
     case "events":
       // The SAME guard the write arm asks, and the same refusal — a SET events map
       // is keyed by event-type URIs (RFC 8417 §2.2), which are identifiers rather
@@ -1462,6 +1353,9 @@ const decodeValue = (
       return value;
     case "bstr":
       return isString(value) ? value : undefined; // the JOSE string form
+    case "jwk":
+    case "coseKey":
+      return isObject(value) ? value : undefined; // the JOSE JWK form
     case "array":
       return codec.of === undefined
         ? decodeArray(spec, codec.scalar, value, context)

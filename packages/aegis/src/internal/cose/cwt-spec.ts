@@ -9,13 +9,18 @@ import {
   coseLabel,
   coseName,
 } from "../claims/claims-registry.js";
-import type { BespokeKind, ClaimMemberSpec } from "../registry/claim-spec.js";
+import type {
+  BespokeKind,
+  ClaimMemberSpec,
+  ObjectCodec,
+} from "../registry/claim-spec.js";
 import { isPrivateUseLabel } from "../registry/is-private-use-label.js";
 import { codecFor } from "../registry/param-spec.js";
 import { wireKeyLabel } from "../registry/wire-key.js";
 import { type CompactSpec, compactDecode, compactEncode } from "./compact-map.js";
 import { compactSpecFromMembers } from "./compact-spec-from-members.js";
 import { decodeCnf, encodeCnf } from "./cose-key.js";
+import { registeredLabelsOf } from "./registered-labels.js";
 
 // The map-level mapping only — label ↔ JOSE key, value kinds, the proprietary
 // dual-key. The COSE byte layer (Tag / Buffer / CDE / preferMap) stays in cbor.ts,
@@ -60,15 +65,6 @@ const VERBATIM: Partial<CborField> = {
  */
 export const shapeForBespoke = (bespoke: BespokeKind): Partial<CborField> => {
   switch (bespoke) {
-    case "confirmation":
-      return {
-        kind: "bespoke",
-        encode: (value) => encodeCnf(value as Dict),
-        // No cast: `decodeCnf` takes `unknown` and owns the container check, so
-        // the shape a foreign token carried cannot be asserted away here.
-        decode: (value) => decodeCnf(value),
-      };
-
     // RFC 8417 — keyed by event-type URI, so nothing to reshape.
     case "events":
       return VERBATIM;
@@ -122,16 +118,109 @@ const decompactValue = (
       : value;
 
 /**
- * The value-shaping half of a structured claim, DERIVED from the member set
- * rather than a second table beside the registry's. One question decides it: are
- * the members string-keyed (ride verbatim) or integer-labelled (compact label
- * map, walked by `compact-map.ts` off a spec derived from the same members)?
+ * The value-shaping half of a structured claim, DERIVED from the structure's
+ * declaration rather than a second table beside the registry's. The structure's
+ * {@link ObjectCodec.labels} cell decides which label map its members ride:
+ *
+ *   - `"proprietary"` — lindorm's own labels ({@link shapeProprietary}). The map
+ *     rides under `proprietary: true` alone; off it the structure keeps its string
+ *     keys, which a stock reader can read.
+ *   - `"registered"` — IANA-registered labels ({@link shapeRegistered},
+ *     RFC 8747 §3.1). The map rides on EVERY COSE token, each member's `per.cose`
+ *     codec applied to its value.
+ *
+ * ⚠ Exported for the drift guard alone, as {@link shapeForBespoke} is;
+ * {@link fieldForClaim} is the sole production caller.
+ */
+export const shapeForObject = (
+  domain: string,
+  structure: ObjectCodec,
+  form: StructureForm,
+): Partial<CborField> => {
+  switch (structure.labels) {
+    case "proprietary":
+      return shapeProprietary(domain, structure, form);
+    case "registered":
+      return shapeRegistered(domain, structure, form);
+    default: {
+      // `noImplicitReturns` is off repo-wide: without this a third label mode
+      // returns `undefined` and puts an unshaped CBOR value on a signed wire.
+      const exhaustive: never = structure.labels;
+      throw new CoseError("Unhandled COSE label mode", {
+        code: "cose_unhandled_labels",
+        data: { claim: domain, labels: String(exhaustive) },
+        title: "Unhandled COSE Label Mode",
+        details:
+          "The claim registry declares a structured claim whose `labels` cell the CWT spec builder has no shape for, so the claim would reach the COSE wire unshaped.",
+      });
+    }
+  }
+};
+
+/**
+ * The REGISTERED label map — ONE structure, rendered through `encodeCnf` /
+ * `decodeCnf` (`cose-key.ts`) over the table `registered-labels.ts` derives from
+ * the same declaration.
+ *
+ * ⚠ `options.proprietary` IS NOT READ, and that is the point: the labels are
+ * IANA-registered, so the map rides on every COSE token and a reader holding no
+ * lindorm registry still reads it. The read keeps `decodeCnf`'s semantics — the
+ * container must be a map, only the table's labels are read, everything else is
+ * dropped — not `compact-map.ts`'s, which carries string keys and refuses a
+ * duplicate label/name pair.
+ *
+ * ⚠ A COLLECTION IS REFUSED at construction: `encodeCnf` speaks the confirmation's
+ * error contract for one structure, and no specification registers a label map
+ * for the elements of a collection.
+ */
+const shapeRegistered = (
+  domain: string,
+  structure: ObjectCodec,
+  form: StructureForm,
+): Partial<CborField> => {
+  if (form === "collection") {
+    throw new CoseError("Registered label map on a collection", {
+      code: "cose_registered_collection_unsupported",
+      data: { claim: domain },
+      title: "Registered Label Map On A Collection",
+      details:
+        "The claim registry declares a collection whose elements ride a registered COSE label map; the registered label shaper renders one structure, so the collection has no COSE shape.",
+    });
+  }
+
+  // Built once and closed over, so the encode and decode halves below provably
+  // read the SAME table rather than two derivations of it.
+  const table = registeredLabelsOf(domain, structure.children());
+
+  return {
+    kind: "bespoke",
+    encode: (value) => encodeCnf(value as Dict, table),
+    // No cast: `decodeCnf` takes `unknown` and owns the container check, so the
+    // shape a foreign token carried cannot be asserted away here.
+    decode: (value) => decodeCnf(value, table),
+  };
+};
+
+/**
+ * The PROPRIETARY label map. One question decides the shape: are the members
+ * string-keyed (ride verbatim) or integer-labelled (compact label map, walked by
+ * `compact-map.ts` off a spec derived from the same members)?
  *
  * ⚠ A MIXED SET THROWS as a MIGRATION guard, not a correctness one: RFC 9052 §1.5
  * makes it representable, and `compactEncode` gives an unlabelled member its own
  * string key. What the refusal buys is that a half-labelled member set cannot
  * freeze a halfway migration onto a signed wire, where completing it moves bytes.
  * The refusal names every member on the minority side.
+ *
+ * ⚠ THREE DECLARATIONS ARE REFUSED AT CONSTRUCTION, because the compact map has no
+ * answer for them and a silent one is wrong bytes on a signed wire: a member
+ * `absent` on COSE (the map has no key to carry it under — the structure walker
+ * keys such a member by its JOSE name, `claims-registry.ts` `memberNameOf`, and
+ * the byte layer is where it is refused); a member carrying a per-wire codec (the
+ * compact map applies none); and a nested structure declaring
+ * `labels: "registered"` (nested here it would ride under `proprietary: true`
+ * alone, and a registered label rides on every token). The visit reads every
+ * nested `labels` cell.
  *
  * ⚠ The question is asked at EVERY depth, not only of the direct children:
  * `CompactSpec.nested` holds compact specs alone, and a verbatim value has nothing
@@ -141,9 +230,9 @@ const decompactValue = (
  * returns — the arrays are fresh per call, and a member set can name ITSELF
  * (RFC 8693 §4.1), so a naive descent does not terminate.
  */
-export const shapeForObject = (
+const shapeProprietary = (
   domain: string,
-  children: ReadonlyArray<ClaimMemberSpec>,
+  structure: ObjectCodec,
   form: StructureForm,
 ): Partial<CborField> => {
   const labelled: Array<string> = [];
@@ -156,6 +245,26 @@ export const shapeForObject = (
       // leaf name alone ("sub") does not.
       const here = path.length === 0 ? member.domain : `${path}.${member.domain}`;
 
+      if (member.wire.cose.kind === "absent") {
+        throw new CoseError("Proprietary label map member has no COSE form", {
+          code: "cose_proprietary_member_unsupported",
+          data: { claim: domain, member: here },
+          title: "Proprietary Label Map Member Unsupported",
+          details:
+            "The claim registry declares a structured claim whose members ride a proprietary COSE label map, but one of them is absent on COSE; the map has no key to carry it under, so the structure cannot be rendered without dropping a member from a signed token.",
+        });
+      }
+
+      if (member.codec.per !== undefined) {
+        throw new CoseError("Proprietary label map member carries a per-wire codec", {
+          code: "cose_proprietary_member_unsupported",
+          data: { claim: domain, member: here },
+          title: "Proprietary Label Map Member Unsupported",
+          details:
+            "The claim registry declares a structured claim whose members ride a proprietary COSE label map, but one of them declares a per-wire codec; the compact map carries member values through unchanged, so the codec would never be applied and the wire would carry the JOSE form under the COSE label.",
+        });
+      }
+
       if (wireKeyLabel(member.wire.cose) === undefined) textKeyed.push(here);
       else labelled.push(here);
 
@@ -163,27 +272,38 @@ export const shapeForObject = (
       // equally live at either, so reaching only one leaves the guard half-blind.
       const nested =
         member.codec.kind === "object"
-          ? member.codec.children
+          ? member.codec
           : member.codec.kind === "array"
-            ? member.codec.of?.children
+            ? member.codec.of
             : undefined;
 
       if (nested === undefined) continue;
-      if (seen.has(nested)) continue;
 
-      seen.add(nested);
-      visit(nested(), here);
+      if (nested.labels === "registered") {
+        throw new CoseError("Registered label map nested in a proprietary one", {
+          code: "cose_proprietary_member_unsupported",
+          data: { claim: domain, member: here },
+          title: "Proprietary Label Map Member Unsupported",
+          details:
+            "The claim registry declares a structured claim whose members ride a proprietary COSE label map, but one of them is a structure riding a registered label map; nested there it would ride under the proprietary encoding alone, where a registered label rides on every COSE token.",
+        });
+      }
+
+      if (seen.has(nested.children)) continue;
+
+      seen.add(nested.children);
+      visit(nested.children(), here);
     }
   };
 
-  visit(children, "");
+  visit(structure.children(), "");
 
   if (labelled.length === 0) return VERBATIM;
 
   if (textKeyed.length === 0) {
     // Built once and closed over, so the encode and decode halves below provably
     // read the SAME table rather than two derivations of it.
-    const spec = compactSpecFromMembers(domain, children);
+    const spec = compactSpecFromMembers(domain, structure.children());
 
     return {
       kind: "bespoke",
@@ -276,6 +396,17 @@ export const fieldForClaim = (spec: ClaimSpec): CborField => {
     case "date":
     case "bool":
       return { ...base, kind: codec.kind as CborValueKind };
+    // MEMBER codecs: a key is carried inside a confirmation, never as a claim of
+    // its own, so a top-level declaration has no CBOR field.
+    case "jwk":
+    case "coseKey":
+      throw new CoseError("Unhandled CWT claim codec kind", {
+        code: "cose_unhandled_codec_kind",
+        data: { claim: spec.domain, kind: codec.kind },
+        title: "Unhandled CWT Claim Codec Kind",
+        details:
+          "The claim registry declares a top-level claim with a member-only codec — a JWK or a COSE_Key — which the CWT spec builder maps to no CBOR field.",
+      });
     // An array of DECLARED STRUCTURES asks the same keying question a single
     // structure does, so it goes to the same builder rather than a second one
     // that could answer it differently.
@@ -284,14 +415,14 @@ export const fieldForClaim = (spec: ClaimSpec): CborField => {
         ? ({ ...base, kind: codec.kind as CborValueKind } as CborField)
         : ({
             ...base,
-            ...shapeForObject(spec.domain, codec.of.children(), "collection"),
+            ...shapeForObject(spec.domain, codec.of, "collection"),
           } as CborField);
     case "bstr":
       return { ...base, ...shapeForBstr(codec.encoding) } as CborField;
     case "object":
       return {
         ...base,
-        ...shapeForObject(spec.domain, codec.children(), "single"),
+        ...shapeForObject(spec.domain, codec, "single"),
       } as CborField;
     case "bespoke":
       return { ...base, ...shapeForBespoke(codec.bespoke) } as CborField;

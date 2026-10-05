@@ -1,40 +1,21 @@
-import type { SpecCitation } from "../registry/spec-citation.js";
-import type { Wire } from "../registry/wire.js";
-import { type WireKey, wireAbsent, wireLabel, wireName } from "../registry/wire-key.js";
+import type { ClaimMemberSpec } from "../registry/claim-spec.js";
+import { wireAbsent, wireLabel, wireName } from "../registry/wire-key.js";
 
 /**
  * ⭐ THE ONE DECLARATION OF THE RFC 7800 CONFIRMATION MEMBERS — what each one is
- * called in the domain vocabulary, what it is called on each wire, and what shape
- * its value has. The translator, `internal/utils/rules/cnf-shape.ts`, both
- * capability rows and the COSE codec all DERIVE from this table, so a member
- * added here reaches every one of them and a member absent from it reaches none.
+ * called in the domain vocabulary, what it is called on each wire, and how its
+ * value is shaped on each. The translator, both capability rows and the COSE
+ * codec's label table all DERIVE from this table, so a member added here reaches
+ * every one of them and a member absent from it reaches none.
  *
- * ⛔⛔ IT IS DELIBERATELY **NOT** `ObjectCodec.children`, and three things decide
- * that where the other five structured claims migrated onto the generic member
- * sets:
- *
- *   1. THE COSE FORM TRANSCODES ITS VALUE — a JWK becomes an integer-labelled
- *      COSE_Key (RFC 8747 §3.1 label 1) where every declared member set the
- *      registry walks carries values through unchanged. `internal/cose/cose-key.ts`
- *      does that transcoding and cannot be derived from a member set, because a
- *      JWK is a union DISCRIMINATED BY `kty` whose labels COLLIDE: `AKP.pub` is -1
- *      where `EC`/`OKP` put `crv` and `AKP.priv` is -2 where they put `x`. A flat
- *      member set cannot express a label whose meaning depends on a sibling's value.
- *   2. THE COSE cnf MAP IS A **REGISTERED** LABEL MAP. `internal/cose/cwt-spec.ts`'s
- *      `shapeForObject` emits a derived label map only under `proprietary: true`,
- *      because the labels it was built for are lindorm's own; RFC 8747 §3.1's are
- *      IANA-registered and must ride on every COSE token, interoperable or not.
- *   3. THE REFUSAL BELONGS TO THE BYTE LAYER, SO THE `absent` CELLS ARE READ
- *      THERE. The raw `aegis.cwt.sign` door hands an already-wire `CwtClaimsWire`
- *      straight to `CwtKit.sign` with no translation (`internal/cose/cwt-spec.ts`),
- *      so a translator-side refusal would be a SECOND copy of the byte layer's
- *      rather than a replacement for it. The byte layer reads this table directly,
- *      which is what lets the cells stay `absent` and still have a reader.
- *      ⚠ The generic walker also cannot key an `absent` member as it stands:
- *      `walkObject` calls `direction.keyOf(member)` eagerly and both selectors
- *      route through `claims-registry.ts`'s `requireName`, which THROWS for a wire
- *      with no name. That is a missing selector variant, not an impossibility —
- *      reason 1 is what decides it.
+ * The members are the structure walker's own {@link ClaimMemberSpec}s, and the
+ * confirmation row (`internal/claims/claims-registry.ts`) declares this table as
+ * its `children`: the walker (`internal/claims/translate.ts`) carries the members
+ * on both wires in their JOSE form, keying a member the COSE wire has no label for
+ * by its JOSE name there. Two carry a COSE value codec as `per.cose` — a JWK
+ * becomes an integer-labelled COSE_Key (RFC 8747 §3.1 label 1) and a key id a byte
+ * string (label 3) — which the registered label shaper applies
+ * (`internal/cose/registered-labels.ts`, `internal/cose/cose-key.ts`).
  *
  * ⚠⚠ THE FIVE BELOW ARE NOT AN ALLOWLIST ON JOSE, AND THEY ARE ON COSE — so a
  * `cnf` member aegis does not declare is carried on one wire and refused on the
@@ -63,31 +44,6 @@ import { type WireKey, wireAbsent, wireLabel, wireName } from "../registry/wire-
  */
 
 /**
- * One confirmation member.
- *
- * ⚠ `spec` is stated HERE rather than inherited, because this type is NOT
- * {@link MemberSpec} — a confirmation member has no codec, no `whenEmpty` and no
- * sample, so it shares the question but not the base. `wire` is TOTAL over
- * {@link Wire}, so a new wire is a compile error in every member rather than a
- * silent hole, and its COSE cell is a {@link WireKey}: "COSE cannot carry this" is
- * a stated fact with its reason attached rather than a member missing from a
- * label table.
- */
-export type CnfMemberSpec = {
-  domain: string;
-  spec: SpecCitation;
-  /**
-   * ⚠ TOTAL over {@link Wire} through the `Record`, AND narrowed on JOSE through
-   * the intersection. Both halves are load-bearing: the `Record` makes a third
-   * wire a compile error in every member, and the JOSE narrowing says a
-   * confirmation method ALWAYS has a JOSE spelling (RFC 7800 §6.2) — which is
-   * what lets {@link CnfMember} be derived from the names rather than restated.
-   */
-  wire: Record<Wire, WireKey> & { jose: { kind: "name"; name: string } };
-  value: "text" | "jwk";
-};
-
-/**
  * ⚠ WHY THE THREE COSE CELLS ARE `absent` RATHER THAN UNLABELLED NAMES. RFC 9679
  * §5.5 · RFC 8747 §7.2.2; each cell's own reason is below. A member with no COSE
  * form is not the same thing as a member COSE keys by its string name — `acr` is
@@ -100,6 +56,11 @@ const NO_COSE_X5T =
 const NO_COSE_JKU =
   "The COSE cnf is a registered label map, so aegis will not invent a label for a member that has none — `jku` is carried on JOSE only. RFC 7800 §3.5, RFC 8747 §3.1.";
 
+// Aegis policy at mint: an empty member names no key the presenter could prove.
+// Verify accepts one as written; for the key id, RFC 7800 §3.4 and RFC 8747 §3.4
+// leave its content to the application.
+const REFUSE = "refuse" as const;
+
 export const CNF_MEMBERS = [
   {
     // RFC 9449 §6.1, RFC 7638 §3 — the key a DPoP-bound token is bound to.
@@ -111,7 +72,9 @@ export const CNF_MEMBERS = [
       url: "https://www.rfc-editor.org/rfc/rfc9449#section-6.1",
     },
     wire: { jose: wireName("jkt"), cose: wireAbsent(NO_COSE_JKT) },
-    value: "text",
+    codec: { kind: "text" },
+    whenEmpty: REFUSE,
+    sample: "jkt_sample",
   },
   {
     // RFC 8705 §3.1.
@@ -123,11 +86,13 @@ export const CNF_MEMBERS = [
       url: "https://www.rfc-editor.org/rfc/rfc8705#section-3.1",
     },
     wire: { jose: wireName("x5t#S256"), cose: wireAbsent(NO_COSE_X5T) },
-    value: "text",
+    codec: { kind: "text" },
+    whenEmpty: REFUSE,
+    sample: "x5t_sample",
   },
   {
     // RFC 7800 §3.2 / RFC 8747 §3.1. ⚠ The COSE value is a COSE_Key, not a JWK —
-    // `internal/cose/cose-key.ts` transcodes it.
+    // `per.cose` names it, and the registered label shaper transcodes it.
     domain: "key",
     spec: {
       kind: "rfc",
@@ -136,10 +101,12 @@ export const CNF_MEMBERS = [
       url: "https://www.rfc-editor.org/rfc/rfc7800#section-3.2",
     },
     wire: { jose: wireName("jwk"), cose: wireLabel(1, "jwk") },
-    value: "jwk",
+    codec: { kind: "jwk", per: { cose: { kind: "coseKey" } } },
+    whenEmpty: REFUSE,
+    sample: { kty: "EC", crv: "P-256", x: "eHNhbXBsZQ", y: "eXNhbXBsZQ" },
   },
   {
-    // RFC 7800 §3.4 / RFC 8747 §3.1. ⚠ COSE carries it as a byte string.
+    // RFC 7800 §3.4 / RFC 8747 §3.1. ⚠ COSE carries it as a byte string — `per.cose`.
     domain: "keyId",
     spec: {
       kind: "rfc",
@@ -148,7 +115,9 @@ export const CNF_MEMBERS = [
       url: "https://www.rfc-editor.org/rfc/rfc7800#section-3.4",
     },
     wire: { jose: wireName("kid"), cose: wireLabel(3, "kid") },
-    value: "text",
+    codec: { kind: "text", per: { cose: { kind: "bstr", encoding: "utf8" } } },
+    whenEmpty: REFUSE,
+    sample: "kid_sample",
   },
   {
     // RFC 7800 §3.5.
@@ -160,9 +129,11 @@ export const CNF_MEMBERS = [
       url: "https://www.rfc-editor.org/rfc/rfc7800#section-3.5",
     },
     wire: { jose: wireName("jku"), cose: wireAbsent(NO_COSE_JKU) },
-    value: "text",
+    codec: { kind: "text" },
+    whenEmpty: REFUSE,
+    sample: "https://issuer.lindorm.test/.well-known/jwks.json",
   },
-] as const satisfies ReadonlyArray<CnfMemberSpec>;
+] as const satisfies ReadonlyArray<ClaimMemberSpec>;
 
 /**
  * The confirmation members aegis can put on a wire — DERIVED from the table's own
@@ -170,26 +141,6 @@ export const CNF_MEMBERS = [
  * declared. `ckt` is added by hand and is in no kit's set: see the file docstring.
  */
 export type CnfMember = (typeof CNF_MEMBERS)[number]["wire"]["jose"]["name"] | "ckt";
-
-/**
- * The confirmation members COSE CAN carry — DERIVED by discriminating each
- * member's own `wire.cose` cell on `kind`, so "representable" and "has a label"
- * are one fact rather than two lists.
- *
- * ⭐⭐ WIDENING THIS IS A COMPILE ERROR, NOT A TEST FAILURE. Giving a `wireAbsent`
- * member a label narrows `internal/cose/cose-key.ts`'s `unhandledCnfMember` calls
- * — the `never` parameter of the exhaustive default in BOTH the encode and the
- * decode switch — so the label table cannot grow past the codec that writes it.
- *
- * ⚠ THE OTHER DIRECTION IS NOT COMPILER-HELD, which is why `cnf-members.test.ts`
- * pins the table against a hand-written literal: NARROWING the set — taking a
- * label away — leaves both switches exhaustive over a smaller union and compiles
- * perfectly well.
- */
-export type CoseCnfMember = Extract<
-  (typeof CNF_MEMBERS)[number],
-  { wire: { cose: { kind: "label" } } }
->["wire"]["jose"]["name"];
 
 /** Every declared member's DOMAIN name, in declaration order. */
 export const CNF_DOMAIN_MEMBERS: ReadonlyArray<string> = CNF_MEMBERS.map(
@@ -201,35 +152,16 @@ export const CNF_JOSE_MEMBERS: ReadonlyArray<CnfMember> = CNF_MEMBERS.map(
   (member) => member.wire.jose.name,
 );
 
-/** Resolve a member by its DOMAIN name (the write direction's lookup). */
-export const cnfMemberByDomain: ReadonlyMap<string, CnfMemberSpec> = new Map(
-  CNF_MEMBERS.map((member) => [member.domain, member]),
-);
-
-/** Resolve a member by its JOSE wire name (the read direction's lookup). */
-export const cnfMemberByJose: ReadonlyMap<string, CnfMemberSpec> = new Map(
-  CNF_MEMBERS.map((member) => [member.wire.jose.name, member]),
-);
-
 /**
- * The COSE label each representable member travels under — DERIVED from the
- * `wire.cose` cells, keyed by the JOSE name the translator has already produced
- * by the time the byte layer runs.
+ * The confirmation members COSE CAN carry — the members whose `wire.cose` cell
+ * carries a label, in declaration order: the COSE kits' capability row.
  *
- * ⚠ The COSE capability row and the codec's own refusal both read this, so the
- * set a caller is told is representable and the set the encoder writes are one
- * thing.
+ * ⚠ `internal/cose/registered-labels.ts` derives the codec's label table from the
+ * same cells, and `kit-capabilities.test.ts` holds the two to one set, so what a
+ * caller is told is representable and what the encoder writes cannot drift apart.
+ * A member given a label without a COSE codec the registered map can write is
+ * refused there at import, so the table cannot grow past the codec that writes it.
  */
-export const COSE_CNF_LABELS = Object.fromEntries(
-  CNF_MEMBERS.flatMap((member) =>
-    member.wire.cose.kind === "label"
-      ? [[member.wire.jose.name, member.wire.cose.label] as const]
-      : [],
-  ),
-) as Readonly<Record<CoseCnfMember, number>>;
-
-/** {@link COSE_CNF_LABELS}'s keys, in declaration order, for iteration. */
-export const COSE_CNF_MEMBERS: ReadonlyArray<CoseCnfMember> = CNF_MEMBERS.flatMap(
-  (member) =>
-    member.wire.cose.kind === "label" ? [member.wire.jose.name as CoseCnfMember] : [],
+export const COSE_CNF_MEMBERS: ReadonlyArray<CnfMember> = CNF_MEMBERS.flatMap((member) =>
+  member.wire.cose.kind === "label" ? [member.wire.jose.name] : [],
 );

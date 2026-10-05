@@ -33,23 +33,23 @@ export type ArrayScalar = "spaced" | "strict" | "wrap";
 
 /**
  * Sub-kind of a `bespoke` claim — the discriminator telling the translator and the
- * COSE byte-shaper WHICH per-claim builder to use.
+ * COSE byte-shaper WHICH per-claim builder to use. ONE claim carries it, and it is
+ * not waiting its turn at the member-set mechanism.
  *
- * ⚠ NEITHER MEMBER IS WAITING ITS TURN AT THE MEMBER-SET MECHANISM.
- *
- * `"confirmation"` — `cnf` HAS declared members (`internal/claims/cnf-members.ts`),
- * but its COSE form needs a per-claim BUILDER (RFC 8747 §3.1): the embedded key's
- * VALUE is transcoded, where a declared member set carries values through
- * unchanged, and a JWK is a union discriminated by `kty` whose labels collide
- * (`AKP.pub` is -1, `EC.crv` is -1) — the same reason `jwk`/`epk` have no children.
- *
- * `"events"` — the claim's keys are event-statement URIs rather than field names
+ * `"events"` — a map keyed by event-type URI with an object per key
  * (RFC 8417 §2.2), so every key is the producer's. A member set answers "what
  * becomes of a member the registry does not declare", and there are none for that
- * question to be about. The URI check is a PROFILE rule
- * (`internal/utils/rules/events-shape.ts`).
+ * question to be about; an empty member set with an open tail would also lose the
+ * two refusals the builder states — a payload that is not an object, and a `null`
+ * payload — and the builder hands the map on unrebuilt so a `__proto__` event-type
+ * key stays an own key (`internal/claims/translate.ts`, `eventsMap`). The URI check
+ * is a PROFILE rule (`internal/utils/rules/events-shape.ts`).
+ *
+ * The RFC 7800 confirmation is a declared structure like every other: two of its
+ * members (`internal/claims/cnf-members.ts`), `key` and `keyId`, carry a COSE codec
+ * as `per.cose` and ride a REGISTERED label map ({@link ObjectCodec.labels}).
  */
-export type BespokeKind = "confirmation" | "events";
+export type BespokeKind = "events";
 
 /**
  * How a claim's VALUE is shaped. A CLOSED union, kept separate from the header
@@ -61,16 +61,27 @@ export type BespokeKind = "confirmation" | "events";
  *   - `"bool"`    boolean scalar
  *   - `"bstr"`    byte string — a PER-WIRE codec only; no claim carries it as its
  *                 base codec, because JOSE has no byte strings
+ *   - `"jwk"`     a JSON Web Key (RFC 7517 §4) — a MEMBER codec, carried through
+ *                 as the object it is; `per.cose` names its COSE form
+ *   - `"coseKey"` a COSE_Key (RFC 9052 §7) — a PER-WIRE codec only, the COSE form
+ *                 of a `jwk` member, applied by the registered label shaper
+ *                 (`internal/cose/registered-labels.ts`); the translator carries
+ *                 the object through as it does `bstr`
  *   - `"array"`   array of strings with its scalar-tolerance policy — or, with
  *                 `of`, an array of DECLARED STRUCTURES
  *   - `"object"`  a DECLARED structure — see {@link ObjectCodec}
  *   - `"bespoke"` needs a per-claim builder, named by its sub-kind
+ *
+ * pinned: claims-registry.test.ts, "no claim or member carries a per-wire-only
+ * codec as its BASE codec".
  */
 export type ClaimCodec =
   | { kind: "text" }
   | { kind: "int" }
   | { kind: "date" }
   | { kind: "bool" }
+  | { kind: "jwk" }
+  | { kind: "coseKey" }
   /**
    * Byte string. `encoding` says how the DOMAIN string maps to those bytes:
    *   - `"utf8"` the string's OWN bytes (`tokenId` -> `cti`, RFC 8392 §3.1.7).
@@ -111,7 +122,7 @@ export type ClaimCodec =
  * Recursive by construction — a member's `codec` may itself be an
  * {@link ObjectCodec}, which is how a structure nests.
  */
-export type ClaimMemberSpec = MemberSpec<unknown, ClaimCodec, "keep" | "prune">;
+export type ClaimMemberSpec = MemberSpec<unknown, ClaimCodec, WhenEmpty>;
 
 /**
  * What becomes of a DECLARED member whose value fails its LEAF codec — a `text`
@@ -190,12 +201,49 @@ export type LeafFailure = "refuse" | "drop";
  *
  * pinned: claims-registry.test.ts, "each declared structure states what a read
  * makes of a declared member it cannot decode".
+ *
+ * `binds` says whether the structure STATES A KEY THE PRESENTER MUST PROVE, which
+ * decides what the walker makes of a member holding `null`:
+ *   - `"none"`   `null` is absence, as it is at the claim key — the members report
+ *                facts, and a caller minting from a nullable database column must
+ *                not have to strip its nulls first (`internal/claims/is-not-stated.ts`).
+ *   - `"key"`    `undefined` is the ONLY absence, on the declared members and the
+ *                tail alike; a `null` member is a value contradicting its shape and
+ *                is REFUSED. Erased, the binding collapses to nothing and the token
+ *                verifies as a plain bearer one (RFC 7800 §3.1), so "erased" and
+ *                "absent" must not become one state on this structure. On the write
+ *                side a member fault that leaves the structure naming no key adds a
+ *                second entry saying so: deleting the faulty member is no repair.
+ *
+ * ⚠ REQUIRED, like `open` and `readLeafFailure`, and for the same reason: a cell
+ * decided by omission would answer one depth silently.
+ *
+ * pinned: claims-registry.test.ts, "each declared structure states whether it
+ * binds a key".
+ *
+ * `labels` says how the structure's integer-labelled members reach the COSE wire
+ * (`internal/cose/cwt-spec.ts`):
+ *   - `"proprietary"` the labels are lindorm's own, so the compact label map rides
+ *                     on-platform (`proprietary: true`) alone and the structure
+ *                     keeps its string keys off it — a stock reader holds no
+ *                     registry for them. Aegis policy.
+ *   - `"registered"`  the labels are IANA-registered (RFC 8747 §3.1), so the label
+ *                     map rides on EVERY COSE token and each member's `per.cose`
+ *                     codec is applied to its value — a stock reader is expected
+ *                     to understand it.
+ *
+ * ⚠ REQUIRED, like the cells above, and for the same reason.
+ *
+ * pinned: claims-registry.test.ts, "each declared structure states how its labels
+ * reach the COSE wire".
  */
 export type ObjectCodec = {
   kind: "object";
   children: () => ReadonlyArray<ClaimMemberSpec>;
   open: "closed" | "flip" | "verbatim";
   readLeafFailure: LeafFailure;
+  binds: "key" | "none";
+  labels: "registered" | "proprietary";
 };
 
 export type ClaimSpec<D = unknown> = ParamSpec<D, ClaimCodec, WhenEmpty> & {
