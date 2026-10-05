@@ -80,11 +80,11 @@ export class AegisProfileFloorSteps extends AegisStepsBase {
     direction: string,
     table: DataTable,
   ): void {
-    expect(this.refusalData()).toEqual({ direction, invalid: table.hashes() });
+    expect(this.refusalData()).toStrictEqual({ direction, invalid: table.hashes() });
   }
 
   @Then("the refusal names the claim {string} and lists the faults")
   theRefusalNamesTheClaimAndListsTheFaults(claim: string, table: DataTable): void {
-    expect(this.refusalData()).toEqual({ claim, invalid: table.hashes() });
+    expect(this.refusalData()).toStrictEqual({ claim, invalid: table.hashes() });
   }
 }

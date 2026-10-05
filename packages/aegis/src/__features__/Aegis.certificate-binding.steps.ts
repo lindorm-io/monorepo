@@ -58,6 +58,10 @@ export class AegisCertificateBindingSteps extends AegisStepsBase {
     "the refusal names the key id of the certificate-bearing signing key, under the issuer {string}",
   )
   theRefusalNamesTheKeyIdOfTheCertificateBearingSigningKey(issuer: string): void {
-    expect(this.refusalData()).toEqual({ kid: TEST_EC_KEY_SIG_CERT.id, issuer });
+    expect(this.refusalData()).toStrictEqual({
+      kid: TEST_EC_KEY_SIG_CERT.id,
+      issuer,
+      profile: undefined,
+    });
   }
 }

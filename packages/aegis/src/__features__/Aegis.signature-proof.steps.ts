@@ -91,7 +91,7 @@ export class AegisSignatureProofSteps extends AegisStepsBase {
     key: string,
     message: string,
   ): void {
-    expect(this.refusalData()).toEqual({ algorithm, invalid: [{ key, message }] });
+    expect(this.refusalData()).toStrictEqual({ algorithm, invalid: [{ key, message }] });
   }
 
   @Then(
@@ -109,7 +109,7 @@ export class AegisSignatureProofSteps extends AegisStepsBase {
       throw new Error("the scenario handed the mint no key outright");
     }
 
-    expect(this.refusalData()).toEqual({
+    expect(this.refusalData()).toStrictEqual({
       kid: handed.id,
       algorithm,
       algClass,

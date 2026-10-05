@@ -118,7 +118,7 @@ export class AegisHeaderProvenanceSteps extends AegisStepsBase {
 
   @Then("the refusal names the parameter {string} in the bucket {string}")
   theRefusalNamesTheParameterInTheBucket(parameter: string, bucket: string): void {
-    expect(this.refusalData()).toEqual({ parameter, bucket });
+    expect(this.refusalData()).toStrictEqual({ parameter, bucket });
   }
 
   @Then("the refusal names the parameter {string} under the empty-value ruling {string}")
@@ -126,7 +126,7 @@ export class AegisHeaderProvenanceSteps extends AegisStepsBase {
     parameter: string,
     whenEmpty: string,
   ): void {
-    expect(this.refusalData()).toEqual({ parameter, whenEmpty });
+    expect(this.refusalData()).toStrictEqual({ parameter, whenEmpty });
   }
 
   // helpers

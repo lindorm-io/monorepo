@@ -105,12 +105,12 @@ export class AegisVerifyOnlyProfileSteps extends AegisStepsBase {
 
   @Then("the refusal reports the type header it read {string}")
   theRefusalReportsTheTypeHeaderItRead(typ: string): void {
-    expect(this.refusalData()).toEqual({ typ });
+    expect(this.refusalData()).toStrictEqual({ typ });
   }
 
   @Then("the refusal names the profile {string} and its declared use {string}")
   theRefusalNamesTheProfileAndItsDeclaredUse(profile: string, use: string): void {
-    expect(this.refusalData()).toEqual({ profile, use });
+    expect(this.refusalData()).toStrictEqual({ profile, use });
   }
 
   @Then(
@@ -121,7 +121,7 @@ export class AegisVerifyOnlyProfileSteps extends AegisStepsBase {
     key: string,
     message: string,
   ): void {
-    expect(this.refusalData()).toEqual({ direction, invalid: [{ key, message }] });
+    expect(this.refusalData()).toStrictEqual({ direction, invalid: [{ key, message }] });
   }
 
   // parameter types

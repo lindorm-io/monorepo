@@ -260,7 +260,7 @@ export class AegisProfileLessSteps extends AegisStepsBase {
 
   @Then("the refusal names the claim {string} and locates the fault at {string}: {}")
   theRefusalNamesTheClaim(claim: string, key: string, message: string): void {
-    expect(this.refusalData()).toEqual({ claim, invalid: [{ key, message }] });
+    expect(this.refusalData()).toStrictEqual({ claim, invalid: [{ key, message }] });
   }
 
   // parameter types

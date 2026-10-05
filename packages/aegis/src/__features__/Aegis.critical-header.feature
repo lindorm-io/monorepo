@@ -1184,7 +1184,8 @@ Feature: Critical header parameters
       When I sign the wire claims as a claims token on the cose wire
       Then signing is refused as a COSE error "header_no_cose_label"
       And the refusal's data is exactly
-        | jose | "zip" |
+        | jose   | "zip"     |
+        | reason | undefined |
 
     Scenario: jose: an opaque signature at the wire door is refused as a parameter that cannot be emitted
       Given the payload to sign
@@ -1203,7 +1204,8 @@ Feature: Critical header parameters
       When I sign the payload as opaque content on the cose wire
       Then signing is refused as a COSE error "header_no_cose_label"
       And the refusal's data is exactly
-        | jose | "zip" |
+        | jose   | "zip"     |
+        | reason | undefined |
 
     Scenario: jose: an encryption at the wire door is refused as a parameter that cannot be emitted
       Given the data to encrypt
@@ -1222,7 +1224,8 @@ Feature: Critical header parameters
       When I encrypt the data as sealed content on the cose wire
       Then encryption is refused as a COSE error "header_no_cose_label"
       And the refusal's data is exactly
-        | jose | "zip" |
+        | jose   | "zip"     |
+        | reason | undefined |
 
     Scenario: jose: a mint sealing its token under the parameter is refused as a parameter that cannot be emitted
       Given the content to mint
@@ -1245,7 +1248,8 @@ Feature: Critical header parameters
       When I mint the content under the "id_token" profile on the cose wire
       Then minting is refused as a COSE error "header_no_cose_label"
       And the refusal's data is exactly
-        | jose | "zip" |
+        | jose   | "zip"     |
+        | reason | undefined |
 
     Scenario Outline: <wire>: an unprofiled signature is refused as a parameter that cannot be emitted
       Given the claims to sign
@@ -1334,7 +1338,8 @@ Feature: Critical header parameters
       When I sign the wire claims as a claims token on the cose wire
       Then signing is refused as a COSE error "header_no_cose_label"
       And the refusal's data is exactly
-        | jose | "x-lindorm-hint" |
+        | jose   | "x-lindorm-hint" |
+        | reason | undefined        |
 
     Scenario: jose: an opaque signature at the wire door is refused, naming the parameter
       Given the payload to sign
@@ -1353,7 +1358,8 @@ Feature: Critical header parameters
       When I sign the payload as opaque content on the cose wire
       Then signing is refused as a COSE error "header_no_cose_label"
       And the refusal's data is exactly
-        | jose | "x-lindorm-hint" |
+        | jose   | "x-lindorm-hint" |
+        | reason | undefined        |
 
     Scenario: jose: an encryption at the wire door is refused, naming the parameter
       Given the data to encrypt
@@ -1372,7 +1378,8 @@ Feature: Critical header parameters
       When I encrypt the data as sealed content on the cose wire
       Then encryption is refused as a COSE error "header_no_cose_label"
       And the refusal's data is exactly
-        | jose | "x-lindorm-hint" |
+        | jose   | "x-lindorm-hint" |
+        | reason | undefined        |
 
     Scenario: jose: a mint sealing its token under the parameter is refused, naming the parameter
       Given the content to mint
@@ -1395,7 +1402,8 @@ Feature: Critical header parameters
       When I mint the content under the "id_token" profile on the cose wire
       Then minting is refused as a COSE error "header_no_cose_label"
       And the refusal's data is exactly
-        | jose | "x-lindorm-hint" |
+        | jose   | "x-lindorm-hint" |
+        | reason | undefined        |
 
     Scenario Outline: <wire>: the same parameter in the custom header rides the protected header
       Given the wire claims
@@ -1453,7 +1461,8 @@ Feature: Critical header parameters
       When I sign the wire claims as a claims token on the cose wire
       Then signing is refused as a COSE error "header_no_cose_label"
       And the refusal's data is exactly
-        | jose | "objectId" |
+        | jose   | "objectId" |
+        | reason | undefined  |
 
     Scenario: jose: an opaque signature at the wire door is refused, naming the wire spelling it expects
       Given the payload to sign
@@ -1472,7 +1481,8 @@ Feature: Critical header parameters
       When I sign the payload as opaque content on the cose wire
       Then signing is refused as a COSE error "header_no_cose_label"
       And the refusal's data is exactly
-        | jose | "objectId" |
+        | jose   | "objectId" |
+        | reason | undefined  |
 
     Scenario: jose: an encryption at the wire door is refused, naming the wire spelling it expects
       Given the data to encrypt
@@ -1491,7 +1501,8 @@ Feature: Critical header parameters
       When I encrypt the data as sealed content on the cose wire
       Then encryption is refused as a COSE error "header_no_cose_label"
       And the refusal's data is exactly
-        | jose | "objectId" |
+        | jose   | "objectId" |
+        | reason | undefined  |
 
     Scenario: jose: a mint sealing its token under the parameter is refused, naming the wire spelling it expects
       Given the content to mint
@@ -1514,7 +1525,8 @@ Feature: Critical header parameters
       When I mint the content under the "id_token" profile on the cose wire
       Then minting is refused as a COSE error "header_no_cose_label"
       And the refusal's data is exactly
-        | jose | "objectId" |
+        | jose   | "objectId" |
+        | reason | undefined  |
 
     Scenario Outline: <wire>: the same parameter in its wire spelling rides the protected header
       Given the wire claims

@@ -267,17 +267,17 @@ export class AegisCriticalHeaderSteps extends AegisStepsBase {
 
   @Then("the refusal reports the critical list {json}")
   theRefusalReportsTheCriticalList(crit: unknown): void {
-    expect(this.refusalData()).toEqual({ crit });
+    expect(this.refusalData()).toStrictEqual({ crit });
   }
 
   @Then("the refusal names the parameter {json}")
   theRefusalNamesTheParameter(parameter: unknown): void {
-    expect(this.refusalData()).toEqual({ parameter });
+    expect(this.refusalData()).toStrictEqual({ parameter });
   }
 
   @Then("the refusal names the undeclared parameter {string}")
   theRefusalNamesTheUndeclaredParameter(param: string): void {
-    expect(this.refusalData()).toEqual({ param });
+    expect(this.refusalData()).toStrictEqual({ param });
   }
 
   @Then(
@@ -287,7 +287,7 @@ export class AegisCriticalHeaderSteps extends AegisStepsBase {
     parameter: string,
     expected: string,
   ): void {
-    expect(this.refusalData()).toEqual({ parameter, expected });
+    expect(this.refusalData()).toStrictEqual({ parameter, expected });
   }
 
   @Then("the refusal names the parameter {string} and expects the wire spelling {string}")
@@ -295,7 +295,7 @@ export class AegisCriticalHeaderSteps extends AegisStepsBase {
     parameter: string,
     expected: string,
   ): void {
-    expect(this.refusalData()).toEqual({ parameter, expected });
+    expect(this.refusalData()).toStrictEqual({ parameter, expected });
   }
 
   // parameter types

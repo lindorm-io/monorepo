@@ -109,7 +109,7 @@ export class AegisDelegationSteps extends AegisStepsBase {
     label: number,
     key: string,
   ): void {
-    expect(this.refusalData()).toEqual({ claim, member, label, key });
+    expect(this.refusalData()).toStrictEqual({ claim, member, label, key });
   }
 
   // parameter types

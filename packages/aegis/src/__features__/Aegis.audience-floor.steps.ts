@@ -86,6 +86,6 @@ export class AegisAudienceFloorSteps extends AegisStepsBase {
 
   @Then("the refusal reports the audience it read as the list {stringList}")
   theRefusalReportsTheAudienceItRead(audience: Array<string>): void {
-    expect(this.refusalData()).toEqual({ audience });
+    expect(this.refusalData()).toStrictEqual({ audience });
   }
 }
