@@ -1,15 +1,35 @@
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { basename, join } from "node:path";
-import { afterAll, beforeAll, describe, expect, test } from "vitest";
+import { basename, join, relative } from "node:path";
+import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 import {
   META_FIXTURES_DIRECTORY,
   readSummary,
   resolveVitestBin,
   runMetaFixture,
+  runMetaFixtureOutput,
+  runVitestChild,
+  runVitestChildOutput,
   stripAnsi,
   toVitestBinPath,
 } from "./spawn-vitest.js";
+
+const CHILD_ARGS = ["--globals"];
+
+const SPAWN_DOORS: Array<[string, (directory: string) => unknown]> = [
+  ["runVitestChild", (directory) => runVitestChild(directory, CHILD_ARGS)],
+  ["runVitestChildOutput", (directory) => runVitestChildOutput(directory, CHILD_ARGS)],
+  [
+    "runMetaFixture",
+    (directory) =>
+      runMetaFixture(relative(META_FIXTURES_DIRECTORY, directory), CHILD_ARGS),
+  ],
+  [
+    "runMetaFixtureOutput",
+    (directory) =>
+      runMetaFixtureOutput(relative(META_FIXTURES_DIRECTORY, directory), CHILD_ARGS),
+  ],
+];
 
 describe("spawnVitest", () => {
   describe("META_FIXTURES_DIRECTORY", () => {
@@ -83,6 +103,57 @@ describe("spawnVitest", () => {
   describe("runMetaFixture", () => {
     test("should throw when the fixture directory does not exist", () => {
       expect(() => runMetaFixture("does-not-exist")).toThrow();
+    });
+  });
+
+  describe.each(SPAWN_DOORS)("%s child environment", (_door, run) => {
+    let directory: string;
+    let childEnvironment: Partial<Record<string, string>>;
+
+    beforeAll(async () => {
+      directory = await mkdtemp(join(tmpdir(), "gherkin-spawn-vitest-env-"));
+      const record = join(directory, "environment.json");
+
+      await writeFile(
+        join(directory, "environment.test.mjs"),
+        [
+          'import { writeFileSync } from "node:fs";',
+          "",
+          'test("records its environment", () => {',
+          "  writeFileSync(",
+          `    ${JSON.stringify(record)},`,
+          "    JSON.stringify({",
+          "      GHERKIN_SPAWN_PROBE: process.env.GHERKIN_SPAWN_PROBE,",
+          "      ROLLDOWN_WORKER_THREADS: process.env.ROLLDOWN_WORKER_THREADS,",
+          "    }),",
+          "  );",
+          "});",
+        ].join("\n"),
+      );
+
+      vi.stubEnv("GHERKIN_SPAWN_PROBE", "inherited");
+      vi.stubEnv("ROLLDOWN_WORKER_THREADS", "4");
+
+      run(directory);
+
+      childEnvironment = JSON.parse(await readFile(record, "utf8"));
+    }, 180_000);
+
+    afterAll(async () => {
+      vi.unstubAllEnvs();
+      await rm(directory, { recursive: true, force: true });
+    });
+
+    test("should run the child on one rolldown worker thread whatever the parent sets — on several, the config-bundle race can stall it forever (#247)", () => {
+      expect(childEnvironment.ROLLDOWN_WORKER_THREADS).toBe("1");
+    });
+
+    test("should pass the parent's environment through to the child", () => {
+      expect(childEnvironment.GHERKIN_SPAWN_PROBE).toBe("inherited");
+    });
+
+    test("should leave the parent's own ROLLDOWN_WORKER_THREADS as found", () => {
+      expect(process.env.ROLLDOWN_WORKER_THREADS).toBe("4");
     });
   });
 });

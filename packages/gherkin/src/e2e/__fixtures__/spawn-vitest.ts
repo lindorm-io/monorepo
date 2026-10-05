@@ -93,7 +93,15 @@ export const runVitestChildOutput = (
     {
       cwd: directory,
       encoding: "utf8",
-      env: { ...env, CI: "true", NO_COLOR: "1" },
+      env: {
+        ...env,
+        CI: "true",
+        NO_COLOR: "1",
+        // On several worker threads, rolldown can leave vite's config bundle
+        // unsettled and the child idle until the timeout (#247); pinned:
+        // spawn-vitest.test.ts.
+        ROLLDOWN_WORKER_THREADS: "1",
+      },
       timeout: 150_000,
     },
   );
