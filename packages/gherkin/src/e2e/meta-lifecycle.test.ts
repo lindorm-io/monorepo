@@ -21,7 +21,7 @@ describe("meta-suite: lifecycle", () => {
   }, 180_000);
 
   test("should print exact totals — the beforeAll-failed feature is IN the counts as a failed FILE", () => {
-    // CAPTURED behaviour (vitest 4.1.4): a throwing beforeAll fails the
+    // CAPTURED behaviour (vitest 5.0.3): a throwing beforeAll fails the
     // SUITE, so the file counts as failed while its scenarios report
     // SKIPPED — red at file level, and no scenario reports green.
     expect(testFiles).toBe("1 failed | 1 passed (2)");
@@ -45,7 +45,7 @@ describe("meta-suite: lifecycle", () => {
   });
 
   test("should run @AfterFeature even though @BeforeFeature threw — teardown still unwinds", () => {
-    // CAPTURED behaviour (vitest 4.1.4): afterAll runs after a FAILED
+    // CAPTURED behaviour (vitest 5.0.3): afterAll runs after a FAILED
     // beforeAll, so the @AfterFeature teardown of a red feature still
     // executes. §4's "after-hooks always run" holds at feature level through
     // vitest's own mechanism — this pin goes red if a vitest upgrade stops

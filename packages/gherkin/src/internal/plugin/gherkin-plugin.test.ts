@@ -450,7 +450,28 @@ describe("gherkinPlugin", () => {
       }
     });
 
-    test("should read test.include relative to vitest's dir — test.dir or --dir — where vitest globs it", async () => {
+    test("should read test.include relative to vitest's dir — test.dir or --dir — as configResolved hands it", async () => {
+      const root = await mkdtemp(join(tmpdir(), "gherkin-plugin-dir-"));
+
+      try {
+        await mkdir(join(root, "features"), { recursive: true });
+        await writeFile(join(root, "features", "a.feature"), "Feature: a\n");
+
+        const [plugin] = gherkinPlugin({ features: ["features/**/*.feature"] });
+
+        await plugin.config({ root });
+        plugin.configResolved({
+          root,
+          test: { dir: join(root, "features"), include: ["*.feature"] },
+        });
+
+        await expect(plugin.buildStart()).resolves.toBeUndefined();
+      } finally {
+        await rm(root, { force: true, recursive: true });
+      }
+    });
+
+    test("should read test.include relative to the dir configureVitest hands it before buildStart — vitest 4's root-project hook order", async () => {
       const root = await mkdtemp(join(tmpdir(), "gherkin-plugin-dir-"));
 
       try {
@@ -472,6 +493,34 @@ describe("gherkinPlugin", () => {
     });
 
     test("should reject with feature_not_collected for a covered feature outside vitest's dir — vitest never globs it", async () => {
+      const root = await mkdtemp(join(tmpdir(), "gherkin-plugin-dir-"));
+
+      try {
+        await mkdir(join(root, "features"), { recursive: true });
+        await mkdir(join(root, "src"), { recursive: true });
+        await writeFile(join(root, "features", "a.feature"), "Feature: a\n");
+        await writeFile(join(root, "src", "b.feature"), "Feature: b\n");
+
+        const [plugin] = gherkinPlugin({ features: ["**/*.feature"] });
+
+        await plugin.config({ root });
+        plugin.configResolved({
+          root,
+          test: { dir: join(root, "features"), include: ["**/*.feature"] },
+        });
+
+        const error = await captureAsync(() => plugin.buildStart());
+
+        expect(error.code).toBe("feature_not_collected");
+        expect(error.data.uncollected).toEqual([
+          { pattern: "**/*.feature", uri: "src/b.feature" },
+        ]);
+      } finally {
+        await rm(root, { force: true, recursive: true });
+      }
+    });
+
+    test("should reject with feature_not_collected for a covered feature outside the dir configureVitest hands it before buildStart — vitest 4's root-project hook order", async () => {
       const root = await mkdtemp(join(tmpdir(), "gherkin-plugin-dir-"));
 
       try {

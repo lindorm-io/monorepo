@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`registerFeatureHooks > @AfterFeature throwing an error whose cause cannot be read > should report the error carrying 'a cause getter that throws' as itself, anchored 1`] = `
+exports[`registerFeatureHooks > @AfterFeature throwing an error whose cause cannot be read > should report the error carrying a cause getter that throws as itself, anchored 1`] = `
 "@AfterFeature hook failed
 
   UnreadableHooks.boom
@@ -9,7 +9,7 @@ exports[`registerFeatureHooks > @AfterFeature throwing an error whose cause cann
 docker failed"
 `;
 
-exports[`registerFeatureHooks > @AfterFeature throwing an error whose cause cannot be read > should report the error carrying 'a cause whose message has no string f…' as itself, anchored 1`] = `
+exports[`registerFeatureHooks > @AfterFeature throwing an error whose cause cannot be read > should report the error carrying a cause whose message has no string form as itself, anchored 1`] = `
 "@AfterFeature hook failed
 
   UnreadableHooks.boom
@@ -18,7 +18,7 @@ exports[`registerFeatureHooks > @AfterFeature throwing an error whose cause cann
 docker failed"
 `;
 
-exports[`registerFeatureHooks > @BeforeFeature throwing an error whose cause cannot be read > should report the error carrying 'a cause getter that throws' as itself, anchored 1`] = `
+exports[`registerFeatureHooks > @BeforeFeature throwing an error whose cause cannot be read > should report the error carrying a cause getter that throws as itself, anchored 1`] = `
 "@BeforeFeature hook failed
 
   UnreadableHooks.boom
@@ -27,7 +27,7 @@ exports[`registerFeatureHooks > @BeforeFeature throwing an error whose cause can
 docker failed"
 `;
 
-exports[`registerFeatureHooks > @BeforeFeature throwing an error whose cause cannot be read > should report the error carrying 'a cause whose message has no string f…' as itself, anchored 1`] = `
+exports[`registerFeatureHooks > @BeforeFeature throwing an error whose cause cannot be read > should report the error carrying a cause whose message has no string form as itself, anchored 1`] = `
 "@BeforeFeature hook failed
 
   UnreadableHooks.boom

@@ -11,9 +11,9 @@ export type GherkinTagDeclaration = { name: string };
 export type ScanTagDeclarationsOptions = {
   /**
    * Tag names the user config already declares — skipped, because vitest
-   * rejects a duplicate `test.tags` name at startup (measured on 4.1.4:
-   * "Tag names must be unique"). Merging is vite's job; NOT re-declaring is
-   * this scan's.
+   * rejects a duplicate `test.tags` name at startup (vitest 5.0.3
+   * `dist/chunks/index.DpLw24bj.js`: "Tag names must be unique"). Merging is
+   * vite's job; NOT re-declaring is this scan's.
    */
   declared: Array<string>;
   features: Array<string>;
@@ -26,8 +26,8 @@ export type ScanTagDeclarationsOptions = {
  * The union of every tag in every configured `.feature` file, as vitest tag
  * declarations for `test.tags`. Mandatory, not an optimization: vitest's
  * strictTags (default true, kept) fails collection on any UNDECLARED tag a
- * registered test carries — one missed tag in one file and the whole suite
- * reports the invisible "no tests" (pinned: meta-tags.test.ts). Filters like
+ * registered test carries — a file carrying one missed tag fails collection
+ * and none of its scenarios run (pinned: meta-tags.test.ts). Filters like
  * assert-features-covered.ts, on the cadence-INDEPENDENT `features` list, so
  * a lane-excluded file's tags are still declared; a file the `exclude`
  * setting removed is never read.

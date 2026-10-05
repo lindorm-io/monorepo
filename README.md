@@ -139,7 +139,7 @@ npm run build
 | `npm run sync:peers`       | `syncpack lint` — verify peer-dep ranges across packages.                                 |
 | `npm run release`          | `lerna publish` (maintainer use).                                                         |
 
-Tests are powered by **Vitest 4** with cadence-driven configs (`unit`, `integration`, `weekly`). Only `iris` and `proteus` ship integration suites — everything else is pure unit tests. Run a single package's tests by `cd packages/<name> && npm test`.
+Tests are powered by **Vitest 5** with cadence-driven configs (`unit`, `integration`, `weekly`). Only `iris` and `proteus` ship integration suites — everything else is pure unit tests. Run a single package's tests by `cd packages/<name> && npm test`.
 
 ## License
 

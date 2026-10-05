@@ -57,7 +57,10 @@ export type GherkinConfigPatch = {
 export type GherkinVitePlugin = Plugin & {
   buildStart: () => Promise<void>;
   config: (config: GherkinUserConfig) => Promise<GherkinConfigPatch>;
-  configResolved: (config: { root: string; test?: { include?: Array<string> } }) => void;
+  configResolved: (config: {
+    root: string;
+    test?: { dir?: string; include?: Array<string> };
+  }) => void;
   configureVitest: (context: {
     project: { config: { dir?: string; exclude: Array<string> } };
   }) => void;
@@ -116,9 +119,9 @@ export const gherkinPlugin = (settings?: GherkinSettings): GherkinVitePlugins =>
       // Runs at config resolution, before any collection: the emitted tests
       // carry vitest tags, and vitest's strictTags (default true, kept) fails
       // collection on any UNDECLARED tag — so the union of every feature
-      // file's tags is injected into `test.tags` here, or one missed tag
-      // collapses the suite to the invisible "no tests". The `exclude`
-      // setting is resolved to feature files here too.
+      // file's tags is injected into `test.tags` here, or a file carrying one
+      // missed tag fails collection and none of its scenarios run. The
+      // `exclude` setting is resolved to feature files here too.
       // ⚠ Computed ONCE at config time: a tag newly added to a .feature
       // mid-watch is undeclared until vitest restarts — strictTags then fails
       // collection LOUDLY (that is strictTags working, never a silent skip) —
@@ -144,16 +147,21 @@ export const gherkinPlugin = (settings?: GherkinSettings): GherkinVitePlugins =>
 
       configResolved: (config: {
         root: string;
-        test?: { include?: Array<string> };
+        test?: { dir?: string; include?: Array<string> };
       }): void => {
         root = config.root;
         include = config.test?.include;
+        // vitest 5 runs buildStart before configureVitest, so the guard's dir
+        // is read here, where vitest 5 has already merged a CLI --dir into
+        // `test` (pinned: the test.dir and --dir children in
+        // src/e2e/meta-exclude.test.ts).
+        vitestDir = config.test?.dir;
         isStepModule = createFilter(steps, [], { resolve: root });
       },
 
-      // The one hook that reads vitest's resolved config — a CLI `--dir`
-      // included — and vitest runs it before it globs test files, so the
-      // excluded feature files join test.exclude here.
+      // Reads the project config vitest resolved, a CLI `--dir` included, and
+      // vitest runs it before it globs test files, so the excluded feature
+      // files join test.exclude here.
       configureVitest: ({
         project,
       }: {
@@ -177,14 +185,12 @@ export const gherkinPlugin = (settings?: GherkinSettings): GherkinVitePlugins =>
       // ONE walk feeds both guards — the same file set, minus the excluded
       // files, and `features` anchored at the same root, so "covered" and
       // "collected" cannot disagree on what a feature file is. buildStart
-      // follows configResolved (root + include) and fires at server init,
-      // before test file globbing — pinned by the overwrite child in
+      // follows configResolved (root, include and dir) and fires at server
+      // init, under vitest 5 before configureVitest, and before test file
+      // globbing — pinned by the overwrite child in
       // src/e2e/base-config-wiring.test.ts, which dies here although its
-      // include collects no feature at all. It follows configureVitest (dir)
-      // for the root project alone (pinned: the --dir child in
-      // src/e2e/meta-exclude.test.ts); vitest's `Vitest._setServer` inits
-      // each test.projects project, its buildStart included, before the
-      // configureVitest loop, so a project's guard never sees its dir.
+      // include collects no feature at all. The dir reading is pinned for a
+      // config without test.projects (#248).
       buildStart: async (): Promise<void> => {
         if (excluded.unmatchedLiterals.length > 0) {
           throw new GherkinError(

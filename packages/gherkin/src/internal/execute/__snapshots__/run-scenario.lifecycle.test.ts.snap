@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`runScenario lifecycle > a failure whose cause cannot be read > should report a step failure carrying 'a cause getter that throws' under the step anchor, still running @AfterScenario and dispose 1`] = `
+exports[`runScenario lifecycle > a failure whose cause cannot be read > should report a step failure carrying a cause getter that throws under the step anchor, still running @AfterScenario and dispose 1`] = `
 "Step failed
 
   Given a step throwing an error whose cause getter throws
@@ -9,7 +9,7 @@ exports[`runScenario lifecycle > a failure whose cause cannot be read > should r
 unreadable cause boom"
 `;
 
-exports[`runScenario lifecycle > a failure whose cause cannot be read > should report a step failure carrying 'a cause that is a proxy whose traps t…' under the step anchor, still running @AfterScenario and dispose 1`] = `
+exports[`runScenario lifecycle > a failure whose cause cannot be read > should report a step failure carrying a cause that is a proxy whose traps thr… under the step anchor, still running @AfterScenario and dispose 1`] = `
 "Step failed
 
   Given a step throwing an error whose cause is a proxy whose traps throw
@@ -18,7 +18,7 @@ exports[`runScenario lifecycle > a failure whose cause cannot be read > should r
 unreadable cause boom"
 `;
 
-exports[`runScenario lifecycle > a failure whose cause cannot be read > should report a step failure carrying 'a cause whose message has no string f…' under the step anchor, still running @AfterScenario and dispose 1`] = `
+exports[`runScenario lifecycle > a failure whose cause cannot be read > should report a step failure carrying a cause whose message has no string form under the step anchor, still running @AfterScenario and dispose 1`] = `
 "Step failed
 
   Given a step throwing an error whose cause has a message with no string form

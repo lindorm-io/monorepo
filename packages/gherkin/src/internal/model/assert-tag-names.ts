@@ -5,7 +5,7 @@ import type { AstTag } from "./collect-ast-tags.js";
 
 /**
  * Vitest's own `test.tags` name rules, mirrored from the shipped validator
- * (vitest 4.1.4 `dist/chunks/coverage.Da5gzbsu.js` — whitespace, then
+ * (vitest 5.0.3 `dist/chunks/index.DpLw24bj.js` — whitespace, then
  * `! ( ) * | &`, then a logical operator). It rejects at config resolution
  * with a bare internal stack, BEFORE any transform runs, so the offending
  * `.feature` file is unfindable from the message — hence the same rules run

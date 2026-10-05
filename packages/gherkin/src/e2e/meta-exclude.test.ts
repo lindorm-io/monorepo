@@ -160,7 +160,7 @@ describe("meta-suite: exclude", () => {
       expect(result.summary.testFiles).toBe("3 passed (3)");
     });
 
-    test("should write each excluded feature file relative to the --dir directory, which no config hook sees", () => {
+    test("should write each excluded feature file relative to the --dir directory", () => {
       expect(result.output).not.toContain("parked.wip.feature");
       expect(result.output).not.toContain("look-alike[1].feature");
       expect(result.output).toContain(

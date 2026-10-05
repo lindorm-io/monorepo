@@ -33,9 +33,9 @@ describe("meta-suite: tags", () => {
     });
 
     test("should collect a feature whose tag is declared NOWHERE by the user — the config-time scan declares it", () => {
-      // Without the scan, strictTags turns @nowhere-declared into the
-      // invisible "no tests" collapse (probed on 4.1.4) — this green line IS
-      // the scan working.
+      // Without the scan, strictTags fails undeclared.feature at collection
+      // and none of its scenarios reach the counts (probed on 5.0.3) — this
+      // green line IS the scan working.
       expect(unfiltered.output).toContain(
         "✓ features/undeclared.feature > scan declaration > still collects",
       );
