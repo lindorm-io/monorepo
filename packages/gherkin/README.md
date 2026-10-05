@@ -11,6 +11,7 @@ Reqnroll-style BDD for vitest. A `.feature` file **is** a vitest test file: a Vi
 - `@ParameterType` as a decorator — typed (optionally async) transforms for custom `{expression}` parameters
 - A strict failure contract: undefined, ambiguous, pending and conversion failures are all RED, anchored to the `.feature` file and line, with pasteable snippets
 - Watch mode: editing a step module re-runs the features that use it
+- An ESLint rule reporting a step definition no scenario reaches (`@lindorm/gherkin/eslint`)
 - ESM-only
 
 ## Installation
@@ -19,7 +20,7 @@ Reqnroll-style BDD for vitest. A `.feature` file **is** a vitest test file: a Vi
 npm install --save-dev @lindorm/gherkin unplugin-swc
 ```
 
-Peer dependencies: `vite` >= 8 and `vitest` >= 4.1.4, plus `unplugin-swc` >= 1.5.9 as an optional peer. Step classes are written with stage-3 decorators, so the pipeline has to lower them; `unplugin-swc` is the route this package verifies, and any equivalent transform does. Without one, the run fails with a `GherkinError` naming the step module and the missing transform: `Step module <path> still carries a stage-3 decorator after the transform pipeline ran.` (`step_module_not_lowered`), or `step_module_not_compiled` when the module does not parse as JavaScript at all.
+Peer dependencies: `vite` >= 8 and `vitest` >= 4.1.4, plus two optional peers: `unplugin-swc` >= 1.5.9, and `eslint` >= 9 for the [lint rule](#lint-unreached-steps). Step classes are written with stage-3 decorators, so the pipeline has to lower them; `unplugin-swc` is the route this package verifies, and any equivalent transform does. Without one, the run fails with a `GherkinError` naming the step module and the missing transform: `Step module <path> still carries a stage-3 decorator after the transform pipeline ran.` (`step_module_not_lowered`), or `step_module_not_compiled` when the module does not parse as JavaScript at all.
 
 ## Quick start
 
@@ -336,9 +337,51 @@ The plugin also fails the whole run at startup if a `.feature` file on disk (out
 
 And it fails a step module whose transformed code could never have run — one that still carries a stage-3 decorator (`step_module_not_lowered`) or does not parse as JavaScript at all (`step_module_not_compiled`) — naming the missing transform instead of letting a bare `SyntaxError` escape with `Tests no tests`.
 
+## Lint: unreached steps
+
+`@lindorm/gherkin/eslint` is an ESLint plugin whose rule `gherkin/no-unreached-step` reports a `@Given` / `@When` / `@Then` expression that no scenario step in your feature files matches — a definition left behind when its scenario was deleted. It is lint only and never part of a test run, so the tests run while a step waits for its feature. It reads decorators, so the step files need a TypeScript parser, such as `typescript-eslint`'s.
+
+```js
+// eslint.config.js
+import gherkin from "@lindorm/gherkin/eslint";
+
+export default [
+  {
+    files: ["**/*.steps.ts"],
+    plugins: { gherkin },
+    rules: { "gherkin/no-unreached-step": "warn" },
+  },
+];
+```
+
+- **Severity is yours**, set the ordinary way; `gherkin.configs.recommended` sets `error`.
+- **Options:** `features` (default `["src/**/*.feature"]`) and `exclude` (default none) take the globs you give `gherkinPlugin`, re-anchored at ESLint's working directory when that is not the vitest root: `["warn", { exclude: ["src/**/*.wip.feature"] }]`. A step whose scenarios sit only in a feature file the rule does not read is reported as unreached.
+- **Matching follows the runner:** Background steps count, every Examples row expands, and Cucumber's built-in parameter types match as Cucumber defines them. A custom parameter type matches by its regexp only when a `@Binding` class in the same file declares it with `@ParameterType` and a regexp literal, or an array of them; any other matches any text, so a step that differs from every scenario only inside such a type is not reported.
+- Only decorators imported from `@lindorm/gherkin` with a string-literal expression are read; a variable or a template with `${…}` is skipped. A feature file that does not parse or cannot be read contributes no steps.
+
+Waive a step kept ahead of its scenarios with `// eslint-disable-next-line gherkin/no-unreached-step -- <reason>` on the line above its expression string, where the report sits — inside the call once the decorator wraps:
+
+```ts
+// src/checkout.steps.ts
+import { Binding, When } from "@lindorm/gherkin";
+
+@Binding()
+export class CheckoutSteps {
+  discount = 0;
+
+  @When(
+    // eslint-disable-next-line gherkin/no-unreached-step -- voucher scenarios land next
+    "I apply a voucher worth {int} percent to every item in the basket before checkout",
+  )
+  iApplyAVoucher(percent: number): void {
+    this.discount = percent;
+  }
+}
+```
+
 ## Current scope
 
-Feature-complete for the planned set: everything above — parsing and emission, step matching with custom parameter types, lifecycle hooks and contexts, DataTable/DocString with typed schema conversion, tags, and the failure contract. An unknown plugin setting throws at config time (`unknown_setting`) rather than being silently ignored.
+Feature-complete for the planned set: everything above — parsing and emission, step matching with custom parameter types, lifecycle hooks and contexts, DataTable/DocString with typed schema conversion, tags, the failure contract, and the unreached-step lint rule. An unknown plugin setting throws at config time (`unknown_setting`) rather than being silently ignored.
 
 Deliberately out, for now: `RegExp` step expressions, living-doc HTML output, a `bin` that scaffolds step stubs, and richer built-in parameter types (`{email}`, `{date}`, `{list}`, …).
 

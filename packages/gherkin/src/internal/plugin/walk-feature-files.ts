@@ -1,7 +1,11 @@
 import { readdir } from "node:fs/promises";
 import { join } from "node:path";
 
-const SKIPPED_DIRECTORIES = new Set(["node_modules", "dist", "coverage"]);
+export const SKIPPED_DIRECTORIES: ReadonlySet<string> = new Set([
+  "node_modules",
+  "dist",
+  "coverage",
+]);
 
 // Skips every dot-named directory, dependency trees, build output and coverage reports.
 const isSkippedDirectory = (name: string): boolean =>
