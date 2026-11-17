@@ -13,7 +13,6 @@ import type { Linter } from "eslint";
 import { RuleTester } from "eslint";
 import tseslint from "typescript-eslint";
 import { afterAll, describe, test, vi } from "vitest";
-import { SKIPPED_DIRECTORIES } from "../plugin/walk-feature-files.js";
 import { noUnreachedStep } from "./no-unreached-step.js";
 
 RuleTester.describe = describe;
@@ -99,11 +98,6 @@ const COUNT = writeTree("count", {
   ],
 });
 
-const LANES = writeTree("lanes", {
-  "kept.feature": ["Feature: Kept", "", "  Scenario: kept", "    Given the kept step"],
-  "wip.feature": ["Feature: Wip", "", "  Scenario: wip", "    Given the wip step"],
-});
-
 const BROKEN = writeTree("broken", {
   "sound.feature": [
     "Feature: Sound",
@@ -158,15 +152,6 @@ const LINKED = writeTree("linked", {
 
 mkdirSync(join(LINKED, "src"));
 symlinkSync(join(LINKED, "shared"), join(LINKED, "src", "linked"), "dir");
-
-const CASED = writeTree("cased", {
-  "src/b.WIP.feature": [
-    "Feature: Upper-case wip",
-    "",
-    "  Scenario: upper-case wip",
-    "    Given the upper-case wip step",
-  ],
-});
 
 const DIRECTORY = writeTree("directory", {
   "src/features/listed.feature": [
@@ -232,31 +217,14 @@ const SEPARATED = writeTree("separated", {
 });
 
 const PROJECT = writeTree("project", {
-  "k.wip.feature": scenario("the top-level wip step"),
-  "src/top.feature": scenario("the top-level step"),
-  "src/checkout/pay.feature": scenario("the nested step"),
-  "src/wip/w.feature": scenario("the wip directory step"),
-  "src/k.wip.feature": scenario("the excluded step"),
-  "src/.k.wip.feature": scenario("the dot-named excluded step"),
-  "src/.drafts/d.wip.feature": scenario("the dot-named directory step"),
-  ...Object.fromEntries(
-    Array.from(
-      SKIPPED_DIRECTORIES,
-      (name) =>
-        [`src/${name}/s.wip.feature`, scenario(`the ${name} directory step`)] as const,
-    ),
-  ),
-  "shared/y.wip.feature": scenario("the symlinked directory step"),
-  "other/target.feature": scenario("the symlinked file step"),
+  "src/a.feature": scenario("the suite step"),
+  "src/k.wip.feature": scenario("the wip step"),
+  "src/node_modules/n.feature": scenario("the node_modules directory step"),
+  "src/dist/d.feature": scenario("the dist directory step"),
+  "src/coverage/c.feature": scenario("the coverage directory step"),
 });
 
-symlinkSync(join(PROJECT, "shared"), join(PROJECT, "src", "linked"), "dir");
-symlinkSync(
-  join(PROJECT, "other", "target.feature"),
-  join(PROJECT, "src", "link.wip.feature"),
-);
-
-writeTree("outside", { "o.wip.feature": scenario("the outside step") });
+writeTree("outside", { "o.feature": scenario("the outside step") });
 
 const IMPORTS =
   'import { Binding, Given, ParameterType, Then, When } from "@lindorm/gherkin";';
@@ -438,16 +406,6 @@ ruleTesterAt(ROOT, {
       options: SHOP_OPTIONS,
     },
     {
-      name: "reports nothing for a step whose only consumer is outside the exclude globs",
-      code: steps('  @Given("the kept step") kept(): void {}'),
-      options: [{ features: features(LANES), exclude: [`${LANES}/**/wip.feature`] }],
-    },
-    {
-      name: "reports nothing for a step reached from a feature file no exclude glob names",
-      code: steps('  @Given("the wip step") wip(): void {}'),
-      options: [{ features: features(LANES) }],
-    },
-    {
       name: "keeps reading the feature files that parse when another does not",
       code: steps('  @Given("the sound step") sound(): void {}'),
       options: [{ features: features(BROKEN) }],
@@ -486,13 +444,6 @@ ruleTesterAt(ROOT, {
       name: "reports nothing for a step reached only through a symlinked directory",
       code: steps('  @Given("the linked directory step") linked(): void {}'),
       options: [{ features: srcFeatures(LINKED) }],
-    },
-    {
-      name: "reports nothing for a step whose feature file an exclude glob matches only in another letter case",
-      code: steps('  @Given("the upper-case wip step") wip(): void {}'),
-      options: [
-        { features: srcFeatures(CASED), exclude: [`${CASED}/src/**/*.wip.feature`] },
-      ],
     },
   ],
   invalid: [
@@ -641,12 +592,6 @@ ruleTesterAt(ROOT, {
       errors: [unreached("nobody writes this")],
     },
     {
-      name: "reports a step whose only consumer an exclude glob removes",
-      code: steps('  @Given("the wip step") wip(): void {}'),
-      options: [{ features: features(LANES), exclude: [`${LANES}/**/wip.feature`] }],
-      errors: [unreached("the wip step")],
-    },
-    {
       name: "reports a step whose only consumer is a feature file that does not parse",
       code: steps('  @Given("a step in a broken file") broken(): void {}'),
       options: [{ features: features(BROKEN) }],
@@ -678,90 +623,32 @@ ruleTesterAt(PROJECT, {
 }).run("no-unreached-step from a project's working directory", noUnreachedStep, {
   valid: [
     {
-      name: "reports nothing for a step reached only from below a directory an exclude glob matches",
-      code: steps('  @Given("the nested step") nested(): void {}'),
-      options: [{ exclude: ["src/*"] }],
+      name: "reports nothing under the default options for a step reached only from a feature file the plugin's `exclude` may take out of the suite",
+      code: steps('  @Given("the wip step") wip(): void {}'),
     },
     {
-      name: "reports nothing for a step reached only from inside a directory an exclude glob names",
-      code: steps('  @Given("the wip directory step") wip(): void {}'),
-      options: [{ exclude: ["**/wip"] }],
+      name: "reports nothing under the default options for a step reached only from a feature file inside a directory named node_modules",
+      code: steps('  @Given("the node_modules directory step") dependency(): void {}'),
     },
     {
-      name: "reports nothing for a step reached only from a feature file an exclude glob matches inside a dot-named directory",
-      code: steps('  @Given("the dot-named directory step") draft(): void {}'),
-      options: [{ exclude: ["src/**/*.wip.feature"] }],
-    },
-    ...Array.from(SKIPPED_DIRECTORIES, (name) => ({
-      name: `reports nothing for a step reached only from a feature file an exclude glob matches inside ${name}, which the runner's walk skips`,
-      code: steps(`  @Given("the ${name} directory step") skipped(): void {}`),
-      options: [{ exclude: ["src/**/*.wip.feature"] }],
-    })),
-    {
-      name: "reports nothing for a step reached only from a feature file an exclude glob matches inside a symlinked directory",
-      code: steps('  @Given("the symlinked directory step") linked(): void {}'),
-      options: [{ exclude: ["src/**/*.wip.feature"] }],
+      name: "reports nothing under the default options for a step reached only from a feature file inside a directory named dist",
+      code: steps('  @Given("the dist directory step") built(): void {}'),
     },
     {
-      name: "reports nothing for a step reached only from a feature file an exclude glob names through a symlinked directory",
-      code: steps('  @Given("the symlinked directory step") linked(): void {}'),
-      options: [{ exclude: ["src/linked/*.feature"] }],
+      name: "reports nothing under the default options for a step reached only from a feature file inside a directory named coverage",
+      code: steps('  @Given("the coverage directory step") covered(): void {}'),
     },
     {
-      name: "reports nothing for a step reached only from a feature file an exclude glob ending in a slash would match without it",
-      code: steps('  @Given("the top-level step") top(): void {}'),
-      options: [{ exclude: ["src/*/"] }],
-    },
-    {
-      name: "reports nothing for a step reached only from a top-level feature file an exclude glob opening with `**` glued to more characters names",
-      code: steps('  @Given("the top-level wip step") wip(): void {}'),
-      options: [{ features: ["**/*.feature"], exclude: ["**wip.feature"] }],
-    },
-    {
-      name: "reports nothing for a step reached only from a feature file an exclude glob names through a backslash-escaped dot",
-      code: steps('  @Given("the excluded step") excluded(): void {}'),
-      options: [{ exclude: ["src/*\\.wip.feature"] }],
-    },
-    {
-      name: "reports nothing for a step reached only from a feature file an exclude glob names through a `[!…]` negated class",
-      code: steps('  @Given("the excluded step") excluded(): void {}'),
-      options: [{ exclude: ["src/[!a]*.wip.feature"] }],
-    },
-    {
-      name: "reports nothing for a step reached only from outside the working directory, which no exclude glob reaches",
+      name: "reports nothing for a step reached only from a feature file a features glob lists outside the working directory",
       code: steps('  @Given("the outside step") outside(): void {}'),
-      options: [
-        {
-          features: ["src/**/*.feature", "../outside/*.feature"],
-          exclude: ["../outside/*.feature"],
-        },
-      ],
+      options: [{ features: ["src/**/*.feature", "../outside/*.feature"] }],
     },
   ],
   invalid: [
     {
-      name: "reports a step whose only consumer an exclude glob relative to the working directory removes",
-      code: steps('  @Given("the excluded step") excluded(): void {}'),
-      options: [{ exclude: ["src/**/*.wip.feature"] }],
-      errors: [unreached("the excluded step")],
-    },
-    {
-      name: "reports a step whose only consumer an exclude glob removes from a nested directory the runner's walk enters",
-      code: steps('  @Given("the nested step") nested(): void {}'),
-      options: [{ exclude: ["src/checkout/*.feature"] }],
-      errors: [unreached("the nested step")],
-    },
-    {
-      name: "reports a step whose only consumer is a dot-named feature file an exclude glob removes",
-      code: steps('  @Given("the dot-named excluded step") dot(): void {}'),
-      options: [{ exclude: ["src/**/*.wip.feature"] }],
-      errors: [unreached("the dot-named excluded step")],
-    },
-    {
-      name: "reports a step whose only consumer is a feature symlink an exclude glob removes",
-      code: steps('  @Given("the symlinked file step") link(): void {}'),
-      options: [{ exclude: ["src/**/*.wip.feature"] }],
-      errors: [unreached("the symlinked file step")],
+      name: "reports under the default options a step reached only from a feature file outside the working directory",
+      code: steps('  @Given("the outside step") outside(): void {}'),
+      errors: [unreached("the outside step")],
     },
   ],
 });

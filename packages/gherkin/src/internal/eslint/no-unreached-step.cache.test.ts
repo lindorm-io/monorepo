@@ -1,11 +1,4 @@
-import {
-  lstatSync,
-  mkdirSync,
-  mkdtempSync,
-  rmSync,
-  symlinkSync,
-  writeFileSync,
-} from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { Linter } from "eslint";
@@ -14,7 +7,6 @@ import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import { noUnreachedStep } from "./no-unreached-step.js";
 import { readStepTexts } from "./read-step-texts.js";
 
-vi.mock("node:fs", { spy: true });
 vi.mock("./read-step-texts.js", { spy: true });
 
 const ROOT = mkdtempSync(join(tmpdir(), "gherkin-no-unreached-step-cache-"));
@@ -166,28 +158,14 @@ describe("no-unreached-step feature cache", () => {
 
   test("should compile a feature file once whichever settings select it", () => {
     const cwd = project("alternating");
-    const excludeB = { exclude: ["src/b.feature"] };
 
     expect(lint(cwd, steps("step b"))).toEqual([]);
-    expect(lint(cwd, steps("step b"), excludeB)).toEqual([
+    expect(lint(cwd, steps("step b"), { features: ["src/a.feature"] })).toEqual([
       'No scenario step in the feature files matches "step b".',
     ]);
     expect(lint(cwd, steps("step b"))).toEqual([]);
-    expect(lint(cwd, steps("step b"), { features: ["src/a.feature"] })).toHaveLength(1);
+    expect(lint(cwd, steps("step b"), { features: ["src/*.feature"] })).toEqual([]);
 
     expect(readStepTexts).toHaveBeenCalledTimes(2);
-  });
-});
-
-describe("no-unreached-step exclude listing", () => {
-  test("should read an excluded feature file whose directory cannot be lstat'ed rather than crash the run", () => {
-    const cwd = project("unlstatable");
-
-    vi.mocked(lstatSync).mockImplementationOnce(() => {
-      throw new Error("EACCES: permission denied, lstat");
-    });
-
-    expect(lint(cwd, steps("step b"), { exclude: ["src/b.feature"] })).toEqual([]);
-    expect(lstatSync).toHaveBeenCalledWith(join(cwd, "src"));
   });
 });

@@ -355,7 +355,7 @@ export default [
 ```
 
 - **Severity is yours**, set the ordinary way; `gherkin.configs.recommended` sets `error`.
-- **Options:** `features` (default `["src/**/*.feature"]`) and `exclude` (default none) take the globs you give `gherkinPlugin`, re-anchored at ESLint's working directory when that is not the vitest root: `["warn", { exclude: ["src/**/*.wip.feature"] }]`. A step whose scenarios sit only in a feature file the rule does not read is reported as unreached.
+- **Options:** `features` (default `["src/**/*.feature"]`) takes the globs you give `gherkinPlugin`, re-anchored at ESLint's working directory when that is not the vitest root: `["warn", { features: ["packages/shop/src/**/*.feature"] }]`. The rule reads every file they list, also one the plugin's `exclude` takes out of the suite, so a step reached only from an excluded file is not reported. A step whose scenarios sit only in a feature file the rule does not read is reported as unreached.
 - **Matching follows the runner:** Background steps count, every Examples row expands, and Cucumber's built-in parameter types match as Cucumber defines them. A custom parameter type matches by its regexp only when a `@Binding` class in the same file declares it with `@ParameterType` and a regexp literal, or an array of them; any other matches any text, so a step that differs from every scenario only inside such a type is not reported.
 - Only decorators imported from `@lindorm/gherkin` with a string-literal expression are read; a variable or a template with `${…}` is skipped. A feature file that does not parse or cannot be read contributes no steps.
 

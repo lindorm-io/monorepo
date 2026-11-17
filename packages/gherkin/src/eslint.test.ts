@@ -187,6 +187,20 @@ describe("@lindorm/gherkin/eslint", () => {
     ).toEqual([]);
   });
 
+  test("should refuse an `exclude` option, the rule taking `features` alone", async () => {
+    await expect(
+      lintSteps([
+        {
+          files: ["**/*.steps.ts"],
+          plugins: { gherkin },
+          rules: {
+            "gherkin/no-unreached-step": ["error", { exclude: ["src/**/*.wip.feature"] }],
+          },
+        },
+      ]),
+    ).rejects.toThrow('Unexpected property "exclude". Expected properties: "features".');
+  });
+
   test("should map the ./eslint subpath to the built entry and keep eslint an optional peer from 9", () => {
     expect(MANIFEST.exports["./eslint"]).toEqual({
       types: "./dist/eslint.d.ts",

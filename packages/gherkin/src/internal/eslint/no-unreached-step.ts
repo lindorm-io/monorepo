@@ -8,11 +8,8 @@ import { createParameterTypeRegistry } from "./create-parameter-type-registry.js
 import { readGherkinImports } from "./read-gherkin-imports.js";
 
 type NoUnreachedStepOptions = {
-  exclude?: Array<string>;
   features?: Array<string>;
 };
-
-const GLOBS = { type: "array", items: { type: "string" } } as const;
 
 export const noUnreachedStep: Rule.RuleModule = {
   meta: {
@@ -27,7 +24,7 @@ export const noUnreachedStep: Rule.RuleModule = {
     schema: [
       {
         type: "object",
-        properties: { exclude: GLOBS, features: GLOBS },
+        properties: { features: { type: "array", items: { type: "string" } } },
         additionalProperties: false,
       },
     ],
@@ -53,9 +50,9 @@ export const noUnreachedStep: Rule.RuleModule = {
           return;
         }
 
-        const { exclude = [], features = ["src/**/*.feature"] }: NoUnreachedStepOptions =
+        const { features = ["src/**/*.feature"] }: NoUnreachedStepOptions =
           context.options[0] ?? {};
-        const texts = collectStepTexts({ cwd: context.cwd, exclude, features });
+        const texts = collectStepTexts({ cwd: context.cwd, features });
         const registry = createParameterTypeRegistry(
           declarations.flatMap(({ parameterTypes }) => parameterTypes),
         );
