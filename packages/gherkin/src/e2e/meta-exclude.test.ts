@@ -17,11 +17,12 @@ const SENTINEL_DIRECTORY = join(
 );
 
 /**
- * Child `vitest run`s over one fixture tree wired with the `exclude` setting,
- * asserting the PRINTED counts: an excluded feature file is absent from them,
- * raises no guard, and never reaches the tag scan, while vitest keeps its own
- * excludes and every file the patterns do not resolve to. Coverage is NOT
- * discharged here; every branch stays unit-covered in-process.
+ * Child `vitest run`s over two fixture trees wired with the `exclude` setting
+ * — exclude/, and exclude-outside-dir/, whose excluded draft sits outside
+ * test.dir — asserting the PRINTED counts: an excluded feature file is absent
+ * from them, raises no guard, and never reaches the tag scan, while vitest
+ * keeps its own excludes and every file the patterns do not resolve to.
+ * Coverage is NOT discharged here; every branch stays unit-covered in-process.
  */
 describe("meta-suite: exclude", () => {
   describe("a consumer that sets no test.exclude", () => {
@@ -222,6 +223,77 @@ describe("meta-suite: exclude", () => {
       expect(result.output).not.toContain("feature_not_included");
       expect(result.output).not.toContain("feature_not_collected");
       expect(result.output).not.toContain("invalid_tag_name");
+    });
+  });
+
+  describe("a directory pattern excluding a feature file outside test.dir that test.include reaches", () => {
+    let result: MetaRunResult;
+
+    beforeAll(() => {
+      result = runMetaFixture("exclude-outside-dir", [
+        "--config",
+        "vitest.dir.config.ts",
+      ]);
+    }, 180_000);
+
+    test("should never collect the excluded file — vitest matches test.exclude relative to test.dir, `..` segments included", () => {
+      expect(result.output).not.toContain("drafts/draft.feature");
+      expect(result.summary.tests).toBe("1 passed (1)");
+    });
+
+    test("should raise no tag error for the excluded file's tag, which the tag scan never declares", () => {
+      expect(result.output).not.toContain('cannot apply "wip" tag');
+      expect(result.output).not.toContain('The tag "wip" is not defined');
+      expect(result.summary.testFiles).toBe("1 passed (1)");
+      expect(result.summary.tests).toBe("1 passed (1)");
+    });
+  });
+
+  describe("a literal exclude path naming a feature file outside test.dir that test.include reaches", () => {
+    let result: MetaRunResult;
+
+    beforeAll(() => {
+      result = runMetaFixture("exclude-outside-dir", [
+        "--config",
+        "vitest.literal.config.ts",
+      ]);
+    }, 180_000);
+
+    test("should never collect the excluded file and raise no exclude_unmatched", () => {
+      expect(result.output).not.toContain("drafts/draft.feature");
+      expect(result.output).not.toContain("exclude_unmatched");
+      expect(result.summary.tests).toBe("1 passed (1)");
+    });
+  });
+
+  describe("a --dir on the command line with test.include reaching an excluded feature file outside it", () => {
+    let result: MetaRunResult;
+
+    beforeAll(() => {
+      result = runMetaFixture("exclude-outside-dir", [
+        "--config",
+        "vitest.cli-dir.config.ts",
+        "--dir",
+        "features",
+      ]);
+    }, 180_000);
+
+    test("should never collect the excluded file — vitest matches test.exclude relative to the --dir directory", () => {
+      expect(result.output).not.toContain("drafts/draft.feature");
+      expect(result.summary.tests).toBe("1 passed (1)");
+    });
+  });
+
+  describe("no vitest dir, with test.include reaching an excluded feature file beside the collected one", () => {
+    let result: MetaRunResult;
+
+    beforeAll(() => {
+      result = runMetaFixture("exclude-outside-dir");
+    }, 180_000);
+
+    test("should never collect the excluded file — vitest matches test.exclude relative to the root", () => {
+      expect(result.output).not.toContain("drafts/draft.feature");
+      expect(result.summary.tests).toBe("1 passed (1)");
     });
   });
 

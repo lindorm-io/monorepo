@@ -170,11 +170,15 @@ export const gherkinPlugin = (settings?: GherkinSettings): GherkinVitePlugins =>
         vitestDir = project.config.dir;
 
         const matchDirectory = resolveMatchDirectory();
-        const isUnderMatchDirectory = (path: string): boolean =>
-          path.startsWith("../") === false;
+        // A file outside vitest's dir keeps its entry, since test.include can
+        // reach it (pinned: gherkin-plugin.test.ts,
+        // src/e2e/meta-exclude.test.ts). The entry is relative to that dir,
+        // `..` segments kept (pinned: gherkin-plugin.test.ts), because
+        // vitest's watcher matches test.exclude against a path relative to
+        // dir || root (read from vitest 5.0.3's TestProject.matchesTestGlob,
+        // not pinned).
         const entries = excluded.files
           .map((file) => normalizePath(relative(matchDirectory, file)))
-          .filter(isUnderMatchDirectory)
           .map(escapeGlob);
 
         // A new array, never a push: with no consumer test.exclude, the
